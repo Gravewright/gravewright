@@ -1,0 +1,16 @@
+{
+  "helpers": {
+    "abilityMod": {
+      "args": [
+        "score"
+      ],
+      "expression": "floor((score - 10) / 2)"
+    },
+    "profBonus": {
+      "args": [
+        "level"
+      ],
+      "expression": "2 + floor((max(1, level) - 1) / 4)"
+    }
+  }
+}

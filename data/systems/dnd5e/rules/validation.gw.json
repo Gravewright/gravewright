@@ -1,0 +1,87 @@
+{
+  "validation": {
+    "character": {
+      "sheet.hp.value": {
+        "min": 0
+      },
+      "sheet.level": {
+        "min": 1,
+        "max": 20
+      },
+      "sheet.abilities.str.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.dex.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.con.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.int.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.wis.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.cha.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.hp.max": {
+        "min": 0
+      },
+      "sheet.hp.temp": {
+        "min": 0
+      },
+      "sheet.xp": {
+        "min": 0
+      },
+      "sheet.speed": {
+        "min": 0
+      },
+      "sheet.init_misc": {
+        "min": 0
+      },
+      "sheet.spell.mod": {
+        "min": 0
+      }
+    },
+    "monster": {
+      "sheet.hp.value": {
+        "min": 0
+      },
+      "sheet.hp.max": {
+        "min": 0
+      },
+      "sheet.abilities.str.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.dex.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.con.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.int.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.wis.score": {
+        "min": 1,
+        "max": 30
+      },
+      "sheet.abilities.cha.score": {
+        "min": 1,
+        "max": 30
+      }
+    }
+  }
+}

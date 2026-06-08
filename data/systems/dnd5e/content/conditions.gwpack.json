@@ -1,0 +1,110 @@
+{
+  "id": "dnd5e-conditions",
+  "type": "effect_pack",
+  "system": "dnd5e",
+  "label": "Efeitos & Condições",
+  "entries": [
+    {
+      "id": "bless",
+      "type": "effect",
+      "name": "Bless",
+      "label": "Bless",
+      "img": "",
+      "data": {
+        "category": "buff",
+        "description": "Adiciona 1d4 em ataques e salvaguardas enquanto ativo.",
+        "duration": {
+          "type": "rounds",
+          "value": 10,
+          "remaining": 10
+        },
+        "concentration": true,
+        "modifiers": [
+          {
+            "id": "bless-attack",
+            "target": "roll.attack",
+            "operation": "add_dice",
+            "value": "1d4",
+            "label": "Bless"
+          },
+          {
+            "id": "bless-save",
+            "target": "roll.save",
+            "operation": "add_dice",
+            "value": "1d4",
+            "label": "Bless"
+          }
+        ]
+      }
+    },
+    {
+      "id": "poisoned",
+      "type": "effect",
+      "name": "Envenenado",
+      "label": "Envenenado",
+      "img": "",
+      "data": {
+        "category": "condition",
+        "description": "Desvantagem em ataques e testes de habilidade.",
+        "duration": {
+          "type": "permanent"
+        },
+        "modifiers": [
+          {
+            "id": "poisoned-attack",
+            "target": "roll.attack",
+            "operation": "disadvantage",
+            "label": "Envenenado"
+          },
+          {
+            "id": "poisoned-check",
+            "target": "roll.check",
+            "operation": "disadvantage",
+            "label": "Envenenado"
+          }
+        ]
+      }
+    },
+    {
+      "id": "inspired",
+      "type": "effect",
+      "name": "Inspirado",
+      "label": "Inspirado",
+      "img": "",
+      "data": {
+        "category": "buff",
+        "description": "Marcador positivo de modelo; ajuste conforme a mesa.",
+        "duration": {
+          "type": "session"
+        },
+        "modifiers": []
+      }
+    },
+    {
+      "id": "burning",
+      "type": "effect",
+      "name": "Em Chamas",
+      "label": "Em Chamas",
+      "img": "",
+      "data": {
+        "category": "condition",
+        "description": "Sofre 1d6 de dano de fogo no início de cada rodada enquanto durar.",
+        "duration": {
+          "type": "rounds",
+          "value": 3,
+          "remaining": 3
+        },
+        "modifiers": [
+          {
+            "id": "burning-tick",
+            "target": "damage.self",
+            "operation": "damage_over_time",
+            "value": "1d6",
+            "damageType": "fire",
+            "label": "Em Chamas"
+          }
+        ]
+      }
+    }
+  ]
+}

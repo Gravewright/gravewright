@@ -1,0 +1,50 @@
+
+
+
+{% macro labels() %}
+<script type="application/json" data-journal-editor-labels>{{ {
+    "placeholder": t("game.journal.editor.placeholder"),
+    "group_basic": t("game.journal.editor.group_basic"),
+    "group_media": t("game.journal.editor.group_media"),
+    "group_gm": t("game.journal.editor.group_gm"),
+    "image": t("game.journal.editor.image"),
+    "upload_error": t("game.journal.assets.errors.generic"),
+    "text": t("game.journal.editor.text"),
+    "heading1": t("game.journal.editor.heading1"),
+    "heading2": t("game.journal.editor.heading2"),
+    "heading3": t("game.journal.editor.heading3"),
+    "bullet_list": t("game.journal.editor.bullet_list"),
+    "ordered_list": t("game.journal.editor.ordered_list"),
+    "quote": t("game.journal.editor.quote"),
+    "divider": t("game.journal.editor.divider"),
+    "gm_note": t("game.journal.editor.gm_note"),
+    "secret": t("game.journal.editor.secret"),
+    "gm_note_title": t("game.journal.editor.gm_note_title"),
+    "secret_title": t("game.journal.editor.secret_title")
+} | tojson }}</script>
+{% endmacro %}
+
+
+{% macro editor(name, doc, markdown=None, gm=None) %}
+<div class="journal-block-field" data-journal-block-field>
+    <div class="journal-block-editor-host" data-journal-block-editor
+         data-is-gm="{{ 'true' if (gm if gm is not none else is_gm) else 'false' }}">
+        <script type="application/json" data-journal-doc>{{ doc | tojson }}</script>
+        {% if markdown %}
+        <script type="application/json" data-journal-doc-markdown>{{ markdown | tojson }}</script>
+        {% endif %}
+    </div>
+    <input type="hidden" name="{{ name }}" data-journal-doc-input />
+</div>
+{% endmacro %}
+
+
+{% macro reader(doc, markdown=None) %}
+{% if markdown %}
+<div class="journal-reader-content" data-journal-markdown>{{ markdown }}</div>
+{% elif doc and doc.doc and doc.doc.content %}
+<div class="journal-reader-content" data-journal-doc-reader>
+    <script type="application/json" data-journal-doc>{{ doc | tojson }}</script>
+</div>
+{% endif %}
+{% endmacro %}

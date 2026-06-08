@@ -1,0 +1,100 @@
+# Python cache / test artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Runtime/user data at repository root only
+/storage/
+/scenes/
+/uploads/
+/tmp/
+/temp/
+
+# Databases and SQLite sidecars
+*.sqlite
+*.sqlite3
+*.db
+*.db3
+*.db-shm
+*.db-wal
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite3-shm
+*.sqlite3-wal
+
+# Environment files
+#
+# The root .env is a private local override and must not be committed.
+.env
+.env.local
+.env.*.local
+.env.private
+.env.*.private
+
+# Public sanitized environment templates tracked in Git.
+!.env.example
+!.env.development
+!.env.staging
+!.env.production
+!.env.production-sqlite
+
+# Virtual environments / package caches
+.venv/
+venv/
+.uv-cache/
+
+# Logs / generated reports
+*.log
+/logs/
+/reports/
+
+# Performance outputs
+tests/performance/*.txt
+tests/performance/*.html
+tests/performance/*.csv
+tests/performance/docker_stats*
+tests/performance/locust_output*
+tests/performance/report*
+tests/performance/**/latest/
+tests/performance/**/runs/
+tests/performance/chunk_stream/load/
+
+# Node / frontend artifacts
+node_modules/
+dist/
+build/
+.vite/
+.next/
+.svelte-kit/
+
+# AI agent workspace / local assistant files
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+.codex/
+.claude/
+.gemini/
+.cursor/
+.cursorrules
+.windsurf/
+.aider*
+.aider/
+.roo/
+.continue/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+tests/performance/chunk_stream/load/

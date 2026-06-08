@@ -1,0 +1,48 @@
+name: gravewright_chunk_stream
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8000"
+    volumes:
+      - ../storage:/app/storage
+    cpus: 1.0
+    mem_limit: 4g
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 4g
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "false"
+      SESSION_SECRET: perf-test-secret-key-change-me
+      WEB_WORKERS: "1"
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  chunk_stream:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ../storage:/app/storage
+      - ./performance/chunk_stream:/app/tests/performance/chunk_stream
+    command: >
+      .venv/bin/python tests/performance/chunk_stream/ws_reconnect_check.py --host http://app:8000
+    depends_on:
+      app:
+        condition: service_healthy
+    cpus: 0.5
+    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m

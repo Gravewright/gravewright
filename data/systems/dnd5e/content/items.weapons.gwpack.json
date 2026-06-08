@@ -1,0 +1,50 @@
+{
+  "id": "dnd5e-weapons",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Armas",
+  "entries": [
+    {
+      "id": "template-longsword",
+      "type": "weapon",
+      "name": "Espada Longa (modelo)",
+      "data": {
+        "category": "martial",
+        "attack_type": "melee",
+        "damage": "1d8",
+        "damage_type": "slashing",
+        "versatile": "1d10",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "props": {
+          "versatile": true
+        },
+        "weight": 3,
+        "cost": "15 gp",
+        "description": "Entrada de modelo para testar drag/drop e edição."
+      }
+    },
+    {
+      "id": "template-shortbow",
+      "type": "weapon",
+      "name": "Arco Curto (modelo)",
+      "data": {
+        "category": "simple",
+        "attack_type": "ranged",
+        "damage": "1d6",
+        "damage_type": "piercing",
+        "range": "80/320 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "props": {
+          "ammunition": true,
+          "two_handed": true
+        },
+        "weight": 2,
+        "cost": "25 gp",
+        "description": "Entrada de modelo para armas à distância."
+      }
+    }
+  ]
+}

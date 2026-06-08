@@ -1,0 +1,87 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-race",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.subrace",
+            "labelKey": "dnd5e.ui.sub.raca"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.size",
+            "options": [
+              {
+                "value": "tiny",
+                "labelKey": "dnd5e.ui.minusculo"
+              },
+              {
+                "value": "small",
+                "labelKey": "dnd5e.ui.pequeno"
+              },
+              {
+                "value": "medium",
+                "labelKey": "dnd5e.ui.medio"
+              },
+              {
+                "value": "large",
+                "labelKey": "dnd5e.ui.grande"
+              }
+            ],
+            "labelKey": "dnd5e.ui.tamanho"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "numberField",
+            "path": "sheet.speed",
+            "labelKey": "dnd5e.ui.deslocamento"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.languages",
+            "labelKey": "dnd5e.ui.idiomas"
+          }
+        ]
+      },
+      {
+        "type": "textField",
+        "path": "sheet.asi",
+        "labelKey": "dnd5e.ui.aumento.de.atributos"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.age_alignment",
+        "labelKey": "dnd5e.ui.idade.and.tendencia"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.traits",
+        "labelKey": "dnd5e.ui.tracos.raciais"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      }
+    ],
+    "labelKey": "dnd5e.ui.raca"
+  }
+}

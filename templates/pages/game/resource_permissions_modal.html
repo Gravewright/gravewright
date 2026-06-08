@@ -1,0 +1,65 @@
+<article class="game-modal-window resource-permissions-modal" data-modal-window
+         data-modal-id="resource-permissions-{{ resource_type }}-{{ resource_id }}"
+         data-window-key="resource-permissions-{{ resource_type }}-{{ resource_id }}"
+         hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <div class="game-modal-sheet-title">
+            <span class="sheet-modal-name">{{ t("resource_permissions.title") }}</span>
+            <span class="sheet-modal-owner">{{ resource_title }}</span>
+        </div>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+            </button>
+            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                <i class="ph ph-minus" aria-hidden="true"></i>
+            </button>
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('inside.campaigns.cancel') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+
+    <form class="resource-permissions-form" method="post" action="/game/resource-permissions">
+        {{ csrf_input | safe }}
+        <input type="hidden" name="resource_type" value="{{ resource_type }}" />
+        <input type="hidden" name="resource_id" value="{{ resource_id }}" />
+
+        <div class="resource-permissions-list">
+            {% for row in rows %}
+            <fieldset class="resource-permission-row">
+                <legend>{{ row.name }}</legend>
+                <label>
+                    <input type="radio" name="access__{{ row.user_id }}" value="none"
+                           {% if row.access == "none" %}checked{% endif %} />
+                    <span>{{ t("resource_permissions.none") }}</span>
+                </label>
+                <label>
+                    <input type="radio" name="access__{{ row.user_id }}" value="read"
+                           {% if row.access == "read" %}checked{% endif %} />
+                    <span>{{ t("resource_permissions.read") }}</span>
+                </label>
+                <label>
+                    <input type="radio" name="access__{{ row.user_id }}" value="owner"
+                           {% if row.access == "owner" %}checked{% endif %} />
+                    <span>{{ t("resource_permissions.owner") }}</span>
+                </label>
+            </fieldset>
+            {% else %}
+            <div class="tool-empty">
+                <i class="ph ph-users-three" aria-hidden="true"></i>
+                <p>{{ t("resource_permissions.empty") }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <footer class="resource-permissions-footer">
+            <button class="permission-save" type="submit">
+                <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+                <span>{{ t("permissions.save") }}</span>
+            </button>
+        </footer>
+    </form>
+</article>
+

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gravewright.dev/schemas/system-layout-v1.json",
+  "title": "Gravewright System Sheet Layout v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "kind",
+    "system",
+    "id",
+    "body"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "actorSheet",
+        "itemSheet"
+      ]
+    },
+    "system": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actorType": {
+      "type": "string"
+    },
+    "itemType": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "object"
+    },
+    "body": {
+      "$ref": "#/$defs/node"
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "labelKey": {
+          "type": "string"
+        },
+        "icon": {
+          "type": "string"
+        },
+        "bind": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "tabs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "interaction": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

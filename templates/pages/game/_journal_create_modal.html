@@ -1,0 +1,101 @@
+<article class="game-modal-window journal-modal journal-modal--create" data-modal-window
+         data-modal-id="journal-create-{{ room_id }}"
+         data-window-key="journal-create-{{ room_id }}"
+         data-journal-campaign="{{ room_id }}"
+         hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <div class="game-modal-sheet-title">
+            <span class="sheet-modal-name">{{ t("game.journal.create") }}</span>
+            <span class="sheet-modal-owner">{{ t("game.journal.title") }}</span>
+        </div>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('inside.campaigns.cancel') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="journal-modal-body" data-journal-modal data-journal-create>
+        <form class="journal-editor-form" method="post" action="/game/journal"
+              data-journal-create-form
+              data-journal-type="{{ default_type }}">
+            {{ csrf_input | safe }}
+            <input type="hidden" name="campaign_id" value="{{ room_id }}" />
+
+            <header class="journal-editor-head">
+                <label class="journal-editor-type-field">
+                    <span>{{ t("game.journal.type") }}</span>
+                    <select name="type" data-journal-create-type>
+                        <option value="diary" {% if default_type == 'diary' %}selected{% endif %}>{{ t("game.journal.types.diary") }}</option>
+                        <option value="quest" {% if default_type == 'quest' %}selected{% endif %}>{{ t("game.journal.types.quest") }}</option>
+                        <option value="quest_board" {% if default_type == 'quest_board' %}selected{% endif %}>{{ t("game.journal.types.quest_board") }}</option>
+                    </select>
+                </label>
+                <label class="journal-editor-title-field">
+                    <span>{{ t("game.journal.title") }}</span>
+                    <input type="text" name="title" maxlength="120"
+                           placeholder="{{ t('game.journal.title_placeholder') }}" required autofocus />
+                </label>
+                <button type="submit" class="primary-action journal-editor-submit">
+                    <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+                    <span>{{ t("game.journal.save") }}</span>
+                </button>
+            </header>
+
+            <div class="journal-meta-grid">
+                <label>
+                    <span>{{ t("game.journal.folder") }}</span>
+                    <select name="folder_id">
+                        <option value="">{{ t("game.journal.no_folder") }}</option>
+                        {% for folder in journal_folders %}
+                        <option value="{{ folder.id }}" {% if folder.id == default_folder_id %}selected{% endif %}>
+                            {{ folder.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>
+                    <span>{{ t("game.journal.visibility.label") }}</span>
+                    <select name="visibility">
+                        <option value="private">{{ t("game.journal.visibility.private") }}</option>
+                        <option value="shared">{{ t("game.journal.visibility.shared") }}</option>
+                        <option value="handout">{{ t("game.journal.visibility.handout") }}</option>
+                    </select>
+                </label>
+            </div>
+
+            
+            <div class="journal-content-field" data-journal-type-fields="diary"
+                 {% if default_type != 'diary' %}hidden{% endif %}>
+                <p class="journal-create-hint">{{ t("game.journal.diary.create_hint") }}</p>
+            </div>
+
+            
+            <div data-journal-type-fields="quest" {% if default_type != 'quest' %}hidden{% endif %}>
+                <div class="journal-meta-grid">
+                    <label>
+                        <span>{{ t("game.journal.quest.status") }}</span>
+                        <select name="quest_status">
+                            {% for value in ["draft", "available", "active", "completed", "failed", "archived"] %}
+                            <option value="{{ value }}" {% if value == 'available' %}selected{% endif %}>
+                                {{ t("game.journal.quest.status_values." ~ value) }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+                <label class="journal-field">
+                    <span>{{ t("game.journal.quest.summary") }}</span>
+                    <input type="text" name="public_summary" maxlength="480" />
+                </label>
+                <p class="journal-create-hint">{{ t("game.journal.quest.create_hint") }}</p>
+            </div>
+
+            
+            <div data-journal-type-fields="quest_board" {% if default_type != 'quest_board' %}hidden{% endif %}>
+                <p class="journal-create-hint">{{ t("game.journal.board.create_hint") }}</p>
+            </div>
+        </form>
+    </div>
+</article>

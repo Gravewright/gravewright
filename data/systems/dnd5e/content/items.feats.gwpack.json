@@ -1,0 +1,18 @@
+{
+  "id": "dnd5e-feats",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Talentos",
+  "entries": [
+    {
+      "id": "template-feat",
+      "type": "feat",
+      "name": "Talento Modelo",
+      "data": {
+        "prerequisite": "",
+        "description": "Talento de modelo.",
+        "benefits": "Descreva o benefício aqui."
+      }
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="{{ locale }}">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{{ app_name }} - {{ t("auth.register.title") }}</title>
+
+    <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="/static/css/auth.css" />
+</head>
+
+<body>
+    <canvas id="auth-background" aria-hidden="true"></canvas>
+
+    <main class="auth-page">
+        <section class="auth-shell" aria-label="{{ t('auth.register.title') }}">
+            <header class="auth-header">
+                <div class="auth-tab auth-tab--single">{{ t("auth.register.title") }}</div>
+            </header>
+
+            <section class="auth-content">
+                <div class="auth-panel auth-panel--login">
+                    <div class="brand">
+                        <span class="brand-mark"></span>
+                        <div>
+                            <p class="brand-label">{{ t("app.subtitle") }}</p>
+                            <h1>{{ app_name }}</h1>
+                        </div>
+                    </div>
+
+                    {% if is_first_user %}
+                    <p class="auth-description">
+                        {{ t("auth.register.first_owner_notice") }}
+                    </p>
+                    {% else %}
+                    <p class="auth-description">
+                        {{ t("auth.register.description") }}
+                    </p>
+                    {% endif %}
+
+                    {% if error %}
+                    <div class="auth-error" role="alert">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    <form class="auth-form" method="post" action="/register" autocomplete="on">
+                        {{ csrf_input | safe }}
+
+                        <label class="field">
+                            <span>{{ t("auth.fields.name") }}</span>
+                            <input type="text" name="name" autocomplete="name"
+                                placeholder="{{ t('auth.fields.name_placeholder') }}" required />
+                        </label>
+
+                        <label class="field">
+                            <span>{{ t("auth.fields.email") }}</span>
+                            <input type="email" name="email" autocomplete="email"
+                                placeholder="{{ t('auth.fields.email_placeholder') }}" required />
+                        </label>
+
+                        <label class="field">
+                            <span>{{ t("auth.fields.password") }}</span>
+                            <input type="password" name="password" autocomplete="new-password"
+                                placeholder="{{ t('auth.fields.new_password_placeholder') }}" required />
+                        </label>
+
+                        <button class="button-primary" type="submit">
+                            {{ t("auth.register.submit") }}
+                        </button>
+                    </form>
+
+                    <footer class="auth-links">
+                        <a href="/login">{{ t("auth.register.already_have_account") }}</a>
+                    </footer>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/vendor/pixi.min.js"></script>
+    <script src="/static/js/auth/auth-background.js"></script>
+</body>
+
+</html>

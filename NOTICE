@@ -1,0 +1,8 @@
+Gravewright
+Copyright 2026 Gravewright contributors
+
+Gravewright core is licensed under the Apache License, Version 2.0.
+
+Gravewright public API materials are licensed under the MIT License. API materials include public extension specifications, public schemas, manifest formats, public browser API contracts, and examples intended for use by systems, modules, integrations, or content packages.
+
+Bundled systems, modules, content packs, generated assets, and third-party dependencies may carry their own licenses. Their notices should remain with those packages.

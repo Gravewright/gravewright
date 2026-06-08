@@ -1,0 +1,37 @@
+[project]
+name = "Gravewright"
+version = "0.0.1"
+description = "Gravewright is an open-source virtual tabletop platform for tabletop RPGs, built with a focus on performance, extensibility, and full control over the gameplay experience."
+requires-python = ">=3.11"
+dependencies = [
+  "alembic>=1.14",
+  "litestar[jinja]>=2.15,<3",
+  "pillow>=12.2.0",
+  "sqlalchemy>=2.0",
+  "uvicorn[standard]>=0.30",
+  "xdice>=1.2.1",
+]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.7"]
+
+
+
+
+postgres = ["psycopg[binary]>=3.2"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+
+filterwarnings = ["error::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.4.0",
+]

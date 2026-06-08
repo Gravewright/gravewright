@@ -1,0 +1,54 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-equipment",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.category",
+            "labelKey": "dnd5e.ui.categoria"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "numberField",
+            "path": "sheet.quantity",
+            "labelKey": "dnd5e.ui.quantidade"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.weight",
+            "labelKey": "dnd5e.ui.peso"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.cost",
+            "labelKey": "dnd5e.ui.custo"
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      }
+    ],
+    "labelKey": "dnd5e.ui.equipamento"
+  }
+}

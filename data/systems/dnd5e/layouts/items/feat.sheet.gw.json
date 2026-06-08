@@ -1,0 +1,34 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-feat",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "textField",
+        "path": "core.name",
+        "labelKey": "dnd5e.ui.nome"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.prerequisite",
+        "labelKey": "dnd5e.ui.pre.requisito"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.benefits",
+        "labelKey": "dnd5e.ui.beneficios"
+      }
+    ],
+    "labelKey": "dnd5e.ui.talento"
+  }
+}

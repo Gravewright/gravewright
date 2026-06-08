@@ -1,0 +1,105 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-class",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.hit_die",
+            "options": [
+              {
+                "value": "d6",
+                "labelKey": "dnd5e.ui.d6"
+              },
+              {
+                "value": "d8",
+                "labelKey": "dnd5e.ui.d8"
+              },
+              {
+                "value": "d10",
+                "labelKey": "dnd5e.ui.d10"
+              },
+              {
+                "value": "d12",
+                "labelKey": "dnd5e.ui.d12"
+              }
+            ],
+            "labelKey": "dnd5e.ui.dado.de.vida"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.primary_ability",
+            "labelKey": "dnd5e.ui.atributo.primario"
+          }
+        ]
+      },
+      {
+        "type": "textField",
+        "path": "sheet.saving_throws",
+        "labelKey": "dnd5e.ui.salvaguardas.proficientes"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.armor_proficiencies",
+        "labelKey": "dnd5e.ui.proficiencias.em.armaduras"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.weapon_proficiencies",
+        "labelKey": "dnd5e.ui.proficiencias.em.armas"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.tool_proficiencies",
+        "labelKey": "dnd5e.ui.proficiencias.em.ferramentas"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.skills",
+        "labelKey": "dnd5e.ui.pericias"
+      },
+      {
+        "type": "selectField",
+        "path": "sheet.spellcasting_ability",
+        "options": [
+          {
+            "value": "none",
+            "labelKey": "dnd5e.ui.nenhum"
+          },
+          {
+            "value": "int",
+            "labelKey": "dnd5e.ui.inteligencia"
+          },
+          {
+            "value": "wis",
+            "labelKey": "dnd5e.ui.sabedoria"
+          },
+          {
+            "value": "cha",
+            "labelKey": "dnd5e.ui.carisma"
+          }
+        ],
+        "labelKey": "dnd5e.ui.atributo.de.conjuracao"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      }
+    ],
+    "labelKey": "dnd5e.ui.classe"
+  }
+}

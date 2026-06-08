@@ -1,0 +1,23 @@
+{
+  "id": "dnd5e-races",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Raças",
+  "entries": [
+    {
+      "id": "template-race",
+      "type": "race",
+      "name": "Raça Modelo",
+      "data": {
+        "subrace": "",
+        "size": "medium",
+        "speed": 30,
+        "languages": "Comum",
+        "asi": "",
+        "age_alignment": "",
+        "traits": "Descreva traços raciais aqui.",
+        "description": "Raça de modelo."
+      }
+    }
+  ]
+}

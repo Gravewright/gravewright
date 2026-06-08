@@ -1,0 +1,62 @@
+{
+  "id": "dnd5e-monsters",
+  "type": "actor_pack",
+  "system": "dnd5e",
+  "label": "Monstros",
+  "entries": [
+    {
+      "id": "template-monster",
+      "type": "monster",
+      "name": "Monstro Modelo",
+      "data": {
+        "size": "medium",
+        "type": "creature",
+        "alignment": "unaligned",
+        "cr": "0",
+        "prof": 2,
+        "hp": {
+          "value": 7,
+          "max": 7,
+          "formula": "2d6"
+        },
+        "ac": 12,
+        "speed": "30 ft.",
+        "abilities": {
+          "str": {
+            "score": 10
+          },
+          "dex": {
+            "score": 12
+          },
+          "con": {
+            "score": 10
+          },
+          "int": {
+            "score": 8
+          },
+          "wis": {
+            "score": 10
+          },
+          "cha": {
+            "score": 8
+          }
+        },
+        "saves": {},
+        "senses": "",
+        "languages": "",
+        "traits": "",
+        "attacks": [
+          {
+            "name": "Ataque Modelo",
+            "type": "weapon",
+            "data": {
+              "damage": "1d6",
+              "damage_type": "bludgeoning"
+            }
+          }
+        ],
+        "features": []
+      }
+    }
+  ]
+}

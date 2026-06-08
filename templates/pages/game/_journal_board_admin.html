@@ -1,0 +1,37 @@
+<section class="journal-board-admin" data-board-admin="{{ journal.id }}"
+         data-board-id="{{ journal.id }}" data-csrf="{{ csrf_token() }}">
+    <h3 class="journal-section-title">
+        <i class="ph ph-kanban" aria-hidden="true"></i> {{ t("game.journal.board.linked_quests") }}
+    </h3>
+    <p class="journal-board-hint">{{ t("game.journal.board.pinned_players_hint") }}</p>
+
+    <div class="journal-board-add">
+        <select data-board-quest-select aria-label="{{ t('game.journal.board.add_quest') }}">
+            <option value="">{{ t("game.journal.board.choose_quest") }}</option>
+            {% for option in board_quest_options %}
+            <option value="{{ option.id }}">{{ option.title }}</option>
+            {% endfor %}
+        </select>
+        <button type="button" class="journal-mini-action" data-board-add-quest>
+            <i class="ph ph-plus" aria-hidden="true"></i> {{ t("game.journal.board.add_quest") }}
+        </button>
+    </div>
+
+    <ul class="journal-board-entries" data-board-entries>
+        {% for entry in view.board_entries %}
+        <li class="journal-board-entry" data-board-entry="{{ entry.quest_id }}">
+            <span class="journal-board-entry-title">
+                {% if entry.pinned %}<i class="ph ph-push-pin-fill" aria-hidden="true"></i>{% endif %}
+                {{ entry.card.title }}
+            </span>
+            <span class="journal-board-entry-status">{{ t("game.journal.quest.status_values." ~ entry.card.status) }}</span>
+            <span class="journal-board-entry-actions">
+                <button type="button" data-board-move="up" aria-label="{{ t('game.journal.board.move_up') }}"><i class="ph ph-arrow-up" aria-hidden="true"></i></button>
+                <button type="button" data-board-move="down" aria-label="{{ t('game.journal.board.move_down') }}"><i class="ph ph-arrow-down" aria-hidden="true"></i></button>
+                <button type="button" data-board-pin="{{ 0 if entry.pinned else 1 }}" aria-label="{{ t('game.journal.board.unpin') if entry.pinned else t('game.journal.board.pin') }}"><i class="ph {% if entry.pinned %}ph-push-pin-fill{% else %}ph-push-pin{% endif %}" aria-hidden="true"></i></button>
+                <button type="button" data-board-remove aria-label="{{ t('game.journal.board.remove') }}"><i class="ph ph-trash" aria-hidden="true"></i></button>
+            </span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>

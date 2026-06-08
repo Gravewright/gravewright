@@ -1,0 +1,76 @@
+.gw-dsn {
+    position: fixed;
+    right: 18px;
+    bottom: 84px;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(18, 22, 28, 0.92);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.34);
+    color: #edf2f7;
+    backdrop-filter: blur(12px);
+}
+
+.gw-dsn__roll,
+.gw-dsn__color {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.gw-dsn__roll {
+    display: inline-grid;
+    place-items: center;
+    color: #f8fafc;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.gw-dsn__roll:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.gw-dsn__color {
+    padding: 4px;
+    cursor: pointer;
+}
+
+.gw-dsn-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 69;
+    pointer-events: none;
+    display: grid;
+    place-items: center;
+}
+
+.gw-dsn-stage[hidden] {
+    display: none;
+}
+
+.gw-dsn-stage__canvas {
+    width: min(44vw, 360px);
+    height: min(44vw, 360px);
+    filter: drop-shadow(0 28px 44px rgba(0, 0, 0, 0.52));
+}
+
+.gw-dsn-stage__result {
+    position: absolute;
+    top: calc(50% + min(25vw, 210px));
+    min-width: 54px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(18, 22, 28, 0.92);
+    color: #f8fafc;
+    text-align: center;
+    font-size: 24px;
+    font-weight: 800;
+}

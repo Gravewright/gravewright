@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gravewright.dev/schemas/system-combat-v1.json",
+  "title": "Gravewright System Combat v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "version"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "defaultMode": {
+      "type": "string"
+    },
+    "turnOrder": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "strategy": {
+          "enum": [
+            "formula_sort"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "formula": {
+          "type": "string"
+        },
+        "sort": {
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        },
+        "tieBreakers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/resource"
+      }
+    },
+    "activityTypes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "initiativeRoll": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "initiative": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "combat": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "resource": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "label",
+        "path"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "maxPath": {
+          "type": "string"
+        },
+        "min": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

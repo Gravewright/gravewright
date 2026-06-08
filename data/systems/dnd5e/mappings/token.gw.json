@@ -1,0 +1,25 @@
+{
+  "character": {
+    "name": "core.name",
+    "bars": {
+      "hp": {
+        "value": "sheet.hp.value",
+        "max": "sheet.hp.max"
+      }
+    },
+    "initiative": "sheet.init",
+    "defense": "sheet.ac"
+  },
+  "monster": {
+    "name": "core.name",
+    "size": "sheet.size",
+    "bars": {
+      "hp": {
+        "value": "sheet.hp.value",
+        "max": "sheet.hp.max"
+      }
+    },
+    "initiative": "sheet.init",
+    "defense": "sheet.ac"
+  }
+}

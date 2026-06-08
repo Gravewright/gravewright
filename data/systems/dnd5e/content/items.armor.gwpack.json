@@ -1,0 +1,24 @@
+{
+  "id": "dnd5e-armor",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Armaduras",
+  "entries": [
+    {
+      "id": "template-leather-armor",
+      "type": "armor",
+      "name": "Armadura de Couro (modelo)",
+      "data": {
+        "armor_type": "light",
+        "base_ac": 11,
+        "add_dex": true,
+        "max_dex": 99,
+        "str_req": 0,
+        "stealth_disadvantage": false,
+        "weight": 10,
+        "cost": "10 gp",
+        "description": "Entrada de modelo para armadura leve."
+      }
+    }
+  ]
+}

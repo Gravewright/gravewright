@@ -1,0 +1,20 @@
+{
+  "id": "dnd5e-equipment",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Equipamentos",
+  "entries": [
+    {
+      "id": "template-rope",
+      "type": "equipment",
+      "name": "Corda (modelo)",
+      "data": {
+        "category": "adventuring gear",
+        "quantity": 1,
+        "weight": 10,
+        "cost": "1 gp",
+        "description": "Equipamento genérico de modelo."
+      }
+    }
+  ]
+}

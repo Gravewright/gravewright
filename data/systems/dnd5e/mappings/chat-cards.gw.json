@@ -1,0 +1,98 @@
+{
+  "cards": {
+    "check": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "label": "Fórmula",
+          "value": "@roll.formula"
+        },
+        {
+          "label": "Total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "save": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "label": "Fórmula",
+          "value": "@roll.formula"
+        },
+        {
+          "label": "Total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "attack": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "label": "Fórmula",
+          "value": "@roll.formula"
+        },
+        {
+          "label": "Total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "death-save": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "label": "Rolagem (d20)",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "weapon-attack": {
+      "title": "@actor.name",
+      "subtitle": "Ataque",
+      "lines": [
+        {
+          "label": "Fórmula",
+          "value": "@roll.formula"
+        },
+        {
+          "label": "Total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "weapon-damage": {
+      "title": "@actor.name",
+      "subtitle": "Dano",
+      "lines": [
+        {
+          "label": "Fórmula",
+          "value": "@roll.formula"
+        },
+        {
+          "label": "Total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "spell-damage": {
+      "title": "@actor.name",
+      "subtitle": "Dano de Magia",
+      "lines": [
+        {
+          "label": "Fórmula",
+          "value": "@roll.formula"
+        },
+        {
+          "label": "Total",
+          "value": "@roll.total"
+        }
+      ]
+    }
+  }
+}

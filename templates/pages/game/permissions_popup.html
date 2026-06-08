@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="{{ locale }}">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ t("permissions.title") }} — {{ room.title }}</title>
+    <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="/static/css/game.css" />
+</head>
+
+<body class="sheet-popup-body">
+    <header class="sheet-popup-header">
+        <strong class="sheet-popup-title">{{ t("permissions.title") }}</strong>
+        <span class="sheet-system-badge">{{ room.title }}</span>
+    </header>
+
+    <main class="sheet-popup-content">
+        {% if room.permission_settings.can_update_permissions %}
+        <form method="post" action="/campaigns/permissions">
+            {{ csrf_input | safe }}
+            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+
+            <div class="permission-role-list">
+                {% for role_state in room.permission_settings.roles %}
+                <section class="permission-role-card">
+                    <div class="permission-role-head">
+                        <h3>{{ t(role_state.label_key) }}</h3>
+                        {% if role_state.locked %}
+                        <span>{{ t("permissions.locked") }}</span>
+                        {% else %}
+                        <span>{{ t("permissions.configurable") }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if role_state.locked %}
+                    <p class="permission-note">{{ t("permissions.gm_locked_description") }}</p>
+                    {% else %}
+                    {% for group in room.permission_settings.groups %}
+                    <details class="permission-group" open>
+                        <summary>{{ t(group.label_key) }}</summary>
+                        <div class="permission-check-list">
+                            {% for permission in group.permissions %}
+                            <div class="permission-check">
+                                <input type="checkbox" name="permissions__{{ role_state.role }}"
+                                    value="{{ permission.key }}" {% if permission.key in
+                                    role_state.allowed_keys %}checked{% endif %} />
+                                <span>
+                                    <strong>{{ t(permission.title_key) }}</strong>
+                                    <small>{{ t(permission.description_key) }}</small>
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                    {% endfor %}
+                    {% endif %}
+                </section>
+                {% endfor %}
+            </div>
+
+            <button class="permission-save" type="submit">
+                <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+                <span>{{ t("permissions.save") }}</span>
+            </button>
+        </form>
+        {% else %}
+        <div class="tool-empty">
+            <i class="ph ph-lock-key" aria-hidden="true"></i>
+            <p>{{ t("permissions.no_access") }}</p>
+        </div>
+        {% endif %}
+    </main>
+</body>
+
+</html>

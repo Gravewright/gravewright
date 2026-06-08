@@ -1,0 +1,23 @@
+{
+  "id": "dnd5e-features",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Características",
+  "entries": [
+    {
+      "id": "template-feature",
+      "type": "feature",
+      "name": "Característica Modelo",
+      "data": {
+        "source": "classe/raça",
+        "level": 1,
+        "uses": {
+          "value": 1,
+          "max": 1
+        },
+        "recharge": "long_rest",
+        "description": "Característica de modelo."
+      }
+    }
+  ]
+}

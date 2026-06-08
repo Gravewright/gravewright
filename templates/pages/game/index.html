@@ -1,0 +1,1998 @@
+<!doctype html>
+<html lang="{{ locale }}">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{{ app_name }} - Game</title>
+
+    <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="/static/css/game.css?v=20260604-modal-fit2" />
+    
+    {% for href in system_styles %}<link rel="stylesheet" href="{{ href }}" />
+    {% endfor %}
+
+    <script defer src="/static/js/csrf.js"></script>
+    
+    <script defer src="/static/js/core/csrf.js"></script>
+    <script defer src="/static/js/core/http.js"></script>
+    <script defer src="/static/js/core/dom.js"></script>
+    <script defer src="/static/js/core/events.js"></script>
+    <script defer src="/static/js/core/storage.js"></script>
+    <script defer src="/static/js/core/geometry.js"></script>
+    <script defer src="/static/js/core/sanitization.js"></script>
+    <script defer src="/static/js/core/bootstrap.js"></script>
+    
+    <script defer src="/static/js/tools/tools-registry.js?v=20260605-token-hp"></script>
+    <script defer src="/static/js/tools/tools-toolbar.js?v=20260605-token-hp"></script>
+    
+    <script defer src="/static/js/realtime/realtime-client.js?v=20260604-realtime-split"></script>
+    <script defer src="/static/js/realtime/realtime-events.js?v=20260604-realtime-split"></script>
+    <script defer src="/static/js/realtime/presence.js?v=20260604-realtime-split"></script>
+    <script defer src="/static/js/realtime/command-client.js?v=20260604-realtime-split"></script>
+    <script defer src="/static/js/combat/combat-state.js?v=20260605-token-rings"></script>
+    <script defer src="/static/vendor/pixi.min.js"></script>
+    <script defer src="/static/js/board/board-renderer.js"></script>
+    
+    <script defer src="/static/js/board/pixi/pixi-board-renderer.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/board/pixi/pixi-board-layers.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/board/pixi/pixi-tile-layer.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/board/pixi/pixi-grid-layer.js?v=20260604-pixi-layers"></script>
+    <script defer src="/static/js/board/pixi/pixi-token-layer.js?v=20260605-crisp-labels"></script>
+    <script defer src="/static/js/board/pixi/pixi-ghost-layer.js?v=20260604-pixi-layers"></script>
+    <script defer src="/static/js/board/pixi/pixi-origin-layer.js?v=20260604-pixi-layers"></script>
+    <script defer src="/static/js/board/pixi/pixi-fog-layer.js?v=20260604-pixi-layers"></script>
+    <script defer src="/static/js/board/pixi/pixi-debug.js?v=20260604-pixi-layers"></script>
+    <script defer src="/static/js/map/api/map-api.js?v=20260605-token-hp"></script>
+    <script defer src="/static/js/map/scene/map-scene.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/camera/map-camera.js"></script>
+    <script defer src="/static/js/map/camera/map-pan.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/camera/map-zoom.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/streaming/map-streaming.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/map/board-history.js?v=20260605-board-history"></script>
+    <script defer src="/static/js/map/selection/map-selection.js"></script>
+    <script defer src="/static/js/map/selection/map-marquee.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/drag/map-drag.js"></script>
+    <script defer src="/static/js/map/drag/map-token-drag.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/tokens/map-tokens.js"></script>
+    <script defer src="/static/js/map/tokens/map-token-events.js"></script>
+    <script defer src="/static/js/map/tokens/map-token-delete.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/tokens/map-token-dom-events.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/board-ping/map-board-ping.js"></script>
+    <script defer src="/static/js/map/add-to-scene/map-add-to-scene.js"></script>
+    <script defer src="/static/js/map/layers/map-layer-mode.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/input/map-keyboard-events.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/events/map-realtime-events.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/render-loop/map-render-loop.js"></script>
+    <script defer src="/static/js/map/measures/map-measure-store.js"></script>
+    <script defer src="/static/js/map/measures/map-measure-geometry.js"></script>
+    <script defer src="/static/js/map/measures/map-measure-renderer.js"></script>
+    <script defer src="/static/js/map/measures/map-measure-editors.js"></script>
+    <script defer src="/static/js/map/measures/map-measures.js"></script>
+    <script defer src="/static/js/map/measures/map-measure-controller.js"></script>
+    <script defer src="/static/js/map/map-debug.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/map-controller.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/ui/status-zones.js?v=20260603-effects-board3"></script>
+    <script defer src="/static/js/ui/invitations.js"></script>
+    <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
+    <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
+    <script defer src="/static/js/ui/modals/modal-remote.js?v=20260604-modals-split"></script>
+    <script defer src="/static/js/ui/modals/modal-forms.js?v=20260604-modals-split"></script>
+    <script defer src="/static/js/ui/modals/modal-window-actions.js?v=20260605-detached-remote"></script>
+    <script defer src="/static/js/ui/modals/modal-manager.js?v=20260605-detached-remote"></script>
+    <script defer src="/static/js/ui/modals/modal-drag.js?v=20260604-modals-split"></script>
+    <script defer src="/static/js/ui/modals/modal-api.js?v=20260604-modals-split"></script>
+    <script defer src="/static/js/ui/permissions.js"></script>
+    <script type="application/json" id="gravewright-game-context">{{ game_client_context_json | safe }}</script>
+    <script type="application/json" id="gravewright-module-manifests">{{ module_manifests_json | safe }}</script>
+    <script defer src="/static/js/modules/module-hooks.js?v=20260604-modules"></script>
+    <script defer src="/static/js/modules/module-registry.js?v=20260604-modules"></script>
+    <script defer src="/static/js/modules/public-api.js?v=20260604-modules"></script>
+    <script defer src="/static/js/modules/module-loader.js?v=20260604-modules"></script>
+    <script defer src="/static/js/modules/modules.js?v=20260604-modules"></script>
+    
+    <script defer src="/static/js/chat/chat-renderer.js?v=20260604-chat-split"></script>
+    <script defer src="/static/js/chat/chat-roll-cards.js?v=20260604-chat-split"></script>
+    <script defer src="/static/js/chat/chat-api.js?v=20260604-chat-split"></script>
+    <script defer src="/static/js/chat/chat-commands.js?v=20260604-chat-split"></script>
+    <script defer src="/static/js/chat/chat-controller.js?v=20260604-chat-split"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    
+    <script type="module" src="/static/js/journals/block-editor.js"></script>
+    
+    <script defer src="/static/js/journals/journal-api.js?v=20260604-journals-split"></script>
+    <script defer src="/static/js/journals/journals-tree.js?v=20260604-journals-split"></script>
+    <script defer src="/static/js/journals/journal-editor.js?v=20260604-journals-split"></script>
+    <script defer src="/static/js/journals/journal-preview.js?v=20260604-journals-split"></script>
+    <script defer src="/static/js/journals/journals-panel.js?v=20260604-journals-split"></script>
+    <script defer src="/static/js/journals/journal-modal.js?v=20260604-journal-board-broadcast1"></script>
+    
+    <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-actions.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-controller.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-events.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/combat/combat-api.js?v=20260605-system-api-v1"></script>
+    
+    {% for src in system_scripts %}<script defer src="{{ src }}"></script>
+    {% endfor %}
+    {% for script in module_scripts %}
+    {% if script.type == "module" %}<script type="module" src="{{ script.src }}"></script>{% else %}<script defer src="{{ script.src }}"></script>{% endif %}
+    {% endfor %}
+    
+    <script defer src="/static/js/actors/actors-api.js?v=20260604-actors-split"></script>
+    <script defer src="/static/js/actors/actors-tree.js?v=20260604-actors-split"></script>
+    <script defer src="/static/js/actors/actors-context-actions.js?v=20260604-actors-split"></script>
+    <script defer src="/static/js/actors/actors-drag.js?v=20260604-actors-split"></script>
+    <script defer src="/static/js/actors/actors-panel.js?v=20260604-actors-split"></script>
+    
+    <script defer src="/static/js/sheets/items/item-sheet-renderer.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-controller.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-events.js?v=20260604-sheets-split"></script>
+    
+    <script defer src="/static/js/items/items-api.js?v=20260604-items-split"></script>
+    <script defer src="/static/js/items/items-tree.js?v=20260604-items-split"></script>
+    <script defer src="/static/js/items/items-context-actions.js?v=20260604-items-split"></script>
+    <script defer src="/static/js/items/items-drag.js?v=20260604-items-split"></script>
+    <script defer src="/static/js/items/items-panel.js?v=20260604-items-split"></script>
+    
+    <script defer src="/static/js/content/content-api.js"></script>
+    <script defer src="/static/js/content/content-browser.js"></script>
+    <script defer src="/static/js/content/content-drag.js"></script>
+    
+    <script defer src="/static/js/ui/context-menu/context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/token-context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/measure-context-menu.js?v=20260605-measure-layer-menu"></script>
+    <script defer src="/static/js/ui/context-menu/journal-context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/actor-context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/item-context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/toasts.js"></script>
+    
+    <script defer src="/static/js/fog/fog-state.js?v=20260604-fog-split"></script>
+    <script defer src="/static/js/fog/fog-commands.js?v=20260604-fog-split"></script>
+    <script defer src="/static/js/fog/fog-preview.js?v=20260604-fog-split"></script>
+    <script defer src="/static/js/fog/fog-tools.js?v=20260604-fog-split"></script>
+    <script defer src="/static/js/fog/fog-panel.js?v=20260604-modal-fit2"></script>
+    <script defer src="/static/js/fog/fog-events.js?v=20260604-fog-split"></script>
+    <script defer src="/static/js/fog/fog-controller.js?v=20260604-fog-split"></script>
+    
+    <script defer src="/static/js/combat/combat-panel.js"></script>
+    <script defer src="/static/js/combat/combat-actions.js"></script>
+    <script defer src="/static/js/combat/combat-events.js"></script>
+    <script defer src="/static/js/game/system-onboarding.js?v=20260605-system-onboarding"></script>
+    <script defer src="/static/js/game/streamer-link.js?v=20260607-streamer-mode"></script>
+    <script defer src="/static/js/game/game-bootstrap.js?v=20260604-game-entrypoint"></script>
+    <script defer src="/static/js/game/game-entrypoint.js?v=20260604-game-entrypoint"></script>
+</head>
+
+{% set active_room = rooms|selectattr("id", "equalto", active_room_id)|first if rooms else none %}
+<body data-current-user-id="{{ user.id }}" data-current-member-role="{{ active_room.member_role if active_room else '' }}"
+    data-streamer-mode="{{ 'true' if active_room and active_room.is_streamer else 'false' }}"
+    data-game-layout="{{ game_layout_mode }}" {% if open_modal
+    %}data-open-modal="{{ open_modal }}" {% endif %} {% if detached_modal %}data-detached-modal="{{ detached_modal }}"
+    {% endif %} data-presence-csrf-token="{{ csrf_token() }}"
+    data-presence-online-label="{{ t('game.players.online') }}"
+    data-presence-offline-label="{{ t('game.players.offline') }}" data-invite-success="{{ t('game.invite.success') }}"
+    data-role-gm="{{ t('roles.campaign.gm') }}" data-role-assistant-gm="{{ t('roles.campaign.assistant_gm') }}"
+    data-role-player="{{ t('roles.campaign.player') }}" data-role-streamer="{{ t('roles.campaign.streamer') }}"
+    data-player-ban-label="{{ t('game.players.ban') }}" data-player-ban-confirm="{{ t('game.players.ban_confirm') }}"
+    data-player-ban-success="{{ t('game.players.banned') }}"
+    data-player-ban-error-denied="{{ t('inside.campaigns.errors.gm_required') }}"
+    data-player-ban-error-self="{{ t('game.players.errors.cannot_ban_self') }}"
+    data-player-ban-error-gm="{{ t('game.players.errors.cannot_ban_gm') }}"
+    data-player-ban-error-not-found="{{ t('game.players.errors.not_found') }}"
+    data-player-ban-error-session-expired="{{ t('auth.errors.session_expired') }}"
+    data-invite-error-session-expired="{{ t('auth.errors.session_expired') }}"
+    data-invite-error-invalid-email="{{ t('game.invite.errors.invalid_email') }}"
+    data-invite-error-invalid-role="{{ t('game.invite.errors.invalid_role') }}"
+    data-invite-error-gm-required="{{ t('game.invite.errors.gm_required') }}"
+    data-invite-error-user-not-found="{{ t('game.invite.errors.user_not_found') }}"
+    data-invite-error-already-member="{{ t('game.invite.errors.already_member') }}"
+    data-invite-error-already-pending="{{ t('game.invite.errors.already_pending') }}"
+    data-permissions-updated="{{ t('permissions.updated') }}"
+    data-permissions-error-denied="{{ t('permissions.errors.denied') }}"
+    data-permissions-error-session-expired="{{ t('auth.errors.session_expired') }}"
+    data-permissions-error-not-found="{{ t('inside.campaigns.errors.not_found') }}"
+    data-chat-error-session-expired="{{ t('auth.errors.session_expired') }}"
+    data-chat-error-empty-message="{{ t('game.chat.errors.empty_message') }}"
+    data-chat-error-message-too-long="{{ t('game.chat.errors.message_too_long') }}"
+    data-chat-error-invalid-roll="{{ t('game.chat.errors.invalid_roll') }}"
+    data-chat-error-not-a-member="{{ t('game.chat.errors.not_a_member') }}"
+    data-chat-error-not-found="{{ t('game.chat.errors.not_found') }}"
+    data-chat-error-denied="{{ t('permissions.errors.denied') }}"
+    data-chat-error-invalid-whisper-target="{{ t('game.chat.errors.invalid_whisper_target') }}"
+    data-chat-whisper-to="{{ t('game.chat.whisper_to') }}" data-chat-secret-roll="{{ t('game.chat.secret_roll') }}"
+    data-chat-commands-title="{{ t('game.chat.commands_title') }}"
+    data-chat-cmd-roll="{{ t('game.chat.commands.roll') }}" data-chat-cmd-gmroll="{{ t('game.chat.commands.gmroll') }}"
+    data-chat-cmd-whisper="{{ t('game.chat.commands.whisper') }}" data-chat-cmd-me="{{ t('game.chat.commands.me') }}"
+    data-chat-cmd-gm="{{ t('game.chat.commands.gm') }}"
+    data-chat-delete-message-label="{{ t('game.chat.delete_message') }}"
+    data-chat-delete-all-label="{{ t('game.chat.delete_all') }}"
+    data-chat-delete-all-confirm="{{ t('game.chat.delete_all_confirm') }}"
+    data-scene-request-error="{{ t('game.scenes.ajax_error') }}"
+    data-ctx-journal-open="{{ t('game.journal.ctx.open') }}" data-ctx-journal-owner="{{ t('game.journal.ctx.owner') }}"
+    data-ctx-journal-delete="{{ t('game.journal.ctx.delete') }}"
+    data-ctx-journal-delete-confirm="{{ t('game.journal.ctx.delete_confirm') }}"
+    data-ctx-item-open="{{ t('game.items.ctx.open') }}"
+    data-ctx-item-delete="{{ t('game.items.ctx.delete') }}"
+    data-ctx-item-delete-confirm="{{ t('game.items.ctx.delete_confirm') }}"
+    data-ctx-actor-delete="{{ t('game.actors.ctx.delete') }}"
+    data-ctx-actor-delete-confirm="{{ t('game.actors.ctx.delete_confirm') }}"
+    data-ctx-actor-permissions="{{ t('game.actors.ctx.permissions') }}"
+    data-ctx-actor-owner="{{ t('game.actors.ctx.set_owner') }}"
+    data-ctx-actor-move-to-folder="{{ t('game.actors.ctx.move_to_folder') }}"
+    data-ctx-actor-move-to-root="{{ t('game.actors.ctx.move_to_root') }}"
+    data-ctx-actor-folder-add-to-scene="{{ t('game.actors.folder.add_to_scene') }}"
+    data-ctx-actor-folder-rename="{{ t('game.actors.folder.rename') }}"
+    data-ctx-actor-folder-color="{{ t('game.actors.folder.color') }}"
+    data-ctx-actor-folder-add-subfolder="{{ t('game.actors.folder.add_subfolder') }}"
+    data-ctx-actor-folder-move-root="{{ t('game.actors.folder.move_to_root') }}"
+    data-ctx-actor-folder-delete="{{ t('game.actors.folder.delete') }}"
+    data-ctx-actor-folder-delete-confirm="{{ t('game.actors.folder.delete_confirm') }}"
+    data-ctx-sheet-add-to-scene="{{ t('game.actors.add_to_scene') }}"
+    data-ctx-token-open-sheet="{{ t('game.token.ctx.open_sheet') }}"
+    data-ctx-token-add-combat="{{ t('game.token.ctx.add_combat') }}"
+    data-ctx-token-hide="{{ t('game.token.ctx.hide') }}" data-ctx-token-reveal="{{ t('game.token.ctx.reveal') }}"
+    data-ctx-token-remove="{{ t('game.token.ctx.remove') }}"
+    data-ctx-token-remove-confirm="{{ t('game.token.ctx.remove_confirm') }}"
+    data-toast-add-to-scene="{{ t('game.map.add_to_scene.toast') }}"
+    data-toast-roll-result="{{ t('game.toast.roll_result') }}"
+    data-fog-status-enabled="{{ t('game.fog.status_enabled') }}"
+    data-fog-status-disabled="{{ t('game.fog.status_disabled') }}">
+
+    <div id="ctx-menu" class="ctx-menu" hidden>
+        <div class="ctx-menu-inner"></div>
+    </div>
+
+    <main class="game-page">
+        {% if rooms %}
+        <section class="game-shell">
+            {% for room in rooms %}
+            <input class="room-switch-control" type="radio" name="selected-room" id="room-{{ room.id }}"
+                value="{{ room.id }}" {% if room.id==active_room_id %}checked{% endif %} />
+            {% endfor %}
+
+            <section class="game-board">
+                {% set show_journal_panel = true %}
+                {% set show_library_panel = false %}
+                {% set show_combat_panel = true %}
+                {% for room in rooms %}
+                <article class="room-workspace {% if room.id == active_room_id %}is-active{% endif %}"
+                    data-room-id="{{ room.id }}"
+                    data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') or room.is_streamer else 'false' }}"
+                    data-is-streamer="{{ 'true' if room.is_streamer else 'false' }}"
+                    data-is-readonly="{{ 'true' if room.is_readonly else 'false' }}">
+                    <div class="status-zone status-zone--players" data-status-zone="players"
+                        data-room-id="{{ room.id }}"
+                        data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"
+                        aria-label="Player status zone" aria-live="polite"></div>
+                    <div class="status-zone status-zone--monsters" data-status-zone="monsters"
+                        data-room-id="{{ room.id }}"
+                        data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"
+                        aria-label="Monster status zone" aria-live="polite"></div>
+                    <div class="table-surface" data-map-viewport>
+                        <canvas class="map-canvas" data-map-canvas data-room-id="{{ room.id }}" {% if room.active_scene
+                            %} data-scene-id="{{ room.active_scene['id'] }}"
+                            data-scene-width="{{ room.active_scene['width'] }}"
+                            data-scene-height="{{ room.active_scene['height'] }}"
+                            data-scene-tile-size="{{ room.active_scene['tile_size'] }}"
+                            data-scene-grid-visible="{{ 'true' if room.active_scene['grid_visible'] else 'false' }}"
+                            data-scene-grid-color="{{ room.active_scene['grid_color'] }}"
+                            data-scene-grid-opacity="{{ room.active_scene['grid_opacity'] | default(0.4) }}"
+                            data-scene-image-scale="{{ room.active_scene['image_scale'] | default(1.0) }}"
+                            data-scene-start-world-x="{{ room.active_scene['start_world_x'] | default(room.active_scene['width'] / 2) }}"
+                            data-scene-start-world-y="{{ room.active_scene['start_world_y'] | default(room.active_scene['height'] / 2) }}"
+                            data-scene-start-zoom="{{ room.active_scene['start_zoom'] | default(1.0) }}"
+                            data-scene-layer-id="{{ room.ground_layer_id or '' }}"
+                            data-scene-tile-version="{{ room.active_scene['tile_table_version'] }}"
+                            data-measure-flash-seconds="{{ room.measure_flash_seconds | default(6) }}"
+                            data-area-marker-presets="{{ room.area_marker_presets_json | default('[]') | e }}" {% endif %}
+                            aria-label="{{ t('game.table.eyebrow') }}"></canvas>
+                        {% if not room.active_scene %}
+                        <div class="table-empty" data-map-overlay>
+                            <span class="table-marker"></span>
+
+                            <p class="panel-eyebrow">{{ t("game.table.eyebrow") }}</p>
+
+                            <h1>{{ room.title }}</h1>
+
+                            {% if room.description %}
+                            <p>{{ room.description }}</p>
+                            {% else %}
+                            <p>{{ t("game.table.empty_description") }}</p>
+                            {% endif %}
+
+                            <div class="table-meta">
+                                <span>
+                                    {% if room.active_system %}
+                                    {{ room.active_system.name }}
+                                    {% else %}
+                                    {{ t("inside.campaigns.systemless") }}
+                                    {% endif %}
+                                </span>
+                                <span>{{ t("inside.campaigns.member_role", role=t("roles.campaign." ~ room.member_role))
+                                    }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </section>
+
+            <section class="game-modal-layer" aria-label="Game windows">
+                {% for room in rooms %}
+                <article class="game-modal-window" data-modal-window data-modal-id="permissions-{{ room.id }}"
+                    data-window-key="permissions-{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <h2 class="sr-only">{{ t("permissions.title") }}</h2>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+
+                            </button>
+
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+
+                    <form method="post" action="/campaigns/permissions" class="game-modal-form">
+                        {{ csrf_input | safe }}
+                        <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+
+                        <div class="game-modal-body">
+                            {% if room.permission_settings.can_update_permissions %}
+                            <div class="permission-role-list">
+                                {% for role_state in room.permission_settings.roles %}
+                                <section class="permission-role-card">
+                                    <div class="permission-role-head">
+                                        <h3>{{ t(role_state.label_key) }}</h3>
+
+                                        {% if role_state.locked %}
+                                        <span>{{ t("permissions.locked") }}</span>
+                                        {% else %}
+                                        <span>{{ t("permissions.configurable") }}</span>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if role_state.locked %}
+                                    <p class="permission-note">
+                                        {{ t("permissions.gm_locked_description") }}
+                                    </p>
+                                    {% else %}
+                                    {% for group in room.permission_settings.groups %}
+                                    <details class="permission-group" open>
+                                        <summary>{{ t(group.label_key) }}</summary>
+
+                                        <div class="permission-check-list">
+                                            {% for permission in group.permissions %}
+                                            <div class="permission-check" data-checkbox-row>
+                                                <input type="checkbox" name="permissions__{{ role_state.role }}"
+                                                    value="{{ permission.key }}" {% if permission.key in
+                                                    role_state.allowed_keys %}checked{% endif %} />
+
+                                                <span>
+                                                    <strong>{{ t(permission.title_key) }}</strong>
+                                                    <small>{{ t(permission.description_key) }}</small>
+                                                </span>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </details>
+                                    {% endfor %}
+                                    {% endif %}
+                                </section>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="tool-empty">
+                                <i class="ph ph-lock-key" aria-hidden="true"></i>
+                                <p>{{ t("permissions.no_access") }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if room.permission_settings.can_update_permissions %}
+                        <footer class="game-modal-footer">
+                            <button class="permission-save" type="submit">
+                                <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+                                <span>{{ t("permissions.save") }}</span>
+                            </button>
+                        </footer>
+                        {% endif %}
+                    </form>
+                </article>
+                {% endfor %}
+
+                {% for room in rooms %}
+
+                
+                <article class="game-modal-window game-panel" data-modal-window data-modal-id="panel-chat-{{ room.id }}"
+                    data-window-key="panel-chat-{{ room.id }}" data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.tools.chat") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+
+                            </button>
+
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body game-panel-body--chat">
+                        <div class="chat-messages" id="chat-messages-{{ room.id }}" data-room-id="{{ room.id }}"
+                            data-can-delete-own="{{ 'true' if room.can_delete_chat_own else 'false' }}"
+                            data-can-delete-any="{{ 'true' if room.can_delete_chat_any else 'false' }}"
+                            aria-live="polite" aria-label="{{ t('game.chat.title') }}">
+                            {% for msg in room.recent_messages %}
+                            {% set can_delete_message = room.can_delete_chat_any or (room.can_delete_chat_own and
+                            msg.author_user_id == user.id) %}
+                            {% if msg.kind == "roll" %}
+                            <div class="chat-message chat-message--roll" data-message-id="{{ msg.id }}"
+                                data-author-id="{{ msg.author_user_id }}">
+                                <div class="chat-message-content">
+                                    <span class="chat-author">{{ msg.author_name }}</span>
+                                    <span class="roll-expression">{{ msg.expression }}</span>
+                                    <div class="roll-breakdown">
+                                        {% for g in msg.groups %}
+                                        <span class="roll-group">{{ g.notation }}: [{{ g.results | join(", ") }}]</span>
+                                        {% endfor %}
+                                        {% if msg.modifier and msg.modifier != 0 %}
+                                        <span class="roll-modifier">{% if msg.modifier > 0 %}+{% endif %}{{ msg.modifier
+                                            }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <span class="roll-total">{{ msg.total }}</span>
+                                </div>
+                                {% if can_delete_message %}
+                                <button class="chat-message-delete" type="button" data-chat-delete="{{ msg.id }}"
+                                    aria-label="{{ t('game.chat.delete_message') }}"
+                                    title="{{ t('game.chat.delete_message') }}">
+                                    <i class="ph ph-trash" aria-hidden="true"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% elif msg.kind == "emote" %}
+                            <div class="chat-message chat-message--emote" data-message-id="{{ msg.id }}"
+                                data-author-id="{{ msg.author_user_id }}">
+                                <div class="chat-message-content">
+                                    <span class="chat-emote-text">* {{ msg.author_name }} {{ msg.content }}</span>
+                                </div>
+                                {% if can_delete_message %}
+                                <button class="chat-message-delete" type="button" data-chat-delete="{{ msg.id }}"
+                                    aria-label="{{ t('game.chat.delete_message') }}"
+                                    title="{{ t('game.chat.delete_message') }}">
+                                    <i class="ph ph-trash" aria-hidden="true"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% elif msg.kind == "system" %}
+                            <div class="chat-message chat-message--system" data-message-id="{{ msg.id }}"
+                                data-author-id="{{ msg.author_user_id }}">
+                                <div class="chat-message-content">
+                                    <span class="chat-content">{{ msg.content }}</span>
+                                </div>
+                                {% if can_delete_message %}
+                                <button class="chat-message-delete" type="button" data-chat-delete="{{ msg.id }}"
+                                    aria-label="{{ t('game.chat.delete_message') }}"
+                                    title="{{ t('game.chat.delete_message') }}">
+                                    <i class="ph ph-trash" aria-hidden="true"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="chat-message chat-message--text {% if msg.visibility == 'gm_only' %}chat-message--gm{% endif %}"
+                                data-message-id="{{ msg.id }}" data-author-id="{{ msg.author_user_id }}">
+                                <div class="chat-message-content">
+                                    <span class="chat-author">{{ msg.author_name }}</span>
+                                    <span class="chat-content">{{ msg.content }}</span>
+                                </div>
+                                {% if can_delete_message %}
+                                <button class="chat-message-delete" type="button" data-chat-delete="{{ msg.id }}"
+                                    aria-label="{{ t('game.chat.delete_message') }}"
+                                    title="{{ t('game.chat.delete_message') }}">
+                                    <i class="ph ph-trash" aria-hidden="true"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if not room.is_readonly %}
+                        <form class="chat-form" data-chat-form data-room-id="{{ room.id }}" novalidate>
+                            {{ csrf_input | safe }}
+                            <div class="chat-input-row">
+                                <textarea name="message" class="chat-input"
+                                    placeholder="{{ t('game.chat.placeholder') }}" rows="2" maxlength="2000"></textarea>
+                                <button type="submit" class="chat-send" aria-label="{{ t('game.chat.send') }}">
+                                    <i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>
+                                </button>
+                                {% if room.can_delete_chat_any %}
+                                <button type="button" class="chat-clear" data-chat-clear
+                                    aria-label="{{ t('game.chat.delete_all') }}"
+                                    title="{{ t('game.chat.delete_all') }}">
+                                    <i class="ph ph-trash" aria-hidden="true"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </form>
+                        {% else %}
+                        <div class="streamer-readonly-note">
+                            <i class="ph ph-eye" aria-hidden="true"></i>
+                            <span>{{ t("game.streamer.readonly_note") }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+
+                
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="panel-actors-{{ room.id }}" data-window-key="panel-actors-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.tools.actors") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body actor-panel-body" data-actor-panel data-room-id="{{ room.id }}"
+                        data-members-json="{{ room.members_json }}"
+                        data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"
+                        data-can-table-drop="{{ 'true' if room.member_role in ('gm', 'assistant_gm') or room.is_streamer else 'false' }}">
+                        {% if room.member_role == "gm" %}
+                        <header class="directory-head">
+                            <div class="directory-actions">
+                                {% if room.active_system %}
+                                <button type="button" class="directory-btn"
+                                    data-modal-open="actor-create-{{ room.id }}">
+                                    <i class="ph ph-user-plus" aria-hidden="true"></i>
+                                    <span>{{ t("game.actors.create_actor_title") }}</span>
+                                </button>
+                                {% endif %}
+                                <button type="button" class="directory-btn"
+                                    data-modal-open="actor-folder-create-{{ room.id }}">
+                                    <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                                    <span>{{ t("game.actors.create_folder_title") }}</span>
+                                </button>
+                            </div>
+                        </header>
+                        {% endif %}
+                        <div class="directory-search">
+                            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                            <input type="search" data-actor-search
+                                placeholder="{{ t('game.actors.search_placeholder') }}" />
+                            <button type="button" class="directory-icon-btn" data-actor-collapse-all
+                                title="{{ t('game.actors.collapse_all') }}"
+                                aria-label="{{ t('game.actors.collapse_all') }}">
+                                <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="actor-tree-host" data-actor-tree-host>
+                            {% include "pages/game/_actors_panel.html" %}
+                        </div>
+                    </div>
+                </article>
+
+                
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="panel-items-{{ room.id }}" data-window-key="panel-items-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.items.title") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body item-panel-body" data-item-panel data-room-id="{{ room.id }}"
+                        data-is-gm="{{ 'true' if room.member_role == 'gm' else 'false' }}">
+                        {% if room.member_role == "gm" %}
+                        <header class="directory-head">
+                            <div class="directory-actions">
+                                {% if room.active_system and room.active_system.item_types %}
+                                <button type="button" class="directory-btn" data-modal-open="item-create-{{ room.id }}">
+                                    <i class="ph ph-plus" aria-hidden="true"></i>
+                                    <span>{{ t("game.items.create_item_title") }}</span>
+                                </button>
+                                {% endif %}
+                                <button type="button" class="directory-btn"
+                                    data-modal-open="item-folder-create-{{ room.id }}">
+                                    <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                                    <span>{{ t("game.items.create_folder_title") }}</span>
+                                </button>
+                            </div>
+                        </header>
+                        {% endif %}
+                        <div class="directory-search">
+                            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                            <input type="search" data-item-search
+                                placeholder="{{ t('game.items.search_placeholder') }}" />
+                            <button type="button" class="directory-icon-btn" data-item-collapse-all
+                                title="{{ t('game.actors.collapse_all') }}"
+                                aria-label="{{ t('game.actors.collapse_all') }}">
+                                <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="actor-tree-host" data-item-tree-host>
+                            {% include "pages/game/_items_panel.html" %}
+                        </div>
+                    </div>
+                </article>
+
+                {% if room.member_role == "gm" %}
+                {% if room.active_system and room.active_system.item_types %}
+                
+                <article class="game-modal-window dialog-modal" data-modal-window
+                    data-modal-id="item-create-{{ room.id }}" data-window-key="item-create-{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.items.create_item_title") }}</span>
+                        </div>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                    </header>
+                    <form class="dialog-form" data-item-create-form data-room-id="{{ room.id }}">
+                        <label class="dialog-field">
+                            <span>{{ t("game.items.name_label") }}</span>
+                            <input type="text" data-item-create-name maxlength="120"
+                                placeholder="{{ t('game.items.name_placeholder') }}" autofocus />
+                        </label>
+                        <label class="dialog-field">
+                            <span>{{ t("game.items.type") }}</span>
+                            <select data-item-create-target>
+                                {% for itype in room.active_system.item_types %}
+                                <option value="{{ room.active_system.id }}::{{ itype.id }}">{{ itype.label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <button type="submit" class="dialog-submit">
+                            <i class="ph ph-check" aria-hidden="true"></i>
+                            <span>{{ t("game.items.create_item_title") }}</span>
+                        </button>
+                    </form>
+                </article>
+                {% endif %}
+
+                
+                <article class="game-modal-window dialog-modal" data-modal-window
+                    data-modal-id="item-folder-create-{{ room.id }}" data-window-key="item-folder-create-{{ room.id }}"
+                    hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.items.create_folder_title") }}</span>
+                        </div>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                    </header>
+                    <form class="dialog-form" data-item-folder-create-form data-room-id="{{ room.id }}">
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.folder_name_label") }}</span>
+                            <input type="text" name="name" maxlength="60"
+                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" autofocus />
+                        </label>
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.folder_color_label") }}</span>
+                            <span class="dialog-color-row">
+                                <input type="text" name="color" value="#b9995d" maxlength="9" placeholder="#b9995d"
+                                    data-item-folder-color-text />
+                                <input type="color" value="#b9995d" data-item-folder-color-pick />
+                            </span>
+                        </label>
+                        <button type="submit" class="dialog-submit">
+                            <i class="ph ph-check" aria-hidden="true"></i>
+                            <span>{{ t("game.items.create_folder_title") }}</span>
+                        </button>
+                    </form>
+                </article>
+                {% endif %}
+
+                {% if room.member_role == "gm" %}
+                {% if room.active_system %}
+                
+                <article class="game-modal-window dialog-modal" data-modal-window
+                    data-modal-id="actor-create-{{ room.id }}" data-window-key="actor-create-{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.actors.create_actor_title") }}</span>
+                        </div>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                    </header>
+                    <form class="dialog-form" data-actor-create-form data-room-id="{{ room.id }}">
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.name_label") }}</span>
+                            <input type="text" data-actor-create-name maxlength="120"
+                                placeholder="{{ t('game.actors.name_placeholder') }}" autofocus />
+                        </label>
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.type") }}</span>
+                            <select data-actor-create-target>
+                                {% for sys in room.enabled_systems %}
+                                {% if sys.id == room.active_system.id %}
+                                {% for atype in sys.actor_types %}
+                                <option value="{{ sys.id }}::{{ atype.id }}">{{ atype.label }}</option>
+                                {% endfor %}
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <button type="submit" class="dialog-submit">
+                            <i class="ph ph-check" aria-hidden="true"></i>
+                            <span>{{ t("game.actors.create_actor_title") }}</span>
+                        </button>
+                    </form>
+                </article>
+                {% endif %}
+
+                
+                <article class="game-modal-window dialog-modal" data-modal-window
+                    data-modal-id="actor-folder-create-{{ room.id }}"
+                    data-window-key="actor-folder-create-{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.actors.create_folder_title") }}</span>
+                        </div>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                    </header>
+                    <form class="dialog-form" data-actor-folder-create-form data-room-id="{{ room.id }}">
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.folder_name_label") }}</span>
+                            <input type="text" name="name" maxlength="60"
+                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" autofocus />
+                        </label>
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.folder_color_label") }}</span>
+                            <span class="dialog-color-row">
+                                <input type="text" name="color" value="#b9995d" maxlength="9" placeholder="#b9995d"
+                                    data-actor-folder-color-text />
+                                <input type="color" value="#b9995d" data-actor-folder-color-pick />
+                            </span>
+                        </label>
+                        <button type="submit" class="dialog-submit">
+                            <i class="ph ph-check" aria-hidden="true"></i>
+                            <span>{{ t("game.actors.create_folder_title") }}</span>
+                        </button>
+                    </form>
+                </article>
+                {% endif %}
+
+                {% if room.member_role == "gm" and not room.active_system %}
+                
+                <article class="game-modal-window dialog-modal system-onboarding-modal" data-modal-window
+                    data-modal-id="system-onboarding-{{ room.id }}"
+                    data-window-key="system-onboarding-{{ room.id }}"
+                    data-system-onboarding-modal data-room-id="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.system_onboarding.title") }}</span>
+                        </div>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                    </header>
+                    <form class="dialog-form" method="post" action="/campaigns/set-system"
+                        data-system-onboarding-form>
+                        {{ csrf_input | safe }}
+                        <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                        <p class="dialog-help">{{ t("game.system_onboarding.description") }}</p>
+                        {% if available_systems %}
+                        <label class="dialog-field">
+                            <span>{{ t("game.system_onboarding.system_label") }}</span>
+                            <select name="system_id">
+                                {% for system in available_systems %}
+                                <option value="{{ system.id }}">{{ system.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <button type="submit" class="dialog-submit">
+                            <i class="ph ph-plug" aria-hidden="true"></i>
+                            <span>{{ t("game.system_onboarding.submit") }}</span>
+                        </button>
+                        {% else %}
+                        <p class="dialog-help dialog-help--muted">{{ t("game.system_onboarding.no_systems") }}</p>
+                        {% endif %}
+                    </form>
+                </article>
+                {% endif %}
+
+                {% if room.member_role == "gm" %}
+                
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="panel-content-{{ room.id }}" data-window-key="panel-content-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.tools.content") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body content-panel-body">
+                        <div data-content-browser data-room-id="{{ room.id }}"
+                            data-content-systems="{{ room.enabled_systems | tojson | e }}"
+                            data-empty-text="{{ t('game.actors.no_enabled_system') }}"></div>
+                    </div>
+                </article>
+                {% endif %}
+
+                {% if show_journal_panel %}
+                
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="panel-journal-{{ room.id }}" data-window-key="panel-journal-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.tools.journal") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+
+                            </button>
+
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body journal-panel-body journal-list-area" data-journal-panel
+                        data-room-id="{{ room.id }}" data-is-gm="{{ 'true' if room.member_role == 'gm' else 'false' }}"
+                        data-members-json="{{ room.members_json | e }}">
+                        {% if room.member_role == "gm" %}
+                        <header class="directory-head">
+                            <div class="directory-actions">
+                                <button type="button" class="directory-btn" data-journal-create-open
+                                    data-campaign-id="{{ room.id }}">
+                                    <i class="ph ph-note-pencil" aria-hidden="true"></i>
+                                    <span>{{ t("game.journal.create_entry") }}</span>
+                                </button>
+                                <button type="button" class="directory-btn"
+                                    data-modal-open="journal-folder-create-{{ room.id }}">
+                                    <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                                    <span>{{ t("game.journal.create_folder") }}</span>
+                                </button>
+                            </div>
+                        </header>
+                        {% endif %}
+
+                        <div class="directory-search">
+                            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                            <input type="search" data-journal-search
+                                placeholder="{{ t('game.journal.search_placeholder') }}" />
+                            <button type="button" class="directory-icon-btn" data-journal-collapse-all
+                                title="{{ t('game.actors.collapse_all') }}"
+                                aria-label="{{ t('game.actors.collapse_all') }}">
+                                <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="journal-tree-host" data-journal-tree-host>
+                            {% include "pages/game/_journals_panel.html" %}
+                        </div>
+                    </div>
+                </article>
+
+                {% if room.member_role == "gm" %}
+                
+                <article class="game-modal-window dialog-modal" data-modal-window
+                    data-modal-id="journal-folder-create-{{ room.id }}"
+                    data-window-key="journal-folder-create-{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.journal.create_folder") }}</span>
+                        </div>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                    </header>
+                    <form class="dialog-form" data-journal-folder-create-form data-room-id="{{ room.id }}">
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.folder_name_label") }}</span>
+                            <input type="text" name="name" maxlength="60"
+                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" autofocus />
+                        </label>
+                        <label class="dialog-field">
+                            <span>{{ t("game.actors.folder_color_label") }}</span>
+                            <span class="dialog-color-row">
+                                <input type="text" name="color" value="#b9995d" maxlength="9" placeholder="#b9995d"
+                                    data-journal-folder-color-text />
+                                <input type="color" value="#b9995d" data-journal-folder-color-pick />
+                            </span>
+                        </label>
+                        <button type="submit" class="dialog-submit">
+                            <i class="ph ph-check" aria-hidden="true"></i>
+                            <span>{{ t("game.journal.create_folder") }}</span>
+                        </button>
+                    </form>
+                </article>
+                {% endif %}
+                {% endif %}
+
+                {% if show_library_panel %}
+                
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="panel-library-{{ room.id }}" data-window-key="panel-library-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.tools.library") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+
+                            </button>
+
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body">
+                        <div class="library-actions">
+                            <button type="button">
+                                <i class="ph ph-image-square" aria-hidden="true"></i>
+                                <span>{{ t("game.library.images") }}</span>
+                            </button>
+                            <button type="button">
+                                <i class="ph ph-speaker-high" aria-hidden="true"></i>
+                                <span>{{ t("game.library.audio") }}</span>
+                            </button>
+                        </div>
+                        <div class="tool-empty">
+                            <i class="ph ph-images" aria-hidden="true"></i>
+                            <p>{{ t("game.library.empty") }}</p>
+                        </div>
+                    </div>
+                </article>
+                {% endif %}
+
+                
+                {% if room.member_role == "gm" or room.is_streamer %}
+                <article class="game-modal-window game-panel" data-modal-window data-modal-id="panel-gm-{{ room.id }}"
+                    data-window-key="panel-gm-{{ room.id }}" data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.tools.gm") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+
+                            </button>
+
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body">
+                        <div class="gm-actions">
+                            {% if room.member_role == "gm" %}
+                            <button type="button" data-modal-open="scene-manager-{{ room.id }}"><i
+                                    class="ph ph-map-trifold" aria-hidden="true"></i><span>{{ t("game.gm.scenes")
+                                    }}</span></button>
+                            {% endif %}
+                            <button type="button" data-modal-open="fog-panel-{{ room.id }}"><i class="ph ph-cloud"
+                                    aria-hidden="true"></i><span>{{ t("game.fog.title") }}</span></button>
+                            <button type="button" data-panel-toggle="panel-settings-{{ room.id }}"
+                                aria-pressed="false"><i class="ph ph-users-three" aria-hidden="true"></i><span>{{
+                                    t("game.gm.players") }}</span></button>
+                        </div>
+                    </div>
+                </article>
+                {% endif %}
+
+                {% if room.member_role == "gm" %}
+                <article class="game-modal-window scene-manager-modal" data-modal-window
+                    data-modal-id="scene-manager-{{ room.id }}" data-window-key="scene-manager-{{ room.id }}"
+                    data-auto-fit-width="720" data-auto-fit-min-width="720" data-auto-fit-min-height="620" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.scenes.title") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="game-panel-body scene-manager-body">
+                        {% if scenes_error_key %}
+                        <div class="game-notice game-notice--danger" role="alert" data-auto-dismiss>{{
+                            t(scenes_error_key) }}</div>
+                        {% endif %}
+                        {% if scenes_message_key %}
+                        <div class="game-notice" role="status" data-auto-dismiss>{{ t(scenes_message_key) }}</div>
+                        {% endif %}
+
+                        <div class="scene-tabs" data-scene-tabs>
+                            <input class="scene-tab-radio" type="radio" name="scene-tab-{{ room.id }}"
+                                id="scene-tab-library-{{ room.id }}" checked />
+                            <input class="scene-tab-radio" type="radio" name="scene-tab-{{ room.id }}"
+                                id="scene-tab-upload-{{ room.id }}" />
+                            <div class="scene-tabbar" role="tablist">
+                                <label class="scene-tab" for="scene-tab-library-{{ room.id }}">
+                                    <i class="ph ph-stack" aria-hidden="true"></i><span>{{ t("game.scenes.groups")
+                                        }}</span>
+                                </label>
+                                <label class="scene-tab" for="scene-tab-upload-{{ room.id }}">
+                                    <i class="ph ph-upload-simple" aria-hidden="true"></i><span>{{
+                                        t("game.scenes.upload") }}</span>
+                                </label>
+                            </div>
+                            <section class="scene-manager-section scene-manager-section--upload scene-tab-panel">
+                                <p class="scene-tab-meta">{{ t("game.scenes.upload_meta") }}</p>
+                                <form class="scene-upload-form" method="post" action="/game/scenes/upload-map"
+                                    enctype="multipart/form-data" data-scene-ajax-form data-upload-progress-form>
+                                    {{ csrf_input | safe }}
+                                    <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                                    <input type="hidden" name="upload_id" value="" />
+                                    <div class="scene-two-col">
+                                        <label class="game-field">
+                                            <span>{{ t("game.scenes.scene_name") }}</span>
+                                            <input type="text" name="name" maxlength="120" required />
+                                        </label>
+                                        <label class="game-field">
+                                            <span>{{ t("game.scenes.grid_size") }}</span>
+                                            <input type="number" name="tile_size" min="8" max="1024" value="70"
+                                                required />
+                                        </label>
+                                    </div>
+                                    <label class="game-field scene-file-field">
+                                        <span>{{ t("game.scenes.map_file") }}</span>
+                                        <input type="file" name="map_file" accept="image/png,image/jpeg,image/webp"
+                                            required />
+                                    </label>
+                                    <div class="scene-two-col">
+                                        <label class="game-field">
+                                            <span>{{ t("game.scenes.group") }}</span>
+                                            <select name="group_id">
+                                                <option value="">{{ t("game.scenes.ungrouped") }}</option>
+                                                {% for group in room.scene_groups %}
+                                                <option value="{{ group.id }}">{{ group.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </label>
+                                        <label class="game-field">
+                                            <span>{{ t("game.scenes.visibility") }}</span>
+                                            <select name="visibility">
+                                                <option value="players">{{ t("game.scenes.visibility.players") }}
+                                                </option>
+                                                <option value="gm_only">{{ t("game.scenes.visibility.gm_only") }}
+                                                </option>
+                                                <option value="hidden">{{ t("game.scenes.visibility.hidden") }}</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <div class="scene-grid-row scene-grid-row--boxed">
+                                        <label class="scene-check">
+                                            <input type="checkbox" name="grid_visible" checked />
+                                            <span>{{ t("game.scenes.grid_visible") }}</span>
+                                        </label>
+                                        <label class="scene-color-field">
+                                            <span>{{ t("game.scenes.grid_color") }}</span>
+                                            <input type="color" name="grid_color" value="#6fddb4" />
+                                        </label>
+                                        <label class="scene-opacity-field">
+                                            <span>{{ t("game.scenes.grid_opacity") }}</span>
+                                            <input type="range" name="grid_opacity" min="0" max="1" step="0.05"
+                                                value="0.4" data-grid-opacity-input />
+                                            <output data-grid-opacity-output>0.4</output>
+                                        </label>
+                                    </div>
+                                    <label class="scene-check">
+                                        <input type="checkbox" name="activate_after_upload" checked />
+                                        <span>{{ t("game.scenes.activate_after_upload") }}</span>
+                                    </label>
+                                    <button class="primary-action" type="submit">
+                                        <i class="ph ph-upload-simple" aria-hidden="true"></i>
+                                        <span>{{ t("game.scenes.upload") }}</span>
+                                    </button>
+                                    <div class="scene-upload-progress" data-upload-progress hidden
+                                        data-label-uploading="{{ t('game.maps.progress.uploading') }}"
+                                        data-label-preparing="{{ t('game.maps.progress.preparing') }}"
+                                        data-label-tiling="{{ t('game.maps.progress.tiling') }}"
+                                        data-label-chunking="{{ t('game.maps.progress.chunking') }}"
+                                        data-label-complete="{{ t('game.maps.progress.complete') }}">
+                                        <div class="scene-upload-progress__head">
+                                            <span class="scene-upload-progress__label"
+                                                data-upload-progress-label></span>
+                                            <span class="scene-upload-progress__pct"
+                                                data-upload-progress-pct>0%</span>
+                                        </div>
+                                        <div class="scene-upload-progress__track" role="progressbar"
+                                            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                            <div class="scene-upload-progress__bar"
+                                                data-upload-progress-bar style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </form>
+                            </section>
+
+                            <section class="scene-manager-section scene-manager-section--library scene-tab-panel">
+                                <p class="scene-tab-meta">{{ t("game.scenes.groups_meta") }}</p>
+                                <form class="scene-group-form" method="post" action="/game/scenes/group"
+                                    data-scene-ajax-form>
+                                    {{ csrf_input | safe }}
+                                    <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                                    <div class="scene-group-create-row">
+                                        <input type="text" name="name" placeholder="{{ t('game.scenes.group_name') }}"
+                                            maxlength="80" aria-label="{{ t('game.scenes.group_name') }}" required />
+                                        <input type="color" name="color" value="#8ea8ff"
+                                            aria-label="{{ t('game.scenes.group_color') }}" />
+                                        <button type="submit" class="scene-icon-button"
+                                            title="{{ t('game.scenes.create_group') }}">
+                                            <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="scene-list">
+                                    {% for item in room.scene_groups_with_scenes %}
+                                    <details class="scene-group-block" {% if item.has_active %}open{% endif %}>
+                                        <summary>
+                                            <span class="scene-group-dot"
+                                                data-dot-color="{{ item.group.color }}"></span>
+                                            <strong>{{ item.group.name }}</strong>
+                                            <small>{{ item.scenes|length }}</small>
+                                            <i class="ph ph-caret-down" aria-hidden="true"></i>
+                                        </summary>
+                                        <div class="scene-group-scenes">
+                                            {% for scene in item.scenes %}
+                                            {% include "pages/game/scene_card.html" %}
+                                            {% else %}
+                                            <p class="scene-empty-line">{{ t("game.scenes.no_scenes") }}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </details>
+                                    {% endfor %}
+
+                                    <details class="scene-group-block" {% if room.ungrouped_scenes_has_active %}open{%
+                                        endif %}>
+                                        <summary>
+                                            <span class="scene-group-dot"></span>
+                                            <strong>{{ t("game.scenes.ungrouped") }}</strong>
+                                            <small>{{ room.ungrouped_scenes|length }}</small>
+                                            <i class="ph ph-caret-down" aria-hidden="true"></i>
+                                        </summary>
+                                        <div class="scene-group-scenes">
+                                            {% for scene in room.ungrouped_scenes %}
+                                            {% include "pages/game/scene_card.html" %}
+                                            {% else %}
+                                            <p class="scene-empty-line">{{ t("game.scenes.no_scenes") }}</p>
+                                            {% endfor %}
+                                        </div>
+                                    </details>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </article>
+                {% endif %}
+
+                {% if room.member_role == "gm" or room.is_streamer %}
+                
+                <article class="game-modal-window fog-panel" data-modal-window data-modal-id="fog-panel-{{ room.id }}"
+                    data-window-key="fog-panel-{{ room.id }}" data-auto-fit-width="420" data-auto-fit-min-width="420"
+                    data-auto-fit-min-height="320" data-fog-panel data-room-id="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.fog.title") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+
+                    <div class="game-panel-body fog-panel-body">
+                        <section class="fog-section fog-section--enable" data-fog-enable-section>
+                            <p class="fog-status" data-fog-status>{{ t("game.fog.status_disabled") }}</p>
+                            <div class="fog-enable-controls" data-fog-enable-controls>
+                                <p class="fog-label">{{ t("game.fog.initial_prompt") }}</p>
+                                <div class="fog-button-row">
+                                    <button type="button" class="fog-btn fog-btn--primary" data-fog-enable="hide_all">
+                                        <i class="ph ph-eye-slash" aria-hidden="true"></i>
+                                        <span>{{ t("game.fog.initial_hide_all") }}</span>
+                                    </button>
+                                    <button type="button" class="fog-btn" data-fog-enable="reveal_all">
+                                        <i class="ph ph-eye" aria-hidden="true"></i>
+                                        <span>{{ t("game.fog.initial_reveal_all") }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="fog-btn fog-btn--ghost" data-fog-disable hidden>
+                                <i class="ph ph-power" aria-hidden="true"></i>
+                                <span>{{ t("game.fog.disable") }}</span>
+                            </button>
+                        </section>
+
+                        <section class="fog-section fog-section--tools" data-fog-tools hidden>
+                            <div class="fog-mode-row">
+                                <p class="fog-label">{{ t("game.fog.mode") }}</p>
+                                <div class="fog-button-row">
+                                    <button type="button" class="fog-btn fog-btn--toggle" data-fog-mode="reveal"
+                                        aria-pressed="true">
+                                        <i class="ph ph-eraser" aria-hidden="true"></i>
+                                        <span>{{ t("game.fog.mode_reveal") }}</span>
+                                    </button>
+                                    <button type="button" class="fog-btn fog-btn--toggle" data-fog-mode="hide"
+                                        aria-pressed="false">
+                                        <i class="ph ph-paint-brush" aria-hidden="true"></i>
+                                        <span>{{ t("game.fog.mode_hide") }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="fog-shape-row">
+                                <p class="fog-label">{{ t("game.fog.shape") }}</p>
+                                <div class="fog-button-row">
+                                    <button type="button" class="fog-btn fog-btn--toggle" data-fog-shape="circle"
+                                        aria-pressed="true">
+                                        <i class="ph ph-circle" aria-hidden="true"></i>
+                                        <span>{{ t("game.fog.shape_circle") }}</span>
+                                    </button>
+                                    <button type="button" class="fog-btn fog-btn--toggle" data-fog-shape="square"
+                                        aria-pressed="false">
+                                        <i class="ph ph-square" aria-hidden="true"></i>
+                                        <span>{{ t("game.fog.shape_square") }}</span>
+                                    </button>
+                                    <button type="button" class="fog-btn fog-btn--toggle" data-fog-shape="polygon"
+                                        aria-pressed="false">
+                                        <i class="ph ph-polygon" aria-hidden="true"></i>
+                                        <span>{{ t("game.fog.shape_polygon") }}</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="fog-size-row" data-fog-size-row>
+                                <label class="fog-label" for="fog-size-{{ room.id }}">
+                                    <span>{{ t("game.fog.size") }}</span>
+                                    <output data-fog-size-output>3</output>
+                                </label>
+                                <input id="fog-size-{{ room.id }}" type="range" min="1" max="40" step="1" value="3"
+                                    data-fog-size />
+                                <small class="fog-hint">{{ t("game.fog.size_hint") }}</small>
+                            </div>
+
+                            <div class="fog-opacity-row">
+                                <label class="fog-label" for="fog-opacity-{{ room.id }}">
+                                    <span>{{ t("game.fog.gm_opacity") }}</span>
+                                    <output data-fog-opacity-output>50%</output>
+                                </label>
+                                <input id="fog-opacity-{{ room.id }}" type="range" min="10" max="100" step="5"
+                                    value="50" data-fog-opacity />
+                                <small class="fog-hint">{{ t("game.fog.gm_opacity_hint") }}</small>
+                            </div>
+
+                            <div class="fog-actions">
+                                <button type="button" class="fog-btn" data-fog-reset="hide_all">
+                                    <i class="ph ph-eye-slash" aria-hidden="true"></i>
+                                    <span>{{ t("game.fog.reset_hide_all") }}</span>
+                                </button>
+                                <button type="button" class="fog-btn" data-fog-reset="reveal_all">
+                                    <i class="ph ph-eye" aria-hidden="true"></i>
+                                    <span>{{ t("game.fog.reset_reveal_all") }}</span>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </article>
+                {% endif %}
+
+                {% if show_combat_panel %}
+                
+                <article class="game-modal-window game-panel game-panel--combat" data-modal-window
+                    data-modal-id="panel-combat-{{ room.id }}" data-window-key="panel-combat-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">Combate</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body gw-combat-panel" data-combat-panel data-room-id="{{ room.id }}"
+                        data-csrf="{{ csrf_token() }}"
+                        data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') and not room.is_streamer else 'false' }}">
+                        <section class="gw-combat-panel__state" data-combat-state>
+                            <div class="tool-empty">
+                                <i class="ph ph-sword" aria-hidden="true"></i>
+                                <p>Carregando combate...</p>
+                            </div>
+                        </section>
+                    </div>
+                </article>
+                {% endif %}
+
+                
+                {% if room.can_invite %}
+                <article class="game-modal-window dialog-modal invite-modal" data-modal-window
+                    data-modal-id="invite-{{ room.id }}" data-window-key="invite-{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.invite.title") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-modal-body">
+                        <div id="game-invite-notice" class="game-notice" hidden></div>
+                        <form class="invite-form" method="post" action="/campaigns/invitations">
+                            {{ csrf_input | safe }}
+                            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                            <label class="game-field">
+                                <span>{{ t("game.invite.email") }}</span>
+                                <input type="email" name="email"
+                                    placeholder="{{ t('game.invite.email_placeholder') }}" autocomplete="off"
+                                    required />
+                            </label>
+                            <label class="game-field">
+                                <span>{{ t("game.invite.role") }}</span>
+                                <select name="role" required>
+                                    <option value="player">{{ t("roles.campaign.player") }}</option>
+                                    <option value="assistant_gm">{{ t("roles.campaign.assistant_gm") }}</option>
+                                    <option value="streamer">{{ t("roles.campaign.streamer") }}</option>
+                                </select>
+                            </label>
+                            <button class="invite-submit" type="submit">
+                                <i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>
+                                <span>{{ t("game.invite.submit") }}</span>
+                            </button>
+                        </form>
+                    </div>
+                </article>
+                {% endif %}
+
+                
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="panel-settings-{{ room.id }}" data-window-key="panel-settings-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.tools.settings") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+
+                            </button>
+
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body settings-panel-body">
+                        {% if permissions_error_key %}
+                        <div class="game-notice game-notice--danger" role="alert">{{ t(permissions_error_key) }}</div>
+                        {% endif %}
+                        {% if permissions_message_key %}
+                        <div class="game-notice" role="status">{{ t(permissions_message_key) }}</div>
+                        {% endif %}
+                        {% if system_error_key %}
+                        <div class="game-notice game-notice--danger" role="alert" data-auto-dismiss>{{
+                            t(system_error_key) }}</div>
+                        {% endif %}
+                        {% if system_message_key %}
+                        <div class="game-notice" role="status" data-auto-dismiss>{{ t(system_message_key) }}</div>
+                        {% endif %}
+                        {% if invite_error_key %}
+                        <div class="game-notice game-notice--danger" role="alert">{{ t(invite_error_key) }}</div>
+                        {% endif %}
+                        {% if invite_message_key %}
+                        <div class="game-notice" role="status">{{ t(invite_message_key) }}</div>
+                        {% endif %}
+
+
+                        <section class="settings-layout-section">
+                            <p class="sidebar-section-title">{{ t("game.settings.layout_mode") }}</p>
+                            <div class="settings-layout-mode" role="group"
+                                aria-label="{{ t('game.settings.layout_mode') }}">
+                                <button class="layout-mode-btn" type="button" data-layout-mode="gravewright">
+                                    <i class="ph ph-dots-nine" aria-hidden="true"></i>
+                                    <span>{{ t("game.settings.gravewright_mode") }}</span>
+                                </button>
+                                <button class="layout-mode-btn" type="button" data-layout-mode="classic">
+                                    <i class="ph ph-sidebar-simple" aria-hidden="true"></i>
+                                    <span>{{ t("game.settings.classic_mode") }}</span>
+                                </button>
+                            </div>
+                        </section>
+
+
+                        <section class="settings-section">
+                            <p class="sidebar-section-title">{{ t("game.about.fields.system") }}</p>
+                            <p class="settings-system-name">{% if room.active_system %}{{ room.active_system.name }}{% else %}{{
+                                t("inside.campaigns.systemless") }}{% endif %}</p>
+                            {% if room.member_role == "gm" %}
+                            <form method="post" action="/campaigns/set-system" class="system-inline-form">
+                                {{ csrf_input | safe }}
+                                <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                                <select name="system_id" class="system-select">
+                                    <option value="">{{ t("inside.campaigns.systemless") }}</option>
+                                    {% for system in available_systems %}
+                                    <option value="{{ system.id }}" {% if room.active_system and
+                                        room.active_system.id==system.id %}selected{% endif %}>
+                                        {{ system.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <button class="secondary-action" type="submit">{{ t("inside.campaigns.set_system")
+                                    }}</button>
+                            </form>
+                            {% endif %}
+                        </section>
+
+
+                        <section class="players-section">
+                            <p class="sidebar-section-title">{{ t("game.settings.connected_players") }}</p>
+                            <div class="player-list" data-player-list data-room-id="{{ room.id }}"
+                                data-can-ban="{{ 'true' if room.member_role == 'gm' else 'false' }}">
+                                {% for member in room.members %}
+                                <article class="player-card" data-room-id="{{ room.id }}"
+                                    data-player-id="{{ member.user_id }}">
+                                    <div class="player-main">
+                                        <div class="player-name-row">
+                                            <span
+                                                class="status-dot {% if member.is_online %}status-dot--online{% else %}status-dot--offline{% endif %}"
+                                                aria-hidden="true"></span>
+                                            <strong>{{ member.name }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="player-side">
+                                        <small class="player-status-text">{% if member.is_online %}{{
+                                            t("game.players.online") }}{% else %}{{ t("game.players.offline") }}{%
+                                            endif %}</small>
+                                        <em>{{ t("roles.campaign." ~ member.role) }}</em>
+                                        {% if room.member_role == "gm" and member.role != "gm" and member.user_id !=
+                                        user.id %}
+                                        <form class="player-ban-form" method="post" action="/game/member/ban">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                                            <input type="hidden" name="user_id" value="{{ member.user_id }}" />
+                                            <button class="player-ban-button" type="submit"
+                                                title="{{ t('game.players.ban') }}"
+                                                aria-label="{{ t('game.players.ban') }}">
+                                                <i class="ph ph-user-minus" aria-hidden="true"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </article>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+
+                        <div class="settings-room-list">
+                            {% if room.can_invite %}
+                            <button class="settings-open-modal" type="button" data-modal-open="invite-{{ room.id }}">
+                                <i class="ph ph-user-plus" aria-hidden="true"></i>
+                                <span>{{ t("game.invite.title") }}</span>
+                            </button>
+                            {% endif %}
+                            {% if room.permission_settings.can_view %}
+                            <button class="settings-open-modal" type="button"
+                                data-modal-open="permissions-{{ room.id }}">
+                                <i class="ph ph-shield-check" aria-hidden="true"></i>
+                                <span>{{ t("permissions.title") }}</span>
+                            </button>
+                            {% endif %}
+                            {% if room.can_invite %}
+                            <button class="settings-open-modal" type="button"
+                                data-modal-open="streamer-link-{{ room.id }}">
+                                <i class="ph ph-broadcast" aria-hidden="true"></i>
+                                <span>{{ t("game.streamer.title") }}</span>
+                            </button>
+                            {% endif %}
+                        </div>
+
+
+                        {% if not room.is_streamer %}
+                        <footer class="settings-bottom-actions settings-bottom-actions--classic">
+                            <a class="settings-exit" href="/inside">
+                                <i class="ph ph-sign-out" aria-hidden="true"></i>
+                                <span>{{ t("game.back_to_inside") }}</span>
+                            </a>
+                        </footer>
+                        {% endif %}
+                    </div>
+                </article>
+
+                
+                {% if room.can_invite %}
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="streamer-link-{{ room.id }}" data-window-key="streamer-link-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.streamer.title") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body streamer-link-body" data-streamer-link data-room-id="{{ room.id }}"
+                        data-expiry-template="{{ t('game.streamer.expires_at') }}"
+                        data-copied-label="{{ t('game.streamer.copied') }}"
+                        data-error-generic="{{ t('game.streamer.errors.generic') }}">
+                        <p class="streamer-link-help">{{ t("game.streamer.help") }}</p>
+
+                        <div class="streamer-link-result" data-streamer-result hidden>
+                            <label class="game-field">
+                                <span>{{ t("game.streamer.link_label") }}</span>
+                                <input type="text" class="streamer-link-input" data-streamer-url readonly
+                                    aria-label="{{ t('game.streamer.link_label') }}" />
+                            </label>
+                            <p class="streamer-link-expiry" data-streamer-expiry></p>
+                            <div class="streamer-link-actions">
+                                <button class="invite-submit" type="button" data-streamer-copy>
+                                    <i class="ph ph-copy" aria-hidden="true"></i>
+                                    <span>{{ t("game.streamer.copy") }}</span>
+                                </button>
+                                <button class="secondary-action" type="button" data-streamer-revoke>
+                                    <i class="ph ph-prohibit" aria-hidden="true"></i>
+                                    <span>{{ t("game.streamer.revoke") }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="invite-submit" type="button" data-streamer-generate>
+                            <i class="ph ph-broadcast" aria-hidden="true"></i>
+                            <span data-streamer-generate-label>{{ t("game.streamer.generate") }}</span>
+                        </button>
+
+                        <div class="game-notice game-notice--danger" role="alert" data-streamer-error hidden></div>
+                    </div>
+                </article>
+                {% endif %}
+
+                {% endfor %}
+
+                <nav class="game-modal-dock" aria-label="Minimized windows">
+                    {% for room in rooms %}
+                    <button type="button" class="game-dock-item" data-modal-restore="permissions-{{ room.id }}" hidden>
+                        <i class="ph ph-shield-check" aria-hidden="true"></i>
+                        <span>{{ t("permissions.title") }}</span>
+                    </button>
+                    {% endfor %}
+                </nav>
+            </section>
+
+            {% set show_rc2_tool_dock = true %}
+            {% if show_rc2_tool_dock %}
+            {% for room in rooms %}
+            <aside class="tool-dock" data-tool-dock data-dock-room="{{ room.id }}" {% if room.id !=active_room_id
+                %}hidden{% endif %} aria-label="{{ t('game.tool_dock.title') }}">
+                <button class="tool-dock-toggle" data-tool-dock-toggle aria-label="{{ t('game.tool_dock.collapse') }}">
+                    <i class="ph ph-caret-left" aria-hidden="true"></i>
+                </button>
+                <div class="tool-dock-body">
+                    <div class="tool-dock-group">
+                        <button class="tool-dock-btn" data-tool="select" aria-pressed="false"
+                            data-tooltip="{{ t('game.tool_dock.select') }}">
+                            <i class="ph ph-cursor" aria-hidden="true"></i>
+                        </button>
+                        <button class="tool-dock-btn" data-tool="ruler" aria-pressed="false"
+                            data-tooltip="{{ t('game.tool_dock.ruler') }}">
+                            <i class="ph ph-ruler" aria-hidden="true"></i>
+                        </button>
+                        {% if not room.is_streamer %}
+                        <button class="tool-dock-btn" data-tool="hp" aria-pressed="false"
+                            data-tooltip="{{ t('game.tool_dock.hp') }}">
+                            <i class="ph ph-heartbeat" aria-hidden="true"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+                    <div class="tool-dock-sep"></div>
+                    <div class="tool-dock-group">
+                        <button class="tool-dock-btn" data-tool="draw" aria-pressed="false"
+                            data-tooltip="{{ t('game.tool_dock.draw') }}">
+                            <i class="ph ph-pencil-simple" aria-hidden="true"></i>
+                        </button>
+                        <button class="tool-dock-btn" data-tool="shape" aria-pressed="false"
+                            data-tooltip="{{ t('game.tool_dock.shape') }}">
+                            <i class="ph ph-shapes" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
+                    <div class="tool-dock-sep"></div>
+                    <div class="tool-dock-group">
+                        <button class="tool-dock-btn" data-vision-toggle aria-pressed="false"
+                            data-tooltip="{{ t('game.tool_dock.vision') }}"
+                            data-player-view-banner="{{ t('game.tool_dock.vision.player_view_indicator') }}">
+                            <i class="ph ph-eye" aria-hidden="true"></i>
+                        </button>
+                        <button class="tool-dock-btn" data-layers-toggle aria-pressed="false"
+                            data-tooltip="{{ t('game.tool_dock.layers') }}">
+                            <i class="ph ph-stack" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            </aside>
+            {% endfor %}
+
+            <div class="tool-sub-panel" data-tool-sub-panel="draw"
+                data-text-placeholder="{{ t('game.tool_dock.draw.text_placeholder') }}" hidden>
+                <button class="tool-sub-btn" data-subtool="select" aria-pressed="false">
+                    <i class="ph ph-cursor" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.draw.select') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="brush" aria-pressed="true">
+                    <i class="ph ph-pencil-simple" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.draw.brush') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="text" aria-pressed="false">
+                    <i class="ph ph-text-t" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.draw.text') }}</span>
+                </button>
+                <div class="tool-sub-sep"></div>
+                <div class="tool-sub-heading">{{ t('game.tool_dock.draw.colors') }}</div>
+                <div class="tool-color-grid" role="group" aria-label="{{ t('game.tool_dock.draw.colors') }}">
+                    <button class="tool-color-btn" type="button" data-draw-color="#f8fafc" aria-pressed="true"
+                        aria-label="{{ t('game.tool_dock.draw.white') }}">
+                        <span style="background:#f8fafc"></span>
+                    </button>
+                    <button class="tool-color-btn" type="button" data-draw-color="#facc15" aria-pressed="false"
+                        aria-label="{{ t('game.tool_dock.draw.yellow') }}">
+                        <span style="background:#facc15"></span>
+                    </button>
+                    <button class="tool-color-btn" type="button" data-draw-color="#fb7185" aria-pressed="false"
+                        aria-label="{{ t('game.tool_dock.draw.red') }}">
+                        <span style="background:#fb7185"></span>
+                    </button>
+                    <button class="tool-color-btn" type="button" data-draw-color="#60a5fa" aria-pressed="false"
+                        aria-label="{{ t('game.tool_dock.draw.blue') }}">
+                        <span style="background:#60a5fa"></span>
+                    </button>
+                    <button class="tool-color-btn" type="button" data-draw-color="#34d399" aria-pressed="false"
+                        aria-label="{{ t('game.tool_dock.draw.green') }}">
+                        <span style="background:#34d399"></span>
+                    </button>
+                    <button class="tool-color-btn" type="button" data-draw-color="#c084fc" aria-pressed="false"
+                        aria-label="{{ t('game.tool_dock.draw.purple') }}">
+                        <span style="background:#c084fc"></span>
+                    </button>
+                </div>
+                <div class="tool-sub-sep" data-gm-only hidden></div>
+                <div class="tool-sub-heading" data-gm-only hidden>{{ t('game.tool_dock.layers.move') }}</div>
+                <button class="tool-sub-btn" data-gm-only hidden data-move-layer="game">
+                    <i class="ph ph-game-controller" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.game') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-gm-only hidden data-move-layer="gm">
+                    <i class="ph ph-eye-slash" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.gm') }}</span>
+                </button>
+                <div class="tool-sub-sep"></div>
+                <button class="tool-sub-btn tool-sub-btn--clear" data-tool-clear>
+                    <i class="ph ph-trash" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.clear') }}</span>
+                </button>
+            </div>
+
+
+            <div class="tool-sub-panel" data-tool-sub-panel="hp" hidden>
+                <div class="tool-sub-head">
+                    <i class="ph ph-heartbeat" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.hp') }}</span>
+                </div>
+                <div class="tool-sub-heading">{{ t('game.tool_dock.hp.mode') }}</div>
+                <button class="tool-sub-btn" data-subtool="damage" aria-pressed="true">
+                    <i class="ph ph-minus-circle" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.hp.damage') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="heal" aria-pressed="false">
+                    <i class="ph ph-plus-circle" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.hp.heal') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="set" aria-pressed="false">
+                    <i class="ph ph-equals" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.hp.set') }}</span>
+                </button>
+                <div class="tool-sub-sep"></div>
+                <label class="tool-field-label">
+                    <span>{{ t('game.tool_dock.hp.amount') }}</span>
+                    <input class="tool-field-input" type="number" min="0" step="1" value="1" data-hp-amount>
+                </label>
+                <p class="tool-sub-help">{{ t('game.tool_dock.hp.help') }}</p>
+            </div>
+
+            <div class="tool-sub-panel" data-tool-sub-panel="ruler" hidden>
+                <button class="tool-sub-btn" data-subtool="line" aria-pressed="false">
+                    <i class="ph ph-minus" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.measure.line') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="circle" aria-pressed="false">
+                    <i class="ph ph-circle" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.measure.circle') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="square" aria-pressed="false">
+                    <i class="ph ph-square" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.measure.square') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="cone" aria-pressed="false">
+                    <i class="ph ph-triangle" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.measure.cone') }}</span>
+                </button>
+                <div class="tool-sub-sep"></div>
+                <button class="tool-sub-btn tool-sub-btn--clear" data-tool-clear>
+                    <i class="ph ph-trash" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.clear') }}</span>
+                </button>
+            </div>
+
+            <div class="tool-sub-panel" data-tool-sub-panel="shape"
+                data-text-placeholder="{{ t('game.tool_dock.shape.text_placeholder') }}" hidden>
+                <div class="tool-sub-head">
+                    <i class="ph ph-shapes" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.shape') }}</span>
+                </div>
+                <button class="tool-sub-btn" data-subtool="select" aria-pressed="false">
+                    <i class="ph ph-cursor" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.shape.select') }}</span>
+                </button>
+                <div class="tool-sub-sep"></div>
+                <div class="tool-sub-heading" data-area-marker-presets-heading hidden>
+                    {{ t('game.tool_dock.shape.presets') }}
+                </div>
+                <div class="tool-sub-dynamic" data-area-marker-presets-list hidden></div>
+                <div class="tool-sub-sep" data-gm-only hidden></div>
+                <div class="tool-sub-heading" data-gm-only hidden>{{ t('game.tool_dock.layers.move') }}</div>
+                <button class="tool-sub-btn" data-gm-only hidden data-move-layer="game">
+                    <i class="ph ph-game-controller" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.game') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-gm-only hidden data-move-layer="gm">
+                    <i class="ph ph-eye-slash" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.gm') }}</span>
+                </button>
+                <div class="tool-sub-sep"></div>
+                <button class="tool-sub-btn tool-sub-btn--clear" data-tool-clear>
+                    <i class="ph ph-trash" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.clear') }}</span>
+                </button>
+            </div>
+
+            <div class="tool-sub-panel" data-tool-sub-panel="layers"
+                data-gm-layer-banner="{{ t('game.tool_dock.layers.gm_indicator') }}" hidden>
+                <div class="tool-sub-head">
+                    <i class="ph ph-stack" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers') }}</span>
+                </div>
+                <div class="tool-sub-heading">{{ t('game.tool_dock.layers.active') }}</div>
+                <button class="tool-sub-btn" data-active-layer="game" aria-pressed="true">
+                    <i class="ph ph-game-controller" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.game') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-active-layer="gm" aria-pressed="false">
+                    <i class="ph ph-eye-slash" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.gm') }}</span>
+                </button>
+                <div class="tool-sub-sep"></div>
+                <div class="tool-sub-heading">{{ t('game.tool_dock.layers.move') }}</div>
+                <button class="tool-sub-btn" data-move-layer="game">
+                    <i class="ph ph-arrow-line-down" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.game') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-move-layer="gm">
+                    <i class="ph ph-arrow-line-up" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.gm') }}</span>
+                </button>
+            </div>
+            {% endif %}
+
+            <nav class="game-dock" aria-label="{{ t('game.tools.title') }}">
+                {% for room in rooms %}
+                <div class="game-dock-group" data-dock-room="{{ room.id }}" {% if room.id !=active_room_id %}hidden{%
+                    endif %}>
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-chat-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.chat') }}"
+                        title="{{ t('game.tools.chat') }}">
+                        <i class="ph ph-chat-circle-text" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.chat") }}</span>
+                    </button>
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-actors-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.actors') }}"
+                        title="{{ t('game.tools.actors') }}">
+                        <i class="ph ph-user-circle-gear" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.actors") }}</span>
+                    </button>
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-items-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.items') }}"
+                        title="{{ t('game.tools.items') }}">
+                        <i class="ph ph-package" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.items") }}</span>
+                    </button>
+                    {% if show_journal_panel %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-journal-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.journal') }}"
+                        title="{{ t('game.tools.journal') }}">
+                        <i class="ph ph-book-open-text" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.journal") }}</span>
+                    </button>
+                    {% endif %}
+                    {% if show_library_panel %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-library-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.library') }}"
+                        title="{{ t('game.tools.library') }}">
+                        <i class="ph ph-images" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.library") }}</span>
+                    </button>
+                    {% endif %}
+                    {% if room.member_role == "gm" or room.is_streamer %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-gm-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.gm') }}"
+                        title="{{ t('game.tools.gm') }}">
+                        <i class="ph ph-crown" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.gm") }}</span>
+                    </button>
+                    {% endif %}
+                    {% if show_combat_panel %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-combat-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.combat') }}"
+                        title="{{ t('game.tools.combat') }}">
+                        <i class="ph ph-sword" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.combat") }}</span>
+                    </button>
+                    {% endif %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-settings-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.settings') }}"
+                        title="{{ t('game.tools.settings') }}">
+                        <i class="ph ph-gear-six" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.settings") }}</span>
+                    </button>
+                </div>
+                {% endfor %}
+                {% if not active_room or not active_room.is_streamer %}
+                <div class="game-dock-sep" aria-hidden="true"></div>
+                <a class="game-dock-btn game-dock-btn--exit" href="/inside"
+                    data-tooltip="{{ t('game.back_to_inside') }}" title="{{ t('game.back_to_inside') }}">
+                    <i class="ph ph-sign-out" aria-hidden="true"></i>
+                    <span class="sr-only">{{ t("game.back_to_inside") }}</span>
+                </a>
+                {% endif %}
+            </nav>
+        </section>
+        {% else %}
+        <section class="game-empty-page">
+            <div class="game-empty-panel">
+                <span class="table-marker"></span>
+
+                <p class="panel-eyebrow">{{ app_name }}</p>
+
+                <h1>{{ t("game.empty.title") }}</h1>
+
+                <p>{{ t("game.empty.description") }}</p>
+
+                <a class="inside-action" href="/inside">
+                    <i class="ph ph-arrow-left" aria-hidden="true"></i>
+                    <span>{{ t("game.empty.action") }}</span>
+                </a>
+            </div>
+        </section>
+        {% endif %}
+    </main>
+</body>
+
+</html>

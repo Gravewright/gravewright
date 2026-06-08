@@ -1,0 +1,885 @@
+<!doctype html>
+<html lang="{{ locale }}">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>{{ app_name }} - Inside</title>
+
+    <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="/static/css/inside.css" />
+    <script defer src="/static/js/csrf.js"></script>
+    <script defer src="/static/js/inside/inside-invitations.js?v=20260525-no-polling"></script>
+    <script defer src="/static/js/inside/inside-admin.js"></script>
+    <script defer src="/static/js/inside/inside-ajax.js?v=20260607-inside-ajax"></script>
+</head>
+
+<body data-csrf-token="{{ csrf_token() }}" data-invitation-accepted="{{ t('inside.invitations.accepted') }}"
+    data-invitation-declined="{{ t('inside.invitations.declined') }}"
+    data-invitation-error-session-expired="{{ t('auth.errors.session_expired') }}"
+    data-invitation-error-not-found="{{ t('inside.invitations.errors.not_found') }}"
+    data-invitation-error-not-pending="{{ t('inside.invitations.errors.not_pending') }}"
+    data-invitation-invited-by-template="{{ t('inside.invitations.invited_by', name='{name}') }}"
+    data-invitation-role-template="{{ t('inside.invitations.role', role='{role}') }}"
+    data-invitation-accept-label="{{ t('inside.invitations.accept') }}"
+    data-invitation-decline-label="{{ t('inside.invitations.decline') }}"
+    data-campaign-open-label="{{ t('inside.campaigns.open') }}"
+    data-campaign-systemless-label="{{ t('inside.campaigns.systemless') }}"
+    data-campaign-member-role-template="{{ t('inside.campaigns.member_role', role='{role}') }}"
+    data-role-gm="{{ t('roles.campaign.gm') }}" data-role-assistant-gm="{{ t('roles.campaign.assistant_gm') }}"
+    data-role-player="{{ t('roles.campaign.player') }}" data-role-streamer="{{ t('roles.campaign.streamer') }}">
+    <main class="inside-page">
+        <section class="inside-content">
+            <input class="nav-control" type="radio" name="inside-section" id="section-campaigns" checked />
+            <input class="nav-control" type="radio" name="inside-section" id="section-systems" />
+            <input class="nav-control" type="radio" name="inside-section" id="section-modules" />
+
+            {% if user.is_owner %}
+            <input class="nav-control" type="radio" name="inside-section" id="section-settings" />
+            <input class="nav-control" type="radio" name="inside-section" id="section-privacy" />
+            {% endif %}
+
+            <div class="editor-area">
+                <article class="editor-panel editor-panel--campaigns">
+                    <div class="editor-panel-inner">
+                        <section class="section-head">
+                            <p class="panel-eyebrow">{{ t("inside.tabs.campaigns") }}</p>
+                            <p class="panel-description">{{ t("inside.campaigns.description") }}</p>
+                        </section>
+
+                        {% if campaign_error_key %}
+                        <div class="notice notice--danger" role="alert">
+                            {{ t(campaign_error_key) }}
+                        </div>
+                        {% endif %}
+
+                        {% if campaign_message_key %}
+                        <div class="notice" role="status">
+                            {{ t(campaign_message_key) }}
+                        </div>
+                        {% endif %}
+
+                        <div id="inside-invitation-notice" class="notice" hidden></div>
+
+                        {% if invitation_error_key %}
+                        <div class="notice notice--danger" role="alert">
+                            {{ t(invitation_error_key) }}
+                        </div>
+                        {% endif %}
+
+                        {% if invitation_message_key %}
+                        <div class="notice" role="status">
+                            {{ t(invitation_message_key) }}
+                        </div>
+                        {% endif %}
+
+                        <section id="pending-invitations-section" class="invitation-block" {% if not pending_invitations
+                            %}hidden{% endif %}>
+                            <div class="invitation-block-head">
+                                <p class="panel-eyebrow">{{ t("inside.invitations.title") }}</p>
+                                <p>{{ t("inside.invitations.description") }}</p>
+                            </div>
+
+                            <div id="pending-invitations-list" class="invitation-list">
+                                {% for invitation in pending_invitations %}
+                                <article class="invitation-card" data-invitation-id="{{ invitation.id }}">
+                                    <div class="invitation-main">
+                                        <h2>{{ invitation.campaign_title }}</h2>
+
+                                        {% if invitation.campaign_description %}
+                                        <p>{{ invitation.campaign_description }}</p>
+                                        {% endif %}
+
+                                        <div class="campaign-meta">
+                                            <span>{{ t("inside.invitations.invited_by", name=invitation.invited_by_name)
+                                                }}</span>
+                                            <span>{{ t("inside.invitations.role", role=t("roles.campaign." ~
+                                                invitation.role)) }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="invitation-actions">
+                                        <form class="invitation-accept-form" method="post"
+                                            action="/campaigns/invitations/accept">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="invitation_id" value="{{ invitation.id }}" />
+
+                                            <button class="primary-action" type="submit">
+                                                {{ t("inside.invitations.accept") }}
+                                            </button>
+                                        </form>
+
+                                        <form class="invitation-decline-form" method="post"
+                                            action="/campaigns/invitations/decline">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="invitation_id" value="{{ invitation.id }}" />
+
+                                            <button class="secondary-action" type="submit">
+                                                {{ t("inside.invitations.decline") }}
+                                            </button>
+                                        </form>
+                                    </div>
+                                </article>
+                                {% endfor %}
+                            </div>
+                        </section>
+
+                        <section class="campaign-layout">
+                            <form class="campaign-create" method="post" action="/campaigns">
+                                {{ csrf_input | safe }}
+
+                                <label class="field">
+                                    <span>{{ t("inside.campaigns.form.title") }}</span>
+                                    <input type="text" name="title"
+                                        placeholder="{{ t('inside.campaigns.form.title_placeholder') }}" maxlength="120"
+                                        required />
+                                </label>
+
+                                <label class="field">
+                                    <span>{{ t("inside.campaigns.form.description") }}</span>
+                                    <textarea name="description"
+                                        placeholder="{{ t('inside.campaigns.form.description_placeholder') }}"
+                                        maxlength="2000"></textarea>
+                                </label>
+
+                                <button class="primary-action" type="submit">
+                                    {{ t("inside.campaigns.form.submit") }}
+                                </button>
+                            </form>
+
+                            {% if campaigns %}
+                            <div class="campaign-list">
+                                {% for campaign in campaigns %}
+                                <article class="campaign-card" data-campaign-id="{{ campaign.id }}">
+                                    <div class="campaign-card-main">
+                                        <div class="campaign-title-row">
+                                            <div>
+                                                <h2>{{ campaign.title }}</h2>
+
+                                                {% if campaign.description %}
+                                                <p>{{ campaign.description }}</p>
+                                                {% endif %}
+                                            </div>
+
+                                            <a class="secondary-action" href="/game?room={{ campaign.id }}">
+                                                {{ t("inside.campaigns.open") }}
+                                            </a>
+                                        </div>
+
+                                        <div class="campaign-meta">
+                                            {% if campaign.active_system_name %}
+                                            <span>{{ t("inside.campaigns.active_system", name=campaign.active_system_name) }}</span>
+                                            {% else %}
+                                            <span>{{ t("inside.campaigns.systemless") }}</span>
+                                            {% endif %}
+                                            {% if campaign.member_role %}
+                                            <span>{{ t("inside.campaigns.member_role", role=t("roles.campaign." ~
+                                                campaign.member_role)) }}</span>
+                                            {% endif %}
+                                        </div>
+
+                                        {% if campaign.member_role == "gm" or user.is_owner %}
+                                        <div class="campaign-card-footer">
+                                            {% if campaign.member_role == "gm" %}
+                                            <details class="campaign-details">
+                                                <summary>{{ t("inside.campaigns.edit") }}</summary>
+
+                                                <form class="campaign-edit-form" method="post"
+                                                    action="/campaigns/update">
+                                                    {{ csrf_input | safe }}
+                                                    <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+
+                                                    <label class="field">
+                                                        <span>{{ t("inside.campaigns.form.title") }}</span>
+                                                        <input type="text" name="title" value="{{ campaign.title }}"
+                                                            maxlength="120" required />
+                                                    </label>
+
+                                                    <label class="field">
+                                                        <span>{{ t("inside.campaigns.form.description") }}</span>
+                                                        <textarea name="description"
+                                                            maxlength="2000">{{ campaign.description }}</textarea>
+                                                    </label>
+
+                                                    <button class="primary-action" type="submit">
+                                                        {{ t("inside.campaigns.save") }}
+                                                    </button>
+                                                </form>
+                                            </details>
+                                            {% endif %}
+
+                                            <form class="campaign-delete-form" method="post"
+                                                action="/campaigns/request-delete">
+                                                {{ csrf_input | safe }}
+                                                <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                <button class="campaign-delete-link" type="submit">
+                                                    {{ t("inside.campaigns.delete") }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </article>
+
+                                {% if pending_delete_campaign_id == campaign.id and removal_code %}
+                                <div class="modal-backdrop" role="presentation">
+                                    <section class="delete-modal" role="dialog" aria-modal="true"
+                                        aria-labelledby="delete-campaign-title">
+                                        <div class="delete-modal-header">
+                                            <div>
+                                                <p class="panel-eyebrow">{{ t("inside.campaigns.delete") }}</p>
+                                                <h2 id="delete-campaign-title">{{ campaign.title }}</h2>
+                                            </div>
+
+                                            <a class="modal-close" href="/inside"
+                                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                                ×
+                                            </a>
+                                        </div>
+
+                                        <p class="delete-modal-copy">
+                                            {{ t("inside.campaigns.delete_modal.description") }}
+                                        </p>
+
+                                        <div class="removal-code-box">
+                                            <span>{{ t("inside.campaigns.delete_code.label") }}</span>
+                                            <strong>{{ removal_code }}</strong>
+                                        </div>
+
+                                        <form class="delete-form" method="post" action="/campaigns/delete">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+
+                                            <label class="field">
+                                                <span>{{ t("inside.campaigns.removal_code") }}</span>
+                                                <input type="text" name="removal_code"
+                                                    placeholder="{{ t('inside.campaigns.removal_code_placeholder') }}"
+                                                    autocomplete="off" required />
+                                            </label>
+
+                                            <div class="modal-actions">
+                                                <a class="secondary-action" href="/inside">
+                                                    {{ t("inside.campaigns.cancel") }}
+                                                </a>
+
+                                                <button class="danger-button" type="submit">
+                                                    {{ t("inside.campaigns.confirm_delete") }}
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </section>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <span class="empty-marker"></span>
+                                <p>{{ t("inside.campaigns.empty") }}</p>
+                            </div>
+                            {% endif %}
+                        </section>
+                    </div>
+                </article>
+
+                <article class="editor-panel editor-panel--systems">
+                    <div class="editor-panel-inner">
+                        <section class="section-head">
+                            <p class="panel-eyebrow">{{ t("inside.tabs.systems") }}</p>
+                            <p class="panel-description">{{ t("inside.systems.description") }}</p>
+                        </section>
+
+                        {% if user.is_owner %}
+                        <div class="section-actions">
+                            <button class="system-action system-action--primary" type="button"
+                                data-inside-modal-open="systems-install-modal">
+                                {{ t("inside.systems.actions.install_system") }}
+                            </button>
+                        </div>
+
+                        <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="systems-install-modal"
+                            role="presentation" hidden>
+                            <section class="delete-modal system-detail-modal" role="dialog" aria-modal="true"
+                                aria-labelledby="systems-install-title">
+                                <div class="delete-modal-header">
+                                    <div>
+                                        <p class="panel-eyebrow">{{ t("inside.tabs.systems") }}</p>
+                                        <h2 id="systems-install-title">{{ t("inside.systems.install.title") }}</h2>
+                                    </div>
+                                    <button class="modal-close" type="button" data-inside-modal-close
+                                        aria-label="{{ t('inside.campaigns.cancel') }}">×</button>
+                                </div>
+
+                                {% set installable_systems = installed_systems | selectattr("can_install") | list %}
+                                {% if installable_systems %}
+                                <div class="module-campaign-list">
+                                    {% for system in installable_systems %}
+                                    <div class="admin-row">
+                                        <div class="admin-row-main">
+                                            <strong>{{ system.name }}</strong>
+                                            <span>{{ t("inside.systems.version", version=system.version) }} · {{ system.id }}</span>
+                                        </div>
+                                        <div class="admin-row-actions">
+                                            <form method="post" action="/systems/install">
+                                                {{ csrf_input | safe }}
+                                                <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                                <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.install") }}</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="empty-state empty-state--compact">
+                                    <span class="empty-marker"></span>
+                                    <p>{{ t("inside.systems.install.empty") }}</p>
+                                </div>
+                                {% endif %}
+                            </section>
+                        </div>
+                        {% endif %}
+
+                        {% if systems_message_key %}
+                        <div class="system-banner system-banner--ok">{{ t(systems_message_key) }}</div>
+                        {% endif %}
+                        {% if systems_error_key %}
+                        <div class="system-banner system-banner--error">{{ t(systems_error_key) }}</div>
+                        {% endif %}
+
+                        {% if installed_systems %}
+                        <div class="system-card-grid">
+                            {% for system in installed_systems %}
+                            <article class="system-card system-card--{{ system.status }}" data-system-id="{{ system.id }}"
+                                data-status="{{ system.status }}">
+                                <button class="system-card-button" type="button"
+                                    data-inside-modal-open="system-detail-{{ system.id }}">
+                                    <span class="system-card-top">
+                                        <strong>{{ system.name }}</strong>
+                                        <span class="system-status-badge system-status-badge--{{ system.status }}">
+                                            {{ t("inside.systems.status." ~ system.status) }}
+                                        </span>
+                                    </span>
+                                    {% if system.description %}
+                                    <span class="system-card-desc">{{ system.description }}</span>
+                                    {% endif %}
+                                    <span class="system-card-meta">
+                                        <span class="system-version">{{ t("inside.systems.version", version=system.version) }}</span>
+                                        {% if system.api_version %}<span class="system-api">API v{{ system.api_version }}</span>{% endif %}
+                                        <span class="system-compat system-compat--{{ system.compatibility_status }}">
+                                            {{ t("inside.systems.compat." ~ system.compatibility_status) }}
+                                        </span>
+                                    </span>
+                                </button>
+                                {% if user.is_owner %}
+                                {% if system.can_install %}
+                                <form class="compact-card-action" method="post" action="/systems/install">
+                                    {{ csrf_input | safe }}
+                                    <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                    <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.install") }}</button>
+                                </form>
+                                {% endif %}
+                                {% if system.status in ["installed", "disabled"] %}
+                                <form class="compact-card-action" method="post" action="/systems/enable">
+                                    {{ csrf_input | safe }}
+                                    <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                    <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.enable") }}</button>
+                                </form>
+                                {% endif %}
+                                {% if system.status == "enabled" %}
+                                <form class="compact-card-action" method="post" action="/systems/disable">
+                                    {{ csrf_input | safe }}
+                                    <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                    <button type="submit" class="system-action">{{ t("inside.systems.actions.disable") }}</button>
+                                </form>
+                                {% endif %}
+                                {% endif %}
+                            </article>
+
+                            <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="system-detail-{{ system.id }}"
+                                role="presentation" hidden>
+                                <section class="delete-modal system-detail-modal" role="dialog" aria-modal="true"
+                                    aria-labelledby="system-detail-title-{{ system.id }}">
+                                    <div class="delete-modal-header">
+                                        <div>
+                                            <p class="panel-eyebrow">{{ t("inside.tabs.systems") }}</p>
+                                            <h2 id="system-detail-title-{{ system.id }}">{{ system.name }}</h2>
+                                        </div>
+                                        <button class="modal-close" type="button" data-inside-modal-close
+                                            aria-label="{{ t('inside.campaigns.cancel') }}">×</button>
+                                    </div>
+
+                                    {% if system.description %}
+                                    <p class="delete-modal-copy">{{ system.description }}</p>
+                                    {% endif %}
+
+                                    <div class="system-detail-meta">
+                                        <span>{{ t("inside.systems.status." ~ system.status) }}</span>
+                                        <span>{{ t("inside.systems.version", version=system.version) }}</span>
+                                        <span>{{ system.id }}</span>
+                                        {% if system.api_version %}<span>API v{{ system.api_version }}</span>{% endif %}
+                                        {% if system.author %}<span>{{ system.author }}</span>{% endif %}
+                                        <span class="system-compat system-compat--{{ system.compatibility_status }}">
+                                            {{ t("inside.systems.compat." ~ system.compatibility_status) }}
+                                        </span>
+                                    </div>
+
+                                    {% if system.capabilities %}
+                                    <div class="system-chips">
+                                        {% for cap in system.capabilities %}<span class="system-chip">{{ cap }}</span>{% endfor %}
+                                    </div>
+                                    {% endif %}
+
+                                    <dl class="system-detail-grid">
+                                        {% if system.actor_types %}
+                                        <dt>{{ t("inside.systems.actor_types") }}</dt>
+                                        <dd>{{ system.actor_types | map(attribute='label') | join(', ') }}</dd>
+                                        {% endif %}
+                                        {% if system.item_types %}
+                                        <dt>{{ t("inside.systems.item_types") }}</dt>
+                                        <dd>{{ system.item_types | map(attribute='label') | join(', ') }}</dd>
+                                        {% endif %}
+                                        {% if system.content_packs %}
+                                        <dt>{{ t("inside.systems.content_packs") }}</dt>
+                                        <dd>{{ system.content_packs | map(attribute='label') | join(', ') }}</dd>
+                                        {% endif %}
+                                        {% if system.compatibility.minimum %}
+                                        <dt>{{ t("inside.systems.compatibility") }}</dt>
+                                        <dd>{{ system.compatibility.minimum }} – {{ system.compatibility.maximum }}</dd>
+                                        {% endif %}
+                                    </dl>
+
+                                    {% if system.validation_errors %}
+                                    <ul class="system-errors">
+                                        {% for err in system.validation_errors %}<li>{{ t(err) }}</li>{% endfor %}
+                                    </ul>
+                                    {% endif %}
+
+                                    {% if user.is_owner %}
+                                    <div class="system-detail-actions">
+                                        {% if system.can_install %}
+                                        <form method="post" action="/systems/install">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.install") }}</button>
+                                        </form>
+                                        {% endif %}
+                                        {% if system.status in ["installed", "disabled"] %}
+                                        <form method="post" action="/systems/enable">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.enable") }}</button>
+                                        </form>
+                                        {% endif %}
+                                        {% if system.status == "enabled" %}
+                                        <form method="post" action="/systems/disable">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action">{{ t("inside.systems.actions.disable") }}</button>
+                                        </form>
+                                        {% endif %}
+                                        {% if system.installed %}
+                                        <form method="post" action="/systems/remove">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action system-action--danger">{{ t("inside.systems.actions.remove") }}</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </section>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <span class="empty-marker"></span>
+                            <p>{{ t("inside.systems.empty") }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+
+                <article class="editor-panel editor-panel--modules">
+                    <div class="editor-panel-inner">
+                        <section class="section-head">
+                            <p class="panel-eyebrow">{{ t("inside.tabs.modules") }}</p>
+                            <p class="panel-description">{{ t("inside.modules.description") }}</p>
+                        </section>
+
+                        {% if modules_error_key %}
+                        <div class="system-banner system-banner--error">{{ t(modules_error_key) }}</div>
+                        {% endif %}
+                        {% if modules_message_key %}
+                        <div class="system-banner system-banner--ok">{{ t(modules_message_key) }}</div>
+                        {% endif %}
+
+                        {% if user.is_owner %}
+                        <div class="notice">{{ t("inside.modules.owner_note") }}</div>
+                        <form method="post" action="/modules/upload" enctype="multipart/form-data" class="system-upload-form">
+                            {{ csrf_input | safe }}
+                            <label>
+                                <span>{{ t("inside.modules.upload.label") }}</span>
+                                <input type="file" name="module_file" accept=".zip,application/zip,application/x-zip-compressed" required />
+                            </label>
+                            <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.upload.action") }}</button>
+                            <p class="form-help">{{ t("inside.modules.upload.help") }}</p>
+                        </form>
+                        {% else %}
+                        <div class="notice">{{ t("inside.modules.user_note") }}</div>
+                        {% endif %}
+
+                        {% if installed_modules %}
+                        <div class="module-card-grid">
+                            {% for module in installed_modules %}
+                            <article class="module-card module-card--{{ module.status }}" data-module-id="{{ module.id }}"
+                                data-status="{{ module.status }}">
+                                <button class="module-card-button" type="button"
+                                    data-inside-modal-open="module-detail-{{ module.id }}">
+                                    <span class="module-card-top">
+                                        <strong>{{ module.name }}</strong>
+                                        <span class="system-status-badge system-status-badge--{{ module.status }}">
+                                            {{ t("inside.modules.status." ~ module.status) }}
+                                        </span>
+                                    </span>
+                                    {% if module.description %}
+                                    <span class="module-card-desc">{{ module.description }}</span>
+                                    {% endif %}
+                                    <span class="module-card-meta">
+                                        <span>{{ t("inside.modules.meta.version", version=module.version) }}</span>
+                                        <span>{{ t("inside.modules.meta.api", version=module.api_version) }}</span>
+                                    </span>
+                                </button>
+                            </article>
+
+                            <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="module-detail-{{ module.id }}"
+                                role="presentation" hidden>
+                                <section class="delete-modal module-detail-modal" role="dialog" aria-modal="true"
+                                    aria-labelledby="module-detail-title-{{ module.id }}">
+                                    <div class="delete-modal-header">
+                                        <div>
+                                            <p class="panel-eyebrow">{{ t("inside.tabs.modules") }}</p>
+                                            <h2 id="module-detail-title-{{ module.id }}">{{ module.name }}</h2>
+                                        </div>
+                                        <button class="modal-close" type="button" data-inside-modal-close
+                                            aria-label="{{ t('inside.campaigns.cancel') }}">×</button>
+                                    </div>
+
+                                    {% if module.description %}
+                                    <p class="delete-modal-copy">{{ module.description }}</p>
+                                    {% endif %}
+
+                                    <div class="module-detail-meta">
+                                        <span>{{ t("inside.modules.status." ~ module.status) }}</span>
+                                        <span>{{ t("inside.modules.meta.version", version=module.version) }}</span>
+                                        <span>{{ t("inside.modules.meta.api", version=module.api_version) }}</span>
+                                        {% if module.author %}<span>{{ module.author }}</span>{% endif %}
+                                    </div>
+
+                                    {% if module.capabilities %}
+                                    <div class="system-chips">
+                                        {% for capability in module.capabilities %}
+                                        <span class="system-chip">{{ capability }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+
+                                    {% if module.validation_errors %}
+                                    <ul class="system-errors">
+                                        {% for error in module.validation_errors %}
+                                        <li>{{ t(error) }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% endif %}
+
+                                    {% if user.is_owner %}
+                                    <div class="module-detail-actions">
+                                        {% if module.can_install %}
+                                        <form method="post" action="/modules/install">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.actions.install") }}</button>
+                                        </form>
+                                        {% endif %}
+                                        {% if module.status == "installed" or module.status == "disabled" %}
+                                        <form method="post" action="/modules/enable">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.actions.enable") }}</button>
+                                        </form>
+                                        {% endif %}
+                                        {% if module.status == "enabled" %}
+                                        <form method="post" action="/modules/disable">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action">{{ t("inside.modules.actions.disable") }}</button>
+                                        </form>
+                                        {% endif %}
+                                        {% if module.installed %}
+                                        <form method="post" action="/modules/remove">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action system-action--danger">{{ t("inside.modules.actions.remove") }}</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+
+                                    {% if module.status == "enabled" and module_campaigns %}
+                                    <div class="system-campaign-bindings">
+                                        <h3>{{ t("inside.modules.campaigns.title") }}</h3>
+                                        <p>{{ t("inside.modules.campaigns.description") }}</p>
+                                        <div class="module-campaign-list">
+                                            {% for campaign in module_campaigns %}
+                                            <div class="admin-row">
+                                                <div class="admin-row-main">
+                                                    <strong>{{ campaign.title }}</strong>
+                                                    <span>{{ t("inside.campaigns.member_role", role=t("roles.campaign." ~ campaign.member_role)) }}</span>
+                                                </div>
+                                                <div class="admin-row-actions">
+                                                    {% if campaign.id in module.enabled_campaign_ids %}
+                                                    <form method="post" action="/campaigns/modules/disable">
+                                                        {{ csrf_input | safe }}
+                                                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                        <input type="hidden" name="module_id" value="{{ module.module_id }}" />
+                                                        <button type="submit" class="system-action">{{ t("inside.modules.actions.disable_for_campaign") }}</button>
+                                                    </form>
+                                                    {% else %}
+                                                    <form method="post" action="/campaigns/modules/enable">
+                                                        {{ csrf_input | safe }}
+                                                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                        <input type="hidden" name="module_id" value="{{ module.module_id }}" />
+                                                        <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.actions.enable_for_campaign") }}</button>
+                                                    </form>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </section>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <span class="empty-marker"></span>
+                            <p>{{ t("inside.modules.empty") }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </article>
+
+                {% if user.is_owner %}
+                <article class="editor-panel editor-panel--settings">
+                    <div class="editor-panel-inner">
+                        <section class="section-head">
+                            <p class="panel-eyebrow">{{ t("inside.tabs.settings") }}</p>
+                            <p class="panel-description">{{ t("inside.settings.description") }}</p>
+                        </section>
+
+                        {% if settings_message_key %}
+                        <div class="system-banner system-banner--ok">{{ t(settings_message_key) }}</div>
+                        {% endif %}
+                        {% if settings_error_key %}
+                        <div class="system-banner system-banner--error">{{ t(settings_error_key) }}</div>
+                        {% endif %}
+
+                        <div class="settings-grid">
+                            <section class="settings-card">
+                                <h3>{{ t("inside.settings.general.title") }}</h3>
+                                <form class="settings-form" method="post" action="/inside/settings">
+                                    {{ csrf_input | safe }}
+                                    <label>
+                                        <span>{{ t("inside.settings.app_name") }}</span>
+                                        <input type="text" name="app_name" value="{{ inside_settings.app_name }}" maxlength="80" required />
+                                    </label>
+                                    <label>
+                                        <span>{{ t("inside.settings.default_locale") }}</span>
+                                        <select name="default_locale">
+                                            {% for option in inside_settings.supported_locales %}
+                                            <option value="{{ option }}" {% if option == locale %}selected{% endif %}>
+                                                {{ t("inside.settings.locale." ~ option) }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                    <button class="system-action system-action--primary" type="submit">{{ t("inside.settings.save") }}</button>
+                                </form>
+                            </section>
+                        </div>
+
+                        <div class="admin-block">
+                            <h3 class="admin-block-title">{{ t("inside.admin.users.title") }}</h3>
+                            {% if admin_message_key %}
+                            <div class="system-banner system-banner--ok">{{ t(admin_message_key) }}</div>
+                            {% endif %}
+                            {% if admin_error_key %}
+                            <div class="system-banner system-banner--error">{{ t(admin_error_key) }}</div>
+                            {% endif %}
+                            {% if all_users %}
+                            <div class="admin-table">
+                                {% for u in all_users %}
+                                <div class="admin-row admin-row--user">
+                                    <div class="admin-row-main">
+                                        <strong>{{ u.name }}</strong>
+                                        <span>{{ u.email }} · <span class="role-badge">{{ u.system_role }}</span>
+                                            · {{ t("inside.admin.users.campaigns", count=u.campaign_count) }}</span>
+                                    </div>
+                                    <div class="admin-row-actions">
+                                        <button type="button" class="secondary-action"
+                                            data-reset-toggle="reset-{{ u.id }}">{{
+                                            t("inside.admin.users.reset_password") }}</button>
+                                        {% if u.id != user.id %}
+                                        <form method="post" action="/inside/admin/users/delete"
+                                            data-confirm="{{ t('inside.admin.users.delete_confirm') }}">
+                                            {{ csrf_input | safe }}
+                                            <input type="hidden" name="user_id" value="{{ u.id }}" />
+                                            <button class="danger-button" type="submit">{{
+                                                t("inside.admin.users.delete") }}</button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                    <form class="admin-reset-form" id="reset-{{ u.id }}" hidden method="post"
+                                        action="/inside/admin/users/reset-password">
+                                        {{ csrf_input | safe }}
+                                        <input type="hidden" name="user_id" value="{{ u.id }}" />
+                                        <input type="password" name="new_password"
+                                            placeholder="{{ t('inside.admin.users.new_password') }}" required />
+                                        <button class="primary-action" type="submit">{{
+                                            t("inside.admin.users.reset_submit") }}</button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="empty-state">
+                                <span class="empty-marker"></span>
+                                <p>{{ t("inside.admin.users.empty") }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+
+                <article class="editor-panel editor-panel--privacy">
+                    <div class="editor-panel-inner">
+                        <section class="section-head">
+                            <p class="panel-eyebrow">{{ t("inside.tabs.privacy") }}</p>
+                            <p class="panel-description">{{ t("inside.privacy.description") }}</p>
+                        </section>
+
+                        {% if privacy_message_key %}
+                        <div class="system-banner system-banner--ok">{{ t(privacy_message_key) }}</div>
+                        {% endif %}
+                        {% if privacy_error_key %}
+                        <div class="system-banner system-banner--error">{{ t(privacy_error_key) }}</div>
+                        {% endif %}
+
+                        <section class="settings-card privacy-editor-card">
+                            <h3>{{ t("inside.privacy.policy.title") }}</h3>
+                            <p>{{ t("inside.privacy.policy.description") }}</p>
+                            <form class="settings-form" method="post" action="/inside/privacy">
+                                {{ csrf_input | safe }}
+                                <label class="settings-toggle">
+                                    <input type="checkbox" name="enabled" value="true" {% if privacy_settings.enabled %}checked{% endif %} />
+                                    <span>{{ t("inside.privacy.enabled") }}</span>
+                                </label>
+                                <label>
+                                    <span>{{ t("inside.privacy.policy_title") }}</span>
+                                    <input type="text" name="title" value="{{ privacy_settings.title }}" maxlength="120" required />
+                                </label>
+                                <label>
+                                    <span>{{ t("inside.privacy.content") }}</span>
+                                    <textarea name="content" rows="7">{{ privacy_settings.content }}</textarea>
+                                </label>
+                                <div class="settings-field-grid">
+                                    <label>
+                                        <span>{{ t("inside.privacy.data_controller") }}</span>
+                                        <input type="text" name="data_controller" value="{{ privacy_settings.data_controller }}" maxlength="160" />
+                                    </label>
+                                    <label>
+                                        <span>{{ t("inside.privacy.dpo_contact") }}</span>
+                                        <input type="text" name="dpo_contact" value="{{ privacy_settings.dpo_contact }}" maxlength="160" />
+                                    </label>
+                                    <label>
+                                        <span>{{ t("inside.privacy.contact_email") }}</span>
+                                        <input type="email" name="contact_email" value="{{ privacy_settings.contact_email }}" maxlength="160" />
+                                    </label>
+                                </div>
+                                <label>
+                                    <span>{{ t("inside.privacy.legal_basis") }}</span>
+                                    <textarea name="legal_basis" rows="3">{{ privacy_settings.legal_basis }}</textarea>
+                                </label>
+                                <label>
+                                    <span>{{ t("inside.privacy.retention_policy") }}</span>
+                                    <textarea name="retention_policy" rows="3">{{ privacy_settings.retention_policy }}</textarea>
+                                </label>
+                                <label>
+                                    <span>{{ t("inside.privacy.data_subject_rights") }}</span>
+                                    <textarea name="data_subject_rights" rows="3">{{ privacy_settings.data_subject_rights }}</textarea>
+                                </label>
+                                <button class="system-action system-action--primary" type="submit">{{ t("inside.privacy.save") }}</button>
+                            </form>
+                        </section>
+                    </div>
+                </article>
+                {% endif %}
+            </div>
+
+            <aside class="right-nav" aria-label="Inside navigation">
+                <div class="nav-brand">
+                    <span class="brand-mark"></span>
+                    <div>
+                        <strong>{{ app_name }}</strong>
+                        <span>{{ t("app.subtitle") }}</span>
+                    </div>
+                </div>
+
+                <nav class="nav-list">
+                    <label class="nav-item nav-item--campaigns" for="section-campaigns">
+                        <span class="nav-icon"></span>
+                        <span>{{ t("inside.tabs.campaigns") }}</span>
+                    </label>
+
+                    <label class="nav-item nav-item--systems" for="section-systems">
+                        <span class="nav-icon"></span>
+                        <span>{{ t("inside.tabs.systems") }}</span>
+                    </label>
+
+                    <label class="nav-item nav-item--modules" for="section-modules">
+                        <span class="nav-icon"></span>
+                        <span>{{ t("inside.tabs.modules") }}</span>
+                    </label>
+
+                    {% if user.is_owner %}
+                    <label class="nav-item nav-item--settings" for="section-settings">
+                        <span class="nav-icon"></span>
+                        <span>{{ t("inside.tabs.settings") }}</span>
+                    </label>
+
+                    <label class="nav-item nav-item--privacy" for="section-privacy">
+                        <span class="nav-icon"></span>
+                        <span>{{ t("inside.tabs.privacy") }}</span>
+                    </label>
+                    {% endif %}
+                </nav>
+
+                <div class="nav-footer">
+                    <div class="user-card">
+                        <span class="user-email">{{ user.email }}</span>
+                        <span class="user-role">{{ t("roles.system." ~ user.system_role) }}</span>
+                    </div>
+
+                    <form method="post" action="/logout">
+                        {{ csrf_input | safe }}
+                        <button class="logout" type="submit">{{ t("inside.logout") }}</button>
+                    </form>
+                </div>
+            </aside>
+        </section>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,103 @@
+<article class="game-modal-window scene-edit-modal" data-modal-window data-modal-id="scene-edit-{{ scene.id }}"
+    data-window-key="scene-edit-{{ scene.id }}" hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+        <span class="game-panel-title">{{ t("game.scenes.edit_title") }} — {{ scene.name }}</span>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('inside.campaigns.cancel') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="game-panel-body scene-edit-modal-body">
+        <form method="post" action="/game/scenes/update" class="scene-edit-form" data-scene-ajax-form>
+            {{ csrf_input | safe }}
+            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+            <input type="hidden" name="scene_id" value="{{ scene.id }}" />
+            <div class="scene-edit-grid">
+                <label class="game-field">
+                    <span>{{ t("game.scenes.scene_name") }}</span>
+                    <input type="text" name="name" value="{{ scene.name }}" maxlength="120" required />
+                </label>
+                <label class="game-field">
+                    <span>{{ t("game.scenes.group") }}</span>
+                    <select name="group_id">
+                        <option value="">{{ t("game.scenes.ungrouped") }}</option>
+                        {% for group in room.scene_groups %}
+                        <option value="{{ group.id }}" {% if scene.group_id == group.id %}selected{% endif %}>{{ group.name }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label class="game-field">
+                    <span>{{ t("game.scenes.visibility") }}</span>
+                    <select name="visibility">
+                        <option value="players" {% if scene.visibility == "players" %}selected{% endif %}>{{ t("game.scenes.visibility.players") }}</option>
+                        <option value="gm_only" {% if scene.visibility == "gm_only" %}selected{% endif %}>{{ t("game.scenes.visibility.gm_only") }}</option>
+                        <option value="hidden" {% if scene.visibility == "hidden" %}selected{% endif %}>{{ t("game.scenes.visibility.hidden") }}</option>
+                    </select>
+                </label>
+                <div class="scene-two-col">
+                    <label class="game-field">
+                        <span>{{ t("game.scenes.grid_size") }}</span>
+                        <input type="number" name="tile_size" min="8" max="1024" value="{{ scene.tile_size }}" required
+                               data-warn-on-change="{{ t('game.scenes.grid_size_warning') }}" />
+                    </label>
+                    <label class="game-field">
+                        <span>{{ t("game.scenes.image_scale") }}</span>
+                        <input type="number" name="image_scale" min="0.1" max="10" step="0.01"
+                               value="{{ (scene.image_scale | default(1.0)) | round(2) }}" required />
+                    </label>
+                </div>
+                <div class="scene-grid-row scene-grid-row--boxed">
+                    <label class="scene-check">
+                        <input type="checkbox" name="grid_visible" {% if scene.grid_visible %}checked{% endif %} />
+                        <span>{{ t("game.scenes.grid_visible") }}</span>
+                    </label>
+                    <label class="scene-color-field">
+                        <span>{{ t("game.scenes.grid_color") }}</span>
+                        <input type="color" name="grid_color" value="{{ scene.grid_color }}" />
+                    </label>
+                    <label class="scene-opacity-field">
+                        <span>{{ t("game.scenes.grid_opacity") }}</span>
+                        <input type="range" name="grid_opacity" min="0" max="1" step="0.05"
+                               value="{{ (scene.grid_opacity | default(0.4)) | round(2) }}" data-grid-opacity-input />
+                        <output data-grid-opacity-output>{{ (scene.grid_opacity | default(0.4)) | round(2) }}</output>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="primary-action">
+                <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+                <span>{{ t("game.scenes.save") }}</span>
+            </button>
+        </form>
+
+        {% if scene.active %}
+        <form method="post" action="/game/scenes/start-point" class="scene-start-form"
+              data-scene-ajax-form data-scene-start-form>
+            {{ csrf_input | safe }}
+            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+            <input type="hidden" name="scene_id" value="{{ scene.id }}" />
+            <input type="hidden" name="start_world_x" value="" />
+            <input type="hidden" name="start_world_y" value="" />
+            <input type="hidden" name="start_zoom" value="" />
+            <button type="submit" class="secondary-action">
+                <i class="ph ph-crosshair" aria-hidden="true"></i>
+                <span>{{ t("game.scenes.set_start_point") }}</span>
+            </button>
+        </form>
+        {% endif %}
+
+        <form method="post" action="/game/scenes/delete" class="scene-delete-form"
+              data-scene-ajax-form data-confirm="{{ t('game.scenes.delete_confirm') }}">
+            {{ csrf_input | safe }}
+            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+            <input type="hidden" name="scene_id" value="{{ scene.id }}" />
+            <button type="submit" class="scene-delete-button">
+                <i class="ph ph-trash" aria-hidden="true"></i>
+                <span>{{ t("game.scenes.delete") }}</span>
+            </button>
+        </form>
+    </div>
+</article>

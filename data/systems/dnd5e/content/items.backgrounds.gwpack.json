@@ -1,0 +1,23 @@
+{
+  "id": "dnd5e-backgrounds",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Antecedentes",
+  "entries": [
+    {
+      "id": "template-background",
+      "type": "background",
+      "name": "Antecedente Modelo",
+      "data": {
+        "skill_proficiencies": "",
+        "tool_proficiencies": "",
+        "languages": "",
+        "equipment": "",
+        "feature_name": "Característica de Antecedente",
+        "feature_description": "",
+        "suggested_characteristics": "",
+        "description": "Antecedente de modelo."
+      }
+    }
+  ]
+}

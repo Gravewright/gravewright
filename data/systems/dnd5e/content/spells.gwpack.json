@@ -1,0 +1,32 @@
+{
+  "id": "dnd5e-spells",
+  "type": "spell_pack",
+  "system": "dnd5e",
+  "label": "Magias",
+  "entries": [
+    {
+      "id": "template-arcane-bolt",
+      "type": "spell",
+      "name": "Raio Arcano (modelo)",
+      "data": {
+        "level": 0,
+        "school": "evocation",
+        "casting_time": "1 ação",
+        "range": "60 ft.",
+        "duration": "Instantânea",
+        "components": {
+          "v": true,
+          "s": true,
+          "m": false
+        },
+        "materials": "",
+        "concentration": false,
+        "ritual": false,
+        "resolution": "attack",
+        "damage": "1d10",
+        "classes": "",
+        "description": "Magia de modelo para testar spellbook e rolagens."
+      }
+    }
+  ]
+}

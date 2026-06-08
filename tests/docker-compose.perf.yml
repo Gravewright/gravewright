@@ -1,0 +1,50 @@
+name: gravewright_perf
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../storage:/app/storage
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 4g
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "false"
+      SESSION_SECRET: perf-test-secret-key-change-me
+      WEB_WORKERS: "1"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  locust:
+    image: locustio/locust:2.32.3
+    ports:
+      - "8089:8089"
+    volumes:
+      - ./performance:/mnt/locust
+    command: >
+      -f /mnt/locust/locustfile.py
+      --host http://app:8000
+      --headless
+      --users 20
+      --spawn-rate 2
+      --run-time 90s
+      --html /mnt/locust/report.html
+      --csv /mnt/locust/results
+    depends_on:
+      app:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512m

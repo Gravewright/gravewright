@@ -1,0 +1,51 @@
+{
+  "check": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "save": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "attack": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "death-save": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "weapon-attack": {
+    "title": "@action.label",
+    "subtitle": "Ataque",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "weapon-damage": {
+    "title": "@action.label",
+    "subtitle": "Dano",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "spell-damage": {
+    "title": "@action.label",
+    "subtitle": "Dano de Magia",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  }
+}

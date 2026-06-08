@@ -1,0 +1,19 @@
+{
+  "conditions": [
+    {
+      "id": "blinded",
+      "label": "Cego",
+      "kind": "negative"
+    },
+    {
+      "id": "poisoned",
+      "label": "Envenenado",
+      "kind": "negative"
+    },
+    {
+      "id": "inspired",
+      "label": "Inspirado",
+      "kind": "positive"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+<article class="game-modal-window item-sheet-modal" data-modal-window
+         data-modal-id="item-{{ item.item_id }}"
+         data-window-key="item-{{ item.item_id }}"
+         data-item-id="{{ item.item_id }}"
+         data-item-campaign="{{ room_id }}"
+         hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <div class="game-modal-sheet-title">
+            <span class="sheet-modal-name">{{ item.name }}</span>
+            <span class="sheet-modal-owner">{{ item.type }}</span>
+        </div>
+        <div class="game-modal-controls">
+            {% if is_gm %}
+            <button class="game-modal-control" type="button"
+                    data-resource-permissions="item"
+                    data-resource-id="{{ item.item_id }}"
+                    aria-label="{{ t('resource_permissions.title') }}">
+                <i class="ph ph-shield-check" aria-hidden="true"></i>
+            </button>
+            {% endif %}
+            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+            </button>
+            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                <i class="ph ph-minus" aria-hidden="true"></i>
+            </button>
+            <button class="game-modal-control" type="button" data-modal-close aria-label="Close">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="actor-sheet-body item-sheet-body"
+         data-item-sheet-root
+         data-item-id="{{ item.item_id }}"
+         data-csrf="{{ csrf_token() }}">
+        <div class="actor-sheet-loading">…</div>
+    </div>
+
+    <script type="application/json" data-item-bundle>{{ bundle_json | safe }}</script>
+</article>

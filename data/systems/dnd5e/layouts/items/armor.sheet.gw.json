@@ -1,0 +1,102 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-armor",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.armor_type",
+            "options": [
+              {
+                "value": "light",
+                "labelKey": "dnd5e.ui.leve"
+              },
+              {
+                "value": "medium",
+                "labelKey": "dnd5e.ui.media"
+              },
+              {
+                "value": "heavy",
+                "labelKey": "dnd5e.ui.pesada"
+              },
+              {
+                "value": "shield",
+                "labelKey": "dnd5e.ui.escudo"
+              }
+            ],
+            "labelKey": "dnd5e.ui.tipo"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "numberField",
+            "path": "sheet.base_ac",
+            "labelKey": "dnd5e.ui.ca.base"
+          },
+          {
+            "type": "checkboxField",
+            "path": "sheet.add_dex",
+            "labelKey": "dnd5e.ui.soma.mod.de.destreza"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.max_dex",
+            "labelKey": "dnd5e.ui.max.de.destreza"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "numberField",
+            "path": "sheet.str_req",
+            "labelKey": "dnd5e.ui.forca.minima"
+          },
+          {
+            "type": "checkboxField",
+            "path": "sheet.stealth_disadvantage",
+            "labelKey": "dnd5e.ui.desvantagem.em.furtividade"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "numberField",
+            "path": "sheet.weight",
+            "labelKey": "dnd5e.ui.peso"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.cost",
+            "labelKey": "dnd5e.ui.custo"
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      }
+    ],
+    "labelKey": "dnd5e.ui.armadura"
+  }
+}

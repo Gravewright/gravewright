@@ -1,0 +1,2744 @@
+{
+  "actions": {
+    "roll.check.str": {
+      "type": "roll",
+      "label": "Teste de Força",
+      "formula": "1d20 + @sheet.abilities.str.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.check.dex": {
+      "type": "roll",
+      "label": "Teste de Destreza",
+      "formula": "1d20 + @sheet.abilities.dex.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.check.con": {
+      "type": "roll",
+      "label": "Teste de Constituição",
+      "formula": "1d20 + @sheet.abilities.con.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.check.int": {
+      "type": "roll",
+      "label": "Teste de Inteligência",
+      "formula": "1d20 + @sheet.abilities.int.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.check.wis": {
+      "type": "roll",
+      "label": "Teste de Sabedoria",
+      "formula": "1d20 + @sheet.abilities.wis.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.check.cha": {
+      "type": "roll",
+      "label": "Teste de Carisma",
+      "formula": "1d20 + @sheet.abilities.cha.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.save.str": {
+      "type": "roll",
+      "label": "Salvaguarda de Força",
+      "formula": "1d20 + @sheet.saves.str.mod",
+      "visibility": "public",
+      "chatCard": "save",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.save.dex": {
+      "type": "roll",
+      "label": "Salvaguarda de Destreza",
+      "formula": "1d20 + @sheet.saves.dex.mod",
+      "visibility": "public",
+      "chatCard": "save",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.save.con": {
+      "type": "roll",
+      "label": "Salvaguarda de Constituição",
+      "formula": "1d20 + @sheet.saves.con.mod",
+      "visibility": "public",
+      "chatCard": "save",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.save.int": {
+      "type": "roll",
+      "label": "Salvaguarda de Inteligência",
+      "formula": "1d20 + @sheet.saves.int.mod",
+      "visibility": "public",
+      "chatCard": "save",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.save.wis": {
+      "type": "roll",
+      "label": "Salvaguarda de Sabedoria",
+      "formula": "1d20 + @sheet.saves.wis.mod",
+      "visibility": "public",
+      "chatCard": "save",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.save.cha": {
+      "type": "roll",
+      "label": "Salvaguarda de Carisma",
+      "formula": "1d20 + @sheet.saves.cha.mod",
+      "visibility": "public",
+      "chatCard": "save",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.acrobatics": {
+      "type": "roll",
+      "label": "Acrobacia",
+      "formula": "1d20 + @sheet.skills.acrobatics.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.animal_handling": {
+      "type": "roll",
+      "label": "Lidar com Animais",
+      "formula": "1d20 + @sheet.skills.animal_handling.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.arcana": {
+      "type": "roll",
+      "label": "Arcanismo",
+      "formula": "1d20 + @sheet.skills.arcana.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.athletics": {
+      "type": "roll",
+      "label": "Atletismo",
+      "formula": "1d20 + @sheet.skills.athletics.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.deception": {
+      "type": "roll",
+      "label": "Enganação",
+      "formula": "1d20 + @sheet.skills.deception.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.history": {
+      "type": "roll",
+      "label": "História",
+      "formula": "1d20 + @sheet.skills.history.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.insight": {
+      "type": "roll",
+      "label": "Intuição",
+      "formula": "1d20 + @sheet.skills.insight.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.intimidation": {
+      "type": "roll",
+      "label": "Intimidação",
+      "formula": "1d20 + @sheet.skills.intimidation.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.investigation": {
+      "type": "roll",
+      "label": "Investigação",
+      "formula": "1d20 + @sheet.skills.investigation.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.medicine": {
+      "type": "roll",
+      "label": "Medicina",
+      "formula": "1d20 + @sheet.skills.medicine.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.nature": {
+      "type": "roll",
+      "label": "Natureza",
+      "formula": "1d20 + @sheet.skills.nature.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.perception": {
+      "type": "roll",
+      "label": "Percepção",
+      "formula": "1d20 + @sheet.skills.perception.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.performance": {
+      "type": "roll",
+      "label": "Atuação",
+      "formula": "1d20 + @sheet.skills.performance.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.persuasion": {
+      "type": "roll",
+      "label": "Persuasão",
+      "formula": "1d20 + @sheet.skills.persuasion.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.religion": {
+      "type": "roll",
+      "label": "Religião",
+      "formula": "1d20 + @sheet.skills.religion.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.sleight_of_hand": {
+      "type": "roll",
+      "label": "Prestidigitação",
+      "formula": "1d20 + @sheet.skills.sleight_of_hand.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.stealth": {
+      "type": "roll",
+      "label": "Furtividade",
+      "formula": "1d20 + @sheet.skills.stealth.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.skill.survival": {
+      "type": "roll",
+      "label": "Sobrevivência",
+      "formula": "1d20 + @sheet.skills.survival.mod",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.initiative": {
+      "type": "roll",
+      "label": "Iniciativa",
+      "formula": "1d20 + @sheet.init",
+      "visibility": "public",
+      "chatCard": "check",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.death_save": {
+      "type": "roll",
+      "label": "Salvaguarda contra Morte",
+      "formula": "1d20",
+      "visibility": "public",
+      "chatCard": "death-save",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "roll.spell_attack": {
+      "type": "roll",
+      "label": "Ataque de Magia",
+      "formula": "1d20 + @sheet.spell.attack",
+      "visibility": "public",
+      "chatCard": "attack",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "resource.hp.damage": {
+      "type": "patch",
+      "label": "Sofrer Dano",
+      "patch": {
+        "sheet.hp.value": "max(0, @sheet.hp.value - input.amount)"
+      }
+    },
+    "resource.hp.heal": {
+      "type": "patch",
+      "label": "Curar",
+      "patch": {
+        "sheet.hp.value": "min(@sheet.hp.max, @sheet.hp.value + input.amount)"
+      }
+    },
+    "rest.long": {
+      "type": "patch",
+      "label": "Descanso Longo",
+      "patch": {
+        "sheet.hp.value": "@sheet.hp.max",
+        "sheet.hp.temp": "0"
+      }
+    },
+    "inventory.addItem": {
+      "type": "append",
+      "target": "sheet.inventory",
+      "value": {
+        "source": "@drop.source",
+        "name": "@drop.entry.name",
+        "img": "@drop.entry.img",
+        "type": "@drop.entry.type",
+        "data": "@drop.entry.data",
+        "quantity": 1,
+        "equipped": false,
+        "id": "@id.uuid"
+      }
+    },
+    "spells.addSpell": {
+      "type": "append",
+      "target": "sheet.spells",
+      "value": {
+        "source": "@drop.source",
+        "name": "@drop.entry.name",
+        "img": "@drop.entry.img",
+        "level": "@drop.entry.data.level",
+        "school": "@drop.entry.data.school",
+        "data": "@drop.entry.data",
+        "prepared": false,
+        "type": "@drop.entry.type",
+        "id": "@id.uuid"
+      }
+    },
+    "features.addFeature": {
+      "type": "append",
+      "target": "sheet.features",
+      "value": {
+        "source": "@drop.source",
+        "name": "@drop.entry.name",
+        "type": "@drop.entry.type",
+        "data": "@drop.entry.data",
+        "id": "@id.uuid"
+      }
+    },
+    "attacks.addItem": {
+      "type": "append",
+      "target": "sheet.attacks",
+      "value": {
+        "source": "@drop.source",
+        "name": "@drop.entry.name",
+        "type": "@drop.entry.type",
+        "data": "@drop.entry.data",
+        "id": "@id.uuid"
+      }
+    },
+    "weapons.addWeapon": {
+      "type": "append",
+      "target": "sheet.weapons",
+      "value": {
+        "source": "@drop.source",
+        "name": "@drop.entry.name",
+        "img": "@drop.entry.img",
+        "type": "@drop.entry.type",
+        "data": "@drop.entry.data",
+        "quantity": 1,
+        "equipped": false,
+        "id": "@id.uuid"
+      }
+    },
+    "weapon.attack": {
+      "type": "roll",
+      "scope": "item",
+      "label": "@item.name",
+      "formula": "1d20 + @sheet.prof + @item.data.attack_bonus",
+      "visibility": "public",
+      "chatCard": "weapon-attack",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "mode",
+            "type": "select",
+            "label": "Modo",
+            "default": "normal",
+            "options": [
+              {
+                "value": "normal",
+                "label": "Normal"
+              },
+              {
+                "value": "advantage",
+                "label": "Vantagem"
+              },
+              {
+                "value": "disadvantage",
+                "label": "Desvantagem"
+              }
+            ]
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.mode == 'advantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kh1"
+          }
+        },
+        {
+          "when": "input.mode == 'disadvantage'",
+          "replaceFirstDie": {
+            "from": "1d20",
+            "to": "2d20kl1"
+          }
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "weapon.damage": {
+      "type": "roll",
+      "scope": "item",
+      "label": "@item.name",
+      "formula": "@item.data.damage",
+      "visibility": "public",
+      "chatCard": "weapon-damage",
+      "apply": { "mode": "damage", "damageType": "@item.data.damage_type" },
+      "dialog": {
+        "enabled": true,
+        "intent": "damage",
+        "fields": [
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "spell.damage": {
+      "type": "roll",
+      "scope": "item",
+      "label": "@item.name",
+      "formula": "@item.data.damage",
+      "visibility": "public",
+      "chatCard": "spell-damage",
+      "apply": { "mode": "damage", "damageType": "@item.data.damage_type" },
+      "dialog": {
+        "enabled": true,
+        "intent": "damage",
+        "fields": [
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "label": "Dados extras",
+            "default": []
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "label": "Modificador extra",
+            "default": 0
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "label": "Visibilidade",
+            "default": "public"
+          }
+        ]
+      },
+      "transforms": [
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ]
+    },
+    "effects.addEffect": {
+      "type": "append",
+      "label": "Adicionar Efeito",
+      "target": "sheet.effects",
+      "value": {
+        "id": "@id.uuid",
+        "source": "@drop.entry.source",
+        "type": "effect",
+        "name": "@drop.entry.name",
+        "img": "@drop.entry.img",
+        "enabled": true,
+        "visibility": "public",
+        "duration": "@drop.entry.data.duration",
+        "data": "@drop.entry.data"
+      }
+    }
+  }
+}

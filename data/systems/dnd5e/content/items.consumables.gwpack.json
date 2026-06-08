@@ -1,0 +1,21 @@
+{
+  "id": "dnd5e-consumables",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Consumíveis",
+  "entries": [
+    {
+      "id": "template-minor-healing-potion",
+      "type": "consumable",
+      "name": "Poção Curativa Menor (modelo)",
+      "data": {
+        "subtype": "potion",
+        "quantity": 1,
+        "uses": 1,
+        "weight": 0.5,
+        "cost": "50 gp",
+        "description": "Consumível de modelo. Ajuste valores conforme sua mesa."
+      }
+    }
+  ]
+}

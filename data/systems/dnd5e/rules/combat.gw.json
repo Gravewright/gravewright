@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "defaultMode": "individual_initiative",
+  "turnOrder": {
+    "strategy": "formula_sort",
+    "label": "Iniciativa D&D 5e",
+    "formula": "1d20 + @sheet.combat.initiative",
+    "sort": "desc",
+    "tieBreakers": [
+      "@sheet.abilities.dex.score",
+      "@participant.name"
+    ]
+  },
+  "resources": {
+    "hp": {
+      "label": "HP",
+      "path": "sheet.hp.value",
+      "maxPath": "sheet.hp.max",
+      "min": 0
+    }
+  },
+  "activityTypes": [
+    {
+      "id": "token.move",
+      "label": "Mover token"
+    },
+    {
+      "id": "sheet.action",
+      "label": "Usar ação da ficha"
+    },
+    {
+      "id": "sheet.item.action",
+      "label": "Usar item"
+    }
+  ],
+  "initiativeRoll": {
+    "actionId": "roll.initiative",
+    "label": "Iniciativa D&D 5e",
+    "sort": "desc"
+  },
+  "initiative": {
+    "mode": "individual",
+    "label": "Iniciativa D&D 5e",
+    "roll": {
+      "actionId": "roll.initiative",
+      "formula": "1d20 + @sheet.combat.initiative"
+    },
+    "sort": {
+      "direction": "desc",
+      "tieBreakers": [
+        "@sheet.abilities.dex.score",
+        "@participant.name"
+      ]
+    },
+    "allowReroll": true,
+    "allowManualEdit": true,
+    "appearance": {
+      "theme": "dnd5e",
+      "die": "d20",
+      "rollAllLabel": "Rolar todas",
+      "rollMonstersLabel": "Só monstros",
+      "rollSubtitle": "d20 + iniciativa",
+      "monsterSubtitle": "criaturas do GM",
+      "accent": "red-gold"
+    },
+    "groups": [
+      {
+        "id": "players",
+        "label": "Personagens",
+        "actorTypes": [
+          "character"
+        ]
+      },
+      {
+        "id": "monsters",
+        "label": "Monstros",
+        "actorTypes": [
+          "monster",
+          "npc",
+          "creature"
+        ]
+      }
+    ]
+  },
+  "ui": {
+    "combat": {
+      "skin": "dnd5e",
+      "density": "compact",
+      "palette": {
+        "accent": "#b88a44",
+        "accentStrong": "#ffe4a3",
+        "danger": "#9f1d1d",
+        "dangerSoft": "#f0b0a3",
+        "current": "#28d17c",
+        "next": "#d33b2f",
+        "acted": "#a8a29e",
+        "scrollbarThumb": "#c99748",
+        "scrollbarTrack": "#1c1110",
+        "surface": "#2a1713",
+        "surfaceRaised": "#3a211a",
+        "text": "#f8ecd3",
+        "muted": "#c3ad83",
+        "border": "#6f4a25",
+        "gold": "#e2bd6c",
+        "blood": "#6f1010"
+      },
+      "hero": {
+        "style": "d20-banner",
+        "motif": "red-parchment-gold"
+      },
+      "initiative": {
+        "icon": "ph-dice-five",
+        "monsterIcon": "ph-skull",
+        "rollAllLabel": "Rolar iniciativa",
+        "rollMonstersLabel": "Rolar monstros",
+        "rollSubtitle": "d20 + modificador",
+        "monsterSubtitle": "criaturas e NPCs",
+        "scoreLabel": "Iniciativa"
+      },
+      "statusLabels": {
+        "current": "Turno atual",
+        "next": "Próximo",
+        "acted": "Já agiu",
+        "waiting": "Aguardando"
+      },
+      "participant": {
+        "frame": "ornate-card",
+        "portrait": "gold-token-frame"
+      }
+    }
+  }
+}

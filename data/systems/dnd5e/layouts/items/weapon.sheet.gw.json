@@ -1,0 +1,239 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-weapon",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.category",
+            "options": [
+              {
+                "value": "simple",
+                "labelKey": "dnd5e.ui.simples"
+              },
+              {
+                "value": "martial",
+                "labelKey": "dnd5e.ui.marcial"
+              }
+            ],
+            "labelKey": "dnd5e.ui.categoria"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.attack_type",
+            "options": [
+              {
+                "value": "melee",
+                "labelKey": "dnd5e.ui.corpo.a.corpo"
+              },
+              {
+                "value": "ranged",
+                "labelKey": "dnd5e.ui.a.distancia"
+              }
+            ],
+            "labelKey": "dnd5e.ui.alcance"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "sheet.damage",
+            "labelKey": "dnd5e.ui.dano.ex.1d8"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.damage_type",
+            "options": [
+              {
+                "value": "slashing",
+                "labelKey": "dnd5e.ui.cortante"
+              },
+              {
+                "value": "piercing",
+                "labelKey": "dnd5e.ui.perfurante"
+              },
+              {
+                "value": "bludgeoning",
+                "labelKey": "dnd5e.ui.concussao"
+              },
+              {
+                "value": "fire",
+                "labelKey": "dnd5e.ui.fogo"
+              },
+              {
+                "value": "cold",
+                "labelKey": "dnd5e.ui.frio"
+              },
+              {
+                "value": "lightning",
+                "labelKey": "dnd5e.ui.eletrico"
+              },
+              {
+                "value": "acid",
+                "labelKey": "dnd5e.ui.acido"
+              },
+              {
+                "value": "poison",
+                "labelKey": "dnd5e.ui.veneno"
+              },
+              {
+                "value": "necrotic",
+                "labelKey": "dnd5e.ui.necrotico"
+              },
+              {
+                "value": "radiant",
+                "labelKey": "dnd5e.ui.radiante"
+              },
+              {
+                "value": "psychic",
+                "labelKey": "dnd5e.ui.psiquico"
+              },
+              {
+                "value": "thunder",
+                "labelKey": "dnd5e.ui.trovejante"
+              },
+              {
+                "value": "force",
+                "labelKey": "dnd5e.ui.energia"
+              }
+            ],
+            "labelKey": "dnd5e.ui.tipo.de.dano"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.versatile",
+            "labelKey": "dnd5e.ui.dano.versatil.2.maos"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "sheet.range",
+            "labelKey": "dnd5e.ui.alcance.normal.maximo"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.attack_bonus",
+            "labelKey": "dnd5e.ui.bonus.de.ataque"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.damage_bonus",
+            "labelKey": "dnd5e.ui.bonus.de.dano"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "children": [
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.finesse",
+                "labelKey": "dnd5e.ui.acuidade"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.light",
+                "labelKey": "dnd5e.ui.leve"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.heavy",
+                "labelKey": "dnd5e.ui.pesada"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.thrown",
+                "labelKey": "dnd5e.ui.arremesso"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.two_handed",
+                "labelKey": "dnd5e.ui.duas.maos"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.versatile",
+                "labelKey": "dnd5e.ui.versatil"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.reach",
+                "labelKey": "dnd5e.ui.alongada"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.ammunition",
+                "labelKey": "dnd5e.ui.municao"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.loading",
+                "labelKey": "dnd5e.ui.recarga"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.props.special",
+                "labelKey": "dnd5e.ui.especial"
+              }
+            ]
+          }
+        ],
+        "labelKey": "dnd5e.ui.propriedades"
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "numberField",
+            "path": "sheet.weight",
+            "labelKey": "dnd5e.ui.peso"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.cost",
+            "labelKey": "dnd5e.ui.custo"
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      }
+    ],
+    "labelKey": "dnd5e.ui.arma"
+  }
+}

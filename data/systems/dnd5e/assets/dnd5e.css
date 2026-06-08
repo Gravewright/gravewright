@@ -1,0 +1,2839 @@
+
+
+
+
+
+
+.actor-sheet-modal--dnd5e {
+    width: min(980px, calc(100vw - 44px));
+    border-color: rgba(111, 36, 31, 0.88);
+    background: rgba(20, 18, 16, 0.94);
+    box-shadow:
+        0 0 0 1px rgba(218, 190, 137, 0.18),
+        0 24px 90px rgba(0, 0, 0, 0.72);
+}
+
+.actor-sheet-modal--dnd5e .game-modal-titlebar {
+    border-bottom-color: rgba(218, 190, 137, 0.28);
+    background:
+        linear-gradient(90deg, rgba(111, 36, 31, 0.92), rgba(70, 28, 25, 0.82)),
+        rgba(27, 22, 19, 0.96);
+}
+
+.actor-sheet-modal--dnd5e .sheet-modal-name {
+    color: #f5e9ce;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+}
+
+.actor-sheet-modal--dnd5e .sheet-modal-owner {
+    color: rgba(245, 233, 206, 0.68);
+}
+
+.actor-sheet--dnd5e {
+    --dnd-paper: #eee5d2;
+    --dnd-paper-deep: #e4d7bc;
+    --dnd-paper-soft: #f8f1df;
+    --dnd-ink: #2d2924;
+    --dnd-muted: #756b5d;
+    --dnd-line: rgba(83, 66, 48, 0.36);
+    --dnd-line-soft: rgba(83, 66, 48, 0.18);
+    --dnd-red: #742d28;
+    --dnd-red-deep: #54201d;
+    --dnd-gold: #a9844f;
+    max-height: 76vh;
+    padding: 16px 18px 20px;
+    gap: 10px;
+    color: var(--dnd-ink);
+    background:
+        radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.52), transparent 27%),
+        radial-gradient(circle at 84% 92%, rgba(123, 84, 45, 0.09), transparent 32%),
+        repeating-linear-gradient(0deg, rgba(84, 58, 33, 0.018) 0 1px, transparent 1px 5px),
+        var(--dnd-paper);
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.actor-sheet--dnd5e .actor-sheet-header {
+    position: relative;
+    gap: 15px;
+    margin-bottom: 2px;
+    padding: 14px 16px;
+    border: 1px solid var(--dnd-line);
+    border-top: 4px solid var(--dnd-red);
+    border-radius: 3px;
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.46), rgba(188, 157, 111, 0.08)),
+        var(--dnd-paper-soft);
+    box-shadow: 0 2px 0 rgba(73, 48, 29, 0.14);
+}
+
+.actor-sheet--dnd5e .actor-sheet-header::after {
+    position: absolute;
+    right: 14px;
+    bottom: -6px;
+    left: 14px;
+    height: 2px;
+    content: "";
+    background: linear-gradient(90deg, transparent, var(--dnd-red), transparent);
+    opacity: 0.55;
+}
+
+.actor-sheet--dnd5e .ash-frame {
+    border: 2px solid var(--dnd-red);
+    border-radius: 3px;
+    background: rgba(112, 78, 45, 0.10);
+    box-shadow:
+        0 0 0 2px rgba(255, 251, 236, 0.88),
+        0 0 0 3px var(--dnd-line);
+}
+
+.actor-sheet--dnd5e .ash-frame--token {
+    border-radius: 50%;
+}
+
+.actor-sheet--dnd5e .ash-frame-placeholder,
+.actor-sheet--dnd5e .ash-subtitle {
+    color: var(--dnd-muted);
+}
+
+.actor-sheet--dnd5e .ash-frame-upload {
+    border-color: var(--dnd-gold);
+    background: var(--dnd-red-deep);
+    color: #f8ebcf;
+}
+
+.actor-sheet--dnd5e .ash-name-input {
+    color: var(--dnd-red-deep);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+}
+
+.actor-sheet--dnd5e .ash-name-input:hover:not(:disabled),
+.actor-sheet--dnd5e .ash-name-input:focus {
+    border-bottom-color: var(--dnd-red);
+}
+
+.actor-sheet--dnd5e .ash-stat {
+    border-color: var(--dnd-line);
+    border-radius: 3px;
+    background: rgba(255, 251, 236, 0.62);
+}
+
+.actor-sheet--dnd5e .ash-stat-label {
+    color: var(--dnd-red);
+}
+
+.actor-sheet--dnd5e .ash-stat-value {
+    color: var(--dnd-ink);
+}
+
+.actor-sheet--dnd5e .actor-tab-bar {
+    position: sticky;
+    top: -16px;
+    z-index: 4;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0 -18px 12px;
+    padding: 0 18px;
+    border-color: rgba(84, 32, 29, 0.46);
+    background: rgba(238, 229, 210, 0.96);
+    box-shadow: 0 5px 12px rgba(67, 48, 30, 0.08);
+}
+
+.actor-sheet--dnd5e .actor-tab-btn {
+    border-right: 1px solid var(--dnd-line-soft);
+    border-bottom-width: 3px;
+    color: var(--dnd-muted);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.025em;
+    padding: 9px 11px 7px;
+}
+
+.actor-sheet--dnd5e .actor-tab-btn:hover,
+.actor-sheet--dnd5e .actor-tab-btn.is-active {
+    color: var(--dnd-red);
+}
+
+.actor-sheet--dnd5e .actor-tab-btn.is-active {
+    border-bottom-color: var(--dnd-red);
+    background: rgba(116, 45, 40, 0.06);
+}
+
+.actor-sheet--dnd5e .actor-tab-panel {
+    display: grid;
+    gap: 10px;
+}
+
+.actor-sheet--dnd5e .actor-tab-panel[hidden] {
+    display: none;
+}
+
+.actor-sheet--dnd5e .actor-section {
+    gap: 9px;
+    border-color: var(--dnd-line);
+    border-radius: 3px;
+    padding: 11px;
+    background: rgba(255, 251, 237, 0.42);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.48);
+}
+
+.actor-sheet--dnd5e .actor-section-title {
+    margin: -2px 0 2px;
+    color: var(--dnd-red);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 14px;
+    font-variant: small-caps;
+    font-weight: 700;
+    letter-spacing: 0.10em;
+}
+
+.actor-sheet--dnd5e .actor-field-label,
+.actor-sheet--dnd5e .actor-combat-stat-abbr,
+.actor-sheet--dnd5e .actor-resource-box-label {
+    color: var(--dnd-red);
+}
+
+.actor-sheet--dnd5e .actor-input,
+.actor-sheet--dnd5e .actor-ability-card-score,
+.actor-sheet--dnd5e .actor-resource-box-value,
+.actor-sheet--dnd5e .actor-resource-box-max {
+    border-color: var(--dnd-line);
+    border-radius: 3px;
+    background: rgba(255, 253, 244, 0.70);
+    color: var(--dnd-ink);
+}
+
+.actor-sheet--dnd5e .actor-input:focus,
+.actor-sheet--dnd5e .actor-ability-card-score:focus,
+.actor-sheet--dnd5e .actor-resource-box-value:focus,
+.actor-sheet--dnd5e .actor-resource-box-max:focus {
+    border-color: var(--dnd-red);
+    outline: 1px solid rgba(116, 45, 40, 0.20);
+}
+
+.actor-sheet--dnd5e .actor-readonly-value,
+.actor-sheet--dnd5e .actor-text,
+.actor-sheet--dnd5e .actor-resource-sep,
+.actor-sheet--dnd5e .actor-resource-box-sep {
+    color: var(--dnd-ink);
+}
+
+.actor-sheet--dnd5e .actor-divider {
+    border-color: var(--dnd-line);
+}
+
+.actor-sheet--dnd5e .actor-section--abilities .actor-row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(92px, 1fr));
+    gap: 8px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e {
+    position: relative;
+    min-width: 0;
+    gap: 3px;
+    border: 2px solid var(--dnd-red);
+    border-radius: 8px 8px 18px 18px;
+    padding: 8px 6px 12px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.80), rgba(228, 215, 188, 0.64)),
+        var(--dnd-paper-soft);
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 251, 237, 0.76),
+        0 2px 0 rgba(93, 55, 31, 0.14);
+}
+
+.actor-sheet--dnd5e .actor-ability-card-abbr {
+    color: var(--dnd-red);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 12px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card-label {
+    color: var(--dnd-muted);
+    font-size: 9px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card-score {
+    width: 52px;
+    border: 0;
+    background: transparent;
+    color: var(--dnd-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 24px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card-mod {
+    color: var(--dnd-ink);
+}
+
+.actor-sheet--dnd5e .actor-ability-card-roll {
+    border-color: var(--dnd-red);
+    background: rgba(255, 251, 237, 0.92);
+}
+
+.actor-sheet--dnd5e .actor-ability-card-roll:hover,
+.actor-sheet--dnd5e .actor-ability-card-roll:focus-visible {
+    border-color: var(--dnd-red-deep);
+    background: #fffaf0;
+}
+
+.actor-sheet--dnd5e .actor-combat-stat,
+.actor-sheet--dnd5e .actor-resource-box {
+    border-color: var(--dnd-line);
+    border-radius: 4px;
+    background: rgba(255, 251, 237, 0.64);
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, 0.42),
+        0 2px 0 rgba(93, 55, 31, 0.10);
+}
+
+.actor-sheet--dnd5e .actor-combat-stat-value {
+    color: var(--dnd-ink);
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.actor-sheet--dnd5e .actor-resource-box-step,
+.actor-sheet--dnd5e .actor-action-btn,
+.actor-sheet--dnd5e .actor-step-btn,
+.actor-sheet--dnd5e .actor-item-action-btn {
+    border-color: var(--dnd-line);
+    border-radius: 3px;
+    background: rgba(255, 251, 237, 0.74);
+    color: var(--dnd-ink);
+}
+
+.actor-sheet--dnd5e .actor-resource-box-step:hover:not(:disabled),
+.actor-sheet--dnd5e .actor-action-btn:hover,
+.actor-sheet--dnd5e .actor-step-btn:hover,
+.actor-sheet--dnd5e .actor-item-action-btn:hover:not(:disabled) {
+    border-color: var(--dnd-red);
+    background: rgba(116, 45, 40, 0.10);
+}
+
+.actor-sheet--dnd5e .actor-bar {
+    background: rgba(84, 52, 34, 0.16);
+}
+
+.actor-sheet--dnd5e .actor-bar-fill {
+    background: linear-gradient(90deg, #7b2926, #b3473e);
+}
+
+.actor-sheet--dnd5e .actor-item-row {
+    border-color: var(--dnd-line-soft);
+    border-radius: 3px;
+    background: rgba(255, 253, 244, 0.52);
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e .actor-item-row-title {
+    color: var(--dnd-ink);
+    font-family: Georgia, "Times New Roman", serif;
+}
+
+.actor-sheet--dnd5e .actor-item-row-subtitle,
+.actor-sheet--dnd5e .actor-itemlist-empty {
+    color: var(--dnd-muted);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table th {
+    color: #f8ecd5;
+    background: var(--dnd-red);
+    border-color: var(--dnd-red-deep);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table td {
+    color: var(--dnd-ink);
+    border-color: var(--dnd-line-soft);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table tbody tr:nth-child(even) {
+    background: rgba(123, 91, 51, 0.055);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table tbody tr:hover {
+    background: rgba(116, 45, 40, 0.08);
+}
+
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--monster {
+    width: min(840px, calc(100vw - 44px));
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-sheet-header {
+    border-width: 0 0 4px;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-name-input {
+    font-size: 31px;
+    text-transform: uppercase;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-tab-btn {
+    font-variant: small-caps;
+    text-transform: uppercase;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section {
+    border-width: 0;
+    border-radius: 0;
+    padding: 8px 2px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section + .actor-section {
+    border-top: 2px solid var(--dnd-red);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section-title {
+    color: var(--dnd-red);
+    font-size: 17px;
+    letter-spacing: 0.06em;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-identity .actor-field-label,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-combat .actor-field-label,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-details .actor-field-label {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 11px;
+    font-variant: small-caps;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities .actor-row {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(82px, 1fr));
+    gap: 6px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities .actor-column {
+    gap: 5px;
+    min-width: 0;
+    padding: 7px 5px 8px;
+    border-top: 1px solid var(--dnd-line);
+    border-bottom: 1px solid var(--dnd-line);
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities .actor-field-label {
+    color: var(--dnd-red);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities .actor-input {
+    border: 0;
+    background: transparent;
+    color: var(--dnd-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 1px;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities .actor-readonly-value {
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities .actor-action-btn {
+    padding: 4px 5px;
+    font-size: 11px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-traits .actor-textarea {
+    min-height: 100px;
+    font-family: Georgia, "Times New Roman", serif;
+    line-height: 1.45;
+}
+@media (max-width: 760px) {
+    .actor-sheet-modal--dnd5e,
+    .actor-sheet-modal--dnd5e.actor-sheet-modal--monster {
+        width: calc(100vw - 24px);
+    }
+
+    .actor-sheet--dnd5e {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .actor-sheet--dnd5e .actor-tab-bar {
+        margin-right: -12px;
+        margin-left: -12px;
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .actor-sheet--dnd5e .actor-section--abilities .actor-row,
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities .actor-row {
+        grid-template-columns: repeat(3, minmax(82px, 1fr));
+    }
+}
+
+
+
+.actor-sheet-modal--dnd5e {
+    width: min(1080px, calc(100vw - 44px));
+    border-color: var(--border-accent-strong);
+    background: #0b0e10;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow:
+        0 0 0 1px rgba(192, 154, 90, 0.08),
+        0 28px 90px rgba(0, 0, 0, 0.68);
+}
+
+.actor-sheet-modal--dnd5e .game-modal-titlebar {
+    border-bottom-color: rgba(192, 154, 90, 0.18);
+    background:
+        linear-gradient(180deg, rgba(192, 154, 90, 0.05), rgba(192, 154, 90, 0)),
+        rgba(16, 19, 21, 0.94);
+}
+
+.actor-sheet-modal--dnd5e .sheet-modal-name {
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+}
+
+.actor-sheet-modal--dnd5e .sheet-modal-owner {
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e {
+    --dnd-paper: var(--surface);
+    --dnd-paper-deep: var(--surface-raised);
+    --dnd-paper-soft: var(--surface-field);
+    --dnd-ink: var(--text);
+    --dnd-muted: var(--text-muted);
+    --dnd-line: var(--border);
+    --dnd-line-soft: rgba(192, 154, 90, 0.12);
+    --dnd-red: var(--accent);
+    --dnd-red-deep: var(--accent-hover);
+    --dnd-gold: var(--accent);
+    max-height: 78vh;
+    padding: 14px;
+    color: var(--text);
+    background: rgba(11, 14, 16, 0.76);
+    font-family: inherit;
+}
+
+.actor-sheet--dnd5e .actor-sheet-header {
+    gap: 12px;
+    margin: 0;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background:
+        radial-gradient(110% 160% at 0% 0%, var(--accent-glow), transparent 58%),
+        linear-gradient(180deg, var(--surface-raised), var(--surface));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.actor-sheet--dnd5e .actor-sheet-header::after {
+    display: none;
+}
+
+.actor-sheet--dnd5e .ash-frame {
+    border: 1px solid var(--border-accent);
+    border-radius: 10px;
+    background: var(--surface-field);
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e .ash-frame--token {
+    border-radius: 50%;
+}
+
+.actor-sheet--dnd5e .ash-frame-placeholder,
+.actor-sheet--dnd5e .ash-subtitle {
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e .ash-frame-upload {
+    border-color: var(--border-accent-strong);
+    background: rgba(17, 21, 26, 0.92);
+    color: var(--accent);
+}
+
+.actor-sheet--dnd5e .ash-name-input {
+    color: var(--text);
+    font-family: inherit;
+    font-size: 22px;
+    letter-spacing: 0.01em;
+}
+
+.actor-sheet--dnd5e .ash-name-input:hover:not(:disabled),
+.actor-sheet--dnd5e .ash-name-input:focus {
+    border-bottom-color: var(--accent);
+}
+
+.actor-sheet--dnd5e .ash-stats {
+    border-color: var(--border-accent);
+    background: rgba(192, 154, 90, 0.05);
+}
+
+.actor-sheet--dnd5e .ash-stat {
+    border-right-color: var(--border-accent);
+    border-radius: 0;
+    background: transparent;
+}
+
+.actor-sheet--dnd5e .ash-stat-label {
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e .ash-stat-value {
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e .actor-tab-bar {
+    position: sticky;
+    top: -14px;
+    z-index: 4;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 0 -14px 12px;
+    padding: 10px 14px 0;
+    border-color: var(--border);
+    background: rgba(11, 14, 16, 0.96);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.actor-sheet--dnd5e .actor-tab-btn {
+    border-right: 0;
+    border-bottom-width: 2px;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.01em;
+    padding: 7px 10px;
+}
+
+.actor-sheet--dnd5e .actor-tab-btn:hover,
+.actor-sheet--dnd5e .actor-tab-btn.is-active {
+    color: var(--accent);
+}
+
+.actor-sheet--dnd5e .actor-tab-btn.is-active {
+    border-bottom-color: var(--accent);
+    background: var(--accent-glow);
+}
+
+.actor-sheet--dnd5e .actor-tab-panel {
+    gap: 12px;
+}
+
+.actor-sheet--dnd5e .actor-section {
+    min-width: 0;
+    gap: 7px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 9px;
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: none;
+}
+
+
+
+.actor-sheet--dnd5e .actor-ability-card-label {
+    display: none;
+}
+
+.actor-sheet--dnd5e .actor-section-title {
+    margin: 0;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 11px;
+    font-variant: normal;
+    letter-spacing: 0.08em;
+}
+
+.actor-sheet--dnd5e .actor-field-label,
+.actor-sheet--dnd5e .actor-combat-stat-abbr,
+.actor-sheet--dnd5e .actor-resource-box-label {
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e .actor-input,
+.actor-sheet--dnd5e .actor-ability-card-score,
+.actor-sheet--dnd5e .actor-resource-box-value,
+.actor-sheet--dnd5e .actor-resource-box-max {
+    border-color: var(--border);
+    border-radius: var(--radius);
+    background: rgba(16, 19, 21, 0.68);
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e .actor-input:focus,
+.actor-sheet--dnd5e .actor-ability-card-score:focus,
+.actor-sheet--dnd5e .actor-resource-box-value:focus,
+.actor-sheet--dnd5e .actor-resource-box-max:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+.actor-sheet--dnd5e .actor-readonly-value,
+.actor-sheet--dnd5e .actor-text,
+.actor-sheet--dnd5e .actor-resource-sep,
+.actor-sheet--dnd5e .actor-resource-box-sep {
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e .actor-divider {
+    border-color: var(--border);
+}
+
+
+
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-tab-panel--main {
+    grid-template-columns: 200px minmax(0, 1fr) 220px;
+    grid-template-areas:
+        "identity identity identity"
+        "abilities skills combat"
+        "abilities skills passives";
+    align-items: start;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--identity {
+    grid-area: identity;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--abilities {
+    grid-area: abilities;
+    gap: 4px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills {
+    grid-area: skills;
+    gap: 1px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--passives {
+    grid-area: passives;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--combat {
+    grid-area: combat;
+}
+
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px 8px;
+    background: rgba(255, 255, 255, 0.025);
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e .actor-ability-card-abbr {
+    width: 32px;
+    text-align: left;
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e .actor-ability-card-score {
+    margin: 0;
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e .actor-ability-card-mod {
+    margin-left: auto;
+}
+
+.actor-sheet--dnd5e .actor-ability-card-abbr {
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 10px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card-label {
+    color: var(--text-faint);
+}
+
+.actor-sheet--dnd5e .actor-ability-card-score {
+    width: 44px;
+    border: 1px solid var(--border);
+    background: rgba(16, 19, 21, 0.72);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 18px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card-mod {
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e .actor-ability-card-roll {
+    border-color: var(--border-accent-strong);
+    background: rgba(192, 154, 90, 0.12);
+}
+
+.actor-sheet--dnd5e .actor-ability-card-roll:hover,
+.actor-sheet--dnd5e .actor-ability-card-roll:focus-visible {
+    border-color: var(--accent);
+    background: rgba(192, 154, 90, 0.22);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--combatGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    align-items: stretch;
+}
+
+.actor-sheet--dnd5e .actor-combat-stat,
+.actor-sheet--dnd5e .actor-resource-box {
+    border-color: var(--border);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.025);
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e .actor-combat-stat-value {
+    color: var(--text);
+    font-family: inherit;
+}
+
+.actor-sheet--dnd5e .actor-resource-box-step,
+.actor-sheet--dnd5e .actor-action-btn,
+.actor-sheet--dnd5e .actor-step-btn,
+.actor-sheet--dnd5e .actor-item-action-btn {
+    border-color: var(--border);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e .actor-resource-box-step:hover:not(:disabled),
+.actor-sheet--dnd5e .actor-action-btn:hover,
+.actor-sheet--dnd5e .actor-step-btn:hover,
+.actor-sheet--dnd5e .actor-item-action-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(192, 154, 90, 0.10);
+}
+
+.actor-sheet--dnd5e .actor-bar {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.actor-sheet--dnd5e .actor-bar-fill {
+    background: linear-gradient(90deg, var(--accent-dark), var(--accent));
+}
+
+.actor-sheet--character .actor-tab-panel--skills {
+    grid-template-columns: minmax(220px, 0.8fr) minmax(360px, 1.45fr);
+    grid-template-areas:
+        "saves skills"
+        "passives skills";
+    align-items: start;
+}
+
+.actor-sheet--character .actor-section--saves {
+    grid-area: saves;
+}
+
+.actor-sheet--character .actor-section--skills {
+    grid-area: skills;
+}
+
+.actor-sheet--character .actor-section--passives {
+    grid-area: passives;
+}
+
+
+
+.actor-sheet--character .actor-section--saves,
+.actor-sheet--character .actor-section--skills {
+    gap: 2px;
+}
+
+.actor-sheet--character .actor-section--saves > .actor-section-title,
+.actor-sheet--character .actor-section--skills > .actor-section-title {
+    margin-bottom: 4px;
+}
+
+.actor-sheet--character .actor-section--saves .actor-rollable-row + .actor-rollable-row,
+.actor-sheet--character .actor-section--skills .actor-rollable-row + .actor-rollable-row {
+    border-top: 1px solid var(--border);
+}
+
+.actor-sheet--character .actor-section--saves .actor-rollable-row,
+.actor-sheet--character .actor-section--skills .actor-rollable-row {
+    padding: 0;
+}
+
+.actor-sheet--character .actor-section--saves .actor-rollable-toggles,
+.actor-sheet--character .actor-section--skills .actor-rollable-toggles {
+    padding-left: 4px;
+}
+
+.actor-sheet--character .actor-tab-panel--spells {
+    grid-template-columns: minmax(0, 1fr) minmax(270px, 0.85fr);
+    align-items: start;
+}
+
+.actor-sheet--character .actor-section--spellbook {
+    grid-column: 1 / -1;
+}
+
+.actor-sheet--character .actor-tab-panel--inventory {
+    grid-template-columns: minmax(0, 1fr) 250px;
+    align-items: start;
+}
+
+.actor-sheet--character .actor-section--currency .actor-row {
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+.actor-sheet--character .actor-tab-panel--features {
+    grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+    align-items: start;
+}
+
+.actor-sheet--character .actor-section--feature-list {
+    grid-row: span 2;
+}
+
+.actor-sheet--dnd5e .actor-item-row {
+    border-color: var(--border);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.028);
+}
+
+.actor-sheet--dnd5e .actor-item-row-title,
+.actor-sheet--dnd5e .actor-itemlist-table td {
+    color: var(--text);
+    font-family: inherit;
+}
+
+.actor-sheet--dnd5e .actor-item-row-subtitle,
+.actor-sheet--dnd5e .actor-itemlist-empty {
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table th {
+    color: var(--text-muted);
+    background: var(--surface-raised);
+    border-color: var(--border);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table td {
+    border-color: var(--border);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.018);
+}
+
+.actor-sheet--dnd5e .actor-itemlist-table tbody tr:hover {
+    background: var(--accent-glow);
+}
+
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--monster {
+    width: min(860px, calc(100vw - 44px));
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-sheet-header {
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-name-input {
+    font-size: 24px;
+    text-transform: uppercase;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-tab-btn {
+    font-variant: normal;
+    text-transform: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-tab-panel {
+    gap: 0;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section {
+    border: 0;
+    border-radius: 0;
+    padding: 11px 2px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section + .actor-section {
+    border-top: 1px solid var(--border-accent);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section-title {
+    margin-bottom: 2px;
+    color: var(--accent);
+    font-size: 12px;
+    letter-spacing: 0.10em;
+}
+
+.actor-sheet--monster .actor-row--monster-profile,
+.actor-sheet--monster .actor-row--monster-profile-meta {
+    display: grid;
+    gap: 8px;
+}
+
+.actor-sheet--monster .actor-row--monster-profile {
+    grid-template-columns: 130px minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.actor-sheet--monster .actor-row--monster-profile-meta {
+    grid-template-columns: 130px 170px;
+}
+
+.actor-sheet--monster .actor-grid--monsterVitals {
+    grid-template-columns: 112px 112px minmax(220px, 1fr);
+    gap: 8px;
+}
+
+.actor-sheet--monster .actor-row--monster-combat-meta {
+    display: grid;
+    grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1fr);
+    gap: 8px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-row--monsterAbilityStrip {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+}
+
+.actor-sheet--monster .actor-ability-card--monster {
+    min-width: 0;
+    gap: 2px;
+    border: 0;
+    border-radius: 0;
+    padding: 6px 3px;
+    background: transparent;
+    box-shadow: none;
+}
+
+.actor-sheet--monster .actor-ability-card--monster + .actor-ability-card--monster {
+    border-left: 1px solid var(--border);
+}
+
+.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-label {
+    display: none;
+}
+
+.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-score {
+    width: 48px;
+    border: 0;
+    background: transparent;
+    font-size: 18px;
+}
+
+.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-mod {
+    min-height: 24px;
+    font-size: 13px;
+}
+
+.actor-sheet--monster .actor-section--monster-traits .actor-textarea {
+    min-height: 104px;
+}
+@media (max-width: 760px) {
+    .actor-sheet-modal--dnd5e,
+    .actor-sheet-modal--dnd5e.actor-sheet-modal--monster {
+        width: calc(100vw - 24px);
+    }
+
+    .actor-sheet--dnd5e {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .actor-sheet--dnd5e .actor-tab-bar {
+        margin-right: -10px;
+        margin-left: -10px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .actor-tab-panel--main,
+    .actor-sheet--character .actor-tab-panel--skills,
+    .actor-sheet--character .actor-tab-panel--spells,
+    .actor-sheet--character .actor-tab-panel--inventory,
+    .actor-sheet--character .actor-tab-panel--features {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-areas: none;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .actor-tab-panel--main > *,
+    .actor-sheet--character .actor-tab-panel--skills > *,
+    .actor-sheet--character .actor-tab-panel--spells > *,
+    .actor-sheet--character .actor-tab-panel--inventory > *,
+    .actor-sheet--character .actor-tab-panel--features > * {
+        grid-area: auto;
+        grid-column: auto;
+        grid-row: auto;
+    }
+
+    .actor-sheet--monster .actor-grid--monsterVitals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .actor-sheet--monster .actor-grid--monsterVitals .actor-resource-box {
+        grid-column: 1 / -1;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-row--monsterAbilityStrip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+
+
+
+
+
+
+
+.actor-sheet--dnd5e .actor-sheet-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background:
+        radial-gradient(120% 180% at 0% 0%, var(--accent-glow), transparent 55%),
+        linear-gradient(180deg, var(--surface-raised), var(--surface));
+}
+
+.actor-sheet--dnd5e .ash-frame--portrait {
+    flex: none;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--surface-field);
+    box-shadow: 0 0 0 3px rgba(192, 154, 90, 0.14);
+    overflow: hidden;
+}
+
+.actor-sheet--dnd5e .ash-frame--portrait .ash-frame-img {
+    border-radius: 50%;
+}
+
+.actor-sheet--dnd5e .ash-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+        "title title"
+        "meta  ids";
+    gap: 6px 18px;
+    align-items: center;
+}
+
+.actor-sheet--dnd5e .ash-title-row {
+    grid-area: title;
+}
+
+.actor-sheet--dnd5e .ash-name-input {
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.actor-sheet--dnd5e .ash-meta {
+    grid-area: meta;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-self: end;
+}
+
+.actor-sheet--dnd5e .ash-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e .ash-meta-icon {
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.actor-sheet--dnd5e .ash-meta-input {
+    border: none;
+    background: transparent;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 1px 0;
+    width: auto;
+    min-width: 60px;
+}
+
+.actor-sheet--dnd5e .ash-meta-input:focus {
+    outline: none;
+    color: var(--accent-hover);
+}
+
+.actor-sheet--dnd5e .ash-meta-input--lvl {
+    width: 34px;
+    min-width: 0;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e .ash-meta-sep {
+    color: var(--text-faint);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.actor-sheet--dnd5e .ash-identity {
+    grid-area: ids;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 22px;
+    align-self: end;
+    justify-content: flex-end;
+}
+
+.actor-sheet--dnd5e .ash-id-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.actor-sheet--dnd5e .ash-id-label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--accent);
+}
+
+.actor-sheet--dnd5e .ash-id-readonly {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e .ash-identity .ash-meta-input {
+    font-size: 14px;
+    font-weight: 700;
+    min-width: 90px;
+}
+
+
+.actor-sheet--dnd5e .actor-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.actor-sheet--dnd5e .actor-tab-icon {
+    font-size: 15px;
+    opacity: 0.9;
+}
+
+
+
+.actor-sheet--dnd5e.actor-sheet--character {
+    width: 768px;
+    max-width: 100%;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-tab-panel--main {
+    display: grid;
+    grid-template-columns: 84px 212px minmax(0, 1fr) 158px;
+    grid-template-areas:
+        "abilities skills statbar statbar"
+        "abilities skills attacks equipment"
+        "abilities skills vitals  traits";
+    gap: 8px;
+    align-items: start;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--abilities { grid-area: abilities; }
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills { grid-area: skills; }
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--statbar { grid-area: statbar; }
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals { grid-area: vitals; }
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--attacks { grid-area: attacks; }
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--equipment { grid-area: equipment; }
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--traits { grid-area: traits; }
+
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--abilities {
+    gap: 7px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e {
+    display: grid;
+    grid-template-rows: auto auto auto auto;
+    justify-items: center;
+    gap: 1px;
+    padding: 7px 6px 8px;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e .actor-ability-card-abbr {
+    width: auto;
+    text-align: center;
+    font-size: 10px;
+    color: var(--accent);
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e .actor-ability-card-label {
+    display: block;
+    font-size: 8px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e .actor-ability-card-score {
+    width: 100%;
+    max-width: 58px;
+    margin: 1px 0 2px;
+    border: none;
+    background: transparent;
+    font-size: 24px;
+}
+
+.actor-sheet--dnd5e .actor-ability-card--dnd5e .actor-ability-card-mod {
+    margin: 0;
+    min-width: 38px;
+    padding: 1px 8px;
+    border: 1px solid var(--border-accent);
+    border-radius: 999px;
+    background: var(--surface-field);
+    font-size: 12px;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills {
+    gap: 0;
+}
+
+.actor-sheet--dnd5e .actor-rollable-icon {
+    flex: none;
+    width: 18px;
+    text-align: center;
+    color: var(--accent);
+    font-size: 15px;
+}
+
+.actor-sheet--dnd5e .actor-section--skills .actor-rollable {
+    padding: 5px 8px;
+    gap: 7px;
+}
+
+.actor-sheet--dnd5e .actor-section--skills .actor-rollable-name {
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e .actor-section--skills .actor-rollable-ability {
+    padding: 1px 5px;
+    font-size: 8px;
+}
+
+.actor-sheet--dnd5e .actor-section--skills .actor-rollable-mod {
+    min-width: 28px;
+    color: var(--text);
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--statbar,
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals {
+    border: none;
+    background: transparent;
+    padding: 0;
+    gap: 8px;
+}
+
+.actor-sheet--dnd5e .actor-grid--statBar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+}
+
+
+.actor-sheet--dnd5e .actor-grid--statBar .actor-resource-box-value,
+.actor-sheet--dnd5e .actor-grid--statBar .actor-resource-box-max {
+    width: 42px;
+    font-size: 14px;
+}
+
+.actor-sheet--dnd5e .actor-combat-stat,
+.actor-sheet--dnd5e .actor-resource-box {
+    gap: 1px;
+    padding: 8px 6px;
+}
+
+.actor-sheet--dnd5e .actor-combat-stat-icon,
+.actor-sheet--dnd5e .actor-resource-box-icon {
+    color: var(--accent);
+    font-size: 18px;
+    margin-bottom: 2px;
+}
+
+.actor-sheet--dnd5e .actor-resource-box-head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+
+.actor-sheet--dnd5e .actor-combat-stat-abbr,
+.actor-sheet--dnd5e .actor-resource-box-label {
+    font-size: 9px;
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e .actor-combat-stat-value {
+    font-size: 22px;
+}
+
+
+.actor-sheet--dnd5e .actor-section--death {
+    gap: 6px;
+    padding: 8px 9px;
+}
+
+.actor-sheet--dnd5e .actor-section--death .actor-row {
+    gap: 8px;
+}
+
+.actor-sheet--dnd5e .actor-section--death .actor-row > * {
+    flex: 1 1 60px;
+}
+
+
+.actor-sheet--dnd5e .actor-section--attacks > .actor-section-title,
+.actor-sheet--dnd5e .actor-section--equipment > .actor-section-title,
+.actor-sheet--dnd5e .actor-section--traits > .actor-section-title,
+.actor-sheet--dnd5e .actor-section--statbar > .actor-section-title {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+
+.actor-sheet--dnd5e .actor-section--skills-full {
+    gap: 0;
+}
+
+.actor-sheet--dnd5e .actor-section--skills-full .actor-rollable-row + .actor-rollable-row {
+    border-top: 1px solid var(--border);
+}
+
+
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--character {
+    width: min(820px, calc(100vw - 24px));
+    min-width: min(720px, calc(100vw - 24px));
+}
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--character .actor-sheet-body {
+    width: 100%;
+    max-height: none;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(192, 154, 90, 0.7) rgba(255, 255, 255, 0.04);
+}
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--character .actor-sheet-body::-webkit-scrollbar {
+    width: 10px;
+}
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--character .actor-sheet-body::-webkit-scrollbar-track {
+    border-left: 1px solid rgba(192, 154, 90, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--character .actor-sheet-body::-webkit-scrollbar-thumb {
+    border: 2px solid rgba(12, 16, 19, 0.94);
+    border-radius: 999px;
+    background: rgba(192, 154, 90, 0.7);
+}
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--character .actor-sheet-body::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    gap: 9px;
+    padding: 10px;
+    background:
+        radial-gradient(100% 120% at 12% 0%, rgba(192, 154, 90, 0.055), transparent 48%),
+        linear-gradient(145deg, rgba(13, 17, 20, 0.98), rgba(9, 13, 16, 0.98));
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-sheet-header {
+    position: relative;
+    display: grid;
+    grid-template-columns: 106px minmax(0, 1fr);
+    gap: 16px;
+    min-height: 132px;
+    padding: 11px 13px;
+    border-color: var(--border-accent);
+    border-radius: 8px;
+    background:
+        radial-gradient(95% 190% at 0% 20%, rgba(192, 154, 90, 0.11), transparent 55%),
+        linear-gradient(90deg, rgba(18, 23, 27, 0.98), rgba(10, 14, 17, 0.94));
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-frame--portrait {
+    width: 94px;
+    height: 94px;
+    align-self: center;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 3px rgba(8, 11, 13, 0.96),
+        0 0 0 4px rgba(192, 154, 90, 0.42);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 186px;
+    grid-template-areas:
+        "title ids"
+        "meta  ids";
+    gap: 7px 16px;
+    align-items: center;
+    min-height: 108px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-title-row {
+    grid-area: title;
+    position: static;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-name-input {
+    color: var(--accent-hover);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px;
+    font-variant: small-caps;
+    letter-spacing: 0.035em;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-frame--token {
+    position: absolute;
+    bottom: 9px;
+    left: 88px;
+    width: 34px;
+    height: 34px;
+    border-color: var(--accent);
+    background: rgba(12, 16, 19, 0.98);
+    box-shadow: 0 0 0 3px rgba(9, 12, 15, 0.95);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-frame-upload,
+.actor-sheet--dnd5e.actor-sheet--character .ash-frame--token .ash-frame-upload {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: inherit;
+    background: rgba(9, 13, 16, 0.42);
+    font-size: 18px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-meta {
+    gap: 6px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-meta-line {
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-meta-input {
+    min-width: 84px;
+    color: var(--text-muted);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-meta-input:focus {
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-meta-divider {
+    color: var(--accent);
+    opacity: 0.65;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-identity {
+    grid-area: ids;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-self: stretch;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(9, 13, 16, 0.62);
+    overflow: hidden;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-id-cell {
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 5px 6px;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-id-cell--inspiration {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--border);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-id-cell--experience {
+    border-left: 1px solid var(--border);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-id-label {
+    color: var(--text-muted);
+    font-size: 10px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .ash-id-readonly,
+.actor-sheet--dnd5e.actor-sheet--character .ash-identity .ash-meta-input {
+    width: 100%;
+    min-width: 0;
+    color: var(--accent-hover);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-tab-bar {
+    top: -10px;
+    gap: 1px;
+    margin: 0 -10px 8px;
+    padding: 0 10px;
+    background: rgba(10, 14, 17, 0.97);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-tab-btn {
+    padding: 6px 9px 5px;
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-tab-panel--main {
+    display: grid;
+    grid-template-columns: 104px 206px minmax(0, 1fr);
+    grid-template-areas:
+        "statbar   statbar statbar"
+        "abilities skills  attacks"
+        "abilities skills  vitals"
+        "abilities skills  equipment"
+        "abilities skills  traits";
+    gap: 7px;
+    align-items: start;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--statbar {
+    grid-area: statbar;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--abilities {
+    grid-area: abilities;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills {
+    grid-area: skills;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--attacks {
+    grid-area: attacks;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals {
+    grid-area: vitals;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--equipment {
+    grid-area: equipment;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--traits {
+    grid-area: traits;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section {
+    gap: 5px;
+    border-radius: 6px;
+    padding: 6px;
+    background: rgba(12, 16, 19, 0.62);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section-title {
+    color: var(--accent);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 12px;
+    font-variant: small-caps;
+    letter-spacing: 0.1em;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-field-label {
+    font-size: 12px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-input {
+    font-size: 15px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character input:not([type="file"]):not([type="checkbox"]):not([type="hidden"]),
+.actor-sheet--dnd5e.actor-sheet--character textarea,
+.actor-sheet--dnd5e.actor-sheet--character select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character input:not([type="file"]):not([type="checkbox"]):not([type="hidden"]):focus,
+.actor-sheet--dnd5e.actor-sheet--character textarea:focus,
+.actor-sheet--dnd5e.actor-sheet--character select:focus {
+    border-color: var(--accent);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-readonly-value {
+    font-size: 16px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-text {
+    font-size: 15px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-itemlist-title {
+    font-size: 18px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-itemlist-empty {
+    font-size: 14px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-rollable-row--action .actor-rollable {
+    font-size: 15px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--statbar {
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar {
+    grid-template-columns: 1.24fr 0.9fr 1.04fr 0.9fr 0.8fr 0.9fr;
+    gap: 5px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-combat-stat,
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-resource-box {
+    min-height: 64px;
+    justify-content: center;
+    border-color: var(--border);
+    border-radius: 6px;
+    background: rgba(12, 16, 19, 0.78);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-combat-stat-icon,
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-resource-box-icon {
+    font-size: 14px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-combat-stat-abbr,
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-resource-box-label {
+    font-size: 10px;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-combat-stat-value {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-resource-box-controls,
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-bar {
+    display: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-resource-box-value,
+.actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar .actor-resource-box-max {
+    width: 42px;
+    padding: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-ability-card--dnd5e {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) 32px;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+        "abbr mod"
+        "score mod"
+        "label label";
+    gap: 1px 4px;
+    min-height: 55px;
+    padding: 5px;
+    border-left: 2px solid var(--border-accent-strong);
+    border-radius: 5px;
+    background: rgba(17, 21, 24, 0.82);
+    overflow: hidden;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-ability-card--dnd5e .actor-ability-card-abbr {
+    grid-area: abbr;
+    width: auto;
+    color: var(--accent);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-ability-card--dnd5e .actor-ability-card-label {
+    grid-area: label;
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-faint);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-ability-card--dnd5e .actor-ability-card-score {
+    grid-area: score;
+    width: 32px;
+    max-width: 32px;
+    margin: 0;
+    border: 1px solid var(--border);
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: left;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-ability-card--dnd5e .actor-ability-card-mod {
+    grid-area: mod;
+    align-self: center;
+    width: 32px;
+    min-width: 0;
+    margin: 0;
+    padding: 3px 0;
+    border-radius: 5px;
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 19px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills {
+    gap: 0;
+    padding: 6px 5px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills .actor-rollable-row {
+    gap: 3px;
+    min-height: 22px;
+    border-top: 1px solid rgba(192, 154, 90, 0.07);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills .actor-rollable-row:first-of-type {
+    border-top: 0;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-rollable-toggles {
+    gap: 2px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-prof-dot {
+    width: 9px;
+    height: 9px;
+    border-width: 1px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills .actor-rollable {
+    gap: 3px;
+    padding: 2px 1px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills .actor-rollable-name {
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills .actor-rollable-ability {
+    padding: 0;
+    color: var(--text-faint);
+    background: transparent;
+    font-size: 10px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--skills .actor-rollable-mod {
+    min-width: 18px;
+    color: var(--accent-hover);
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals > .actor-section-title {
+    display: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals .actor-section {
+    border-color: rgba(192, 154, 90, 0.12);
+    padding: 5px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals > .actor-section--death,
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals > .actor-section--passives {
+    grid-area: auto;
+    align-self: start;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--death {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--death > .actor-section-title,
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--death > .actor-rollable-row {
+    grid-column: 1 / -1;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--death > .actor-row {
+    display: contents;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--death .actor-input {
+    min-width: 0;
+    padding: 4px 5px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--passives .actor-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--passives .actor-row > * {
+    min-width: 0;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals .actor-section-title {
+    font-size: 11px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-section--vitals .actor-field-label {
+    font-size: 10px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row-list {
+    gap: 3px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row {
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    gap: 6px;
+    border: 0;
+    border-top: 1px solid rgba(192, 154, 90, 0.09);
+    border-radius: 0;
+    padding: 4px 3px;
+    background: transparent;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row:first-child {
+    border-top: 0;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row-icon {
+    color: var(--accent);
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row-title {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row-subtitle {
+    font-size: 11px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row-actions {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row:hover .actor-item-row-actions,
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-row:focus-within .actor-item-row-actions {
+    opacity: 1;
+}
+
+.actor-sheet--dnd5e.actor-sheet--character .actor-item-action-btn {
+    min-height: 22px;
+    padding: 2px 5px;
+    font-size: 11px;
+}
+@media (max-width: 920px) {
+    .actor-sheet--dnd5e.actor-sheet--character .actor-tab-panel--main {
+        grid-template-columns: 104px minmax(206px, 0.8fr) minmax(286px, 1.3fr);
+    }
+}
+
+@media (max-width: 680px) {
+    .actor-sheet--dnd5e.actor-sheet--character .actor-sheet-header {
+        grid-template-columns: 76px minmax(0, 1fr);
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .ash-frame--portrait {
+        width: 66px;
+        height: 66px;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .ash-frame--token {
+        left: 58px;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .ash-main {
+        display: flex;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .ash-identity {
+        display: none;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .actor-tab-panel--main {
+        grid-template-columns: 92px minmax(0, 1fr);
+        grid-template-areas:
+            "statbar   statbar"
+            "abilities skills"
+            "attacks   attacks"
+            "vitals    vitals"
+            "equipment equipment"
+            "traits    traits";
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--character .actor-grid--statBar {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--monster {
+    width: min(820px, calc(100vw - 24px));
+    max-height: calc(100vh - 44px);
+}
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--monster:not([data-maximized="true"]) {
+    height: min(820px, calc(100vh - 44px)) !important;
+}
+
+.actor-sheet-modal--dnd5e.actor-sheet-modal--monster .actor-sheet-body {
+    min-height: 0;
+    max-height: calc(100vh - 92px);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster {
+    gap: 9px;
+    padding: 10px;
+    overflow: visible;
+    background: inherit;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section + .actor-section {
+    border-top: 0;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-sheet-header {
+    position: relative;
+    display: grid;
+    grid-template-columns: 106px minmax(0, 1fr);
+    gap: 16px;
+    min-height: 132px;
+    padding: 11px 13px;
+    border: 1px solid var(--border-accent);
+    border-radius: 8px;
+    background:
+        radial-gradient(95% 190% at 0% 20%, rgba(192, 154, 90, 0.11), transparent 55%),
+        linear-gradient(90deg, rgba(18, 23, 27, 0.98), rgba(10, 14, 17, 0.94));
+    box-shadow: none;
+    overflow: visible;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-frame--portrait {
+    width: 94px;
+    height: 94px;
+    align-self: center;
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 3px rgba(8, 11, 13, 0.96),
+        0 0 0 4px rgba(192, 154, 90, 0.42);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 186px;
+    grid-template-areas:
+        "title ids"
+        "meta  ids";
+    gap: 7px 16px;
+    align-items: center;
+    min-height: 108px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-title-row {
+    grid-area: title;
+    position: static;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-name-input {
+    color: var(--accent-hover);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px;
+    font-variant: small-caps;
+    font-weight: 800;
+    letter-spacing: 0.035em;
+    text-transform: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-frame--token {
+    position: absolute;
+    bottom: 9px;
+    left: 88px;
+    width: 34px;
+    height: 34px;
+    border-color: var(--accent);
+    background: rgba(12, 16, 19, 0.98);
+    box-shadow: 0 0 0 3px rgba(9, 12, 15, 0.95);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-frame-upload,
+.actor-sheet--dnd5e.actor-sheet--monster .ash-frame--token .ash-frame-upload {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: inherit;
+    background: rgba(9, 13, 16, 0.42);
+    font-size: 18px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta,
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta--monster {
+    grid-area: meta;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta-icon {
+    color: var(--accent);
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta-input {
+    min-width: 84px;
+    color: var(--text-muted);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta-input:focus {
+    color: var(--text);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta-input--lvl {
+    min-width: 0;
+    width: 44px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta-divider {
+    color: var(--accent);
+    opacity: 0.65;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-meta-sep {
+    color: var(--text-faint);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-identity,
+.actor-sheet--dnd5e.actor-sheet--monster .ash-identity--monster {
+    grid-area: ids;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    align-self: stretch;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(9, 13, 16, 0.62);
+    overflow: hidden;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-id-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 3px;
+    padding: 6px 4px;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-id-cell + .ash-id-cell {
+    border-left: 1px solid var(--border);
+}
+
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-id-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.2em;
+    color: var(--text-muted);
+    font-size: 9px;
+    letter-spacing: 0.03em;
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .ash-id-readonly,
+.actor-sheet--dnd5e.actor-sheet--monster .ash-identity .ash-meta-input {
+    width: 100%;
+    min-width: 0;
+    margin-top: auto;
+    color: var(--accent-hover);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+    text-align: center;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-tab-panel {
+    gap: 9px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-tab-bar {
+    top: -10px;
+    gap: 1px;
+    margin: 0 -10px 8px;
+    padding: 0 10px;
+    background: rgba(10, 14, 17, 0.97);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-tab-btn {
+    padding: 6px 9px 5px;
+    font-size: 13px;
+    font-variant: normal;
+    text-transform: none;
+}
+
+
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-tab-panel--main {
+    display: grid;
+    grid-template-columns: 104px 220px minmax(0, 1fr);
+    grid-template-areas:
+        "combat    combat combat"
+        "abilities aside  actions";
+    gap: 7px;
+    align-items: start;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-combat { grid-area: combat; }
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-abilities { grid-area: abilities; }
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-aside { grid-area: aside; }
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-actions { grid-area: actions; }
+
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-aside > .actor-section-title {
+    display: none;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section {
+    gap: 5px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px;
+    background: rgba(12, 16, 19, 0.62);
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section-title {
+    margin: 0;
+    color: var(--accent);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 12px;
+    font-variant: small-caps;
+    letter-spacing: 0.1em;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-field-label {
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    font-variant: normal;
+    font-weight: 400;
+    letter-spacing: normal;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-input {
+    font-size: 15px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster input:not([type="file"]):not([type="checkbox"]):not([type="hidden"]),
+.actor-sheet--dnd5e.actor-sheet--monster textarea,
+.actor-sheet--dnd5e.actor-sheet--monster select {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(16, 19, 21, 0.68);
+    color: var(--text);
+    font-family: inherit;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster input:not([type="file"]):not([type="checkbox"]):not([type="hidden"]):focus,
+.actor-sheet--dnd5e.actor-sheet--monster textarea:focus,
+.actor-sheet--dnd5e.actor-sheet--monster select:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-combat {
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-combat > .actor-section-title {
+    display: none;
+}
+
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 0.85fr)) minmax(0, 1.7fr) repeat(2, minmax(0, 0.95fr));
+    gap: 5px;
+    align-items: stretch;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals .actor-combat-stat,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals .actor-resource-box,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals .actor-field--check-track {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-height: 64px;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 8px;
+    background: rgba(12, 16, 19, 0.78);
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-combat-stat-abbr,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-resource-box-label {
+    color: var(--text-muted);
+    font-size: 10px;
+    text-align: center;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-combat-stat-value {
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-resource-box-value,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-resource-box-max {
+    width: 42px;
+    padding: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 20px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals .actor-field--check-track .actor-field-label {
+    color: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals .actor-check-track {
+    margin: 0;
+}
+
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-row--monsterAbilityStrip {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 5px !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) 32px;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+        "abbr mod"
+        "score mod"
+        "label label";
+    gap: 1px 4px;
+    min-height: 55px;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--border-accent-strong);
+    border-radius: 5px;
+    padding: 5px;
+    background: rgba(17, 21, 24, 0.82);
+    box-shadow: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster + .actor-ability-card--monster {
+    border-left: 2px solid var(--border-accent-strong);
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-abbr {
+    grid-area: abbr;
+    width: auto;
+    color: var(--accent);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 13px;
+    text-align: left;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-label {
+    grid-area: label;
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-faint);
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-align: left;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-score {
+    grid-area: score;
+    width: 32px;
+    max-width: 32px;
+    margin: 0;
+    border: 1px solid var(--border);
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: left;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-mod {
+    grid-area: mod;
+    align-self: center;
+    width: 32px;
+    min-width: 0;
+    min-height: 0;
+    margin: 0;
+    padding: 3px 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 19px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-roll {
+    border: 0;
+    background: transparent;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-roll:hover,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-ability-card--monster .actor-ability-card-roll:focus-visible {
+    color: var(--accent-hover);
+}
+
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-skills .actor-section-title {
+    text-align: center;
+}
+
+.actor-monster-skills-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 auto;
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    font: inherit;
+    letter-spacing: inherit;
+    padding: 0;
+    text-transform: inherit;
+}
+
+.actor-monster-skills-open:hover,
+.actor-monster-skills-open:focus-visible {
+    color: var(--accent-hover);
+    outline: none;
+}
+
+.actor-monster-skills-open__icon {
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-monster-skills-summary {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-top: 4px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-monster-skill-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 24px;
+    border: 0;
+    border-top: 1px solid rgba(192, 154, 90, 0.07);
+    border-radius: 0;
+    padding: 3px 2px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-monster-skill-summary:first-child {
+    border-top: 0;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-monster-skill-summary:hover,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-monster-skill-summary:focus-visible {
+    color: var(--accent-hover);
+    outline: none;
+}
+
+.actor-monster-skill-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actor-monster-skill-ability,
+.actor-monster-skill-badge {
+    color: var(--text-faint);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.actor-monster-skill-mod {
+    margin-left: auto;
+    color: var(--accent-hover);
+    font-size: 13px;
+}
+
+.actor-monster-skills-empty {
+    margin: 4px 0 0;
+    color: var(--text-faint);
+    font-size: 12px;
+    font-style: italic;
+}
+
+
+.gw-skills-dialog {
+    width: min(560px, 94vw);
+}
+
+.gw-skills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    max-height: min(62vh, 560px);
+    overflow: auto;
+    padding-right: 2px;
+}
+
+.gw-skill-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 46px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.025);
+    padding: 7px 8px;
+}
+
+.gw-skill-option__label {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.gw-skill-option__label strong {
+    overflow: hidden;
+    color: var(--text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.gw-skill-option__label span {
+    color: var(--text-faint);
+    font-size: 11px;
+}
+
+.gw-skill-option__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-senses .actor-field-label,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-languages .actor-field-label,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-resistances .actor-field-label {
+    display: none;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-senses .actor-field,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-languages .actor-field,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-resistances .actor-field {
+    width: 100%;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-senses .actor-input,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-languages .actor-input,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-resistances .actor-textarea {
+    width: 100%;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-resistances .actor-textarea {
+    min-height: 72px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-actions .actor-textarea {
+    min-height: 64px;
+}
+
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row-list {
+    gap: 3px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row {
+    grid-template-columns: 14px minmax(0, 1fr) auto;
+    gap: 6px;
+    border: 0;
+    border-top: 1px solid rgba(192, 154, 90, 0.09);
+    border-radius: 0;
+    padding: 4px 3px;
+    background: transparent;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row:first-child {
+    border-top: 0;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row-icon {
+    color: var(--accent);
+    font-size: 13px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row-title {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row-subtitle {
+    font-size: 11px;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row-actions {
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row:hover .actor-item-row-actions,
+.actor-sheet--dnd5e.actor-sheet--monster .actor-item-row:focus-within .actor-item-row-actions {
+    opacity: 1;
+}
+
+.actor-sheet--dnd5e.actor-sheet--monster .actor-section--monster-actions .actor-textarea {
+    font-family: inherit;
+    line-height: 1.45;
+}
+@media (max-width: 920px) {
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-tab-panel--main {
+        grid-template-columns: 104px minmax(206px, 0.85fr) minmax(286px, 1.25fr);
+    }
+}
+
+@media (max-width: 760px) {
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-tab-panel--main {
+        grid-template-columns: 96px minmax(0, 1fr);
+        grid-template-areas:
+            "combat    combat"
+            "abilities aside"
+            "actions   actions";
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .gw-skills-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 680px) {
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-sheet-header {
+        grid-template-columns: 76px minmax(0, 1fr);
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .ash-frame--portrait {
+        width: 66px;
+        height: 66px;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .ash-frame--token {
+        left: 58px;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .ash-main {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .ash-identity,
+    .actor-sheet--dnd5e.actor-sheet--monster .ash-identity--monster {
+        display: none;
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-tab-panel--main {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "combat"
+            "abilities"
+            "aside"
+            "actions";
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-grid--monsterVitals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .actor-sheet--dnd5e.actor-sheet--monster .actor-row--monsterAbilityStrip {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}

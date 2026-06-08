@@ -1,0 +1,292 @@
+{
+  "id": "dnd5e-monster-actions",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Ações de Monstro",
+  "description": "Ataques e traços genéricos de criaturas (garra, mordida, sopro, armadura natural, etc.) para arrastar nas fichas de monstro.",
+  "entries": [
+    {
+      "id": "monster-claw",
+      "type": "weapon",
+      "name": "Garra",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d6",
+        "damage_type": "slashing",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Ataque corpo a corpo com arma natural. Dano de corte mais o modificador de Força."
+      }
+    },
+    {
+      "id": "monster-bite",
+      "type": "weapon",
+      "name": "Mordida",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d8",
+        "damage_type": "piercing",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Ataque corpo a corpo com arma natural. Dano perfurante mais o modificador de Força."
+      }
+    },
+    {
+      "id": "monster-bite-venom",
+      "type": "weapon",
+      "name": "Mordida Venenosa",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d6",
+        "damage_type": "piercing",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Acerto: dano perfurante mais o modificador de Força e 2d6 de dano de veneno. O alvo deve fazer uma salvaguarda de Constituição ou ficar envenenado."
+      }
+    },
+    {
+      "id": "monster-gore",
+      "type": "weapon",
+      "name": "Chifrada",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d8",
+        "damage_type": "piercing",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Ataque corpo a corpo com chifres. Costuma combinar com Investida."
+      }
+    },
+    {
+      "id": "monster-hooves",
+      "type": "weapon",
+      "name": "Coice",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "2d6",
+        "damage_type": "bludgeoning",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Ataque corpo a corpo com cascos. Dano de concussão mais o modificador de Força."
+      }
+    },
+    {
+      "id": "monster-slam",
+      "type": "weapon",
+      "name": "Pancada",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d6",
+        "damage_type": "bludgeoning",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Golpe corpo a corpo com membro, tronco ou massa corporal."
+      }
+    },
+    {
+      "id": "monster-tail",
+      "type": "weapon",
+      "name": "Cauda",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d8",
+        "damage_type": "bludgeoning",
+        "range": "10 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Ataque corpo a corpo com alcance estendido (10 ft.)."
+      }
+    },
+    {
+      "id": "monster-tentacle",
+      "type": "weapon",
+      "name": "Tentáculo",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d6",
+        "damage_type": "bludgeoning",
+        "range": "10 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Ataque corpo a corpo com alcance 10 ft. O alvo pode ficar agarrado (CD à escolha do mestre)."
+      }
+    },
+    {
+      "id": "monster-sting",
+      "type": "weapon",
+      "name": "Ferrão",
+      "data": {
+        "category": "natural",
+        "attack_type": "melee",
+        "damage": "1d4",
+        "damage_type": "piercing",
+        "range": "5 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Acerto: dano perfurante mais 1d6 de veneno; salvaguarda de Constituição para evitar ficar envenenado."
+      }
+    },
+    {
+      "id": "monster-breath-fire",
+      "type": "weapon",
+      "name": "Sopro de Fogo",
+      "data": {
+        "category": "natural",
+        "attack_type": "special",
+        "damage": "4d6",
+        "damage_type": "fire",
+        "range": "Cone de 15 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Arma de sopro (Recarrega 5–6). Cada criatura na área faz uma salvaguarda de Destreza, sofrendo dano de fogo total se falhar ou metade se passar."
+      }
+    },
+    {
+      "id": "monster-breath-cold",
+      "type": "weapon",
+      "name": "Sopro de Gelo",
+      "data": {
+        "category": "natural",
+        "attack_type": "special",
+        "damage": "4d6",
+        "damage_type": "cold",
+        "range": "Cone de 15 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Arma de sopro (Recarrega 5–6). Salvaguarda de Constituição; dano de frio total se falhar ou metade se passar."
+      }
+    },
+    {
+      "id": "monster-breath-lightning",
+      "type": "weapon",
+      "name": "Sopro Elétrico",
+      "data": {
+        "category": "natural",
+        "attack_type": "special",
+        "damage": "4d6",
+        "damage_type": "lightning",
+        "range": "Linha de 30 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Arma de sopro (Recarrega 5–6). Salvaguarda de Destreza; dano elétrico total se falhar ou metade se passar."
+      }
+    },
+    {
+      "id": "monster-breath-acid",
+      "type": "weapon",
+      "name": "Sopro Ácido",
+      "data": {
+        "category": "natural",
+        "attack_type": "special",
+        "damage": "4d6",
+        "damage_type": "acid",
+        "range": "Linha de 30 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Arma de sopro (Recarrega 5–6). Salvaguarda de Destreza; dano de ácido total se falhar ou metade se passar."
+      }
+    },
+    {
+      "id": "monster-breath-poison",
+      "type": "weapon",
+      "name": "Sopro de Veneno",
+      "data": {
+        "category": "natural",
+        "attack_type": "special",
+        "damage": "4d6",
+        "damage_type": "poison",
+        "range": "Cone de 15 ft.",
+        "attack_bonus": 0,
+        "damage_bonus": 0,
+        "description": "Arma de sopro (Recarrega 5–6). Salvaguarda de Constituição; dano de veneno total se falhar ou metade se passar."
+      }
+    },
+    {
+      "id": "monster-natural-armor",
+      "type": "feature",
+      "name": "Armadura Natural",
+      "data": {
+        "source": "Monstro",
+        "description": "A criatura tem proteção natural (couro grosso, escamas ou casco). Sua CA já considera essa armadura natural; não pode usar armadura convencional."
+      }
+    },
+    {
+      "id": "monster-multiattack",
+      "type": "feature",
+      "name": "Ataque Múltiplo",
+      "data": {
+        "source": "Monstro",
+        "description": "A criatura realiza dois ou mais ataques na sua ação de Ataque. Especifique a combinação (ex.: uma Mordida e duas Garras)."
+      }
+    },
+    {
+      "id": "monster-magic-resistance",
+      "type": "feature",
+      "name": "Resistência Mágica",
+      "data": {
+        "source": "Monstro",
+        "description": "A criatura tem vantagem em salvaguardas contra magias e outros efeitos mágicos."
+      }
+    },
+    {
+      "id": "monster-regeneration",
+      "type": "feature",
+      "name": "Regeneração",
+      "data": {
+        "source": "Monstro",
+        "recharge": "start_of_turn",
+        "description": "A criatura recupera uma quantidade de pontos de vida no início de cada um dos seus turnos, desde que tenha ao menos 1 PV (defina o valor e a condição que interrompe a regeneração)."
+      }
+    },
+    {
+      "id": "monster-amphibious",
+      "type": "feature",
+      "name": "Anfíbio",
+      "data": {
+        "source": "Monstro",
+        "description": "A criatura pode respirar ar e água."
+      }
+    },
+    {
+      "id": "monster-charge",
+      "type": "feature",
+      "name": "Investida",
+      "data": {
+        "source": "Monstro",
+        "description": "Se a criatura se mover ao menos 20 ft. em linha reta em direção a um alvo e o acertar com um ataque corpo a corpo no mesmo turno, o alvo sofre dano extra (defina o valor) e pode precisar de uma salvaguarda de Força ou cair caído."
+      }
+    },
+    {
+      "id": "monster-pounce",
+      "type": "feature",
+      "name": "Bote",
+      "data": {
+        "source": "Monstro",
+        "description": "Se a criatura se mover ao menos 20 ft. em direção a uma criatura e a acertar com um ataque de Garra no mesmo turno, o alvo faz uma salvaguarda de Força ou cai caído. Se cair, a criatura pode fazer um ataque de Mordida adicional como ação bônus."
+      }
+    },
+    {
+      "id": "monster-keen-smell",
+      "type": "feature",
+      "name": "Faro Aguçado",
+      "data": {
+        "source": "Monstro",
+        "description": "A criatura tem vantagem em testes de Sabedoria (Percepção) que dependam do olfato."
+      }
+    }
+  ]
+}

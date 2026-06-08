@@ -1,0 +1,73 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-feature",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.source",
+            "labelKey": "dnd5e.ui.origem.classe.raca.etc"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.level",
+            "labelKey": "dnd5e.ui.nivel"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "resourceField",
+            "valuePath": "sheet.uses.value",
+            "maxPath": "sheet.uses.max",
+            "labelKey": "dnd5e.ui.usos"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.recharge",
+            "options": [
+              {
+                "value": "none",
+                "labelKey": "dnd5e.ui.dash"
+              },
+              {
+                "value": "short",
+                "labelKey": "dnd5e.ui.descanso.curto"
+              },
+              {
+                "value": "long",
+                "labelKey": "dnd5e.ui.descanso.longo"
+              },
+              {
+                "value": "turn",
+                "labelKey": "dnd5e.ui.inicio.do.turno"
+              }
+            ],
+            "labelKey": "dnd5e.ui.recarrega.em"
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      }
+    ],
+    "labelKey": "dnd5e.ui.caracteristica"
+  }
+}
