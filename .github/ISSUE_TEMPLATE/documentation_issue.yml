@@ -1,0 +1,61 @@
+name: Documentation issue
+description: Report missing, unclear, outdated, or incorrect documentation.
+title: "[Docs]: "
+labels:
+  - "type: docs"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template for documentation problems, unclear setup instructions, broken links, or missing API/system/module guidance.
+
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Which page, section, file, or URL is affected?
+      placeholder: docs/api/extension-apis.md
+    validations:
+      required: true
+
+  - type: dropdown
+    id: docs-area
+    attributes:
+      label: Documentation area
+      options:
+        - getting started
+        - configuration
+        - deployment
+        - systems
+        - modules
+        - API
+        - realtime
+        - database/storage
+        - testing
+        - security
+        - licensing
+        - PT-BR docs
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is missing, confusing, outdated, or wrong?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested correction
+      description: Optional. Suggest wording, links, or examples that would help.
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would be willing to open a pull request for this documentation issue.

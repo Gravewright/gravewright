@@ -1,0 +1,74 @@
+name: Alpha feedback
+description: Share feedback from testing Gravewright Alpha.
+title: "[Alpha feedback]: "
+labels:
+  - "alpha-risk"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for Alpha testing feedback, usability notes, rough edges, and suggestions.
+
+        If you found a reproducible defect, use the bug report template instead.
+        If this is a security issue, do not open a public issue. See `SECURITY.md`.
+
+  - type: checkboxes
+    id: alpha-warning
+    attributes:
+      label: Alpha acknowledgement
+      options:
+        - label: I understand Gravewright is Alpha software and should not be trusted for long campaigns yet.
+          required: true
+
+  - type: dropdown
+    id: feedback-type
+    attributes:
+      label: Feedback type
+      options:
+        - Usability
+        - Documentation
+        - Performance
+        - Installation/setup
+        - System creation
+        - Module creation
+        - Scene/map workflow
+        - Realtime/table experience
+        - Data persistence/schema concern
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: What were you trying to do?
+      placeholder: Describe the table, flow, setup, or test scenario.
+    validations:
+      required: true
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Feedback
+      description: What felt confusing, broken, missing, risky, or good?
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: Optional. What would make this better?
+
+  - type: input
+    id: version
+    attributes:
+      label: Gravewright version / commit
+      placeholder: v0.1.0-alpha.1 or commit SHA
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional notes
+      description: Add screenshots/logs only if sanitized.
