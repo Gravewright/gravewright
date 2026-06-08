@@ -11,6 +11,12 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
 
+    env:
+      PUBLIC_BASE_URL: http://testserver.local
+      ALLOWED_HOSTS: testserver.local,localhost,127.0.0.1
+      WS_ALLOWED_ORIGINS: http://testserver.local,http://localhost,http://127.0.0.1
+      SESSION_COOKIE_SECURE: "false"
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
