@@ -1,0 +1,72 @@
+name: Feature request
+description: Propose a focused Gravewright improvement.
+title: "[Feature]: "
+labels:
+  - "type: feature"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please keep feature requests focused. For broad product direction, explain the use case first.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What problem does this solve?
+      placeholder: As a GM/player/system author/module author, I want...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should Gravewright do?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - engine
+        - persistence
+        - realtime
+        - auth
+        - API
+        - systems
+        - modules
+        - scenes/maps
+        - actors/items/journals
+        - UI
+        - documentation
+        - deployment
+        - other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - label: This may require a schema/storage change.
+        - label: This may change public APIs.
+        - label: This may affect systems.
+        - label: This may affect modules.
+        - label: This may be a breaking change during Alpha.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Optional. What workarounds or alternative designs did you consider?
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Links, mockups, examples, or related issues.
