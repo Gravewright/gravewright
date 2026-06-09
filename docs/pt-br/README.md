@@ -8,7 +8,7 @@ Esta e a documentacao em portugues do Gravewright para o publico brasileiro.
 > podem ocorrer entre versões e **não há garantia de caminho de upgrade** — uma
 > atualização pode tornar uma mesa existente irrecuperável.
 >
-> **Use para one-shots.** Teste, quebre, e relate problemas e sugestões em [issues](https://github.com/ricardoporfirio/grave/issues).
+> **Use para one-shots.** Teste, quebre, e relate problemas e sugestões em [issues](https://github.com/Gravewright/gravewright/issues).
 > O que você perde numa one-shot é uma sessão. Numa campanha, são meses.
 
 ## Guias Do Projeto
