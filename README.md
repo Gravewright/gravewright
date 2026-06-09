@@ -6,7 +6,7 @@
 > may happen between versions and **there is no guaranteed upgrade path**.
 > An update can make an existing table unrecoverable.
 >
-> **Use it for one-shots.** Test it, break it, and report problems and suggestions in [issues](https://github.com/ricardoporfirio/grave/issues).
+> **Use it for one-shots.** Test it, break it, and report problems and suggestions in [issues]([https://github.com/ricardoporfirio/grave/issues](https://github.com/Gravewright/gravewright/issues)).
 > What you lose in a one-shot is one session. In a campaign, it can be months.
 
 Gravewright is an open-source virtual tabletop platform for tabletop RPGs. It is built with Litestar, Jinja2, SQLAlchemy Core, WebSockets, PixiJS, declarative system packages, and campaign-scoped modules.
