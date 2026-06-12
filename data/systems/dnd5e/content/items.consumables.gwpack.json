@@ -2,7 +2,7 @@
   "id": "dnd5e-consumables",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Consumíveis",
+  "label": "Consumables",
   "entries": [
     {
       "id": "template-minor-healing-potion",

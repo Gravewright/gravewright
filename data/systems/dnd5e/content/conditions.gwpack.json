@@ -2,7 +2,7 @@
   "id": "dnd5e-conditions",
   "type": "effect_pack",
   "system": "dnd5e",
-  "label": "Efeitos & Condições",
+  "label": "Effects & Conditions",
   "entries": [
     {
       "id": "bless",
@@ -12,7 +12,7 @@
       "img": "",
       "data": {
         "category": "buff",
-        "description": "Adiciona 1d4 em ataques e salvaguardas enquanto ativo.",
+        "description": "Adds 1d4 to attacks and saving throws while active.",
         "duration": {
           "type": "rounds",
           "value": 10,
@@ -40,12 +40,12 @@
     {
       "id": "poisoned",
       "type": "effect",
-      "name": "Envenenado",
-      "label": "Envenenado",
+      "name": "Poisoned",
+      "label": "Poisoned",
       "img": "",
       "data": {
         "category": "condition",
-        "description": "Desvantagem em ataques e testes de habilidade.",
+        "description": "Disadvantage on attacks and ability checks.",
         "duration": {
           "type": "permanent"
         },
@@ -54,13 +54,13 @@
             "id": "poisoned-attack",
             "target": "roll.attack",
             "operation": "disadvantage",
-            "label": "Envenenado"
+            "label": "Poisoned"
           },
           {
             "id": "poisoned-check",
             "target": "roll.check",
             "operation": "disadvantage",
-            "label": "Envenenado"
+            "label": "Poisoned"
           }
         ]
       }
@@ -68,12 +68,12 @@
     {
       "id": "inspired",
       "type": "effect",
-      "name": "Inspirado",
-      "label": "Inspirado",
+      "name": "Inspired",
+      "label": "Inspired",
       "img": "",
       "data": {
         "category": "buff",
-        "description": "Marcador positivo de modelo; ajuste conforme a mesa.",
+        "description": "Positive template marker; adjust as needed at the table.",
         "duration": {
           "type": "session"
         },
@@ -83,12 +83,12 @@
     {
       "id": "burning",
       "type": "effect",
-      "name": "Em Chamas",
-      "label": "Em Chamas",
+      "name": "Burning",
+      "label": "Burning",
       "img": "",
       "data": {
         "category": "condition",
-        "description": "Sofre 1d6 de dano de fogo no início de cada rodada enquanto durar.",
+        "description": "Takes 1d6 fire damage at the start of each round while active.",
         "duration": {
           "type": "rounds",
           "value": 3,
@@ -101,7 +101,7 @@
             "operation": "damage_over_time",
             "value": "1d6",
             "damageType": "fire",
-            "label": "Em Chamas"
+            "label": "Burning"
           }
         ]
       }

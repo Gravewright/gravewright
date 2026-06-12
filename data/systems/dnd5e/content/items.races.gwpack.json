@@ -2,7 +2,7 @@
   "id": "dnd5e-races",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Raças",
+  "label": "Races",
   "entries": [
     {
       "id": "template-race",

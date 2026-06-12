@@ -129,11 +129,11 @@
       const label = el("input", "actor-input gw-modifier-row__label");
       label.dataset.modifierField = "label";
       label.disabled = !rc.canEdit;
-      label.placeholder = "Rótulo";
+      label.placeholder = "Label";
       label.value = modifier?.label ?? "";
       row.appendChild(label);
 
-      const remove = el("button", "gw-modifier-row__remove", "remover");
+      const remove = el("button", "gw-modifier-row__remove", "remove");
       remove.type = "button";
       remove.disabled = !rc.canEdit;
       remove.dataset.modifierAction = "remove";
@@ -143,13 +143,13 @@
     });
     wrap.appendChild(body);
 
-    const add = el("button", "gw-modifier-builder__add", "+ Adicionar modificador");
+    const add = el("button", "gw-modifier-builder__add", "+ Add modifier");
     add.type = "button";
     add.disabled = !rc.canEdit || !targets.length;
     add.dataset.modifierAction = "add";
     wrap.appendChild(add);
 
-    if (!modifiers.length) wrap.appendChild(el("p", "gw-modifier-builder__empty", "Nenhum modificador ativo."));
+    if (!modifiers.length) wrap.appendChild(el("p", "gw-modifier-builder__empty", "No active modifiers."));
     return wrap;
   }
 

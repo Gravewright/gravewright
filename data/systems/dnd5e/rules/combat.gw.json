@@ -3,7 +3,7 @@
   "defaultMode": "individual_initiative",
   "turnOrder": {
     "strategy": "formula_sort",
-    "label": "Iniciativa D&D 5e",
+    "label": "dnd5e.ui.iniciativa.dnd5e",
     "formula": "1d20 + @sheet.combat.initiative",
     "sort": "desc",
     "tieBreakers": [
@@ -13,7 +13,7 @@
   },
   "resources": {
     "hp": {
-      "label": "HP",
+      "label": "dnd5e.abbr.hp",
       "path": "sheet.hp.value",
       "maxPath": "sheet.hp.max",
       "min": 0
@@ -22,25 +22,25 @@
   "activityTypes": [
     {
       "id": "token.move",
-      "label": "Mover token"
+      "label": "dnd5e.ui.mover.token"
     },
     {
       "id": "sheet.action",
-      "label": "Usar ação da ficha"
+      "label": "dnd5e.ui.usar.acao.da.ficha"
     },
     {
       "id": "sheet.item.action",
-      "label": "Usar item"
+      "label": "dnd5e.ui.usar.item"
     }
   ],
   "initiativeRoll": {
     "actionId": "roll.initiative",
-    "label": "Iniciativa D&D 5e",
+    "label": "dnd5e.ui.iniciativa.dnd5e",
     "sort": "desc"
   },
   "initiative": {
     "mode": "individual",
-    "label": "Iniciativa D&D 5e",
+    "label": "dnd5e.ui.iniciativa.dnd5e",
     "roll": {
       "actionId": "roll.initiative",
       "formula": "1d20 + @sheet.combat.initiative"
@@ -57,23 +57,23 @@
     "appearance": {
       "theme": "dnd5e",
       "die": "d20",
-      "rollAllLabel": "Rolar todas",
-      "rollMonstersLabel": "Só monstros",
-      "rollSubtitle": "d20 + iniciativa",
-      "monsterSubtitle": "criaturas do GM",
+      "rollAllLabel": "Roll all",
+      "rollMonstersLabel": "Monsters only",
+      "rollSubtitle": "d20 + initiative",
+      "monsterSubtitle": "GM creatures",
       "accent": "red-gold"
     },
     "groups": [
       {
         "id": "players",
-        "label": "Personagens",
+        "label": "dnd5e.ui.personagens",
         "actorTypes": [
           "character"
         ]
       },
       {
         "id": "monsters",
-        "label": "Monstros",
+        "label": "dnd5e.ui.monstros",
         "actorTypes": [
           "monster",
           "npc",
@@ -111,17 +111,58 @@
       "initiative": {
         "icon": "ph-dice-five",
         "monsterIcon": "ph-skull",
-        "rollAllLabel": "Rolar iniciativa",
-        "rollMonstersLabel": "Rolar monstros",
-        "rollSubtitle": "d20 + modificador",
-        "monsterSubtitle": "criaturas e NPCs",
-        "scoreLabel": "Iniciativa"
+        "rollAllLabel": "Roll initiative",
+        "rollMonstersLabel": "Roll monsters",
+        "rollSubtitle": "d20 + modifier",
+        "monsterSubtitle": "creatures and NPCs",
+        "scoreLabel": "Initiative"
       },
       "statusLabels": {
-        "current": "Turno atual",
-        "next": "Próximo",
-        "acted": "Já agiu",
-        "waiting": "Aguardando"
+        "current": "Current turn",
+        "next": "Next",
+        "acted": "Already acted",
+        "waiting": "Waiting"
+      },
+      "labels": {
+        "searchPlaceholder": "Search participant",
+        "filterAll": "All",
+        "filterActed": "Acted",
+        "filterCurrent": "Current",
+        "roundPrefix": "Round",
+        "turnLabel": "Turn",
+        "noParticipants": "No participants. Select tokens and use + to add.",
+        "noCombat": "No active combat.",
+        "noMatch": "No participants match the filter.",
+        "outOfCombat": "Out of combat",
+        "startCombat": "Start combat",
+        "endCombat": "End combat",
+        "previousTurn": "Previous turn",
+        "nextTurn": "Next turn",
+        "nextRound": "Next round",
+        "addSelectedTokens": "Add selected tokens",
+        "participantActions": "Participant actions",
+        "centerToken": "Center token",
+        "openSheet": "Open sheet",
+        "rollInitiative": "Roll initiative",
+        "setAsTurn": "Set as turn",
+        "removeParticipant": "Remove",
+        "noActions": "No actions",
+        "metricParticipants": "Participants",
+        "metricInitiatives": "Initiatives",
+        "metricWaiting": "Waiting",
+        "metricActed": "Already acted",
+        "combatInactive": "Out of combat",
+        "noActiveParticipant": "No active participant",
+        "combatNotStarted": "Combat not started",
+        "startHint": "Start combat and add tokens to set the order.",
+        "activeLabel": "Active:",
+        "waitingForGm": "Waiting for GM.",
+        "usePlayToStart": "Use ▶ to start.",
+        "card": "Card",
+        "condition": "condition",
+        "conditions": "conditions",
+        "effect": "effect",
+        "effects": "effects"
       },
       "participant": {
         "frame": "ornate-card",

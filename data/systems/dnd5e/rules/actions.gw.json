@@ -2,7 +2,7 @@
   "actions": {
     "roll.check.str": {
       "type": "roll",
-      "label": "Teste de Força",
+      "label": "dnd5e.ui.teste.de.forca",
       "formula": "1d20 + @sheet.abilities.str.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -13,39 +13,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -77,7 +77,7 @@
     },
     "roll.check.dex": {
       "type": "roll",
-      "label": "Teste de Destreza",
+      "label": "dnd5e.ui.teste.de.destreza",
       "formula": "1d20 + @sheet.abilities.dex.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -88,39 +88,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -152,7 +152,7 @@
     },
     "roll.check.con": {
       "type": "roll",
-      "label": "Teste de Constituição",
+      "label": "dnd5e.ui.teste.de.constituicao",
       "formula": "1d20 + @sheet.abilities.con.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -163,39 +163,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -227,7 +227,7 @@
     },
     "roll.check.int": {
       "type": "roll",
-      "label": "Teste de Inteligência",
+      "label": "dnd5e.ui.teste.de.inteligencia",
       "formula": "1d20 + @sheet.abilities.int.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -238,39 +238,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -302,7 +302,7 @@
     },
     "roll.check.wis": {
       "type": "roll",
-      "label": "Teste de Sabedoria",
+      "label": "dnd5e.ui.teste.de.sabedoria",
       "formula": "1d20 + @sheet.abilities.wis.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -313,39 +313,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -377,7 +377,7 @@
     },
     "roll.check.cha": {
       "type": "roll",
-      "label": "Teste de Carisma",
+      "label": "dnd5e.ui.teste.de.carisma",
       "formula": "1d20 + @sheet.abilities.cha.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -388,39 +388,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -452,7 +452,7 @@
     },
     "roll.save.str": {
       "type": "roll",
-      "label": "Salvaguarda de Força",
+      "label": "dnd5e.ui.salvaguarda.de.forca",
       "formula": "1d20 + @sheet.saves.str.mod",
       "visibility": "public",
       "chatCard": "save",
@@ -463,39 +463,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -527,7 +527,7 @@
     },
     "roll.save.dex": {
       "type": "roll",
-      "label": "Salvaguarda de Destreza",
+      "label": "dnd5e.ui.salvaguarda.de.destreza",
       "formula": "1d20 + @sheet.saves.dex.mod",
       "visibility": "public",
       "chatCard": "save",
@@ -538,39 +538,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -602,7 +602,7 @@
     },
     "roll.save.con": {
       "type": "roll",
-      "label": "Salvaguarda de Constituição",
+      "label": "dnd5e.ui.salvaguarda.de.constituicao",
       "formula": "1d20 + @sheet.saves.con.mod",
       "visibility": "public",
       "chatCard": "save",
@@ -613,39 +613,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -677,7 +677,7 @@
     },
     "roll.save.int": {
       "type": "roll",
-      "label": "Salvaguarda de Inteligência",
+      "label": "dnd5e.ui.salvaguarda.de.inteligencia",
       "formula": "1d20 + @sheet.saves.int.mod",
       "visibility": "public",
       "chatCard": "save",
@@ -688,39 +688,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -752,7 +752,7 @@
     },
     "roll.save.wis": {
       "type": "roll",
-      "label": "Salvaguarda de Sabedoria",
+      "label": "dnd5e.ui.salvaguarda.de.sabedoria",
       "formula": "1d20 + @sheet.saves.wis.mod",
       "visibility": "public",
       "chatCard": "save",
@@ -763,39 +763,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -827,7 +827,7 @@
     },
     "roll.save.cha": {
       "type": "roll",
-      "label": "Salvaguarda de Carisma",
+      "label": "dnd5e.ui.salvaguarda.de.carisma",
       "formula": "1d20 + @sheet.saves.cha.mod",
       "visibility": "public",
       "chatCard": "save",
@@ -838,39 +838,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -902,7 +902,7 @@
     },
     "roll.skill.acrobatics": {
       "type": "roll",
-      "label": "Acrobacia",
+      "label": "dnd5e.ui.acrobacia",
       "formula": "1d20 + @sheet.skills.acrobatics.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -913,39 +913,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -977,7 +977,7 @@
     },
     "roll.skill.animal_handling": {
       "type": "roll",
-      "label": "Lidar com Animais",
+      "label": "dnd5e.ui.lidar.com.animais",
       "formula": "1d20 + @sheet.skills.animal_handling.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -988,39 +988,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1052,7 +1052,7 @@
     },
     "roll.skill.arcana": {
       "type": "roll",
-      "label": "Arcanismo",
+      "label": "dnd5e.ui.arcanismo",
       "formula": "1d20 + @sheet.skills.arcana.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1063,39 +1063,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1127,7 +1127,7 @@
     },
     "roll.skill.athletics": {
       "type": "roll",
-      "label": "Atletismo",
+      "label": "dnd5e.ui.atletismo",
       "formula": "1d20 + @sheet.skills.athletics.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1138,39 +1138,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1202,7 +1202,7 @@
     },
     "roll.skill.deception": {
       "type": "roll",
-      "label": "Enganação",
+      "label": "dnd5e.ui.enganacao",
       "formula": "1d20 + @sheet.skills.deception.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1213,39 +1213,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1277,7 +1277,7 @@
     },
     "roll.skill.history": {
       "type": "roll",
-      "label": "História",
+      "label": "dnd5e.ui.historia",
       "formula": "1d20 + @sheet.skills.history.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1288,39 +1288,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1352,7 +1352,7 @@
     },
     "roll.skill.insight": {
       "type": "roll",
-      "label": "Intuição",
+      "label": "dnd5e.ui.intuicao",
       "formula": "1d20 + @sheet.skills.insight.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1363,39 +1363,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1427,7 +1427,7 @@
     },
     "roll.skill.intimidation": {
       "type": "roll",
-      "label": "Intimidação",
+      "label": "dnd5e.ui.intimidacao",
       "formula": "1d20 + @sheet.skills.intimidation.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1438,39 +1438,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1502,7 +1502,7 @@
     },
     "roll.skill.investigation": {
       "type": "roll",
-      "label": "Investigação",
+      "label": "dnd5e.ui.investigacao",
       "formula": "1d20 + @sheet.skills.investigation.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1513,39 +1513,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1577,7 +1577,7 @@
     },
     "roll.skill.medicine": {
       "type": "roll",
-      "label": "Medicina",
+      "label": "dnd5e.ui.medicina",
       "formula": "1d20 + @sheet.skills.medicine.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1588,39 +1588,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1652,7 +1652,7 @@
     },
     "roll.skill.nature": {
       "type": "roll",
-      "label": "Natureza",
+      "label": "dnd5e.ui.natureza",
       "formula": "1d20 + @sheet.skills.nature.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1663,39 +1663,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1727,7 +1727,7 @@
     },
     "roll.skill.perception": {
       "type": "roll",
-      "label": "Percepção",
+      "label": "dnd5e.ui.percepcao",
       "formula": "1d20 + @sheet.skills.perception.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1738,39 +1738,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1802,7 +1802,7 @@
     },
     "roll.skill.performance": {
       "type": "roll",
-      "label": "Atuação",
+      "label": "dnd5e.ui.atuacao",
       "formula": "1d20 + @sheet.skills.performance.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1813,39 +1813,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1877,7 +1877,7 @@
     },
     "roll.skill.persuasion": {
       "type": "roll",
-      "label": "Persuasão",
+      "label": "dnd5e.ui.persuasao",
       "formula": "1d20 + @sheet.skills.persuasion.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1888,39 +1888,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -1952,7 +1952,7 @@
     },
     "roll.skill.religion": {
       "type": "roll",
-      "label": "Religião",
+      "label": "dnd5e.ui.religiao",
       "formula": "1d20 + @sheet.skills.religion.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -1963,39 +1963,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2027,7 +2027,7 @@
     },
     "roll.skill.sleight_of_hand": {
       "type": "roll",
-      "label": "Prestidigitação",
+      "label": "dnd5e.ui.prestidigitacao",
       "formula": "1d20 + @sheet.skills.sleight_of_hand.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -2038,39 +2038,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2102,7 +2102,7 @@
     },
     "roll.skill.stealth": {
       "type": "roll",
-      "label": "Furtividade",
+      "label": "dnd5e.ui.furtividade",
       "formula": "1d20 + @sheet.skills.stealth.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -2113,39 +2113,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2177,7 +2177,7 @@
     },
     "roll.skill.survival": {
       "type": "roll",
-      "label": "Sobrevivência",
+      "label": "dnd5e.ui.sobrevivencia",
       "formula": "1d20 + @sheet.skills.survival.mod",
       "visibility": "public",
       "chatCard": "check",
@@ -2188,39 +2188,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2252,7 +2252,7 @@
     },
     "roll.initiative": {
       "type": "roll",
-      "label": "Iniciativa",
+      "label": "dnd5e.ui.iniciativa",
       "formula": "1d20 + @sheet.init",
       "visibility": "public",
       "chatCard": "check",
@@ -2263,39 +2263,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2327,7 +2327,7 @@
     },
     "roll.death_save": {
       "type": "roll",
-      "label": "Salvaguarda contra Morte",
+      "label": "dnd5e.ui.salvaguarda.contra.morte",
       "formula": "1d20",
       "visibility": "public",
       "chatCard": "death-save",
@@ -2338,39 +2338,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2402,7 +2402,7 @@
     },
     "roll.spell_attack": {
       "type": "roll",
-      "label": "Ataque de Magia",
+      "label": "dnd5e.ui.ataque.de.magia",
       "formula": "1d20 + @sheet.spell.attack",
       "visibility": "public",
       "chatCard": "attack",
@@ -2413,39 +2413,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2477,21 +2477,21 @@
     },
     "resource.hp.damage": {
       "type": "patch",
-      "label": "Sofrer Dano",
+      "label": "dnd5e.ui.sofrer.dano",
       "patch": {
         "sheet.hp.value": "max(0, @sheet.hp.value - input.amount)"
       }
     },
     "resource.hp.heal": {
       "type": "patch",
-      "label": "Curar",
+      "label": "dnd5e.ui.curar",
       "patch": {
         "sheet.hp.value": "min(@sheet.hp.max, @sheet.hp.value + input.amount)"
       }
     },
     "rest.long": {
       "type": "patch",
-      "label": "Descanso Longo",
+      "label": "dnd5e.ui.descanso.longo",
       "patch": {
         "sheet.hp.value": "@sheet.hp.max",
         "sheet.hp.temp": "0"
@@ -2576,39 +2576,39 @@
           {
             "id": "mode",
             "type": "select",
-            "label": "Modo",
+            "label": "dnd5e.ui.modo",
             "default": "normal",
             "options": [
               {
                 "value": "normal",
-                "label": "Normal"
+                "label": "dnd5e.ui.normal"
               },
               {
                 "value": "advantage",
-                "label": "Vantagem"
+                "label": "dnd5e.ui.vantagem"
               },
               {
                 "value": "disadvantage",
-                "label": "Desvantagem"
+                "label": "dnd5e.ui.desvantagem"
               }
             ]
           },
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2653,19 +2653,19 @@
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2696,19 +2696,19 @@
           {
             "id": "extraDice",
             "type": "diceList",
-            "label": "Dados extras",
+            "label": "dnd5e.ui.dados.extras",
             "default": []
           },
           {
             "id": "extraModifier",
             "type": "number",
-            "label": "Modificador extra",
+            "label": "dnd5e.ui.modificador.extra",
             "default": 0
           },
           {
             "id": "visibility",
             "type": "visibility",
-            "label": "Visibilidade",
+            "label": "dnd5e.ui.visibilidade",
             "default": "public"
           }
         ]
@@ -2726,7 +2726,7 @@
     },
     "effects.addEffect": {
       "type": "append",
-      "label": "Adicionar Efeito",
+      "label": "dnd5e.ui.adicionar.efeito",
       "target": "sheet.effects",
       "value": {
         "id": "@id.uuid",
