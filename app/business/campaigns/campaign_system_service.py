@@ -22,6 +22,19 @@ class CampaignSystemService:
         record = self.system_install.installed.get(system_id)
         return record is not None and record["status"] == "enabled"
 
+    def area_marker_presets(self, system_id: str | None) -> list[dict]:
+        """Resolved area-marker presets for an enabled system (empty if none/detached).
+
+        Mirrors what ``GamePageService`` injects into the page on load so a live
+        ``campaign.system.changed`` broadcast can refresh the tool palette in place.
+        """
+        if not system_id:
+            return []
+        for item in self.system_install.list_for_tab():
+            if item.get("system_id") == system_id and item["status"] == "enabled":
+                return item.get("area_markers", [])
+        return []
+
     def assign_to_campaign(
         self,
         *,

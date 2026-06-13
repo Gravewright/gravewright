@@ -11,7 +11,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from app.config import config
 from app.engine.rules.rules_registry import SystemRulesService
+from app.engine.systems.system_locale_service import SystemLocaleService
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,7 @@ class RollPresentation:
 class RollPresentationService:
     def __init__(self) -> None:
         self.rules = SystemRulesService()
+        self.locales = SystemLocaleService()
 
     def render(
         self,
@@ -63,8 +66,9 @@ class RollPresentationService:
             modifier=modifier,
             total=total,
         )
-        chat_card = self._render_chat_card(system_id=system_id, card_id=chat_card_id, context=context)
-        roll_toast = self._render_roll_toast(system_id=system_id, toast_id=roll_toast_id, context=context)
+        catalog = self.locales.get_locale(system_id, config.default_locale)
+        chat_card = self._render_chat_card(system_id=system_id, card_id=chat_card_id, context=context, catalog=catalog)
+        roll_toast = self._render_roll_toast(system_id=system_id, toast_id=roll_toast_id, context=context, catalog=catalog)
 
         return RollPresentation(
             chat_card=chat_card or self._fallback_chat_card(label=label, expression=expression, groups=groups, modifier=modifier, total=total),
@@ -121,7 +125,7 @@ class RollPresentationService:
             "input": metadata.get("rollInput") if isinstance(metadata.get("rollInput"), dict) else {},
         }
 
-    def _render_chat_card(self, *, system_id: str, card_id: Any, context: dict) -> dict | None:
+    def _render_chat_card(self, *, system_id: str, card_id: Any, context: dict, catalog: dict[str, str]) -> dict | None:
         if not isinstance(card_id, str) or not card_id:
             return None
         mappings = self.rules.get_chat_card_mappings(system_id)
@@ -129,15 +133,15 @@ class RollPresentationService:
         spec = cards.get(card_id) if isinstance(cards, dict) else None
         if not isinstance(spec, dict):
             return None
-        title = self._resolve(spec.get("title", "@action.label"), context)
-        subtitle = self._resolve(spec.get("subtitle", ""), context)
+        title = self._resolve_field(spec, "title", context, catalog, default="@action.label")
+        subtitle = self._resolve_field(spec, "subtitle", context, catalog, default="")
         lines = []
         raw_lines = spec.get("lines")
         if isinstance(raw_lines, list):
             for line in raw_lines[:12]:
                 if not isinstance(line, dict):
                     continue
-                label = self._resolve(line.get("label", ""), context)
+                label = self._resolve_field(line, "label", context, catalog, default="")
                 value = self._resolve(line.get("value", ""), context)
                 if value in (None, ""):
                     continue
@@ -150,7 +154,7 @@ class RollPresentationService:
             "total": context["roll"]["total"],
         }
 
-    def _render_roll_toast(self, *, system_id: str, toast_id: Any, context: dict) -> dict | None:
+    def _render_roll_toast(self, *, system_id: str, toast_id: Any, context: dict, catalog: dict[str, str]) -> dict | None:
         if not isinstance(toast_id, str) or not toast_id:
             return None
         mappings = self.rules.get_roll_toast_mappings(system_id)
@@ -160,12 +164,24 @@ class RollPresentationService:
             return None
         return {
             "id": toast_id,
-            "title": str(self._resolve(spec.get("title", "@action.label"), context) or ""),
-            "subtitle": str(self._resolve(spec.get("subtitle", ""), context) or ""),
+            "title": str(self._resolve_field(spec, "title", context, catalog, default="@action.label") or ""),
+            "subtitle": str(self._resolve_field(spec, "subtitle", context, catalog, default="") or ""),
             "formula": str(self._resolve(spec.get("formula", "@roll.formula"), context) or ""),
             "total": self._resolve(spec.get("total", "@roll.total"), context),
             "kind": str(self._resolve(spec.get("kind", "@roll.kind"), context) or "roll"),
         }
+
+    def _resolve_field(self, spec: dict, field: str, context: dict, catalog: dict[str, str], *, default: str = "") -> Any:
+        """Resolve a presentation field, preferring a ``{field}Key`` locale lookup.
+
+        A ``labelKey``/``titleKey``/``subtitleKey`` resolves against the system
+        locale catalog; otherwise the literal ``{field}`` (which may be an
+        ``@``-context path) is used.
+        """
+        locale_key = spec.get(f"{field}Key")
+        if isinstance(locale_key, str) and locale_key in catalog:
+            return catalog[locale_key]
+        return self._resolve(spec.get(field, default), context)
 
     def _resolve(self, node: Any, context: dict) -> Any:
         if isinstance(node, dict):

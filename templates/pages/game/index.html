@@ -278,7 +278,8 @@
                         data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"
                         aria-label="Monster status zone" aria-live="polite"></div>
                     <div class="table-surface" data-map-viewport>
-                        <canvas class="map-canvas" data-map-canvas data-room-id="{{ room.id }}" {% if room.active_scene
+                        <canvas class="map-canvas" data-map-canvas data-room-id="{{ room.id }}"
+                            data-area-marker-presets="{{ room.area_marker_presets_json | default('[]') | e }}" {% if room.active_scene
                             %} data-scene-id="{{ room.active_scene['id'] }}"
                             data-scene-width="{{ room.active_scene['width'] }}"
                             data-scene-height="{{ room.active_scene['height'] }}"
@@ -292,8 +293,7 @@
                             data-scene-start-zoom="{{ room.active_scene['start_zoom'] | default(1.0) }}"
                             data-scene-layer-id="{{ room.ground_layer_id or '' }}"
                             data-scene-tile-version="{{ room.active_scene['tile_table_version'] }}"
-                            data-measure-flash-seconds="{{ room.measure_flash_seconds | default(6) }}"
-                            data-area-marker-presets="{{ room.area_marker_presets_json | default('[]') | e }}" {% endif %}
+                            data-measure-flash-seconds="{{ room.measure_flash_seconds | default(6) }}" {% endif %}
                             aria-label="{{ t('game.table.eyebrow') }}"></canvas>
                         {% if not room.active_scene %}
                         <div class="table-empty" data-map-overlay>

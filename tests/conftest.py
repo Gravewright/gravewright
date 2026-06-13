@@ -8,6 +8,9 @@ import os
                                                                                  
 os.environ.setdefault("APP_ENV", "test")
 
+
+os.environ.setdefault("ALLOWED_HOSTS", "testserver.local,localhost,127.0.0.1")
+
 import time              
 import uuid              
 

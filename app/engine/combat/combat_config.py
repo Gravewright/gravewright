@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.config import config
 from app.engine.rules.rules_registry import SystemRulesService
+from app.engine.systems.system_locale_service import SystemLocaleService
 
 
 DEFAULT_ACTIVITY_TYPES = [
@@ -100,6 +102,7 @@ class CombatConfigService:
 
     def __init__(self) -> None:
         self.rules = SystemRulesService()
+        self.locales = SystemLocaleService()
 
     def get_for_system(self, system_id: str | None) -> CombatConfig:
         if not system_id:
@@ -107,6 +110,9 @@ class CombatConfigService:
         raw = self.rules.get_combat_config(system_id)
         if not isinstance(raw, dict):
             raw = {}
+        catalog = self.locales.get_locale(system_id, config.default_locale)
+        if catalog:
+            raw = _localize_keys(raw, catalog)
         raw_turn_order = raw.get("turnOrder") if isinstance(raw.get("turnOrder"), dict) else {}
         raw_legacy_roll = raw.get("initiativeRoll") if isinstance(raw.get("initiativeRoll"), dict) else {}
         initiative = _normalize_initiative(raw.get("initiative"), raw_turn_order, raw_legacy_roll)
@@ -125,6 +131,22 @@ class CombatConfigService:
             ui=ui,
             activity_types=[item for item in activity_types if isinstance(item, dict)],
         )
+
+
+def _localize_keys(value: Any, catalog: dict[str, str]) -> Any:
+    """Resolve system locale keys that appear as literal values in the config.
+
+    ``combat.gw.json`` places catalog keys (e.g. ``"dnd5e.ui.iniciativa.dnd5e"``)
+    directly in label positions. Catalog keys are namespaced, so plain literal
+    labels never collide and pass through untouched.
+    """
+    if isinstance(value, dict):
+        return {key: _localize_keys(item, catalog) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_localize_keys(item, catalog) for item in value]
+    if isinstance(value, str):
+        return catalog.get(value, value)
+    return value
 
 
 def supported_strategies() -> set[str]:

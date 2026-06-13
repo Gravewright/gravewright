@@ -33,9 +33,15 @@ class ContentPackService:
         pair = self._record_and_manifest(system_id)
         if pair is None:
             return []
-        _, manifest = pair
+        record, manifest = pair
+        package_dir = system_loader.SYSTEMS_DIR / record["package_dir"]
+        locale_data = manifest._load_locale(package_dir, "en")
         return [
-            {"id": pack.id, "type": pack.type, "label": pack.label}
+            {
+                "id": pack.id,
+                "type": pack.type,
+                "label": manifest._resolve_label(pack.label, pack.label_key, locale_data),
+            }
             for pack in manifest.content_packs
         ]
 
@@ -62,10 +68,12 @@ class ContentPackService:
         if parsed is None:
             return None
         entries = parsed.get("entries")
+        package_dir = system_loader.SYSTEMS_DIR / record["package_dir"]
+        locale_data = manifest._load_locale(package_dir, "en")
         return {
             "id": pack_id,
             "type": ref.type,
-            "label": ref.label,
+            "label": manifest._resolve_label(ref.label, ref.label_key, locale_data),
             "entries": [e for e in entries if isinstance(e, dict)] if isinstance(entries, list) else [],
         }
 

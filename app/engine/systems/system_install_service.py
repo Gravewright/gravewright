@@ -174,7 +174,7 @@ class SystemInstallService:
 
     def _tab_item(self, loaded: LoadedSystem, record: dict | None) -> dict:
         if loaded.manifest is not None:
-            summary = loaded.manifest.summary()
+            summary = loaded.manifest.summary(package_dir=loaded.package_dir)
             system_id = loaded.manifest.id
         else:
             system_id = ""
