@@ -8,7 +8,9 @@ problems with precise, user-facing errors.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 
 
 def _str(value: object, default: str = "") -> str:
@@ -27,6 +29,7 @@ def _list(value: object) -> list:
 class TypeDef:
     id: str
     label: str
+    label_key: str = ""
     schema: str = ""
     sheet: str = ""
 
@@ -36,6 +39,7 @@ class TypeDef:
         return cls(
             id=_str(raw.get("id")),
             label=_str(raw.get("label")),
+            label_key=_str(raw.get("labelKey")),
             schema=_str(raw.get("schema")),
             sheet=_str(raw.get("sheet")),
         )
@@ -47,6 +51,7 @@ class ContentPackRef:
     type: str
     label: str
     path: str
+    label_key: str = ""
 
     @classmethod
     def from_dict(cls, raw: object) -> ContentPackRef:
@@ -55,6 +60,7 @@ class ContentPackRef:
             id=_str(raw.get("id")),
             type=_str(raw.get("type")),
             label=_str(raw.get("label")),
+            label_key=_str(raw.get("labelKey")),
             path=_str(raw.get("path")),
         )
 
@@ -176,8 +182,9 @@ class SystemManifest:
                 unique.append(path)
         return unique
 
-    def summary(self) -> dict:
+    def summary(self, *, package_dir: Path | None = None) -> dict:
         """Lightweight dict for list/detail views in the Systems tab."""
+        locale_data = self._load_locale(package_dir, "en") if package_dir else {}
         author = self.authors[0].get("name") if self.authors else ""
         return {
             "id": self.id,
@@ -188,11 +195,30 @@ class SystemManifest:
             "author": author,
             "color": _str(self.display.get("color")),
             "capabilities": list(self.capabilities),
-            "actor_types": [{"id": t.id, "label": t.label} for t in self.actor_types],
-            "item_types": [{"id": t.id, "label": t.label} for t in self.item_types],
-            "area_markers": list(self.area_markers),
+            "actor_types": [
+                {"id": t.id, "label": self._resolve_label(t.label, t.label_key, locale_data)}
+                for t in self.actor_types
+            ],
+            "item_types": [
+                {"id": t.id, "label": self._resolve_label(t.label, t.label_key, locale_data)}
+                for t in self.item_types
+            ],
+            "area_markers": [
+                {
+                    **m,
+                    "label": self._resolve_label(
+                        _str(m.get("label")), _str(m.get("labelKey")), locale_data
+                    ),
+                }
+                for m in self.area_markers
+            ],
             "content_packs": [
-                {"id": p.id, "type": p.type, "label": p.label} for p in self.content_packs
+                {
+                    "id": p.id,
+                    "type": p.type,
+                    "label": self._resolve_label(p.label, p.label_key, locale_data),
+                }
+                for p in self.content_packs
             ],
             "compatibility": {
                 "minimum": self.compatibility.minimum,
@@ -200,3 +226,21 @@ class SystemManifest:
                 "maximum": self.compatibility.maximum,
             },
         }
+
+    def _load_locale(self, package_dir: Path, locale: str) -> dict:
+        path_rel = self.locales.get(locale)
+        if not path_rel:
+            return {}
+        try:
+            locale_path = package_dir / path_rel
+            return json.loads(locale_path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+
+    @staticmethod
+    def _resolve_label(label: str, label_key: str, locale_data: dict) -> str:
+        if label:
+            return label
+        if label_key and locale_data:
+            return locale_data.get(label_key, label_key)
+        return label_key

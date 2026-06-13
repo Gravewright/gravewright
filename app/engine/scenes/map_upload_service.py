@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import time
+import traceback
 import uuid
 from dataclasses import dataclass
 from io import BytesIO
@@ -390,7 +391,16 @@ class MapUploadService:
                 done_units=tile_total + chunk_total,
                 force=True,
             )
-        except Exception:
+        except Exception as exc:
+            emit_diagnostic(
+                "map.upload.processing_failed",
+                level="error",
+                campaign_id=campaign_id,
+                scene_id=scene["id"],
+                user_id=user_id,
+                error=repr(exc),
+                traceback=traceback.format_exc(),
+            )
             self._discard_scene(scene["id"])
             _record_map_operation(
                 "upload",

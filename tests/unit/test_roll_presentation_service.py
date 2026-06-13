@@ -48,7 +48,7 @@ def test_roll_presentation_uses_system_chat_card_and_toast_mapping(db):
     assert rendered["chatCard"]["title"] == "Aria"
     assert rendered["chatCard"]["subtitle"] == "Initiative"
     assert {line["label"]: line["value"] for line in rendered["chatCard"]["lines"]} == {
-        "Fórmula": "1d20 + 2",
+        "Formula": "1d20 + 2",
         "Total": "17",
     }
     assert rendered["rollToast"]["id"] == "check"

@@ -12,6 +12,8 @@ from app.persistence.rows import Row
 
 from app.business.campaigns.campaign_system_service import CampaignSystemService
 from app.helpers.auth import require_user
+from app.realtime.events import TransportEvent
+from app.realtime.transport import RealtimeTransport
 
 
 @dataclass
@@ -37,5 +39,17 @@ async def set_campaign_system(
 
     if not result.success:
         return Redirect(path=f"/game?room={data.campaign_id}&system_error_key={result.error_key}")
+
+
+
+    await RealtimeTransport().to_room(
+        room_id=data.campaign_id,
+        event=TransportEvent.CAMPAIGN_SYSTEM_CHANGED,
+        payload={
+            "room_id": data.campaign_id,
+            "system_id": system_id,
+            "area_markers": campaign_system_service.area_marker_presets(system_id),
+        },
+    )
 
     return Redirect(path=f"/game?room={data.campaign_id}&system_message_key=inside.systems.assigned")

@@ -237,6 +237,38 @@ async def test_player_cannot_upload_raster_map_by_default(db, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_upload_raster_map_processing_failure_logs_diagnostic(db, tmp_path, monkeypatch, caplog):
+    """A failure while writing tiles must surface the real cause, not just a
+    generic ``processing_failed`` key. The broad except swallows the exception,
+    so it has to be logged for the operator to diagnose it."""
+    campaign_id, gm_id, _player_id = create_upload_context(db)
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("simulated tile failure")
+
+    monkeypatch.setattr(MapUploadService, "_persist_tile", _boom)
+
+    with caplog.at_level("ERROR", logger="gravewright.diagnostics"):
+        result = await make_service(tmp_path).upload_raster_map(
+            campaign_id=campaign_id,
+            user_id=gm_id,
+            name="Boom Map",
+            filename="map.png",
+            content_type="image/png",
+            data=png_bytes(140, 140),
+            tile_size=70,
+            chunk_size=SCENE_NATIVE_CHUNK_SIZE,
+        )
+
+    assert not result.success
+    assert result.error_key == "game.maps.errors.processing_failed"
+
+    logged = "\n".join(record.getMessage() for record in caplog.records)
+    assert "map.upload.processing_failed" in logged
+    assert "simulated tile failure" in logged
+
+
+@pytest.mark.asyncio
 async def test_upload_raster_map_rejects_empty_file(db, tmp_path):
     campaign_id, gm_id, _player_id = create_upload_context(db)
     result = await make_service(tmp_path).upload_raster_map(

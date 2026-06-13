@@ -427,6 +427,27 @@
         }
     });
 
+
+    document.addEventListener("vtt:transport-event", (event) => {
+        const { event: evtName, payload } = event.detail ?? {};
+        if (evtName !== "campaign.system.changed") return;
+
+        const roomId = payload?.room_id;
+        if (!roomId) return;
+
+        const presets = Array.isArray(payload.area_markers) ? payload.area_markers : [];
+        const json = JSON.stringify(presets);
+        document
+            .querySelectorAll(`[data-map-canvas][data-room-id="${CSS.escape(roomId)}"]`)
+            .forEach((canvas) => { canvas.dataset.areaMarkerPresets = json; });
+
+        if (roomId !== activeCanvas()?.dataset.roomId) return;
+        if (activeMarkerPresetId && !presets.some((preset) => preset?.id === activeMarkerPresetId)) {
+            activeMarkerPresetId = "";
+        }
+        renderAreaMarkerPresets();
+    });
+
     
     document.addEventListener("vision:changed", (event) => {
         const playerView = Boolean(event.detail?.playerView);

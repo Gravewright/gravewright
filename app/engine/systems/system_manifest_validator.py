@@ -182,7 +182,7 @@ def validate_manifest(raw: object) -> ManifestValidation:
 
                             
     for type_def in (*manifest.actor_types, *manifest.item_types):
-        if not type_def.id or not type_def.label:
+        if not type_def.id or not (type_def.label or type_def.label_key):
             result.add("inside.systems.validation.type_fields")
 
                          

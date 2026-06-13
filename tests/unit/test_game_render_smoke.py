@@ -44,6 +44,25 @@ def test_game_page_renders_for_gm_with_manifest_system(db):
                                                                        
     assert "panel-items-" in resp.text
     assert "data-item-panel" in resp.text
+
+
+def test_area_marker_presets_present_without_active_scene(db):
+    """Attaching a system must expose its area-marker presets on the canvas even
+    before a map is uploaded — the presets come from the system, not the scene."""
+    from main import app
+
+    gm_id = seed_user(name="GM", email="gm-presets-noscene@test.com")
+    campaign_id = seed_campaign(gm_id)
+    seed_system(campaign_id, gm_id)
+
+    with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
+        login(client, gm_id)
+        resp = client.get(f"/game?room={campaign_id}")
+
+    assert resp.status_code == 200
+
+    assert "data-area-marker-presets=" in resp.text
+    assert "dnd5e-spell-sphere" in resp.text
     assert "sheets/items/item-sheet-controller.js" in resp.text
     assert "items/items-panel.js" in resp.text
     assert "pixi-board-renderer.js" in resp.text

@@ -110,10 +110,10 @@ def test_dnd5e_initiative_config_exposes_dnd5e_appearance(db):
     state = TurnOrderService().start(campaign_id=campaign_id, user_id=gm_id, actor_ids=[actor_id])
 
     assert state.success
-    assert state.config["initiative"]["label"] == "Iniciativa D&D 5e"
+    assert state.config["initiative"]["label"] == "D&D 5e Initiative"
     assert state.config["initiative"]["appearance"]["theme"] == "dnd5e"
     assert state.config["initiative"]["appearance"]["die"] == "d20"
-    assert state.config["initiative"]["appearance"]["rollMonstersLabel"] == "Só monstros"
+    assert state.config["initiative"]["appearance"]["rollMonstersLabel"] == "Monsters only"
 
 
 def test_dnd5e_combat_ui_is_defined_by_system_package(db):
@@ -132,9 +132,9 @@ def test_dnd5e_combat_ui_is_defined_by_system_package(db):
     assert combat_ui["palette"]["danger"] == "#9f1d1d"
     assert combat_ui["palette"]["surfaceRaised"] == "#3a211a"
     assert combat_ui["initiative"]["icon"] == "ph-dice-five"
-    assert combat_ui["initiative"]["rollAllLabel"] == "Rolar iniciativa"
-    assert combat_ui["initiative"]["rollMonstersLabel"] == "Rolar monstros"
-    assert combat_ui["statusLabels"]["next"] == "Próximo"
+    assert combat_ui["initiative"]["rollAllLabel"] == "Roll initiative"
+    assert combat_ui["initiative"]["rollMonstersLabel"] == "Roll monsters"
+    assert combat_ui["statusLabels"]["next"] == "Next"
 
 
 def test_roll_monster_initiative_only_updates_monster_participants(db, monkeypatch):
