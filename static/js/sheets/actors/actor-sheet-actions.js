@@ -72,7 +72,7 @@
       const btn = el("button", "gw-action-menu__item");
       btn.type = "button";
       if (item.icon) btn.appendChild(el("span", "gw-action-menu__icon", iconText(item.icon)));
-      btn.appendChild(el("span", "gw-action-menu__label", item.label || item.action || item.command || "Ação"));
+      btn.appendChild(el("span", "gw-action-menu__label", item.label || item.action || item.command || "Action"));
       btn.addEventListener("click", () => {
         if (item.dialog === "roll" || (item.dialog && typeof item.dialog === "object")) openRollDialog(root, anchor, item, context);
         else if (item.action && context.itemId) void executeItemAction(root, context.itemId, item.action);
@@ -94,14 +94,14 @@
     return {
       type: "roll",
       fields: [
-        { id: "mode", type: "segmented", label: "Modo", default: "normal", options: [
+        { id: "mode", type: "segmented", label: "Mode", default: "normal", options: [
           { value: "normal", label: "Normal" },
-          { value: "advantage", label: "Vantagem" },
-          { value: "disadvantage", label: "Desvantagem" },
+          { value: "advantage", label: "Advantage" },
+          { value: "disadvantage", label: "Disadvantage" },
         ] },
-        { id: "extraDice", type: "diceList", label: "Dados extras", placeholder: "1d6, 1d4" },
-        { id: "extraModifier", type: "number", label: "Modificador", default: 0 },
-        { id: "visibility", type: "visibility", label: "Visibilidade", default: "public" },
+        { id: "extraDice", type: "diceList", label: "Extra Dice", placeholder: "1d6, 1d4" },
+        { id: "extraModifier", type: "number", label: "Modifier", default: 0 },
+        { id: "visibility", type: "visibility", label: "Visibility", default: "public" },
       ],
     };
   }
@@ -148,7 +148,7 @@
     } else if (type === "select" || type === "visibility") {
       control = el("select", "gw-roll-dialog__input");
       const options = type === "visibility"
-        ? (field.options || [{ value: "public", label: "Público" }, { value: "gm", label: "GM" }])
+        ? (field.options || [{ value: "public", label: "Public" }, { value: "gm", label: "GM" }])
         : (field.options || []);
       options.forEach((opt) => {
         const value = typeof opt === "object" ? opt.value : opt;
@@ -235,10 +235,10 @@
     const targets = damageTargets(root);
     if (!targets.length) return null;
     const wrap = el("label", "gw-roll-dialog__field");
-    wrap.appendChild(el("span", "gw-roll-dialog__label", "Alvo"));
+    wrap.appendChild(el("span", "gw-roll-dialog__label", "Target"));
     const select = el("select", "gw-roll-dialog__input");
     select.dataset.rollTarget = "1";
-    select.appendChild(el("option", null, "Sem alvo (só rolar)")).value = "";
+    select.appendChild(el("option", null, "No target (roll only)")).value = "";
     targets.forEach((target) => {
       const option = el("option", null, target.name);
       option.value = target.tokenId || target.actorId || "";
@@ -250,13 +250,14 @@
     return wrap;
   }
 
-  function toastApplied(applied) {
+  function toastApplied(applied, systemId) {
     if (!applied || !window.GravewrightToasts) return;
-    const verb = applied.mode === "heal" ? "curou" : "sofreu";
-    const type = applied.damageType ? ` de ${applied.damageType}` : "";
+    const L = window.GravewrightSheets?.getLabels?.(systemId) || {};
+    const verb = applied.mode === "heal" ? (L.healed || "healed") : (L.tookDamage || "took");
+    const type = applied.damageType ? ` ${applied.damageType}` : "";
     let msg = `${applied.targetName} ${verb} ${applied.amount}${type} (HP ${applied.valueAfter})`;
     if (applied.mode !== "heal" && applied.rawAmount != null && applied.rawAmount !== applied.amount) {
-      msg += ` — reduzido de ${applied.rawAmount}`;
+      msg += ` — ${L.reducedFrom || "reduced from"} ${applied.rawAmount}`;
     }
     window.GravewrightToasts.showToast(msg, { duration: 5000 });
   }
@@ -269,7 +270,7 @@
     const dialog = el("div", "gw-roll-dialog");
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
-    dialog.appendChild(el("div", "gw-roll-dialog__title", schema.title || item.title || item.label || "Rolagem"));
+    dialog.appendChild(el("div", "gw-roll-dialog__title", schema.title || item.title || item.label || "Roll"));
 
     (schema.fields || []).forEach((field) => {
       if (field?.type === "hint") {
@@ -288,13 +289,13 @@
     if (targetField) dialog.appendChild(targetField);
 
     const actions = el("div", "gw-roll-dialog__actions");
-    const cancel = el("button", "gw-roll-dialog__btn", "Cancelar");
+    const cancel = el("button", "gw-roll-dialog__btn", "Cancel");
     cancel.type = "button";
     cancel.addEventListener("click", closeFloatingSheetMenus);
     const roll = el("button", "gw-roll-dialog__btn gw-roll-dialog__btn--primary");
     roll.type = "button";
     roll.appendChild(phIcon("dice-five"));
-    roll.appendChild(el("span", null, "Rolar"));
+    roll.appendChild(el("span", null, "Roll"));
     roll.addEventListener("click", async () => {
       const rollOptions = collectRollOptions(dialog);
       const action = resolveDialogAction(dialog, schema, item.action);
@@ -303,10 +304,11 @@
       const options = { rollOptions };
       if (targetOption?.dataset.targetTokenId) options.targetTokenId = targetOption.dataset.targetTokenId;
       else if (targetOption?.dataset.targetActorId) options.targetActorId = targetOption.dataset.targetActorId;
+      const meta = contexts.get(root) || {};
       const result = context.itemId
         ? await executeItemAction(root, context.itemId, action, options)
         : await executeSheetAction(root, action, options);
-      if (result?.applied) toastApplied(result.applied);
+      if (result?.applied) toastApplied(result.applied, meta.systemId);
       closeFloatingSheetMenus();
     });
     actions.appendChild(cancel);

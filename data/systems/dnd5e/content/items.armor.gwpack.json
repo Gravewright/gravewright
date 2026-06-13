@@ -2,7 +2,7 @@
   "id": "dnd5e-armor",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Armaduras",
+  "label": "Armor",
   "entries": [
     {
       "id": "template-leather-armor",

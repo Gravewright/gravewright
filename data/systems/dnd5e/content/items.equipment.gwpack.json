@@ -2,7 +2,7 @@
   "id": "dnd5e-equipment",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Equipamentos",
+  "label": "Equipment",
   "entries": [
     {
       "id": "template-rope",

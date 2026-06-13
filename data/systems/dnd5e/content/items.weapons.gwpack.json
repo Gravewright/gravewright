@@ -2,7 +2,7 @@
   "id": "dnd5e-weapons",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Armas",
+  "label": "Weapons",
   "entries": [
     {
       "id": "template-longsword",

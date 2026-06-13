@@ -2,7 +2,7 @@
   "id": "dnd5e-monsters",
   "type": "actor_pack",
   "system": "dnd5e",
-  "label": "Monstros",
+  "label": "Monsters",
   "entries": [
     {
       "id": "template-monster",

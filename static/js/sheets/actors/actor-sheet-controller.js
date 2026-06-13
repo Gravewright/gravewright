@@ -89,7 +89,7 @@
           }
           openRollDialog(root, itemAction, {
             action: itemAction.dataset.itemAction,
-            label: itemAction.textContent || "Rolagem",
+            label: itemAction.textContent || "Roll",
             dialog,
           }, {
             itemId: itemAction.dataset.itemId,
@@ -153,6 +153,7 @@
       roomId: modal.dataset.actorCampaign || "",
       tokenLinkMode: bundle.actor?.token_link_mode || "",
       canEdit: !!bundle.can_edit,
+      systemId: bundle.actor?.system_id || "",
     });
     if (!root.dataset.wired) {
       wire(root);
