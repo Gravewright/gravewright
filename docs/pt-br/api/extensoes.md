@@ -1,43 +1,28 @@
-# APIs de Extensão
+# APIs de Extensão no Navegador
 
-Gravewright expõe APIs públicas de navegador para sistemas e módulos. Essas APIs são materiais MIT para facilitar criação de integrações, sistemas, módulos, exemplos e SDKs. A implementação interna continua Apache-2.0.
+Gravewright expõe APIs públicas de navegador para sistemas e módulos.
+
+Os materiais de API são licenciados sob MIT. A implementação permanece Apache-2.0.
 
 > [!WARNING]
-> **Alpha.** Use apenas APIs documentadas aqui. Objetos internos, stores, funções globais não documentadas e estrutura DOM do core podem mudar sem aviso entre versões Alpha.
+> **Alpha.**
+>
+> Use apenas APIs documentadas. Globals internos, stores privados, internals de renderer, comportamento de fallback e estrutura DOM do core podem mudar entre releases Alpha.
 
-## Superfícies principais
+## Superfícies Principais
 
-| Superfície | Usada por | Finalidade |
-|---|---|---|
-| `window.Gravewright.modules` | módulos | registrar runtime, consultar módulos, obter API escopada |
-| `api.*` | módulos | hooks, UI, settings, chat, cena, tokens e contexto |
-| `window.GravewrightSheets` | sistemas | registrar comportamento complementar de fichas |
-| `window.GravewrightCombat` | sistemas | registrar hooks/slots leves do tracker de combate |
+| Superfície                   | Usada por | Finalidade                                                                               |
+| ---------------------------- | --------- | ---------------------------------------------------------------------------------------- |
+| `window.Gravewright.modules` | Módulos   | Registrar runtimes de módulo, inspecionar módulos e obter APIs escopadas                 |
+| `api.*` escopado             | Módulos   | Hooks, UI, settings, chat, cena, tokens e APIs de contexto                               |
+| `window.GravewrightSheets`   | Sistemas  | Labels de ficha, pequenas extensões de comportamento de ficha e hooks de cabeçalho/seção |
+| `window.GravewrightCombat`   | Sistemas  | Hooks e slots leves do tracker de combate                                                |
 
-## Regra de autoridade
+O backend é autoritativo para o estado de jogo.
 
-O backend é autoritativo para estado de jogo. Código de módulo/sistema no navegador pode melhorar UI, enviar intenções e reagir a eventos, mas não deve assumir que estado local é verdade final.
-
-Use APIs públicas para:
-
-- mostrar UI;
-- registrar hooks;
-- ler contexto;
-- enviar intenções;
-- salvar settings por endpoint oficial;
-- acionar interações documentadas.
-
-Evite:
-
-- mutar objetos retornados por `api.game.*`;
-- depender de DOM interno do core;
-- chamar endpoints privados sem documentação;
-- guardar estado crítico só em `localStorage`;
-- sobrescrever globals do Gravewright.
+APIs de navegador podem melhorar UI, reagir a eventos e enviar intenções. Elas não devem tratar estado local como verdade final.
 
 ## Module Runtime API
-
-Um módulo registra seu runtime assim:
 
 ```js
 (function () {
@@ -45,48 +30,53 @@ Um módulo registra seu runtime assim:
     id: "meu-modulo",
 
     init(api, payload) {
-      // registre hooks e prepare estado local
+      // Chamado quando o runtime do módulo é inicializado.
     },
 
     ready(api, payload) {
-      // rode depois do game:ready para este módulo
+      // Chamado quando o runtime do módulo está pronto.
     }
   });
 })();
 ```
 
-O `id` deve bater com o `id` do manifest.
+O id do runtime deve bater com o id do manifest.
 
-### `payload`
-
-O payload passado para `init` e `ready` contém:
+`payload` contém:
 
 ```js
 {
-  module,   // manifesto normalizado do módulo
-  api,      // API escopada do módulo
-  context   // contexto atual da mesa
+  module,  // manifest normalizado do módulo
+  api,     // API escopada do módulo
+  context  // contexto atual da mesa
 }
 ```
 
-## Namespaces do `api`
+## API Escopada de Módulo
 
-### `api.version`
+Namespaces:
 
-```js
-console.log(api.version); // "1"
+```text
+api.version
+api.capabilities
+api.hooks
+api.game
+api.chat
+api.scene
+api.settings
+api.tokens
+api.tools
+api.ui
 ```
 
 ### `api.capabilities`
 
 ```js
 api.capabilities.has("settings");
-api.capabilities.require("assets.ui", "minha-ui");
+api.capabilities.require("assets.ui", "minha-feature");
 api.capabilities.requirement("settings.get");
 api.capabilities.list();
 ```
-
-Use para verificar em runtime se o manifest declarou o necessário.
 
 ### `api.game`
 
@@ -97,19 +87,19 @@ const scene = api.game.scene();
 const user = api.game.user();
 ```
 
-Os retornos são clones congelados. Eles são leitura, não fonte de mutação.
+Os valores retornados são clones ou snapshots congelados.
 
 ### `api.hooks`
 
-Requer capability `hooks.client`.
+Requer `hooks.client`.
 
 ```js
 const off = api.hooks.on("game:ready", ({ context }) => {
-  console.log("Mesa pronta", context);
+  // Reage quando a mesa está pronta.
 });
 
 api.hooks.once("scene:loaded", ({ scene }) => {
-  console.log("Primeira cena carregada", scene);
+  // Reage uma única vez.
 });
 
 off();
@@ -117,87 +107,57 @@ off();
 
 Hooks oficiais:
 
-```text
-module:init
-module:ready
-module:failed
-game:ready
-campaign:loaded
-scene:loaded
-```
-
-Consulte programaticamente:
-
-```js
-api.hooks.official();
-```
+* `module:init`
+* `module:ready`
+* `module:failed`
+* `game:ready`
+* `campaign:loaded`
+* `scene:loaded`
 
 ### `api.ui`
 
-Requer capability `assets.ui`.
+Requer `assets.ui`.
 
 ```js
-api.ui.toast("Mensagem do módulo", { duration: 4000 });
+api.ui.toast("Olá do módulo", { duration: 4000 });
 api.ui.openModal("modal-id");
 api.ui.closeModal("modal-id");
 ```
 
 ### `api.settings`
 
-Requer capability `settings`.
+Requer `settings`.
 
 ```js
-const definitions = api.settings.definitions();
-const all = api.settings.all();
 const value = api.settings.get("ui.enabled", true);
 await api.settings.set("ui.enabled", false);
 ```
 
-`set` usa o endpoint oficial:
-
-```text
-POST /modules/settings
-```
-
 ### `api.chat`
 
-Requer capability `chat.cards`.
+Requer `chat.cards`.
 
 ```js
 api.chat.send({
   type: "module-message",
-  text: "Olá do módulo"
+  text: "Olá"
 });
 ```
 
-### `api.scene`
-
-Requer capability `assets.ui`.
+### `api.scene`, `api.tokens` e `api.tools`
 
 ```js
-const canvas = api.scene.activeCanvas();
-const camera = api.scene.activeCameraForScene(sceneId);
-```
+const canvas = api.scene.activeCanvas(); // assets.ui
+const camera = api.scene.activeCameraForScene(sceneId); // assets.ui
 
-### `api.tokens`
+api.tokens.centerOn(tokenId); // tokens.extends
 
-Requer capability `tokens.extends`.
-
-```js
-api.tokens.centerOn(tokenId);
-```
-
-### `api.tools`
-
-Requer capability `assets.ui`.
-
-```js
-const tool = api.tools.activeTool();
+const tool = api.tools.activeTool(); // assets.ui
 ```
 
 ## System Sheet API
 
-Sistemas podem registrar comportamento complementar para fichas:
+Sistemas podem registrar pequenos comportamentos de ficha no navegador através de `window.GravewrightSheets`.
 
 ```js
 (function () {
@@ -205,15 +165,23 @@ Sistemas podem registrar comportamento complementar para fichas:
   if (!Sheets || typeof Sheets.registerSystem !== "function") return;
 
   Sheets.registerSystem("meu-sistema", {
+    labels: {
+      actorName: "Nome",
+      roll: "Rolar",
+      equipped: "Equipado",
+      prepared: "Preparado"
+    },
+
     renderSection(node, variant, renderContext, helpers) {
       if (variant !== "special") return null;
-      const section = helpers.el("section", "my-special-section");
+
+      const section = helpers.el("section", "minha-secao-especial");
       section.appendChild(helpers.el("h3", null, node.label || "Especial"));
       return section;
     },
 
     renderHeaderIdentity(main, bundle, helpers) {
-      main.appendChild(helpers.el("div", "my-subtitle", bundle.actor?.type || ""));
+      main.appendChild(helpers.el("div", "meu-subtitulo", bundle.actor?.type || ""));
     },
 
     autoFitWidth(actorType) {
@@ -223,39 +191,86 @@ Sistemas podem registrar comportamento complementar para fichas:
 })();
 ```
 
-Hooks conhecidos:
+### Labels de ficha
 
-| Hook | Retorno | Uso |
-|---|---|---|
-| `renderSection(node, variant, renderContext, helpers)` | `Node` ou `null` | renderizar uma seção customizada |
-| `renderHeaderIdentity(main, bundle, helpers)` | `void` | complementar cabeçalho da ficha |
-| `autoFitWidth(actorType)` | número ou `null` | sugerir largura automática da modal |
+Sistemas podem fornecer labels de ficha através de `labels`.
 
-Helpers úteis:
+A engine fornece labels de fallback em inglês. Labels de sistema são mescladas com os fallbacks. Chaves ausentes caem para inglês.
 
-```text
-helpers.el
-helpers.phIcon
-helpers.getPath
-helpers.formatMod
-helpers.cssIdent
-helpers.nonEmptyParts
-helpers.normalizeInteraction
-helpers.bindInteraction
-helpers.headerInput
-helpers.headerSelect
-helpers.headerIdentityCell
-helpers.closeFloatingSheetMenus
-helpers.postJSON
-helpers.refresh
-helpers.getContext
+Chaves conhecidas de label de ficha:
+
+| Chave               | Finalidade                                    |
+| ------------------- | --------------------------------------------- |
+| `actorName`         | Placeholder do nome do ator                   |
+| `levelPrefix`       | Prefixo usado antes de um valor de nível      |
+| `equipped`          | Badge de item equipado                        |
+| `spellCirclePrefix` | Prefixo usado antes de círculo/nível de magia |
+| `prepared`          | Badge de magia preparada                      |
+| `active`            | Label de efeito/status ativo                  |
+| `inactive`          | Label de efeito/status inativo                |
+| `qtyPrefix`         | Prefixo de quantidade                         |
+| `portrait`          | Placeholder de retrato                        |
+| `token`             | Placeholder de token                          |
+| `uploadPortrait`    | Título de upload de retrato                   |
+| `uploadToken`       | Título de upload de token                     |
+| `cancel`            | Label do botão de cancelar                    |
+| `roll`              | Label genérico de rolagem                     |
+| `rollDialogTitle`   | Título do diálogo de rolagem                  |
+| `healed`            | Texto de toast de cura                        |
+| `tookDamage`        | Texto de toast de dano recebido               |
+| `reducedFrom`       | Texto de toast de redução de dano             |
+
+Exemplo:
+
+```js
+(function () {
+  const Sheets = window.GravewrightSheets;
+  if (!Sheets || typeof Sheets.registerSystem !== "function") return;
+
+  Sheets.registerSystem("meu-sistema", {
+    labels: {
+      actorName: "Nome",
+      levelPrefix: "Nível",
+      equipped: "Equipado",
+      spellCirclePrefix: "Círculo",
+      prepared: "Preparado",
+      active: "Ativo",
+      inactive: "Inativo",
+      qtyPrefix: "Qtd.",
+      portrait: "Retrato",
+      token: "Token",
+      uploadPortrait: "Enviar retrato",
+      uploadToken: "Enviar token",
+      cancel: "Cancelar",
+      roll: "Rolar",
+      rollDialogTitle: "Rolagem",
+      healed: "curou",
+      tookDamage: "sofreu",
+      reducedFrom: "reduzido de"
+    }
+  });
+})();
 ```
 
-Use essa API com moderação. Prefira layout declarativo sempre que possível.
+### Hooks de ficha
+
+Hooks conhecidos de ficha:
+
+| Hook                                                   | Retorno            | Finalidade                                         |
+| ------------------------------------------------------ | ------------------ | -------------------------------------------------- |
+| `renderSection(node, variant, renderContext, helpers)` | `Node` ou `null`   | Renderiza uma seção customizada de ficha           |
+| `renderHeaderIdentity(main, bundle, helpers)`          | `void`             | Estende a área de identidade do cabeçalho da ficha |
+| `autoFitWidth(actorType)`                              | `number` ou `null` | Sugere largura de modal para um tipo de ator       |
+
+### Limite dos helpers de ficha
+
+O objeto `helpers` passado para hooks de ficha é a superfície suportada de helpers.
+
+Sistemas não devem depender de variáveis não documentadas do renderer, stores privados, estrutura DOM ou classes CSS internas, exceto quando forem explicitamente documentadas como pontos públicos de extensão.
 
 ## System Combat API
 
-Sistemas podem registrar hooks e slots de combate:
+Sistemas podem registrar hooks e slots leves de combate através de `window.GravewrightCombat`.
 
 ```js
 (function () {
@@ -264,37 +279,55 @@ Sistemas podem registrar hooks e slots de combate:
 
   Combat.registerSystem("meu-sistema", {
     hooks: {
-      participantMeta(payload) {
-        return payload.participant?.actor_type || "";
+      participantMeta({ participant }) {
+        return participant?.actor_type || "";
       }
     },
+
     slots: {
-      participantBadge(payload) {
-        const badge = document.createElement("span");
-        badge.className = "my-combat-badge";
-        badge.textContent = payload.participant?.actor_type || "";
-        return badge;
+      participantActions({ participant }) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "minha-acao-combate";
+        button.textContent = participant?.actor_type || "Ação";
+        return button;
       }
     }
   });
 })();
 ```
 
-A API de combate é intencionalmente pequena. Sistemas não substituem o renderer completo do tracker.
+Hooks conhecidos de combate:
 
-## Compatibilidade
+| Hook              | Retorno                       | Finalidade                                                |
+| ----------------- | ----------------------------- | --------------------------------------------------------- |
+| `beforeRender`    | `void`                        | Chamado antes do tracker de combate renderizar            |
+| `afterRender`     | `void`                        | Chamado depois do tracker de combate renderizar           |
+| `participantMeta` | `string`, `string[]` ou falsy | Adiciona metadados específicos do sistema ao participante |
 
-Todo sistema/módulo deve declarar:
+Slots conhecidos de combate:
 
-```json
-{
-  "apiVersion": "1",
-  "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1",
-    "maximum": "1.x"
-  }
-}
-```
+| Slot                 | Retorno                   | Finalidade                                                                |
+| -------------------- | ------------------------- | ------------------------------------------------------------------------- |
+| `participantActions` | `Node`, `Node[]` ou falsy | Adiciona controles específicos do sistema à área de ações do participante |
 
-Durante Alpha, atualize `verified` sempre que testar contra uma nova versão do Gravewright.
+A API de combate é intencionalmente pequena.
+
+Sistemas devem preferir configuração de combate, labels, hooks, slots e CSS em vez de substituir o renderer inteiro do tracker de combate.
+
+Substituir `window.GravewrightCombatPanel` não faz parte da API pública estável durante Alpha.
+
+## Detalhes Privados de Implementação
+
+Os itens abaixo são privados, exceto quando documentados em outro lugar:
+
+* globals de renderer;
+* estrutura DOM;
+* stores privados;
+* ordenação interna de eventos;
+* classes CSS que não foram documentadas como hooks de extensão;
+* labels de fallback;
+* substituição completa do renderer de ficha;
+* substituição completa do renderer de combate.
+
+Use APIs documentadas, configuração declarativa, labels, locales, hooks, slots e assets.

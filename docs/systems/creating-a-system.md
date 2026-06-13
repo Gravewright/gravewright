@@ -2,13 +2,18 @@
 
 > [!WARNING]
 > **System API v1 is Alpha.**
-> Systems are the most sensitive extension surface in Gravewright because they define schema, sheets, rules, rolls, packs, and token mappings. Alpha releases may change fields or behavior. Test custom systems in one-shots and test environments before trusting long campaigns to them.
+>
+> Systems are the most sensitive extension surface in Gravewright because they define schema, sheets, rules, rolls, packs, token mappings, labels, and combat behavior.
+>
+> Alpha releases may change fields or behavior. Test custom systems in one-shots and test environments before trusting long campaigns to them.
 
-A **system** is a declarative package that teaches Gravewright how to understand a specific game: which actor types exist, which item types exist, what data shape each entity uses, how sheets render, which rolls exist, how initiative works, and which starter content can be imported.
+A **system** is a declarative package that teaches Gravewright how to understand a specific game: which actor types exist, which item types exist, what data shape each entity uses, how sheets render, which rolls exist, how initiative works, which labels should be shown, and which starter content can be imported.
 
-Systems are not arbitrary backend plugins. The server reads and validates declarative files. System JavaScript, when used, runs in the browser and must use documented public APIs only.
+Systems are not arbitrary backend plugins.
 
-## When to create a system
+The server reads and validates declarative files. System JavaScript, when used, runs in the browser and must use documented public APIs only.
+
+## When to Create a System
 
 Create a system when you need to define the structural rules of a game:
 
@@ -18,11 +23,13 @@ Create a system when you need to define the structural rules of a game:
 - derived data, formulas, rolls, and actions;
 - mappings between sheet data and tokens;
 - combat configuration, initiative, and resources;
+- ruleset vocabulary and UI labels;
+- locale files;
 - content packs that belong to the system.
 
-Do not create a system for small visual improvements, optional automation, or behavior that should be enabled/disabled per campaign. Use a **module** for that.
+Do not create a system for small visual improvements, optional automation, or behavior that should be enabled or disabled per campaign. Use a **module** for that.
 
-## Mental model
+## Mental Model
 
 A system has four main layers:
 
@@ -34,29 +41,27 @@ A system has four main layers:
 Optionally, a system can also include:
 
 - CSS for custom visuals;
-- client-side JavaScript for small extension points;
+- client-side JavaScript for documented extension points;
+- labels;
 - locales;
 - content packs.
 
-## Recommended package layout
+## Recommended Package Layout
 
 ```text
 data/systems/my-system/
   manifest.json
   README.md
-
   schemas/
     character.schema.json
     monster.schema.json
     item.schema.json
-
   layouts/
     character.sheet.gw.json
     monster.sheet.gw.json
-    items/
-      weapon.sheet.gw.json
-      spell.sheet.gw.json
-
+  items/
+    weapon.sheet.gw.json
+    spell.sheet.gw.json
   rules/
     actions.gw.json
     combat.gw.json
@@ -64,21 +69,17 @@ data/systems/my-system/
     formulas.gw.json
     validation.gw.json
     conditions.gw.json
-
   mappings/
     token.gw.json
     chat-cards.gw.json
     roll-toast.gw.json
-
   content/
     actors.monsters.gwpack.json
     items.weapons.gwpack.json
     spells.gwpack.json
-
   locales/
     en.json
     pt-BR.json
-
   assets/
     my-system.css
     my-system.js
@@ -89,13 +90,21 @@ For a minimal system, you need only:
 ```text
 data/systems/my-system/
   manifest.json
-  schemas/character.schema.json
-  layouts/character.sheet.gw.json
+  schemas/
+    character.schema.json
+  layouts/
+    character.sheet.gw.json
 ```
 
-A useful system will usually also have `rules/actions.gw.json`, `rules/combat.gw.json`, and at least one CSS file.
+A useful system will usually also have:
 
-## Minimal manifest
+- `rules/actions.gw.json`;
+- `rules/combat.gw.json`;
+- locale files;
+- at least one CSS file;
+- optional system JavaScript for documented sheet or combat extension points.
+
+## Minimal Manifest
 
 Create `manifest.json`:
 
@@ -110,7 +119,9 @@ Create `manifest.json`:
   "version": "0.1.0",
   "apiVersion": "1",
   "authors": [
-    { "name": "Your Name" }
+    {
+      "name": "Your Name"
+    }
   ],
   "license": "MIT",
   "compatibility": {
@@ -150,17 +161,17 @@ Create `manifest.json`:
 }
 ```
 
-### Important rules
+Important rules:
 
-- `manifestVersion` must be `1`.
-- `type` must be `"system"`.
-- `apiVersion` must be `"1"`.
-- Top-level `id` and `system.id` must match.
-- IDs use lowercase kebab-case: `my-system`.
-- `system.storage.model` must be `"scoped-json-v1"`.
-- Package paths must be relative to the package root.
-- URLs, absolute paths, `..`, and files outside the package are rejected.
-- Declare only capabilities that correspond to files or APIs you actually use.
+- `manifestVersion` must be `1`;
+- `type` must be `"system"`;
+- `apiVersion` must be `"1"`;
+- top-level `id` and `system.id` must match;
+- IDs use lowercase kebab-case, such as `my-system`;
+- `system.storage.model` must be `"scoped-json-v1"`;
+- package paths must be relative to the package root;
+- URLs, absolute paths, `..`, and files outside the package are rejected;
+- declare only capabilities that correspond to files or APIs you actually use.
 
 ## Capabilities
 
@@ -185,9 +196,11 @@ Capabilities describe what the system provides.
 | `combat.hooks` | registers combat client hooks |
 | `rolls.intent` | uses semantic roll intents |
 
-Capabilities are not just decoration. They are documentation for users and maintainers, and they allow the backend/runtime to reject unsupported behavior.
+Capabilities are not just decoration.
 
-## Creating the first actor schema
+They are documentation for users and maintainers, and they allow the backend/runtime to reject unsupported behavior.
+
+## Creating the First Actor Schema
 
 Create `schemas/character.schema.json`:
 
@@ -201,25 +214,48 @@ Create `schemas/character.schema.json`:
     "attributes": {
       "type": "object",
       "properties": {
-        "strength": { "type": "integer", "default": 10 },
-        "dexterity": { "type": "integer", "default": 10 },
-        "strengthMod": { "type": "integer", "default": 0 },
-        "dexterityMod": { "type": "integer", "default": 0 }
+        "strength": {
+          "type": "integer",
+          "default": 10
+        },
+        "dexterity": {
+          "type": "integer",
+          "default": 10
+        },
+        "strengthMod": {
+          "type": "integer",
+          "default": 0
+        },
+        "dexterityMod": {
+          "type": "integer",
+          "default": 0
+        }
       }
     },
     "combat": {
       "type": "object",
       "properties": {
-        "hp": { "type": "integer", "default": 10 },
-        "maxHp": { "type": "integer", "default": 10 },
-        "initiative": { "type": "integer", "default": 0 }
+        "hp": {
+          "type": "integer",
+          "default": 10
+        },
+        "maxHp": {
+          "type": "integer",
+          "default": 10
+        },
+        "initiative": {
+          "type": "integer",
+          "default": 0
+        }
       }
     }
   }
 }
 ```
 
-Gravewright stores core actor metadata separately from system sheet data. In layouts and rules you normally refer to system data through paths such as:
+Gravewright stores core actor metadata separately from system sheet data.
+
+In layouts and rules you normally refer to system data through paths such as:
 
 ```text
 sheet.attributes.strength
@@ -227,9 +263,11 @@ sheet.combat.hp
 sheet.combat.maxHp
 ```
 
-Good practice: keep schemas stable and predictable. During Alpha, schema changes may make old tables difficult to recover.
+Good practice: keep schemas stable and predictable.
 
-## Creating the first sheet
+During Alpha, schema changes may make old tables difficult to recover.
+
+## Creating the First Sheet
 
 Create `layouts/character.sheet.gw.json`:
 
@@ -306,7 +344,7 @@ Create `layouts/character.sheet.gw.json`:
 }
 ```
 
-### Useful layout nodes
+Useful layout nodes:
 
 | Type | Use |
 |---|---|
@@ -331,9 +369,11 @@ Create `layouts/character.sheet.gw.json`:
 | `incrementButton` | increment button |
 | `decrementButton` | decrement button |
 
-Not every field is fully locked down in JSON Schema yet. Alpha allows additional properties so the renderer can evolve. Document any custom node or variant your system depends on.
+Not every field is fully locked down in JSON Schema yet.
 
-## Creating actions and rolls
+Alpha allows additional properties so the renderer can evolve. Document any custom node or variant your system depends on.
+
+## Creating Actions and Rolls
 
 Create `rules/actions.gw.json`:
 
@@ -382,9 +422,11 @@ Intent values in v1:
 | `tool` | tool |
 | `custom` | system-specific case |
 
-Use `intent` for semantics, not appearance. Appearance should be controlled through `chatCard`, `rollToast`, CSS, and mappings.
+Use `intent` for semantics, not appearance.
 
-## Configuring combat
+Appearance should be controlled through `chatCard`, `rollToast`, CSS, and mappings.
+
+## Configuring Combat
 
 Create `rules/combat.gw.json`:
 
@@ -409,16 +451,27 @@ Create `rules/combat.gw.json`:
     }
   },
   "activityTypes": [
-    { "id": "action", "label": "Action" },
-    { "id": "bonus", "label": "Bonus Action" },
-    { "id": "reaction", "label": "Reaction" }
+    {
+      "id": "action",
+      "label": "Action"
+    },
+    {
+      "id": "bonus",
+      "label": "Bonus Action"
+    },
+    {
+      "id": "reaction",
+      "label": "Reaction"
+    }
   ]
 }
 ```
 
 Use `combat.config` in the capabilities list when declaring this file.
 
-## Mapping tokens
+Combat UI text should come from system-owned combat configuration, labels, or locale files when the default engine text is not appropriate for the system.
+
+## Mapping Tokens
 
 If your system uses tokens with HP, names, portraits, or derived states, declare a mapping:
 
@@ -448,7 +501,7 @@ Reference it in the manifest:
 
 Use the `tokens.mappings` capability.
 
-## Adding assets
+## Adding Assets
 
 In the manifest:
 
@@ -464,7 +517,51 @@ In the manifest:
 }
 ```
 
-CSS is the preferred path for visual customization. JavaScript should be reserved for behavior that the declarative sheet cannot express yet.
+CSS is the preferred path for visual customization.
+
+JavaScript should be reserved for documented behavior that declarative sheets and rules cannot express yet.
+
+## Providing System UI Labels
+
+Systems can provide UI labels for sheet rendering through their browser asset.
+
+Register labels in `assets/my-system.js`:
+
+```js
+(function () {
+  const Sheets = window.GravewrightSheets;
+  if (!Sheets || typeof Sheets.registerSystem !== "function") return;
+
+  Sheets.registerSystem("my-system", {
+    labels: {
+      actorName: "Name",
+      levelPrefix: "Level",
+      equipped: "Equipped",
+      spellCirclePrefix: "Circle",
+      prepared: "Prepared",
+      active: "Active",
+      inactive: "Inactive",
+      qtyPrefix: "Qty",
+      portrait: "Portrait",
+      token: "Token",
+      uploadPortrait: "Upload portrait",
+      uploadToken: "Upload token",
+      cancel: "Cancel",
+      roll: "Roll",
+      rollDialogTitle: "Roll",
+      healed: "healed",
+      tookDamage: "took",
+      reducedFrom: "reduced from"
+    }
+  });
+})();
+```
+
+Use labels for ruleset vocabulary and language-specific text that the engine cannot know safely.
+
+The engine provides English fallbacks, but public systems should define their own labels when distributing a non-English or ruleset-specific experience.
+
+## Adding Sheet Hooks
 
 Example system JavaScript:
 
@@ -499,11 +596,73 @@ Browser APIs available to systems:
 
 - `window.GravewrightSheets.registerSystem(systemId, hooks)`;
 - `window.GravewrightSheets.helpers`;
+- `window.GravewrightSheets.getLabels(systemId)`;
 - `window.GravewrightCombat.registerSystem(systemId, plugin)`.
 
-Avoid internal variables, private stores, and undocumented DOM structure.
+Avoid internal variables, private stores, undocumented DOM structure, fallback behavior, and renderer internals.
 
-## Adding content packs
+## Adding Combat Hooks and Slots
+
+Systems can register lightweight combat hooks and slots:
+
+```js
+(function () {
+  const Combat = window.GravewrightCombat;
+  if (!Combat || typeof Combat.registerSystem !== "function") return;
+
+  Combat.registerSystem("my-system", {
+    hooks: {
+      participantMeta({ participant }) {
+        return participant?.actor_type || "";
+      }
+    },
+
+    slots: {
+      participantActions({ participant }) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "my-system-combat-action";
+        button.textContent = participant?.actor_type || "Action";
+        return button;
+      }
+    }
+  });
+})();
+```
+
+Prefer combat configuration, CSS, labels, hooks, and slots over replacing the entire combat renderer.
+
+Full combat renderer replacement is not part of the stable public API during Alpha.
+
+## Localization
+
+In the manifest:
+
+```json
+{
+  "capabilities": ["locales"],
+  "system": {
+    "locales": {
+      "en": "locales/en.json",
+      "pt-BR": "locales/pt-BR.json"
+    }
+  }
+}
+```
+
+Example `locales/en.json`:
+
+```json
+{
+  "MY_SYSTEM.Character": "Character",
+  "MY_SYSTEM.Strength": "Strength",
+  "MY_SYSTEM.Initiative": "Initiative"
+}
+```
+
+Prefer `labelKey` in layouts, manifests, rules, and content packs when text needs to be translated.
+
+## Adding Content Packs
 
 In the manifest:
 
@@ -534,35 +693,7 @@ Accepted pack types:
 
 A pack must use the same data model that the system schemas expect.
 
-## Localization
-
-In the manifest:
-
-```json
-{
-  "capabilities": ["locales"],
-  "system": {
-    "locales": {
-      "en": "locales/en.json",
-      "pt-BR": "locales/pt-BR.json"
-    }
-  }
-}
-```
-
-Example `locales/en.json`:
-
-```json
-{
-  "MY_SYSTEM.Character": "Character",
-  "MY_SYSTEM.Strength": "Strength",
-  "MY_SYSTEM.Initiative": "Initiative"
-}
-```
-
-Prefer `labelKey` in layouts when text needs to be translated.
-
-## Validation checklist
+## Validation Checklist
 
 Before distributing:
 
@@ -583,20 +714,22 @@ Verify also:
 - the system installs through the Systems screen;
 - a new campaign can select the system;
 - new actors and items open their sheets without error;
+- labels render correctly;
 - rolls appear in chat;
 - combat works with the expected initiative logic.
 
-## Common errors
+## Common Errors
 
 | Error | Likely cause | Fix |
 |---|---|---|
-| Manifest invalid | wrong `manifestVersion`, `type`, `apiVersion`, or `compatibility` fields | compare with the minimal manifest |
-| Path rejected | absolute path, URL, `..`, or missing file | use package-relative paths |
-| Asset does not load | missing `assets.styles` or `assets.scripts` capability | declare the correct capability |
-| Sheet opens empty | `actorType` does not match the registered actor type | check `actorTypes` and layout metadata |
-| Roll button does nothing | `rollAction` does not exist in `rules/actions.gw.json` | create the action or fix the id |
-| Token does not show resource | missing mapping or wrong path | review `mappings/token.gw.json` |
-| System breaks an old table | schema changed without migration | during Alpha, clearly mark breaking changes |
+| Manifest invalid | Wrong `manifestVersion`, `type`, `apiVersion`, or `compatibility` fields | Compare with the minimal manifest |
+| Path rejected | Absolute path, URL, `..`, or missing file | Use package-relative paths |
+| Asset does not load | Missing `assets.styles` or `assets.scripts` capability | Declare the correct capability |
+| Sheet opens empty | `actorType` does not match the registered actor type | Check `actorTypes` and layout metadata |
+| Roll button does nothing | `rollAction` does not exist in `rules/actions.gw.json` | Create the action or fix the id |
+| Token does not show resource | Missing mapping or wrong path | Review `mappings/token.gw.json` |
+| Labels do not appear | System script did not load or labels were not registered | Check `assets.scripts`, capabilities, and `window.GravewrightSheets.registerSystem` |
+| System breaks an old table | Schema changed without migration | During Alpha, clearly mark breaking changes |
 
 ## Distribution
 
@@ -626,7 +759,7 @@ Do not include:
 - real campaign data;
 - unlicensed assets.
 
-## README for a public system
+## README for a Public System
 
 A system package should include a `README.md` with:
 
@@ -635,6 +768,7 @@ A system package should include a `README.md` with:
 - actor and item types;
 - sheet features;
 - supported rolls and combat behavior;
+- labels/locales included;
 - content packs included;
 - known Alpha limitations;
 - migration warnings for breaking schema changes.

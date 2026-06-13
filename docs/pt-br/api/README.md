@@ -1,42 +1,75 @@
 # APIs Públicas do Gravewright
 
-Esta seção documenta as superfícies públicas de integração para autores de sistemas, módulos, integrações e content packs. Materiais de API são licenciados sob MIT; a implementação do core permanece Apache-2.0.
+Esta seção documenta as superfícies públicas de integração para autores de sistemas, módulos, integrações e pacotes de conteúdo.
+
+Os materiais de API são licenciados sob MIT. A implementação do core permanece Apache-2.0.
 
 > [!WARNING]
-> **API em Alpha.** Gravewright ainda é pré-1.0. As APIs públicas são documentadas para permitir experimentação, mas garantias de compatibilidade ainda estão sendo finalizadas. Breaking changes devem atualizar documentação, schemas e testes no mesmo change.
+> **Superfície de API em Alpha.**
+>
+> Gravewright ainda é pré-1.0. As APIs públicas são documentadas para permitir experimentação por autores de sistemas, módulos, integrações e pacotes de conteúdo, mas as garantias de compatibilidade ainda estão sendo finalizadas.
+>
+> Breaking changes de API devem atualizar documentação, schemas e testes no mesmo change.
 
 ## Superfícies de API
 
-| Documento | Público | Cobre |
-|---|---|---|
-| [`extensoes.md`](extensoes.md) | autores de módulos/sistemas | globals de navegador, API escopada de módulo, hooks de ficha e combate |
-| [`http.md`](http.md) | integrações | grupos de rotas HTTP e convenções de request |
-| [`realtime.md`](realtime.md) | clientes realtime | `/game/ws`, comandos, eventos e replay |
-| [`../modulos.md`](../modulos.md) | autores de módulos | Module API v1, manifest, capabilities, settings e empacotamento |
-| [`../modulos/criando-um-modulo.md`](../modulos/criando-um-modulo.md) | autores de módulos | guia passo a passo detalhado |
-| [`../sistemas/criando-um-sistema.md`](../sistemas/criando-um-sistema.md) | autores de sistemas | System API v1, estrutura, manifest, schemas, fichas e regras |
-| [`../sistemas/manifest.md`](../sistemas/manifest.md) | autores de sistemas | referência do manifest de sistema |
+| Documento                                                                | Público                       | Cobre                                                                                                              |
+| ------------------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [`extensoes.md`](extensoes.md)                                           | Autores de módulos e sistemas | Globals de navegador, API escopada de módulo, hooks de ficha, labels de ficha, hooks de combate e slots de combate |
+| [`http.md`](http.md)                                                     | Autores de integrações        | Grupos de rotas HTTP e convenções de request                                                                       |
+| [`realtime.md`](realtime.md)                                             | Clientes realtime             | `/game/ws`, comandos, eventos e comportamento de replay                                                            |
+| [`../modulos.md`](../modulos.md)                                         | Autores de módulos            | Visão geral da Module API v1 e quick start                                                                         |
+| [`../modulos/criando-um-modulo.md`](../modulos/criando-um-modulo.md)     | Autores de módulos            | Manifest, entrypoints, capabilities, hooks, settings, empacotamento e validação                                    |
+| [`../sistemas/criando-um-sistema.md`](../sistemas/criando-um-sistema.md) | Autores de sistemas           | System API v1, estrutura de pacote, manifest, schemas, fichas, regras, labels, assets e configuração de combate    |
+| [`../sistemas/manifest.md`](../sistemas/manifest.md)                     | Autores de sistemas           | Referência do manifest de sistema                                                                                  |
 
-## Escolhendo entre sistema e módulo
+## Escolhendo o Tipo Certo de Extensão
 
-| Necessidade | Use |
-|---|---|
-| definir tipos de ator/item | sistema |
-| definir schemas e layouts de ficha | sistema |
-| definir rolagens base e combate | sistema |
-| adicionar comportamento visual opcional | módulo |
-| adicionar automação habilitável por campanha | módulo |
-| adicionar settings de usuário/campanha | módulo |
-| distribuir conteúdo opcional | módulo ou sistema, dependendo do dono do conteúdo |
+| Necessidade                                                  | Use                                                |
+| ------------------------------------------------------------ | -------------------------------------------------- |
+| Definir tipos de ator                                        | Sistema                                            |
+| Definir tipos de item                                        | Sistema                                            |
+| Definir schemas e layouts de ficha                           | Sistema                                            |
+| Definir rolagens centrais e configuração de combate          | Sistema                                            |
+| Fornecer vocabulário de ruleset, labels e arquivos de locale | Sistema                                            |
+| Adicionar comportamento opcional de UI                       | Módulo                                             |
+| Adicionar automação habilitável por campanha                 | Módulo                                             |
+| Adicionar settings de usuário ou campanha                    | Módulo                                             |
+| Distribuir conteúdo opcional                                 | Módulo ou sistema, dependendo da posse do conteúdo |
 
-Regra prática: se a campanha não funciona sem isso, provavelmente é sistema. Se o GM deve poder ligar/desligar por campanha, é módulo.
+Regra prática: se a campanha não funciona sem isso, provavelmente pertence a um sistema.
 
-## Estabilidade
+Se o GM deve poder ligar ou desligar por campanha, deve ser um módulo.
+
+## Expectativas de Estabilidade
 
 Durante Alpha:
 
-- manifests devem declarar `apiVersion: "1"`;
-- pacotes devem declarar `compatibility.minimum`, `compatibility.verified` e `compatibility.maximum`;
-- autores devem testar contra a versão exata marcada como `verified`;
-- APIs documentadas são o contrato público;
-- globals internos, DOM interno e detalhes de implementação podem mudar sem migração.
+* manifests devem declarar `apiVersion: "1"`;
+* pacotes devem declarar `compatibility.minimum`, `compatibility.verified` e `compatibility.maximum`;
+* autores de extensão devem testar contra a versão exata do Gravewright marcada como `verified`;
+* APIs documentadas são o único contrato público;
+* globals não documentados, estrutura DOM, internals de renderer, comportamento de fallback, stores privados e detalhes de implementação podem mudar sem suporte de migração;
+* mudanças em API pública devem refletir em documentação e testes no mesmo change.
+
+## API Pública vs Implementação Privada
+
+APIs públicas são documentadas neste diretório e nos guias relacionados de sistemas e módulos.
+
+Os itens abaixo não são contratos públicos, exceto quando forem explicitamente documentados:
+
+* globals internos de JavaScript;
+* estado local de renderer;
+* stores privados;
+* estrutura DOM;
+* classes CSS que não foram documentadas como hooks de extensão;
+* labels de fallback;
+* substituição completa do renderer de ficha;
+* substituição completa do renderer de combate;
+* formatos internos de eventos WebSocket que não estejam documentados em `api/realtime.md`.
+
+Sistemas e módulos devem usar APIs documentadas, manifests declarativos, schemas, regras, hooks, slots, labels, locales e assets em vez de depender de detalhes de implementação.
+
+## Licença dos Materiais de API
+
+Os materiais de API são licenciados sob MIT para permitir que autores copiem livremente contratos de API, schemas, exemplos, formatos de manifest e estruturas iniciais de pacote.
