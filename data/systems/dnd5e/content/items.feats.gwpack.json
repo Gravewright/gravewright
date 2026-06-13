@@ -2,7 +2,7 @@
   "id": "dnd5e-feats",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Talentos",
+  "label": "Feats",
   "entries": [
     {
       "id": "template-feat",

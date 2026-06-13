@@ -4,9 +4,6 @@
 
 
 (function () {
-  const Panel = window.GravewrightCombatPanel;
-  const renderHud = Panel.renderHud;
-  const renderPanel = Panel.renderPanel;
   const selectedTokensByRoom = new Map();
   const lastStateByRoom = new Map();
 
@@ -60,10 +57,10 @@
 
   function renderRoom(roomId, state) {
     const payload = state || lastStateByRoom.get(roomId) || {};
-    document.querySelectorAll(`[data-combat-hud][data-room-id="${CSS.escape(roomId)}"]`).forEach((hud) => renderHud(hud, payload));
+    document.querySelectorAll(`[data-combat-hud][data-room-id="${CSS.escape(roomId)}"]`).forEach((hud) => window.GravewrightCombatPanel?.renderHud?.(hud, payload));
     document.querySelectorAll(`[data-combat-panel][data-room-id="${CSS.escape(roomId)}"]`).forEach((panel) => {
       panel.dataset.selectedTokenCount = String(selectedTokenCount(roomId));
-      renderPanel(panel, payload);
+      window.GravewrightCombatPanel?.renderPanel?.(panel, payload);
     });
   }
 
@@ -129,7 +126,7 @@
       const panel = filter.closest("[data-combat-panel]");
       if (!panel) return;
       panel.dataset.combatFilter = filter.dataset.combatFilter || "all";
-      renderPanel(panel, lastStateByRoom.get(panel.dataset.roomId) || {});
+      window.GravewrightCombatPanel?.renderPanel?.(panel, lastStateByRoom.get(panel.dataset.roomId) || {});
       return;
     }
 
@@ -146,7 +143,7 @@
     const panel = input.closest("[data-combat-panel]");
     if (!panel) return;
     panel.dataset.combatSearch = input.value || "";
-    renderPanel(panel, lastStateByRoom.get(panel.dataset.roomId) || {});
+    window.GravewrightCombatPanel?.renderPanel?.(panel, lastStateByRoom.get(panel.dataset.roomId) || {});
     const restored = panel.querySelector("[data-combat-search]");
     if (restored) {
       restored.focus();

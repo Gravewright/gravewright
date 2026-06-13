@@ -2,17 +2,17 @@
   "conditions": [
     {
       "id": "blinded",
-      "label": "Cego",
+      "label": "dnd5e.ui.cego",
       "kind": "negative"
     },
     {
       "id": "poisoned",
-      "label": "Envenenado",
+      "label": "dnd5e.ui.envenenado",
       "kind": "negative"
     },
     {
       "id": "inspired",
-      "label": "Inspirado",
+      "label": "dnd5e.ui.inspirado",
       "kind": "positive"
     }
   ]

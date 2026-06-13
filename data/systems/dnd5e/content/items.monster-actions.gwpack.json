@@ -2,7 +2,7 @@
   "id": "dnd5e-monster-actions",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Ações de Monstro",
+  "label": "Monster Actions",
   "description": "Ataques e traços genéricos de criaturas (garra, mordida, sopro, armadura natural, etc.) para arrastar nas fichas de monstro.",
   "entries": [
     {

@@ -635,9 +635,5 @@
     combatHook(state, "afterRender", { panel, state, target, isGm });
   }
 
-  // System assets loaded before this file override window.GravewrightCombatPanel.
-  // Only set if no system has already provided an implementation.
-  if (!window.GravewrightCombatPanel) {
-    window.GravewrightCombatPanel = { renderHud, renderPanel };
-  }
+  window.GravewrightCombatPanel = { renderHud, renderPanel };
 })();

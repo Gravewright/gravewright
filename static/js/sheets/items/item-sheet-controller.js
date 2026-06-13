@@ -58,7 +58,7 @@
       const operationId = row.querySelector('[data-modifier-field="operation"]')?.value || target?.operations?.[0]?.id || "";
       const operation = modifierOperationById(target, operationId);
       const rawValue = row.querySelector('[data-modifier-field="value"]')?.value ?? "";
-      const label = row.querySelector('[data-modifier-field="label"]')?.value || target?.label || "Modificador";
+      const label = row.querySelector('[data-modifier-field="label"]')?.value || target?.label || "Modifier";
       const result = {
         id: row.dataset.modifierId || `mod_${Date.now()}_${index}`,
         target: targetId,
@@ -73,13 +73,13 @@
 
   function defaultModifier(builder) {
     const targets = JSON.parse(builder.dataset.targets || "[]");
-    const target = targets[0] || { id: "roll.check", label: "Teste", operations: [] };
+    const target = targets[0] || { id: "roll.check", label: "Check", operations: [] };
     const operation = (Array.isArray(target.operations) ? target.operations[0] : null) || { id: "add", valueType: "number" };
     return {
       id: `mod_${Date.now()}`,
       target: target.id,
       operation: operation.id,
-      label: target.label || "Modificador",
+      label: target.label || "Modifier",
       ...(modifierValueType(operation) === "none" ? {} : { value: modifierValueType(operation) === "number" ? 0 : "" }),
     };
   }

@@ -22,6 +22,36 @@
   
   
   const systemPlugins = {};
+
+  const DEFAULT_SHEET_LABELS = {
+    actorName: "Name",
+    levelPrefix: "Level",
+    equipped: "Equipped",
+    spellCirclePrefix: "Circle",
+    prepared: "Prepared",
+    active: "Active",
+    inactive: "Inactive",
+    qtyPrefix: "Qty",
+    portrait: "Portrait",
+    token: "Token",
+    uploadPortrait: "Upload portrait",
+    uploadToken: "Upload token",
+    cancel: "Cancel",
+    roll: "Roll",
+    rollDialogTitle: "Roll",
+    healed: "healed",
+    tookDamage: "took",
+    reducedFrom: "reduced from",
+  };
+
+  function sheetLabels(systemId) {
+    const plugin = systemId && systemPlugins[systemId];
+    if (plugin && plugin.labels && typeof plugin.labels === "object") {
+      return { ...DEFAULT_SHEET_LABELS, ...plugin.labels };
+    }
+    return DEFAULT_SHEET_LABELS;
+  }
+
   const sheetHelpers = {
     el: (...a) => el(...a),
     phIcon: (...a) => phIcon(...a),
@@ -38,12 +68,14 @@
     postJSON: (...a) => postJSON(...a),
     refresh: (...a) => refresh(...a),
     getContext: (root) => contexts.get(root),
+    getLabels: (systemId) => sheetLabels(systemId),
   };
   window.GravewrightSheets = {
     helpers: sheetHelpers,
     registerSystem(id, hooks) {
       if (id && hooks && typeof hooks === "object") systemPlugins[String(id)] = hooks;
     },
+    getLabels(systemId) { return sheetLabels(systemId); },
   };
 
   function csrfOf(root) {
@@ -131,8 +163,8 @@
     if (fallbackAction) return {
       type: "action",
       action: fallbackAction,
-      title: fallbackLabel || "Ação",
-      label: fallbackLabel || "Rolar",
+      title: fallbackLabel || "Action",
+      label: fallbackLabel || "Roll",
     };
     return null;
   }
@@ -203,7 +235,8 @@
     }[type] || "diamond";
   }
 
-  function buildItemRow(row, item, editable) {
+  function buildItemRow(row, item, editable, rc) {
+    const L = sheetLabels(rc?.systemId);
     const rowType = cssIdent(row?.type || "inventoryRow");
     const card = el("article", `actor-item-row actor-item-row--${rowType}`);
     if (item?.id) card.dataset.itemInstanceId = item.id;
@@ -220,14 +253,14 @@
         itemTemplateValue(item, row?.attackLabel, "data.attackBonus"),
         itemTemplateValue(item, row?.damageLabel, "data.damage"),
         itemTemplateValue(item, row?.damageTypeLabel, "data.damage_type") || itemTemplateValue(item, row?.damageTypeLabel, "data.damageType"),
-        item?.equipped ? "Equipado" : "",
+        item?.equipped ? L.equipped : "",
       ]);
     } else if (type === "spellRow") {
       const level = itemTemplateValue(item, row?.levelPath, "level") ?? itemTemplateValue(item, row?.levelPath, "data.level");
       metaParts = nonEmptyParts([
-        level !== undefined && level !== "" ? `Círculo ${level}` : "",
+        level !== undefined && level !== "" ? `${L.spellCirclePrefix} ${level}` : "",
         itemTemplateValue(item, row?.schoolPath, "school") || itemTemplateValue(item, row?.schoolPath, "data.school"),
-        item?.prepared ? "Preparada" : "",
+        item?.prepared ? L.prepared : "",
       ]);
     } else if (type === "featureRow") {
       metaParts = nonEmptyParts([
@@ -241,14 +274,15 @@
       metaParts = nonEmptyParts([
         itemTemplateValue(item, row?.categoryPath, "data.category"),
         duration,
-        item?.enabled === false ? "Inativo" : "Ativo",
+        item?.enabled === false ? L.inactive : L.active,
       ]);
     } else {
+      const qty = itemTemplateValue(item, row?.quantityPath, "quantity");
       metaParts = nonEmptyParts([
-        itemTemplateValue(item, row?.quantityPath, "quantity") ? `Qtd ${itemTemplateValue(item, row?.quantityPath, "quantity")}` : "",
+        qty ? `${L.qtyPrefix} ${qty}` : "",
         itemTemplateValue(item, row?.typePath, "type"),
         itemTemplateValue(item, row?.damageLabel, "data.damage"),
-        item?.equipped ? "Equipado" : "",
+        item?.equipped ? L.equipped : "",
       ]);
     }
 
@@ -359,7 +393,7 @@
         if (interaction) {
           const mod = el("button", "actor-ability-card-mod actor-ability-card-roll", modText);
           mod.type = "button";
-          mod.title = interaction.title || node.rollLabel || "Ações";
+          mod.title = interaction.title || node.rollLabel || "Actions";
           bindInteraction(mod, interaction);
           card.appendChild(mod);
         } else {
@@ -387,15 +421,15 @@
         };
         if (node.profPath || node.expertPath) {
           const dots = el("div", "actor-rollable-toggles");
-          if (node.profPath) dots.appendChild(toggle(node.profPath, "actor-prof-dot--prof", "Proficiência"));
-          if (node.expertPath) dots.appendChild(toggle(node.expertPath, "actor-prof-dot--expert", "Especialização"));
+          if (node.profPath) dots.appendChild(toggle(node.profPath, "actor-prof-dot--prof", "Proficiency"));
+          if (node.expertPath) dots.appendChild(toggle(node.expertPath, "actor-prof-dot--expert", "Expertise"));
           row.appendChild(dots);
         }
 
         const interaction = normalizeInteraction(node.interaction, node.rollAction, node.rollLabel || node.label);
         const trigger = el("button", "actor-rollable");
         trigger.type = "button";
-        trigger.title = (interaction && (interaction.title || node.rollLabel)) || `Rolar ${node.label || ""}`.trim();
+        trigger.title = (interaction && (interaction.title || node.rollLabel)) || `Roll ${node.label || ""}`.trim();
         if (interaction) bindInteraction(trigger, interaction);
         else trigger.disabled = true;
 
@@ -424,7 +458,7 @@
         if (interaction) {
           const btn = el("button", "actor-combat-stat-value actor-combat-stat-roll", valueText);
           btn.type = "button";
-          btn.title = interaction.title || node.rollLabel || "Ações";
+          btn.title = interaction.title || node.rollLabel || "Actions";
           bindInteraction(btn, interaction);
           stat.appendChild(btn);
         } else if (node.readonly) {
@@ -601,7 +635,7 @@
         if (Array.isArray(items) && items.length) {
           if (isSpecializedItemRow(node.row)) {
             const list = el("div", `actor-item-row-list actor-item-row-list--${cssIdent(node.row.type)}`);
-            items.forEach((item) => list.appendChild(buildItemRow(node.row, item, editable)));
+            items.forEach((item) => list.appendChild(buildItemRow(node.row, item, editable, rc)));
             wrap.appendChild(list);
           } else {
             const table = el("table", "actor-itemlist-table");
@@ -692,11 +726,12 @@
     if (res.ok) {
       refresh(root);
     } else if (window.GravewrightToasts) {
-      window.GravewrightToasts.showToast("Não foi possível enviar a imagem.");
+      window.GravewrightToasts.showToast("Failed to upload image.");
     }
   }
 
-  function imageFrame(root, kind, url, canEdit) {
+  function imageFrame(root, kind, url, canEdit, systemId) {
+    const L = sheetLabels(systemId);
     const frame = el("div", `ash-frame ash-frame--${kind}${url ? "" : " is-empty"}`);
     if (url) {
       const img = el("img", "ash-frame-img");
@@ -704,7 +739,7 @@
       img.alt = "";
       frame.appendChild(img);
     } else {
-      frame.appendChild(el("span", "ash-frame-placeholder", kind === "portrait" ? "Retrato" : "Token"));
+      frame.appendChild(el("span", "ash-frame-placeholder", kind === "portrait" ? L.portrait : L.token));
     }
     if (canEdit) {
       frame.classList.add("is-editable");
@@ -716,7 +751,7 @@
       input.hidden = true;
       const trigger = el("button", "ash-frame-upload");
       trigger.type = "button";
-      trigger.title = kind === "portrait" ? "Enviar retrato" : "Enviar token";
+      trigger.title = kind === "portrait" ? L.uploadPortrait : L.uploadToken;
       trigger.innerHTML = '<i class="ph ph-upload-simple" aria-hidden="true"></i>';
       trigger.addEventListener("click", () => input.click());
       frame.addEventListener("click", (event) => {
@@ -739,10 +774,12 @@
 
   function headerSubtitle(bundle) {
     const d = bundle.data || {};
+    const systemId = cssIdent(bundle.actor?.system_id);
+    const L = sheetLabels(systemId);
     const parts = [];
     if (d.race) parts.push(d.race);
     if (d.class) parts.push(d.class);
-    if (d.level != null && d.level !== "") parts.push(`Nível ${d.level}`);
+    if (d.level != null && d.level !== "") parts.push(`${L.levelPrefix} ${d.level}`);
     if (parts.length) return parts.join(" · ");
     return bundle.actor && bundle.actor.type ? bundle.actor.type : "";
   }
@@ -803,11 +840,12 @@
     if (subtitle) main.appendChild(subtitle);
   }
 
-  function renderSheetHeader(root, bundle) {
+  function renderSheetHeader(root, bundle, systemId) {
     const canEdit = !!bundle.can_edit;
+    const L = sheetLabels(systemId);
     const header = el("div", "actor-sheet-header");
 
-    header.appendChild(imageFrame(root, "portrait", bundle.portrait_url, canEdit));
+    header.appendChild(imageFrame(root, "portrait", bundle.portrait_url, canEdit, systemId));
 
     const main = el("div", "ash-main");
 
@@ -815,12 +853,12 @@
     const nameInput = el("input", "ash-name-input");
     nameInput.type = "text";
     nameInput.value = (bundle.actor && bundle.actor.name) || "";
-    nameInput.placeholder = "Nome";
+    nameInput.placeholder = L.actorName;
     nameInput.dataset.bindPath = "core.name";
     nameInput.dataset.bindKind = "text";
     nameInput.disabled = !canEdit;
     titleRow.appendChild(nameInput);
-    titleRow.appendChild(imageFrame(root, "token", bundle.token_url || bundle.portrait_url, canEdit));
+    titleRow.appendChild(imageFrame(root, "token", bundle.token_url || bundle.portrait_url, canEdit, systemId));
     main.appendChild(titleRow);
 
     renderHeaderIdentity(main, bundle);
@@ -853,7 +891,7 @@
 
     const rc = { ctx: buildContext(bundle), canEdit: !!bundle.can_edit, systemId, actorType };
     root.innerHTML = "";
-    renderSheetHeader(root, bundle);
+    renderSheetHeader(root, bundle, systemId);
     const layout = bundle.layout;
     if (!layout || !layout.body) {
       root.appendChild(el("p", "actor-sheet-empty", "No sheet layout for this system."));

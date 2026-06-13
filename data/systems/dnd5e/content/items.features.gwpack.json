@@ -2,7 +2,7 @@
   "id": "dnd5e-features",
   "type": "item_pack",
   "system": "dnd5e",
-  "label": "Características",
+  "label": "Features",
   "entries": [
     {
       "id": "template-feature",

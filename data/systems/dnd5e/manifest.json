@@ -48,19 +48,20 @@
         "assets/dnd5e.css"
       ],
       "scripts": [
-        "assets/dnd5e-sheets.js"
+        "assets/dnd5e-sheets.js",
+        "assets/combat-panel.js"
       ]
     },
     "actorTypes": [
       {
         "id": "character",
-        "label": "Personagem",
+        "labelKey": "dnd5e.ui.personagem",
         "schema": "schemas/character.schema.json",
         "sheet": "layouts/character.sheet.gw.json"
       },
       {
         "id": "monster",
-        "label": "Monstro",
+        "labelKey": "dnd5e.ui.monstro",
         "schema": "schemas/monster.schema.json",
         "sheet": "layouts/monster.sheet.gw.json"
       }
@@ -68,67 +69,67 @@
     "itemTypes": [
       {
         "id": "weapon",
-        "label": "Arma",
+        "labelKey": "dnd5e.ui.arma",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/weapon.sheet.gw.json"
       },
       {
         "id": "armor",
-        "label": "Armadura",
+        "labelKey": "dnd5e.ui.armadura",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/armor.sheet.gw.json"
       },
       {
         "id": "equipment",
-        "label": "Equipamento",
+        "labelKey": "dnd5e.ui.equipamento",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/equipment.sheet.gw.json"
       },
       {
         "id": "consumable",
-        "label": "Consumível",
+        "labelKey": "dnd5e.ui.consumivel",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/consumable.sheet.gw.json"
       },
       {
         "id": "spell",
-        "label": "Magia",
+        "labelKey": "dnd5e.ui.magia",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/spell.sheet.gw.json"
       },
       {
         "id": "feat",
-        "label": "Talento",
+        "labelKey": "dnd5e.ui.talento",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/feat.sheet.gw.json"
       },
       {
         "id": "feature",
-        "label": "Característica",
+        "labelKey": "dnd5e.ui.caracteristica",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/feature.sheet.gw.json"
       },
       {
         "id": "race",
-        "label": "Raça",
+        "labelKey": "dnd5e.ui.raca",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/race.sheet.gw.json"
       },
       {
         "id": "background",
-        "label": "Antecedente",
+        "labelKey": "dnd5e.ui.antecedente",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/background.sheet.gw.json"
       },
       {
         "id": "class",
-        "label": "Classe",
+        "labelKey": "dnd5e.ui.classe",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/class.sheet.gw.json"
       },
       {
         "id": "effect",
-        "label": "Efeito",
+        "labelKey": "dnd5e.ui.efeito",
         "schema": "schemas/item.schema.json",
         "sheet": "layouts/items/effect.sheet.gw.json"
       }
@@ -136,12 +137,12 @@
     "defaults": {
       "actorType": "character",
       "itemType": "weapon",
-      "locale": "pt-BR"
+      "locale": "en"
     },
     "areaMarkers": [
       {
         "id": "dnd5e-spell-sphere",
-        "label": "Magia: esfera/raio",
+        "labelKey": "dnd5e.ui.magia.esfera.raio",
         "shape": "circle",
         "style": {
           "stroke": "rgba(125, 211, 252, 0.96)",
@@ -151,7 +152,7 @@
       },
       {
         "id": "dnd5e-spell-cone",
-        "label": "Magia: cone",
+        "labelKey": "dnd5e.ui.magia.cone",
         "shape": "cone",
         "style": {
           "stroke": "rgba(168, 85, 247, 0.96)",
@@ -161,7 +162,7 @@
       },
       {
         "id": "dnd5e-spell-line",
-        "label": "Magia: linha",
+        "labelKey": "dnd5e.ui.magia.linha",
         "shape": "line",
         "style": {
           "stroke": "rgba(96, 165, 250, 0.96)",
@@ -171,7 +172,7 @@
       },
       {
         "id": "dnd5e-spell-cube",
-        "label": "Magia: cubo/quadrado",
+        "labelKey": "dnd5e.ui.magia.cubo.quadrado",
         "shape": "square",
         "style": {
           "stroke": "rgba(45, 212, 191, 0.96)",
@@ -181,7 +182,7 @@
       },
       {
         "id": "dnd5e-aura",
-        "label": "Aura",
+        "labelKey": "dnd5e.ui.aura",
         "shape": "circle",
         "style": {
           "stroke": "rgba(250, 204, 21, 0.96)",
@@ -192,7 +193,7 @@
       },
       {
         "id": "dnd5e-difficult-terrain",
-        "label": "Terreno difícil",
+        "labelKey": "dnd5e.ui.terreno.dificil",
         "shape": "square",
         "style": {
           "stroke": "rgba(34, 197, 94, 0.96)",
@@ -203,7 +204,7 @@
       },
       {
         "id": "dnd5e-hazard",
-        "label": "Perigo/efeito ativo",
+        "labelKey": "dnd5e.ui.perigo.efeito.ativo",
         "shape": "square",
         "style": {
           "stroke": "rgba(248, 113, 113, 0.96)",
@@ -230,79 +231,79 @@
       {
         "id": "dnd5e-weapons",
         "type": "item_pack",
-        "label": "Armas",
+        "labelKey": "dnd5e.ui.armas",
         "path": "content/items.weapons.gwpack.json"
       },
       {
         "id": "dnd5e-armor",
         "type": "item_pack",
-        "label": "Armaduras",
+        "labelKey": "dnd5e.ui.armaduras",
         "path": "content/items.armor.gwpack.json"
       },
       {
         "id": "dnd5e-equipment",
         "type": "item_pack",
-        "label": "Equipamentos",
+        "labelKey": "dnd5e.ui.equipamentos",
         "path": "content/items.equipment.gwpack.json"
       },
       {
         "id": "dnd5e-consumables",
         "type": "item_pack",
-        "label": "Consumíveis",
+        "labelKey": "dnd5e.ui.consumiveis",
         "path": "content/items.consumables.gwpack.json"
       },
       {
         "id": "dnd5e-spells",
         "type": "spell_pack",
-        "label": "Magias",
+        "labelKey": "dnd5e.ui.magias",
         "path": "content/spells.gwpack.json"
       },
       {
         "id": "dnd5e-feats",
         "type": "item_pack",
-        "label": "Talentos",
+        "labelKey": "dnd5e.ui.talentos",
         "path": "content/items.feats.gwpack.json"
       },
       {
         "id": "dnd5e-features",
         "type": "item_pack",
-        "label": "Características",
+        "labelKey": "dnd5e.ui.caracteristicas",
         "path": "content/items.features.gwpack.json"
       },
       {
         "id": "dnd5e-monster-actions",
         "type": "item_pack",
-        "label": "Ações de Monstro",
+        "labelKey": "dnd5e.ui.acoes.de.monstro",
         "path": "content/items.monster-actions.gwpack.json"
       },
       {
         "id": "dnd5e-races",
         "type": "item_pack",
-        "label": "Raças",
+        "labelKey": "dnd5e.ui.racas",
         "path": "content/items.races.gwpack.json"
       },
       {
         "id": "dnd5e-backgrounds",
         "type": "item_pack",
-        "label": "Antecedentes",
+        "labelKey": "dnd5e.ui.antecedentes",
         "path": "content/items.backgrounds.gwpack.json"
       },
       {
         "id": "dnd5e-classes",
         "type": "item_pack",
-        "label": "Classes",
+        "labelKey": "dnd5e.ui.classes",
         "path": "content/items.classes.gwpack.json"
       },
       {
         "id": "dnd5e-monsters",
         "type": "actor_pack",
-        "label": "Monstros",
+        "labelKey": "dnd5e.ui.monstros",
         "path": "content/actors.monsters.gwpack.json"
       },
       {
         "id": "dnd5e-conditions",
         "type": "condition_pack",
-        "label": "Efeitos & Condições",
+        "labelKey": "dnd5e.ui.efeitos.and.condicoes",
         "path": "content/conditions.gwpack.json"
       }
     ],

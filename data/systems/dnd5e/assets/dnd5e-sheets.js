@@ -1,18 +1,72 @@
 
 
-
-
-
-
-
-
-
 (function () {
   const GW = window.GravewrightSheets;
   if (!GW || typeof GW.registerSystem !== "function") return;
   const h = GW.helpers;
 
-  
+  const L = {
+    // Character header
+    class: "Class",
+    levelLabel: "Level",
+    background: "Background",
+    race: "Race",
+    alignment: "Alignment",
+    inspiration: "Inspiration",
+    proficiencyBonus: "Proficiency Bonus",
+    experiencePoints: "Experience Points",
+
+    // Monster header
+    sizes: {
+      tiny: "Tiny",
+      small: "Small",
+      medium: "Medium",
+      large: "Large",
+      huge: "Huge",
+      gargantuan: "Gargantuan",
+    },
+    type: "Type",
+    speed: "Speed",
+    hitDice: "Hit Dice",
+    profShort: "Prof.",
+
+    // Monster skills
+    monsterSkillsTitle: "Monster Skills",
+    expertiseBadge: "Exp.",
+    proficiencyShort: "Prof.",
+    expertiseShort: "Exp.",
+    skills: "Skills",
+    noSkillsMarked: "No skills selected.",
+
+    // Buttons
+    cancel: "Cancel",
+    close: "Close",
+    save: "Save",
+    roll: "Roll",
+
+    // Item rows
+    equipped: "Equipped",
+    spellCirclePrefix: "Circle",
+    prepared: "Prepared",
+    active: "Active",
+    inactive: "Inactive",
+    qtyPrefix: "Qty",
+
+    // Name / header
+    actorName: "Name",
+    levelPrefix: "Level",
+
+    // Image frames
+    portrait: "Portrait",
+    token: "Token",
+    uploadPortrait: "Upload portrait",
+    uploadToken: "Upload token",
+
+    // Damage toast
+    healed: "healed",
+    tookDamage: "took",
+    reducedFrom: "reduced from",
+  };
 
   function skillKeyFromPath(path) {
     const match = String(path || "").match(/^sheet\.skills\.([^.]+)\./);
@@ -42,7 +96,7 @@
     trigger.appendChild(h.el("span", "actor-monster-skill-name", skill.label));
     if (skill.ability) trigger.appendChild(h.el("span", "actor-monster-skill-ability", skill.ability));
     trigger.appendChild(h.el("span", "actor-monster-skill-mod", skill.mod));
-    if (skill.expert) trigger.appendChild(h.el("span", "actor-monster-skill-badge", "Esp."));
+    if (skill.expert) trigger.appendChild(h.el("span", "actor-monster-skill-badge", L.expertiseBadge));
     if (skill.interaction) h.bindInteraction(trigger, skill.interaction);
     else trigger.disabled = true;
     return trigger;
@@ -57,7 +111,7 @@
     const dialog = h.el("div", "gw-roll-dialog gw-skills-dialog");
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
-    dialog.appendChild(h.el("div", "gw-roll-dialog__title", "Perícias do Monstro"));
+    dialog.appendChild(h.el("div", "gw-roll-dialog__title", L.monsterSkillsTitle));
 
     const grid = h.el("div", "gw-skills-grid");
     skills.forEach((skill) => {
@@ -75,7 +129,7 @@
       profInput.disabled = !rc.canEdit;
       profInput.dataset.skillProf = "1";
       prof.appendChild(profInput);
-      prof.appendChild(h.el("span", null, "Prof."));
+      prof.appendChild(h.el("span", null, L.proficiencyShort));
 
       const expert = h.el("label", "gw-skill-option__check");
       const expertInput = h.el("input", null);
@@ -84,7 +138,7 @@
       expertInput.disabled = !rc.canEdit;
       expertInput.dataset.skillExpert = "1";
       expert.appendChild(expertInput);
-      expert.appendChild(h.el("span", null, "Esp."));
+      expert.appendChild(h.el("span", null, L.expertiseShort));
 
       row.appendChild(label);
       row.appendChild(prof);
@@ -94,7 +148,7 @@
     dialog.appendChild(grid);
 
     const actions = h.el("div", "gw-roll-dialog__actions");
-    const cancel = h.el("button", "gw-roll-dialog__btn", rc.canEdit ? "Cancelar" : "Fechar");
+    const cancel = h.el("button", "gw-roll-dialog__btn", rc.canEdit ? L.cancel : L.close);
     cancel.type = "button";
     cancel.addEventListener("click", h.closeFloatingSheetMenus);
     actions.appendChild(cancel);
@@ -102,7 +156,7 @@
       const save = h.el("button", "gw-roll-dialog__btn gw-roll-dialog__btn--primary");
       save.type = "button";
       save.appendChild(h.phIcon("check"));
-      save.appendChild(h.el("span", null, "Salvar"));
+      save.appendChild(h.el("span", null, L.save));
       save.addEventListener("click", async () => {
         const patch = {};
         dialog.querySelectorAll("[data-skill-key]").forEach((row) => {
@@ -136,7 +190,7 @@
     const title = h.el("h3", "actor-section-title actor-section-title--button");
     const open = h.el("button", "actor-monster-skills-open");
     open.type = "button";
-    open.appendChild(h.el("span", null, node.label || "Perícias"));
+    open.appendChild(h.el("span", null, node.label || L.skills));
     open.appendChild(h.phIcon("list-checks", "actor-monster-skills-open__icon"));
     open.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -150,26 +204,18 @@
     if (selected.length) {
       selected.forEach((skill) => list.appendChild(renderMonsterSkillSummaryRow(skill)));
     } else {
-      list.appendChild(h.el("p", "actor-monster-skills-empty", "Nenhuma perícia marcada."));
+      list.appendChild(h.el("p", "actor-monster-skills-empty", L.noSkillsMarked));
     }
     section.appendChild(list);
     return section;
   }
 
-  
+
 
   function renderMonsterIdentity(main, bundle) {
     const d = bundle.data || {};
     const editable = !!bundle.can_edit;
-    const sizes = {
-      tiny: "Minúsculo",
-      small: "Pequeno",
-      medium: "Médio",
-      large: "Grande",
-      huge: "Enorme",
-      gargantuan: "Imenso",
-    };
-    const sizeOptions = Object.entries(sizes).map(([value, label]) => ({ value, label }));
+    const sizeOptions = Object.entries(L.sizes).map(([value, label]) => ({ value, label }));
     const hp = d.hp || {};
     const meta = h.el("div", "ash-meta ash-meta--monster");
     const typeLine = h.el("div", "ash-meta-line");
@@ -180,21 +226,21 @@
     cr.classList.add("ash-meta-input--lvl");
     typeLine.appendChild(cr);
     typeLine.appendChild(h.el("span", "ash-meta-divider", "·"));
-    typeLine.appendChild(h.headerInput("sheet.type", "text", d.type, editable, "Tipo"));
+    typeLine.appendChild(h.headerInput("sheet.type", "text", d.type, editable, L.type));
     meta.appendChild(typeLine);
 
     const detailLine = h.el("div", "ash-meta-line");
     detailLine.appendChild(h.phIcon("footprints", "ash-meta-icon"));
-    detailLine.appendChild(h.headerInput("sheet.speed", "text", d.speed, editable, "Deslocamento"));
+    detailLine.appendChild(h.headerInput("sheet.speed", "text", d.speed, editable, L.speed));
     detailLine.appendChild(h.el("span", "ash-meta-divider", "·"));
-    detailLine.appendChild(h.headerInput("sheet.alignment", "text", d.alignment, editable, "Alinhamento"));
+    detailLine.appendChild(h.headerInput("sheet.alignment", "text", d.alignment, editable, L.alignment));
     meta.appendChild(detailLine);
     main.appendChild(meta);
 
     const ids = h.el("div", "ash-identity ash-identity--monster");
     ids.appendChild(h.headerIdentityCell("ND", h.headerInput("sheet.cr", "text", d.cr, editable, "0"), "challenge"));
-    ids.appendChild(h.headerIdentityCell("Prof.", h.headerInput("sheet.prof", "number", d.prof, editable, "2"), "proficiency"));
-    ids.appendChild(h.headerIdentityCell("Dados de Vida", h.headerInput("sheet.hp.formula", "text", hp.formula, editable, "—"), "hitdice"));
+    ids.appendChild(h.headerIdentityCell(L.profShort, h.headerInput("sheet.prof", "number", d.prof, editable, "2"), "proficiency"));
+    ids.appendChild(h.headerIdentityCell(L.hitDice, h.headerInput("sheet.hp.formula", "text", hp.formula, editable, "—"), "hitdice"));
     main.appendChild(ids);
   }
 
@@ -204,33 +250,34 @@
     const meta = h.el("div", "ash-meta");
     const classLine = h.el("div", "ash-meta-line");
     classLine.appendChild(h.phIcon("graduation-cap", "ash-meta-icon"));
-    classLine.appendChild(h.headerInput("sheet.class", "text", d.class, editable, "Classe"));
-    classLine.appendChild(h.el("span", "ash-meta-sep", "Nível"));
+    classLine.appendChild(h.headerInput("sheet.class", "text", d.class, editable, L.class));
+    classLine.appendChild(h.el("span", "ash-meta-sep", L.levelLabel));
     const lvl = h.headerInput("sheet.level", "number", d.level, editable, "1");
     lvl.classList.add("ash-meta-input--lvl");
     classLine.appendChild(lvl);
     classLine.appendChild(h.el("span", "ash-meta-divider", "·"));
-    classLine.appendChild(h.headerInput("sheet.background", "text", d.background, editable, "Antecedente"));
+    classLine.appendChild(h.headerInput("sheet.background", "text", d.background, editable, L.background));
     meta.appendChild(classLine);
 
     const raceLine = h.el("div", "ash-meta-line");
     raceLine.appendChild(h.phIcon("person", "ash-meta-icon"));
-    raceLine.appendChild(h.headerInput("sheet.race", "text", d.race, editable, "Raça"));
+    raceLine.appendChild(h.headerInput("sheet.race", "text", d.race, editable, L.race));
     raceLine.appendChild(h.el("span", "ash-meta-divider", "·"));
-    raceLine.appendChild(h.headerInput("sheet.alignment", "text", d.alignment, editable, "Alinhamento"));
+    raceLine.appendChild(h.headerInput("sheet.alignment", "text", d.alignment, editable, L.alignment));
     meta.appendChild(raceLine);
     main.appendChild(meta);
 
     const ids = h.el("div", "ash-identity");
-    ids.appendChild(h.headerIdentityCell("Inspiração", h.headerInput("sheet.inspiration", "number", d.inspiration, editable, "0"), "inspiration"));
-    ids.appendChild(h.headerIdentityCell("Bônus de Proficiência", h.el("span", "ash-id-readonly", h.formatMod(d.prof)), "proficiency"));
-    ids.appendChild(h.headerIdentityCell("Pontos de Experiência", h.headerInput("sheet.xp", "number", d.xp, editable, "0"), "experience"));
+    ids.appendChild(h.headerIdentityCell(L.inspiration, h.headerInput("sheet.inspiration", "number", d.inspiration, editable, "0"), "inspiration"));
+    ids.appendChild(h.headerIdentityCell(L.proficiencyBonus, h.el("span", "ash-id-readonly", h.formatMod(d.prof)), "proficiency"));
+    ids.appendChild(h.headerIdentityCell(L.experiencePoints, h.headerInput("sheet.xp", "number", d.xp, editable, "0"), "experience"));
     main.appendChild(ids);
   }
 
-  
+
 
   GW.registerSystem("dnd5e", {
+    labels: L,
     renderSection(node, variant, rc) {
       if (rc.actorType === "monster" && variant === "skills") {
         return renderMonsterSkillsSection(node, rc);

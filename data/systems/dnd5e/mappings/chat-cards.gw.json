@@ -5,11 +5,11 @@
       "subtitle": "@action.label",
       "lines": [
         {
-          "label": "Fórmula",
+          "labelKey": "dnd5e.ui.formula",
           "value": "@roll.formula"
         },
         {
-          "label": "Total",
+          "labelKey": "dnd5e.ui.total",
           "value": "@roll.total"
         }
       ]
@@ -19,11 +19,11 @@
       "subtitle": "@action.label",
       "lines": [
         {
-          "label": "Fórmula",
+          "labelKey": "dnd5e.ui.formula",
           "value": "@roll.formula"
         },
         {
-          "label": "Total",
+          "labelKey": "dnd5e.ui.total",
           "value": "@roll.total"
         }
       ]
@@ -33,11 +33,11 @@
       "subtitle": "@action.label",
       "lines": [
         {
-          "label": "Fórmula",
+          "labelKey": "dnd5e.ui.formula",
           "value": "@roll.formula"
         },
         {
-          "label": "Total",
+          "labelKey": "dnd5e.ui.total",
           "value": "@roll.total"
         }
       ]
@@ -47,49 +47,49 @@
       "subtitle": "@action.label",
       "lines": [
         {
-          "label": "Rolagem (d20)",
+          "labelKey": "dnd5e.ui.rolagem.d20",
           "value": "@roll.total"
         }
       ]
     },
     "weapon-attack": {
       "title": "@actor.name",
-      "subtitle": "Ataque",
+      "subtitleKey": "dnd5e.ui.ataque",
       "lines": [
         {
-          "label": "Fórmula",
+          "labelKey": "dnd5e.ui.formula",
           "value": "@roll.formula"
         },
         {
-          "label": "Total",
+          "labelKey": "dnd5e.ui.total",
           "value": "@roll.total"
         }
       ]
     },
     "weapon-damage": {
       "title": "@actor.name",
-      "subtitle": "Dano",
+      "subtitleKey": "dnd5e.ui.dano",
       "lines": [
         {
-          "label": "Fórmula",
+          "labelKey": "dnd5e.ui.formula",
           "value": "@roll.formula"
         },
         {
-          "label": "Total",
+          "labelKey": "dnd5e.ui.total",
           "value": "@roll.total"
         }
       ]
     },
     "spell-damage": {
       "title": "@actor.name",
-      "subtitle": "Dano de Magia",
+      "subtitleKey": "dnd5e.ui.dano.de.magia",
       "lines": [
         {
-          "label": "Fórmula",
+          "labelKey": "dnd5e.ui.formula",
           "value": "@roll.formula"
         },
         {
-          "label": "Total",
+          "labelKey": "dnd5e.ui.total",
           "value": "@roll.total"
         }
       ]

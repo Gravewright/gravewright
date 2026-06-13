@@ -29,21 +29,21 @@
   },
   "weapon-attack": {
     "title": "@action.label",
-    "subtitle": "Ataque",
+    "subtitleKey": "dnd5e.ui.ataque",
     "formula": "@roll.formula",
     "total": "@roll.total",
     "kind": "@roll.kind"
   },
   "weapon-damage": {
     "title": "@action.label",
-    "subtitle": "Dano",
+    "subtitleKey": "dnd5e.ui.dano",
     "formula": "@roll.formula",
     "total": "@roll.total",
     "kind": "@roll.kind"
   },
   "spell-damage": {
     "title": "@action.label",
-    "subtitle": "Dano de Magia",
+    "subtitleKey": "dnd5e.ui.dano.de.magia",
     "formula": "@roll.formula",
     "total": "@roll.total",
     "kind": "@roll.kind"

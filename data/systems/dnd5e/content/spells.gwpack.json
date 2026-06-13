@@ -2,7 +2,7 @@
   "id": "dnd5e-spells",
   "type": "spell_pack",
   "system": "dnd5e",
-  "label": "Magias",
+  "label": "Spells",
   "entries": [
     {
       "id": "template-arcane-bolt",
