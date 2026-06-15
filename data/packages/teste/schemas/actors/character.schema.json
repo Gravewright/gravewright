@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "attributes": {
+      "properties": {
+        "hp": {
+          "properties": {
+            "max": {
+              "default": 10,
+              "type": "integer"
+            },
+            "value": {
+              "default": 10,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "title": "Character",
+  "type": "object"
+}

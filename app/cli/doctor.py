@@ -264,14 +264,21 @@ def summarize(checks: list[Check]) -> dict:
     return {"ok": errors == 0, "error_count": errors, "warn_count": warns}
 
 
-def render_check_lines(checks: list[Check]) -> list[str]:
+def render_check_lines(checks: list[Check], *, verbose: bool = False) -> list[str]:
     """The ``OK/WARN/ERROR`` (+ ``FIX``) lines, without the closing verdict."""
     label = {OK: "OK   ", WARN: "WARN ", ERROR: "ERROR"}
     lines: list[str] = []
+
     for c in checks:
-        lines.append(f"{label[c.status]} {c.message}")
+        prefix = f"{label[c.status]} "
+        if verbose:
+            lines.append(f"{prefix}[{c.id}] {c.message}")
+        else:
+            lines.append(f"{prefix}{c.message}")
+
         if c.fix:
             lines.append(f"FIX    {c.fix}")
+
     return lines
 
 
