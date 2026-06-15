@@ -125,11 +125,11 @@ Restore is destructive. Gravewright keeps a `*.pre-restore` safety copy of the p
 
 ## Current Status
 
-Gravewright is pre-1.0 Alpha.
+Gravewright is currently **v1.0.0-alpha.1**.
 
 Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, and browser SDK runtime are actively evolving.
 
-APIs documented under `docs/` are intended to become stable public contracts, but breaking changes may still happen before a 1.0 release.
+APIs documented under `docs/` are intended to become stable public contracts, but breaking changes may still happen between Alpha releases.
 
 ## What Gravewright Includes
 

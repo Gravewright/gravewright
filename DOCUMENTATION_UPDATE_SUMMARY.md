@@ -1,21 +1,36 @@
 # Documentation Update Summary
 
-This documentation bundle updates Gravewright docs for the current SDK + CLI architecture.
+This bundle is corrected for **Gravewright v1.0.0-alpha.1**.
 
-## Updated Areas
+## Included
 
-- Root README quick start now uses `grave doctor` and `grave run --open`.
-- Alpha warning now emphasizes backup-before-update and short Alpha arcs.
-- CLI docs now cover launchers, run, doctor, backup, restore, lock, package lifecycle, campaign activation, and per-kind scaffolding.
-- SDK docs now treat packages as the only extension model.
-- Package kind docs now align content packages with campaign activation.
-- Operations docs now document backup/restore flow through the CLI.
-- Testing docs now include CLI parser tests, focused CLI tests, unit suite, compile check, and browser E2E.
-- Contributing docs now include CLI/package development expectations.
-- Security docs now cover trusted JavaScript packages, SDK capabilities, and package path safety.
-- Brazilian Portuguese docs now mirror the updated operational model.
+- Full project documentation tree under `docs/`.
+- Root project docs:
+  - `README.md`
+  - `CHANGELOG.md`
+  - `CONTRIBUTING.md`
+  - `SECURITY.md`
+  - `CODE_OF_CONDUCT.md`
+  - `NOTICE`
+- Release notes:
+  - `RELEASE_v1.0.0-alpha.1.md`
+- GitHub org/profile README:
+  - `ORG_PROFILE_README.md`
+  - `.github/profile/README.md`
+- English and Brazilian Portuguese Alpha docs updated for `v1.0.0-alpha.1`.
+- Public status language uses the explicit `v1.0.0-alpha.1` release name.
 
-## Recommended Verification
+## Version language
+
+Use:
+
+```text
+Gravewright v1.0.0-alpha.1
+```
+
+Avoid old generic pre-release labels. Use the explicit release name instead.
+
+## Recommended validation
 
 ```bash
 grave doctor

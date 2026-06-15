@@ -1,9 +1,13 @@
 # Estado Alpha
 
 > [!WARNING]
-> **ALPHA — NÃO RODE CAMPANHAS LONGAS.**
+> **Gravewright v1.0.0-alpha.1 é uma release Alpha.**
 >
-> O Gravewright está em fase Alpha. Mudanças estruturais, especialmente no schema do banco de dados e nos contratos públicos, podem ocorrer entre versões. **Não há garantia de caminho de upgrade**: uma atualização pode tornar uma mesa existente irrecuperável.
+> Faça backup antes de atualizar. Não rode campanhas longas ainda.
+>
+> Mudanças estruturais, especialmente schema do banco, layout de storage, contratos de pacotes SDK, eventos realtime e APIs públicas, podem ocorrer entre releases Alpha.
+>
+> **Não há garantia de caminho de upgrade entre releases Alpha**: uma atualização pode tornar uma mesa existente irrecuperável.
 >
 > **Use para one-shots, testes e experimentação.** Teste, quebre e relate problemas ou sugestões em [issues](https://github.com/gravewright/gravewright/issues).
 >
@@ -13,7 +17,7 @@
 
 Alpha significa que o projeto já pode ser testado e discutido publicamente, mas ainda não deve ser usado como base confiável para campanhas longas.
 
-Espere mudanças em:
+Espere mudanças entre releases Alpha em:
 
 - schema do banco de dados;
 - comportamento de migrações;
@@ -25,7 +29,7 @@ Espere mudanças em:
 
 ## Uso recomendado
 
-Use o Gravewright Alpha para:
+Use o Gravewright v1.0.0-alpha.1 para:
 
 - one-shots;
 - experimentos locais;
@@ -41,15 +45,15 @@ Não dependa de releases Alpha para:
 - hospedagem pública multi-mesa;
 - instâncias de produção sem backup e teste de restauração.
 
-## Política de upgrade antes da 1.0
+## Política de upgrade durante Alpha
 
-Antes da 1.0, mantenedores podem publicar mudanças incompatíveis sem migração automática. As release notes devem chamar atenção para quebras conhecidas, mas dados antigos ainda podem exigir reparo manual ou uma instalação limpa.
+Durante Alpha, mantenedores podem publicar mudanças incompatíveis sem migração automática. As release notes devem chamar atenção para quebras conhecidas, mas dados antigos ainda podem exigir reparo manual ou uma instalação limpa.
 
 Antes de atualizar uma instância com dados importantes:
 
 1. Pare a aplicação.
 2. Faça backup do banco.
 3. Faça backup de `storage/`.
-4. Faça backup de `GRAVEWRIGHT_DATA_DIR` ou `data/`.
+4. Faça backup de `GRAVEWRIGHT_DATA_DIR` ou `data/packages/`.
 5. Teste a restauração em uma cópia.
 6. Atualize apenas depois que a cópia iniciar e os diagnósticos estiverem limpos.
