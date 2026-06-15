@@ -1,36 +1,52 @@
 # Testes
 
-## Testes Unitarios
+## Gate Local Recomendado
+
+```bash
+uv run pytest tests/unit -q
+python3 -m compileall app tests scripts main.py
+uv run pytest tests/e2e -q
+```
+
+Para mudanças no CLI:
+
+```bash
+uv run pytest tests/unit/test_cli_parser_smoke.py -q
+uv run pytest tests/unit/test_cli_backup.py tests/unit/test_cli_doctor.py tests/unit/test_sdk_cli.py -q
+```
+
+## Testes Unitários
 
 ```bash
 uv run pytest tests/unit
 ```
 
-Durante desenvolvimento, rode arquivos focados:
-
-```bash
-uv run pytest tests/unit/test_campaign_delete_cascade.py
-uv run pytest tests/unit/test_game_render_smoke.py
-```
-
-## Checagem De Compilacao
+## Checagem de Compilação
 
 ```bash
 python3 -m compileall app tests scripts main.py
 ```
 
-## Testes De Integracao
+## Testes de CLI
 
-Smoke tests de backend de banco sao opt-in:
+Cobrem parser, backup/restore, doctor, package validate e integração básica com o SDK CLI.
 
 ```bash
-GRAVEWRIGHT_TEST_DATABASE_URLS="postgresql+psycopg://user:pass@localhost:5432/gravewright_test" \
-  uv run pytest tests/integration/test_database_backends.py -q
+uv run pytest tests/unit/test_cli_parser_smoke.py -q
+uv run pytest tests/unit/test_cli_backup.py tests/unit/test_cli_doctor.py tests/unit/test_sdk_cli.py -q
 ```
 
-URLs MySQL/MariaDB podem ser usadas para checagens experimentais de portabilidade de schema, mas MySQL/MariaDB nao e backend de producao suportado na V1.
+## Testes E2E de Browser
 
-## Docker E Performance
+`tests/e2e/` roda Firefox headless contra um servidor real, faz login, abre a mesa e valida o runtime `window.GravewrightSDK`.
+
+```bash
+uv run pytest tests/e2e -q
+```
+
+A suite pula automaticamente quando Selenium, Firefox ou geckodriver não estão disponíveis.
+
+## Docker e Performance
 
 Os Compose de teste ficam em `tests/`:
 
@@ -41,7 +57,7 @@ tests/docker-compose.i5-stress.yml
 tests/docker-compose.chunk-stream.yml
 ```
 
-Validacao sem subir containers:
+Validação sem subir containers:
 
 ```bash
 docker compose -f tests/docker-compose.perf.yml config
@@ -49,14 +65,3 @@ docker compose -f tests/docker-compose.max-stress.yml config
 docker compose -f tests/docker-compose.i5-stress.yml config
 docker compose -f tests/docker-compose.chunk-stream.yml config
 ```
-
-Scripts:
-
-```bash
-bash tests/run_perf_test.sh
-bash tests/run_max_stress.sh
-bash tests/run_i5_stress.sh
-bash tests/run_chunk_stream_test.sh
-```
-
-Resultados de performance sao gravados em `tests/performance/`.

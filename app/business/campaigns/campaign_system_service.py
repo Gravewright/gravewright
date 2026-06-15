@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.domain.roles import PlayerRole
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.campaign_repository import CampaignRepository
 
 
@@ -16,11 +16,15 @@ class CampaignSystemResult:
 class CampaignSystemService:
     def __init__(self) -> None:
         self.campaigns = CampaignRepository()
-        self.system_install = SystemInstallService()
+        self.system_install = PackageInstallService()
 
     def _is_assignable(self, system_id: str) -> bool:
         record = self.system_install.installed.get(system_id)
-        return record is not None and record["status"] == "enabled"
+        return (
+            record is not None
+            and record["status"] == "enabled"
+            and record["kind"] == "ruleset"
+        )
 
     def area_marker_presets(self, system_id: str | None) -> list[dict]:
         """Resolved area-marker presets for an enabled system (empty if none/detached).
@@ -31,7 +35,7 @@ class CampaignSystemService:
         if not system_id:
             return []
         for item in self.system_install.list_for_tab():
-            if item.get("system_id") == system_id and item["status"] == "enabled":
+            if item["id"] == system_id and item["status"] == "enabled":
                 return item.get("area_markers", [])
         return []
 
@@ -48,7 +52,7 @@ class CampaignSystemService:
         if campaign["member_role"] != PlayerRole.GM.value:
             return CampaignSystemResult(success=False, error_key="inside.campaigns.errors.gm_required")
         if system_id is not None and not self._is_assignable(system_id):
-            return CampaignSystemResult(success=False, error_key="inside.systems.errors.not_found")
+            return CampaignSystemResult(success=False, error_key="inside.rulesets.errors.not_found")
 
         self.campaigns.update_system(
             campaign_id=campaign_id,

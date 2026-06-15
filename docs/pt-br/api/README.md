@@ -1,13 +1,13 @@
 # APIs Públicas do Gravewright
 
-Esta seção documenta as superfícies públicas de integração para autores de sistemas, módulos, integrações e pacotes de conteúdo.
+Esta seção documenta as superfícies públicas de integração para autores de pacotes SDK e integrações.
 
 Os materiais de API são licenciados sob MIT. A implementação do core permanece Apache-2.0.
 
 > [!WARNING]
 > **Superfície de API em Alpha.**
 >
-> Gravewright ainda é pré-1.0. As APIs públicas são documentadas para permitir experimentação por autores de sistemas, módulos, integrações e pacotes de conteúdo, mas as garantias de compatibilidade ainda estão sendo finalizadas.
+> Gravewright ainda é pré-1.0. As APIs públicas são documentadas para permitir experimentação por autores de pacotes SDK e integrações, mas as garantias de compatibilidade ainda estão sendo finalizadas.
 >
 > Breaking changes de API devem atualizar documentação, schemas e testes no mesmo change.
 
@@ -15,46 +15,43 @@ Os materiais de API são licenciados sob MIT. A implementação do core permanec
 
 | Documento                                                                | Público                       | Cobre                                                                                                              |
 | ------------------------------------------------------------------------ | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| [`extensoes.md`](extensoes.md)                                           | Autores de módulos e sistemas | Globals de navegador, API escopada de módulo, hooks de ficha, labels de ficha, hooks de combate e slots de combate |
 | [`http.md`](http.md)                                                     | Autores de integrações        | Grupos de rotas HTTP e convenções de request                                                                       |
 | [`realtime.md`](realtime.md)                                             | Clientes realtime             | `/game/ws`, comandos, eventos e comportamento de replay                                                            |
-| [`../modulos.md`](../modulos.md)                                         | Autores de módulos            | Visão geral da Module API v1 e quick start                                                                         |
-| [`../modulos/criando-um-modulo.md`](../modulos/criando-um-modulo.md)     | Autores de módulos            | Manifest, entrypoints, capabilities, hooks, settings, empacotamento e validação                                    |
-| [`../sistemas/criando-um-sistema.md`](../sistemas/criando-um-sistema.md) | Autores de sistemas           | System API v1, estrutura de pacote, manifest, schemas, fichas, regras, labels, assets e configuração de combate    |
-| [`../sistemas/manifest.md`](../sistemas/manifest.md)                     | Autores de sistemas           | Referência do manifest de sistema                                                                                  |
+| [`../../sdk/README.md`](../../sdk/README.md)                             | Autores de pacotes            | Gravewright SDK — o único modelo de extensão                                                                       |
+| [`../../sdk/manifest.md`](../../sdk/manifest.md)                         | Autores de pacotes            | Referência do manifest de pacote (v1)                                                                              |
+| [`../../sdk/runtime.md`](../../sdk/runtime.md)                           | Autores de pacotes            | Runtime de navegador `window.GravewrightSDK`                                                                       |
 
-## Escolhendo o Tipo Certo de Extensão
+## Escolhendo o Tipo Certo de Pacote
 
-| Necessidade                                                  | Use                                                |
-| ------------------------------------------------------------ | -------------------------------------------------- |
-| Definir tipos de ator                                        | Sistema                                            |
-| Definir tipos de item                                        | Sistema                                            |
-| Definir schemas e layouts de ficha                           | Sistema                                            |
-| Definir rolagens centrais e configuração de combate          | Sistema                                            |
-| Fornecer vocabulário de ruleset, labels e arquivos de locale | Sistema                                            |
-| Adicionar comportamento opcional de UI                       | Módulo                                             |
-| Adicionar automação habilitável por campanha                 | Módulo                                             |
-| Adicionar settings de usuário ou campanha                    | Módulo                                             |
-| Distribuir conteúdo opcional                                 | Módulo ou sistema, dependendo da posse do conteúdo |
+| Necessidade | Kind |
+| --- | --- |
+| Definir tipos de ator/item, fichas, regras e combate | `ruleset` |
+| Fornecer vocabulario de ruleset, labels e arquivos de locale | `ruleset` |
+| Adicionar comportamento opcional de UI ou automacao por campanha | `addon` |
+| Adicionar tema visual | `theme` |
+| Fornecer midia reutilizavel, como tokens, mapas e audio | `assets` |
+| Distribuir pacotes de conteudo importavel | `content` |
+| Compartilhar codigo/estilos passivos entre pacotes | `library` |
 
-Regra prática: se a campanha não funciona sem isso, provavelmente pertence a um sistema.
+Regra pratica: se a campanha nao funciona sem isso, pertence a um `ruleset`.
 
-Se o GM deve poder ligar ou desligar por campanha, deve ser um módulo.
+Se o GM deve poder ligar ou desligar por campanha, use `addon`, `theme`, `assets`
+ou `content`. Veja [`../../sdk/kinds.md`](../../sdk/kinds.md).
 
 ## Expectativas de Estabilidade
 
 Durante Alpha:
 
-* manifests devem declarar `apiVersion: "1"`;
+* manifests devem declarar `schemaVersion: 1` e `sdkVersion: "1"`;
 * pacotes devem declarar `compatibility.minimum`, `compatibility.verified` e `compatibility.maximum`;
-* autores de extensão devem testar contra a versão exata do Gravewright marcada como `verified`;
+* autores de pacotes devem testar contra a versão exata do Gravewright marcada como `verified`;
 * APIs documentadas são o único contrato público;
 * globals não documentados, estrutura DOM, internals de renderer, comportamento de fallback, stores privados e detalhes de implementação podem mudar sem suporte de migração;
 * mudanças em API pública devem refletir em documentação e testes no mesmo change.
 
 ## API Pública vs Implementação Privada
 
-APIs públicas são documentadas neste diretório e nos guias relacionados de sistemas e módulos.
+APIs públicas são documentadas neste diretório e nos guias do SDK.
 
 Os itens abaixo não são contratos públicos, exceto quando forem explicitamente documentados:
 
@@ -64,11 +61,10 @@ Os itens abaixo não são contratos públicos, exceto quando forem explicitament
 * estrutura DOM;
 * classes CSS que não foram documentadas como hooks de extensão;
 * labels de fallback;
-* substituição completa do renderer de ficha;
-* substituição completa do renderer de combate;
 * formatos internos de eventos WebSocket que não estejam documentados em `api/realtime.md`.
 
-Sistemas e módulos devem usar APIs documentadas, manifests declarativos, schemas, regras, hooks, slots, labels, locales e assets em vez de depender de detalhes de implementação.
+Pacotes devem usar a SDK documentada: manifests declarativos, schemas, regras,
+hooks, slots, labels, locales, assets e `window.GravewrightSDK`.
 
 ## Licença dos Materiais de API
 

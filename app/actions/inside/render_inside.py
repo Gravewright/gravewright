@@ -9,9 +9,16 @@ from app.business.campaigns.campaign_service import CampaignService
 from app.business.inside_settings_service import InsideSettingsService
 from app.config import config
 from app.domain.roles import SystemRole
-from app.engine.systems.system_install_service import SystemInstallService
-from app.engine.modules.module_install_service import ModuleInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.helpers.view import view_context
+
+
+def split_packages(packages: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Split installed packages into rulesets (the "Systems" block) and every
+    other kind (the "Modules" block, where each card carries a kind marker)."""
+    rulesets = [p for p in packages if p["kind"] == "ruleset"]
+    modules = [p for p in packages if p["kind"] != "ruleset"]
+    return rulesets, modules
 
 
 def render_inside(
@@ -19,8 +26,7 @@ def render_inside(
     cookies: dict[str, str],
     user: Row,
     campaign_service: CampaignService,
-    system_install_service: SystemInstallService,
-    module_install_service: ModuleInstallService,
+    package_install_service: PackageInstallService,
     campaign_error: str | None = None,
     campaign_message: str | None = None,
     pending_delete_campaign_id: str | None = None,
@@ -28,40 +34,26 @@ def render_inside(
 ) -> Template:
     is_owner = user["system_role"] == SystemRole.OWNER.value
 
-    installed_systems = system_install_service.list_for_tab()
-    installed_modules = module_install_service.list_for_tab()
+    packages = package_install_service.list_for_tab()
+    rulesets, modules = split_packages(packages)
     inside_settings = InsideSettingsService().read()
-    installed_by_id = {item["system_id"]: item["name"] for item in installed_systems if item["system_id"]}
+    ruleset_name_by_id = {p["id"]: p["name"] for p in rulesets}
 
-    campaigns_raw = campaign_service.list_for_user(user["id"])
     campaigns = []
-    for c in campaigns_raw:
+    for c in campaign_service.list_for_user(user["id"]):
         row = dict(c)
-        sys_id = row.get("active_system_id")
-        row["active_system_name"] = installed_by_id.get(sys_id)
+        row["active_ruleset_name"] = ruleset_name_by_id.get(row.get("active_system_id"))
         campaigns.append(row)
 
-    module_campaigns = [
-        {"id": row["id"], "title": row["title"], "member_role": row.get("member_role")}
-        for row in campaigns
-        if row.get("member_role") == "gm"
-    ]
-    enabled_campaigns_by_module = module_install_service.enabled_campaign_ids_by_module(
-        [row["id"] for row in module_campaigns]
-    )
-    for module in installed_modules:
-        module["enabled_campaign_ids"] = sorted(enabled_campaigns_by_module.get(module.get("module_id") or "", set()))
-
-                                                                  
     available_systems = [
         {
-            "id": item["system_id"],
+            "id": item["id"],
             "name": item["name"],
-            "description": item["description"],
+            "description": item.get("description", ""),
             "version": item["version"],
         }
-        for item in installed_systems
-        if item["system_id"] and item["status"] == "enabled"
+        for item in rulesets
+        if item["status"] == "enabled"
     ]
     all_users = []
     if is_owner:
@@ -84,9 +76,9 @@ def render_inside(
             },
             campaigns=campaigns,
             available_systems=available_systems,
-            installed_systems=installed_systems,
-            installed_modules=installed_modules,
-            module_campaigns=module_campaigns,
+            packages=packages,
+            rulesets=rulesets,
+            modules=modules,
             all_users=all_users,
             inside_settings=inside_settings["app"],
             privacy_settings=inside_settings["privacy"],
@@ -94,8 +86,8 @@ def render_inside(
             campaign_message=campaign_message,
             pending_delete_campaign_id=pending_delete_campaign_id,
             removal_code=removal_code,
-            modules_error_key=None,
-            modules_message_key=None,
+            packages_error_key=None,
+            packages_message_key=None,
             admin_error_key=None,
             admin_message_key=None,
             settings_error_key=None,

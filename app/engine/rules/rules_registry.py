@@ -9,20 +9,20 @@ from __future__ import annotations
 
 import json
 
-from app.engine.systems import system_loader
-from app.engine.systems.system_loader import safe_join
-from app.engine.systems.system_manifest import SystemManifest
-from app.persistence.repositories.installed_system_repository import InstalledSystemRepository
+from app.engine.sdk import package_registry
+from app.engine.sdk.package_paths import safe_join
+from app.engine.sdk.package_manifest import PackageManifest
+from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
 
 class SystemRulesService:
     def __init__(self) -> None:
-        self.installed = InstalledSystemRepository()
+        self.installed = InstalledPackageRepository()
 
     def _read_json(self, package_dir_name: str, relative: str) -> dict:
         if not relative:
             return {}
-        base = system_loader.SYSTEMS_DIR / package_dir_name
+        base = package_registry.PACKAGES_DIR / package_dir_name
         path = safe_join(base, relative)
         if path is None or not path.is_file():
             return {}
@@ -37,7 +37,7 @@ class SystemRulesService:
         if record is None:
             return None
         try:
-            manifest = SystemManifest.from_dict(json.loads(record["manifest_json"]))
+            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
         except (TypeError, ValueError):
             return None
         return record, manifest

@@ -1,4 +1,4 @@
-"""Actor Core lifecycle (System API v0, §2.2, commands ``actor.*``).
+"""Actor Core lifecycle (Gravewright SDK, §2.2, commands ``actor.*``).
 
 Creates/updates the minimal Actor Core row in SQLite and initialises the
 matching Sheet Data file in scoped-json-v1 storage. The actor's ``type`` must
@@ -13,7 +13,7 @@ from app.engine.actors.actor_permissions import can_edit_actor, can_view_actor
 from app.engine.sheets.schema_service import SchemaService
 from app.engine.sheets.sheet_validation import apply_schema_defaults
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.actor_folder_repository import ActorFolderRepository
 from app.persistence.repositories.actor_permission_repository import ActorPermissionRepository
 from app.persistence.repositories.actor_repository import ActorRepository
@@ -40,7 +40,7 @@ class ActorService:
     def __init__(self) -> None:
         self.actors = ActorRepository()
         self.campaigns = CampaignRepository()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.schemas = SchemaService()
         self.storage = ScopedJsonStorage()
         self.permissions = ActorPermissionRepository()

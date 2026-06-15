@@ -1,4 +1,4 @@
-"""Upload + validation of an actor's portrait/token image (System API v0).
+"""Upload + validation of an actor's portrait/token image (Gravewright SDK).
 
 Mirrors :class:`JournalAssetService`, simplified: one image per actor per kind,
 stored at a deterministic path (no asset table). The relative storage path is

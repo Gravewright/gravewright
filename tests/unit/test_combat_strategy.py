@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.engine.combat.turn_order_service import TurnOrderService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from tests.conftest import seed_actor, seed_campaign, seed_system, seed_user
 
 
@@ -59,7 +59,7 @@ def test_combat_state_visible_to_player(db):
 
 def test_combat_config_paths_are_registered(db):
     gm_id = seed_user(name="GM", email="gm-combat-config-path@test.com")
-    systems = SystemInstallService()
+    systems = PackageInstallService()
     assert systems.install(package_id="dnd5e", user_id=gm_id).success
     manifest = systems.get_manifest("dnd5e")
     assert manifest is not None

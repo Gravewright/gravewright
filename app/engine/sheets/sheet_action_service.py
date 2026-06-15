@@ -32,7 +32,7 @@ from app.engine.rules.formula_engine import FormulaError, evaluate
 from app.engine.rules.rules_registry import SystemRulesService
 from app.engine.rules.token_mapping_resolver import resolve_token_view
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.scene_repository import SceneRepository
@@ -340,7 +340,7 @@ class SheetActionService:
         self.scenes = SceneRepository()
         self.tokens = TokenRepository()
         self.storage = ScopedJsonStorage()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.rules = SystemRulesService()
 
     def execute(

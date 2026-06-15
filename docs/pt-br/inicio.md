@@ -1,4 +1,4 @@
-# Inicio Rapido
+# Início Rápido
 
 ## Requisitos
 
@@ -6,9 +6,9 @@
 - [`uv`](https://docs.astral.sh/uv/).
 - Navegador moderno com suporte a JavaScript.
 
-SQLite e usado por padrao no desenvolvimento local.
+SQLite é usado por padrão no desenvolvimento local.
 
-## Instalar Dependencias
+## Instalar Dependências
 
 ```bash
 uv sync
@@ -20,12 +20,31 @@ uv sync
 cp .env.example .env
 ```
 
-O `.env.example` funciona para desenvolvimento local. Troque `SESSION_SECRET` antes de usar qualquer instancia compartilhada ou publica.
+O `.env.example` funciona para desenvolvimento local. Troque `SESSION_SECRET` antes de usar qualquer instância compartilhada ou pública.
 
-## Rodar A Aplicacao
+## Rodar Diagnóstico
 
 ```bash
-uv run uvicorn main:app --reload
+chmod +x grave
+./grave doctor
+```
+
+Fallback:
+
+```bash
+uv run python -m app.cli doctor
+```
+
+## Rodar a Aplicação
+
+```bash
+./grave run --open
+```
+
+Fallback:
+
+```bash
+uv run python -m app.cli run --open
 ```
 
 Abra:
@@ -34,29 +53,56 @@ Abra:
 http://127.0.0.1:8000
 ```
 
+Windows:
+
+```bat
+grave.bat doctor
+grave.bat run --open
+```
+
 ## Primeiro Fluxo Local
 
-1. Registre um usuario local.
+1. Registre um usuário local.
 2. Abra `/inside`.
 3. Crie uma campanha.
-4. Instale e habilite um sistema pela aba Sistemas.
-5. Associe o sistema a campanha.
-6. Abra a mesa da campanha.
-7. Envie um mapa pelo painel de cenas.
-8. Crie atores, itens, diarios e tokens.
+4. Confira os pacotes:
+
+   ```bash
+   ./grave package list
+   ```
+
+5. Instale e habilite um ruleset se necessário:
+
+   ```bash
+   ./grave package install dnd5e --yes --enable
+   ```
+
+6. Associe o ruleset à campanha.
+7. Abra a mesa.
+8. Envie um mapa pelo painel de cenas.
+9. Crie atores, itens, diários e tokens.
+
+## Backup Antes de Atualizar
+
+```bash
+./grave doctor
+./grave backup -o gravewright-backup.zip --include-assets --verify
+```
+
+Teste restauração em uma cópia antes de atualizar dados reais.
 
 ## Dados Locais
 
-Arquivos de runtime ficam por padrao em:
+Arquivos de runtime ficam por padrão em:
 
 ```text
 storage/
 ```
 
-Pacotes e dados base ficam por padrao em:
+Pacotes ficam por padrão em:
 
 ```text
-data/
+data/packages/
 ```
 
-Use `GRAVEWRIGHT_DATA_DIR` para manter sistemas e modulos instalaveis fora do repositorio.
+Use `GRAVEWRIGHT_DATA_DIR` para manter pacotes SDK instaláveis fora do repositório.

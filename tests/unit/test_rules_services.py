@@ -3,7 +3,7 @@ from __future__ import annotations
 from app.engine.rules.derived_field_service import apply_derived
 from app.engine.rules.rules_registry import SystemRulesService
 from app.engine.rules.token_mapping_resolver import resolve_token_view
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from tests.conftest import seed_user
 
 HELPERS = {"abilityMod": {"args": ["score"], "expression": "floor((score - 10) / 2)"}}
@@ -54,7 +54,7 @@ def test_token_view_resolves_paths():
 
 def test_rules_registry_reads_bundled_dnd5e(db):
     owner_id = seed_user(name="Owner", email="owner-rules@test.com")
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     assert svc.install(package_id="dnd5e", user_id=owner_id).success
     assert svc.enable(package_id="dnd5e").success
 

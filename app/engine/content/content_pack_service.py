@@ -1,4 +1,4 @@
-"""Read-only Content Pack access (System API v0, §10).
+"""Read-only Content Pack access (Gravewright SDK, §10).
 
 Content packs are declared in the manifest (``contentPacks``) and live as JSON
 files in the package. They are read-only catalogues — when the GM uses an entry
@@ -9,22 +9,22 @@ from __future__ import annotations
 
 import json
 
-from app.engine.systems import system_loader
-from app.engine.systems.system_loader import safe_join
-from app.engine.systems.system_manifest import SystemManifest
-from app.persistence.repositories.installed_system_repository import InstalledSystemRepository
+from app.engine.sdk import package_registry
+from app.engine.sdk.package_paths import safe_join
+from app.engine.sdk.package_manifest import PackageManifest
+from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
 
 class ContentPackService:
     def __init__(self) -> None:
-        self.installed = InstalledSystemRepository()
+        self.installed = InstalledPackageRepository()
 
     def _record_and_manifest(self, system_id: str) -> tuple[dict, SystemManifest] | None:
         record = self.installed.get(system_id)
         if record is None:
             return None
         try:
-            manifest = SystemManifest.from_dict(json.loads(record["manifest_json"]))
+            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
         except (TypeError, ValueError):
             return None
         return record, manifest
@@ -34,8 +34,8 @@ class ContentPackService:
         if pair is None:
             return []
         record, manifest = pair
-        package_dir = system_loader.SYSTEMS_DIR / record["package_dir"]
-        locale_data = manifest._load_locale(package_dir, "en")
+        package_dir = package_registry.PACKAGES_DIR / record["package_dir"]
+        locale_data = manifest.load_locale(package_dir, "en")
         return [
             {
                 "id": pack.id,
@@ -46,7 +46,7 @@ class ContentPackService:
         ]
 
     def _read_pack_file(self, package_dir: str, relative: str) -> dict | None:
-        base = system_loader.SYSTEMS_DIR / package_dir
+        base = package_registry.PACKAGES_DIR / package_dir
         path = safe_join(base, relative)
         if path is None or not path.is_file():
             return None
@@ -68,8 +68,8 @@ class ContentPackService:
         if parsed is None:
             return None
         entries = parsed.get("entries")
-        package_dir = system_loader.SYSTEMS_DIR / record["package_dir"]
-        locale_data = manifest._load_locale(package_dir, "en")
+        package_dir = package_registry.PACKAGES_DIR / record["package_dir"]
+        locale_data = manifest.load_locale(package_dir, "en")
         return {
             "id": pack_id,
             "type": ref.type,

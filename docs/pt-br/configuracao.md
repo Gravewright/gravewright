@@ -24,7 +24,7 @@ O modo `production` faz validacao rigorosa no startup e falha cedo quando encont
 | `ALLOWED_HOSTS` | Hosts aceitos, separados por virgula. Obrigatorio em producao. |
 | `TRUSTED_PROXIES` | IPs ou CIDRs de proxies confiaveis. |
 | `WS_ALLOWED_ORIGINS` | Origens explicitas para WebSocket. Derivado de `ALLOWED_HOSTS` quando vazio. |
-| `GRAVEWRIGHT_DATA_DIR` | Raiz de pacotes de sistemas e modulos. Padrao: `data/`. |
+| `GRAVEWRIGHT_DATA_DIR` | Raiz de dados dos pacotes SDK. Padrao: `data/`. |
 | `DATABASE_URL` | URL SQLAlchemy do banco. |
 
 ## Banco De Dados

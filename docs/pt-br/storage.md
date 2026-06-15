@@ -4,7 +4,7 @@
 
 `storage/` guarda arquivos de runtime, incluindo banco SQLite local, uploads, imagens processadas, tiles e assets escopados por campanha.
 
-`data/` guarda pacotes base de sistemas e modulos. `GRAVEWRIGHT_DATA_DIR` permite mover pacotes instalaveis para fora do repositorio.
+`data/` guarda pacotes SDK. `GRAVEWRIGHT_DATA_DIR` permite mover pacotes instalaveis para fora do repositorio.
 
 ## Uploads
 
@@ -20,7 +20,7 @@ Dados de campanha incluem:
 - atores, itens, diarios, pastas e permissoes;
 - chat, combate, convites e presenca;
 - assets enviados para mapas, atores e diarios;
-- storage escopado de sistemas e modulos.
+- storage escopado por pacote/ruleset.
 
 Deletar uma campanha remove dados relacionados em cascata no banco e no storage escopado.
 

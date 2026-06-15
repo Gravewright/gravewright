@@ -51,6 +51,11 @@
                     .some((canvas) => canvas.dataset.sceneId === deletedId);
                 if (showing) window.location.reload();
             }
+            if (evtName === "campaign.packages.changed") {
+                const roomId = payload?.room_id;
+                const showing = roomId && document.querySelector(`[data-room-id="${CSS.escape(roomId)}"]`);
+                if (showing) window.location.reload();
+            }
             if (evtName === "scene.chunk.updated") handleChunkUpdated(payload);
             if (evtName === "tokens.snapshot") handleTokensSnapshot(payload);
             if (evtName === "tokens.created") handleTokensCreated(payload);

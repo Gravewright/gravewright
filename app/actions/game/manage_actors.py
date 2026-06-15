@@ -1,4 +1,4 @@
-"""HTTP surface for the Actor + Sheet Data commands (System API v0, §14).
+"""HTTP surface for the Actor + Sheet Data commands (Gravewright SDK, §14).
 
 These are JSON command endpoints (no server-rendered UI yet — the declarative
 Sheet renderer is a later slice). The backend stays authoritative: it validates

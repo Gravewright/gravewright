@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "addon",
+  "id": "dice-so-nice-lite",
+  "name": "Dice So Nice Lite",
+  "version": "0.1.0",
+  "description": "Local 3D dice overlay with a user-selectable die color.",
+  "authors": ["Gravewright"],
+  "license": "MIT",
+  "compatibility": {
+    "minimum": "1.0.0-rc.1",
+    "verified": "1.0.0-rc.1",
+    "maximum": "1.x"
+  },
+  "capabilities": [
+    "assets.ui",
+    "assets.styles",
+    "assets.scripts",
+    "settings"
+  ],
+  "activation": {
+    "scope": "campaign",
+    "mode": "multiple"
+  },
+  "display": {
+    "color": "#7c5cff"
+  },
+  "entrypoints": {
+    "game": {
+      "styles": ["assets/dice-so-nice-lite.css"],
+      "scripts": ["assets/dice-so-nice-lite.js"]
+    }
+  },
+  "settings": [
+    {
+      "key": "dice.color",
+      "scope": "user",
+      "type": "string",
+      "default": "#7c5cff",
+      "label": "Die color"
+    }
+  ],
+  "provides": {}
+}

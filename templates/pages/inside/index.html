@@ -60,6 +60,18 @@
                         </div>
                         {% endif %}
 
+                        {% if packages_error_key %}
+                        <div class="notice notice--danger" role="alert">
+                            {{ t(packages_error_key) }}
+                        </div>
+                        {% endif %}
+
+                        {% if packages_message_key %}
+                        <div class="notice" role="status">
+                            {{ t(packages_message_key) }}
+                        </div>
+                        {% endif %}
+
                         <div id="inside-invitation-notice" class="notice" hidden></div>
 
                         {% if invitation_error_key %}
@@ -168,8 +180,8 @@
                                         </div>
 
                                         <div class="campaign-meta">
-                                            {% if campaign.active_system_name %}
-                                            <span>{{ t("inside.campaigns.active_system", name=campaign.active_system_name) }}</span>
+                                            {% if campaign.active_ruleset_name %}
+                                            <span>{{ t("inside.campaigns.active_system", name=campaign.active_ruleset_name) }}</span>
                                             {% else %}
                                             <span>{{ t("inside.campaigns.systemless") }}</span>
                                             {% endif %}
@@ -207,6 +219,13 @@
                                                     </button>
                                                 </form>
                                             </details>
+
+                                            {% set active_package_count = campaign.available_packages | selectattr("active") | list | length %}
+                                            <button class="campaign-package-trigger" type="button"
+                                                data-inside-modal-open="campaign-packages-{{ campaign.id }}">
+                                                <span>{{ t("inside.campaigns.packages") }}</span>
+                                                <small>{{ active_package_count }}/{{ campaign.available_packages | length }}</small>
+                                            </button>
                                             {% endif %}
 
                                             <form class="campaign-delete-form" method="post"
@@ -221,6 +240,73 @@
                                         {% endif %}
                                     </div>
                                 </article>
+
+                                {% if campaign.member_role == "gm" %}
+                                <div class="modal-backdrop inside-modal-backdrop"
+                                    data-inside-modal="campaign-packages-{{ campaign.id }}" role="presentation" hidden>
+                                    <section class="delete-modal campaign-package-modal" role="dialog" aria-modal="true"
+                                        aria-labelledby="campaign-packages-title-{{ campaign.id }}">
+                                        <div class="delete-modal-header">
+                                            <div>
+                                                <p class="panel-eyebrow">{{ t("inside.campaigns.packages") }}</p>
+                                                <h2 id="campaign-packages-title-{{ campaign.id }}">{{ campaign.title }}</h2>
+                                            </div>
+                                            <button class="modal-close" type="button" data-inside-modal-close
+                                                aria-label="{{ t('inside.campaigns.cancel') }}">×</button>
+                                        </div>
+
+                                        <p class="delete-modal-copy">{{ t("inside.campaigns.packages_modal_help") }}</p>
+
+                                        {% if campaign.available_packages %}
+                                        <div class="campaign-package-list">
+                                            {% for package in campaign.available_packages %}
+                                            <div class="campaign-package-row{% if package.active %} campaign-package-row--active{% endif %}">
+                                                <div class="campaign-package-main">
+                                                    <div>
+                                                        <strong>{{ package.name }}</strong>
+                                                        {% if package.active %}
+                                                        <span class="campaign-package-status">{{ t("inside.campaigns.package_active") }}</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span>{{ t("inside.packages.kind." ~ package.kind) }} · {{ package.version }}</span>
+                                                    {% if package.blockers %}
+                                                    <ul class="campaign-package-blockers">
+                                                        {% for blocker in package.blockers %}
+                                                        <li class="campaign-package-blocker">{{ t(blocker) }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                    {% endif %}
+                                                </div>
+                                                {% if package.active %}
+                                                <form method="post" action="/sdk/campaigns/packages/deactivate">
+                                                    {{ csrf_input | safe }}
+                                                    <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                    <input type="hidden" name="package_id" value="{{ package.id }}" />
+                                                    <button class="system-action" type="submit">
+                                                        {{ t("inside.campaigns.package_deactivate") }}
+                                                    </button>
+                                                </form>
+                                                {% else %}
+                                                <form method="post" action="/sdk/campaigns/packages/activate">
+                                                    {{ csrf_input | safe }}
+                                                    <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                    <input type="hidden" name="package_id" value="{{ package.id }}" />
+                                                    <button class="system-action system-action--primary" type="submit"
+                                                        {% if not package.activatable %}disabled
+                                                        title="{{ t(package.blockers[0]) }}"{% endif %}>
+                                                        {{ t("inside.campaigns.package_activate") }}
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <p class="campaign-details-empty">{{ t("inside.campaigns.packages_empty") }}</p>
+                                        {% endif %}
+                                    </section>
+                                </div>
+                                {% endif %}
 
                                 {% if pending_delete_campaign_id == campaign.id and removal_code %}
                                 <div class="modal-backdrop" role="presentation">
@@ -286,15 +372,15 @@
                 <article class="editor-panel editor-panel--systems">
                     <div class="editor-panel-inner">
                         <section class="section-head">
-                            <p class="panel-eyebrow">{{ t("inside.tabs.systems") }}</p>
-                            <p class="panel-description">{{ t("inside.systems.description") }}</p>
+                            <p class="panel-eyebrow">{{ t("inside.tabs.rulesets") }}</p>
+                            <p class="panel-description">{{ t("inside.rulesets.description") }}</p>
                         </section>
 
                         {% if user.is_owner %}
                         <div class="section-actions">
                             <button class="system-action system-action--primary" type="button"
                                 data-inside-modal-open="systems-install-modal">
-                                {{ t("inside.systems.actions.install_system") }}
+                                {{ t("inside.rulesets.actions.install_system") }}
                             </button>
                         </div>
 
@@ -304,27 +390,28 @@
                                 aria-labelledby="systems-install-title">
                                 <div class="delete-modal-header">
                                     <div>
-                                        <p class="panel-eyebrow">{{ t("inside.tabs.systems") }}</p>
-                                        <h2 id="systems-install-title">{{ t("inside.systems.install.title") }}</h2>
+                                        <p class="panel-eyebrow">{{ t("inside.tabs.rulesets") }}</p>
+                                        <h2 id="systems-install-title">{{ t("inside.rulesets.install.title") }}</h2>
                                     </div>
                                     <button class="modal-close" type="button" data-inside-modal-close
                                         aria-label="{{ t('inside.campaigns.cancel') }}">×</button>
                                 </div>
 
-                                {% set installable_systems = installed_systems | selectattr("can_install") | list %}
+                                {% set installable_systems = rulesets | selectattr("can_install") | list %}
                                 {% if installable_systems %}
                                 <div class="module-campaign-list">
                                     {% for system in installable_systems %}
                                     <div class="admin-row">
                                         <div class="admin-row-main">
                                             <strong>{{ system.name }}</strong>
-                                            <span>{{ t("inside.systems.version", version=system.version) }} · {{ system.id }}</span>
+                                            <span>{{ t("inside.rulesets.version", version=system.version) }} · {{ system.id }}</span>
                                         </div>
                                         <div class="admin-row-actions">
-                                            <form method="post" action="/systems/install">
+                                            <form method="post" action="/sdk/packages/install"
+                                                {% if system.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
                                                 {{ csrf_input | safe }}
-                                                <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                                <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.install") }}</button>
+                                                <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                                <button type="submit" class="system-action system-action--primary">{{ t("inside.rulesets.actions.install") }}</button>
                                             </form>
                                         </div>
                                     </div>
@@ -333,7 +420,7 @@
                                 {% else %}
                                 <div class="empty-state empty-state--compact">
                                     <span class="empty-marker"></span>
-                                    <p>{{ t("inside.systems.install.empty") }}</p>
+                                    <p>{{ t("inside.rulesets.install.empty") }}</p>
                                 </div>
                                 {% endif %}
                             </section>
@@ -347,9 +434,9 @@
                         <div class="system-banner system-banner--error">{{ t(systems_error_key) }}</div>
                         {% endif %}
 
-                        {% if installed_systems %}
+                        {% if rulesets %}
                         <div class="system-card-grid">
-                            {% for system in installed_systems %}
+                            {% for system in rulesets %}
                             <article class="system-card system-card--{{ system.status }}" data-system-id="{{ system.id }}"
                                 data-status="{{ system.status }}">
                                 <button class="system-card-button" type="button"
@@ -357,40 +444,42 @@
                                     <span class="system-card-top">
                                         <strong>{{ system.name }}</strong>
                                         <span class="system-status-badge system-status-badge--{{ system.status }}">
-                                            {{ t("inside.systems.status." ~ system.status) }}
+                                            {{ t("inside.rulesets.status." ~ system.status) }}
                                         </span>
                                     </span>
                                     {% if system.description %}
                                     <span class="system-card-desc">{{ system.description }}</span>
                                     {% endif %}
                                     <span class="system-card-meta">
-                                        <span class="system-version">{{ t("inside.systems.version", version=system.version) }}</span>
+                                        <span class="system-version">{{ t("inside.rulesets.version", version=system.version) }}</span>
                                         {% if system.api_version %}<span class="system-api">API v{{ system.api_version }}</span>{% endif %}
                                         <span class="system-compat system-compat--{{ system.compatibility_status }}">
-                                            {{ t("inside.systems.compat." ~ system.compatibility_status) }}
+                                            {{ t("inside.rulesets.compat." ~ system.compatibility_status) }}
                                         </span>
                                     </span>
                                 </button>
                                 {% if user.is_owner %}
                                 {% if system.can_install %}
-                                <form class="compact-card-action" method="post" action="/systems/install">
+                                <form class="compact-card-action" method="post" action="/sdk/packages/install"
+                                    {% if system.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
                                     {{ csrf_input | safe }}
-                                    <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                    <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.install") }}</button>
+                                    <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                    <button type="submit" class="system-action system-action--primary">{{ t("inside.rulesets.actions.install") }}</button>
                                 </form>
                                 {% endif %}
                                 {% if system.status in ["installed", "disabled"] %}
-                                <form class="compact-card-action" method="post" action="/systems/enable">
+                                <form class="compact-card-action" method="post" action="/sdk/packages/enable"
+                                    {% if system.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
                                     {{ csrf_input | safe }}
-                                    <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                    <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.enable") }}</button>
+                                    <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                    <button type="submit" class="system-action system-action--primary">{{ t("inside.rulesets.actions.enable") }}</button>
                                 </form>
                                 {% endif %}
                                 {% if system.status == "enabled" %}
-                                <form class="compact-card-action" method="post" action="/systems/disable">
+                                <form class="compact-card-action" method="post" action="/sdk/packages/disable">
                                     {{ csrf_input | safe }}
-                                    <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                    <button type="submit" class="system-action">{{ t("inside.systems.actions.disable") }}</button>
+                                    <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                    <button type="submit" class="system-action">{{ t("inside.rulesets.actions.disable") }}</button>
                                 </form>
                                 {% endif %}
                                 {% endif %}
@@ -402,7 +491,7 @@
                                     aria-labelledby="system-detail-title-{{ system.id }}">
                                     <div class="delete-modal-header">
                                         <div>
-                                            <p class="panel-eyebrow">{{ t("inside.tabs.systems") }}</p>
+                                            <p class="panel-eyebrow">{{ t("inside.tabs.rulesets") }}</p>
                                             <h2 id="system-detail-title-{{ system.id }}">{{ system.name }}</h2>
                                         </div>
                                         <button class="modal-close" type="button" data-inside-modal-close
@@ -412,15 +501,18 @@
                                     {% if system.description %}
                                     <p class="delete-modal-copy">{{ system.description }}</p>
                                     {% endif %}
+                                    {% if system.trusted_code_required %}
+                                    <p class="system-banner system-banner--warning">{{ t("inside.packages.trusted_code_warning") }}</p>
+                                    {% endif %}
 
                                     <div class="system-detail-meta">
-                                        <span>{{ t("inside.systems.status." ~ system.status) }}</span>
-                                        <span>{{ t("inside.systems.version", version=system.version) }}</span>
+                                        <span>{{ t("inside.rulesets.status." ~ system.status) }}</span>
+                                        <span>{{ t("inside.rulesets.version", version=system.version) }}</span>
                                         <span>{{ system.id }}</span>
                                         {% if system.api_version %}<span>API v{{ system.api_version }}</span>{% endif %}
                                         {% if system.author %}<span>{{ system.author }}</span>{% endif %}
                                         <span class="system-compat system-compat--{{ system.compatibility_status }}">
-                                            {{ t("inside.systems.compat." ~ system.compatibility_status) }}
+                                            {{ t("inside.rulesets.compat." ~ system.compatibility_status) }}
                                         </span>
                                     </div>
 
@@ -432,19 +524,19 @@
 
                                     <dl class="system-detail-grid">
                                         {% if system.actor_types %}
-                                        <dt>{{ t("inside.systems.actor_types") }}</dt>
+                                        <dt>{{ t("inside.rulesets.actor_types") }}</dt>
                                         <dd>{{ system.actor_types | map(attribute='label') | join(', ') }}</dd>
                                         {% endif %}
                                         {% if system.item_types %}
-                                        <dt>{{ t("inside.systems.item_types") }}</dt>
+                                        <dt>{{ t("inside.rulesets.item_types") }}</dt>
                                         <dd>{{ system.item_types | map(attribute='label') | join(', ') }}</dd>
                                         {% endif %}
                                         {% if system.content_packs %}
-                                        <dt>{{ t("inside.systems.content_packs") }}</dt>
+                                        <dt>{{ t("inside.rulesets.content_packs") }}</dt>
                                         <dd>{{ system.content_packs | map(attribute='label') | join(', ') }}</dd>
                                         {% endif %}
                                         {% if system.compatibility.minimum %}
-                                        <dt>{{ t("inside.systems.compatibility") }}</dt>
+                                        <dt>{{ t("inside.rulesets.compatibility") }}</dt>
                                         <dd>{{ system.compatibility.minimum }} – {{ system.compatibility.maximum }}</dd>
                                         {% endif %}
                                     </dl>
@@ -458,31 +550,33 @@
                                     {% if user.is_owner %}
                                     <div class="system-detail-actions">
                                         {% if system.can_install %}
-                                        <form method="post" action="/systems/install">
+                                        <form method="post" action="/sdk/packages/install"
+                                            {% if system.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.install") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.rulesets.actions.install") }}</button>
                                         </form>
                                         {% endif %}
                                         {% if system.status in ["installed", "disabled"] %}
-                                        <form method="post" action="/systems/enable">
+                                        <form method="post" action="/sdk/packages/enable"
+                                            {% if system.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.systems.actions.enable") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.rulesets.actions.enable") }}</button>
                                         </form>
                                         {% endif %}
                                         {% if system.status == "enabled" %}
-                                        <form method="post" action="/systems/disable">
+                                        <form method="post" action="/sdk/packages/disable">
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                            <button type="submit" class="system-action">{{ t("inside.systems.actions.disable") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action">{{ t("inside.rulesets.actions.disable") }}</button>
                                         </form>
                                         {% endif %}
                                         {% if system.installed %}
-                                        <form method="post" action="/systems/remove">
+                                        <form method="post" action="/sdk/packages/remove">
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="system_id" value="{{ system.id }}" />
-                                            <button type="submit" class="system-action system-action--danger">{{ t("inside.systems.actions.remove") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ system.id }}" />
+                                            <button type="submit" class="system-action system-action--danger">{{ t("inside.rulesets.actions.remove") }}</button>
                                         </form>
                                         {% endif %}
                                     </div>
@@ -494,7 +588,7 @@
                         {% else %}
                         <div class="empty-state">
                             <span class="empty-marker"></span>
-                            <p>{{ t("inside.systems.empty") }}</p>
+                            <p>{{ t("inside.rulesets.empty") }}</p>
                         </div>
                         {% endif %}
                     </div>
@@ -503,8 +597,8 @@
                 <article class="editor-panel editor-panel--modules">
                     <div class="editor-panel-inner">
                         <section class="section-head">
-                            <p class="panel-eyebrow">{{ t("inside.tabs.modules") }}</p>
-                            <p class="panel-description">{{ t("inside.modules.description") }}</p>
+                            <p class="panel-eyebrow">{{ t("inside.tabs.addons") }}</p>
+                            <p class="panel-description">{{ t("inside.addons.description") }}</p>
                         </section>
 
                         {% if modules_error_key %}
@@ -515,23 +609,14 @@
                         {% endif %}
 
                         {% if user.is_owner %}
-                        <div class="notice">{{ t("inside.modules.owner_note") }}</div>
-                        <form method="post" action="/modules/upload" enctype="multipart/form-data" class="system-upload-form">
-                            {{ csrf_input | safe }}
-                            <label>
-                                <span>{{ t("inside.modules.upload.label") }}</span>
-                                <input type="file" name="module_file" accept=".zip,application/zip,application/x-zip-compressed" required />
-                            </label>
-                            <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.upload.action") }}</button>
-                            <p class="form-help">{{ t("inside.modules.upload.help") }}</p>
-                        </form>
+                        <div class="notice">{{ t("inside.addons.owner_note") }}</div>
                         {% else %}
-                        <div class="notice">{{ t("inside.modules.user_note") }}</div>
+                        <div class="notice">{{ t("inside.addons.user_note") }}</div>
                         {% endif %}
 
-                        {% if installed_modules %}
+                        {% if modules %}
                         <div class="module-card-grid">
-                            {% for module in installed_modules %}
+                            {% for module in modules %}
                             <article class="module-card module-card--{{ module.status }}" data-module-id="{{ module.id }}"
                                 data-status="{{ module.status }}">
                                 <button class="module-card-button" type="button"
@@ -539,15 +624,17 @@
                                     <span class="module-card-top">
                                         <strong>{{ module.name }}</strong>
                                         <span class="system-status-badge system-status-badge--{{ module.status }}">
-                                            {{ t("inside.modules.status." ~ module.status) }}
+                                            {{ t("inside.addons.status." ~ module.status) }}
                                         </span>
+                                    </span>
+                                    <span class="package-kind-badge package-kind-badge--{{ module.kind }}">
+                                        {{ t("inside.packages.kind." ~ module.kind) }}
                                     </span>
                                     {% if module.description %}
                                     <span class="module-card-desc">{{ module.description }}</span>
                                     {% endif %}
                                     <span class="module-card-meta">
-                                        <span>{{ t("inside.modules.meta.version", version=module.version) }}</span>
-                                        <span>{{ t("inside.modules.meta.api", version=module.api_version) }}</span>
+                                        <span>{{ t("inside.addons.meta.version", version=module.version) }}</span>
                                     </span>
                                 </button>
                             </article>
@@ -558,7 +645,7 @@
                                     aria-labelledby="module-detail-title-{{ module.id }}">
                                     <div class="delete-modal-header">
                                         <div>
-                                            <p class="panel-eyebrow">{{ t("inside.tabs.modules") }}</p>
+                                            <p class="panel-eyebrow">{{ t("inside.tabs.addons") }}</p>
                                             <h2 id="module-detail-title-{{ module.id }}">{{ module.name }}</h2>
                                         </div>
                                         <button class="modal-close" type="button" data-inside-modal-close
@@ -568,11 +655,16 @@
                                     {% if module.description %}
                                     <p class="delete-modal-copy">{{ module.description }}</p>
                                     {% endif %}
+                                    {% if module.trusted_code_required %}
+                                    <p class="system-banner system-banner--warning">{{ t("inside.packages.trusted_code_warning") }}</p>
+                                    {% endif %}
 
                                     <div class="module-detail-meta">
-                                        <span>{{ t("inside.modules.status." ~ module.status) }}</span>
-                                        <span>{{ t("inside.modules.meta.version", version=module.version) }}</span>
-                                        <span>{{ t("inside.modules.meta.api", version=module.api_version) }}</span>
+                                        <span class="package-kind-badge package-kind-badge--{{ module.kind }}">
+                                            {{ t("inside.packages.kind." ~ module.kind) }}
+                                        </span>
+                                        <span>{{ t("inside.addons.status." ~ module.status) }}</span>
+                                        <span>{{ t("inside.addons.meta.version", version=module.version) }}</span>
                                         {% if module.author %}<span>{{ module.author }}</span>{% endif %}
                                     </div>
 
@@ -595,69 +687,39 @@
                                     {% if user.is_owner %}
                                     <div class="module-detail-actions">
                                         {% if module.can_install %}
-                                        <form method="post" action="/modules/install">
+                                        <form method="post" action="/sdk/packages/install"
+                                            {% if module.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
-                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.actions.install") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.addons.actions.install") }}</button>
                                         </form>
                                         {% endif %}
                                         {% if module.status == "installed" or module.status == "disabled" %}
-                                        <form method="post" action="/modules/enable">
+                                        <form method="post" action="/sdk/packages/enable"
+                                            {% if module.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
-                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.actions.enable") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action system-action--primary">{{ t("inside.addons.actions.enable") }}</button>
                                         </form>
                                         {% endif %}
                                         {% if module.status == "enabled" %}
-                                        <form method="post" action="/modules/disable">
+                                        <form method="post" action="/sdk/packages/disable">
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
-                                            <button type="submit" class="system-action">{{ t("inside.modules.actions.disable") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action">{{ t("inside.addons.actions.disable") }}</button>
                                         </form>
                                         {% endif %}
                                         {% if module.installed %}
-                                        <form method="post" action="/modules/remove">
+                                        <form method="post" action="/sdk/packages/remove">
                                             {{ csrf_input | safe }}
-                                            <input type="hidden" name="module_id" value="{{ module.id }}" />
-                                            <button type="submit" class="system-action system-action--danger">{{ t("inside.modules.actions.remove") }}</button>
+                                            <input type="hidden" name="package_id" value="{{ module.id }}" />
+                                            <button type="submit" class="system-action system-action--danger">{{ t("inside.addons.actions.remove") }}</button>
                                         </form>
                                         {% endif %}
                                     </div>
                                     {% endif %}
 
-                                    {% if module.status == "enabled" and module_campaigns %}
-                                    <div class="system-campaign-bindings">
-                                        <h3>{{ t("inside.modules.campaigns.title") }}</h3>
-                                        <p>{{ t("inside.modules.campaigns.description") }}</p>
-                                        <div class="module-campaign-list">
-                                            {% for campaign in module_campaigns %}
-                                            <div class="admin-row">
-                                                <div class="admin-row-main">
-                                                    <strong>{{ campaign.title }}</strong>
-                                                    <span>{{ t("inside.campaigns.member_role", role=t("roles.campaign." ~ campaign.member_role)) }}</span>
-                                                </div>
-                                                <div class="admin-row-actions">
-                                                    {% if campaign.id in module.enabled_campaign_ids %}
-                                                    <form method="post" action="/campaigns/modules/disable">
-                                                        {{ csrf_input | safe }}
-                                                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
-                                                        <input type="hidden" name="module_id" value="{{ module.module_id }}" />
-                                                        <button type="submit" class="system-action">{{ t("inside.modules.actions.disable_for_campaign") }}</button>
-                                                    </form>
-                                                    {% else %}
-                                                    <form method="post" action="/campaigns/modules/enable">
-                                                        {{ csrf_input | safe }}
-                                                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
-                                                        <input type="hidden" name="module_id" value="{{ module.module_id }}" />
-                                                        <button type="submit" class="system-action system-action--primary">{{ t("inside.modules.actions.enable_for_campaign") }}</button>
-                                                    </form>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    {% endif %}
+                                    <p class="form-help">{{ t("inside.packages.campaign_hint") }}</p>
                                 </section>
                             </div>
                             {% endfor %}
@@ -665,7 +727,7 @@
                         {% else %}
                         <div class="empty-state">
                             <span class="empty-marker"></span>
-                            <p>{{ t("inside.modules.empty") }}</p>
+                            <p>{{ t("inside.addons.empty") }}</p>
                         </div>
                         {% endif %}
                     </div>
@@ -845,12 +907,12 @@
 
                     <label class="nav-item nav-item--systems" for="section-systems">
                         <span class="nav-icon"></span>
-                        <span>{{ t("inside.tabs.systems") }}</span>
+                        <span>{{ t("inside.tabs.rulesets") }}</span>
                     </label>
 
                     <label class="nav-item nav-item--modules" for="section-modules">
                         <span class="nav-icon"></span>
-                        <span>{{ t("inside.tabs.modules") }}</span>
+                        <span>{{ t("inside.tabs.addons") }}</span>
                     </label>
 
                     {% if user.is_owner %}

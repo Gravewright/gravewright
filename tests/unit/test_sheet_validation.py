@@ -7,7 +7,7 @@ from app.engine.sheets.sheet_validation import (
     merge_defaults,
     sanitize_write,
 )
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from tests.conftest import seed_campaign, seed_user
 
 
@@ -114,7 +114,7 @@ def test_sanitize_passes_unknown_paths_and_no_schema():
 def _setup_dnd5e(prefix: str, actor_type: str = "character") -> tuple[str, str]:
     gm_id = seed_user(name="GM", email=f"gm-{prefix}@test.com")
     campaign_id = seed_campaign(gm_id)
-    service = SystemInstallService()
+    service = PackageInstallService()
     assert service.install(package_id="dnd5e", user_id=gm_id).success
     assert service.enable(package_id="dnd5e").success
     actor = ActorService().create_actor(

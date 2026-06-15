@@ -1,4 +1,4 @@
-"""Builds the render bundle for an item sheet (System API v0 — mirrors ActorSheetService).
+"""Builds the render bundle for an item sheet (Gravewright SDK — mirrors ActorSheetService).
 
 Items have no canvas/token projection, so the bundle is just:
 
@@ -17,7 +17,7 @@ from app.engine.rules.rules_registry import SystemRulesService
 from app.engine.sheets.sheet_ir_validator import validate_sheet_ir
 from app.engine.sheets.system_layout_service import SystemLayoutService
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.item_repository import ItemRepository
 
@@ -40,7 +40,7 @@ class ItemSheetService:
         self.items = ItemRepository()
         self.campaigns = CampaignRepository()
         self.storage = ScopedJsonStorage()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.rules = SystemRulesService()
         self.layouts = SystemLayoutService()
 

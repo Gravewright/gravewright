@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gravewright.dev/schemas/gravewright-package-v1.json",
+  "title": "Gravewright Package Manifest v1",
+  "description": "Unified manifest contract for every installable Gravewright SDK package (ruleset, addon, library, content, theme, assets).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "sdkVersion",
+    "kind",
+    "id",
+    "name",
+    "version",
+    "compatibility",
+    "capabilities",
+    "activation",
+    "entrypoints",
+    "provides"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "sdkVersion": {
+      "const": "1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["ruleset", "addon", "library", "content", "theme", "assets"]
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": ["string", "object"]
+      }
+    },
+    "license": {
+      "type": "string"
+    },
+    "homepage": {
+      "type": "string"
+    },
+    "repository": {
+      "type": "string"
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "minimum": { "type": "string" },
+        "verified": { "type": "string" },
+        "maximum": { "type": "string" }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "activation": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["mode"],
+      "properties": {
+        "scope": {
+          "type": "string",
+          "enum": ["campaign", "global", "user"]
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["exclusive", "multiple", "passive", "none"]
+        }
+      }
+    },
+    "entrypoints": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "styles": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "scripts": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "provides": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "settings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["key", "type"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "scope": {
+            "type": "string",
+            "enum": ["global", "campaign", "user"]
+          },
+          "type": {
+            "type": "string",
+            "enum": ["boolean", "string", "number", "integer", "enum"]
+          },
+          "default": {},
+          "label": { "type": "string" },
+          "options": { "type": "array" }
+        }
+      }
+    },
+    "distribution": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["zip", "git", "directory"]
+        },
+        "url": { "type": "string" },
+        "sha256": { "type": "string" }
+      }
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "kind": {
+            "type": "string",
+            "enum": ["ruleset", "addon", "library", "content", "theme", "assets"]
+          },
+          "minimum": { "type": "string" },
+          "verified": { "type": "string" },
+          "maximum": { "type": "string" }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "reason": { "type": "string" }
+        }
+      }
+    }
+  }
+}

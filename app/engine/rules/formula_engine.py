@@ -1,4 +1,4 @@
-"""Declarative formula DSL for the System API v0 (§9.1) — no JS / no ``eval``.
+"""Declarative formula DSL for the Gravewright SDK (§9.1) — no JS / no ``eval``.
 
 Supports::
 

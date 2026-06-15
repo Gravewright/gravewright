@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from app.engine.rolls.roll_presentation_service import RollPresentationService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from tests.conftest import seed_user
 
 
 def _enable_dnd5e() -> None:
     user_id = seed_user(name="Owner", email="owner-roll-presentation@test.com")
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     assert svc.install(package_id="dnd5e", user_id=user_id).success
     assert svc.enable(package_id="dnd5e").success
 

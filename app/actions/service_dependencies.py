@@ -27,11 +27,12 @@ from app.engine.combat.turn_order_service import TurnOrderService
 from app.engine.content.content_import_service import ContentImportService
 from app.engine.content.content_pack_service import ContentPackService
 from app.engine.items.item_service import ItemService
-from app.engine.modules.module_asset_service import ModuleAssetService
-from app.engine.modules.module_content_import_service import ModuleContentImportService
-from app.engine.modules.module_content_pack_service import ModuleContentPackService
-from app.engine.modules.module_install_service import ModuleInstallService
-from app.engine.modules.module_settings_service import ModuleSettingsService
+from app.engine.sdk.package_activation_service import PackageActivationService
+from app.engine.sdk.package_asset_service import PackageAssetService
+from app.engine.sdk.package_content_service import PackageContentService
+from app.engine.sdk.package_dependency_service import PackageDependencyService
+from app.engine.sdk.package_install_service import PackageInstallService
+from app.engine.sdk.package_settings_service import PackageSettingsService
 from app.engine.journals.journal_asset_read_service import JournalAssetReadService
 from app.engine.journals.journal_asset_service import JournalAssetService
 from app.engine.journals.journal_page_service import JournalPageService
@@ -49,8 +50,6 @@ from app.engine.sheets.sheet_action_service import SheetActionService
 from app.engine.sheets.sheet_data_service import SheetDataService
 from app.engine.sheets.sheet_drop_service import SheetDropService
 from app.engine.sheets.sheet_item_service import SheetItemService
-from app.engine.systems.system_asset_service import SystemAssetService
-from app.engine.systems.system_install_service import SystemInstallService
 from app.engine.tokens.token_hp_service import TokenHpService
 from app.engine.tokens.token_service import TokenService
 from app.engine.tokens.token_instance_sheet_service import TokenInstanceSheetService
@@ -90,11 +89,12 @@ SERVICE_DEPENDENCIES = {
     "journal_asset_service": _singleton(JournalAssetService),
     "journal_page_service": _singleton(JournalPageService),
     "map_upload_service": _singleton(MapUploadService),
-    "module_asset_service": _singleton(ModuleAssetService),
-    "module_content_import_service": _singleton(ModuleContentImportService),
-    "module_content_pack_service": _singleton(ModuleContentPackService),
-    "module_install_service": _singleton(ModuleInstallService),
-    "module_settings_service": _singleton(ModuleSettingsService),
+    "package_activation_service": _singleton(PackageActivationService),
+    "package_asset_service": _singleton(PackageAssetService),
+    "package_content_service": _singleton(PackageContentService),
+    "package_dependency_service": _singleton(PackageDependencyService),
+    "package_install_service": _singleton(PackageInstallService),
+    "package_settings_service": _singleton(PackageSettingsService),
     "permission_service": _singleton(PermissionService),
     "presence_service": _singleton(PresenceService),
     "resource_permission_page_service": _singleton(ResourcePermissionPageService),
@@ -107,8 +107,6 @@ SERVICE_DEPENDENCIES = {
     "sheet_drop_service": _singleton(SheetDropService),
     "sheet_item_service": _singleton(SheetItemService),
     "streamer_link_service": _singleton(StreamerLinkService),
-    "system_asset_service": _singleton(SystemAssetService),
-    "system_install_service": _singleton(SystemInstallService),
     "token_hp_service": _singleton(TokenHpService),
     "token_service": _singleton(TokenService),
     "token_instance_sheet_service": _singleton(TokenInstanceSheetService),

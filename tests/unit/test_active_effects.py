@@ -5,14 +5,14 @@ from app.engine.actors.actor_service import ActorService
 from app.engine.sheets.sheet_action_service import SheetActionService
 from app.engine.sheets.sheet_data_service import SheetDataService
 from app.engine.sheets.sheet_drop_service import SheetDropService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from tests.conftest import seed_campaign, seed_user
 
 
 def _setup(prefix: str) -> tuple[str, str, str]:
     gm_id = seed_user(name="GM", email=f"gm-active-effects-{prefix}@test.com")
     campaign_id = seed_campaign(gm_id)
-    systems = SystemInstallService()
+    systems = PackageInstallService()
     assert systems.install(package_id="dnd5e", user_id=gm_id).success
     assert systems.enable(package_id="dnd5e").success
     actor = ActorService().create_actor(

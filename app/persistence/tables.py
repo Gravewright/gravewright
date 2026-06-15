@@ -26,6 +26,7 @@ from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import LargeBinary
 from sqlalchemy import MetaData
+from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import String
 from sqlalchemy import Table
 from sqlalchemy import Text
@@ -310,74 +311,82 @@ campaign_system_history = Table(
     Index("idx_campaign_system_history_campaign_id", "campaign_id"),
 )
 
-systems_installed = Table(
-    "systems_installed",
+# --- Gravewright SDK packages -------------------------------------------------
+# Every installable extension is a package: ruleset, addon, library, content,
+# theme, or assets. ``installed_packages`` is the global install registry;
+# ``campaign_packages`` records per-campaign activation; ``package_settings``
+# holds scoped setting values; ``package_content_imports`` tracks imports.
+
+installed_packages = Table(
+    "installed_packages",
     metadata,
     Column("id", _ID, primary_key=True),
-    Column("package_id", _STR, nullable=False),
-    Column("name", _STR, nullable=False),
-    Column("version", _STR, nullable=False),
-    Column("api_version", _STR, nullable=False),
+    Column("kind", _STR, nullable=False),
+    Column("name", _STR, nullable=False, server_default=text("''")),
+    Column("version", _STR, nullable=False, server_default=text("''")),
+    Column("status", _STR, nullable=False, server_default=text("'installed'")),
     Column("package_dir", Text, nullable=False),
     Column("manifest_json", Text, nullable=False),
-    Column("status", _STR, nullable=False, server_default=text("'installed'")),
-    Column("validation_errors_json", Text, nullable=False, default="[]"),
-    Column("installed_by_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-    Column("installed_at", Integer, nullable=False),
-    Column("updated_at", Integer, nullable=False),
-)
-
-
-modules_installed = Table(
-    "modules_installed",
-    metadata,
-    Column("id", _ID, primary_key=True),
-    Column("package_id", _STR, nullable=False, unique=True),
-    Column("name", _STR, nullable=False),
-    Column("version", _STR, nullable=False),
-    Column("api_version", _STR, nullable=False),
-    Column("package_dir", Text, nullable=False),
-    Column("manifest_json", Text, nullable=False),
-    Column("status", _STR, nullable=False, server_default=text("'installed'")),
+    Column("compatibility_status", _STR, nullable=False, server_default=text("'unverified'")),
     Column("validation_errors_json", Text, nullable=False, default="[]"),
     Column("package_sha256", String(64), nullable=True),
     Column("installed_by_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
     Column("installed_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
+    Column("enabled_at", Integer, nullable=True),
+    Column("disabled_at", Integer, nullable=True),
+    Index("idx_installed_packages_kind", "kind"),
 )
 
 
-campaign_modules = Table(
-    "campaign_modules",
+campaign_packages = Table(
+    "campaign_packages",
+    metadata,
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("package_id", _ID, ForeignKey("installed_packages.id", ondelete="CASCADE"), nullable=False),
+    Column("activation_role", _STR, nullable=False),
+    Column("status", _STR, nullable=False, server_default=text("'active'")),
+    Column("load_order", Integer, nullable=False, server_default=text("0")),
+    Column("enabled_by_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("enabled_at", Integer, nullable=False),
+    Column("disabled_at", Integer, nullable=True),
+    PrimaryKeyConstraint("campaign_id", "package_id"),
+    Index("idx_campaign_packages_campaign", "campaign_id"),
+    Index("idx_campaign_packages_role", "campaign_id", "activation_role"),
+)
+
+
+package_settings = Table(
+    "package_settings",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("package_id", _ID, nullable=False),
+    # NULL scopes are stored as '' so the unique constraint behaves the same on
+    # SQLite (which treats NULLs as distinct) as it does on PostgreSQL.
+    Column("campaign_id", _ID, nullable=False, server_default=text("''")),
+    Column("user_id", _ID, nullable=False, server_default=text("''")),
+    Column("setting_key", String(128), nullable=False),
+    Column("value_json", Text, nullable=False),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    UniqueConstraint("package_id", "campaign_id", "user_id", "setting_key"),
+    Index("idx_package_settings_package", "package_id"),
+    Index("idx_package_settings_campaign", "campaign_id"),
+)
+
+
+package_content_imports = Table(
+    "package_content_imports",
     metadata,
     Column("id", _ID, primary_key=True),
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
-    Column("module_id", _ID, ForeignKey("modules_installed.id", ondelete="CASCADE"), nullable=False),
-    Column("enabled_by_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-    Column("created_at", Integer, nullable=False),
-    Column("updated_at", Integer, nullable=False),
-    UniqueConstraint("campaign_id", "module_id"),
-    Index("idx_campaign_modules_campaign", "campaign_id"),
-    Index("idx_campaign_modules_module", "module_id"),
-)
-
-module_settings = Table(
-    "module_settings",
-    metadata,
-    Column("id", _ID, primary_key=True),
-    Column("module_id", _ID, ForeignKey("modules_installed.id", ondelete="CASCADE"), nullable=False),
-    Column("scope", String(32), nullable=False),
-                                                                                        
-                                                                                      
-    Column("subject_id", _ID, nullable=False, server_default=text("''")),
-    Column("setting_key", String(128), nullable=False),
-    Column("value_json", Text, nullable=False),
-    Column("updated_by_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-    Column("created_at", Integer, nullable=False),
-    Column("updated_at", Integer, nullable=False),
-    UniqueConstraint("module_id", "scope", "subject_id", "setting_key"),
-    Index("idx_module_settings_module_scope", "module_id", "scope"),
-    Index("idx_module_settings_subject", "scope", "subject_id"),
+    Column("package_id", _ID, nullable=False),
+    Column("content_pack_id", _STR, nullable=False),
+    Column("content_pack_type", _STR, nullable=False),
+    Column("imported_by_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("imported_at", Integer, nullable=False),
+    Index("idx_package_content_imports_campaign", "campaign_id"),
+    Index("idx_package_content_imports_package", "package_id"),
 )
 
 

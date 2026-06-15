@@ -3,30 +3,43 @@
 ## Fluxo Local
 
 ```bash
-uv sync
+uv sync --group dev
 cp .env.example .env
-uv run uvicorn main:app --reload
+chmod +x grave
+./grave doctor
+./grave run --open
 ```
 
-Use testes focados durante a implementacao e rode a suite relevante antes de abrir uma mudanca.
-
-## Comandos Uteis
+Fallback:
 
 ```bash
-uv run pytest tests/unit
+uv run python -m app.cli doctor
+uv run python -m app.cli run --open
+```
+
+## Comandos Úteis
+
+```bash
+uv run pytest tests/unit/test_cli_parser_smoke.py -q
+uv run pytest tests/unit/test_cli_backup.py tests/unit/test_cli_doctor.py tests/unit/test_sdk_cli.py -q
+uv run pytest tests/unit -q
+uv run pytest tests/e2e -q
 python3 -m compileall app tests scripts main.py
 docker compose -f tests/docker-compose.perf.yml config
 ```
 
-## Padroes
+## Padrões
 
-- Prefira servicos e repositorios existentes antes de criar novos pontos de abstracao.
+- Prefira serviços e repositórios existentes antes de criar novas abstrações.
 - Mantenha estado autoritativo no servidor.
-- Atualize docs e testes quando alterar APIs publicas, schema, manifestos, rotas ou requisitos de deploy.
-- Nao misture refatoracoes grandes com mudancas de comportamento quando nao for necessario.
+- Mantenha CLI em `app/cli`.
+- Mantenha serviços de SDK em `app/engine/sdk`.
+- Atualize docs e testes quando alterar SDK, APIs públicas, schema, manifestos, rotas, CLI ou requisitos de deploy.
+- Não misture refatorações grandes com mudanças de comportamento quando não for necessário.
+- Não dependa de globals privados, DOM interno ou fallback visual como API pública.
 
-## Contribuicao
+## Contribuição
 
 Leia `../../CONTRIBUTING.md`, `../../SECURITY.md` e `../../CODE_OF_CONDUCT.md`.
 
-Contribuicoes para o core entram sob Apache-2.0. Contribuicoes para materiais publicos de API entram sob MIT, conforme `licenciamento.md`.
+Contribuições para o core entram sob Apache-2.0. Contribuições para materiais públicos de API entram sob MIT, conforme `licenciamento.md`.

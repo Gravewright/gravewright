@@ -17,7 +17,7 @@ Espere mudanças em:
 
 - schema do banco de dados;
 - comportamento de migrações;
-- manifests de sistemas e módulos;
+- manifests de pacotes SDK;
 - APIs públicas de navegador;
 - nomes e payloads de eventos realtime;
 - layout de storage para mapas, assets, fichas e pacotes;
@@ -29,7 +29,7 @@ Use o Gravewright Alpha para:
 
 - one-shots;
 - experimentos locais;
-- prototipagem de sistemas e módulos;
+- prototipagem de rulesets, addons e outros pacotes SDK;
 - testes de performance com mapas grandes;
 - feedback de API;
 - relatos de bugs com passos de reprodução.

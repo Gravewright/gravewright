@@ -90,7 +90,7 @@ def _resolve_database_url() -> str:
 
 
 def _resolve_data_dir() -> str:
-    """Root folder for installable content (systems, modules, …).
+    """Root folder for installable SDK packages.
 
     Decoupled from the project so it can live anywhere: set ``GRAVEWRIGHT_DATA_DIR``
     to an absolute path (or one relative to the project root). Defaults to

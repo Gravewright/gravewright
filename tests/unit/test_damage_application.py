@@ -4,7 +4,7 @@ import app.engine.rules.formula_engine as formula_engine
 from app.engine.actors.actor_service import ActorService
 from app.engine.sheets.sheet_action_service import SheetActionService
 from app.engine.sheets.sheet_data_service import SheetDataService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.tokens.token_instance_sheet_service import INSTANCE_KEY
 from app.engine.tokens.token_service import TokenService
 from app.persistence.repositories.token_repository import TokenRepository
@@ -17,7 +17,7 @@ _SWORD = {"id": "w1", "name": "Espada", "data": {"damage": "1d6", "damage_type":
 def _campaign_with_actors(prefix: str) -> tuple[str, str, str, str]:
     gm_id = seed_user(name="GM", email=f"gm-dmg-{prefix}@test.com")
     campaign_id = seed_campaign(gm_id)
-    systems = SystemInstallService()
+    systems = PackageInstallService()
     assert systems.install(package_id="dnd5e", user_id=gm_id).success
     assert systems.enable(package_id="dnd5e").success
     actors = ActorService()

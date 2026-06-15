@@ -7,13 +7,15 @@ from litestar.params import FromQuery
 from litestar.response import Redirect
 from litestar.response import Template
 
+from app.actions.inside.render_inside import split_packages
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
 from app.business.campaigns.campaign_service import CampaignService
 from app.business.admin.admin_service import AdminService
 from app.business.inside_settings_service import InsideSettingsService
 from app.config import config
-from app.engine.systems.system_install_service import SystemInstallService
-from app.engine.modules.module_install_service import ModuleInstallService
+from app.engine.sdk.package_activation_service import PackageActivationService
+from app.engine.sdk.package_dependency_service import PackageDependencyService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.helpers.auth import require_user
 from app.helpers.view import view_context
 
@@ -24,16 +26,13 @@ async def show_inside(
     current_user: Row,
     campaign_service: CampaignService,
     campaign_invitation_service: CampaignInvitationService,
-    system_install_service: SystemInstallService,
-    module_install_service: ModuleInstallService,
+    package_install_service: PackageInstallService,
     campaign_error_key: FromQuery[str | None] = None,
     campaign_message_key: FromQuery[str | None] = None,
     invitation_error_key: FromQuery[str | None] = None,
     invitation_message_key: FromQuery[str | None] = None,
-    systems_error_key: FromQuery[str | None] = None,
-    systems_message_key: FromQuery[str | None] = None,
-    modules_error_key: FromQuery[str | None] = None,
-    modules_message_key: FromQuery[str | None] = None,
+    packages_error_key: FromQuery[str | None] = None,
+    packages_message_key: FromQuery[str | None] = None,
     admin_error_key: FromQuery[str | None] = None,
     admin_message_key: FromQuery[str | None] = None,
     settings_error_key: FromQuery[str | None] = None,
@@ -44,41 +43,58 @@ async def show_inside(
     removal_code: FromQuery[str | None] = None,
 ) -> Redirect | Template:
     user = current_user
-    campaigns_raw = campaign_service.list_for_user(user["id"])
     pending_invitations = campaign_invitation_service.list_pending_for_user(user["id"])
-    installed_systems = system_install_service.list_for_tab()
-    installed_modules = module_install_service.list_for_tab()
+    packages = package_install_service.list_for_tab()
+    rulesets, modules = split_packages(packages)
     inside_settings = InsideSettingsService().read()
+    package_activation_service = PackageActivationService()
+    dependency_service = PackageDependencyService()
 
-    installed_by_id = {item["system_id"]: item["name"] for item in installed_systems if item["system_id"]}
-                                                                  
+    ruleset_name_by_id = {p["id"]: p["name"] for p in rulesets}
     available_systems = [
         {
-            "id": item["system_id"],
+            "id": item["id"],
             "name": item["name"],
-            "description": item["description"],
+            "description": item.get("description", ""),
             "version": item["version"],
         }
-        for item in installed_systems
-        if item["system_id"] and item["status"] == "enabled"
+        for item in rulesets
+        if item["status"] == "enabled"
     ]
     campaigns = []
-    for c in campaigns_raw:
+    for c in campaign_service.list_for_user(user["id"]):
         row = dict(c)
-        sys_id = row.get("active_system_id")
-        row["active_system_name"] = installed_by_id.get(sys_id)
+        row["active_ruleset_name"] = ruleset_name_by_id.get(row.get("active_system_id"))
+        active_package_ids = {
+            package["package_id"]
+            for package in package_activation_service.list_campaign_packages(row["id"])
+            if package["activation_role"] != "ruleset"
+        }
+        available_packages = []
+        for package in modules:
+            if package["status"] != "enabled" or package["kind"] == "library":
+                continue
+            is_active = package["id"] in active_package_ids
+            # Explain why an inactive package cannot be activated in this campaign
+            # (missing/disabled/inactive/outdated/too-new dependency, or a conflict
+            # with an already-active package). Active packages need no reason.
+            blockers: list[str] = []
+            if not is_active:
+                report = dependency_service.check_campaign_activation(package["id"], row["id"])
+                blockers = PackageDependencyService.blocking_error_keys(report)
+            available_packages.append(
+                {
+                    "id": package["id"],
+                    "name": package["name"],
+                    "kind": package["kind"],
+                    "version": package["version"],
+                    "active": is_active,
+                    "blockers": blockers,
+                    "activatable": is_active or not blockers,
+                }
+            )
+        row["available_packages"] = available_packages
         campaigns.append(row)
-
-    module_campaigns = [
-        {"id": row["id"], "title": row["title"], "member_role": row.get("member_role")}
-        for row in campaigns
-        if row.get("member_role") == "gm"
-    ]
-    enabled_campaigns_by_module = module_install_service.enabled_campaign_ids_by_module(
-        [row["id"] for row in module_campaigns]
-    )
-    for module in installed_modules:
-        module["enabled_campaign_ids"] = sorted(enabled_campaigns_by_module.get(module.get("module_id") or "", set()))
 
     system_role = str(user["system_role"])
     all_users = []
@@ -102,9 +118,9 @@ async def show_inside(
             },
             campaigns=campaigns,
             available_systems=available_systems,
-            installed_systems=installed_systems,
-            installed_modules=installed_modules,
-            module_campaigns=module_campaigns,
+            packages=packages,
+            rulesets=rulesets,
+            modules=modules,
             all_users=all_users,
             inside_settings=inside_settings["app"],
             privacy_settings=inside_settings["privacy"],
@@ -113,10 +129,12 @@ async def show_inside(
             campaign_message_key=campaign_message_key,
             invitation_error_key=invitation_error_key,
             invitation_message_key=invitation_message_key,
-            systems_error_key=systems_error_key,
-            systems_message_key=systems_message_key,
-            modules_error_key=modules_error_key,
-            modules_message_key=modules_message_key,
+            packages_error_key=packages_error_key,
+            packages_message_key=packages_message_key,
+            systems_error_key=packages_error_key,
+            systems_message_key=packages_message_key,
+            modules_error_key=packages_error_key,
+            modules_message_key=packages_message_key,
             admin_error_key=admin_error_key,
             admin_message_key=admin_message_key,
             settings_error_key=settings_error_key,

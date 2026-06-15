@@ -30,8 +30,8 @@ from app.persistence.tables import campaign_members
 from app.persistence.tables import campaigns
 from app.persistence.tables import journal_assets
 from app.persistence.tables import journals
-from app.persistence.tables import module_settings
-from app.persistence.tables import modules_installed
+from app.persistence.tables import installed_packages
+from app.persistence.tables import package_settings
 from app.persistence.tables import scene_assets
 from app.persistence.tables import scene_chunks
 from app.persistence.tables import scene_tiles
@@ -57,18 +57,18 @@ def _count(table, *, campaign_id: str | None = None) -> int:
 
 def _insert_campaign_module_setting(*, campaign_id: str, user_id: str) -> None:
     now = int(time.time())
-    module_id = uuid.uuid4().hex
+    package_id = f"cascade-test-{uuid.uuid4().hex}"
     with engine_begin() as conn:
         conn.execute(
-            insert(modules_installed).values(
-                id=module_id,
-                package_id=f"cascade-test-{module_id}",
+            insert(installed_packages).values(
+                id=package_id,
+                kind="addon",
                 name="Cascade Test",
                 version="1.0.0",
-                api_version="1",
-                package_dir="data/modules/cascade-test",
-                manifest_json="{}",
                 status="installed",
+                package_dir=package_id,
+                manifest_json="{}",
+                compatibility_status="compatible",
                 validation_errors_json="[]",
                 package_sha256=None,
                 installed_by_user_id=user_id,
@@ -77,14 +77,13 @@ def _insert_campaign_module_setting(*, campaign_id: str, user_id: str) -> None:
             )
         )
         conn.execute(
-            insert(module_settings).values(
+            insert(package_settings).values(
                 id=uuid.uuid4().hex,
-                module_id=module_id,
-                scope="campaign",
-                subject_id=campaign_id,
+                package_id=package_id,
+                campaign_id=campaign_id,
+                user_id="",
                 setting_key="enabled",
                 value_json="true",
-                updated_by_user_id=user_id,
                 created_at=now,
                 updated_at=now,
             )
@@ -178,7 +177,7 @@ async def test_delete_campaign_cascades_database_and_uploaded_storage(db, tmp_pa
     assert _count(actors_core, campaign_id=campaign_id) == 0
     assert _count(journals, campaign_id=campaign_id) == 0
     assert _count(journal_assets, campaign_id=campaign_id) == 0
-    assert _count(module_settings) == 0
+    assert _count(package_settings) == 0
     assert not (scene_root / map_result.scene["id"]).exists()
     assert not (actor_root / campaign_id).exists()
     assert not (journal_root / campaign_id).exists()

@@ -14,7 +14,7 @@ from app.engine.items.item_service import ItemService
 from app.engine.items.folder_tree import build_item_folder_tree
 from app.engine.journals.folder_tree import build_journal_folder_tree
 from app.engine.journals.journal_service import JournalService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.domain.permissions.permissions import TablePermission
 from app.domain.roles import PlayerRole
 from app.domain.roles import has_full_view
@@ -56,7 +56,7 @@ class GamePageService:
         self.item_service = ItemService()
         self.items = ItemRepository()
         self.item_folders = ItemFolderRepository()
-        self.system_install = SystemInstallService()
+        self.system_install = PackageInstallService()
 
     def build_context(self, *, user_id: str) -> GamePageContext:
         campaigns = self.campaigns.list_for_user(user_id)
@@ -83,14 +83,14 @@ class GamePageService:
                                                                 
         enabled_systems = [
             {
-                "id": item["system_id"],
+                "id": item["id"],
                 "name": item["name"],
                 "actor_types": item["actor_types"],
                 "item_types": item.get("item_types", []),
                 "area_markers": item.get("area_markers", []),
             }
             for item in self.system_install.list_for_tab()
-            if item["status"] == "enabled"
+            if item["status"] == "enabled" and item["kind"] == "ruleset"
         ]
         enabled_systems_by_id = {system["id"]: system for system in enabled_systems}
         available_systems = [

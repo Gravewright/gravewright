@@ -1,4 +1,4 @@
-"""Item Core lifecycle (System API v0, commands ``item.*``).
+"""Item Core lifecycle (Gravewright SDK, commands ``item.*``).
 
 Mirrors :class:`ActorService`: creates/updates the minimal Item Core row in
 SQLite and initialises the matching Sheet Data file in scoped-json-v1 storage.
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 from app.engine.items.item_permissions import can_edit_item, can_view_item
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.item_folder_repository import ItemFolderRepository
 from app.persistence.repositories.item_permission_repository import ItemPermissionRepository
@@ -40,7 +40,7 @@ class ItemService:
     def __init__(self) -> None:
         self.items = ItemRepository()
         self.campaigns = CampaignRepository()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.storage = ScopedJsonStorage()
         self.permissions = ItemPermissionRepository()
         self.folders = ItemFolderRepository()

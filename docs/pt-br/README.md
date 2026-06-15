@@ -1,40 +1,47 @@
-# Documentacao do Gravewright
+# Documentação do Gravewright
 
-Esta e a documentacao em portugues do Gravewright para o publico brasileiro.
+Esta é a documentação em português do Gravewright para o público brasileiro.
 
 > [!WARNING]
-> **ALPHA — NÃO RODE CAMPANHAS.**
-> O Gravewright está em fase Alpha. Mudanças estruturais (especialmente de schema)
-> podem ocorrer entre versões e **não há garantia de caminho de upgrade** — uma
-> atualização pode tornar uma mesa existente irrecuperável.
+> **ALPHA — FAÇA BACKUP ANTES DE ATUALIZAR. NÃO RODE CAMPANHAS LONGAS AINDA.**
 >
-> **Use para one-shots.** Teste, quebre, e relate problemas e sugestões em [issues](https://github.com/Gravewright/gravewright/issues).
-> O que você perde numa one-shot é uma sessão. Numa campanha, são meses.
+> O Gravewright está em fase Alpha. Mudanças estruturais, especialmente em schema, SDK, storage e ciclo de vida de pacotes, podem ocorrer entre versões e **não há garantia de caminho de upgrade**.
+>
+> Uma atualização pode tornar uma mesa existente irrecuperável.
+>
+> Use para one-shots, mesas de teste e arcos curtos de Alpha. Antes de atualizar, faça backup e preserve a versão usada.
+>
+> **Uso recomendado em Alpha:** one-shots e campanhas curtas de poucas sessões.
+>
+> **Ainda não recomendado:** campanhas longas, hospedagem pública de produção ou dados irrecuperáveis.
 
-## Guias Do Projeto
+## Guias do Projeto
 
-- `inicio.md` explica instalacao local e primeira execucao.
-- `configuracao.md` documenta variaveis de ambiente e modos de runtime.
-- `arquitetura.md` descreve backend, frontend, persistencia, realtime e extensoes.
-- `desenvolvimento.md` descreve fluxo de desenvolvimento e contribuicao.
-- `testes.md` documenta testes unitarios, integracao, Docker e performance.
-- `docker-testes.md` documenta a estrutura de Docker Compose em `tests/`.
-- `deploy.md` documenta requisitos para producao.
-- `operacao.md` documenta backup, migracoes, diagnosticos e storage.
-- `seguranca.md` documenta modelo de seguranca e checklist.
+- `inicio.md` explica instalação local e primeira execução com o CLI `grave`.
+- `alpha.md` explica risco de Alpha, backups e política de upgrade.
+- `configuracao.md` documenta variáveis de ambiente e modos de runtime.
+- `arquitetura.md` descreve backend, frontend, persistência, realtime e pacotes SDK.
+- `desenvolvimento.md` descreve fluxo de desenvolvimento e contribuição.
+- `testes.md` documenta testes unitários, CLI, E2E, Docker e performance.
+- `deploy.md` documenta requisitos para produção.
+- `operacao.md` documenta backup, restore, diagnósticos e storage.
+- `seguranca.md` documenta modelo de segurança e checklist.
 - `licenciamento.md` explica core Apache-2.0 e materiais de API MIT.
 - `storage.md` documenta uploads, pacotes e limpeza em cascata.
-- `banco-de-dados.md` documenta SQLite local/teste e PostgreSQL em producao.
+- `banco-de-dados.md` documenta SQLite local/teste e PostgreSQL em produção.
 
-## APIs Publicas
+## APIs Públicas
 
-- `api/README.md` e a entrada da documentacao de APIs publicas.
-- `api/http.md` resume grupos de rotas HTTP e limites de autorizacao.
+- `api/README.md` é a entrada da documentação de APIs públicas.
+- `api/http.md` resume grupos de rotas HTTP e limites de autorização.
 - `api/realtime.md` documenta WebSocket, comandos, eventos e replay.
-- `api/extensoes.md` documenta APIs de navegador para sistemas e modulos.
-- `modulos.md` documenta Module API v1.
-- `sistemas/README.md` e a entrada da System API v1.
 
-## Relacao Com A Documentacao Em Ingles
+## SDK
 
-A documentacao em ingles continua sendo a referencia principal para revisoes tecnicas de API. Esta arvore em portugues deve acompanhar os mesmos conceitos, comandos e alertas operacionais.
+A documentação principal do SDK fica em inglês em `../sdk/`.
+
+O SDK é o único modelo de extensão. Todo extensível é um pacote Gravewright descrito por um único manifest: ruleset, addon, library, theme, content ou assets.
+
+## Relação com a documentação em inglês
+
+A documentação em inglês continua sendo a referência principal para revisões técnicas de API. Esta árvore em português deve acompanhar os mesmos conceitos, comandos e alertas operacionais.

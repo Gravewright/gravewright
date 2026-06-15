@@ -4,7 +4,7 @@ from litestar.testing import TestClient
 
 from app.business.campaigns.campaign_system_service import CampaignSystemService
 from app.business.game_page_service import GamePageService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.realtime.events import TransportEvent
 from tests.conftest import (
@@ -27,7 +27,7 @@ def test_enabled_manifest_system_is_assignable_and_listed(db):
     gm_id = seed_user(name="GM", email="gm-assign@test.com")
     campaign_id = seed_campaign(gm_id)
     seed_system(campaign_id, gm_id)
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     assert svc.install(package_id="dnd5e", user_id=gm_id).success
     assert svc.enable(package_id="dnd5e").success
 
@@ -84,8 +84,8 @@ def test_set_system_broadcasts_presets_to_room(db, monkeypatch):
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
         login(client, gm_id)
         resp = client.post(
-            "/campaigns/set-system",
-            data={"campaign_id": campaign_id, "system_id": "dnd5e"},
+            "/sdk/campaigns/ruleset",
+            data={"campaign_id": campaign_id, "package_id": "dnd5e"},
             follow_redirects=False,
         )
 
@@ -117,8 +117,8 @@ def test_detaching_system_broadcasts_empty_presets(db, monkeypatch):
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
         login(client, gm_id)
         resp = client.post(
-            "/campaigns/set-system",
-            data={"campaign_id": campaign_id, "system_id": ""},
+            "/sdk/campaigns/ruleset",
+            data={"campaign_id": campaign_id, "package_id": ""},
             follow_redirects=False,
         )
 
@@ -135,10 +135,10 @@ def test_disabled_manifest_system_is_not_assignable(db):
     campaign_id = seed_campaign(gm_id)
     seed_system(campaign_id, gm_id)
                                 
-    assert SystemInstallService().install(package_id="dnd5e", user_id=gm_id).success
+    assert PackageInstallService().install(package_id="dnd5e", user_id=gm_id).success
 
     result = CampaignSystemService().assign_to_campaign(
         campaign_id=campaign_id, user_id=gm_id, system_id="dnd5e"
     )
     assert not result.success
-    assert result.error_key == "inside.systems.errors.not_found"
+    assert result.error_key == "inside.rulesets.errors.not_found"

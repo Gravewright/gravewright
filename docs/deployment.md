@@ -15,7 +15,7 @@ Gravewright is designed for self-hosted deployment. Production should use Postgr
 - `SESSION_COOKIE_HTTPONLY=true`.
 - PostgreSQL `DATABASE_URL`.
 - Persistent `storage/` volume.
-- Persistent `GRAVEWRIGHT_DATA_DIR` if systems and modules are installed outside the repository.
+- Persistent `GRAVEWRIGHT_DATA_DIR` if SDK packages are installed outside the repository.
 
 ## Why One Worker
 
@@ -59,7 +59,7 @@ storage/
 data/ or GRAVEWRIGHT_DATA_DIR
 ```
 
-`storage/` contains local SQLite when used, uploaded scene assets, actor assets, journal assets, chunk files, and system-scoped sheet JSON. `data/` contains installable systems and modules when `GRAVEWRIGHT_DATA_DIR` is not set elsewhere.
+`storage/` contains local SQLite when used, uploaded scene assets, actor assets, journal assets, chunk files, and package-scoped sheet JSON. `data/` contains installable SDK packages when `GRAVEWRIGHT_DATA_DIR` is not set elsewhere.
 
 ## Migrations
 

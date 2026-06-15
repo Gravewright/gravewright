@@ -4,34 +4,43 @@ This directory is the canonical documentation set for Gravewright.
 
 Brazilian Portuguese documentation is available in `pt-br/README.md`.
 
+## Start Here
+
+- `getting-started.md` explains local setup and first run with the `grave` CLI.
+- `alpha.md` explains Alpha risk, backups, and upgrade expectations.
+- `operations.md` documents backups, restore, diagnostics, and runtime storage.
+- `sdk/README.md` is the entry point for SDK package authors.
+
 ## Project Guides
 
-- `getting-started.md` explains local setup and the first run.
 - `configuration.md` documents environment variables and runtime configuration.
-- `architecture.md` explains the backend, frontend, persistence, realtime, and extension boundaries.
+- `architecture.md` explains the backend, frontend, persistence, realtime, and SDK package boundaries.
 - `development.md` documents the local workflow and contribution expectations.
-- `testing.md` documents unit, integration, Docker, and performance tests.
+- `testing.md` documents unit, CLI, E2E, Docker, and performance tests.
 - `deployment.md` documents production deployment requirements.
-- `operations.md` documents backups, migrations, diagnostics, and runtime storage.
 - `security.md` documents the security model and hardening checklist.
 - `licensing.md` documents the Apache-2.0 core and MIT API-material split.
-- `storage.md` documents uploaded files, system data, and cleanup behavior.
+- `storage.md` documents uploaded files, package-scoped data, and cleanup behavior.
 - `docker-tests.md` documents the test Docker Compose layout.
+- `publication-checklist.md` documents the public Alpha publication checklist.
 
 ## API Guides
 
 - `api/README.md` is the entry point for public API documentation.
 - `api/http.md` lists HTTP route groups and their authorization boundaries.
 - `api/realtime.md` documents WebSocket transport, commands, events, and replay behavior.
-- `api/extension-apis.md` documents public browser APIs exposed to systems and modules.
-- `modules.md` documents Module API v1.
-- `systems/README.md` is the entry point for System API documentation.
-- `systems/creating-a-system.md` documents System API v1 package creation.
-- `systems/manifest.md` documents system manifests.
-- `systems/sheets.md` documents declarative sheets.
-- `systems/rolls.md` documents rolls.
-- `systems/combat.md` documents combat.
-- `systems/content-packs.md` documents system content packs.
+
+## SDK: the only extension model
+
+- `sdk/README.md` is the entry point for the Gravewright SDK.
+- `sdk/manifest.md` documents the package manifest (v1).
+- `sdk/kinds.md` documents package kinds.
+- `sdk/capabilities.md` documents capabilities and enforcement.
+- `sdk/runtime.md` documents the `window.GravewrightSDK` browser runtime.
+- `sdk/messaging.md` documents package-to-package events.
+- `sdk/cli.md` documents the `grave` CLI.
+- `sdk/creating-packages-with-ai.md` documents the AI-assisted package creation workflow.
+- `sdk/security.md` documents path safety, uploads, and authorization.
 
 ## Documentation Rules
 
@@ -39,4 +48,4 @@ Brazilian Portuguese documentation is available in `pt-br/README.md`.
 - Mark public APIs clearly before extension authors rely on them.
 - Keep examples minimal and runnable.
 - Keep security and licensing boundaries explicit.
-- Update docs in the same change that modifies a public route, manifest schema, module API, system API, or deployment requirement.
+- Update docs in the same change that modifies a public route, package manifest schema, SDK contract, CLI command, or deployment requirement.

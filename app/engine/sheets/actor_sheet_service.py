@@ -1,4 +1,4 @@
-"""Builds the render bundle for an actor sheet (System API v0, §8 + §19).
+"""Builds the render bundle for an actor sheet (Gravewright SDK, §8 + §19).
 
     bundle = { actor core summary, derived-applied data, Sheet IR layout,
                can_edit, version }
@@ -19,7 +19,7 @@ from app.engine.rules.rules_registry import SystemRulesService
 from app.engine.sheets.sheet_ir_validator import validate_sheet_ir
 from app.engine.sheets.system_layout_service import SystemLayoutService
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.tokens.actor_token_projector import ActorTokenProjector
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
@@ -49,7 +49,7 @@ class ActorSheetService:
         self.actors = ActorRepository()
         self.campaigns = CampaignRepository()
         self.storage = ScopedJsonStorage()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.rules = SystemRulesService()
         self.layouts = SystemLayoutService()
         self.projector = ActorTokenProjector()

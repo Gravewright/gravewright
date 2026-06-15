@@ -18,7 +18,7 @@ from app.engine.rules.rules_registry import SystemRulesService
 from app.engine.rules.token_mapping_resolver import resolve_token_view
 from app.engine.sheets.sheet_action_service import ActionResult, SheetActionService
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 
@@ -47,7 +47,7 @@ class SheetItemService:
         self.actors = ActorRepository()
         self.campaigns = CampaignRepository()
         self.storage = ScopedJsonStorage()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.rules = SystemRulesService()
         self.actions = SheetActionService()
 

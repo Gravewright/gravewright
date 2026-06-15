@@ -14,11 +14,10 @@ Gravewright public API materials are licensed under MIT. The MIT license text is
 
 API materials include:
 
-- public JSON schemas in `schemas/`;
-- System API v1 specifications and examples in `docs/systems/`;
-- Module API v1 specifications and examples in `docs/modules.md`;
-- documented public browser APIs such as `window.Gravewright`, `window.GravewrightSheets`, and `window.GravewrightCombat`;
-- manifest formats, content-pack formats, declarative layout formats, roll/action format examples, and compatibility examples intended for external system or module authors.
+- the public JSON schema in `schemas/gravewright-package-v1.schema.json`;
+- Gravewright SDK specifications and examples in `docs/sdk/`;
+- the documented public browser API `window.GravewrightSDK`;
+- manifest formats, content-pack formats, declarative layout formats, roll/action format examples, and compatibility examples intended for external package authors.
 
 ## Boundary
 

@@ -24,7 +24,7 @@ Production mode performs strict startup validation and fails fast on unsafe sett
 | `ALLOWED_HOSTS` | Comma-separated accepted hosts. Required in production. |
 | `TRUSTED_PROXIES` | Comma-separated proxy IPs or CIDRs. |
 | `WS_ALLOWED_ORIGINS` | Explicit WebSocket origins. Derived from `ALLOWED_HOSTS` when empty. |
-| `GRAVEWRIGHT_DATA_DIR` | System and module package root. Defaults to `data/`. |
+| `GRAVEWRIGHT_DATA_DIR` | SDK package data root. Defaults to `data/`. |
 | `DATABASE_URL` | SQLAlchemy database URL. |
 
 ## Database Settings

@@ -9,12 +9,14 @@
     }
 
     function replaceInsideFromHtml(html, sectionId = activeSectionId()) {
+        const openModalId = document.querySelector("[data-inside-modal]:not([hidden])")?.dataset.insideModal || "";
         const doc = new DOMParser().parseFromString(html, "text/html");
         const next = doc.querySelector(".inside-content");
         const current = document.querySelector(".inside-content");
         if (!next || !current) return false;
         current.replaceWith(next);
         restoreSection(sectionId);
+        if (openModalId) openModal(openModalId);
         window.history.replaceState({}, "", "/inside");
         return true;
     }

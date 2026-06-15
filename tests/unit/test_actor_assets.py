@@ -11,7 +11,7 @@ from app.engine.actors.actor_asset_service import ActorAssetService
 from app.engine.actors.actor_service import ActorService
 from app.engine.sheets.actor_sheet_service import ActorSheetService
 from app.engine.tokens.actor_token_projector import ActorTokenProjector
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.infrastructure.storage.local_actor_asset_storage import LocalActorAssetStorage
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.token_repository import TokenRepository
@@ -27,7 +27,7 @@ def _png_bytes(size: int = 8) -> bytes:
 def _setup(prefix: str) -> tuple[str, str, str]:
     gm_id = seed_user(name="GM", email=f"gm-aimg-{prefix}@test.com")
     campaign_id = seed_campaign(gm_id)
-    systems = SystemInstallService()
+    systems = PackageInstallService()
     assert systems.install(package_id="dnd5e", user_id=gm_id).success
     assert systems.enable(package_id="dnd5e").success
     actor = ActorService().create_actor(

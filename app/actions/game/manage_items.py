@@ -1,4 +1,4 @@
-"""HTTP surface for the Item + Item Sheet Data commands (System API v0).
+"""HTTP surface for the Item + Item Sheet Data commands (Gravewright SDK).
 
 Mirrors :mod:`manage_actors` but for standalone items: JSON command endpoints
 plus the server-rendered sheet modal. Items are never on the canvas, so there is
