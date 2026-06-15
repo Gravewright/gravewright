@@ -1,9 +1,13 @@
 # Alpha Status
 
 > [!WARNING]
-> **ALPHA — DO NOT RUN LONG CAMPAIGNS.**
+> **Gravewright v1.0.0-alpha.1 is an Alpha release.**
 >
-> Gravewright is in Alpha. Structural changes, especially database schema and public API contract changes, may happen between versions. **There is no guaranteed upgrade path**: an update can make an existing table unrecoverable.
+> Back up before updating. Do not run long campaigns yet.
+>
+> Structural changes, especially database schema, storage layout, SDK/package contracts, realtime events, and public API behavior, may occur between Alpha releases.
+>
+> **There is no guaranteed upgrade path between Alpha releases**: an update can make an existing table unrecoverable.
 >
 > **Use it for one-shots, testing, and experimentation.** Test it, break it, and report problems or suggestions in [issues](https://github.com/gravewright/gravewright/issues).
 >
@@ -13,11 +17,11 @@
 
 Alpha means the project is public enough to test and discuss, but not stable enough to trust with long-running campaign data.
 
-Expect changes in:
+Expect changes between Alpha releases in:
 
 - database schema;
 - migration behavior;
-- system and module manifests;
+- SDK package manifests;
 - public browser APIs;
 - realtime event names and payloads;
 - storage layout for maps, assets, sheets, and packages;
@@ -25,11 +29,11 @@ Expect changes in:
 
 ## Recommended Use
 
-Use Gravewright Alpha for:
+Use Gravewright v1.0.0-alpha.1 for:
 
 - one-shots;
 - local experiments;
-- ruleset and module prototyping;
+- ruleset and addon prototyping;
 - performance tests with large maps;
 - API feedback;
 - bug reports and reproduction cases.
@@ -41,16 +45,16 @@ Do not rely on Alpha releases for:
 - public multi-table hosting;
 - production instances without backups and restore tests.
 
-## Upgrade Policy Before 1.0
+## Upgrade Policy During Alpha
 
-Before 1.0, maintainers may ship breaking changes without an automatic migration path. Release notes should call out known breaking changes, but old data may still require manual repair or fresh setup.
+During Alpha, maintainers may ship breaking changes without an automatic migration path. Release notes should call out known breaking changes, but old data may still require manual repair or fresh setup.
 
 Before upgrading an instance with data you care about:
 
 1. Stop the application.
 2. Back up the database.
 3. Back up `storage/`.
-4. Back up `GRAVEWRIGHT_DATA_DIR` or `data/`.
+4. Back up `GRAVEWRIGHT_DATA_DIR` or `data/packages/`.
 5. Test restore on a copy.
 6. Upgrade only after the copy starts and diagnostics look clean.
 

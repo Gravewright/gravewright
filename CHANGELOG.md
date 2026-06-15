@@ -2,7 +2,7 @@
 
 All notable changes to Gravewright should be documented here.
 
-The project is currently in Alpha. Breaking changes may occur before 1.0, especially around database schema, storage layout, the package manifest, package activation, realtime events, and the public SDK.
+The project is currently in Alpha. Breaking changes may occur between Alpha releases, especially around database schema, storage layout, the package manifest, package activation, realtime events, and the public SDK.
 
 ## Unreleased
 

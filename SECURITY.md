@@ -4,7 +4,7 @@ Gravewright is a multiplayer application that handles sessions, user-generated c
 
 ## Supported Versions
 
-The project is pre-1.0. Security fixes target the current main development line unless a maintained release branch exists.
+The project is v1.0.0-alpha.1. Security fixes target the current main development line unless a maintained release branch exists.
 
 ## Reporting a Vulnerability
 

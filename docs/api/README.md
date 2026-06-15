@@ -7,7 +7,7 @@ API materials are licensed under MIT. The core implementation remains Apache-2.0
 > [!WARNING]
 > **Alpha API surface.**
 >
-> Gravewright is pre-1.0. Public APIs are documented so package authors can
+> Gravewright is v1.0.0-alpha.1. Public APIs are documented so package authors can
 > experiment, but compatibility guarantees are still being finalized.
 >
 > Breaking API changes should update docs, schemas, and tests in the same change.
