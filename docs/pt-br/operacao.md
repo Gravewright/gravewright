@@ -1,39 +1,87 @@
-# Operacao
+# Operação
+
+## CLI de Operação
+
+```bash
+grave doctor
+grave run --open
+grave backup -o gravewright-backup.zip --include-assets --verify
+grave restore gravewright-backup.zip --dry-run
+grave package list
+grave lock -o grave.lock.json
+```
+
+Fallback:
+
+```bash
+uv run python -m app.cli doctor
+```
 
 ## Backups
+
+Antes de atualizar o Gravewright ou alterar pacotes, faça backup:
+
+```bash
+grave backup -o gravewright-backup.zip --include-assets --verify
+```
+
+Para pacotes locais/customizados, use backup autocontido quando suportado:
+
+```bash
+grave backup -o gravewright-backup.zip --include-assets --include-packages --verify
+```
 
 Backups precisam cobrir:
 
 - banco de dados;
 - `storage/`;
-- diretorio de dados configurado por `GRAVEWRIGHT_DATA_DIR`;
-- arquivos `.env` usados no deploy.
+- `GRAVEWRIGHT_DATA_DIR` ou `data/packages/`;
+- `.env` ou secrets do deploy;
+- pacotes locais que não podem ser baixados novamente.
 
-Sem backup do banco e dos uploads, uma campanha pode ficar inconsistente.
+## Restore
 
-## Migracoes
-
-Use Alembic para evolucao de schema quando migracoes estiverem presentes:
+Teste primeiro:
 
 ```bash
-uv run alembic upgrade head
+grave restore gravewright-backup.zip --dry-run
 ```
 
-Em Alpha, nao ha garantia de upgrade entre todas as versoes. Sempre faca backup antes.
+Restore real exige confirmação:
 
-## Diagnosticos
+```bash
+grave restore gravewright-backup.zip --yes
+```
 
-Owners podem acessar diagnosticos do runtime quando habilitados pela aplicacao. Eventos devem ser scrubbed para nao expor segredos.
+Ordem recomendada:
 
-## Limpeza De Campanha
+1. Pare a aplicação.
+2. Restaure o banco.
+3. Restaure `storage/`.
+4. Restaure `GRAVEWRIGHT_DATA_DIR` ou `data/packages/`.
+5. Rode `grave doctor`.
+6. Inicie a aplicação.
+7. Abra `/inside/diagnostics` como owner.
 
-Ao deletar uma campanha, o Gravewright remove linhas relacionadas do banco e storage escopado da campanha, incluindo mapas, tiles, imagens de atores, assets de diarios e dados escopados de sistemas/modulos.
+## Diagnósticos
 
-## Incidentes
+```bash
+grave doctor
+grave doctor --json
+grave doctor --ai
+```
 
-Em caso de falha:
+Owners também podem acessar diagnósticos do runtime em `/inside/diagnostics`.
 
-1. Pare a instancia se houver risco de corrupcao.
-2. Preserve logs e backups.
-3. Verifique banco, storage e versao do codigo.
-4. Abra uma issue com passos de reproducao quando o problema for do projeto.
+## Operações de Pacotes
+
+```bash
+grave package list
+grave package doctor <package_id>
+grave package disable <package_id>
+grave package remove <package_id>
+grave campaign package list <campaign_id>
+grave campaign package deactivate <campaign_id> <package_id>
+```
+
+Substituição de pacote deve ser feita depois de desativar o pacote nas campanhas e desabilitá-lo globalmente.

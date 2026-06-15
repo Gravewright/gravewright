@@ -7,7 +7,7 @@ Gravewright is a server-authoritative VTT. The browser renders the table and sen
 ```text
 app/actions/       Litestar route handlers, forms, redirects, templates, WebSocket entrypoints
 app/business/      product rules for auth, campaigns, invitations, users, and permissions
-app/engine/        table runtime services for maps, sheets, actors, items, journals, modules, systems
+app/engine/        table runtime services for maps, sheets, actors, items, journals, and SDK packages
 app/realtime/      WebSocket transport, command dispatch, event log, scene stream, presence
 app/domain/        shared enums, permissions, value objects, and domain constraints
 app/persistence/   SQLAlchemy Core tables and repositories
@@ -58,8 +58,8 @@ The schema source is `app/persistence/tables.py`. Repositories use SQLAlchemy Co
 
 ## Frontend
 
-The frontend uses Jinja templates, static JavaScript modules, PixiJS for board rendering, and public browser APIs for systems and modules. Core UI code lives under `static/js`. CSS lives under `static/css`.
+The frontend uses Jinja templates, static JavaScript modules, PixiJS for board rendering, and the public `window.GravewrightSDK` browser runtime for packages. Core UI code lives under `static/js`. CSS lives under `static/css`.
 
-## Extension Boundaries
+## SDK Package Boundaries
 
-Systems define RPG rules, sheets, mappings, assets, and content packs. Modules extend campaign UI and content through declared capabilities. Both are validated from manifests and loaded through explicit public APIs.
+SDK packages are the only extension model. Rulesets define RPG rules, sheets, mappings, assets, and content packs. Addons, themes, content packages, asset libraries, and passive libraries extend a campaign through declared capabilities. Every package is validated from `schemas/gravewright-package-v1.schema.json` and loaded through explicit public APIs documented under `docs/sdk/`.

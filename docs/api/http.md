@@ -38,13 +38,10 @@ POST /campaigns
 POST /campaigns/update
 POST /campaigns/request-delete
 POST /campaigns/delete
-POST /campaigns/set-system
 POST /campaigns/permissions
 POST /campaigns/invitations
 POST /campaigns/invitations/accept
 POST /campaigns/invitations/decline
-POST /campaigns/modules/enable
-POST /campaigns/modules/disable
 ```
 
 Campaign mutating routes require membership and usually GM access.
@@ -84,21 +81,27 @@ Actors, items, journals, folders, ownership, sheet data, content imports, resour
 
 These routes are browser workflow APIs. Treat payload and response shapes as application internals unless documented in a public API guide.
 
-## Systems and Modules
+## SDK Packages
 
 ```text
-POST /systems/install
-POST /systems/enable
-POST /systems/disable
-POST /systems/remove
-GET  /systems/{system_id}/asset/{asset_path}
-POST /modules/upload
-POST /modules/install
-POST /modules/enable
-POST /modules/disable
-POST /modules/remove
-GET  /modules/{module_id}/asset/{asset_path}
-POST /modules/settings
+GET  /sdk/packages
+GET  /sdk/packages/{package_id}
+POST /sdk/packages/install
+POST /sdk/packages/enable
+POST /sdk/packages/disable
+POST /sdk/packages/remove
+GET  /sdk/packages/{package_id}/asset/{asset_path}
+POST /sdk/packages/settings
+GET  /sdk/packages/{package_id}/content/packs
+GET  /sdk/packages/{package_id}/content/pack/{pack_id}
+POST /sdk/packages/content/import
+
+GET  /sdk/campaigns/packages
+POST /sdk/campaigns/packages/activate
+POST /sdk/campaigns/packages/deactivate
+POST /sdk/campaigns/ruleset
 ```
 
-System and module installation routes require owner privileges. Asset routes serve only validated declared paths.
+Global package install/enable/disable/remove routes require owner privileges.
+Campaign routes (ruleset, activate/deactivate, content import) are GM-only. Asset
+routes serve only validated declared paths for enabled packages.

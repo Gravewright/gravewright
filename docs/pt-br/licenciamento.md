@@ -14,11 +14,10 @@ Materiais publicos de API sao licenciados sob MIT. O texto esta em `../../LICENS
 
 Materiais de API incluem:
 
-- especificacoes e exemplos da System API v1;
-- especificacoes e exemplos da Module API v1;
-- manifestos e schemas publicos;
-- contratos de APIs de navegador para sistemas e modulos;
-- exemplos destinados a autores de sistemas, modulos, integracoes e pacotes de conteudo.
+- especificacoes e exemplos do Gravewright SDK em `docs/sdk/`;
+- o schema JSON publico em `schemas/gravewright-package-v1.schema.json`;
+- o contrato da API de navegador `window.GravewrightSDK`;
+- exemplos destinados a autores de pacotes do SDK.
 
 ## Limite
 

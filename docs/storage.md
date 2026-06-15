@@ -10,7 +10,7 @@ Default:
 storage/
 ```
 
-For SQLite, system-scoped data is colocated with the active database path. For external databases, storage remains under the configured local storage root.
+For SQLite, package-scoped sheet data is colocated with the active database path. For external databases, storage remains under the configured local storage root.
 
 ## Scene Storage
 
@@ -50,24 +50,23 @@ storage/journal-assets/<campaign_id>/
 
 The `journal_assets` table stores asset metadata and storage paths.
 
-## System Sheet Data
+## Package Sheet Data
 
-System-scoped actor and item sheet JSON is stored under:
+Ruleset-scoped actor and item sheet JSON is currently stored under:
 
 ```text
 storage/system-data/<system_id>/campaigns/<campaign_id>/actors/<actor_id>.json
 storage/system-data/<system_id>/campaigns/<campaign_id>/items/<item_id>.json
 ```
 
-Paths are derived from validated IDs and confined to the storage root.
+`system_id` is the current internal storage column/name for the active ruleset package id. Paths are derived from validated IDs and confined to the storage root.
 
 ## Package Data
 
 Default:
 
 ```text
-data/systems/
-data/modules/
+data/packages/
 ```
 
 Override with:
@@ -78,4 +77,4 @@ GRAVEWRIGHT_DATA_DIR=/var/lib/gravewright/data
 
 ## Cleanup
 
-Campaign deletion deletes campaign database rows and campaign-owned storage. Scene deletion removes scene rows and scene storage. Module removal removes database installation state but does not automatically delete package directories from disk.
+Campaign deletion deletes campaign database rows and campaign-owned storage. Scene deletion removes scene rows and scene storage. Package removal removes database installation state but does not automatically delete package directories from disk.
