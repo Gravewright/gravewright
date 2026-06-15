@@ -148,9 +148,3 @@ def _ensure_incremental_columns(engine: Engine) -> None:
                 connection.execute(
                     text("ALTER TABLE scenes ADD COLUMN board_version INTEGER NOT NULL DEFAULT 1")
                 )
-
-    if "modules_installed" in table_names:
-        module_columns = {column["name"] for column in inspector.get_columns("modules_installed")}
-        if "package_sha256" not in module_columns:
-            with engine.begin() as connection:
-                connection.execute(text("ALTER TABLE modules_installed ADD COLUMN package_sha256 VARCHAR(64)"))

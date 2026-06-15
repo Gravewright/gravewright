@@ -89,9 +89,6 @@ from app.actions.game.manage_journals import show_journal_modal
 from app.actions.game.manage_journals import toggle_journal_owner
 from app.actions.game.manage_journals import toggle_quest_objective
 from app.actions.game.manage_journals import update_journal
-from app.actions.game.manage_module_content import get_module_content_pack
-from app.actions.game.manage_module_content import import_module_content_entry
-from app.actions.game.manage_module_content import list_module_content_packs
 from app.actions.game.manage_journals import upload_journal_asset
 from app.actions.game.resource_permissions import show_resource_permissions
 from app.actions.game.resource_permissions import update_resource_permissions
@@ -100,7 +97,6 @@ from app.actions.game.send_chat_message import delete_chat_message
 from app.actions.game.send_chat_message import send_chat_message
 from app.actions.game.serve_scene_image import serve_scene_image
 from app.actions.game.serve_scene_tile import serve_scene_tile
-from app.actions.game.module_settings import update_module_setting
 from app.actions.game.scene_manifest import get_scene_manifest
 from app.actions.game.scene_tokens import get_scene_tokens
 from app.actions.game.scene_tokens import update_token_hp
@@ -126,7 +122,6 @@ _protected_handlers = [
     update_token_hp,
     serve_scene_image,
     serve_scene_tile,
-    update_module_setting,
     leave_game,
     create_scene_group,
     activate_scene,
@@ -172,9 +167,6 @@ _protected_handlers = [
     import_content_entry,
     create_journal,
     update_journal,
-    list_module_content_packs,
-    get_module_content_pack,
-    import_module_content_entry,
     delete_journal,
     set_quest_status,
     toggle_quest_objective,

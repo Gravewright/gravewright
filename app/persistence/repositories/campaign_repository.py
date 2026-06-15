@@ -20,12 +20,37 @@ from app.persistence.tables import campaign_delete_codes
 from app.persistence.tables import campaign_members
 from app.persistence.tables import campaign_system_history
 from app.persistence.tables import campaigns as campaigns_table
-from app.persistence.tables import module_settings
+from app.persistence.tables import package_settings
 from app.persistence.tables import users
 
 
 class CampaignRepository:
     """Campaign persistence implemented with SQLAlchemy Core."""
+
+    def get(self, campaign_id: str) -> dict | None:
+        with engine_connect() as conn:
+            return one_or_none(
+                conn.execute(
+                    select(campaigns_table).where(campaigns_table.c.id == campaign_id).limit(1)
+                )
+            )
+
+    def list_with_active_system(self) -> list[dict]:
+        """Campaigns that have a ruleset assigned (operator audits / `grave doctor`)."""
+        with engine_connect() as conn:
+            return all_dicts(
+                conn.execute(
+                    select(campaigns_table).where(campaigns_table.c.active_system_id.isnot(None))
+                )
+            )
+
+    def list_by_active_system(self, system_id: str) -> list[dict]:
+        with engine_connect() as conn:
+            return all_dicts(
+                conn.execute(
+                    select(campaigns_table).where(campaigns_table.c.active_system_id == system_id)
+                )
+            )
 
     def list_for_user(self, user_id: str) -> list[dict]:
         with engine_connect() as conn:
@@ -320,9 +345,7 @@ class CampaignRepository:
     ) -> None:
         with engine_begin() as conn:
             conn.execute(
-                delete(module_settings)
-                .where(module_settings.c.scope == "campaign")
-                .where(module_settings.c.subject_id == campaign_id)
+                delete(package_settings).where(package_settings.c.campaign_id == campaign_id)
             )
             conn.execute(delete(campaigns_table).where(campaigns_table.c.id == campaign_id))
 

@@ -1,16 +1,14 @@
 {
-  "$schema": "https://gravewright.dev/schemas/system-manifest-v1.json",
-  "manifestVersion": 1,
-  "type": "system",
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "ruleset",
   "id": "dnd5e",
   "name": "Dungeons & Dragons 5e",
-  "description": "Sistema 5e declarativo para Gravewright: fichas de personagem e monstro, itens, magias, talentos, raças, classes e antecedentes. Inclui packs de modelo para testar drag/drop; não inclui compêndio oficial completo.",
   "version": "0.3.0",
-  "apiVersion": "1",
+  "description": "Sistema 5e declarativo para Gravewright: fichas de personagem e monstro, itens, magias, talentos, raças, classes e antecedentes. Inclui packs de modelo para testar drag/drop; não inclui compêndio oficial completo.",
   "authors": [
-    {
-      "name": "Gravewright"
-    }
+    "Gravewright"
   ],
   "license": "No official content bundled",
   "compatibility": {
@@ -18,32 +16,33 @@
     "verified": "1.0.0-rc.1",
     "maximum": "1.x"
   },
-  "display": {
-    "color": "#7a1f2b"
-  },
   "capabilities": [
     "actors.register",
     "items.register",
     "sheets.declarative",
+    "sheets.hooks",
     "rules.declarative",
     "content.packs",
     "tokens.mappings",
     "dice.roll",
     "chat.cards",
-    "roll.toast",
+    "rolls.intent",
     "locales",
     "assets.ui",
     "assets.styles",
     "assets.scripts",
     "combat.config",
-    "rolls.intent"
+    "combat.hooks"
   ],
-  "system": {
-    "id": "dnd5e",
-    "storage": {
-      "model": "scoped-json-v1"
-    },
-    "assets": {
+  "activation": {
+    "scope": "campaign",
+    "mode": "exclusive"
+  },
+  "display": {
+    "color": "#7a1f2b"
+  },
+  "entrypoints": {
+    "game": {
       "styles": [
         "assets/dnd5e.css"
       ],
@@ -51,6 +50,16 @@
         "assets/dnd5e-sheets.js",
         "assets/combat-panel.js"
       ]
+    }
+  },
+  "provides": {
+    "storage": {
+      "model": "scoped-json-v1"
+    },
+    "defaults": {
+      "actorType": "character",
+      "itemType": "weapon",
+      "locale": "en"
     },
     "actorTypes": [
       {
@@ -134,11 +143,6 @@
         "sheet": "layouts/items/effect.sheet.gw.json"
       }
     ],
-    "defaults": {
-      "actorType": "character",
-      "itemType": "weapon",
-      "locale": "en"
-    },
     "areaMarkers": [
       {
         "id": "dnd5e-spell-sphere",
@@ -311,7 +315,5 @@
       "pt-BR": "locales/pt-BR.json",
       "en": "locales/en.json"
     }
-  },
-  "dependencies": [],
-  "conflicts": []
+  }
 }

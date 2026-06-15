@@ -13,8 +13,12 @@ def test_inside_renders_modules_tab(db):
         resp = client.get("/inside", follow_redirects=False)
 
     assert resp.status_code == 200
-    assert "Modules" in resp.text or "Módulos" in resp.text
-    assert "/modules/install" in resp.text or "No modules installed yet" in resp.text or "Nenhum módulo instalado ainda" in resp.text
+    assert "Add-ons" in resp.text
+    # The bundled dice addon (a non-ruleset package) is listed under Add-ons with
+    # an SDK install action and a kind marker — no legacy /modules routes remain.
+    assert "/sdk/packages/install" in resp.text
+    assert "/modules/install" not in resp.text
+    assert "package-kind-badge" in resp.text
     assert "inside-ajax.js" in resp.text
     assert "module-card-grid" in resp.text
     assert "data-inside-modal-open" in resp.text

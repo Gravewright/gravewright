@@ -10,12 +10,23 @@
             console.warn("Gravewright game bootstrap: .game-modal-layer not found");
         }
 
-        await window.GravewrightModules?.init?.();
+        function sdkPackages() {
+            const el = document.getElementById("gravewright-sdk-packages");
+            if (!el) return [];
+            try {
+                const parsed = JSON.parse(el.textContent || "[]");
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (_err) {
+                return [];
+            }
+        }
 
+        // The Gravewright SDK runtime self-initialises on DOMContentLoaded; here
+        // we only surface the active package manifests to game-ready consumers.
         const detail = {
             root,
             modalLayer,
-            modules: window.GravewrightModules?.list?.() || [],
+            packages: sdkPackages(),
         };
 
         document.dispatchEvent(new CustomEvent("vtt:game-ready", { detail }));

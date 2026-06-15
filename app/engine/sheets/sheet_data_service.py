@@ -1,4 +1,4 @@
-"""Sheet Data plane (System API v0, commands ``sheet.data.*``).
+"""Sheet Data plane (Gravewright SDK, commands ``sheet.data.*``).
 
 The full per-actor system data lives in scoped-json-v1 storage. This service is
 the only sanctioned way to read/patch it: it enforces actor permissions, bumps

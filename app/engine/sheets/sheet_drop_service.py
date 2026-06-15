@@ -23,7 +23,7 @@ from app.engine.sheets.sheet_ir_validator import (
     find_drop_zone,
     find_matching_drop_zone,
 )
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 
@@ -44,7 +44,7 @@ class SheetDropService:
     def __init__(self) -> None:
         self.actors = ActorRepository()
         self.campaigns = CampaignRepository()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.resolver = DropEntryResolver()
         self.layouts = SystemLayoutService()
         self.rules = SystemRulesService()

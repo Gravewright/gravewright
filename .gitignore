@@ -1,3 +1,7 @@
+# grave CLI backup artifacts
+gravewright-backup-*.zip
+*.pre-restore
+
 # Python cache / test artifacts
 __pycache__/
 *.py[cod]

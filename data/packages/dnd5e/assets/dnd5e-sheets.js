@@ -1,9 +1,8 @@
 
 
 (function () {
-  const GW = window.GravewrightSheets;
-  if (!GW || typeof GW.registerSystem !== "function") return;
-  const h = GW.helpers;
+  const namespace = window.GravewrightDnd5e || {};
+  let h = {};
 
   const L = {
     // Character header
@@ -276,7 +275,9 @@
 
 
 
-  GW.registerSystem("dnd5e", {
+  function createSheetsPlugin(sdk) {
+    h = sdk.sheets.helpers();
+    return {
     labels: L,
     renderSection(node, variant, rc) {
       if (rc.actorType === "monster" && variant === "skills") {
@@ -294,5 +295,11 @@
       if (actorType === "character") return 820;
       return null;
     },
+    };
+  }
+
+  window.GravewrightDnd5e = Object.freeze({
+    ...namespace,
+    createSheetsPlugin,
   });
 })();

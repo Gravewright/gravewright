@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
                                                                                     
                                                              
-_AUTH_EXCLUDE = ["^/static", "^/systems/[^/]+/asset/", "^/modules/[^/]+/asset/", "^/schema"]
+_AUTH_EXCLUDE = ["^/static", "^/sdk/packages/[^/]+/asset/", "^/schema"]
 
                                                                                         
 _session_config = ServerSideSessionConfig(
@@ -39,7 +39,7 @@ _session_config = ServerSideSessionConfig(
     httponly=config.session_cookie_httponly,
     samesite=config.session_cookie_samesite,
     domain=config.session_cookie_domain,
-    exclude=["^/static", "^/systems/[^/]+/asset/", "^/modules/[^/]+/asset/", "^/schema"],
+    exclude=["^/static", "^/sdk/packages/[^/]+/asset/", "^/schema"],
 )
 
 
@@ -68,7 +68,7 @@ app = Litestar(
         secret=config.session_secret,
         cookie_secure=config.session_cookie_secure,
         cookie_samesite=config.session_cookie_samesite,
-        exclude=["^/static", "^/systems/[^/]+/asset/", "^/modules/[^/]+/asset/", "^/schema"],
+        exclude=["^/static", "^/sdk/packages/[^/]+/asset/", "^/schema"],
     ),
     template_config=TemplateConfig(
         directory=BASE_DIR / "templates",

@@ -90,13 +90,10 @@
     <script defer src="/static/js/ui/modals/modal-api.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/permissions.js"></script>
     <script type="application/json" id="gravewright-game-context">{{ game_client_context_json | safe }}</script>
-    <script type="application/json" id="gravewright-module-manifests">{{ module_manifests_json | safe }}</script>
-    <script defer src="/static/js/modules/module-hooks.js?v=20260604-modules"></script>
-    <script defer src="/static/js/modules/module-registry.js?v=20260604-modules"></script>
-    <script defer src="/static/js/modules/public-api.js?v=20260604-modules"></script>
-    <script defer src="/static/js/modules/module-loader.js?v=20260604-modules"></script>
-    <script defer src="/static/js/modules/modules.js?v=20260604-modules"></script>
-    
+    <script type="application/json" id="gravewright-sdk-packages">{{ sdk_client_manifests_json | safe }}</script>
+    <script defer src="/static/js/sdk/sdk-capabilities.js?v=20260614-sdk"></script>
+    <script defer src="/static/js/sdk/gravewright-sdk.js?v=20260614-sdk-nonce"></script>
+
     <script defer src="/static/js/chat/chat-renderer.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/chat/chat-roll-cards.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/chat/chat-api.js?v=20260604-chat-split"></script>
@@ -121,12 +118,9 @@
     <script defer src="/static/js/sheets/actors/actor-sheet-events.js?v=20260604-sheets-split"></script>
     <script defer src="/static/js/combat/combat-api.js?v=20260605-system-api-v1"></script>
     
-    {% for src in system_scripts %}<script defer src="{{ src }}"></script>
+    {% for script in system_scripts %}<script defer src="{{ script.src }}" data-gw-package="{{ script.package_id }}" data-gw-nonce="{{ script.nonce }}"></script>
     {% endfor %}
-    {% for script in module_scripts %}
-    {% if script.type == "module" %}<script type="module" src="{{ script.src }}"></script>{% else %}<script defer src="{{ script.src }}"></script>{% endif %}
-    {% endfor %}
-    
+
     <script defer src="/static/js/actors/actors-api.js?v=20260604-actors-split"></script>
     <script defer src="/static/js/actors/actors-tree.js?v=20260604-actors-split"></script>
     <script defer src="/static/js/actors/actors-context-actions.js?v=20260604-actors-split"></script>
@@ -830,7 +824,7 @@
                                     aria-hidden="true"></i></button>
                         </div>
                     </header>
-                    <form class="dialog-form" method="post" action="/campaigns/set-system"
+                    <form class="dialog-form" method="post" action="/sdk/campaigns/ruleset"
                         data-system-onboarding-form>
                         {{ csrf_input | safe }}
                         <input type="hidden" name="campaign_id" value="{{ room.id }}" />
@@ -838,7 +832,7 @@
                         {% if available_systems %}
                         <label class="dialog-field">
                             <span>{{ t("game.system_onboarding.system_label") }}</span>
-                            <select name="system_id">
+                            <select name="package_id">
                                 {% for system in available_systems %}
                                 <option value="{{ system.id }}">{{ system.name }}</option>
                                 {% endfor %}
@@ -1519,10 +1513,10 @@
                             <p class="settings-system-name">{% if room.active_system %}{{ room.active_system.name }}{% else %}{{
                                 t("inside.campaigns.systemless") }}{% endif %}</p>
                             {% if room.member_role == "gm" %}
-                            <form method="post" action="/campaigns/set-system" class="system-inline-form">
+                            <form method="post" action="/sdk/campaigns/ruleset" class="system-inline-form">
                                 {{ csrf_input | safe }}
                                 <input type="hidden" name="campaign_id" value="{{ room.id }}" />
-                                <select name="system_id" class="system-select">
+                                <select name="package_id" class="system-select">
                                     <option value="">{{ t("inside.campaigns.systemless") }}</option>
                                     {% for system in available_systems %}
                                     <option value="{{ system.id }}" {% if room.active_system and

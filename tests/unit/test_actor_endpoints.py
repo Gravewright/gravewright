@@ -3,7 +3,7 @@ from __future__ import annotations
 from litestar.testing import TestClient
 
 import app.engine.rules.formula_engine as formula_engine
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from tests.conftest import TEST_SESSION_CONFIG, login, seed_campaign, seed_user
 
 
@@ -12,7 +12,7 @@ def test_actor_and_sheet_data_command_endpoints(db):
 
     gm_id = seed_user(name="GM", email="gm-actor-ep@test.com")
     campaign_id = seed_campaign(gm_id)
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     assert svc.install(package_id="dnd5e", user_id=gm_id).success
     assert svc.enable(package_id="dnd5e").success
 
@@ -49,7 +49,7 @@ def test_actor_create_rejects_bad_csrf(db):
 
     gm_id = seed_user(name="GM", email="gm-actor-ep2@test.com")
     campaign_id = seed_campaign(gm_id)
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     svc.install(package_id="dnd5e", user_id=gm_id)
     svc.enable(package_id="dnd5e")
                                                                                
@@ -73,7 +73,7 @@ def test_action_and_roll_endpoints(db, monkeypatch):
     monkeypatch.setattr(formula_engine.random, "randint", lambda a, b: 15)
     gm_id = seed_user(name="GM", email="gm-action-ep@test.com")
     campaign_id = seed_campaign(gm_id)
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     assert svc.install(package_id="dnd5e", user_id=gm_id).success
     assert svc.enable(package_id="dnd5e").success
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
@@ -133,7 +133,7 @@ def test_actor_sheet_modal_and_bundle_endpoints(db):
 
     gm_id = seed_user(name="GM", email="gm-sheet-modal@test.com")
     campaign_id = seed_campaign(gm_id)
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     assert svc.install(package_id="dnd5e", user_id=gm_id).success
     assert svc.enable(package_id="dnd5e").success
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
@@ -161,7 +161,7 @@ def test_content_and_drop_endpoints(db):
 
     gm_id = seed_user(name="GM", email="gm-content-ep@test.com")
     campaign_id = seed_campaign(gm_id)
-    svc = SystemInstallService()
+    svc = PackageInstallService()
     assert svc.install(package_id="dnd5e", user_id=gm_id).success
     assert svc.enable(package_id="dnd5e").success
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:

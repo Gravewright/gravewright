@@ -22,6 +22,29 @@ from tests.conftest import (
 )
 
 
+def test_game_page_wires_gravewright_sdk_runtime(db):
+    """The /game page loads the SDK runtime and injects the client manifests;
+    the legacy module-client runtime is gone."""
+    from main import app
+
+    gm_id = seed_user(name="GM", email="gm-sdk-runtime@test.com")
+    campaign_id = seed_campaign(gm_id)
+    seed_system(campaign_id, gm_id)
+
+    with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
+        login(client, gm_id)
+        resp = client.get(f"/game?room={campaign_id}")
+
+    assert resp.status_code == 200
+    assert "/static/js/sdk/gravewright-sdk.js" in resp.text
+    assert "/static/js/sdk/sdk-capabilities.js" in resp.text
+    assert 'id="gravewright-sdk-packages"' in resp.text
+    assert "window.__GRAVEWRIGHT_SDK_PACKAGES__" not in resp.text
+    # The legacy module-client runtime must not be referenced any more.
+    assert "/static/js/modules/" not in resp.text
+    assert "gravewright-module-manifests" not in resp.text
+
+
 def test_game_page_renders_for_gm_with_manifest_system(db):
     """The /game page renders end-to-end with the legacy sheet panel removed:
     only the Actor Core path (Actors panel + manifest active system) remains."""
@@ -68,7 +91,7 @@ def test_area_marker_presets_present_without_active_scene(db):
     assert "pixi-board-renderer.js" in resp.text
     assert "canvas-board-renderer.js" not in resp.text
     assert "combat/combat-api.js" in resp.text
-    assert resp.text.index("combat/combat-api.js") < resp.text.index("systems/dnd5e/asset/assets/dnd5e-sheets.js")
+    assert resp.text.index("combat/combat-api.js") < resp.text.index("sdk/packages/dnd5e/asset/assets/dnd5e-sheets.js")
 
 
 def test_system_combat_api_v1_hooks_are_exposed():
@@ -309,14 +332,14 @@ def test_create_dialogs_and_no_system_constraint(db):
         assert f'data-modal-id="system-onboarding-{without_system}"' in page2.text
         assert "data-system-onboarding-modal" in page2.text
         assert "data-panel-ajax-form" not in re.search(
-            rf'<form method="post" action="/campaigns/set-system".*?</form>',
+            rf'<form class="dialog-form" method="post" action="/sdk/campaigns/ruleset".*?</form>',
             page2.text,
             re.S,
         ).group(0)
 
         linked = client.post(
-            "/campaigns/set-system",
-            data={"campaign_id": without_system, "system_id": "dnd5e"},
+            "/sdk/campaigns/ruleset",
+            data={"campaign_id": without_system, "package_id": "dnd5e"},
             follow_redirects=False,
         )
         assert linked.status_code in {302, 303}

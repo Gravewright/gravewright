@@ -1,4 +1,6 @@
 (function () {
+  let combatSdk = null;
+
   const DEFAULT_COMBAT_UI = {
     skin: "default",
     density: "compact",
@@ -120,16 +122,12 @@
     return { ...(base || {}), ...((override && typeof override === "object") ? override : {}) };
   }
 
-  function systemIdFor(state) {
-    return String(state?.config?.systemId || state?.system_id || "");
+  function combatHook(_state, name, payload) {
+    return combatSdk?.callHook?.(name, payload);
   }
 
-  function combatHook(state, name, payload) {
-    return window.GravewrightCombat?.callHook?.(systemIdFor(state), name, payload);
-  }
-
-  function combatSlot(state, name, payload) {
-    return window.GravewrightCombat?.renderSlot?.(systemIdFor(state), name, payload) || [];
+  function combatSlot(_state, name, payload) {
+    return combatSdk?.renderSlot?.(name, payload) || [];
   }
 
   function combatUi(state) {
@@ -635,5 +633,15 @@
     combatHook(state, "afterRender", { panel, state, target, isGm });
   }
 
-  window.GravewrightCombatPanel = { renderHud, renderPanel };
+  window.GravewrightSDK?.register?.({
+    id: "dnd5e",
+    setup(sdk) {
+      const dnd5e = window.GravewrightDnd5e || {};
+      if (typeof dnd5e.createSheetsPlugin === "function") {
+        sdk.sheets.register(dnd5e.createSheetsPlugin(sdk));
+      }
+      combatSdk = sdk.combat;
+      sdk.combat.registerPanel({ renderHud, renderPanel });
+    },
+  });
 })();

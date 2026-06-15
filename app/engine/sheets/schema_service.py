@@ -1,4 +1,4 @@
-"""Loads an actor/item type's JSON Schema from its system package (System API v0).
+"""Loads an actor/item type's JSON Schema from its system package (Gravewright SDK).
 
 The schema is the authoring surface a system designer writes to declare the shape
 of an entity's Sheet Data: field types, ``default`` values, and ``readOnly`` flags.
@@ -11,15 +11,15 @@ from __future__ import annotations
 
 import json
 
-from app.engine.systems import system_loader
-from app.engine.systems.system_loader import safe_join
-from app.engine.systems.system_manifest import SystemManifest
-from app.persistence.repositories.installed_system_repository import InstalledSystemRepository
+from app.engine.sdk import package_registry
+from app.engine.sdk.package_paths import safe_join
+from app.engine.sdk.package_manifest import PackageManifest
+from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
 
 class SchemaService:
     def __init__(self) -> None:
-        self.installed = InstalledSystemRepository()
+        self.installed = InstalledPackageRepository()
 
     def get_actor_schema(self, *, system_id: str, actor_type: str) -> dict | None:
         return self._get_schema(system_id=system_id, type_id=actor_type, kind="actor")
@@ -32,7 +32,7 @@ class SchemaService:
         if record is None:
             return None
         try:
-            manifest = SystemManifest.from_dict(json.loads(record["manifest_json"]))
+            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
         except (TypeError, ValueError):
             return None
 
@@ -45,7 +45,7 @@ class SchemaService:
         if not schema_path:
             return None
 
-        base = system_loader.SYSTEMS_DIR / record["package_dir"]
+        base = package_registry.PACKAGES_DIR / record["package_dir"]
         path = safe_join(base, schema_path)
         if path is None or not path.is_file():
             return None

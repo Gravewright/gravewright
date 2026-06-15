@@ -13,7 +13,7 @@ from typing import Any
 
 from app.config import config
 from app.engine.rules.rules_registry import SystemRulesService
-from app.engine.systems.system_locale_service import SystemLocaleService
+from app.engine.sdk.package_locale_service import PackageLocaleService
 
 
 @dataclass(frozen=True)
@@ -33,7 +33,7 @@ class RollPresentation:
 class RollPresentationService:
     def __init__(self) -> None:
         self.rules = SystemRulesService()
-        self.locales = SystemLocaleService()
+        self.locales = PackageLocaleService()
 
     def render(
         self,

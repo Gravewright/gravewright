@@ -12,6 +12,7 @@ class TransportEvent(StrEnum):
     PRESENCE_SNAPSHOT = "presence.snapshot"
 
     CAMPAIGN_SYSTEM_CHANGED = "campaign.system.changed"
+    CAMPAIGN_PACKAGES_CHANGED = "campaign.packages.changed"
 
     CHAT_MESSAGE_CREATED = "chat.message.created"
     CHAT_MESSAGE_DELETED = "chat.message.deleted"

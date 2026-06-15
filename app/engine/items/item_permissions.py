@@ -1,4 +1,4 @@
-"""Item visibility/edit rules (System API v0 — mirrors actor permissions).
+"""Item visibility/edit rules (Gravewright SDK — mirrors actor permissions).
 
 GM sees and edits everything. Otherwise access is granted by ownership
 (``item_owners``) or an explicit per-user grant (``item_permissions``).

@@ -4,7 +4,7 @@ from app.engine.actors.actor_service import ActorService
 from app.engine.combat.turn_order_service import TurnOrderService
 from app.engine.sheets.sheet_data_service import SheetDataService
 from app.engine.sheets.sheet_drop_service import SheetDropService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.token_repository import TokenRepository
 from tests.conftest import seed_scene
 from tests.conftest import seed_actor, seed_campaign, seed_user
@@ -13,7 +13,7 @@ from tests.conftest import seed_actor, seed_campaign, seed_user
 def _setup(prefix: str) -> tuple[str, str, str]:
     gm_id = seed_user(name="GM", email=f"gm-combat-{prefix}@test.com")
     campaign_id = seed_campaign(gm_id)
-    systems = SystemInstallService()
+    systems = PackageInstallService()
     assert systems.install(package_id="dnd5e", user_id=gm_id).success
     assert systems.enable(package_id="dnd5e").success
     actor = ActorService().create_actor(
@@ -230,9 +230,9 @@ def test_roll_participant_initiative_uses_system_action(db, monkeypatch):
     monkeypatch.setattr(formula_engine.random, "randint", lambda a, b: 15)              
     gm_id = seed_user(name="GM", email="gm-combat-dnd5e-init@test.com")
     campaign_id = seed_campaign(gm_id)
-    system_id = SystemInstallService().install(package_id="dnd5e", user_id=gm_id).system_id
+    system_id = PackageInstallService().install(package_id="dnd5e", user_id=gm_id).package_id
     assert system_id
-    assert SystemInstallService().enable(package_id="dnd5e").success
+    assert PackageInstallService().enable(package_id="dnd5e").success
     from app.business.campaigns.campaign_system_service import CampaignSystemService
 
     assert CampaignSystemService().assign_to_campaign(

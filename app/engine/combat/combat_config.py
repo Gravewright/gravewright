@@ -5,7 +5,7 @@ from typing import Any
 
 from app.config import config
 from app.engine.rules.rules_registry import SystemRulesService
-from app.engine.systems.system_locale_service import SystemLocaleService
+from app.engine.sdk.package_locale_service import PackageLocaleService
 
 
 DEFAULT_ACTIVITY_TYPES = [
@@ -102,7 +102,7 @@ class CombatConfigService:
 
     def __init__(self) -> None:
         self.rules = SystemRulesService()
-        self.locales = SystemLocaleService()
+        self.locales = PackageLocaleService()
 
     def get_for_system(self, system_id: str | None) -> CombatConfig:
         if not system_id:

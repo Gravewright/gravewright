@@ -15,7 +15,7 @@ from app.engine.sheets.schema_service import SchemaService
 from app.engine.sheets.sheet_validation import sanitize_write
 from app.engine.sheets.system_layout_service import SystemLayoutService
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.tokens.actor_token_projector import ActorTokenProjector
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
@@ -61,7 +61,7 @@ class TokenInstanceSheetService:
         self.scenes = SceneRepository()
         self.campaigns = CampaignRepository()
         self.storage = ScopedJsonStorage()
-        self.systems = SystemInstallService()
+        self.systems = PackageInstallService()
         self.layouts = SystemLayoutService()
         self.rules = SystemRulesService()
         self.schemas = SchemaService()

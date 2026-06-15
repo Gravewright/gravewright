@@ -6,17 +6,17 @@ import json
 
 from app.config import config
 from app.engine.sheets.sheet_localizer import localize_layout
-from app.engine.systems import system_loader
-from app.engine.systems.system_loader import safe_join
-from app.engine.systems.system_manifest import SystemManifest
-from app.engine.systems.system_locale_service import SystemLocaleService
-from app.persistence.repositories.installed_system_repository import InstalledSystemRepository
+from app.engine.sdk import package_registry
+from app.engine.sdk.package_paths import safe_join
+from app.engine.sdk.package_manifest import PackageManifest
+from app.engine.sdk.package_locale_service import PackageLocaleService
+from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
 
 class SystemLayoutService:
     def __init__(self) -> None:
-        self.installed = InstalledSystemRepository()
-        self.locales = SystemLocaleService()
+        self.installed = InstalledPackageRepository()
+        self.locales = PackageLocaleService()
 
     def get_actor_sheet(self, *, system_id: str, actor_type: str, locale: str | None = None) -> dict | None:
         return self._get_sheet(system_id=system_id, type_id=actor_type, kind="actor", locale=locale)
@@ -29,7 +29,7 @@ class SystemLayoutService:
         if record is None:
             return None
         try:
-            manifest = SystemManifest.from_dict(json.loads(record["manifest_json"]))
+            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
         except (TypeError, ValueError):
             return None
 
@@ -42,7 +42,7 @@ class SystemLayoutService:
         if not sheet_path:
             return None
 
-        base = system_loader.SYSTEMS_DIR / record["package_dir"]
+        base = package_registry.PACKAGES_DIR / record["package_dir"]
         path = safe_join(base, sheet_path)
         if path is None or not path.is_file():
             return None

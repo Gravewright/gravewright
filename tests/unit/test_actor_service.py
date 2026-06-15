@@ -3,12 +3,12 @@ from __future__ import annotations
 from app.domain.roles import PlayerRole
 from app.engine.actors.actor_service import ActorService
 from app.engine.sheets.sheet_data_service import SheetDataService
-from app.engine.systems.system_install_service import SystemInstallService
+from app.engine.sdk.package_install_service import PackageInstallService
 from tests.conftest import seed_campaign, seed_member, seed_user
 
 
 def _enable_test_system(owner_id: str) -> None:
-    service = SystemInstallService()
+    service = PackageInstallService()
     assert service.install(package_id="dnd5e", user_id=owner_id).success
     assert service.enable(package_id="dnd5e").success
 
@@ -76,7 +76,7 @@ def test_create_requires_enabled_system(db):
     gm_id = seed_user(name="GM", email="gm-actor-4@test.com")
     campaign_id = seed_campaign(gm_id)
                                 
-    assert SystemInstallService().install(package_id="dnd5e", user_id=gm_id).success
+    assert PackageInstallService().install(package_id="dnd5e", user_id=gm_id).success
 
     result = ActorService().create_actor(
         campaign_id=campaign_id,

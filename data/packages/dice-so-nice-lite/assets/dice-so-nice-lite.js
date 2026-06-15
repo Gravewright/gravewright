@@ -290,10 +290,10 @@
         return { controls, stage };
     }
 
-    window.Gravewright.modules.register({
+    window.GravewrightSDK.register({
         id: MODULE_ID,
-        init(api) {
-            buildUi(api);
+        setup(sdk) {
+            buildUi(sdk);
         },
     });
 })();

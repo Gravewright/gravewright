@@ -14,11 +14,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["ruff>=0.7"]
-
-
-
-
 postgres = ["psycopg[binary]>=3.2"]
+
+[project.scripts]
+grave = "app.cli:main"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -34,4 +33,5 @@ line-length = 100
 dev = [
     "pytest>=9.0.3",
     "pytest-asyncio>=1.4.0",
+    "selenium>=4.44.0",
 ]

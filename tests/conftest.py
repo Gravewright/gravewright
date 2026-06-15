@@ -54,14 +54,8 @@ def db(tmp_path, monkeypatch):
     from app.persistence import engine as engine_module
 
     engine_module.reset_engine()
-                                                                             
-                                                                          
-    from app.engine.systems import system_loader
-    from app.engine.modules import module_loader
-    from app.helpers.env import PROJECT_ROOT
-
-    monkeypatch.setattr(system_loader, "SYSTEMS_DIR", PROJECT_ROOT / "data" / "systems")
-    monkeypatch.setattr(module_loader, "MODULES_DIR", PROJECT_ROOT / "data" / "modules")
+    # SDK packages are discovered from the real ``data/packages`` directory via
+    # the configured data dir, so no path monkeypatching is required here.
     yield
     engine_module.reset_engine()
 
@@ -109,14 +103,14 @@ def seed_member(campaign_id: str, user_id: str, role: str) -> None:
 
 
 def install_system(gm_id: str, *, package_id: str = "dnd5e") -> str:
-    """Install + enable a bundled manifest system. Returns its system_id."""
-    from app.engine.systems.system_install_service import SystemInstallService
-    svc = SystemInstallService()
+    """Install + enable a bundled SDK package. Returns its package id."""
+    from app.engine.sdk.package_install_service import PackageInstallService
+    svc = PackageInstallService()
     installed = svc.install(package_id=package_id, user_id=gm_id)
     assert installed.success, f"install failed: {installed.error_key}"
     enabled = svc.enable(package_id=package_id)
     assert enabled.success, f"enable failed: {enabled.error_key}"
-    return installed.system_id or package_id
+    return installed.package_id or package_id
 
 
 def seed_system(campaign_id: str, gm_id: str, package_id: str = "dnd5e") -> str:
