@@ -91,11 +91,18 @@ def _ensure_schema(*, no_migrate: bool) -> Check:
     return Check("schema", OK, "database schema ready")
 
 
-def prepare(*, no_install: bool, no_migrate: bool) -> tuple[list[Check], int | None]:
+def prepare(
+    *,
+    no_install: bool,
+    no_migrate: bool,
+    strict_doctor: bool = False,
+) -> tuple[list[Check], int | None]:
     """Run pre-flight setup. Returns (checks, abort_exit_code_or_None).
 
     Only genuinely blocking problems abort the launch; package-level issues are
     surfaced as warnings so an operator can still start the server and fix them.
+
+    When strict_doctor is enabled, doctor validation errors abort the launch.
     """
     checks: list[Check] = []
     checks.extend(_ensure_directories())
@@ -109,10 +116,13 @@ def prepare(*, no_install: bool, no_migrate: bool) -> tuple[list[Check], int | N
 
     checks.append(_ensure_schema(no_migrate=no_migrate))
 
-    # Non-blocking package/db validation — summarize rather than abort.
+    # Non-blocking package/db validation by default.
     audit = run_doctor(packages_dir=Path(config.data_dir) / "packages", skip_db=no_migrate)
     s = summarize(audit)
-    status = OK if s["error_count"] == 0 else WARN
+
+    has_errors = s["error_count"] > 0
+    status = ERROR if strict_doctor and has_errors else OK if not has_errors else WARN
+
     checks.append(
         Check(
             "validation",
@@ -121,6 +131,10 @@ def prepare(*, no_install: bool, no_migrate: bool) -> tuple[list[Check], int | N
             fix=None if status == OK else "grave doctor",
         )
     )
+
+    if strict_doctor and has_errors:
+        return checks, EXIT_DOCTOR_ERROR
+
     return checks, None
 
 
