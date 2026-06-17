@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "hp": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "number", "default": 10 },
+        "max": { "type": "number", "default": 10 }
+      }
+    },
+    "strength": {
+      "type": "number",
+      "default": 10
+    }
+  }
+}

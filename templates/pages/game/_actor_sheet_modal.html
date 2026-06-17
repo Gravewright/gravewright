@@ -1,0 +1,43 @@
+<article class="game-modal-window actor-sheet-modal" data-modal-window
+         data-modal-id="{% if actor.token_id %}token-{{ actor.token_id }}{% else %}actor-{{ actor.actor_id }}{% endif %}"
+         data-window-key="{% if actor.token_id %}token-{{ actor.token_id }}{% else %}actor-{{ actor.actor_id }}{% endif %}"
+         data-actor-id="{{ actor.actor_id }}"
+         {% if actor.token_id %}data-token-id="{{ actor.token_id }}"{% endif %}
+         data-actor-campaign="{{ room_id }}"
+         hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <div class="game-modal-sheet-title">
+            <span class="sheet-modal-name">{{ actor.name }}</span>
+            <span class="sheet-modal-owner">{{ actor.type }}</span>
+        </div>
+        <div class="game-modal-controls">
+            {% if is_gm and not actor.token_id %}
+            <button class="game-modal-control" type="button"
+                    data-resource-permissions="actor"
+                    data-resource-id="{{ actor.actor_id }}"
+                    aria-label="{{ t('resource_permissions.title') }}">
+                <i class="ph ph-shield-check" aria-hidden="true"></i>
+            </button>
+            {% endif %}
+            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+            </button>
+            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                <i class="ph ph-minus" aria-hidden="true"></i>
+            </button>
+            <button class="game-modal-control" type="button" data-modal-close aria-label="Close">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="actor-sheet-body"
+         data-actor-sheet-root
+         data-actor-id="{{ actor.actor_id }}"
+         {% if actor.token_id %}data-token-id="{{ actor.token_id }}"{% endif %}
+         data-csrf="{{ csrf_token() }}">
+        <div class="actor-sheet-loading">…</div>
+    </div>
+
+    <script type="application/json" data-actor-bundle>{{ bundle_json | safe }}</script>
+</article>

@@ -1,0 +1,19 @@
+{
+  "queries": {
+    "getState": {
+      "type": "read",
+      "params": {
+        "key": "string"
+      },
+      "sql": "SELECT value_json FROM addon_state WHERE key = :key LIMIT 1"
+    },
+    "saveState": {
+      "type": "write",
+      "params": {
+        "key": "string",
+        "value_json": "json-string"
+      },
+      "sql": "INSERT INTO addon_state (key, value_json) VALUES (:key, :value_json)"
+    }
+  }
+}

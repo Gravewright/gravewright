@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/gravewright/gravewright/security/policy
+    about: Please do not report security vulnerabilities in public issues.
+  - name: Documentation
+    url: https://github.com/gravewright/gravewright/tree/main/docs
+    about: Read the project documentation before opening setup/API questions.

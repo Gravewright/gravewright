@@ -1,0 +1,8 @@
+{
+  "my-rpg.actor.character": "Character",
+  "my-rpg.item.item": "Item",
+  "my-rpg.field.level": "Level",
+  "my-rpg.field.strength": "Strength",
+  "my-rpg.field.quantity": "Quantity",
+  "my-rpg.field.description": "Description"
+}

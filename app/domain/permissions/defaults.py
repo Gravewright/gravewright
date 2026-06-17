@@ -1,0 +1,65 @@
+from __future__ import annotations
+
+from app.domain.permissions.groups import ALL_CORE_PERMISSION_KEYS
+from app.domain.permissions.permissions import TablePermission
+from app.domain.roles import PlayerRole
+
+
+DEFAULT_ROLE_PERMISSIONS: dict[str, set[str]] = {
+    PlayerRole.GM.value: set(ALL_CORE_PERMISSION_KEYS),
+    PlayerRole.ASSISTANT_GM.value: {
+        TablePermission.SETTINGS_VIEW.value,
+        TablePermission.CHAT_VIEW.value,
+        TablePermission.CHAT_SEND.value,
+        TablePermission.CHAT_WHISPER.value,
+        TablePermission.CHAT_SEND_TO_GM.value,
+        TablePermission.CHAT_DELETE_OWN.value,
+        TablePermission.CHAT_DELETE_ANY.value,
+        TablePermission.COMBAT_VIEW.value,
+        TablePermission.SCENE_VIEW.value,
+        TablePermission.SCENE_CREATE.value,
+        TablePermission.SCENE_MANAGE.value,
+        TablePermission.SCENE_ACTIVATE.value,
+        TablePermission.SCENE_DELETE.value,
+        TablePermission.MAP_UPLOAD.value,
+        TablePermission.MAP_EDIT.value,
+        TablePermission.MAP_PAINT.value,
+        TablePermission.MAP_DELETE.value,
+        TablePermission.FOG_PAINT.value,
+        TablePermission.GRID_VIEW.value,
+        TablePermission.GRID_MEASURE.value,
+        TablePermission.BOARD_PING.value,
+        TablePermission.BOARD_DRAW.value,
+        TablePermission.BOARD_MARKER_CREATE.value,
+        TablePermission.BOARD_MARKER_DELETE.value,
+        TablePermission.BOARD_MARKER_CLEAR.value,
+        TablePermission.TOKEN_CREATE.value,
+        TablePermission.TOKEN_MOVE.value,
+        TablePermission.TOKEN_DELETE.value,
+        TablePermission.TOKEN_VISIBILITY.value,
+        TablePermission.TOKEN_CONDITION_MANAGE.value,
+        TablePermission.TOKEN_OVERRIDE_MANAGE.value,
+    },
+    PlayerRole.PLAYER.value: {
+        TablePermission.CHAT_VIEW.value,
+        TablePermission.CHAT_SEND.value,
+        TablePermission.CHAT_WHISPER.value,
+        TablePermission.CHAT_SEND_TO_GM.value,
+        TablePermission.CHAT_DELETE_OWN.value,
+        TablePermission.COMBAT_VIEW.value,
+        TablePermission.SCENE_VIEW.value,
+        TablePermission.GRID_VIEW.value,
+        TablePermission.GRID_MEASURE.value,
+        TablePermission.BOARD_PING.value,
+        TablePermission.BOARD_DRAW.value,
+        TablePermission.BOARD_MARKER_CREATE.value,
+        TablePermission.BOARD_MARKER_DELETE.value,
+        TablePermission.TOKEN_MOVE.value,
+    },
+    PlayerRole.STREAMER.value: {
+        TablePermission.CHAT_VIEW.value,
+        TablePermission.COMBAT_VIEW.value,
+        TablePermission.SCENE_VIEW.value,
+        TablePermission.GRID_VIEW.value,
+    },
+}

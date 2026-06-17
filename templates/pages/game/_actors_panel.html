@@ -1,0 +1,56 @@
+{% macro actor_card(actor) %}
+<li class="actor-card" data-actor-open="{{ actor.id }}" data-actor-card="{{ actor.id }}"
+    role="button" tabindex="0"
+    {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}draggable="true"{% endif %}
+    data-can-edit="{{ 'true' if actor.can_edit else 'false' }}"
+    data-owners-json="{{ actor.owners_json | default('[]') }}">
+    <i class="ph ph-user actor-card-icon" aria-hidden="true"></i>
+    <span class="actor-card-info">
+        <strong>{{ actor.name }}</strong>
+        <small>{% if actor.owner_name %}{{ actor.owner_name }}{% else %}{{ actor.type }}{% endif %}</small>
+    </span>
+    <i class="ph ph-dots-six-vertical actor-card-grip" aria-hidden="true"></i>
+</li>
+{% endmacro %}
+
+{% macro actor_folder(folder) %}
+<div class="sheet-folder actor-folder" data-actor-folder="{{ folder.id }}"
+     data-folder-id="{{ folder.id }}" data-room-id="{{ room.id }}"
+     data-folder-name="{{ folder.name }}"
+     data-folder-parent-id="{{ folder.parent_id or '' }}"
+     data-folder-color="{{ folder.color or '' }}"
+     data-open
+     {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}draggable="true"{% endif %}>
+    <div class="sheet-folder-header" data-actor-folder-drop="{{ folder.id }}"
+        {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}draggable="true"{% endif %}>
+        {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
+        <i class="ph ph-dots-six-vertical sheet-folder-drag-handle" aria-hidden="true"></i>
+        {% endif %}
+        <button class="sheet-folder-toggle" type="button" data-actor-folder-collapse>
+            <i class="ph ph-folder sheet-folder-icon" aria-hidden="true"></i>
+            <span class="sheet-folder-name">{{ folder.name }}</span>
+            <span class="sheet-folder-count">{{ folder.all_count }}</span>
+            <i class="ph ph-caret-right sheet-folder-caret" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="sheet-folder-body">
+        {% for child in folder.children %}{{ actor_folder(child) }}{% endfor %}
+        <ul class="actor-list">
+            {% for actor in folder.actors %}{{ actor_card(actor) }}{% endfor %}
+        </ul>
+    </div>
+</div>
+{% endmacro %}
+
+<div class="actor-tree" data-actor-tree>
+    {% for folder in room.actor_folder_tree %}
+    {% if room.member_role == 'gm' or room.is_streamer or folder.all_count %}{{ actor_folder(folder) }}{% endif %}
+    {% endfor %}
+
+    <ul class="actor-list actor-root-list" data-actor-root-list data-actor-folder-drop="">
+        {% for actor in room.unfoldered_actors %}{{ actor_card(actor) }}{% endfor %}
+    </ul>
+    {% if not room.actors %}
+    <p class="actor-empty">{{ t("game.actors.empty") }}</p>
+    {% endif %}
+</div>

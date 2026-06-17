@@ -1,0 +1,6 @@
+# Keep line endings correct for the one-click launchers regardless of the
+# contributor's core.autocrlf setting. Windows batch files need CRLF; the shell
+# launchers/installers must stay LF or they will not execute.
+*.bat   text eol=crlf
+*.sh    text eol=lf
+grave   text eol=lf

@@ -1,0 +1,61 @@
+# Gravewright — run the whole app with one command using Docker.
+#
+# Quick start:
+#   docker compose up -d --build
+# then open:
+#   http://localhost:8000
+#
+# Stop:                 docker compose down
+# View logs:            docker compose logs -f
+# Update after changes: docker compose up -d --build
+#
+# Your data (database, uploads, installed packages) lives in named volumes, so
+# it survives restarts and rebuilds. It is NOT deleted by `docker compose down`
+# (use `docker compose down -v` to wipe everything).
+#
+# This setup uses SQLite and serves over plain HTTP for easy local/self-hosted
+# use. Before exposing it to the internet, put an HTTPS reverse proxy in front,
+# set a real domain in ALLOWED_HOSTS, and set a strong SESSION_SECRET:
+#   python -c "import secrets; print(secrets.token_urlsafe(48))"
+
+name: gravewright
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gravewright:local
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Relaxed local defaults so login works over http://localhost out of the box.
+      APP_ENV: development
+      APP_DEBUG: "false"
+      # Hosts the app will accept. Add your machine's LAN IP or domain if you
+      # reach it from another device, e.g. "...,192.168.0.10:8000,mybox.local".
+      ALLOWED_HOSTS: "localhost,localhost:8000,127.0.0.1,127.0.0.1:8000"
+      # Signs session cookies. Override for anything beyond your own machine:
+      #   SESSION_SECRET=$(python -c "import secrets;print(secrets.token_urlsafe(48))") docker compose up -d
+      SESSION_SECRET: "${SESSION_SECRET:-docker-local-change-me-please}"
+      # Allow cookies over plain HTTP for local use. Set to "true" behind HTTPS.
+      SESSION_COOKIE_SECURE: "false"
+      # Persisted via the named volumes below.
+      DATABASE_URL: "sqlite:///storage/gravewright.sqlite3"
+      GRAVEWRIGHT_DATA_DIR: "/app/data"
+      # Single worker is correct for SQLite. Use PostgreSQL to scale out.
+      WEB_WORKERS: "1"
+    volumes:
+      - gravewright-storage:/app/storage
+      - gravewright-data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/login', timeout=4)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+volumes:
+  gravewright-storage:
+  gravewright-data:

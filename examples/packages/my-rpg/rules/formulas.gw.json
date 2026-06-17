@@ -1,0 +1,8 @@
+{
+  "helpers": {
+    "strengthMod": {
+      "args": ["score"],
+      "expression": "floor((score - 10) / 2)"
+    }
+  }
+}

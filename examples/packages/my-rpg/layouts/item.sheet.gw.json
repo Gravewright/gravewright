@@ -1,0 +1,25 @@
+{
+  "kind": "itemSheet",
+  "system": "my-rpg",
+  "itemType": "item",
+  "id": "my-rpg-item",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "main",
+    "children": [
+      {
+        "type": "field",
+        "label": "my-rpg.field.quantity",
+        "path": "sheet.quantity"
+      },
+      {
+        "type": "field",
+        "label": "my-rpg.field.description",
+        "path": "sheet.description"
+      }
+    ]
+  }
+}

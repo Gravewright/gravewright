@@ -1,0 +1,56 @@
+{% macro journal_card(journal) %}
+<div class="journal-card" data-journal-id="{{ journal.id }}" data-journal-select="{{ journal.id }}"
+     data-owners-json="{{ (journal.owners | tojson) | e if journal.owners else '[]' }}"
+     data-folder-id="{{ journal.folder_id or '' }}" role="button" tabindex="0"
+     {% if room.member_role == 'gm' %}draggable="true"{% endif %}>
+    <i class="ph {% if journal.type == 'quest' %}ph-flag-banner{% elif journal.type == 'quest_board' %}ph-kanban{% else %}ph-book-open-text{% endif %} journal-card-icon" aria-hidden="true"></i>
+    <span class="journal-card-info">
+        <strong>{{ journal.title }}</strong>
+        <small>{{ t(journal.type_label_key) }}</small>
+    </span>
+    {% if room.member_role == 'gm' %}
+    <i class="ph ph-dots-six-vertical journal-card-grip" aria-hidden="true"></i>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro journal_folder(folder) %}
+<div class="journal-folder sheet-folder" data-journal-folder="{{ folder.id }}" data-folder-id="{{ folder.id }}"
+     data-folder-color="{{ folder.color or '' }}" data-open
+     {% if room.member_role == 'gm' %}draggable="true"{% endif %}>
+    <div class="sheet-folder-header">
+        {% if room.member_role == 'gm' %}
+        <i class="ph ph-dots-six-vertical sheet-folder-drag-handle" aria-hidden="true"></i>
+        {% endif %}
+        <button class="sheet-folder-toggle" type="button" data-journal-folder-collapse>
+            <i class="ph ph-folder-open sheet-folder-icon" aria-hidden="true"></i>
+            <span class="sheet-folder-name">{{ folder.name }}</span>
+            <span class="sheet-folder-count">{{ folder.all_count }}</span>
+            <i class="ph ph-caret-right sheet-folder-caret" aria-hidden="true"></i>
+        </button>
+        {% if room.member_role == 'gm' %}
+        <button class="sheet-folder-action-btn" type="button" data-journal-create-open
+                data-campaign-id="{{ room.id }}" data-folder-id="{{ folder.id }}"
+                title="{{ t('game.journal.add_note') }}"><i class="ph ph-note-pencil" aria-hidden="true"></i></button>
+        <button class="sheet-folder-action-btn" type="button" data-journal-folder-create
+                data-campaign-id="{{ room.id }}" data-parent-id="{{ folder.id }}"
+                title="{{ t('game.journal.add_folder') }}"><i class="ph ph-folder-plus" aria-hidden="true"></i></button>
+        {% endif %}
+    </div>
+    <div class="sheet-folder-body">
+        {% for child in folder.children %}{{ journal_folder(child) }}{% endfor %}
+        {% for journal in folder.journals %}{{ journal_card(journal) }}{% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+<div class="journal-list journal-directory" data-journal-root-drop>
+    {% for folder in room.journal_folder_tree %}{{ journal_folder(folder) }}{% endfor %}
+    {% for journal in room.unfoldered_journals %}{{ journal_card(journal) }}{% endfor %}
+    {% if not room.journals %}
+    <div class="tool-empty">
+        <i class="ph ph-book-open-text" aria-hidden="true"></i>
+        <p>{{ t("game.journal.empty") }}</p>
+    </div>
+    {% endif %}
+</div>

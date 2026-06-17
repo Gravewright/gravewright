@@ -1,0 +1,25 @@
+{
+  "kind": "actorSheet",
+  "system": "my-rpg",
+  "actorType": "character",
+  "id": "my-rpg-character",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "main",
+    "children": [
+      {
+        "type": "field",
+        "label": "my-rpg.field.level",
+        "path": "sheet.level"
+      },
+      {
+        "type": "field",
+        "label": "my-rpg.field.strength",
+        "path": "sheet.strength"
+      }
+    ]
+  }
+}

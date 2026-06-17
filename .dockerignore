@@ -1,0 +1,13 @@
+.git
+.env
+__pycache__
+.venv/
+*.pyc
+*.pyo
+.pytest_cache
+tests/performance/report.html
+tests/performance/results_*.csv
+tests/performance/docker_stats.txt
+tests/performance/locust_output.txt
+storage/
+memory/

@@ -1,0 +1,38 @@
+<div class="journal-board-cards">
+    {% if not view.board_entries %}
+    <p class="journal-board-empty">{{ t("game.journal.board.empty") }}</p>
+    {% endif %}
+    {% for entry in view.board_entries %}
+    {% set card = entry.card %}
+    
+    <article class="quest-card quest-card--{{ card.status }}{% if entry.pinned %} quest-card--pinned{% endif %}" data-quest-card="{{ entry.quest_id }}"
+             data-journal-select="{{ entry.quest_id }}" role="button" tabindex="0">
+        {% if entry.pinned %}<i class="ph ph-push-pin-fill quest-card-pin" aria-hidden="true"></i>{% endif %}
+        {% if card.image.src %}<img class="quest-card-image" src="{{ card.image.src }}" alt="{{ card.title }}" />{% endif %}
+        <div class="quest-card-body">
+            <header class="quest-card-head">
+                <h4>{{ card.title }}</h4>
+                <span class="quest-card-status">{{ t("game.journal.quest.status_values." ~ card.status) }}</span>
+            </header>
+            {% if card.summary %}<p class="quest-card-summary">{{ card.summary }}</p>{% endif %}
+            <dl class="quest-card-meta">
+                {% if card.location %}<dt>{{ t("game.journal.quest.location") }}</dt><dd>{{ card.location }}</dd>{% endif %}
+                {% if card.giver %}<dt>{{ t("game.journal.quest.giver") }}</dt><dd>{{ card.giver }}</dd>{% endif %}
+            </dl>
+            {% if card.objectives %}
+            <ul class="quest-card-objectives">
+                {% for obj in card.objectives %}
+                <li class="{% if obj.completed %}is-done{% endif %}">{{ obj.text }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% if card.rewards %}
+            <p class="quest-card-rewards">
+                <i class="ph ph-coins" aria-hidden="true"></i>
+                {{ card.rewards | map(attribute='text') | join(', ') }}
+            </p>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+</div>

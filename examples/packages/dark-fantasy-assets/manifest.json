@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "assets",
+  "id": "dark-fantasy-assets",
+  "name": "Dark Fantasy Assets",
+  "version": "0.1.0",
+  "description": "Reusable media library: images, maps, and icons.",
+  "authors": ["Example Author"],
+  "license": "MIT",
+  "compatibility": {
+    "minimum": "1.0.0-rc.1",
+    "verified": "1.0.0-rc.1"
+  },
+  "capabilities": ["assets.pack", "assets.images", "assets.maps", "assets.icons"],
+  "activation": { "scope": "campaign", "mode": "multiple" },
+  "entrypoints": {},
+  "provides": {
+    "assets": {
+      "images": [
+        { "id": "banner", "label": "Banner", "path": "images/banner.webp" }
+      ],
+      "maps": [
+        { "id": "crypt", "label": "Crypt", "path": "maps/crypt.webp" }
+      ],
+      "icons": [
+        { "id": "skull", "label": "Skull", "path": "icons/skull.svg" }
+      ]
+    }
+  }
+}

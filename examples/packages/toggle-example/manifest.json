@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "addon",
+  "id": "toggle-example",
+  "name": "Toggle Example",
+  "version": "0.1.0",
+  "description": "Addon with a user setting that gates a toast.",
+  "authors": ["Example Author"],
+  "license": "MIT",
+  "compatibility": {
+    "minimum": "1.0.0-rc.1",
+    "verified": "1.0.0-rc.1"
+  },
+  "capabilities": ["assets.scripts", "assets.ui", "settings"],
+  "activation": {
+    "scope": "campaign",
+    "mode": "multiple"
+  },
+  "settings": [
+    {
+      "key": "enabled",
+      "scope": "user",
+      "type": "boolean",
+      "default": true,
+      "label": "Enable addon"
+    }
+  ],
+  "entrypoints": {
+    "game": {
+      "scripts": ["assets/toggle-example.js"]
+    }
+  },
+  "provides": {}
+}

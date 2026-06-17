@@ -1,0 +1,1 @@
+{"queries": {"q": {"type": "read", "params": {"k": "blob"}, "sql": "SELECT 1 WHERE x = :k"}}}

@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "capabilities": {
+    "actors.register": {
+      "status": "stable",
+      "description": "Register actor type behavior/data through package metadata.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "items.register": {
+      "status": "stable",
+      "description": "Register item type behavior/data through package metadata.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "sheets.declarative": {
+      "status": "stable",
+      "description": "Provide declarative actor/item sheets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "sheets.runtime": {
+      "status": "stable",
+      "description": "Register sheet runtime plugins and use sheet helper APIs.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["sheets.helpers", "sheets.register"]
+    },
+    "sheets.components": {
+      "status": "stable",
+      "description": "Provide component-based sheet pieces.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "rules.declarative": {
+      "status": "stable",
+      "description": "Provide declarative game rules.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "rules.extends": {
+      "status": "stable",
+      "description": "Extend rules provided by another package.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "dice.roll": {
+      "status": "stable",
+      "description": "Declare dice rolling behavior/configuration.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "rolls.intent": {
+      "status": "stable",
+      "description": "Declare roll intents the package handles.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "combat.config": {
+      "status": "stable",
+      "description": "Provide combat configuration/data.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "combat.runtime": {
+      "status": "stable",
+      "description": "Register combat runtime plugins and render combat panels.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["combat.register", "combat.registerPanel", "combat.dispatch", "combat.renderSlot"]
+    },
+    "tokens.mappings": {
+      "status": "stable",
+      "description": "Provide token mappings.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "tokens.extends": {
+      "status": "stable",
+      "description": "Interact with tokens on the active canvas.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["tokens.centerOn"]
+    },
+    "scene.tools": {
+      "status": "stable",
+      "description": "Read the active scene canvas, camera, and active tool.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["scene.activeCanvas", "scene.activeCameraForScene", "tools.activeTool"]
+    },
+    "scene.overlays": {
+      "status": "stable",
+      "description": "Provide scene overlays.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "chat.cards": {
+      "status": "stable",
+      "description": "Send chat cards/messages.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["chat.send"]
+    },
+    "content.packs": {
+      "status": "stable",
+      "description": "Read and import declared content packs.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["content.packs", "content.pack"]
+    },
+    "settings": {
+      "status": "stable",
+      "description": "Read and write package settings.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["settings.definitions", "settings.all", "settings.get", "settings.set"]
+    },
+    "locales": {
+      "status": "stable",
+      "description": "Provide locale catalogs and translate keys.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["i18n.t"]
+    },
+    "assets.ui": {
+      "status": "stable",
+      "description": "Show toasts and open/close modals; provide UI assets.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["ui.toast", "ui.openModal", "ui.closeModal"]
+    },
+    "assets.styles": {
+      "status": "stable",
+      "description": "Provide stylesheet assets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "assets.scripts": {
+      "status": "stable",
+      "description": "Provide script assets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "assets.pack": {
+      "status": "stable",
+      "description": "Provide a bundled asset pack.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "assets.images": {
+      "status": "stable",
+      "description": "Provide image assets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "assets.audio": {
+      "status": "stable",
+      "description": "Provide audio assets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "assets.video": {
+      "status": "stable",
+      "description": "Provide video assets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "assets.maps": {
+      "status": "stable",
+      "description": "Provide map assets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "assets.icons": {
+      "status": "stable",
+      "description": "Provide icon assets.",
+      "surfaces": ["manifest", "backend"],
+      "methods": []
+    },
+    "commands.register": {
+      "status": "stable",
+      "description": "Register slash/console commands.",
+      "surfaces": ["manifest", "backend", "frontend"],
+      "methods": ["commands.register"]
+    },
+    "storage.sqlite": {
+      "status": "stable",
+      "description": "Use Gravewright-managed SQLite storage scoped to a package.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["storage.sqlite.query", "storage.sqlite.execute", "storage.sqlite.status"]
+    },
+    "bus.publish": {
+      "status": "stable",
+      "description": "Publish SDK interop bus events.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["bus.publish"]
+    },
+    "bus.subscribe": {
+      "status": "stable",
+      "description": "Subscribe to SDK interop bus events.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["bus.subscribe"]
+    },
+    "bus.request": {
+      "status": "stable",
+      "description": "Request a value from an SDK interop bus provider.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["bus.request"]
+    },
+    "bus.provide": {
+      "status": "stable",
+      "description": "Provide an SDK interop bus method other packages can request.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["bus.provide"]
+    },
+    "sheets.html": {
+      "status": "stable",
+      "description": "Provide HTML-mode actor/item sheets.",
+      "surfaces": ["manifest"],
+      "methods": []
+    },
+    "sheets.controller": {
+      "status": "stable",
+      "description": "Attach a controller script to an HTML sheet.",
+      "surfaces": ["manifest", "frontend"],
+      "methods": ["sheets.registerController"]
+    },
+    "sheets.richText": {
+      "status": "stable",
+      "description": "Render sanitized rich text in an HTML sheet.",
+      "surfaces": ["manifest"],
+      "methods": []
+    }
+  },
+  "forbidden": {
+    "backend.execute": {
+      "reason": "Packages must not execute backend code."
+    },
+    "database.raw": {
+      "reason": "Packages must not access raw database APIs."
+    },
+    "filesystem.raw": {
+      "reason": "Packages must not access arbitrary filesystem paths."
+    },
+    "network.raw": {
+      "reason": "Packages must not open arbitrary network access."
+    },
+    "permissions.override": {
+      "reason": "Packages must not override permissions."
+    }
+  }
+}

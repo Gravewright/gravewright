@@ -1,0 +1,26 @@
+<article class="scene-card {% if scene.active %}scene-card--active{% endif %}">
+    <div class="scene-card-main">
+        <div class="scene-card-title-row">
+            <strong>{{ scene.name }}</strong>
+            {% if scene.active %}
+            <span>{{ t("game.scenes.active_badge") }}</span>
+            {% endif %}
+        </div>
+        <small>{{ scene.width }}x{{ scene.height }} · {{ t("game.scenes.grid_size") }} {{ scene.tile_size }}</small>
+    </div>
+    <div class="scene-card-actions">
+        <form method="post" action="/game/scenes/activate" class="scene-activate-form" data-scene-ajax-form>
+            {{ csrf_input | safe }}
+            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+            <input type="hidden" name="scene_id" value="{{ scene.id }}" />
+            <button type="submit" class="scene-icon-button" {% if scene.active %}disabled{% endif %}
+                title="{{ t('game.scenes.activate') }}">
+                <i class="ph ph-play" aria-hidden="true"></i>
+            </button>
+        </form>
+        <button type="button" class="scene-icon-button" data-scene-edit="{{ scene.id }}" data-room-id="{{ room.id }}"
+            title="{{ t('game.scenes.configure') }}">
+            <i class="ph ph-sliders-horizontal" aria-hidden="true"></i>
+        </button>
+    </div>
+</article>

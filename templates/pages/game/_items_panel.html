@@ -1,0 +1,55 @@
+{% macro item_card(item) %}
+<li class="item-card" data-item-open="{{ item.id }}" data-item-card="{{ item.id }}"
+    role="button" tabindex="0"
+    {% if room.member_role == 'gm' %}draggable="true"{% endif %}
+    data-can-edit="{{ 'true' if item.can_edit else 'false' }}"
+    data-owners-json="{{ item.owners_json | default('[]') }}">
+    <i class="ph ph-sword item-card-icon" aria-hidden="true"></i>
+    <span class="item-card-info">
+        <strong>{{ item.name }}</strong>
+        <small>{% if item.owner_name %}{{ item.owner_name }}{% else %}{{ item.type }}{% endif %}</small>
+    </span>
+    <i class="ph ph-dots-six-vertical item-card-grip" aria-hidden="true"></i>
+</li>
+{% endmacro %}
+
+{% macro item_folder(folder) %}
+<div class="sheet-folder item-folder" data-item-folder="{{ folder.id }}"
+     data-folder-id="{{ folder.id }}" data-room-id="{{ room.id }}"
+     data-folder-name="{{ folder.name }}"
+     data-folder-parent-id="{{ folder.parent_id or '' }}"
+     data-folder-color="{{ folder.color or '' }}"
+     data-open
+     {% if room.member_role == 'gm' %}draggable="true"{% endif %}>
+    <div class="sheet-folder-header" data-item-folder-drop="{{ folder.id }}">
+        {% if room.member_role == 'gm' %}
+        <i class="ph ph-dots-six-vertical sheet-folder-drag-handle" aria-hidden="true"></i>
+        {% endif %}
+        <button class="sheet-folder-toggle" type="button" data-item-folder-collapse>
+            <i class="ph ph-folder sheet-folder-icon" aria-hidden="true"></i>
+            <span class="sheet-folder-name">{{ folder.name }}</span>
+            <span class="sheet-folder-count">{{ folder.all_count }}</span>
+            <i class="ph ph-caret-right sheet-folder-caret" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="sheet-folder-body">
+        {% for child in folder.children %}{{ item_folder(child) }}{% endfor %}
+        <ul class="item-list">
+            {% for item in folder.entries %}{{ item_card(item) }}{% endfor %}
+        </ul>
+    </div>
+</div>
+{% endmacro %}
+
+<div class="item-tree" data-item-tree>
+    {% for folder in room.item_folder_tree %}
+    {% if room.member_role == 'gm' or folder.all_count %}{{ item_folder(folder) }}{% endif %}
+    {% endfor %}
+
+    <ul class="item-list item-root-list" data-item-root-list data-item-folder-drop="">
+        {% for item in room.unfoldered_items %}{{ item_card(item) }}{% endfor %}
+    </ul>
+    {% if not room['items'] %}
+    <p class="item-empty">{{ t("game.items.empty") }}</p>
+    {% endif %}
+</div>

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "name": "Fixture",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "1.0.0-rc.1",
+    "verified": "1.0.0-rc.1",
+    "maximum": "1.x"
+  },
+  "entrypoints": {},
+  "provides": {},
+  "capabilities": [
+    "assets.scripts"
+  ],
+  "activation": {
+    "scope": "global",
+    "mode": "passive"
+  },
+  "id": "valid-library",
+  "kind": "library"
+}

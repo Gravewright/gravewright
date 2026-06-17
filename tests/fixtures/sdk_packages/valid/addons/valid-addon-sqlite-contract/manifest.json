@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "name": "Fixture",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "1.0.0-rc.1",
+    "verified": "1.0.0-rc.1",
+    "maximum": "1.x"
+  },
+  "entrypoints": {},
+  "provides": {},
+  "capabilities": [
+    "storage.sqlite"
+  ],
+  "activation": {
+    "scope": "campaign",
+    "mode": "multiple"
+  },
+  "id": "valid-addon-sqlite-contract",
+  "kind": "addon",
+  "storage": {
+    "sqlite": {
+      "status": "experimental",
+      "scopes": [
+        "campaign",
+        "global"
+      ],
+      "migrations": "storage/sqlite/migrations",
+      "queries": "storage/sqlite/queries.json"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "name": "Fixture",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "1.0.0-rc.1",
+    "verified": "1.0.0-rc.1",
+    "maximum": "1.x"
+  },
+  "entrypoints": {},
+  "provides": {
+    "assets": {
+      "icons": [
+        {
+          "id": "i1",
+          "label": "Icon",
+          "path": "icons/i.svg"
+        }
+      ]
+    }
+  },
+  "capabilities": [
+    "assets.pack"
+  ],
+  "activation": {
+    "scope": "campaign",
+    "mode": "multiple"
+  },
+  "id": "valid-assets",
+  "kind": "assets"
+}
