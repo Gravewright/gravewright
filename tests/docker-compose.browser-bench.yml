@@ -1,0 +1,35 @@
+name: gravewright_browser_bench
+
+# App under test for the real-browser benchmark. Only the server runs in Docker;
+# the Chromium tab (the thing we measure for memory/FPS) runs on the host via
+# Playwright, hitting the app on the published port. The server is deliberately
+# modest so it isn't the bottleneck while we profile the client.
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8007:8000"
+    volumes:
+      - ../storage:/app/storage
+    cpus: 2.0
+    mem_limit: 2g
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "false"
+      ALLOWED_HOSTS: app,app:8000,localhost,localhost:8000,localhost:8007,127.0.0.1,127.0.0.1:8007
+      SESSION_SECRET: perf-test-secret-key-change-me
+      WEB_WORKERS: "1"
+      FOG_REQUIRE_EXPECTED_VERSION: "false"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s
+      timeout: 5s
+      retries: 12

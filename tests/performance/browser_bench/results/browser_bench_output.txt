@@ -1,0 +1,6 @@
+[browser-bench] Done
+  map visible:        True (1123 ms)
+  fps avg / 1% low:   60.0 / 59.5
+  janky frames:       0.0%
+  JS heap peak:       17.4 MB
+  browser RSS peak:   134.4 MB

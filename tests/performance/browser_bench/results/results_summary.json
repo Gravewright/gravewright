@@ -1,0 +1,41 @@
+{
+  "host": "http://localhost:8007",
+  "headed": false,
+  "gpu": "on",
+  "cpu_throttle": 1.0,
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "run_seconds": 180.0,
+  "map_visible": true,
+  "milestones_ms": {
+    "nav_to_canvas": 1113.0,
+    "nav_to_manifest": 1122.8,
+    "nav_to_first_chunk": 1122.8,
+    "time_to_map_visible": 1122.8,
+    "time_to_realtime": 1122.8
+  },
+  "interaction": {
+    "pan_zoom_seconds": 180.87,
+    "gestures": 402,
+    "frames": 10851,
+    "fps_avg": 60.0,
+    "fps_p50": 59.9,
+    "fps_1pct_low": 59.5,
+    "frame_ms_p95": 16.7,
+    "frame_ms_p99": 16.8,
+    "frame_ms_max": 16.8,
+    "jank_frame_pct": 0.0,
+    "long_tasks": 0,
+    "total_blocking_ms": 0.0
+  },
+  "memory_mb": {
+    "js_heap_idle": 17.4,
+    "js_heap_peak": 17.4,
+    "browser_rss_idle": 130.7,
+    "browser_rss_peak": 134.4,
+    "rss_available": true
+  },
+  "errors": []
+}
