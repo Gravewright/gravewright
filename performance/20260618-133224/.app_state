@@ -1,0 +1,2 @@
+NAME                     IMAGE                  COMMAND                  SERVICE   CREATED          STATUS                             PORTS
+gravewright_perf-app-1   gravewright_perf-app   "sh -c 'uv run uvico…"   app       13 seconds ago   Up 11 seconds (health: starting)   0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp

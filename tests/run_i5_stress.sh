@@ -18,7 +18,7 @@ done
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║  Gravewright  —  STRESS TEST  (i5-8400 / 8 GB)          ║"
-echo "║  6 cores  •  8 GB RAM  •  6 workers  •  500 usuários    ║"
+echo "║  6 cores  •  8 GB RAM  •  1 worker   •  500 usuários    ║"
 echo "║  mapa 8000×6000  •  47 000 tiles  •  5 minutos          ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
@@ -40,7 +40,7 @@ else
 fi
 
 echo ""
-echo "[3/5] Starting app container (6 CPUs / 8 GB / 6 workers)..."
+echo "[3/5] Starting app container (6 CPUs / 8 GB / 1 worker)..."
 docker compose -f "$COMPOSE_FILE" up -d app
 
 echo "      Waiting for health check..."

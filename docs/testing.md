@@ -97,4 +97,17 @@ bash tests/run_i5_stress.sh
 bash tests/run_chunk_stream_test.sh
 ```
 
+Windows Command Prompt runners:
+
+```batch
+tests\run_perf_test.bat
+tests\run_max_stress.bat
+tests\run_i5_stress.bat
+tests\run_chunk_stream_test.bat
+```
+
+Use `--no-build` to reuse existing images, `--no-seed` on stress and chunk-stream
+runners to reuse test data, and `--keep` on the chunk-stream runner to leave its
+containers running.
+
 Performance outputs are written under `tests/performance/`.

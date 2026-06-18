@@ -1,0 +1,11 @@
+{
+  "scenario": "perf", "role": "baseline",
+  "description": "20 users / spawn 2/s / 90s", "resources": "1 CPU / 4 GB",
+  "startedAt": "2026-06-18T16:32:24.198753+00:00", "rootDir": "C:\\Users\\ricardo\\Desktop\\gravewright",
+  "scriptDir": "C:\\Users\\ricardo\\Desktop\\gravewright\\tests", "composeFile": "C:\\Users\\ricardo\\Desktop\\gravewright\\tests\\docker-compose.perf.yml",
+  "seedFile": "C:\\Users\\ricardo\\Desktop\\gravewright\\tests\\performance\\seed.py",
+  "sqlitePath": "C:\\Users\\ricardo\\Desktop\\gravewright\\storage\\gravewright.sqlite3", "noBuild": 0, "noSeed": 0,
+  "allowFailure": 0, "cleanVolumes": 0, "keepApp": 0,
+  "statsIntervalSeconds": 2, "readinessTimeoutSeconds": 300,
+  "gitCommit": "48559473384f56324f72b3390ea7fca04dd129bc", "runner": "cmd.exe"
+}

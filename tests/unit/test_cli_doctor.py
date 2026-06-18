@@ -8,7 +8,13 @@ from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.installed_package_repository import (
     InstalledPackageRepository,
 )
-from tests.conftest import install_system, seed_campaign, seed_system, seed_user
+from tests.conftest import (
+    SDK_FIXTURES_ROOT,
+    install_system,
+    seed_campaign,
+    seed_system,
+    seed_user,
+)
 
 
 def _write_bad_package(root: Path) -> None:
@@ -62,7 +68,9 @@ def test_doctor_db_audit_surfaces_active_but_disabled_with_fix(db, capsys):
     seed_system(campaign, gm, "valid-ruleset")
     InstalledPackageRepository().set_status(package_id="valid-ruleset", status="disabled")
 
-    exit_code = main(["doctor", "--json"])
+    exit_code = main(
+        ["doctor", "--packages-dir", str(SDK_FIXTURES_ROOT), "--json"]
+    )
 
     assert exit_code == 1
     payload = json.loads(capsys.readouterr().out)
@@ -77,7 +85,9 @@ def test_doctor_warns_enabled_addon_inactive_in_any_campaign(db, capsys):
     # Keep the install valid so the only finding is the inactivity hint.
     assert PackageInstallService().get("valid-addon")["status"] == "enabled"
 
-    exit_code = main(["doctor", "--json"])
+    exit_code = main(
+        ["doctor", "--packages-dir", str(SDK_FIXTURES_ROOT), "--json"]
+    )
 
     # Inactivity is a warning, not an error.
     assert exit_code == 0

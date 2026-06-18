@@ -18,7 +18,7 @@ services:
       APP_ENV: development
       APP_DEBUG: "false"
       SESSION_SECRET: perf-test-secret-key-change-me
-      WEB_WORKERS: "6"
+      WEB_WORKERS: "1"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
       interval: 5s
