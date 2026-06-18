@@ -1,15 +1,8 @@
 # Managed Storage (`storage.sqlite`)
 
-<<<<<<< HEAD
 > **Status: stable in SDK 1.** A package declares the storage it needs;
 > Gravewright owns the path, lifecycle, permissions, migrations, limits, and
 > backup.
-=======
-> **Status: experimental.** Phase 7A defines and validates the storage
-> *contract*; the runtime (query execution, endpoints, migrations) lands in
-> Phase 7B. A package declares the storage it needs; Gravewright owns the path,
-> lifecycle, permissions, and backup.
->>>>>>> origin/main
 
 ## Declaring storage
 
@@ -20,10 +13,6 @@ A package declares the `storage.sqlite` capability and a `storage.sqlite` block:
   "capabilities": ["storage.sqlite"],
   "storage": {
     "sqlite": {
-<<<<<<< HEAD
-=======
-      "status": "experimental",
->>>>>>> origin/main
       "location": "gravewright-managed",
       "scopes": ["campaign", "global"],
       "migrations": "storage/sqlite/migrations",
@@ -84,27 +73,12 @@ Rules:
   `INSERT`/`UPDATE`/`DELETE`.
 - Multiple statements and `ATTACH`/`PRAGMA`/`VACUUM` are rejected
   (`sdk.storage.sqlite.query_sql_disallowed`).
-<<<<<<< HEAD
 - At runtime parameters are whitelisted per query: missing, extra, or
   wrong-typed parameters are rejected.
 
 ## Runtime
 
 The managed storage runtime is available and capability-gated:
-=======
-- At runtime (Phase 7B) parameters are whitelisted per query: missing, extra, or
-  wrong-typed parameters are rejected.
-
-## What Phase 7A does not do
-
-No endpoints, no query execution, no database files are created. The contract is
-validated by the manifest validator (declaration) and the package loader
-(migrations directory + `queries.json` on disk), and surfaced by the doctor.
-
-## Runtime (Phase 7B)
-
-The managed storage runtime is now available (experimental, capability-gated):
->>>>>>> origin/main
 
 ```ts
 await sdk.storage.sqlite.execute("campaign", "saveState", {
@@ -124,7 +98,6 @@ query type matches the operation, whitelists the parameters, and executes with
 bound parameters. There is no `sdk.storage.sqlite.raw` and no path is ever
 exposed.
 
-<<<<<<< HEAD
 Runtime limits:
 
 - default max DB size: 50 MB, configurable via `maxSizeMB` (a positive number up
@@ -135,8 +108,6 @@ Runtime limits:
 - max result payload: 1 MB;
 - SQLite busy timeout: 1000 ms.
 
-=======
->>>>>>> origin/main
 Backup/export: a package backup includes both `data/packages/{kind_plural}/{id}`
 and `data/storage/packages/{kind_plural}/{id}`; an export/publish includes only
 the package directory. The doctor reports storage directories whose package is

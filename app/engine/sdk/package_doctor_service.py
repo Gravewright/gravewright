@@ -156,6 +156,15 @@ class PackageDoctorService:
                             package_id=package_id,
                         )
                     )
+            if getattr(loaded, "is_flat_layout", False):
+                findings.append(
+                    DoctorFinding(
+                        code="package_flat_layout",
+                        severity=SEVERITY_WARNING,
+                        package_id=package_id,
+                        details={"package_dir": str(loaded.package_dir)},
+                    )
+                )
             findings.extend(self._audit_manifest_integrity(package_id, record, loaded))
 
             # Storage (Phase 7A) and interop (Phase 12): surface invalid contracts.

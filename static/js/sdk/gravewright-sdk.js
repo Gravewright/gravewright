@@ -49,36 +49,6 @@
         }
     }
 
-<<<<<<< HEAD
-=======
-    // --- interop bus (Phase 12) ------------------------------------------------
-    // A clean, separate channel from the legacy hook bus above. It is NOT a
-    // wrapper over sdk.hooks and there is no automatic bridge between them.
-    const busListeners = new Map(); // event name -> Set<fn>
-
-    function busSubscribe(name, fn) {
-        const key = String(name || "").trim();
-        if (!key || typeof fn !== "function") return () => {};
-        if (!busListeners.has(key)) busListeners.set(key, new Set());
-        busListeners.get(key).add(fn);
-        return () => busListeners.get(key)?.delete(fn);
-    }
-
-    function busPublish(name, payload) {
-        const set = busListeners.get(String(name || "").trim());
-        if (!set) return;
-        // Deliver an immutable copy so a listener cannot mutate shared state.
-        const frozen = freeze(clone(payload));
-        for (const fn of [...set]) {
-            try {
-                fn(frozen);
-            } catch (err) {
-                console.error(`GravewrightSDK bus "${name}" listener failed`, err);
-            }
-        }
-    }
-
->>>>>>> origin/main
     // RPC over the bus: one provider per method. Returns a structured BusResult.
     const busProviders = new Map(); // method -> { handler, packageId }
     const BUS_DEFAULT_TIMEOUT_MS = 5000;
@@ -87,7 +57,6 @@
         return { ok: false, error: { code, message: message || code } };
     }
 
-<<<<<<< HEAD
     function busException(code, message) {
         const error = new Error(message || code);
         error.code = code;
@@ -133,36 +102,11 @@
         const timeout = new Promise((resolve) => {
             timer = setTimeout(
                 () => resolve(busError("bus.provider_timeout", "provider timed out")),
-=======
-    function busProvide(method, handler, packageId) {
-        const key = String(method || "").trim();
-        if (!key || typeof handler !== "function") return false;
-        if (busProviders.has(key)) {
-            console.error(`GravewrightSDK bus refused duplicate provider for "${key}"`);
-            return false;
-        }
-        busProviders.set(key, { handler, packageId });
-        return true;
-    }
-
-    async function busRequest(method, payload, options) {
-        const provider = busProviders.get(String(method || "").trim());
-        if (!provider) {
-            return busError("sdk.interop.provider_missing", `no provider for "${method}"`);
-        }
-        const timeoutMs = Number(options && options.timeout) || BUS_DEFAULT_TIMEOUT_MS;
-        const frozen = freeze(clone(payload));
-        let timer;
-        const timeout = new Promise((resolve) => {
-            timer = setTimeout(
-                () => resolve(busError("sdk.interop.provider_timeout", "provider timed out")),
->>>>>>> origin/main
                 timeoutMs
             );
         });
         try {
             const value = await Promise.race([
-<<<<<<< HEAD
                 Promise.resolve().then(() => provider.handler(frozen, providerContext)),
                 timeout,
             ]);
@@ -174,16 +118,6 @@
             return { ok: true, value };
         } catch (err) {
             return busError("bus.response_invalid", String((err && err.message) || err));
-=======
-                Promise.resolve().then(() => provider.handler(frozen)),
-                timeout,
-            ]);
-            // A timeout resolves to a BusResult; a handler value is wrapped.
-            if (value && value.ok === false && value.error) return value;
-            return { ok: true, value };
-        } catch (err) {
-            return busError("sdk.interop.response_invalid", String((err && err.message) || err));
->>>>>>> origin/main
         } finally {
             clearTimeout(timer);
         }
@@ -465,38 +399,6 @@
                     return busRequest(name, payload, options, pkg.id);
                 },
             }),
-            bus: Object.freeze({
-                // Formal interop bus (experimental). A package may only publish in
-                // its own "{id}.*" namespace; it may subscribe to any event.
-                publish(name, payload) {
-                    requireCap("bus.publish");
-                    const event = String(name || "");
-                    if (event !== pkg.id && !event.startsWith(pkg.id + ".")) {
-                        throw new Error(
-                            `Package "${pkg.id}" cannot publish to foreign namespace "${event}"`
-                        );
-                    }
-                    return busPublish(event, payload);
-                },
-                subscribe(name, fn) {
-                    requireCap("bus.subscribe");
-                    return busSubscribe(name, fn);
-                },
-                provide(method, handler) {
-                    requireCap("bus.provide");
-                    const name = String(method || "");
-                    if (name !== pkg.id && !name.startsWith(pkg.id + ".")) {
-                        throw new Error(
-                            `Package "${pkg.id}" cannot provide in foreign namespace "${name}"`
-                        );
-                    }
-                    return busProvide(name, handler, pkg.id);
-                },
-                request(method, payload, options) {
-                    requireCap("bus.request");
-                    return busRequest(method, payload, options);
-                },
-            }),
             commands: Object.freeze({
                 register(name, handler) {
                     requireCap("commands.register");
@@ -632,11 +534,7 @@
                 },
             }),
             storage: Object.freeze({
-<<<<<<< HEAD
                 // Managed SQLite storage. The package
-=======
-                // Experimental managed SQLite storage (Phase 7B). The package
->>>>>>> origin/main
                 // never sees a path or raw SQL — only a scope, a named query, and
                 // typed params. The backend validates capability/scope/permission.
                 sqlite: Object.freeze({

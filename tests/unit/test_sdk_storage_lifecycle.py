@@ -43,8 +43,8 @@ def test_doctor_ignores_storage_for_installed_package(db, monkeypatch, tmp_path)
     storage_root = tmp_path / "storage" / "packages"
     monkeypatch.setattr(package_registry, "STORAGE_PACKAGES_DIR", storage_root)
     gm = seed_user(email="storage-lifecycle@test.com")
-    install_system(gm, package_id="dnd5e")
-    (storage_root / "rulesets" / "dnd5e" / "global").mkdir(parents=True)
+    install_system(gm, package_id="valid-ruleset")
+    (storage_root / "rulesets" / "valid-ruleset" / "global").mkdir(parents=True)
 
     codes = {f.code for f in PackageDoctorService().audit()}
     assert "sdk.storage.orphaned_storage" not in codes

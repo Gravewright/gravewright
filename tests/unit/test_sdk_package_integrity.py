@@ -1,4 +1,4 @@
-"""Phase 6 — package integrity migration.
+﻿"""Phase 6 â€” package integrity migration.
 
 The install registry stores a manifest hash and validation status; disk is the
 runtime authority; the doctor detects drift between the stored snapshot/hash and
@@ -41,10 +41,10 @@ def test_installed_packages_schema_has_manifest_integrity_fields():
 
 def test_manifest_hash_saved_on_install(db):
     gm = seed_user(email="integrity-install@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
 
-    record = InstalledPackageRepository().get("dnd5e")
-    assert record["manifest_hash"] == _disk_hash("dnd5e")
+    record = InstalledPackageRepository().get("valid-ruleset")
+    assert record["manifest_hash"] == _disk_hash("valid-ruleset")
     assert record["last_validation_status"] == "valid"
     assert record["last_validated_at"] is not None
 
@@ -52,39 +52,39 @@ def test_manifest_hash_saved_on_install(db):
 def test_enable_revalidates_manifest_from_disk(db):
     gm = seed_user(email="integrity-enable@test.com")
     svc = PackageInstallService()
-    svc.install(package_id="dnd5e", user_id=gm)
+    svc.install(package_id="valid-ruleset", user_id=gm)
 
     # Corrupt the stored hash, then enable: re-validation rewrites it from disk.
     InstalledPackageRepository().record_validation(
-        package_id="dnd5e", manifest_hash="stale", last_validation_status="stale"
+        package_id="valid-ruleset", manifest_hash="stale", last_validation_status="stale"
     )
-    result = svc.enable(package_id="dnd5e")
+    result = svc.enable(package_id="valid-ruleset")
     assert result.success
 
-    record = InstalledPackageRepository().get("dnd5e")
-    assert record["manifest_hash"] == _disk_hash("dnd5e")
+    record = InstalledPackageRepository().get("valid-ruleset")
+    assert record["manifest_hash"] == _disk_hash("valid-ruleset")
     assert record["last_validation_status"] == "valid"
 
 
 def test_runtime_uses_current_validated_manifest_not_stale_snapshot(db):
     gm = seed_user(email="integrity-runtime@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
 
     # Tamper with the stored snapshot; the runtime must still read from disk.
     InstalledPackageRepository().upsert(
-        package_id="dnd5e",
+        package_id="valid-ruleset",
         kind="ruleset",
         name="TAMPERED",
         version="9.9.9",
         status="enabled",
-        package_dir="rulesets/dnd5e",
-        manifest_json=json.dumps({"id": "dnd5e", "kind": "ruleset", "name": "TAMPERED"}),
+        package_dir="rulesets/valid-ruleset",
+        manifest_json=json.dumps({"id": "valid-ruleset", "kind": "ruleset", "name": "TAMPERED"}),
         compatibility_status="compatible",
         validation_errors_json="[]",
         installed_by_user_id=gm,
         manifest_hash="bogus",
     )
-    manifest = PackageInstallService().get_manifest("dnd5e")
+    manifest = PackageInstallService().get_manifest("valid-ruleset")
     assert manifest is not None
     assert manifest.name != "TAMPERED"  # came from disk, not the tampered snapshot
 
@@ -92,7 +92,7 @@ def test_runtime_uses_current_validated_manifest_not_stale_snapshot(db):
 def test_invalid_current_manifest_blocks_enable(db, monkeypatch):
     gm = seed_user(email="integrity-invalid@test.com")
     svc = PackageInstallService()
-    svc.install(package_id="dnd5e", user_id=gm)
+    svc.install(package_id="valid-ruleset", user_id=gm)
 
     from app.engine.sdk.package_loader import LoadedPackage
     from app.engine.sdk.package_manifest import PackageManifest
@@ -101,13 +101,13 @@ def test_invalid_current_manifest_blocks_enable(db, monkeypatch):
 
     invalid = LoadedPackage(
         package_dir=Path("x"),
-        manifest=PackageManifest.from_dict({"id": "dnd5e"}),
+        manifest=PackageManifest.from_dict({"id": "valid-ruleset"}),
         validation=PackageManifestValidation(errors=["sdk.validation.kind"]),
-        raw={"id": "dnd5e"},
+        raw={"id": "valid-ruleset"},
         kind_dir="rulesets",
     )
     monkeypatch.setattr(package_registry, "load_by_package_id", lambda pid, *a, **k: invalid)
-    result = svc.enable(package_id="dnd5e")
+    result = svc.enable(package_id="valid-ruleset")
     assert result.success is False
 
 
@@ -116,17 +116,17 @@ def test_invalid_current_manifest_blocks_enable(db, monkeypatch):
 
 def test_doctor_reports_stale_manifest_snapshot(db):
     gm = seed_user(email="integrity-stale@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
 
     # Snapshot + hash are mutually consistent but differ from disk -> stale.
-    modified = {"id": "dnd5e", "kind": "ruleset", "name": "older"}
+    modified = {"id": "valid-ruleset", "kind": "ruleset", "name": "older"}
     InstalledPackageRepository().upsert(
-        package_id="dnd5e",
+        package_id="valid-ruleset",
         kind="ruleset",
         name="older",
         version="1.0.0",
         status="enabled",
-        package_dir="rulesets/dnd5e",
+        package_dir="rulesets/valid-ruleset",
         manifest_json=json.dumps(modified),
         compatibility_status="compatible",
         validation_errors_json="[]",
@@ -139,22 +139,22 @@ def test_doctor_reports_stale_manifest_snapshot(db):
 
 def test_doctor_reports_manifest_hash_mismatch(db):
     gm = seed_user(email="integrity-mismatch@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
 
     # Snapshot differs from disk but stored hash matches disk -> the stored
     # hash/snapshot pair is internally inconsistent (mismatch, not stale).
     InstalledPackageRepository().upsert(
-        package_id="dnd5e",
+        package_id="valid-ruleset",
         kind="ruleset",
         name="x",
         version="1.0.0",
         status="enabled",
-        package_dir="rulesets/dnd5e",
-        manifest_json=json.dumps({"id": "dnd5e", "kind": "ruleset", "name": "x"}),
+        package_dir="rulesets/valid-ruleset",
+        manifest_json=json.dumps({"id": "valid-ruleset", "kind": "ruleset", "name": "x"}),
         compatibility_status="compatible",
         validation_errors_json="[]",
         installed_by_user_id=gm,
-        manifest_hash=_disk_hash("dnd5e"),
+        manifest_hash=_disk_hash("valid-ruleset"),
     )
     codes = {f.code for f in PackageDoctorService().audit()}
     assert "sdk.persistence.manifest_hash_mismatch" in codes
@@ -162,7 +162,7 @@ def test_doctor_reports_manifest_hash_mismatch(db):
 
 def test_missing_manifest_turns_package_status_error(db):
     gm = seed_user(email="integrity-missing@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
     # Forge a row for a package that does not exist on disk.
     InstalledPackageRepository().upsert(
         package_id="ghost-pkg",

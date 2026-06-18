@@ -21,11 +21,11 @@ from app.engine.sdk.package_manifest import PackageManifest
 from tests.conftest import install_system, seed_campaign, seed_user
 
 
-def _depends_on_dnd5e(self, package_id):
-    """get_manifest stand-in: dice depends on dnd5e; everything else is real."""
-    if package_id == "dice-so-nice-lite":
+def _depends_on_ruleset(self, package_id):
+    """get_manifest stand-in: addon depends on ruleset; everything else is real."""
+    if package_id == "valid-addon":
         return PackageManifest.from_dict(
-            {"id": "dice-so-nice-lite", "kind": "addon", "dependencies": [{"id": "dnd5e"}]}
+            {"id": "valid-addon", "kind": "addon", "dependencies": [{"id": "valid-ruleset"}]}
         )
     loaded = package_registry.load_by_package_id(package_id)
     return loaded.manifest if loaded else None
@@ -33,8 +33,8 @@ def _depends_on_dnd5e(self, package_id):
 
 def _install_pair(email):
     gm = seed_user(email=email)
-    install_system(gm, package_id="dnd5e")
-    install_system(gm, package_id="dice-so-nice-lite")
+    install_system(gm, package_id="valid-ruleset")
+    install_system(gm, package_id="valid-addon")
     return gm
 
 
@@ -43,63 +43,63 @@ def _install_pair(email):
 
 def test_active_dependents_lists_enabled_dependent(db, monkeypatch):
     _install_pair("dep-list@test.com")
-    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_dnd5e)
-    dependents = PackageInstallService().active_dependents("dnd5e")
-    assert {d["id"] for d in dependents} == {"dice-so-nice-lite"}
+    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_ruleset)
+    dependents = PackageInstallService().active_dependents("valid-ruleset")
+    assert {d["id"] for d in dependents} == {"valid-addon"}
 
 
 def test_disable_blocked_when_active_package_depends_on_it(db, monkeypatch):
     _install_pair("dep-disable@test.com")
-    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_dnd5e)
+    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_ruleset)
     svc = PackageInstallService()
 
-    result = svc.disable(package_id="dnd5e")
+    result = svc.disable(package_id="valid-ruleset")
     assert result.success is False
     assert result.error_key == "sdk.errors.active_dependents"
 
 
 def test_remove_blocked_when_active_package_depends_on_it(db, monkeypatch):
     _install_pair("dep-remove@test.com")
-    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_dnd5e)
+    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_ruleset)
     svc = PackageInstallService()
 
-    result = svc.remove(package_id="dnd5e")
+    result = svc.remove(package_id="valid-ruleset")
     assert result.success is False
     assert result.error_key == "sdk.errors.active_dependents"
 
 
 def test_active_dependents_error_includes_dependents_details(db, monkeypatch):
     _install_pair("dep-details@test.com")
-    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_dnd5e)
+    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_ruleset)
 
-    result = PackageInstallService().disable(package_id="dnd5e")
-    assert [d["id"] for d in result.active_dependents] == ["dice-so-nice-lite"]
+    result = PackageInstallService().disable(package_id="valid-ruleset")
+    assert [d["id"] for d in result.active_dependents] == ["valid-addon"]
 
 
 def test_force_disable_allows_but_doctor_reports_missing_dependency(db, monkeypatch):
     from app.engine.sdk.package_doctor_service import PackageDoctorService
 
     _install_pair("dep-force@test.com")
-    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_dnd5e)
+    monkeypatch.setattr(PackageInstallService, "get_manifest", _depends_on_ruleset)
 
-    forced = PackageInstallService().disable(package_id="dnd5e", force=True)
+    forced = PackageInstallService().disable(package_id="valid-ruleset", force=True)
     assert forced.success is True
 
-    # dice is still enabled but its dependency dnd5e is now disabled.
+    # addon is still enabled but its ruleset dependency is now disabled.
     codes = {f.code for f in PackageDoctorService().audit()}
     assert "dependency_disabled" in codes
 
 
 def test_remove_package_preserves_storage_by_default(db, monkeypatch):
     gm = seed_user(email="dep-storage@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
 
-    storage = package_registry.storage_dir_for("ruleset", "dnd5e")
+    storage = package_registry.storage_dir_for("ruleset", "valid-ruleset")
     (storage / "global").mkdir(parents=True, exist_ok=True)
     marker = storage / "global" / "data.sqlite3"
     marker.write_text("data", encoding="utf-8")
     try:
-        result = PackageInstallService().remove(package_id="dnd5e", force=True)
+        result = PackageInstallService().remove(package_id="valid-ruleset", force=True)
         assert result.success is True
         assert marker.is_file(), "managed storage must survive package removal"
     finally:
@@ -130,7 +130,7 @@ def test_deactivate_blocked_when_active_package_depends_on_it(db, monkeypatch):
 def test_ruleset_switch_revalidates_dependencies(db, monkeypatch):
     gm = seed_user(email="dep-ruleset@test.com")
     campaign = seed_campaign(gm)
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
 
     # A failing dependency report must block the ruleset switch.
     monkeypatch.setattr(
@@ -138,5 +138,5 @@ def test_ruleset_switch_revalidates_dependencies(db, monkeypatch):
         "check_campaign_activation",
         lambda self, pid, cid: DependencyReport(ok=False, missing=[{"id": "needs-it"}]),
     )
-    result = PackageActivationService().set_campaign_ruleset(campaign, "dnd5e", gm)
+    result = PackageActivationService().set_campaign_ruleset(campaign, "valid-ruleset", gm)
     assert result.success is False

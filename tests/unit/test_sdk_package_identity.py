@@ -68,11 +68,11 @@ def test_all_sdk_kinds_have_directory_mapping():
 
 
 def test_storage_resolution_uses_validated_kind_and_package_id():
-    storage = storage_dir_for("ruleset", "dnd5e")
+    storage = storage_dir_for("ruleset", "sample-ruleset")
     assert storage is not None
-    assert storage.as_posix().endswith("storage/packages/rulesets/dnd5e")
+    assert storage.as_posix().endswith("storage/packages/rulesets/sample-ruleset")
     # Unknown kind / unsafe id never resolve.
-    assert storage_dir_for("bogus", "dnd5e") is None
+    assert storage_dir_for("bogus", "sample-ruleset") is None
     assert storage_dir_for("ruleset", "../etc") is None
     assert package_dir_for("addon", "my-addon").as_posix().endswith("packages/addons/my-addon")
 
@@ -149,7 +149,7 @@ def test_doctor_reports_manifest_id_mismatch(db, monkeypatch):
     from app.engine.sdk.package_doctor_service import PackageDoctorService
 
     gm = seed_user(email="identity-id@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
     monkeypatch.setattr(
         package_registry,
         "load_by_package_id",
@@ -163,7 +163,7 @@ def test_doctor_reports_kind_root_mismatch(db, monkeypatch):
     from app.engine.sdk.package_doctor_service import PackageDoctorService
 
     gm = seed_user(email="identity-kind@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
     monkeypatch.setattr(
         package_registry,
         "load_by_package_id",
@@ -179,7 +179,7 @@ def test_doctor_reports_flat_layout(db, monkeypatch):
     from app.engine.sdk.package_doctor_service import PackageDoctorService
 
     gm = seed_user(email="identity-flat@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
     monkeypatch.setattr(
         package_registry,
         "load_by_package_id",
@@ -196,11 +196,11 @@ def test_asset_resolution_uses_validated_package_id(db):
     from app.engine.sdk.package_asset_service import PackageAssetService
 
     gm = seed_user(email="identity-asset@test.com")
-    install_system(gm, package_id="dnd5e")
-    resolved = PackageAssetService().resolve("dnd5e", "assets/dnd5e.css")
+    install_system(gm, package_id="valid-assets")
+    resolved = PackageAssetService().resolve("valid-assets", "icons/i.svg")
     assert resolved is not None
     path, content_type = resolved
-    assert content_type == "text/css"
+    assert content_type == "image/svg+xml"
     assert path.is_file()
     # Served from the grouped location, never a flat or traversed path.
-    assert "rulesets/dnd5e" in path.as_posix()
+    assert "assets/valid-assets" in path.as_posix()

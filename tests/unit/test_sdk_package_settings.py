@@ -145,10 +145,10 @@ def test_corrupted_setting_value_does_not_crash_read(db, monkeypatch):
 
 def test_corrupted_setting_json_is_reported_by_doctor(db):
     gm = seed_user(email="settings-corrupt@test.com")
-    install_system(gm, package_id="dice-so-nice-lite")  # declares the user setting "dice.color"
+    install_system(gm, package_id="valid-addon")  # declares the user setting "ui.color"
     PackageSettingRepository().set(
-        package_id="dice-so-nice-lite",
-        setting_key="dice.color",
+        package_id="valid-addon",
+        setting_key="ui.color",
         value_json="{corrupt",
         campaign_id=None,
         user_id=gm,
@@ -157,4 +157,4 @@ def test_corrupted_setting_json_is_reported_by_doctor(db):
     findings = PackageDoctorService().audit()
     corrupted = [f for f in findings if f.code == "setting_value_corrupted"]
     assert corrupted, "doctor should report the corrupted setting value"
-    assert corrupted[0].package_id == "dice-so-nice-lite"
+    assert corrupted[0].package_id == "valid-addon"

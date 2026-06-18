@@ -6,22 +6,12 @@
 
 ## Why
 
-<<<<<<< HEAD
 Bare `error_key` strings are fine at the *edges* (routes, templates, CLI) but a
 weak internal contract: they mix namespaces, are easy to typo, and tempt tests
 to assert on human text. The diagnostics contract is the **internal** format.
 
 > SDK services return `SdkError` / `SdkActionResult` / `DoctorFinding`. At the
 > HTTP boundary the structured `code` is also surfaced as `error_key`.
-=======
-Historically the SDK returned bare `error_key` strings. That is fine at the
-*edges* (routes, templates, CLI, legacy payloads) but it is a weak internal
-contract: it mixes namespaces, is easy to typo, and tempts tests to assert on
-human text. The diagnostics contract replaces it as the **internal** format.
-
-> New and refactored services return `SdkError` / `SdkActionResult` /
-> `DoctorFinding`. `error_key` survives only as a boundary adapter.
->>>>>>> origin/main
 
 ## Types
 
@@ -96,21 +86,11 @@ sdk.storage.sqlite.query_missing
 
 Tests assert on `code` and `details`, **never** on `message`.
 
-<<<<<<< HEAD
 ## HTTP boundary
 
 SDK endpoints return the structured `code`. At the HTTP boundary the same value
 is mirrored into the `error_key` field so the route/template/CLI layer has a
 single stable error string; there is no separate error vocabulary or mapping.
-=======
-## Legacy boundary adapter
-
-`sdk_error_to_legacy_key(error)` maps a structured `SdkError` back to the old
-`error_key` vocabulary (`sdk.validation.*`, `sdk.errors.*`) for routes/templates/
-CLI that still consume it. The mapping lives in `LEGACY_KEY_BY_CODE`; unmapped
-codes fall back to the code string itself. This is a transition shim — new
-services never construct `error_key` directly.
->>>>>>> origin/main
 
 ## Adoption status
 
@@ -120,7 +100,6 @@ Later phases emit these codes as they touch each service: compatibility
 (Phase 7), reverse dependencies (Phase 8). The strict doctor (Phase 9) migrates
 `PackageDoctorService` onto the canonical `DoctorFinding`; until then it keeps
 its existing finding dicts.
-<<<<<<< HEAD
 
 ## Doctor finding codes
 
@@ -157,5 +136,3 @@ Full normalization onto the `sdk.<area>.<detail>` convention (e.g.
 `sdk.bus.provider_conflict`) is **post-freeze** work toward LTS 1. When it lands,
 the un-namespaced codes will be kept as documented aliases so existing tooling
 does not break; the freeze does not rename them.
-=======
->>>>>>> origin/main

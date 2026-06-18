@@ -6,13 +6,8 @@
 
 Layers: **manifest** (the on-disk package contract), **backend** (Python
 services/validation), **frontend** (`window.GravewrightSDK` + the scoped `sdk`),
-<<<<<<< HEAD
 **persistence** (DB-backed install registry), **storage** (managed SQLite),
 **interop** (`sdk.bus.*`), and **HTML sheets**.
-=======
-**persistence** (DB-backed install registry), **storage** (managed SQLite,
-planned), **interop** (`sdk.bus.*`, planned).
->>>>>>> origin/main
 
 ## Frontend — global entry point
 
@@ -38,7 +33,6 @@ planned), **interop** (`sdk.bus.*`, planned).
 | `sdk.commands.register` | `commands.register` | `stable` |
 | `sdk.chat.send` | `chat.cards` | `stable` |
 | `sdk.ui.toast/openModal/closeModal` | `assets.ui` | `stable` |
-<<<<<<< HEAD
 | `sdk.sheets.helpers/register` | `sheets.runtime` | `stable` |
 | `sdk.combat.register/registerPanel/dispatch/renderSlot` | `combat.runtime` | `stable` |
 | `sdk.tokens.centerOn` | `tokens.extends` | `stable` |
@@ -49,19 +43,6 @@ planned), **interop** (`sdk.bus.*`, planned).
 | `sdk.sheets.registerController` | `sheets.controller` | `stable` |
 
 Ergonomic shortcuts (`sdk.toast`, `sdk.setting`) delegate
-=======
-| `sdk.sheets.helpers/register` | `sheets.hooks` | `legacy_experimental` |
-| `sdk.combat.register/registerPanel/callHook/renderSlot` | `combat.hooks` | `legacy_experimental` |
-| `sdk.tokens.centerOn` | `tokens.extends` | `stable` |
-| `sdk.scene.activeCanvas/activeCameraForScene` | `scene.tools` | `stable` |
-| `sdk.tools.activeTool` | `scene.tools` | `stable` |
-| `sdk.hooks.on/once/emit` | `hooks.client` | `legacy_experimental` |
-| `sdk.events.on/once` | `hooks.client` | `legacy_experimental` |
-| `sdk.storage.sqlite.query/execute/status` | `storage.sqlite` | `experimental` (Phase 7B) |
-| `sdk.bus.publish/subscribe/request/provide` | `bus.*` | `experimental` (Phase 12) |
-
-Ergonomic shortcuts (`sdk.on`, `sdk.once`, `sdk.toast`, `sdk.setting`) delegate
->>>>>>> origin/main
 to the namespaces above and inherit their status.
 
 ## Manifest — public fields
@@ -80,15 +61,9 @@ to the namespaces above and inherit their status.
 | `dependencies[]`, `conflicts[]` | `stable` |
 | `distribution{type,url,sha256}` | `stable` |
 | `display{color}` | `stable` |
-<<<<<<< HEAD
 | `storage.sqlite{...}` | `stable` |
 | `interop{emits,listens,provides,requires}` | `stable` |
 | `provides.*.sheet{mode:"html",...}` | `stable` |
-=======
-| `storage.sqlite{...}` | `experimental` (Phase 7A) |
-| `interop{emits,listens,provides,requires}` | `experimental` (Phase 12) |
-| `provides.*.sheet{mode:"html",...}` | planned (Phase 13) |
->>>>>>> origin/main
 
 ## Backend — services / validation
 
@@ -105,13 +80,8 @@ to the namespaces above and inherit their status.
 | `PackageDoctorService` / `DoctorFinding` | `stable` | Unified finding contract in Phase 1; strict checks in Phase 9. |
 | `PackageAssetService` / `PackageContentService` / `PackageLocaleService` | `stable` | |
 | `SdkError` / `SdkActionResult` | planned | Phase 1 diagnostics contract. |
-<<<<<<< HEAD
 | Managed storage service | `stable` | Named query runtime. |
 | `sdk.bus` backend/doctor checks | `stable` | Interop declaration checks. |
-=======
-| Managed storage service | planned | Phase 7A/7B. |
-| `sdk.bus` backend | planned | Phase 12. |
->>>>>>> origin/main
 
 ## Persistence
 
@@ -122,7 +92,6 @@ to the namespaces above and inherit their status.
 | `package_settings` | `stable` |
 | `package_content_imports` | `stable` |
 
-<<<<<<< HEAD
 ## Closed by the Alpha 2.0.0 SDK Freeze
 
 The gaps tracked during SDK 1 development are now closed and part of the frozen
@@ -140,17 +109,3 @@ Remaining hardening (validation error model, broader schema validation for
 surface.
 
 See `stability-policy.md` for the level definitions.
-=======
-## Known gaps (tracked by later phases)
-
-- No canonical `capabilities.json`; backend and frontend capability sets drift.
-  → Phase 2.
-- Error model is bare `sdk.validation.*` strings, not structured `SdkError`. →
-  Phase 1.
-- Some services read `manifest_json` from the DB as authority instead of disk. →
-  Phase 6.
-- Flat data layout, no managed storage tree. → Phase 5 / Phase 7.
-
-See `current-state.md` for the detailed inventory and `stability-policy.md` for
-the level definitions.
->>>>>>> origin/main

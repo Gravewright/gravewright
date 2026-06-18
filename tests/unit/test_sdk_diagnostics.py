@@ -8,20 +8,12 @@ fields, never on human-readable ``message`` text.
 from __future__ import annotations
 
 from app.engine.sdk.diagnostics import (
-<<<<<<< HEAD
-=======
-    LEGACY_KEY_BY_CODE,
->>>>>>> origin/main
     SDK_ERROR_CODES,
     DoctorFinding,
     SdkActionResult,
     SdkError,
     is_known_namespace,
     is_machine_readable_code,
-<<<<<<< HEAD
-=======
-    sdk_error_to_legacy_key,
->>>>>>> origin/main
 )
 
 
@@ -92,33 +84,11 @@ def test_error_codes_are_machine_readable():
     assert not is_known_namespace("sdk.bogus.thing")
 
 
-<<<<<<< HEAD
 def test_new_services_do_not_return_error_key_as_primary_contract():
     # Guard rail: the diagnostics module — the contract every SDK service speaks
     # — must not expose an ``error_key`` field on any of its structured types.
     # SDK services return SdkError/SdkActionResult/DoctorFinding; ``error_key``
     # is only the HTTP-boundary mirror of the structured ``code``.
-=======
-def test_legacy_error_key_can_be_derived_during_transition():
-    # A mapped code resolves to its legacy key...
-    mapped = SdkError(code="sdk.capabilities.forbidden")
-    assert sdk_error_to_legacy_key(mapped) == "sdk.validation.capability_forbidden"
-    # ...and every mapping target is itself a stable string under sdk.*.
-    for code, legacy in LEGACY_KEY_BY_CODE.items():
-        assert is_machine_readable_code(code), code
-        assert legacy.startswith("sdk.")
-
-    # An unmapped code falls back to the (already stable) code itself.
-    unmapped = SdkError(code="sdk.storage.sqlite.query_missing")
-    assert sdk_error_to_legacy_key(unmapped) == "sdk.storage.sqlite.query_missing"
-
-
-def test_new_services_do_not_return_error_key_as_primary_contract():
-    # Guard rail: the diagnostics module — the contract new services speak — must
-    # not expose an ``error_key`` field on any of its structured types. New
-    # services return SdkError/SdkActionResult/DoctorFinding; error_key only
-    # exists via the explicit boundary adapter.
->>>>>>> origin/main
     for cls in (SdkError, SdkActionResult, DoctorFinding):
         annotations = getattr(cls, "__annotations__", {})
         assert "error_key" not in annotations, cls.__name__

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 """SDK 1 HTML sheet contract."""
 
 from __future__ import annotations
@@ -17,37 +16,15 @@ RUNTIME = (PROJECT_ROOT / "static" / "js" / "sdk" / "gravewright-sdk.js").read_t
 
 
 def test_sheet_capabilities_are_stable_manifest_capabilities():
-=======
-"""Phase 13 — HTML sheets preparation.
-
-HTML sheets are not implemented yet. This pins the *reserved* contract: the
-sheet capabilities exist in the canonical registry as experimental,
-declaration-only placeholders, so a future release is additive.
-"""
-
-from __future__ import annotations
-
-from app.engine.sdk.capability_registry import get_registry
-
-
-def test_sheet_capabilities_are_reserved_experimental():
->>>>>>> origin/main
     registry = get_registry()
     for name in ("sheets.html", "sheets.controller", "sheets.richText"):
         cap = registry.capabilities.get(name)
         assert cap is not None, name
-<<<<<<< HEAD
         assert cap.status == "stable", name
-=======
-        assert cap.status == "experimental", name
-        # Declaration-only for now: no runtime methods are gated yet.
-        assert cap.methods == ()
->>>>>>> origin/main
         assert "manifest" in cap.surfaces
 
 
 def test_sheet_capabilities_are_known_to_the_validator():
-<<<<<<< HEAD
     known = get_registry().known_names()
     assert {"sheets.html", "sheets.controller", "sheets.richText"} <= known
 
@@ -356,8 +333,3 @@ def test_html_sheet_unmount_wired_to_modal_close():
     ).read_text(encoding="utf-8")
     assert 'addEventListener("vtt:modal-closed"' in events
     assert "GravewrightHTMLSheets?.unmount?.(root)" in events
-=======
-    # A manifest declaring them must not be rejected as unknown.
-    known = get_registry().known_names()
-    assert {"sheets.html", "sheets.controller", "sheets.richText"} <= known
->>>>>>> origin/main

@@ -10,8 +10,18 @@
   },
   "entrypoints": {},
   "provides": {},
+  "settings": [
+    {
+      "key": "ui.color",
+      "scope": "user",
+      "type": "string",
+      "default": "red",
+      "label": "UI color"
+    }
+  ],
   "capabilities": [
-    "assets.scripts"
+    "assets.scripts",
+    "settings"
   ],
   "activation": {
     "scope": "campaign",

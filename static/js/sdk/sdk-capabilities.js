@@ -35,10 +35,7 @@
         BUS_SUBSCRIBE: "bus.subscribe",
         BUS_REQUEST: "bus.request",
         BUS_PROVIDE: "bus.provide",
-<<<<<<< HEAD
         SHEETS_CONTROLLER: "sheets.controller",
-=======
->>>>>>> origin/main
     });
 
     // SDK method name -> required capability.
@@ -66,17 +63,9 @@
         "content.packs": CAPABILITIES.CONTENT_PACKS,
         "content.pack": CAPABILITIES.CONTENT_PACKS,
         "i18n.t": CAPABILITIES.LOCALES,
-<<<<<<< HEAD
         "storage.sqlite.query": CAPABILITIES.STORAGE_SQLITE,
         "storage.sqlite.execute": CAPABILITIES.STORAGE_SQLITE,
         "storage.sqlite.status": CAPABILITIES.STORAGE_SQLITE,
-=======
-        // Experimental managed storage (Phase 7B).
-        "storage.sqlite.query": CAPABILITIES.STORAGE_SQLITE,
-        "storage.sqlite.execute": CAPABILITIES.STORAGE_SQLITE,
-        "storage.sqlite.status": CAPABILITIES.STORAGE_SQLITE,
-        // Experimental interop bus (Phase 12).
->>>>>>> origin/main
         "bus.publish": CAPABILITIES.BUS_PUBLISH,
         "bus.subscribe": CAPABILITIES.BUS_SUBSCRIBE,
         "bus.request": CAPABILITIES.BUS_REQUEST,

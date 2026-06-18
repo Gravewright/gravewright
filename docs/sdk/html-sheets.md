@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # HTML Sheets
 
 HTML sheets are a stable SDK 1 sheet mode for packages that need custom UI while
@@ -11,33 +10,6 @@ staying inside Gravewright's package, capability, and security boundaries.
   "capabilities": ["sheets.html", "sheets.controller", "sheets.richText"],
   "provides": {
     "actorTypes": [
-=======
-# HTML Sheets — Preparation (Phase 13)
-
-> **Planned, not yet implemented.** HTML sheets must come *after* the stable
-> base (frontend lifecycle, managed storage, interop). This document reserves the
-> contract so it can land later without breaking SDK v1. The capabilities
-> `sheets.html`, `sheets.controller`, and `sheets.richText` exist in the
-> canonical registry as **experimental, declaration-only** placeholders.
-
-## Sheet modes
-
-HTML sheets are a separate sheet *mode*, not a loose extension of the declarative
-model:
-
-```text
-declarative   (current)
-html          (planned)
-component     (future)
-```
-
-## Proposed manifest
-
-```json
-{
-  "provides": {
-    "actors": [
->>>>>>> origin/main
       {
         "id": "character",
         "label": "Character",
@@ -50,7 +22,6 @@ component     (future)
         }
       }
     ]
-<<<<<<< HEAD
   }
 }
 ```
@@ -107,28 +78,3 @@ are removed. `onAction` handles `data-action`.
 HTML sheet controllers communicate with other packages through `sdk.bus` and use
 managed storage through `sdk.storage.sqlite` when their package declares the
 matching capabilities.
-=======
-  },
-  "capabilities": ["sheets.html", "sheets.controller"]
-}
-```
-
-## Reserved rules (to enforce when implemented)
-
-1. No inline HTML in the manifest — `template` must be a declared, path-safe file.
-2. `controller` and `style` must be declared, path-safe files.
-3. Actor/item/campaign data is escaped by default (`textContent`); rich text
-   requires the explicit `sheets.richText` capability and a sanitizer.
-4. Inline scripts and inline event handlers are forbidden (or an explicit unsafe
-   mode).
-5. HTML sheets communicate via `sdk.bus.*`, not loose public DOM events, and may
-   use managed storage only via `sdk.storage.sqlite.*` with the capability.
-6. HTML of a package is trusted installed code, not safe user content.
-
-## Why now
-
-Reserving the capabilities and the `sheet.mode: "html"` shape now means a future
-HTML-sheets release is additive: packages declaring these capabilities are
-already validated against the registry, and the security rules above are agreed
-before any rendering code exists.
->>>>>>> origin/main

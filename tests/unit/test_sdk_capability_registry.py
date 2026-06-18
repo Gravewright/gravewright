@@ -134,29 +134,16 @@ def test_frontend_capability_map_matches_registry():
     assert not unknown, f"frontend declares capabilities absent from registry: {unknown}"
 
     # No drift: every frontend gate maps to the capability the registry declares.
-<<<<<<< HEAD
     all_gates = registry.method_to_capability()
     for method, cap in js_method_map.items():
         assert all_gates.get(method) == cap, method
     # Every registry gate must be present in the frontend.
     assert set(all_gates) <= set(js_method_map)
-=======
-    all_gates = registry.method_to_capability(include_experimental=True)
-    for method, cap in js_method_map.items():
-        assert all_gates.get(method) == cap, method
-    # Every shipping (non-experimental) gate must be present in the frontend.
-    stable_gates = registry.method_to_capability(include_experimental=False)
-    assert set(stable_gates) <= set(js_method_map)
->>>>>>> origin/main
 
 
 def test_every_public_sdk_method_requires_capability_or_is_explicitly_public():
     registry = get_registry()
-<<<<<<< HEAD
     gates = registry.method_to_capability()
-=======
-    gates = registry.method_to_capability(include_experimental=True)
->>>>>>> origin/main
     runtime = JS_RUNTIME.read_text(encoding="utf-8")
     guarded = set(re.findall(r"requireCap\(\"([^\"]+)\"\)", runtime))
     assert guarded, "expected requireCap() gates in the runtime"
@@ -168,7 +155,6 @@ def test_every_public_sdk_method_requires_capability_or_is_explicitly_public():
 # --- statuses ----------------------------------------------------------------
 
 
-<<<<<<< HEAD
 def test_storage_sqlite_capability_is_stable():
     assert get_registry().status_of("storage.sqlite") == "stable"
 
@@ -181,20 +167,6 @@ def test_bus_capabilities_are_stable():
     registry = get_registry()
     for name in ("bus.publish", "bus.subscribe", "bus.request", "bus.provide"):
         assert registry.status_of(name) == "stable", name
-=======
-def test_storage_sqlite_capability_is_experimental():
-    assert get_registry().status_of("storage.sqlite") == "experimental"
-
-
-def test_hooks_client_is_legacy_experimental():
-    assert get_registry().status_of("hooks.client") == "legacy_experimental"
-
-
-def test_bus_capabilities_are_experimental():
-    registry = get_registry()
-    for name in ("bus.publish", "bus.subscribe", "bus.request", "bus.provide"):
-        assert registry.status_of(name) == "experimental", name
->>>>>>> origin/main
 
 
 # --- docs --------------------------------------------------------------------

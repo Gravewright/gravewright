@@ -197,7 +197,7 @@ def test_doctor_reports_invalid_storage_contract(db, monkeypatch):
     from tests.conftest import install_system, seed_user
 
     gm = seed_user(email="storage-doctor@test.com")
-    install_system(gm, package_id="dnd5e")
+    install_system(gm, package_id="valid-ruleset")
 
     fake = LoadedPackage(
         package_dir=Path("x"),

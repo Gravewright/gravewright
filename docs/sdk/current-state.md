@@ -198,8 +198,8 @@ documented in `docs/sdk/messaging.md` without a legacy/experimental marker.
 ## 10. Data layout
 
 `app/engine/sdk/package_registry.py`: `PACKAGES_DIR = data_dir / "packages"`.
-Packages discovered as **flat** `data/packages/{id}/` directories. Current
-on-disk packages: `data/packages/dnd5e`, `data/packages/dice-so-nice-lite`.
+Packages are discovered from the configured package directory; this repository
+does not ship bundled ruleset or addon packages in `data/packages`.
 
 ### DRIFT — universal layout
 

@@ -46,6 +46,10 @@ class LoadedPackage:
         """Path relative to the packages root, e.g. ``rulesets/<id>``."""
         return f"{self.kind_dir}/{self.id}" if self.kind_dir else self.id
 
+    @property
+    def is_flat_layout(self) -> bool:
+        return self.kind_dir is None
+
 
 def load_package(
     package_dir: Path,

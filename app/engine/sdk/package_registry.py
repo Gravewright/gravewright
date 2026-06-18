@@ -1,10 +1,11 @@
 """Discover and load SDK packages from the configured data directory.
 
 The universal layout groups packages by kind:
-``<DATA_DIR>/packages/{kind_plural}/{id}/``. Discovery considers every safe
-package directory candidate under a kind root; loading then validates whether
-``manifest.json`` exists. This is intentionally pessimistic so ``grave doctor``
-reports broken package directories instead of silently ignoring them.
+``<DATA_DIR>/packages/{kind_plural}/{id}/``. Discovery also keeps read-only
+compatibility with the legacy flat layout (``<DATA_DIR>/packages/{id}/``) so
+``grave doctor`` can report and guide migrations instead of silently ignoring
+old package directories. Loading validates whether ``manifest.json`` exists,
+which lets doctor surface broken package directories.
 """
 
 from __future__ import annotations
@@ -56,10 +57,11 @@ def _base_dir(packages_dir: Path | None) -> Path:
 
 
 def _locations(base: Path) -> list[PackageLocation]:
-    """All discoverable package locations under ``base`` (grouped layout)."""
+    """All discoverable package locations under ``base``."""
     if not base.is_dir():
         return []
     found: list[PackageLocation] = []
+    seen: set[Path] = set()
 
     # Universal grouped layout: data/packages/{kind_plural}/{id}.
     # Do not require manifest.json during discovery: a directory under a known
@@ -74,6 +76,22 @@ def _locations(base: Path) -> list[PackageLocation]:
             if not child.is_dir() or not package_id_is_safe(child.name):
                 continue
             found.append(PackageLocation(child, child.name, kind_dir))
+            seen.add(child.resolve())
+
+    # Legacy flat layout: data/packages/{id}. Keep discovery read-compatible so
+    # operators get an explicit doctor finding instead of a missing package.
+    for child in sorted(base.iterdir()):
+        if child.name in _KIND_DIRS:
+            continue
+        if not child.is_dir() or not package_id_is_safe(child.name):
+            continue
+        try:
+            resolved = child.resolve()
+        except OSError:
+            continue
+        if resolved in seen:
+            continue
+        found.append(PackageLocation(child, child.name, None))
 
     return found
 
@@ -105,4 +123,7 @@ def load_by_package_id(
             return load_package(
                 candidate, expected_id=package_id, expected_kind_root=kind_dir
             )
+    candidate = base / package_id
+    if candidate.is_dir():
+        return load_package(candidate, expected_id=package_id, expected_kind_root=None)
     return None

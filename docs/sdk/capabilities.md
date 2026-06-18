@@ -22,18 +22,11 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `assets.scripts` | Load trusted package JavaScript. |
 | `assets.styles` | Load package CSS. |
 | `assets.ui` | Use UI methods such as toasts and modals. |
-<<<<<<< HEAD
 | `assets.video` | Provide video assets. |
 | `bus.provide` | Provide an SDK interop bus method other packages can request. |
 | `bus.publish` | Publish SDK interop bus events. |
 | `bus.request` | Request a value from an SDK interop bus provider. |
 | `bus.subscribe` | Subscribe to SDK interop bus events. |
-=======
-| `bus.provide` | Provide an SDK interop bus method other packages can request (experimental). |
-| `bus.publish` | Publish SDK interop bus events (experimental). |
-| `bus.request` | Request a value from an SDK interop bus provider (experimental). |
-| `bus.subscribe` | Subscribe to SDK interop bus events (experimental). |
->>>>>>> origin/main
 | `chat.cards` | Send chat cards/messages through `sdk.chat`. |
 | `combat.config` | Provide combat configuration. |
 | `combat.runtime` | Use `sdk.combat.*` runtime methods and panel registration. |
@@ -49,21 +42,12 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `scene.tools` | Use scene/tool methods such as `sdk.scene.*` and `sdk.tools.*`. |
 | `settings` | Define and use package settings. |
 | `sheets.components` | Provide sheet components. |
-<<<<<<< HEAD
 | `sheets.controller` | Attach a controller script to an HTML sheet. |
 | `sheets.declarative` | Provide declarative sheet layouts. |
 | `sheets.html` | Provide HTML-mode actor/item sheets. |
 | `sheets.richText` | Render sanitized rich text in an HTML sheet. |
 | `sheets.runtime` | Use `sdk.sheets.*` runtime methods. |
 | `storage.sqlite` | Use Gravewright-managed SQLite storage scoped to a package. |
-=======
-| `sheets.controller` | Attach a controller script to an HTML sheet (reserved; Phase 13). |
-| `sheets.declarative` | Provide declarative sheet layouts. |
-| `sheets.hooks` | Use `sdk.sheets.*` runtime hooks. |
-| `sheets.html` | Provide HTML-mode actor/item sheets (reserved; Phase 13). |
-| `sheets.richText` | Render sanitized rich text in an HTML sheet (reserved; Phase 13). |
-| `storage.sqlite` | Use Gravewright-managed SQLite storage scoped to a package (experimental). |
->>>>>>> origin/main
 | `tokens.extends` | Use token extension methods such as `sdk.tokens.centerOn`. |
 | `tokens.mappings` | Provide token mappings. |
 <!-- END GENERATED -->

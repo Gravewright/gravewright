@@ -65,15 +65,9 @@ class GenerationError(RuntimeError):
 def parse_capabilities() -> tuple[set[str], set[str], dict[str, str]]:
     """Return (known capabilities, forbidden capabilities, method->capability).
 
-<<<<<<< HEAD
     The method gate table documents the stable SDK 1 browser surface: only
     capabilities that declare ``methods`` contribute gate rows, while every
     capability is counted as known for the allow-list table.
-=======
-    The method gate table documents the *shipping* browser surface, so
-    experimental capabilities (storage/bus, wired into the frontend in later
-    phases) are excluded from the gate map but still counted as known.
->>>>>>> origin/main
     """
     data = json.loads(CAPABILITIES_JSON.read_text(encoding="utf-8"))
     capabilities = data.get("capabilities", {})
@@ -87,11 +81,6 @@ def parse_capabilities() -> tuple[set[str], set[str], dict[str, str]]:
 
     method_to_capability: dict[str, str] = {}
     for name, entry in capabilities.items():
-<<<<<<< HEAD
-=======
-        if entry.get("status") == "experimental":
-            continue
->>>>>>> origin/main
         for method in entry.get("methods", []) or []:
             method_to_capability[method] = name
     if not method_to_capability:

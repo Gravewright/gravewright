@@ -199,8 +199,8 @@ estão documentados em `docs/sdk/messaging.md` sem marcação legacy/experimenta
 ## 10. Layout de dados
 
 `app/engine/sdk/package_registry.py`: `PACKAGES_DIR = data_dir / "packages"`. Os
-pacotes são descobertos como diretórios **flat** `data/packages/{id}/`. Pacotes
-atuais em disco: `data/packages/dnd5e`, `data/packages/dice-so-nice-lite`.
+pacotes são descobertos a partir do diretório configurado; este repositório não
+inclui rulesets ou addons bundled em `data/packages`.
 
 ### DRIFT — layout universal
 

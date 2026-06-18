@@ -2,11 +2,7 @@
 
 There is no JS test runner in this project, so per the plan we pin the browser
 SDK runtime with static source assertions: the register() ownership/lifecycle
-<<<<<<< HEAD
 guards, setup/ready idempotency, listener-error isolation, debug gating, and the
-=======
-guards, setup/ready idempotency, hook-error isolation, debug gating, and the
->>>>>>> origin/main
 capability map / status invariants against the canonical registry.
 """
 
@@ -61,15 +57,9 @@ def test_frontend_ready_runs_once():
     assert 'readyDone.add(id);' in RUNTIME
 
 
-<<<<<<< HEAD
 def test_frontend_listener_error_isolated():
     # emit() wraps each listener call so one failing listener cannot break the rest.
     assert 'try {' in RUNTIME and 'listener' in RUNTIME.lower()
-=======
-def test_frontend_hook_error_isolated():
-    # emit() wraps each listener call so one failing hook cannot break the rest.
-    assert 'try {' in RUNTIME and 'hook' in RUNTIME.lower()
->>>>>>> origin/main
     assert 'console.error' in RUNTIME
 
 
@@ -93,7 +83,6 @@ def test_frontend_capability_map_matches_canonical_registry():
         for method, cap in re.findall(r"\"([^\"]+)\":\s*CAPABILITIES\.(\w+)", source)
     }
     registry = get_registry()
-<<<<<<< HEAD
     all_gates = registry.method_to_capability()
     # No drift, and full coverage of every registry gate.
     for method, cap in js_gates.items():
@@ -104,29 +93,11 @@ def test_frontend_capability_map_matches_canonical_registry():
 def test_hooks_client_capability_is_removed():
     assert get_registry().status_of("hooks.client") is None
     assert "hooks.client" not in STABILITY_POLICY
-=======
-    all_gates = registry.method_to_capability(include_experimental=True)
-    # No drift, and full coverage of the shipping (stable) gates.
-    for method, cap in js_gates.items():
-        assert all_gates.get(method) == cap, method
-    assert set(registry.method_to_capability(include_experimental=False)) <= set(js_gates)
-
-
-def test_hooks_client_documented_as_legacy_experimental():
-    assert get_registry().status_of("hooks.client") == "legacy_experimental"
-    assert "legacy_experimental" in STABILITY_POLICY
-    assert "hooks.client" in STABILITY_POLICY
->>>>>>> origin/main
 
 
 def test_frontend_storage_sqlite_requires_capability():
     # The runtime storage methods are gated on the storage.sqlite capability in
-<<<<<<< HEAD
     # the canonical registry.
     gates = get_registry().method_to_capability()
-=======
-    # the canonical registry (frontend wiring lands with Phase 7B).
-    gates = get_registry().method_to_capability(include_experimental=True)
->>>>>>> origin/main
     assert gates["storage.sqlite.query"] == "storage.sqlite"
     assert gates["storage.sqlite.execute"] == "storage.sqlite"
