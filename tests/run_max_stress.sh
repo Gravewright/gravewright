@@ -27,7 +27,7 @@ mkdir -p "$OUT"
 
 if [[ "$NO_SEED" == "false" ]]; then
   echo "[1/5] Seeding 47 000-tile stress scene (may take a few minutes)..."
-  python "$OUT/seed.py" --db "$DB_PATH"
+  uv run python "$OUT/seed.py" --db "$DB_PATH"
 else
   echo "[1/5] Skipping seed (--no-seed)"
 fi

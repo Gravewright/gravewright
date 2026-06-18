@@ -1,4 +1,4 @@
-name: gravewright_perf
+name: gravewright_ws_live
 
 services:
   app:
@@ -6,9 +6,11 @@ services:
       context: ..
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8004:8000"
     volumes:
       - ../storage:/app/storage
+    cpus: 1.0
+    mem_limit: 4g
     deploy:
       resources:
         limits:
@@ -17,33 +19,35 @@ services:
     environment:
       APP_ENV: development
       APP_DEBUG: "false"
-      ALLOWED_HOSTS: app,app:8000,localhost,localhost:8000
+      ALLOWED_HOSTS: app,app:8000,localhost,localhost:8000,localhost:8004
       SESSION_SECRET: perf-test-secret-key-change-me
       WEB_WORKERS: "1"
+      # Last-write-wins fog so concurrent painters don't storm version_conflict.
+      FOG_REQUIRE_EXPECTED_VERSION: "false"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 12
 
-  locust:
-    image: locustio/locust:2.32.3
-    ports:
-      - "8089:8089"
+  ws_live:
+    build:
+      context: ..
+      dockerfile: Dockerfile
     volumes:
-      - ./performance:/mnt/locust
+      - ../storage:/app/storage
+      - ./performance/ws_live:/app/tests/performance/ws_live
     command: >
-      -f /mnt/locust/locustfile.py
+      .venv/bin/python tests/performance/ws_live/ws_live_test.py
       --host http://app:8000
-      --headless
-      --users 20
-      --spawn-rate 2
-      --run-time 90s
-      --html /mnt/locust/report.html
-      --csv /mnt/locust/results
+      --users 15
+      --spawn-rate 3
+      --run-time 1200
     depends_on:
       app:
         condition: service_healthy
+    cpus: 0.5
+    mem_limit: 512m
     deploy:
       resources:
         limits:

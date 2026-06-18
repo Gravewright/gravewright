@@ -1,0 +1,81 @@
+# WS Live Session — token / fog / chat / reconnect load
+
+## Result
+
+```txt
+finished:            True
+host:                http://app:8000
+users:               500
+run_time:            60s
+actual_duration:     69.2s
+users_started:       500
+users_finished:      500
+failures:            0
+connection_failures: 0
+```
+
+## Realtime traffic
+
+```txt
+commands_sent:       6670
+token_moves:         5309
+fog_paints:          907
+chat_messages:       302
+rolls:               307
+connections_opened:  454
+reconnects:          8
+resumes:             7
+clean_resumes:       7
+resync_required:     0
+version_conflicts:   0
+command_timeouts:    0
+http_failures:       0
+errors_by_code:      {}
+```
+
+## Latency (ms)
+
+```json
+{
+  "token_move": {
+    "count": 5309.0,
+    "avg": 559.5064973908364,
+    "p50": 520.0595440001052,
+    "p95": 1191.7976980003004,
+    "p99": 1384.0935629996238,
+    "max": 1472.0569199998863
+  },
+  "fog_paint": {
+    "count": 907.0,
+    "avg": 294.2554835700153,
+    "p50": 247.1177000006719,
+    "p95": 607.9207040002075,
+    "p99": 750.5733979996876,
+    "max": 5051.477997999427
+  },
+  "chat": {
+    "count": 609.0,
+    "avg": 5265.06781488014,
+    "p50": 5076.856859000145,
+    "p95": 12054.515150000043,
+    "p99": 12476.765479999813,
+    "max": 12698.052710999946
+  },
+  "subscribe": {
+    "count": 447.0,
+    "avg": 293.86330044742607,
+    "p50": 274.47528399989096,
+    "p95": 530.1039619998846,
+    "p99": 590.0602120000258,
+    "max": 1051.537031999942
+  },
+  "resume": {
+    "count": 7.0,
+    "avg": 379.9040567141024,
+    "p50": 193.99763799992797,
+    "p95": 1550.154915999883,
+    "p99": 1550.154915999883,
+    "max": 1550.154915999883
+  }
+}
+```

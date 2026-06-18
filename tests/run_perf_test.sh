@@ -9,6 +9,17 @@ OUT="$ROOT_DIR/tests/performance"
 DB_PATH="$ROOT_DIR/storage/gravewright.sqlite3"
 
 NO_BUILD=false
+STATS_PID=""
+
+cleanup() {
+  if [[ -n "$STATS_PID" ]]; then
+    kill "$STATS_PID" 2>/dev/null || true
+  fi
+  docker compose -f "$COMPOSE_FILE" down
+}
+
+trap cleanup EXIT
+
 for arg in "$@"; do
   [[ "$arg" == "--no-build" ]] && NO_BUILD=true
 done
@@ -21,7 +32,7 @@ echo "════════════════════════�
 echo ""
 
 echo "[1/5] Seeding test data..."
-python "$OUT/seed.py" --db "$DB_PATH"
+uv run python "$OUT/seed.py" --db "$DB_PATH"
 
 if [[ "$NO_BUILD" == "false" ]]; then
   echo ""
@@ -53,10 +64,12 @@ STATS_PID=$!
 echo ""
 echo "[5/5] Running Locust (20 users, 90s, headless)..."
 docker compose -f "$COMPOSE_FILE" run --rm locust \
-  2>&1 | tee "$OUT/locust_output.txt" || true
+  2>&1 | tee "$OUT/locust_output.txt"
 
 kill $STATS_PID 2>/dev/null || true
+STATS_PID=""
 docker compose -f "$COMPOSE_FILE" down
+trap - EXIT
 
 echo ""
 echo "═══════════════════════════════════════════════════"

@@ -1,0 +1,66 @@
+name: gravewright_ws_stress
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8005:8000"
+    volumes:
+      - ../storage:/app/storage
+    cpus: 6.0
+    mem_limit: 8g
+    deploy:
+      resources:
+        limits:
+          cpus: "6.0"
+          memory: 8g
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "false"
+      ALLOWED_HOSTS: app,app:8000,localhost,localhost:8000,localhost:8005
+      SESSION_SECRET: perf-test-secret-key-change-me
+      # Single worker on purpose: the realtime gateway keeps connection,
+      # presence and metric state in-process, so >1 uvicorn worker would
+      # fragment broadcasts. The single async worker is the thing under test.
+      WEB_WORKERS: "1"
+      # Last-write-wins fog so 500 concurrent painters don't storm conflicts.
+      FOG_REQUIRE_EXPECTED_VERSION: "false"
+      # Raise per-connection ingress ceilings so the rate limiter doesn't mask
+      # server throughput at 500 connections.
+      WS_COMMANDS_PER_SECOND: "50"
+      WS_BURST_COMMANDS: "100"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  ws_stress:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ../storage:/app/storage
+      - ./performance/ws_live:/app/tests/performance/ws_live
+    command: >
+      .venv/bin/python tests/performance/ws_live/ws_live_test.py
+      --host http://app:8000
+      --fixtures tests/performance/ws_live/fixtures_multiroom.json
+      --users 500
+      --spawn-rate 10
+      --run-time 1200
+      --open-timeout 60
+      --http-workers 96
+      --output tests/performance/ws_live/results_stress
+    depends_on:
+      app:
+        condition: service_healthy
+    cpus: 4.0
+    mem_limit: 2g
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 2g

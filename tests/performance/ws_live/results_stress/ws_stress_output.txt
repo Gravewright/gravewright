@@ -1,0 +1,24 @@
+ Container gravewright_ws_stress-app-1 Running 
+ Container gravewright_ws_stress-app-1 Waiting 
+ Container gravewright_ws_stress-app-1 Healthy 
+ Container gravewright_ws_stress-ws_stress-run-4f207db4308f Creating 
+ Container gravewright_ws_stress-ws_stress-run-4f207db4308f Created 
+[ws-live] fixtures: multiroom (500 players); spawning 500 users
+[ws-live] Done
+  users_started          500
+  users_finished         500
+  failures               0
+  connections_opened     6053
+  connection_failures    0
+  reconnects             5565
+  resumes                5553
+  clean_resumes          5553
+  resync_required        0
+  commands_sent          247552
+  token_moves            201397
+  fog_paints             40102
+  chat_messages          12511
+  rolls                  12510
+  version_conflicts      0
+  http_failures          0
+  command_timeouts       0

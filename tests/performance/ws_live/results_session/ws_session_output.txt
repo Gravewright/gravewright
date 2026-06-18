@@ -1,0 +1,25 @@
+ Container gravewright_ws_session-app-1 Running 
+ Container gravewright_ws_session-app-1 Waiting 
+ Container gravewright_ws_session-app-1 Healthy 
+ Container gravewright_ws_session-ws_session-run-e2ab9a19deec Creating 
+ Container gravewright_ws_session-ws_session-run-e2ab9a19deec Created 
+[ws-live] fixtures: multiroom (18 players); spawning 18 users
+[ws-live] Done
+  users_started          18
+  users_finished         18
+  failures               0
+  connections_opened     103
+  connection_failures    0
+  reconnects             86
+  resumes                85
+  clean_resumes          85
+  resync_required        0
+  commands_sent          4564
+  token_moves            3273
+  fog_paints             648
+  chat_messages          206
+  rolls                  196
+  pan_zooms              540
+  version_conflicts      0
+  http_failures          0
+  command_timeouts       0

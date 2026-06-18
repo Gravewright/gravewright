@@ -1,0 +1,729 @@
+[Hgravewright_ws_session-app-1	0.02%	123.2MiB / 4GiB	3.01%	53.7MB / 132kB	0B / 27.8MB[K
+[K
+[J[Hgravewright_ws_session-app-1	0.02%	123.2MiB / 4GiB	3.01%	53.7MB / 132kB	0B / 27.8MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.50%	125.9MiB / 4GiB	3.07%	53.7MB / 154kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.50%	125.9MiB / 4GiB	3.07%	53.7MB / 154kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.04%	133.1MiB / 4GiB	3.25%	53.7MB / 410kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.04%	133.1MiB / 4GiB	3.25%	53.7MB / 410kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	0.84%	129.6MiB / 4GiB	3.16%	53.7MB / 410kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	0.84%	129.6MiB / 4GiB	3.16%	53.7MB / 410kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	0.09%	129MiB / 4GiB	3.15%	53.7MB / 410kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	0.09%	129MiB / 4GiB	3.15%	53.7MB / 410kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.09%	129.3MiB / 4GiB	3.16%	53.7MB / 412kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.09%	129.3MiB / 4GiB	3.16%	53.7MB / 412kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.61%	145.1MiB / 4GiB	3.54%	53.7MB / 481kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.61%	145.1MiB / 4GiB	3.54%	53.7MB / 481kB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	89.34%	150.3MiB / 4GiB	3.67%	53.8MB / 4.61MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	89.34%	150.3MiB / 4GiB	3.67%	53.8MB / 4.61MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	4.18%	150.7MiB / 4GiB	3.68%	53.8MB / 4.62MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	4.18%	150.7MiB / 4GiB	3.68%	53.8MB / 4.62MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	6.68%	150.4MiB / 4GiB	3.67%	53.8MB / 4.63MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	6.68%	150.4MiB / 4GiB	3.67%	53.8MB / 4.63MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.05%	159.2MiB / 4GiB	3.89%	53.8MB / 4.65MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.05%	159.2MiB / 4GiB	3.89%	53.8MB / 4.65MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	21.69%	150.9MiB / 4GiB	3.68%	53.8MB / 5.22MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	21.69%	150.9MiB / 4GiB	3.68%	53.8MB / 5.22MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.53%	151.7MiB / 4GiB	3.70%	53.8MB / 5.26MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.53%	151.7MiB / 4GiB	3.70%	53.8MB / 5.26MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.98%	150.7MiB / 4GiB	3.68%	53.8MB / 5.28MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.98%	150.7MiB / 4GiB	3.68%	53.8MB / 5.28MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.75%	151.2MiB / 4GiB	3.69%	53.9MB / 5.32MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.75%	151.2MiB / 4GiB	3.69%	53.9MB / 5.32MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.11%	150.9MiB / 4GiB	3.68%	53.9MB / 5.35MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.11%	150.9MiB / 4GiB	3.68%	53.9MB / 5.35MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.05%	151.3MiB / 4GiB	3.69%	53.9MB / 5.37MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.05%	151.3MiB / 4GiB	3.69%	53.9MB / 5.37MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.87%	151.7MiB / 4GiB	3.70%	53.9MB / 5.39MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.87%	151.7MiB / 4GiB	3.70%	53.9MB / 5.39MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.79%	151.5MiB / 4GiB	3.70%	53.9MB / 5.41MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.79%	151.5MiB / 4GiB	3.70%	53.9MB / 5.41MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.13%	152.1MiB / 4GiB	3.71%	53.9MB / 5.42MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.13%	152.1MiB / 4GiB	3.71%	53.9MB / 5.42MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.19%	151MiB / 4GiB	3.69%	53.9MB / 5.45MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.19%	151MiB / 4GiB	3.69%	53.9MB / 5.45MB	0B / 215MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.09%	151MiB / 4GiB	3.69%	53.9MB / 5.47MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.09%	151MiB / 4GiB	3.69%	53.9MB / 5.47MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.91%	151.8MiB / 4GiB	3.71%	54MB / 5.5MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.91%	151.8MiB / 4GiB	3.71%	54MB / 5.5MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.33%	151.8MiB / 4GiB	3.71%	54MB / 5.53MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.33%	151.8MiB / 4GiB	3.71%	54MB / 5.53MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.57%	151.4MiB / 4GiB	3.70%	54MB / 5.55MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.57%	151.4MiB / 4GiB	3.70%	54MB / 5.55MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.40%	151MiB / 4GiB	3.69%	54MB / 5.57MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.40%	151MiB / 4GiB	3.69%	54MB / 5.57MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.08%	150.7MiB / 4GiB	3.68%	54MB / 5.59MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.08%	150.7MiB / 4GiB	3.68%	54MB / 5.59MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.33%	151.6MiB / 4GiB	3.70%	54MB / 5.62MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.33%	151.6MiB / 4GiB	3.70%	54MB / 5.62MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.50%	151.4MiB / 4GiB	3.70%	54MB / 5.64MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.50%	151.4MiB / 4GiB	3.70%	54MB / 5.64MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.47%	151MiB / 4GiB	3.69%	54.1MB / 5.67MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.47%	151MiB / 4GiB	3.69%	54.1MB / 5.67MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.90%	151MiB / 4GiB	3.69%	54.1MB / 5.69MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.90%	151MiB / 4GiB	3.69%	54.1MB / 5.69MB	0B / 219MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.91%	150.6MiB / 4GiB	3.68%	54.1MB / 5.72MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.91%	150.6MiB / 4GiB	3.68%	54.1MB / 5.72MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.32%	151.6MiB / 4GiB	3.70%	54.1MB / 5.75MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.32%	151.6MiB / 4GiB	3.70%	54.1MB / 5.75MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.66%	151.1MiB / 4GiB	3.69%	54.1MB / 5.77MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.66%	151.1MiB / 4GiB	3.69%	54.1MB / 5.77MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.77%	151.3MiB / 4GiB	3.69%	54.1MB / 5.8MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.77%	151.3MiB / 4GiB	3.69%	54.1MB / 5.8MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.45%	151.3MiB / 4GiB	3.69%	54.2MB / 5.84MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.45%	151.3MiB / 4GiB	3.69%	54.2MB / 5.84MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.14%	151.6MiB / 4GiB	3.70%	54.2MB / 5.88MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.14%	151.6MiB / 4GiB	3.70%	54.2MB / 5.88MB	0B / 222MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.06%	151.6MiB / 4GiB	3.70%	54.2MB / 5.92MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.06%	151.6MiB / 4GiB	3.70%	54.2MB / 5.92MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.37%	151.3MiB / 4GiB	3.69%	54.2MB / 5.93MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.37%	151.3MiB / 4GiB	3.69%	54.2MB / 5.93MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.00%	151.1MiB / 4GiB	3.69%	54.2MB / 5.96MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.00%	151.1MiB / 4GiB	3.69%	54.2MB / 5.96MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.75%	151.9MiB / 4GiB	3.71%	54.2MB / 5.98MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.75%	151.9MiB / 4GiB	3.71%	54.2MB / 5.98MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	29.22%	151.5MiB / 4GiB	3.70%	54.3MB / 6.03MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	29.22%	151.5MiB / 4GiB	3.70%	54.3MB / 6.03MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.36%	151.7MiB / 4GiB	3.70%	54.3MB / 6.05MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.36%	151.7MiB / 4GiB	3.70%	54.3MB / 6.05MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.36%	152.1MiB / 4GiB	3.71%	54.3MB / 6.08MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.36%	152.1MiB / 4GiB	3.71%	54.3MB / 6.08MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.34%	152.1MiB / 4GiB	3.71%	54.3MB / 6.1MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.34%	152.1MiB / 4GiB	3.71%	54.3MB / 6.1MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.23%	151.7MiB / 4GiB	3.70%	54.3MB / 6.13MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.23%	151.7MiB / 4GiB	3.70%	54.3MB / 6.13MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.85%	152.2MiB / 4GiB	3.71%	54.3MB / 6.16MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.85%	152.2MiB / 4GiB	3.71%	54.3MB / 6.16MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.21%	151.7MiB / 4GiB	3.70%	54.4MB / 6.19MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.21%	151.7MiB / 4GiB	3.70%	54.4MB / 6.19MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.69%	151.3MiB / 4GiB	3.69%	54.4MB / 6.21MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.69%	151.3MiB / 4GiB	3.69%	54.4MB / 6.21MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.17%	152.6MiB / 4GiB	3.72%	54.4MB / 6.25MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.17%	152.6MiB / 4GiB	3.72%	54.4MB / 6.25MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.31%	152.4MiB / 4GiB	3.72%	54.4MB / 6.27MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.31%	152.4MiB / 4GiB	3.72%	54.4MB / 6.27MB	0B / 223MB[K
+[K
+[J[Hgravewright_ws_session-app-1	18.45%	151.5MiB / 4GiB	3.70%	54.4MB / 6.3MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	18.45%	151.5MiB / 4GiB	3.70%	54.4MB / 6.3MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	6.50%	152.6MiB / 4GiB	3.73%	54.4MB / 6.32MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	6.50%	152.6MiB / 4GiB	3.73%	54.4MB / 6.32MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.32%	152.2MiB / 4GiB	3.72%	54.5MB / 6.35MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.32%	152.2MiB / 4GiB	3.72%	54.5MB / 6.35MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.87%	152.4MiB / 4GiB	3.72%	54.5MB / 6.38MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.87%	152.4MiB / 4GiB	3.72%	54.5MB / 6.38MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.41%	151.8MiB / 4GiB	3.71%	54.5MB / 6.41MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.41%	151.8MiB / 4GiB	3.71%	54.5MB / 6.41MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.61%	151.8MiB / 4GiB	3.71%	54.5MB / 6.44MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.61%	151.8MiB / 4GiB	3.71%	54.5MB / 6.44MB	0B / 227MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.84%	152.4MiB / 4GiB	3.72%	54.5MB / 6.46MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.84%	152.4MiB / 4GiB	3.72%	54.5MB / 6.46MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.98%	152.2MiB / 4GiB	3.72%	54.5MB / 6.48MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.98%	152.2MiB / 4GiB	3.72%	54.5MB / 6.48MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.36%	152.2MiB / 4GiB	3.72%	54.5MB / 6.5MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.36%	152.2MiB / 4GiB	3.72%	54.5MB / 6.5MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.55%	153MiB / 4GiB	3.74%	54.6MB / 6.54MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.55%	153MiB / 4GiB	3.74%	54.6MB / 6.54MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.60%	152.4MiB / 4GiB	3.72%	54.6MB / 6.56MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.60%	152.4MiB / 4GiB	3.72%	54.6MB / 6.56MB	0B / 228MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.52%	152.8MiB / 4GiB	3.73%	54.6MB / 6.59MB	0B / 231MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.52%	152.8MiB / 4GiB	3.73%	54.6MB / 6.59MB	0B / 231MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.31%	153MiB / 4GiB	3.73%	54.6MB / 6.62MB	0B / 231MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.31%	153MiB / 4GiB	3.73%	54.6MB / 6.62MB	0B / 231MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.37%	153.5MiB / 4GiB	3.75%	54.6MB / 6.64MB	0B / 231MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.37%	153.5MiB / 4GiB	3.75%	54.6MB / 6.64MB	0B / 231MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.27%	153.2MiB / 4GiB	3.74%	54.6MB / 6.66MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.27%	153.2MiB / 4GiB	3.74%	54.6MB / 6.66MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.39%	153.2MiB / 4GiB	3.74%	54.7MB / 6.68MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.39%	153.2MiB / 4GiB	3.74%	54.7MB / 6.68MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.88%	153.1MiB / 4GiB	3.74%	54.7MB / 6.71MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.88%	153.1MiB / 4GiB	3.74%	54.7MB / 6.71MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.39%	152.6MiB / 4GiB	3.73%	54.7MB / 6.73MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.39%	152.6MiB / 4GiB	3.73%	54.7MB / 6.73MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.20%	152.6MiB / 4GiB	3.73%	54.7MB / 6.75MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.20%	152.6MiB / 4GiB	3.73%	54.7MB / 6.75MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.90%	153.1MiB / 4GiB	3.74%	54.7MB / 6.79MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.90%	153.1MiB / 4GiB	3.74%	54.7MB / 6.79MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.32%	153.7MiB / 4GiB	3.75%	54.7MB / 6.82MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.32%	153.7MiB / 4GiB	3.75%	54.7MB / 6.82MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.47%	153.1MiB / 4GiB	3.74%	54.7MB / 6.85MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.47%	153.1MiB / 4GiB	3.74%	54.7MB / 6.85MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.46%	152.9MiB / 4GiB	3.73%	54.8MB / 6.87MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.46%	152.9MiB / 4GiB	3.73%	54.8MB / 6.87MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.59%	153.3MiB / 4GiB	3.74%	54.8MB / 6.9MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.59%	153.3MiB / 4GiB	3.74%	54.8MB / 6.9MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.99%	152.3MiB / 4GiB	3.72%	54.8MB / 6.92MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.99%	152.3MiB / 4GiB	3.72%	54.8MB / 6.92MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	21.62%	154.1MiB / 4GiB	3.76%	54.8MB / 6.97MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	21.62%	154.1MiB / 4GiB	3.76%	54.8MB / 6.97MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.32%	153.2MiB / 4GiB	3.74%	54.8MB / 7MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.32%	153.2MiB / 4GiB	3.74%	54.8MB / 7MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.15%	153.9MiB / 4GiB	3.76%	54.9MB / 7.04MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.15%	153.9MiB / 4GiB	3.76%	54.9MB / 7.04MB	0B / 232MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.40%	153.7MiB / 4GiB	3.75%	54.9MB / 7.06MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.40%	153.7MiB / 4GiB	3.75%	54.9MB / 7.06MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.87%	153.6MiB / 4GiB	3.75%	54.9MB / 7.09MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.87%	153.6MiB / 4GiB	3.75%	54.9MB / 7.09MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.47%	154MiB / 4GiB	3.76%	54.9MB / 7.11MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.47%	154MiB / 4GiB	3.76%	54.9MB / 7.11MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.15%	153.6MiB / 4GiB	3.75%	54.9MB / 7.13MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.15%	153.6MiB / 4GiB	3.75%	54.9MB / 7.13MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.47%	153.4MiB / 4GiB	3.74%	54.9MB / 7.16MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.47%	153.4MiB / 4GiB	3.74%	54.9MB / 7.16MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	18.45%	154.1MiB / 4GiB	3.76%	54.9MB / 7.19MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	18.45%	154.1MiB / 4GiB	3.76%	54.9MB / 7.19MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.08%	154.3MiB / 4GiB	3.77%	55MB / 7.22MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.08%	154.3MiB / 4GiB	3.77%	55MB / 7.22MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.30%	154.3MiB / 4GiB	3.77%	55MB / 7.25MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.30%	154.3MiB / 4GiB	3.77%	55MB / 7.25MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.78%	154.5MiB / 4GiB	3.77%	55MB / 7.28MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.78%	154.5MiB / 4GiB	3.77%	55MB / 7.28MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.89%	153.8MiB / 4GiB	3.76%	55MB / 7.3MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.89%	153.8MiB / 4GiB	3.76%	55MB / 7.3MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.94%	154.3MiB / 4GiB	3.77%	55MB / 7.32MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.94%	154.3MiB / 4GiB	3.77%	55MB / 7.32MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.53%	154.3MiB / 4GiB	3.77%	55MB / 7.34MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.53%	154.3MiB / 4GiB	3.77%	55MB / 7.34MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.52%	156.7MiB / 4GiB	3.83%	55MB / 7.37MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.52%	156.7MiB / 4GiB	3.83%	55MB / 7.37MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.20%	153.6MiB / 4GiB	3.75%	55.1MB / 7.39MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.20%	153.6MiB / 4GiB	3.75%	55.1MB / 7.39MB	0B / 236MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.93%	154.6MiB / 4GiB	3.77%	55.1MB / 7.43MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.93%	154.6MiB / 4GiB	3.77%	55.1MB / 7.43MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.74%	154.4MiB / 4GiB	3.77%	55.1MB / 7.45MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.74%	154.4MiB / 4GiB	3.77%	55.1MB / 7.45MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.23%	153.8MiB / 4GiB	3.75%	55.1MB / 7.47MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.23%	153.8MiB / 4GiB	3.75%	55.1MB / 7.47MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.09%	153.5MiB / 4GiB	3.75%	55.1MB / 7.51MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.09%	153.5MiB / 4GiB	3.75%	55.1MB / 7.51MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.99%	154.1MiB / 4GiB	3.76%	55.1MB / 7.53MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.99%	154.1MiB / 4GiB	3.76%	55.1MB / 7.53MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.18%	153.8MiB / 4GiB	3.76%	55.2MB / 7.56MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.18%	153.8MiB / 4GiB	3.76%	55.2MB / 7.56MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.22%	154.3MiB / 4GiB	3.77%	55.2MB / 7.58MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.22%	154.3MiB / 4GiB	3.77%	55.2MB / 7.58MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.26%	154.6MiB / 4GiB	3.77%	55.2MB / 7.6MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.26%	154.6MiB / 4GiB	3.77%	55.2MB / 7.6MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.95%	154.2MiB / 4GiB	3.76%	55.2MB / 7.63MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.95%	154.2MiB / 4GiB	3.76%	55.2MB / 7.63MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.21%	154.5MiB / 4GiB	3.77%	55.2MB / 7.67MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.21%	154.5MiB / 4GiB	3.77%	55.2MB / 7.67MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.80%	154.3MiB / 4GiB	3.77%	55.2MB / 7.7MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.80%	154.3MiB / 4GiB	3.77%	55.2MB / 7.7MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.51%	154.3MiB / 4GiB	3.77%	55.2MB / 7.71MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.51%	154.3MiB / 4GiB	3.77%	55.2MB / 7.71MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.29%	154.4MiB / 4GiB	3.77%	55.3MB / 7.74MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.29%	154.4MiB / 4GiB	3.77%	55.3MB / 7.74MB	0B / 241MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.81%	154.8MiB / 4GiB	3.78%	55.3MB / 7.76MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.81%	154.8MiB / 4GiB	3.78%	55.3MB / 7.76MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	19.85%	155.1MiB / 4GiB	3.79%	55.3MB / 7.8MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	19.85%	155.1MiB / 4GiB	3.79%	55.3MB / 7.8MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.63%	154.9MiB / 4GiB	3.78%	55.3MB / 7.82MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.63%	154.9MiB / 4GiB	3.78%	55.3MB / 7.82MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.47%	154.6MiB / 4GiB	3.77%	55.3MB / 7.85MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.47%	154.6MiB / 4GiB	3.77%	55.3MB / 7.85MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.33%	154.7MiB / 4GiB	3.78%	55.3MB / 7.88MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.33%	154.7MiB / 4GiB	3.78%	55.3MB / 7.88MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.18%	155.3MiB / 4GiB	3.79%	55.4MB / 7.91MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.18%	155.3MiB / 4GiB	3.79%	55.4MB / 7.91MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.29%	154.8MiB / 4GiB	3.78%	55.4MB / 7.94MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.29%	154.8MiB / 4GiB	3.78%	55.4MB / 7.94MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	5.69%	154.7MiB / 4GiB	3.78%	55.4MB / 7.95MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	5.69%	154.7MiB / 4GiB	3.78%	55.4MB / 7.95MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.13%	154.4MiB / 4GiB	3.77%	55.4MB / 7.98MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.13%	154.4MiB / 4GiB	3.77%	55.4MB / 7.98MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.26%	154.9MiB / 4GiB	3.78%	55.4MB / 8.01MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.26%	154.9MiB / 4GiB	3.78%	55.4MB / 8.01MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.13%	154.9MiB / 4GiB	3.78%	55.4MB / 8.04MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.13%	154.9MiB / 4GiB	3.78%	55.4MB / 8.04MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.66%	155MiB / 4GiB	3.78%	55.5MB / 8.07MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.66%	155MiB / 4GiB	3.78%	55.5MB / 8.07MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.89%	154.8MiB / 4GiB	3.78%	55.5MB / 8.11MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.89%	154.8MiB / 4GiB	3.78%	55.5MB / 8.11MB	0B / 245MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.53%	155MiB / 4GiB	3.78%	55.5MB / 8.14MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.53%	155MiB / 4GiB	3.78%	55.5MB / 8.14MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.04%	155.2MiB / 4GiB	3.79%	55.5MB / 8.16MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.04%	155.2MiB / 4GiB	3.79%	55.5MB / 8.16MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.82%	155.2MiB / 4GiB	3.79%	55.5MB / 8.18MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.82%	155.2MiB / 4GiB	3.79%	55.5MB / 8.18MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.58%	155.3MiB / 4GiB	3.79%	55.5MB / 8.21MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.58%	155.3MiB / 4GiB	3.79%	55.5MB / 8.21MB	0B / 249MB[K
+[K
+[J[Hgravewright_ws_session-app-1	5.65%	154.8MiB / 4GiB	3.78%	55.5MB / 8.22MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	5.65%	154.8MiB / 4GiB	3.78%	55.5MB / 8.22MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.08%	154.7MiB / 4GiB	3.78%	55.6MB / 8.25MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.08%	154.7MiB / 4GiB	3.78%	55.6MB / 8.25MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.36%	155.6MiB / 4GiB	3.80%	55.6MB / 8.29MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.36%	155.6MiB / 4GiB	3.80%	55.6MB / 8.29MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.01%	154.9MiB / 4GiB	3.78%	55.6MB / 8.32MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.01%	154.9MiB / 4GiB	3.78%	55.6MB / 8.32MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.97%	155.2MiB / 4GiB	3.79%	55.6MB / 8.34MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.97%	155.2MiB / 4GiB	3.79%	55.6MB / 8.34MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.46%	155.5MiB / 4GiB	3.80%	55.6MB / 8.38MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.46%	155.5MiB / 4GiB	3.80%	55.6MB / 8.38MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	6.92%	155.7MiB / 4GiB	3.80%	55.6MB / 8.4MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	6.92%	155.7MiB / 4GiB	3.80%	55.6MB / 8.4MB	0B / 250MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.45%	155.3MiB / 4GiB	3.79%	55.7MB / 8.43MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.45%	155.3MiB / 4GiB	3.79%	55.7MB / 8.43MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.48%	155MiB / 4GiB	3.78%	55.7MB / 8.45MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.48%	155MiB / 4GiB	3.78%	55.7MB / 8.45MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.73%	155.4MiB / 4GiB	3.80%	55.7MB / 8.48MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.73%	155.4MiB / 4GiB	3.80%	55.7MB / 8.48MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.38%	154.9MiB / 4GiB	3.78%	55.7MB / 8.51MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.38%	154.9MiB / 4GiB	3.78%	55.7MB / 8.51MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.56%	155.5MiB / 4GiB	3.80%	55.7MB / 8.53MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.56%	155.5MiB / 4GiB	3.80%	55.7MB / 8.53MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.42%	155.3MiB / 4GiB	3.79%	55.7MB / 8.56MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.42%	155.3MiB / 4GiB	3.79%	55.7MB / 8.56MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.05%	155.8MiB / 4GiB	3.80%	55.8MB / 8.58MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.05%	155.8MiB / 4GiB	3.80%	55.8MB / 8.58MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.61%	156MiB / 4GiB	3.81%	55.8MB / 8.61MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	15.61%	156MiB / 4GiB	3.81%	55.8MB / 8.61MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.84%	155.7MiB / 4GiB	3.80%	55.8MB / 8.63MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.84%	155.7MiB / 4GiB	3.80%	55.8MB / 8.63MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.55%	155.5MiB / 4GiB	3.80%	55.8MB / 8.65MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.55%	155.5MiB / 4GiB	3.80%	55.8MB / 8.65MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.87%	155.4MiB / 4GiB	3.79%	55.8MB / 8.69MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.87%	155.4MiB / 4GiB	3.79%	55.8MB / 8.69MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.22%	155.4MiB / 4GiB	3.79%	55.8MB / 8.71MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.22%	155.4MiB / 4GiB	3.79%	55.8MB / 8.71MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	22.15%	155.7MiB / 4GiB	3.80%	55.9MB / 8.76MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	22.15%	155.7MiB / 4GiB	3.80%	55.9MB / 8.76MB	0B / 253MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.39%	155.5MiB / 4GiB	3.80%	55.9MB / 8.8MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.39%	155.5MiB / 4GiB	3.80%	55.9MB / 8.8MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.76%	155.8MiB / 4GiB	3.80%	55.9MB / 8.82MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.76%	155.8MiB / 4GiB	3.80%	55.9MB / 8.82MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.25%	155.2MiB / 4GiB	3.79%	55.9MB / 8.85MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.25%	155.2MiB / 4GiB	3.79%	55.9MB / 8.85MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.93%	155.6MiB / 4GiB	3.80%	55.9MB / 8.87MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.93%	155.6MiB / 4GiB	3.80%	55.9MB / 8.87MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.47%	155.9MiB / 4GiB	3.81%	55.9MB / 8.89MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.47%	155.9MiB / 4GiB	3.81%	55.9MB / 8.89MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.18%	155.9MiB / 4GiB	3.81%	56MB / 8.93MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.18%	155.9MiB / 4GiB	3.81%	56MB / 8.93MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.38%	155.8MiB / 4GiB	3.80%	56MB / 8.97MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.38%	155.8MiB / 4GiB	3.80%	56MB / 8.97MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.95%	155.8MiB / 4GiB	3.80%	56MB / 8.99MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.95%	155.8MiB / 4GiB	3.80%	56MB / 8.99MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.40%	155.9MiB / 4GiB	3.81%	56MB / 9.02MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.40%	155.9MiB / 4GiB	3.81%	56MB / 9.02MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.56%	156.4MiB / 4GiB	3.82%	56MB / 9.04MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.56%	156.4MiB / 4GiB	3.82%	56MB / 9.04MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.37%	155.8MiB / 4GiB	3.80%	56MB / 9.07MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	14.37%	155.8MiB / 4GiB	3.80%	56MB / 9.07MB	0B / 257MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.94%	155.7MiB / 4GiB	3.80%	56MB / 9.09MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.94%	155.7MiB / 4GiB	3.80%	56MB / 9.09MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.80%	156.1MiB / 4GiB	3.81%	56.1MB / 9.12MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.80%	156.1MiB / 4GiB	3.81%	56.1MB / 9.12MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.08%	156.3MiB / 4GiB	3.82%	56.1MB / 9.14MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.08%	156.3MiB / 4GiB	3.82%	56.1MB / 9.14MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.06%	156.1MiB / 4GiB	3.81%	56.1MB / 9.17MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.06%	156.1MiB / 4GiB	3.81%	56.1MB / 9.17MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.48%	156.6MiB / 4GiB	3.82%	56.1MB / 9.19MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.48%	156.6MiB / 4GiB	3.82%	56.1MB / 9.19MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.59%	156.4MiB / 4GiB	3.82%	56.1MB / 9.23MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.59%	156.4MiB / 4GiB	3.82%	56.1MB / 9.23MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.47%	155.7MiB / 4GiB	3.80%	56.1MB / 9.26MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.47%	155.7MiB / 4GiB	3.80%	56.1MB / 9.26MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.31%	156.3MiB / 4GiB	3.82%	56.2MB / 9.29MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.31%	156.3MiB / 4GiB	3.82%	56.2MB / 9.29MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.83%	156.8MiB / 4GiB	3.83%	56.2MB / 9.32MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	17.83%	156.8MiB / 4GiB	3.83%	56.2MB / 9.32MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.35%	156.1MiB / 4GiB	3.81%	56.2MB / 9.34MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.35%	156.1MiB / 4GiB	3.81%	56.2MB / 9.34MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.04%	156.4MiB / 4GiB	3.82%	56.2MB / 9.37MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.04%	156.4MiB / 4GiB	3.82%	56.2MB / 9.37MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.84%	156.7MiB / 4GiB	3.83%	56.2MB / 9.39MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.84%	156.7MiB / 4GiB	3.83%	56.2MB / 9.39MB	0B / 261MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.57%	156MiB / 4GiB	3.81%	56.2MB / 9.41MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.57%	156MiB / 4GiB	3.81%	56.2MB / 9.41MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	21.53%	157.2MiB / 4GiB	3.84%	56.3MB / 9.44MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	21.53%	157.2MiB / 4GiB	3.84%	56.3MB / 9.44MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.08%	156.1MiB / 4GiB	3.81%	56.3MB / 9.46MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.08%	156.1MiB / 4GiB	3.81%	56.3MB / 9.46MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.88%	156.5MiB / 4GiB	3.82%	56.3MB / 9.49MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.88%	156.5MiB / 4GiB	3.82%	56.3MB / 9.49MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.49%	156.6MiB / 4GiB	3.82%	56.3MB / 9.52MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.49%	156.6MiB / 4GiB	3.82%	56.3MB / 9.52MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.61%	156.9MiB / 4GiB	3.83%	56.3MB / 9.55MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	11.61%	156.9MiB / 4GiB	3.83%	56.3MB / 9.55MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.20%	156.9MiB / 4GiB	3.83%	56.3MB / 9.57MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	9.20%	156.9MiB / 4GiB	3.83%	56.3MB / 9.57MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.87%	157.2MiB / 4GiB	3.84%	56.3MB / 9.59MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	16.87%	157.2MiB / 4GiB	3.84%	56.3MB / 9.59MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.59%	157.1MiB / 4GiB	3.83%	56.4MB / 9.62MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	13.59%	157.1MiB / 4GiB	3.83%	56.4MB / 9.62MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.30%	157.3MiB / 4GiB	3.84%	56.4MB / 9.65MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.30%	157.3MiB / 4GiB	3.84%	56.4MB / 9.65MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.70%	156.5MiB / 4GiB	3.82%	56.4MB / 9.69MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	10.70%	156.5MiB / 4GiB	3.82%	56.4MB / 9.69MB	0B / 266MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.89%	157MiB / 4GiB	3.83%	56.4MB / 9.72MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.89%	157MiB / 4GiB	3.83%	56.4MB / 9.72MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.21%	157.5MiB / 4GiB	3.84%	56.4MB / 9.73MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	12.21%	157.5MiB / 4GiB	3.84%	56.4MB / 9.73MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	18.36%	157.5MiB / 4GiB	3.85%	56.4MB / 9.78MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	18.36%	157.5MiB / 4GiB	3.85%	56.4MB / 9.78MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.77%	156.9MiB / 4GiB	3.83%	56.5MB / 9.8MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	7.77%	156.9MiB / 4GiB	3.83%	56.5MB / 9.8MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.29%	156.9MiB / 4GiB	3.83%	56.5MB / 9.82MB	0B / 270MB[K
+[K
+[J[Hgravewright_ws_session-app-1	8.29%	156.9MiB / 4GiB	3.83%	56.5MB / 9.82MB	0B / 270MB[K
+[K
+[J

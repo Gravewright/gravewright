@@ -1,0 +1,68 @@
+name: gravewright_ws_session
+
+# Realistic mid-size live table: 15-20 players spread across 2-3 rooms, each on
+# its own account/campaign so the realtime fan-out stays scoped per room. Sits
+# between the single-room smoke test (docker-compose.ws-live.yml) and the 500-user
+# sharded stress test (docker-compose.ws-stress.yml).
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8006:8000"
+    volumes:
+      - ../storage:/app/storage
+    cpus: 2.0
+    mem_limit: 4g
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4g
+    environment:
+      APP_ENV: development
+      APP_DEBUG: "false"
+      ALLOWED_HOSTS: app,app:8000,localhost,localhost:8000,localhost:8006
+      SESSION_SECRET: perf-test-secret-key-change-me
+      # Single async worker: the realtime gateway keeps connection, presence and
+      # broadcast state in-process, so it's the thing under test.
+      WEB_WORKERS: "1"
+      # Last-write-wins fog so concurrent painters don't storm version_conflict.
+      FOG_REQUIRE_EXPECTED_VERSION: "false"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  ws_session:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    volumes:
+      - ../storage:/app/storage
+      - ./performance/ws_live:/app/tests/performance/ws_live
+    # RUN_MINUTES is injected by run_ws_session.sh (--time flag, default 20).
+    command: >
+      .venv/bin/python tests/performance/ws_live/ws_live_test.py
+      --host http://app:8000
+      --fixtures tests/performance/ws_live/fixtures_multiroom.json
+      --users 18
+      --spawn-rate 3
+      --time ${RUN_MINUTES:-20}
+      --pan-every 6
+      --fog-every 5
+      --chat-every 8
+      --output tests/performance/ws_live/results_session
+    depends_on:
+      app:
+        condition: service_healthy
+    cpus: 1.0
+    mem_limit: 512m
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512m

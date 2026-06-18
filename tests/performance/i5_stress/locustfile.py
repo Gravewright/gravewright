@@ -39,7 +39,7 @@ _scene_meta: dict = {}
 
                                                                                 
 
-_CSRF_RE = re.compile(r'name="csrf_token"\s+value="([^"]+)"')
+_CSRF_RE = re.compile(r'name="_csrf_token"\s+value="([^"]+)"')
 _CAMPAIGN_ID_RE = re.compile(r'data-room-id="([^"]+)"')
 _SCENE_ID_RE = re.compile(r'data-scene-id="([^"]+)"')
 _LAYER_ID_RE = re.compile(r'data-scene-layer-id="([^"]+)"')
@@ -58,7 +58,7 @@ def _login(client) -> bool:
         return False
     r2 = client.post(
         "/login",
-        data={"email": STRESS_EMAIL, "password": STRESS_PASSWORD, "csrf_token": m.group(1)},
+        data={"email": STRESS_EMAIL, "password": STRESS_PASSWORD, "_csrf_token": m.group(1)},
         allow_redirects=True,
         name="POST /login",
     )
@@ -203,7 +203,7 @@ class ParallelRetiler(StressBase):
         resp = self.client.post(
             "/game/scenes/update",
             data={
-                "csrf_token": csrf.group(1),
+                "_csrf_token": csrf.group(1),
                 "scene_id": _scene_meta["scene_id"],
                 "campaign_id": _scene_meta["campaign_id"],
                 "name": "Max Stress Scene",

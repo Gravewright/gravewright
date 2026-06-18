@@ -23,7 +23,7 @@ import websockets
 STREAM_EMAIL = "chunkstream@test.local"
 STREAM_PASSWORD = "ChunkStream1!"
 
-CSRF_RE = re.compile(r'name="csrf_token"\s+value="([^"]+)"')
+CSRF_RE = re.compile(r'name="_csrf_token"\s+value="([^"]+)"')
 ROOM_ID_RE = re.compile(r'data-room-id="([^"]+)"')
 SCENE_ID_RE = re.compile(r'data-scene-id="([^"]+)"')
 LAYER_ID_RE = re.compile(r'data-scene-layer-id="([^"]+)"')
@@ -132,7 +132,7 @@ def login_and_discover(host: str) -> SessionInfo:
         {
             "email": STREAM_EMAIL,
             "password": STREAM_PASSWORD,
-            "csrf_token": csrf,
+            "_csrf_token": csrf,
         },
     )
 

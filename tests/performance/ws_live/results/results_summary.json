@@ -1,0 +1,70 @@
+{
+  "finished": true,
+  "host": "http://app:8000",
+  "users": 15,
+  "spawn_rate": 3.0,
+  "run_time": 1200,
+  "actual_duration_seconds": 1205.4970990770007,
+  "users_started": 15,
+  "users_finished": 15,
+  "failures": 0,
+  "connections_opened": 283,
+  "connection_failures": 0,
+  "reconnects": 269,
+  "resumes": 268,
+  "clean_resumes": 268,
+  "resync_required": 0,
+  "commands_sent": 11968,
+  "token_moves": 9743,
+  "fog_paints": 1942,
+  "chat_messages": 596,
+  "rolls": 616,
+  "version_conflicts": 0,
+  "http_failures": 0,
+  "command_timeouts": 0,
+  "errors_by_code": {},
+  "commands_per_second": 9.927854666065478,
+  "token_moves_per_second": 8.082143049087229,
+  "fog_paints_per_second": 1.6109536899648362,
+  "chat_per_second": 1.00539437293377,
+  "token_move_latency_ms": {
+    "count": 9743.0,
+    "avg": 791.7885068168981,
+    "p50": 5.669719999787048,
+    "p95": 4781.8585759996495,
+    "p99": 4989.722889999939,
+    "max": 5729.829331000474
+  },
+  "fog_paint_latency_ms": {
+    "count": 1942.0,
+    "avg": 22.337379469631504,
+    "p50": 7.015964999482094,
+    "p95": 42.3847210004169,
+    "p99": 114.26814600054058,
+    "max": 5013.072726999781
+  },
+  "chat_latency_ms": {
+    "count": 1212.0,
+    "avg": 11.53147796947784,
+    "p50": 4.636738999579393,
+    "p95": 29.942498999844247,
+    "p99": 63.69537999944441,
+    "max": 865.0546879998728
+  },
+  "subscribe_latency_ms": {
+    "count": 15.0,
+    "avg": 144.2389757335453,
+    "p50": 165.5201119992853,
+    "p95": 170.78498400042008,
+    "p99": 170.78498400042008,
+    "max": 170.78498400042008
+  },
+  "resume_latency_ms": {
+    "count": 268.0,
+    "avg": 670.2853045074897,
+    "p50": 31.857088999458938,
+    "p95": 4746.321261000048,
+    "p99": 4969.630810999661,
+    "max": 5183.683829999609
+  }
+}
