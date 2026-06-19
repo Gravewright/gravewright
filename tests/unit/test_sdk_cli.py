@@ -95,3 +95,38 @@ def test_cli_package_validate_discovers_package_root(tmp_path: Path, capsys):
     payload = json.loads(capsys.readouterr().out)
     assert [package["id"] for package in payload["packages"]] == ["demo-addon"]
     assert payload["packages"][0]["trusted_code_required"] is True
+
+
+def test_cli_package_validate_defaults_to_current_package(tmp_path: Path, monkeypatch, capsys):
+    package_dir = tmp_path / "bad-package"
+    package_dir.mkdir()
+    (package_dir / "manifest.json").write_text('{"id": "Bad"}', encoding="utf-8")
+    monkeypatch.chdir(package_dir)
+
+    exit_code = main(["package", "validate", "--json"])
+
+    assert exit_code == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["packages"][0]["path"] == str(package_dir)
+
+
+def test_cli_package_validate_fails_when_no_packages_are_found(tmp_path: Path, capsys):
+    exit_code = main(["package", "validate", str(tmp_path), "--json"])
+
+    assert exit_code == 1
+    assert json.loads(capsys.readouterr().out) == {"ok": False, "packages": []}
+
+
+def test_cli_package_validate_human_report(tmp_path: Path, capsys):
+    package_dir = tmp_path / "bad-package"
+    package_dir.mkdir()
+    (package_dir / "manifest.json").write_text('{"id": "Bad"}', encoding="utf-8")
+
+    exit_code = main(["package", "validate", str(package_dir)])
+
+    assert exit_code == 1
+    out = capsys.readouterr().out
+    assert "Package validation" in out
+    assert "Package id is invalid" in out
+    assert "sdk.validation.id_invalid" in out
+    assert "Validation failed" in out

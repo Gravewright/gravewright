@@ -13,7 +13,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["ruff==0.15.14"]
+dev = [
+    "questionary>=2.1.1",
+    "rich>=15.0.0",
+    "ruff==0.15.14",
+]
 postgres = ["psycopg[binary]==3.3.4"]
 
 [project.scripts]

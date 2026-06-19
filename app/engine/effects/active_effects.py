@@ -45,7 +45,15 @@ def active_effects(sheet_data: dict) -> list[dict]:
     effects = sheet_data.get("effects") if isinstance(sheet_data, dict) else []
     if not isinstance(effects, list):
         return []
-    return [effect for effect in effects[:128] if isinstance(effect, dict) and effect.get("enabled") is not False]
+    active: list[dict] = []
+    for effect in effects[:128]:
+        if not isinstance(effect, dict) or effect.get("enabled") is False:
+            continue
+        payload = effect.get("data") if isinstance(effect.get("data"), dict) else {}
+        if payload.get("enabled") is False:
+            continue
+        active.append(effect)
+    return active
 
 
 def granted_effects(sheet_data: dict) -> list[dict]:

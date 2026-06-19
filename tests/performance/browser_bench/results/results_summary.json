@@ -1,6 +1,6 @@
 {
   "host": "http://localhost:8007",
-  "headed": false,
+  "headed": true,
   "gpu": "on",
   "cpu_throttle": 1.0,
   "viewport": {
@@ -8,34 +8,36 @@
     "height": 768
   },
   "run_seconds": 180.0,
-  "map_visible": true,
+  "map_visible": false,
   "milestones_ms": {
-    "nav_to_canvas": 1113.0,
-    "nav_to_manifest": 1122.8,
-    "nav_to_first_chunk": 1122.8,
-    "time_to_map_visible": 1122.8,
-    "time_to_realtime": 1122.8
+    "nav_to_canvas": 0.0,
+    "nav_to_manifest": 0.0,
+    "nav_to_first_chunk": 0.0,
+    "time_to_map_visible": 0.0,
+    "time_to_realtime": 0.0
   },
   "interaction": {
-    "pan_zoom_seconds": 180.87,
-    "gestures": 402,
-    "frames": 10851,
-    "fps_avg": 60.0,
-    "fps_p50": 59.9,
-    "fps_1pct_low": 59.5,
-    "frame_ms_p95": 16.7,
-    "frame_ms_p99": 16.8,
-    "frame_ms_max": 16.8,
+    "pan_zoom_seconds": 0.0,
+    "gestures": 0,
+    "frames": 0,
+    "fps_avg": 0.0,
+    "fps_p50": 0.0,
+    "fps_1pct_low": 0.0,
+    "frame_ms_p95": 0.0,
+    "frame_ms_p99": 0.0,
+    "frame_ms_max": 0.0,
     "jank_frame_pct": 0.0,
     "long_tasks": 0,
     "total_blocking_ms": 0.0
   },
   "memory_mb": {
-    "js_heap_idle": 17.4,
-    "js_heap_peak": 17.4,
-    "browser_rss_idle": 130.7,
-    "browser_rss_peak": 134.4,
+    "js_heap_idle": 0.0,
+    "js_heap_peak": 0.0,
+    "browser_rss_idle": 0.0,
+    "browser_rss_peak": 1123.1,
     "rss_available": true
   },
-  "errors": []
+  "errors": [
+    "Error: Page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8007/\nCall log:\n  - navigating to \"http://localhost:8007/\", waiting until \"domcontentloaded\"\n"
+  ]
 }

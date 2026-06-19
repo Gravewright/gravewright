@@ -361,6 +361,11 @@ class CampaignRepository:
                 .where(campaign_members.c.campaign_id == campaign_id)
                 .where(campaign_members.c.user_id == user_id)
             )
+        # Drop the cached broadcast roster so a removed member stops receiving
+        # realtime events immediately rather than within the cache TTL.
+        from app.persistence.repositories import realtime_recipient_repository
+
+        realtime_recipient_repository.invalidate(campaign_id)
 
     def update_system(
         self,

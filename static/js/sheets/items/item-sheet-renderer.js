@@ -390,7 +390,9 @@
     let html;
     try {
       const url = `/sdk/packages/${encodeURIComponent(packageId)}/asset/${sheet.template}`;
-      const res = await fetch(url, { credentials: "same-origin", headers: { Accept: "text/html" } });
+      // The template asset URL has no version query, so never serve a stale
+      // cached copy after the package's sheet is regenerated.
+      const res = await fetch(url, { credentials: "same-origin", cache: "no-store", headers: { Accept: "text/html" } });
       if (!res.ok) throw new Error(`template ${res.status}`);
       html = await res.text();
     } catch (_err) {

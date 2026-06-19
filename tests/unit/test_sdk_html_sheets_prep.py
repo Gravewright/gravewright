@@ -13,6 +13,9 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RUNTIME = (PROJECT_ROOT / "static" / "js" / "sdk" / "gravewright-sdk.js").read_text(
     encoding="utf-8"
 )
+BLOCK_EDITOR = (PROJECT_ROOT / "static" / "js" / "journals" / "block-editor.js").read_text(
+    encoding="utf-8"
+)
 
 
 def test_sheet_capabilities_are_stable_manifest_capabilities():
@@ -171,6 +174,15 @@ def test_html_sheet_rich_text_requires_capability(tmp_path):
     assert "sdk.sheets.html.rich_text_capability_missing" in loaded.validation.errors
 
 
+def test_html_sheet_rich_editor_requires_capability(tmp_path):
+    pkg = _write_package(tmp_path, html='<div data-rich-editor="system.bio"></div>')
+    raw = json.loads((pkg / "manifest.json").read_text(encoding="utf-8"))
+    raw["capabilities"] = ["sheets.html"]
+    (pkg / "manifest.json").write_text(json.dumps(raw), encoding="utf-8")
+    loaded = load_package(pkg, expected_id="html-ruleset", expected_kind_root="rulesets")
+    assert "sdk.sheets.html.rich_text_capability_missing" in loaded.validation.errors
+
+
 def test_register_controller_lifecycle_and_bindings_present():
     assert "registerController(sheetType, controller)" in RUNTIME
     assert "registerSheetController(pkg.id, sheetType, controller)" in RUNTIME
@@ -188,6 +200,45 @@ def test_data_text_uses_text_content():
 def test_data_rich_text_is_sanitized():
     assert "sanitizeRichText" in RUNTIME
     assert "node.innerHTML = sanitizeRichText" in RUNTIME
+
+
+def test_data_rich_editor_mounts_block_editor():
+    assert "[data-rich-editor]" in RUNTIME
+    assert "window.GWBlockEditor.mount" in RUNTIME
+    assert "gw:block-editor-ready" in RUNTIME
+
+
+def test_tabs_are_root_scoped():
+    assert "[data-tab]" in RUNTIME
+    assert "data-tab-panel" in RUNTIME
+    assert "wireTabs(root, cleanups)" in RUNTIME
+    assert 'tab.setAttribute("aria-selected"' in RUNTIME
+    assert 'tablist.querySelectorAll(":scope > [data-tab]")' in RUNTIME
+    assert 'list.closest("[data-sheet-type]")' in RUNTIME
+
+
+def test_item_list_binding_present():
+    assert "[data-item-list]" in RUNTIME
+    assert "renderItemList" in RUNTIME
+
+
+def test_html_item_list_opens_and_patches_embedded_item_sheet():
+    assert "mountEmbeddedItemEditor" in RUNTIME
+    assert "gw-item-list__open" in RUNTIME
+    assert "ctx.onItemChange?.(item.id, target, value)" in RUNTIME
+    assert 'postJSON("/game/actor/item/patch"' in ACTOR_RENDERER
+
+
+def test_block_editor_has_labels_without_journal_context():
+    assert "DEFAULT_LABELS" in BLOCK_EDITOR
+    assert 'text: "Text"' in BLOCK_EDITOR
+    assert "{ ...DEFAULT_LABELS, ...(opts.labels || {}) }" in BLOCK_EDITOR
+
+
+def test_rich_editor_persists_on_blur():
+    # Saving on blur (not per keystroke) keeps a realtime refresh from tearing
+    # the editor down mid-typing.
+    assert 'handle.editor?.on?.("blur"' in RUNTIME
 
 
 def test_unmount_cleans_listeners():

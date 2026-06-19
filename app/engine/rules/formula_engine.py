@@ -7,7 +7,7 @@ Supports::
     math    + - * /  (unary -)
     funcs   floor ceil round abs min max clamp  if(cond, a, b)
     compare == != < <= > >=   logic && ||
-    dice    1d20  2d6  2d20kh1  2d20kl1  (server-side; recorded for chat breakdown)
+    dice    1d20, die(8), successes(5, 6, 6), under(2, 20, 10), fate(), draw(52)
     helpers abilityMod(@sheet.attributes.str.score)   (from formulas.gw.json)
 
 Evaluation is a hand-written tokenizer + recursive-descent parser, so a system
@@ -283,6 +283,18 @@ class _Evaluator:
 
     def _call(self, name: str) -> float:
         args = self._args()
+        if name == "explode":
+            return self._explode(args)
+        if name == "die":
+            return self._dynamic_dice(args)
+        if name == "successes":
+            return self._count_successes(args, under=False)
+        if name == "under":
+            return self._count_successes(args, under=True)
+        if name == "fate":
+            return self._fate(args)
+        if name == "draw":
+            return self._draw(args)
         builtin = _BUILTINS.get(name)
         if builtin is not None:
             return builtin(args)
@@ -290,6 +302,82 @@ class _Evaluator:
         if helper is not None:
             return self._call_helper(name, helper, args)
         raise FormulaError(f"unknown function {name!r}")
+
+    def _roll_values(self, count: int, sides: int) -> list[int]:
+        if count < 1 or count > MAX_DICE_COUNT or sides < 2 or sides > MAX_DICE_SIDES:
+            raise FormulaError("dice out of bounds")
+        results = [int(value) for value in self.roller(count, sides)]
+        if len(results) != count or any(value < 1 or value > sides for value in results):
+            raise FormulaError("roller returned an invalid result")
+        return results
+
+    def _dynamic_dice(self, args: list[float]) -> float:
+        if len(args) not in {1, 2}:
+            raise FormulaError("die expects sides or count and sides")
+        count, sides = (1, int(args[0])) if len(args) == 1 else (int(args[0]), int(args[1]))
+        results = self._roll_values(count, sides)
+        subtotal = sum(results)
+        self.groups.append(
+            {"notation": f"{count}d{sides}", "results": results, "subtotal": subtotal}
+        )
+        return float(subtotal)
+
+    def _count_successes(self, args: list[float], *, under: bool) -> float:
+        if len(args) != 3:
+            raise FormulaError("success count expects count, sides and target")
+        count, sides, target = (int(value) for value in args)
+        if target < 1 or target > sides:
+            raise FormulaError("dice target out of bounds")
+        results = self._roll_values(count, sides)
+        hits = sum(value <= target if under else value >= target for value in results)
+        operator = "<=" if under else ">="
+        self.groups.append(
+            {
+                "notation": f"{count}d{sides}{operator}{target}",
+                "results": results,
+                "subtotal": hits,
+            }
+        )
+        return float(hits)
+
+    def _fate(self, args: list[float]) -> float:
+        if args:
+            raise FormulaError("fate expects no arguments")
+        raw = self._roll_values(4, 3)
+        results = [value - 2 for value in raw]
+        subtotal = sum(results)
+        self.groups.append({"notation": "4dF", "results": results, "subtotal": subtotal})
+        return float(subtotal)
+
+    def _draw(self, args: list[float]) -> float:
+        if len(args) != 1:
+            raise FormulaError("draw expects a deck size")
+        cards = int(args[0])
+        result = self._roll_values(1, cards)
+        self.groups.append({"notation": f"draw({cards})", "results": result, "subtotal": result[0]})
+        return float(result[0])
+
+    def _explode(self, args: list[float]) -> float:
+        if len(args) != 2:
+            raise FormulaError("explode expects sides and threshold")
+        sides, threshold = int(args[0]), int(args[1])
+        if sides < 2 or sides > MAX_DICE_SIDES or threshold < 1 or threshold > sides:
+            raise FormulaError("exploding dice out of bounds")
+        results: list[int] = []
+        while len(results) < MAX_DICE_COUNT:
+            value = self._roll_values(1, sides)[0]
+            results.append(value)
+            if value < threshold:
+                break
+        subtotal = sum(results)
+        self.groups.append(
+            {
+                "notation": f"1d{sides}!>={threshold}",
+                "results": results,
+                "subtotal": subtotal,
+            }
+        )
+        return float(subtotal)
 
     def _call_helper(self, name: str, helper: dict, args: list[float]) -> float:
         if self.depth >= MAX_HELPER_DEPTH:
@@ -315,7 +403,7 @@ class _Evaluator:
             raise FormulaError("dice out of bounds")
         if keep not in {"", "kh1", "kl1"}:
             raise FormulaError("unsupported dice keep notation")
-        results = self.roller(count, sides)
+        results = self._roll_values(count, sides)
         if keep == "kh1":
             subtotal = max(results) if results else 0
         elif keep == "kl1":

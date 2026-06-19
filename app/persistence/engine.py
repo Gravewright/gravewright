@@ -48,8 +48,9 @@ def get_engine() -> Engine:
 
 
 def _engine_kwargs(url: str) -> dict:
-    """Engine options. Connection-pool tuning applies to networked backends;
-    SQLite keeps SQLAlchemy's default pooling for a local file."""
+    """Engine options. Networked backends get the full pool tuning; SQLite (WAL)
+    gets a wider pool than SQLAlchemy's default 5+10 so the many ``run_blocking``
+    worker threads doing concurrent reads don't queue on connection checkout."""
     kwargs: dict = {"future": True, "echo": config.database_echo}
     if make_url(url).get_backend_name() != "sqlite":
         kwargs.update(
@@ -58,6 +59,12 @@ def _engine_kwargs(url: str) -> dict:
             pool_timeout=config.database_pool_timeout,
             pool_recycle=config.database_pool_recycle_seconds,
             pool_pre_ping=config.database_pool_pre_ping,
+        )
+    else:
+        kwargs.update(
+            pool_size=config.sqlite_pool_size,
+            max_overflow=config.sqlite_max_overflow,
+            pool_timeout=config.database_pool_timeout,
         )
     return kwargs
 

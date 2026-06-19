@@ -14,6 +14,7 @@ from __future__ import annotations
 import shutil
 import sys
 from dataclasses import asdict, dataclass
+from io import StringIO
 from pathlib import Path
 
 from app.config import config
@@ -22,6 +23,8 @@ from app.helpers.env import PROJECT_ROOT
 OK = "ok"
 WARN = "warn"
 ERROR = "error"
+
+_STATUS_ALIASES = {"warning": WARN}
 
 _MIN_PYTHON = (3, 11)
 _DEV_SECRETS = {"dev-only-change-me", "change-me-in-production"}
@@ -201,7 +204,8 @@ def _audit_checks() -> list[Check]:
         fix = _AUDIT_FIX.get(f.code)
         if fix and f.package_id:
             fix = fix.format(package_id=f.package_id)
-        checks.append(Check(f"audit:{f.code}", f.severity, f"{f.code}: {where}{detail}", fix=fix))
+        status = _STATUS_ALIASES.get(f.severity, f.severity)
+        checks.append(Check(f"audit:{f.code}", status, f"{f.code}: {where}{detail}", fix=fix))
     return checks
 
 
@@ -257,7 +261,8 @@ def render_check_lines(checks: list[Check], *, verbose: bool = False) -> list[st
     lines: list[str] = []
 
     for c in checks:
-        prefix = f"{label[c.status]} "
+        status = _STATUS_ALIASES.get(c.status, c.status)
+        prefix = f"{label[status]} "
         if verbose:
             lines.append(f"{prefix}[{c.id}] {c.message}")
         else:
@@ -281,6 +286,57 @@ def render_text(checks: list[Check]) -> str:
             "Fix the items above and run grave doctor again."
         )
     return "\n".join(lines)
+
+
+def render_pretty(checks: list[Check], *, verbose: bool = False) -> str:
+    """Rich human report; machine-oriented JSON/AI output remains unchanged."""
+    try:
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.table import Table
+    except ImportError:  # pragma: no cover - Rich is a runtime dependency
+        return render_text(checks)
+
+    output = StringIO()
+    console = Console(file=output, force_terminal=False, width=110)
+    table = Table(show_header=True, header_style="bold", border_style="dim", expand=True)
+    table.add_column("Status", width=7, no_wrap=True)
+    if verbose:
+        table.add_column("Check", width=28)
+    table.add_column("Result", ratio=3)
+    table.add_column("FIX ", ratio=2)
+    colors = {OK: "green", WARN: "yellow", ERROR: "red"}
+    labels = {OK: "OK", WARN: "WARN", ERROR: "ERROR"}
+    for check in checks:
+        status = _STATUS_ALIASES.get(check.status, check.status)
+        cells = [f"[{colors[status]} bold]{labels[status]}[/]"]
+        if verbose:
+            cells.append(check.id)
+        cells.extend([check.message, check.fix or ""])
+        table.add_row(*cells)
+
+    summary = summarize(checks)
+    console.print(
+        "[green bold]OK[/]     Gravewright Doctor"
+        if summary["ok"]
+        else "[red bold]ERROR[/]  Gravewright Doctor"
+    )
+    if summary["ok"]:
+        verdict = (
+            f"[green bold]OK, ready to play.[/]  |  {summary['warn_count']} warning(s)"
+        )
+        border = "green"
+    else:
+        verdict = (
+            f"[red bold]Not ready[/]  |  {summary['error_count']} error(s), "
+            f"{summary['warn_count']} warning(s)\n"
+            "Fix the items above and run [bold]grave doctor[/bold] again."
+        )
+        border = "red"
+    console.print(Panel("[bold]Gravewright Doctor[/bold]\n[dim]Environment, packages and database[/dim]", border_style="yellow"))
+    console.print(table)
+    console.print(Panel(verdict, border_style=border))
+    return output.getvalue().rstrip()
 
 
 def render_json(checks: list[Check]) -> dict:

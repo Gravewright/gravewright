@@ -225,33 +225,229 @@
         return template.innerHTML;
     }
 
+    // The Notion-style block editor (TipTap) ships with journals and exposes a
+    // global once its ES module has loaded; sheets reuse it for rich fields.
+    function whenBlockEditorReady(callback) {
+        if (window.GWBlockEditor) return callback();
+        document.addEventListener("gw:block-editor-ready", () => callback(), { once: true });
+    }
+
+    function blockEditorLabels() {
+        const tag = document.querySelector("[data-journal-editor-labels]");
+        try {
+            return JSON.parse(tag?.textContent || "{}");
+        } catch (_err) {
+            return {};
+        }
+    }
+
+    // data-rich-editor mounts a full block editor on the element and persists the
+    // edited document (the journal "gw-journal-doc-v1" shape) through the normal
+    // patch path. It saves on blur — not per keystroke — so a realtime refresh
+    // never tears the editor down mid-typing. Read-only unless canEdit.
+    function mountRichEditor(node, ctx, cleanups) {
+        const path = node.dataset.richEditor;
+        const editable = ctx.data?.canEdit !== false;
+        let handle = null;
+        whenBlockEditorReady(() => {
+            if (handle || !document.contains(node) || !window.GWBlockEditor) return;
+            // A failing editor must not abort the rest of the sheet binding
+            // (tabs, other fields), so isolate the mount.
+            try {
+                handle = window.GWBlockEditor.mount(node, {
+                    editable,
+                    labels: blockEditorLabels(),
+                    doc: getPath(ctx.data, path),
+                    onChange: (doc) => setPath(ctx.data, path, doc),
+                });
+                handle.editor?.on?.("blur", () => ctx.onChange?.(path, handle.getDoc()));
+            } catch (err) {
+                console.error("GravewrightSDK rich editor mount failed", err);
+            }
+        });
+        cleanups.push(() => {
+            try {
+                handle?.destroy();
+            } catch (_err) {
+                /* editor already torn down */
+            }
+        });
+    }
+
+    // data-item-list renders an array of item snapshots (each {id, name, type})
+    // with a Remove control. Items are dropped onto the sheet through the core
+    // drop flow; removal just rewrites the array through the normal patch path.
+    async function mountEmbeddedItemEditor(host, item, ctx) {
+        if (host.dataset.loaded === "1") return;
+        host.dataset.loaded = "1";
+        const type = String(item?.type || "item");
+        try {
+            const templatePath = `sheets/${encodeURIComponent(type)}.html`;
+            const url = `/sdk/packages/${encodeURIComponent(ctx.packageId)}/asset/${templatePath}`;
+            const response = await fetch(url, {
+                credentials: "same-origin",
+                cache: "no-store",
+                headers: { Accept: "text/html" },
+            });
+            if (!response.ok) throw new Error(`template ${response.status}`);
+            host.innerHTML = await response.text();
+            const data = item?.data && typeof item.data === "object" ? item.data : {};
+            mountHtmlSheet(
+                ctx.packageId,
+                type,
+                host,
+                {
+                    item: { id: item.id, name: item.name, type, ...data },
+                    system: data,
+                    canEdit: ctx.data?.canEdit !== false,
+                },
+                {
+                    onChange(path, value) {
+                        let target = String(path || "");
+                        if (target === "item.name" || target === "core.name") target = "name";
+                        else if (target.startsWith("system.")) target = `data.${target.slice(7)}`;
+                        else if (target.startsWith("item.")) target = `data.${target.slice(5)}`;
+                        ctx.onItemChange?.(item.id, target, value);
+                    },
+                    onAction(name) {
+                        ctx.onItemAction?.(item.id, name);
+                    },
+                },
+            );
+        } catch (_err) {
+            host.textContent = "Failed to load item sheet.";
+        }
+    }
+
+    function renderItemList(node, ctx, cleanups) {
+        const path = node.dataset.itemList;
+        const value = getPath(ctx.data, path);
+        const items = Array.isArray(value) ? value : [];
+        const editable = ctx.data?.canEdit !== false;
+        node.replaceChildren();
+        if (!items.length) {
+            const empty = document.createElement("p");
+            empty.className = "gw-item-list__empty";
+            empty.textContent = node.dataset.emptyText || "No items yet.";
+            node.appendChild(empty);
+            return;
+        }
+        items.forEach((item) => {
+            const row = document.createElement("div");
+            row.className = "gw-item-list__row";
+            const label = document.createElement("button");
+            label.type = "button";
+            label.className = "gw-item-list__open";
+            label.textContent = (item && (item.name || item.type)) || "Item";
+            label.setAttribute("aria-expanded", "false");
+            row.appendChild(label);
+            if (editable) {
+                const remove = document.createElement("button");
+                remove.type = "button";
+                remove.className = "gw-item-list__remove";
+                remove.textContent = "Remove";
+                const onRemove = () => {
+                    const next = items.filter((it) => it !== item);
+                    setPath(ctx.data, path, next);
+                    ctx.onChange?.(path, next);
+                };
+                remove.addEventListener("click", onRemove);
+                cleanups.push(() => remove.removeEventListener("click", onRemove));
+                row.appendChild(remove);
+            }
+            node.appendChild(row);
+            const editor = document.createElement("div");
+            editor.className = "gw-item-list__editor";
+            editor.hidden = true;
+            node.appendChild(editor);
+            const onOpen = () => {
+                const opening = editor.hidden;
+                editor.hidden = !opening;
+                label.setAttribute("aria-expanded", opening ? "true" : "false");
+                if (opening) void mountEmbeddedItemEditor(editor, item, ctx);
+            };
+            label.addEventListener("click", onOpen);
+            cleanups.push(() => {
+                label.removeEventListener("click", onOpen);
+                unmountHtmlSheet(editor);
+            });
+        });
+    }
+
+    // Root-scoped tabs: data-tab="name" buttons toggle data-tab-panel="name"
+    // panels. Scoping to ``root`` keeps multiple open sheets independent.
+    function wireTabs(root, cleanups) {
+        const tablists = [...root.querySelectorAll('[role="tablist"]')].filter(
+            (list) => list.closest("[data-sheet-type]") === root.querySelector("[data-sheet-type]")
+        );
+        tablists.forEach((tablist) => {
+            const tabs = [...tablist.querySelectorAll(":scope > [data-tab]")];
+            if (!tabs.length) return;
+            const owner = tablist.parentElement;
+            const panels = [...(owner?.children || [])].filter((node) => node.dataset?.tabPanel);
+            const activate = (name) => {
+                tabs.forEach((tab) => {
+                    const active = tab.dataset.tab === name;
+                    tab.classList.toggle("is-active", active);
+                    tab.setAttribute("aria-selected", active ? "true" : "false");
+                    tab.tabIndex = active ? 0 : -1;
+                });
+                panels.forEach((panel) => {
+                    panel.hidden = panel.dataset.tabPanel !== name;
+                });
+            };
+            tabs.forEach((tab) => {
+                const onClick = () => activate(tab.dataset.tab);
+                tab.addEventListener("click", onClick);
+                cleanups.push(() => tab.removeEventListener("click", onClick));
+            });
+            activate(tabs[0].dataset.tab);
+        });
+    }
+
     function bindHtmlSheet(root, ctx, controller) {
         const cleanups = [];
+        // Wire tabs first so a later binding failure can never leave them dead.
+        wireTabs(root, cleanups);
         root.querySelectorAll("[data-text]").forEach((node) => {
             node.textContent = getPath(ctx.data, node.dataset.text) ?? "";
         });
         root.querySelectorAll("[data-rich-text]").forEach((node) => {
             node.innerHTML = sanitizeRichText(getPath(ctx.data, node.dataset.richText));
         });
+        root.querySelectorAll("[data-rich-editor]").forEach((node) => {
+            mountRichEditor(node, ctx, cleanups);
+        });
+        root.querySelectorAll("[data-item-list]").forEach((node) => {
+            renderItemList(node, ctx, cleanups);
+        });
         root.querySelectorAll("[data-bind]").forEach((node) => {
             const path = node.dataset.bind;
             const value = getPath(ctx.data, path);
-            if ("value" in node) node.value = value ?? "";
+            if (node.type === "checkbox") node.checked = !!value;
+            else if ("value" in node) node.value = value ?? "";
             const onInput = () => {
-                const next = node.type === "number" ? Number(node.value) : node.value;
+                const next = node.type === "checkbox"
+                    ? node.checked
+                    : node.type === "number" ? Number(node.value) : node.value;
                 setPath(ctx.data, path, next);
                 ctx.onChange?.(path, next);
                 controller.update?.(ctx);
             };
-            node.addEventListener("input", onInput);
-            cleanups.push(() => node.removeEventListener("input", onInput));
+            const eventName = node.type === "checkbox" ? "change" : "input";
+            node.addEventListener(eventName, onInput);
+            cleanups.push(() => node.removeEventListener(eventName, onInput));
         });
         root.querySelectorAll("[data-action]").forEach((node) => {
             const onClick = (event) => {
+                // A package controller may handle the action; with no controller
+                // the host runs it as a server-side *system* action (the ruleset's
+                // own rules/actions entry), e.g. a roll preset.
                 controller.onAction?.(
                     { name: node.dataset.action, event, element: node },
                     ctx
                 );
+                ctx.onAction?.(node.dataset.action, { event, element: node });
             };
             node.addEventListener("click", onClick);
             cleanups.push(() => node.removeEventListener("click", onClick));
@@ -282,12 +478,23 @@
             actor: data.actor || null,
             item: data.item || null,
             onChange: options.onChange,
+            onAction: options.onAction,
+            onItemChange: options.onItemChange,
+            onItemAction: options.onItemAction,
         };
         if (!controller.setupDone) {
-            controller.setup?.(ctx);
+            try {
+                controller.setup?.(ctx);
+            } catch (err) {
+                console.error("GravewrightSDK sheet controller setup failed", err);
+            }
             controller.setupDone = true;
         }
-        controller.mount?.(ctx);
+        try {
+            controller.mount?.(ctx);
+        } catch (err) {
+            console.error("GravewrightSDK sheet controller mount failed", err);
+        }
         const cleanups = bindHtmlSheet(root, ctx, controller);
         mountedSheets.set(root, { controller, ctx, cleanups });
         return true;

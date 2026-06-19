@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.engine.effects.active_effects import (
+    active_effects,
     adjust_incoming_damage,
     all_effects,
     apply_resource_delta,
@@ -71,6 +72,21 @@ def test_all_effects_merges_manual_and_granted():
         "inventory": [_equipped_item("sheet.ac", "add", 2, equipped=True)],
     }
     assert len(all_effects(sheet)) == 2
+
+
+def test_manual_effect_can_be_disabled_inside_snapshot_data():
+    sheet = {
+        "effects": [
+            {
+                "id": "e1",
+                "data": {
+                    "enabled": False,
+                    "modifiers": [{"target": "sheet.ac", "operation": "add", "value": 2}],
+                },
+            }
+        ]
+    }
+    assert active_effects(sheet) == []
 
 
                                                                                 

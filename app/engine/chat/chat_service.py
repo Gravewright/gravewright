@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from app.business.permissions import PermissionService
 from app.contracts.transport import RealtimeGatewayContract
 from app.engine.dice.roll_service import RollService
+from app.helpers.async_blocking import run_blocking
 from app.domain.chat import ChatMessageKind
 from app.domain.chat import ChatVisibility
 from app.domain.permissions.permissions import TablePermission
@@ -139,7 +140,10 @@ class ChatService:
         content: str,
         transport: RealtimeGatewayContract,
     ) -> ChatResult:
-        role = self.campaigns.get_member_role(
+        # P0: every DB touch here is offloaded off the event loop via run_blocking
+        # so a slow/contended write never stalls the realtime gateway.
+        role = await run_blocking(
+            self.campaigns.get_member_role,
             campaign_id=campaign_id,
             user_id=sender_user_id,
         )
@@ -179,7 +183,8 @@ class ChatService:
             if result is None:
                 return ChatResult(success=False, error_key="game.chat.errors.invalid_roll")
 
-            self.messages.create(
+            await run_blocking(
+                self.messages.create,
                 message_id=message_id,
                 campaign_id=campaign_id,
                 author_user_id=sender_user_id,
@@ -217,7 +222,8 @@ class ChatService:
 
         if content.startswith("/me "):
             emote_text = content[4:].strip()
-            self.messages.create(
+            await run_blocking(
+                self.messages.create,
                 message_id=message_id,
                 campaign_id=campaign_id,
                 author_user_id=sender_user_id,
@@ -238,7 +244,8 @@ class ChatService:
 
         elif content.startswith("/gm "):
             gm_text = content[4:].strip()
-            self.messages.create(
+            await run_blocking(
+                self.messages.create,
                 message_id=message_id,
                 campaign_id=campaign_id,
                 author_user_id=sender_user_id,
@@ -258,7 +265,8 @@ class ChatService:
             )
 
         else:
-            self.messages.create(
+            await run_blocking(
+                self.messages.create,
                 message_id=message_id,
                 campaign_id=campaign_id,
                 author_user_id=sender_user_id,
@@ -288,7 +296,8 @@ class ChatService:
         base: dict,
         transport: RealtimeGatewayContract,
     ) -> ChatResult:
-        if not self.permissions.can(
+        if not await run_blocking(
+            self.permissions.can,
             user_id=sender_user_id,
             campaign_id=campaign_id,
             permission=TablePermission.CHAT_SEND_TO_GM,
@@ -299,9 +308,10 @@ class ChatService:
         if result is None:
             return ChatResult(success=False, error_key="game.chat.errors.invalid_roll")
 
+        members = await run_blocking(self.campaigns.list_members, campaign_id=campaign_id)
         gm_ids = [
             member["user_id"]
-            for member in self.campaigns.list_members(campaign_id=campaign_id)
+            for member in members
             if member["role"] == PlayerRole.GM.value
         ]
         await transport.chat_whisper(
@@ -329,14 +339,17 @@ class ChatService:
         base: dict,
         transport: RealtimeGatewayContract,
     ) -> ChatResult:
-        if not self.permissions.can(
+        if not await run_blocking(
+            self.permissions.can,
             user_id=sender_user_id,
             campaign_id=campaign_id,
             permission=TablePermission.CHAT_WHISPER,
         ):
             return ChatResult(success=False, error_key="permissions.errors.denied")
 
-        target_ids, target_name, text = self._resolve_whisper(campaign_id=campaign_id, arg=arg)
+        target_ids, target_name, text = await run_blocking(
+            self._resolve_whisper, campaign_id=campaign_id, arg=arg
+        )
         if not target_ids:
             return ChatResult(success=False, error_key="game.chat.errors.invalid_whisper_target")
         if not text:
@@ -398,28 +411,32 @@ class ChatService:
         message_id: str,
         transport: RealtimeGatewayContract,
     ) -> ChatResult:
-        role = self.campaigns.get_member_role(
+        role = await run_blocking(
+            self.campaigns.get_member_role,
             campaign_id=campaign_id,
             user_id=user_id,
         )
         if role is None:
             return ChatResult(success=False, error_key="game.chat.errors.not_a_member")
 
-        message = self.messages.get_for_campaign(
+        message = await run_blocking(
+            self.messages.get_for_campaign,
             campaign_id=campaign_id,
             message_id=message_id,
         )
         if message is None:
             return ChatResult(success=False, error_key="game.chat.errors.not_found")
 
-        can_delete_any = self.permissions.can(
+        can_delete_any = await run_blocking(
+            self.permissions.can,
             user_id=user_id,
             campaign_id=campaign_id,
             permission=TablePermission.CHAT_DELETE_ANY,
         )
         can_delete_own = (
             message["author_user_id"] == user_id
-            and self.permissions.can(
+            and await run_blocking(
+                self.permissions.can,
                 user_id=user_id,
                 campaign_id=campaign_id,
                 permission=TablePermission.CHAT_DELETE_OWN,
@@ -429,7 +446,8 @@ class ChatService:
         if not can_delete_any and not can_delete_own:
             return ChatResult(success=False, error_key="permissions.errors.denied")
 
-        self.messages.delete_for_campaign(
+        await run_blocking(
+            self.messages.delete_for_campaign,
             campaign_id=campaign_id,
             message_id=message_id,
         )
@@ -447,21 +465,23 @@ class ChatService:
         user_id: str,
         transport: RealtimeGatewayContract,
     ) -> ChatResult:
-        role = self.campaigns.get_member_role(
+        role = await run_blocking(
+            self.campaigns.get_member_role,
             campaign_id=campaign_id,
             user_id=user_id,
         )
         if role is None:
             return ChatResult(success=False, error_key="game.chat.errors.not_a_member")
 
-        if not self.permissions.can(
+        if not await run_blocking(
+            self.permissions.can,
             user_id=user_id,
             campaign_id=campaign_id,
             permission=TablePermission.CHAT_DELETE_ANY,
         ):
             return ChatResult(success=False, error_key="permissions.errors.denied")
 
-        self.messages.delete_all_for_campaign(campaign_id=campaign_id)
+        await run_blocking(self.messages.delete_all_for_campaign, campaign_id=campaign_id)
         await transport.to_room(
             room_id=campaign_id,
             event=TransportEvent.CHAT_MESSAGES_CLEARED,

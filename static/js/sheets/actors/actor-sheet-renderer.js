@@ -948,7 +948,9 @@
     let html;
     try {
       const url = `/sdk/packages/${encodeURIComponent(packageId)}/asset/${sheet.template}`;
-      const res = await fetch(url, { credentials: "same-origin", headers: { Accept: "text/html" } });
+      // The template asset URL has no version query, so never serve a stale
+      // cached copy after the package's sheet is regenerated.
+      const res = await fetch(url, { credentials: "same-origin", cache: "no-store", headers: { Accept: "text/html" } });
       if (!res.ok) throw new Error(`template ${res.status}`);
       html = await res.text();
     } catch (_err) {
@@ -961,6 +963,20 @@
     root.innerHTML = html;
     HTML.mount(packageId, sheetType, root, htmlSheetData(bundle), {
       onChange: (path, value) => writeHtmlSheetPath(root, path, value),
+      // data-action buttons execute the ruleset's own rules/actions entry
+      // server-side (e.g. a roll preset), exactly like a declarative sheet.
+      onAction: (name) => FI.executeSheetAction?.(root, name),
+      onItemChange: async (itemId, path, value) => {
+        const meta = contexts.get(root);
+        if (!meta || !itemId || !path) return;
+        await postJSON("/game/actor/item/patch", {
+          csrf_token: meta.csrf,
+          actor_id: meta.actorId,
+          item_instance_id: itemId,
+          patch: { [path]: value },
+        });
+      },
+      onItemAction: (itemId, name) => FI.executeItemAction?.(root, itemId, name),
     });
   }
 

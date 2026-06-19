@@ -21,12 +21,15 @@
     if (!sheet || !hasDropSource(e)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "copy";
-    sheet.classList.add("is-drop-active");
+    const zone = e.target.closest("[data-drop-zone]");
+    (zone || sheet).classList.add("is-drop-active");
   });
 
   document.addEventListener("dragleave", (e) => {
     const sheet = e.target.closest("[data-actor-sheet-root]");
+    const zone = e.target.closest("[data-drop-zone]");
     
+    if (zone && !zone.contains(e.relatedTarget)) zone.classList.remove("is-drop-active");
     if (sheet && !sheet.contains(e.relatedTarget)) sheet.classList.remove("is-drop-active");
   });
 
@@ -37,6 +40,8 @@
     if (!raw) return;
     e.preventDefault();
     sheet.classList.remove("is-drop-active");
+    const zone = e.target.closest("[data-drop-zone]");
+    zone?.classList.remove("is-drop-active");
     let source;
     try {
       source = JSON.parse(raw);
@@ -50,7 +55,7 @@
       csrf_token: csrf(),
       actor_id: actorId,
       source,
-      target: {},
+      target: { drop_zone: zone?.dataset.dropZone || "" },
     });
     
   });

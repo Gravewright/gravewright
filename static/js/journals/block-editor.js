@@ -17,6 +17,21 @@ const DOC_VERSION = 1;
 
 const EMPTY_PM_DOC = { type: "doc", content: [{ type: "paragraph" }] };
 
+const DEFAULT_LABELS = Object.freeze({
+  placeholder: "Type / for commands",
+  group_basic: "Basic blocks",
+  group_media: "Media",
+  text: "Text",
+  heading1: "Heading 1",
+  heading2: "Heading 2",
+  heading3: "Heading 3",
+  bullet_list: "Bullet list",
+  ordered_list: "Numbered list",
+  quote: "Quote",
+  divider: "Divider",
+  image: "Image",
+});
+
 function wrapDoc(pmDoc) {
   return { format: DOC_FORMAT, version: DOC_VERSION, doc: pmDoc || { type: "doc", content: [] } };
 }
@@ -331,7 +346,7 @@ function slashExtension(commands, menu) {
 
 function mount(host, opts = {}) {
   const editable = opts.editable !== false;
-  const labels = opts.labels || {};
+  const labels = { ...DEFAULT_LABELS, ...(opts.labels || {}) };
   const isGm = !!opts.isGm;
   const uploadImage = editable ? opts.uploadImage : null;
 

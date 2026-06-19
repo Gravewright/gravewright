@@ -255,6 +255,9 @@ class AppConfig:
     database_pool_recycle_seconds: int
     database_pool_pre_ping: bool
     database_echo: bool
+    sqlite_pool_size: int
+    sqlite_max_overflow: int
+    realtime_blocking_workers: int
 
     default_locale: str
 
@@ -331,6 +334,9 @@ config = AppConfig(
     database_pool_size=env_int("DATABASE_POOL_SIZE", 5),
     database_max_overflow=env_int("DATABASE_MAX_OVERFLOW", 10),
     database_pool_timeout=env_int("DATABASE_POOL_TIMEOUT", 30),
+    sqlite_pool_size=env_int("SQLITE_POOL_SIZE", 24),
+    sqlite_max_overflow=env_int("SQLITE_MAX_OVERFLOW", 24),
+    realtime_blocking_workers=env_int("REALTIME_BLOCKING_WORKERS", 48),
     database_pool_recycle_seconds=env_int("DATABASE_POOL_RECYCLE_SECONDS", 1800),
     database_pool_pre_ping=env_bool("DATABASE_POOL_PRE_PING", True),
     database_echo=env_bool("DATABASE_ECHO", False),

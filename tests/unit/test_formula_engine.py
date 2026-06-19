@@ -72,6 +72,61 @@ def test_multiple_dice_groups():
     assert result.total == 9
 
 
+def test_exploding_die_rerolls_until_below_threshold():
+    rolls = iter((6, 6, 2))
+    result = evaluate("explode(6, 6)", roller=lambda count, sides: [next(rolls)])
+    assert result.total == 14
+    assert result.groups == [
+        {"notation": "1d6!>=6", "results": [6, 6, 2], "subtotal": 14}
+    ]
+
+
+def test_exploding_die_supports_sheet_values():
+    context = {"sheet": {"die": {"size": 8, "explode": 7}}}
+    rolls = iter((7, 3))
+    result = evaluate(
+        "explode(@sheet.die.size, @sheet.die.explode)",
+        context=context,
+        roller=lambda count, sides: [next(rolls)],
+    )
+    assert result.total == 10
+    assert result.groups[0]["notation"] == "1d8!>=7"
+
+
+def test_dynamic_die_uses_runtime_sides():
+    result = evaluate("die(@sheet.step)", context={"sheet": {"step": 10}}, roller=_fixed_roller(7))
+    assert result.total == 7
+    assert result.groups[0]["notation"] == "1d10"
+
+
+def test_success_pool_counts_results_at_or_above_target():
+    result = evaluate("successes(4, 6, 5)", roller=lambda count, sides: [1, 5, 6, 4])
+    assert result.total == 2
+    assert result.groups == [
+        {"notation": "4d6>=5", "results": [1, 5, 6, 4], "subtotal": 2}
+    ]
+
+
+def test_roll_under_counts_results_at_or_below_target():
+    result = evaluate("under(2, 20, 10)", roller=lambda count, sides: [8, 14])
+    assert result.total == 1
+    assert result.groups[0]["notation"] == "2d20<=10"
+
+
+def test_fate_roll_records_minus_blank_plus_faces():
+    result = evaluate("fate() + 2", roller=lambda count, sides: [1, 2, 3, 3])
+    assert result.total == 3
+    assert result.groups == [
+        {"notation": "4dF", "results": [-1, 0, 1, 1], "subtotal": 1}
+    ]
+
+
+def test_draw_returns_card_index():
+    result = evaluate("draw(52)", roller=lambda count, sides: [37])
+    assert result.total == 37
+    assert result.groups[0]["notation"] == "draw(52)"
+
+
 def test_errors():
     with pytest.raises(FormulaError):
         evaluate("1 / 0")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Generator
@@ -8,6 +9,17 @@ from sqlalchemy.engine import Connection, Result, make_url
 
 from app.config import config
 from app.helpers.env import PROJECT_ROOT
+
+
+# P1: SQLite allows a single writer at a time. Without app-side serialization,
+# every worker thread that opens a write transaction races for that lock and
+# falls into SQLite's busy-timeout backoff (up to 5s) — turning contention into
+# multi-second latency and writer starvation under load. This re-entrant mutex
+# makes write transactions queue politely (FIFO) on one in-process lock instead
+# of fighting at the SQLite layer. Reentrant so a thread that legitimately nests
+# write transactions does not self-deadlock. Networked backends (PostgreSQL)
+# have real write concurrency and skip this entirely.
+_SQLITE_WRITE_LOCK = threading.RLock()
 
 
                                                                                 
@@ -101,12 +113,22 @@ def _ensure_initialized() -> None:
 
 @contextmanager
 def engine_begin() -> Generator[Connection, None, None]:
-    """SQLAlchemy connection wrapped in a transaction (commits on success)."""
-    _ensure_initialized()
-    from app.persistence.engine import get_engine
+    """SQLAlchemy connection wrapped in a transaction (commits on success).
 
-    with get_engine().begin() as connection:
-        yield connection
+    On SQLite the write transaction is serialized through a process-wide lock so
+    concurrent worker threads queue instead of contending on SQLite's single
+    writer lock (see ``_SQLITE_WRITE_LOCK``).
+    """
+    _ensure_initialized()
+    from app.persistence.engine import get_engine, is_sqlite
+
+    if is_sqlite():
+        with _SQLITE_WRITE_LOCK:
+            with get_engine().begin() as connection:
+                yield connection
+    else:
+        with get_engine().begin() as connection:
+            yield connection
 
 
 @contextmanager

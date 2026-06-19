@@ -4,6 +4,9 @@ import json
 from pathlib import Path
 
 from app.cli import main
+from app.cli.doctor import Check, _audit_checks, render_check_lines, render_pretty
+from app.engine.sdk.diagnostics import DoctorFinding
+from app.engine.sdk.package_doctor_service import PackageDoctorService
 from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.installed_package_repository import (
     InstalledPackageRepository,
@@ -94,3 +97,36 @@ def test_doctor_warns_enabled_addon_inactive_in_any_campaign(db, capsys):
     payload = json.loads(capsys.readouterr().out)
     warns = {c["id"]: c for c in payload["checks"] if c["status"] == "warn"}
     assert "inactive:valid-addon" in warns
+
+
+def test_doctor_normalizes_audit_warning_for_text_output(monkeypatch):
+    monkeypatch.setattr(
+        PackageDoctorService,
+        "audit",
+        lambda self: [
+            DoctorFinding(
+                code="orphan_setting_uninstalled",
+                severity="warning",
+                package_id="missing-addon",
+            )
+        ],
+    )
+
+    checks = _audit_checks()
+
+    assert checks[0].status == "warn"
+    assert render_check_lines(checks)[0].startswith("WARN ")
+
+
+def test_doctor_pretty_output_has_report_table_and_verdict():
+    output = render_pretty(
+        [
+            Check("python", "ok", "Python detected"),
+            Check("package:x", "error", "manifest invalid", fix="grave package validate x"),
+        ],
+        verbose=True,
+    )
+    assert "Gravewright Doctor" in output
+    assert "Check" in output and "FIX" in output
+    assert "package:x" in output
+    assert "Not ready" in output

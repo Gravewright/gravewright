@@ -24,8 +24,14 @@ from app.engine.sheets.sheet_ir_validator import (
     find_matching_drop_zone,
 )
 from app.engine.sdk.package_install_service import PackageInstallService
+from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
+
+# Conventional list path where HTML-mode sheets collect dropped items, since
+# they have no declarative dropZone/onDrop action to target.
+HTML_DROP_LIST = "items"
+HTML_EFFECT_LIST = "effects"
 
 
 @dataclass(frozen=True)
@@ -49,6 +55,7 @@ class SheetDropService:
         self.layouts = SystemLayoutService()
         self.rules = SystemRulesService()
         self.actions = SheetActionService()
+        self.storage = ScopedJsonStorage()
 
     def drop(
         self,
@@ -84,17 +91,31 @@ class SheetDropService:
 
         layout = self.layouts.get_actor_sheet(system_id=system_id, actor_type=actor["type"])
         if drop_zone:
-                                                                          
+
             zone = find_drop_zone(layout, drop_zone) if layout else None
             if zone is None:
+                if self._is_html_sheet(system_id, actor["type"]):
+                    list_path = HTML_EFFECT_LIST if drop_zone == HTML_EFFECT_LIST else HTML_DROP_LIST
+                    is_effect = (
+                        entry.drop_type == "effect"
+                        or entry.drop_type.startswith("effect.")
+                        or entry.drop_type == "item.effect"
+                    )
+                    if (list_path == HTML_EFFECT_LIST) != is_effect:
+                        return DropResult(success=False, error_key="game.drop.errors.not_accepted")
+                    return self._append_to_html_list(actor, entry, list_path=list_path)
                 return DropResult(success=False, error_key="game.drop.errors.zone_not_found")
             if not accepts_entry(zone["accepts"], entry.drop_type):
                 return DropResult(success=False, error_key="game.drop.errors.not_accepted")
         else:
-                                                                            
-                                               
+
+
             zone = find_matching_drop_zone(layout, entry.drop_type) if layout else None
             if zone is None:
+                # HTML-mode sheets have no declarative dropZone; collect the
+                # resolved entry into a conventional ``items`` list instead.
+                if self._is_html_sheet(system_id, actor["type"]):
+                    return self._append_to_html_list(actor, entry)
                 return DropResult(success=False, error_key="game.drop.errors.not_accepted")
 
         action_id = zone.get("onDrop")
@@ -117,4 +138,39 @@ class SheetDropService:
             version=result.version,
             changed_paths=result.changed_paths,
             token_view=result.token_view,
+        )
+
+    def _is_html_sheet(self, system_id: str, actor_type: str) -> bool:
+        manifest = self.systems.get_active_manifest(system_id)
+        if manifest is None:
+            return False
+        for type_def in manifest.actor_types:
+            if type_def.id == actor_type:
+                return type_def.html_sheet is not None
+        return False
+
+    def _append_to_html_list(
+        self, actor: dict, entry, *, list_path: str = HTML_DROP_LIST
+    ) -> DropResult:
+        envelope = self.storage.read_actor(
+            system_id=actor["system_id"], campaign_id=actor["campaign_id"], actor_id=actor["id"]
+        ) or {"version": 1, "data": {}}
+        data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
+        items = data.get(list_path)
+        if not isinstance(items, list):
+            items = []
+            data[list_path] = items
+        items.append(entry.as_dict())
+        version = int(envelope.get("version", 1)) + 1
+        self.storage.write_actor(
+            system_id=actor["system_id"], campaign_id=actor["campaign_id"],
+            actor_id=actor["id"], version=version, data=data,
+        )
+        return DropResult(
+            success=True,
+            actor_id=actor["id"],
+            campaign_id=actor["campaign_id"],
+            system_id=actor["system_id"],
+            version=version,
+            changed_paths=[list_path],
         )

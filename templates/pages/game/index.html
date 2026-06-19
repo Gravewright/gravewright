@@ -1,3 +1,4 @@
+{% import "pages/game/_journal_block_field.html" as blockfield with context %}
 <!doctype html>
 <html lang="{{ locale }}">
 
@@ -92,7 +93,7 @@
     <script type="application/json" id="gravewright-game-context">{{ game_client_context_json | safe }}</script>
     <script type="application/json" id="gravewright-sdk-packages">{{ sdk_client_manifests_json | safe }}</script>
     <script defer src="/static/js/sdk/sdk-capabilities.js?v=20260614-sdk"></script>
-    <script defer src="/static/js/sdk/gravewright-sdk.js?v=20260614-sdk-nonce"></script>
+    <script defer src="/static/js/sdk/gravewright-sdk.js?v={{ asset_version }}"></script>
 
     <script defer src="/static/js/chat/chat-renderer.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/chat/chat-roll-cards.js?v=20260604-chat-split"></script>
@@ -104,6 +105,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     
     <script type="module" src="/static/js/journals/block-editor.js"></script>
+    {{ blockfield.labels() }}
     
     <script defer src="/static/js/journals/journal-api.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journals-tree.js?v=20260604-journals-split"></script>
@@ -112,10 +114,10 @@
     <script defer src="/static/js/journals/journals-panel.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journal-modal.js?v=20260604-journal-board-broadcast1"></script>
     
-    <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v=20260604-sheets-split"></script>
-    <script defer src="/static/js/sheets/actors/actor-sheet-actions.js?v=20260604-sheets-split"></script>
-    <script defer src="/static/js/sheets/actors/actor-sheet-controller.js?v=20260604-sheets-split"></script>
-    <script defer src="/static/js/sheets/actors/actor-sheet-events.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-actions.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-controller.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-events.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/combat/combat-api.js?v=20260605-system-api-v1"></script>
     
     {% for script in system_scripts %}<script defer src="{{ script.src }}" data-gw-package="{{ script.package_id }}" data-gw-nonce="{{ script.nonce }}"></script>
@@ -127,9 +129,9 @@
     <script defer src="/static/js/actors/actors-drag.js?v=20260604-actors-split"></script>
     <script defer src="/static/js/actors/actors-panel.js?v=20260604-actors-split"></script>
     
-    <script defer src="/static/js/sheets/items/item-sheet-renderer.js?v=20260604-sheets-split"></script>
-    <script defer src="/static/js/sheets/items/item-sheet-controller.js?v=20260604-sheets-split"></script>
-    <script defer src="/static/js/sheets/items/item-sheet-events.js?v=20260604-sheets-split"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-renderer.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-controller.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-events.js?v={{ asset_version }}"></script>
     
     <script defer src="/static/js/items/items-api.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-tree.js?v=20260604-items-split"></script>

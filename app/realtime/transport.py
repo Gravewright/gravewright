@@ -275,6 +275,23 @@ class RealtimeTransport(RealtimeGatewayContract):
         user_ids = await run_blocking(self.recipients.list_streamer_user_ids, room_id)
         await self._deliver(user_ids=user_ids, room_id=room_id, event=event, payload=payload)
 
+    async def to_token_audience(
+        self,
+        room_id: RoomId,
+        event: TransportEvent,
+        payload: Payload,
+        *,
+        include_players: bool,
+    ) -> None:
+        # Coalesced token fan-out: one recipient resolution, one event-log row,
+        # one send — instead of separate GM / streamer / player broadcasts.
+        user_ids = await run_blocking(
+            self.recipients.list_token_audience_user_ids,
+            room_id=room_id,
+            include_players=include_players,
+        )
+        await self._deliver(user_ids=user_ids, room_id=room_id, event=event, payload=payload)
+
     async def chat_to_room(
         self,
         room_id: RoomId,

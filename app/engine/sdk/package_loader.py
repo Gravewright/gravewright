@@ -186,7 +186,8 @@ def _validate_html_sheets_on_disk(
                         codes.append("sdk.sheets.html.inline_script_forbidden")
                     if _INLINE_HANDLER.search(html):
                         codes.append("sdk.sheets.html.inline_handler_forbidden")
-                    if "data-rich-text" in html and "sheets.richText" not in manifest.capabilities:
+                    uses_rich_text = "data-rich-text" in html or "data-rich-editor" in html
+                    if uses_rich_text and "sheets.richText" not in manifest.capabilities:
                         codes.append("sdk.sheets.html.rich_text_capability_missing")
 
         controller = sheet.get("controller")

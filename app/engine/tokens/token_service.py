@@ -695,19 +695,16 @@ class TokenService:
         transport: RealtimeGatewayContract,
         include_hidden_players: bool = False,
     ) -> None:
-        await transport.to_gm(room_id=campaign_id, event=event, payload=payload)
-
-                                                                                 
-                                                       
-        await transport.to_streamers(room_id=campaign_id, event=event, payload=payload)
-
-        if token.get("hidden") and not include_hidden_players:
-            return
-
-        await transport.to_players_in_room(
+        # Coalesced: GMs/assistant-GMs and streamers always see the event;
+        # plain players see it unless the token is hidden. A single delivery to
+        # that audience replaces the previous three broadcasts (3 recipient
+        # queries + 3 event-log writes -> 1 of each).
+        include_players = include_hidden_players or not token.get("hidden")
+        await transport.to_token_audience(
             room_id=campaign_id,
             event=event,
             payload=payload,
+            include_players=include_players,
         )
 
     def _can_view_token(self, *, token: dict, user_id: str, is_gm: bool) -> bool:

@@ -76,6 +76,15 @@ class RealtimeGatewayContract(Protocol):
         payload: Payload,
     ) -> None: ...
 
+    async def to_token_audience(
+        self,
+        room_id: RoomId,
+        event: TransportEvent,
+        payload: Payload,
+        *,
+        include_players: bool,
+    ) -> None: ...
+
     async def chat_to_room(
         self,
         room_id: RoomId,

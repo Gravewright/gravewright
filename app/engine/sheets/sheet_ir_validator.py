@@ -271,7 +271,13 @@ def accepts_entry(accepts: list, entry_type: str) -> bool:
         if not isinstance(token, str):
             continue
         token_suffix = token.split(".")[-1]
-        if token == entry or token == entry_suffix or token_suffix == entry or token_suffix == entry_suffix:
+        if (
+            token == entry
+            or entry.startswith(f"{token}.")
+            or token == entry_suffix
+            or token_suffix == entry
+            or token_suffix == entry_suffix
+        ):
             return True
     return False
 

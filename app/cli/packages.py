@@ -273,7 +273,7 @@ def cmd_update(args: argparse.Namespace) -> int:
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
-    from app.cli.doctor import ERROR, OK, WARN, Check, render_text, summarize
+    from app.cli.doctor import ERROR, OK, WARN, Check, render_pretty, summarize
     from app.engine.sdk.package_dependency_service import PackageDependencyService
     from app.engine.sdk.package_registry import load_by_package_id
 
@@ -306,7 +306,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
         _print_json(render_json(checks))
     else:
-        print(render_text(checks))
+        print(render_pretty(checks))
     return EXIT_OK if summarize(checks)["ok"] else EXIT_DOCTOR_ERROR
 
 
