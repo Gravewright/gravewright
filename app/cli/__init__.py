@@ -413,22 +413,54 @@ def _cmd_new(args: argparse.Namespace) -> int:
         declared_sheet_type_ids,
         suggest_package_id,
     )
+    from app.cli.templates import get_template, templates_for_kind
     from app.engine.sdk.package_loader import load_package
     from app.engine.sdk.package_manifest import KIND_TO_DIRECTORY
     from app.engine.sdk.package_paths import package_id_is_safe, safe_join
 
+    if getattr(args, "list_templates", False):
+        _print_templates(args.kind, as_json=args.json)
+        return EXIT_OK
+
+    template = None
+    if getattr(args, "template", None):
+        template = get_template(args.template)
+        if template is None or template.kind != args.kind:
+            available = ", ".join(t.id for t in templates_for_kind(args.kind)) or "(none)"
+            if args.json:
+                _print_json({
+                    "ok": False,
+                    "error_key": "scaffold.unknown_template",
+                    "template": args.template,
+                    "available": [t.id for t in templates_for_kind(args.kind)],
+                })
+            else:
+                print(f"ERROR  unknown {args.kind} template: {args.template}")
+                print(f"FIX    Available templates: {available}")
+                print(f"       List them with: grave {args.kind} new --list-templates")
+            return EXIT_DOCTOR_ERROR
+
     # Pick the wizard when explicitly asked, or by default on an interactive
-    # terminal with no intent flags and no non-interactive markers (--yes/--json).
+    # terminal with no intent flags and no non-interactive markers (--yes/--json,
+    # --template). A --template selection is a complete intent, so it never opens
+    # the wizard.
     interactive = _is_interactive()
     use_wizard = args.wizard or (
-        interactive and _no_intent_flags(args) and not args.yes and not args.json
+        interactive
+        and template is None
+        and _no_intent_flags(args)
+        and not args.yes
+        and not args.json
     )
     if use_wizard and not interactive:
         if args.wizard:
             print("WARN  --wizard needs an interactive terminal; using flags/defaults.")
         use_wizard = False
 
-    if use_wizard:
+    if template is not None:
+        name = _prompt_value(args.name, "Package name") or template.name_suggestion
+        intent = template.intent
+    elif use_wizard:
         from app.cli.wizard import run_new_wizard
 
         result = run_new_wizard(args.kind, default_name=args.name)
@@ -684,6 +716,61 @@ def _print_creation_summary_plain(
         print(f"  {step}")
 
 
+def _print_templates(kind: str, *, as_json: bool) -> None:
+    """List the ready-made templates available for ``kind``."""
+    from app.cli.templates import templates_for_kind
+
+    templates = templates_for_kind(kind)
+    if as_json:
+        _print_json({
+            "ok": True,
+            "kind": kind,
+            "templates": [
+                {
+                    "id": t.id,
+                    "label": t.label,
+                    "tagline": t.tagline,
+                    "description": t.description,
+                }
+                for t in templates
+            ],
+        })
+        return
+
+    if not templates:
+        print(f"No templates available for {kind}.")
+        print(f"Build one interactively with: grave {kind} new")
+        return
+
+    try:
+        from rich.console import Console
+        from rich.table import Table
+
+        console = Console()
+        table = Table(
+            title=f"{kind} templates",
+            title_justify="left",
+            show_edge=False,
+            pad_edge=False,
+        )
+        table.add_column("ID", style="cyan", no_wrap=True)
+        table.add_column("Template", style="bold")
+        table.add_column("What you get", style="dim")
+        for t in templates:
+            table.add_row(t.id, t.label, t.tagline)
+        console.print(table)
+        console.print(
+            f"\n[bold]Use one:[/]  [green]$[/] grave {kind} new --template "
+            f"{templates[0].id} --name \"My Game\""
+        )
+    except ImportError:  # pragma: no cover - rich ships with the runtime deps
+        width = max(len(t.id) for t in templates)
+        print(f"{kind} templates:")
+        for t in templates:
+            print(f"  {t.id.ljust(width)}  {t.label} - {t.tagline}")
+        print(f"\nUse one: grave {kind} new --template {templates[0].id} --name \"My Game\"")
+
+
 def _add_json(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
 
@@ -765,6 +852,20 @@ def _add_new_parser(sub, *, kind: str) -> None:
         dest="wizard",
         action="store_true",
         help="interactive guided wizard (checkbox selection) instead of flags",
+    )
+    parser.add_argument(
+        "--template",
+        dest="template",
+        default=None,
+        metavar="ID",
+        help="start from a ready-made template (see --list-templates). "
+        "Non-interactive: combine with --name/--yes for scripted scaffolds.",
+    )
+    parser.add_argument(
+        "--list-templates",
+        dest="list_templates",
+        action="store_true",
+        help="list the available templates for this kind and exit",
     )
     _add_json(parser)
 

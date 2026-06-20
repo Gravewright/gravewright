@@ -33,6 +33,8 @@ def _ruleset_script(actor_types, item_types, mechanic, *, create_items="yes",
         return list(preselected or [])
 
     def fake_choose(title, options, *, default=0):
+        if "start your ruleset" in title:
+            return "scratch"
         if "build the sheets" in title:
             return sheet_mode
         if "Create item sheet types" in title:
@@ -62,6 +64,73 @@ def test_wizard_builds_ruleset_intent(monkeypatch):
     assert i.has_sheets and i.html_sheets
     assert i.wants_biography and i.wants_notes
     assert i.wants_effects is True
+
+
+def test_wizard_collects_fields_for_each_item_type(monkeypatch):
+    _cb, ch = _ruleset_script(["character"], ["equipment"], "none")
+    def checkbox(title, options, *, preselected=None):
+        if "actor sheet types" in title:
+            return ["character"]
+        if "item sheet types" in title:
+            return ["equipment"]
+        if "fields should equipment" in title:
+            return ["weight", "cost", "damage", "description"]
+        return list(preselected or [])
+    monkeypatch.setattr(wizard, "_checkbox", checkbox)
+    monkeypatch.setattr(wizard, "_choose", ch)
+
+    result = wizard.run_new_wizard("ruleset", default_name="My RPG")
+    assert result.intent.item_fields == (
+        ("equipment", ("weight", "cost", "damage", "description")),
+    )
+
+
+def test_item_decision_tree_only_asks_for_selected_fields(monkeypatch):
+    prompts = []
+    answers = iter(["2.5", "75", "2d8 + 3"])
+    monkeypatch.setattr(wizard, "_interactive", lambda: True)
+    monkeypatch.setattr(
+        wizard, "_ask_text",
+        lambda label, default=None: prompts.append(label) or next(answers),
+    )
+    monkeypatch.setattr(wizard, "_choose", lambda title, options, *, default=0: "yes")
+
+    config = wizard._configure_item("equipment", ["weight", "cost", "damage", "description"])
+
+    assert config == (
+        ("weight.default", "2.5"),
+        ("cost.default", "75"),
+        ("damage.default", "2d8 + 3"),
+        ("damage.roll", "yes"),
+    )
+    assert prompts == ["Starting weight", "Starting cost", "Starting damage formula"]
+
+
+def test_armor_decision_tree_configures_armor_and_equipped(monkeypatch):
+    monkeypatch.setattr(wizard, "_interactive", lambda: True)
+    monkeypatch.setattr(wizard, "_ask_text", lambda label, default=None: "4")
+    monkeypatch.setattr(wizard, "_choose", lambda title, options, *, default=0: "no")
+
+    config = wizard._configure_item("armor", ["armor", "equipped"])
+
+    assert config == (("armor.default", "4"), ("equipped.default", "no"))
+
+
+def test_wizard_collects_fields_for_each_actor_type(monkeypatch):
+    _cb, ch = _ruleset_script(["character"], [], "none", create_items="no")
+    def checkbox(title, options, *, preselected=None):
+        if "actor sheet types" in title:
+            return ["character"]
+        if "fields should character" in title:
+            return ["health", "health-max", "mana", "description"]
+        return list(preselected or [])
+    monkeypatch.setattr(wizard, "_checkbox", checkbox)
+    monkeypatch.setattr(wizard, "_choose", ch)
+
+    result = wizard.run_new_wizard("ruleset", default_name="My RPG")
+    assert result.intent.actor_fields == (
+        ("character", ("health", "health-max", "mana", "description")),
+    )
 
 
 def test_wizard_biography_and_notes_questions(monkeypatch):
@@ -102,6 +171,8 @@ def test_wizard_custom_actor_type_normalized(monkeypatch):
         return []
 
     def fake_choose(title, options, *, default=0):
+        if "start your ruleset" in title:
+            return "scratch"
         if "Create item sheet types" in title:
             return "no"
         return options[default][0]
@@ -129,6 +200,55 @@ def test_wizard_intent_validates(monkeypatch):
 def test_wizard_cancel_returns_none(monkeypatch):
     monkeypatch.setattr(wizard, "_choose", lambda *a, **k: None)
     assert wizard.run_new_wizard("ruleset", default_name="My RPG") is None
+
+
+def _template_choose(template_id, *, sheet_mode="declarative"):
+    def fake_choose(title, options, *, default=0):
+        if "start your ruleset" in title:
+            return "template"
+        if "template fits" in title:
+            return template_id
+        if "build the sheets" in title:
+            return sheet_mode
+        return options[default][0]
+
+    return fake_choose
+
+
+def test_wizard_template_path_builds_full_intent(monkeypatch):
+    monkeypatch.setattr(wizard, "_choose", _template_choose("fantasy-d20"))
+    result = wizard.run_new_wizard("ruleset", default_name="Heroes")
+    assert result is not None
+    i = result.intent
+    assert i.actor_types == ("character", "npc", "monster")
+    assert i.item_types == ("weapon", "armor", "spell", "consumable")
+    assert i.mechanic == "d20-attribute-modifier-skill"
+    assert i.html_sheets is False
+    assert i.wants_effects and i.wants_biography
+
+
+def test_wizard_template_html_mode_override(monkeypatch):
+    monkeypatch.setattr(wizard, "_choose", _template_choose("pbta", sheet_mode="html"))
+    result = wizard.run_new_wizard("ruleset", default_name="Hack")
+    assert result.intent.mechanic == "2d6-pbta"
+    assert result.intent.html_sheets is True
+
+
+def test_every_template_produces_a_valid_manifest():
+    from app.cli.templates import RULESET_TEMPLATES
+    from dataclasses import replace
+
+    for template in RULESET_TEMPLATES:
+        for html in (False, True):
+            intent = replace(template.intent, html_sheets=html)
+            manifest = build_manifest(
+                package_id=template.id,
+                name=template.label,
+                version="0.1.0",
+                kind=template.kind,
+                intent=intent,
+            )
+            assert validate_manifest(manifest).ok, (template.id, html)
 
 
 def test_wizard_assets_kind(monkeypatch):
@@ -188,11 +308,35 @@ def test_ruleset_name_is_first_step(monkeypatch):
     assert result is not None
     assert steps == [
         (1, 5, "Ruleset name"),
-        (2, 5, "Authoring mode"),
-        (3, 5, "Document types"),
-        (4, 5, "Core mechanic"),
+        (2, 5, "Core mechanic"),
+        (3, 5, "Authoring mode"),
+        (4, 5, "Document types"),
         (5, 5, "Sheet sections"),
     ]
+
+
+def test_exploding_dice_configuration_is_guided(monkeypatch):
+    answers = iter(["forca, agilidade, mente", "8", "8"])
+    monkeypatch.setattr(wizard, "_interactive", lambda: True)
+    monkeypatch.setattr(wizard, "_ask_text", lambda label, default=None: next(answers))
+
+    configured = wizard._configure_mechanic("exploding-dice")
+
+    assert configured == (
+        ("forca", "agilidade", "mente"),
+        (),
+        (("sides", "8"), ("threshold", "8")),
+    )
+
+
+def test_d20_skill_configuration_asks_attributes_and_skills(monkeypatch):
+    answers = iter(["forca, destreza", "atletismo, furtividade"])
+    monkeypatch.setattr(wizard, "_interactive", lambda: True)
+    monkeypatch.setattr(wizard, "_ask_text", lambda label, default=None: next(answers))
+
+    configured = wizard._configure_mechanic("d20-attribute-modifier-skill")
+
+    assert configured[:2] == (("forca", "destreza"), ("atletismo", "furtividade"))
 
 
 def test_wizard_step_clears_previous_step(monkeypatch):

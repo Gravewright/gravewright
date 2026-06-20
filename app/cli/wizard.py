@@ -14,9 +14,13 @@ flag-driven path otherwise.
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from app.cli.scaffold import MECHANICS, Intent, _slugify, mechanic_ids
+from app.cli.scaffold import (
+    MECHANICS, Intent, _slugify, actor_field_options, default_actor_field_ids,
+    default_item_field_ids, item_field_options, mechanic_ids,
+)
+from app.cli.templates import Template, get_template, templates_for_kind
 
 try:
     import questionary
@@ -112,6 +116,101 @@ def _wizard_step(number: int, total: int, title: str) -> None:
         "Choose the data model, sheets and game mechanics",
         step=(number, total, title),
     )
+
+
+def _wizard_intro(kind: str) -> None:
+    """A friendly welcome banner shown before the first question."""
+    if not _interactive():
+        return
+    try:
+        from rich.console import Console
+        from rich.panel import Panel
+
+        Console().print(
+            Panel.fit(
+                f"[bold]Let's build a {kind}.[/bold]\n"
+                "[dim]Start from a ready-made template and tweak it, or answer a\n"
+                "few questions to design it from scratch. Press Ctrl+C to cancel\n"
+                "at any time.[/dim]",
+                title="Gravewright",
+                border_style="yellow",
+                padding=(0, 2),
+            )
+        )
+    except ImportError:  # pragma: no cover
+        print(f"Let's build a {kind}. Ctrl+C to cancel at any time.")
+
+
+def _format_types(label: str, ids) -> str:
+    values = [str(i) for i in (ids or ())]
+    return f"{label}: {', '.join(values) if values else '(none)'}"
+
+
+def _render_intent_summary(
+    name: str, kind: str, intent: Intent, *, template: Template | None = None
+) -> None:
+    """Show what will be generated so the author can confirm before writing.
+
+    Display-only: the CLI still asks for the final create confirmation. Skipped
+    on non-interactive runs so scripted/automated paths stay silent.
+    """
+    if not _interactive():
+        return
+
+    mechanic_label = MECHANICS.get(intent.mechanic, {}).get("label", intent.mechanic)
+    sections = [
+        label
+        for label, on in (
+            ("Biography", intent.wants_biography),
+            ("Notes", intent.wants_notes),
+            ("Active Effects", intent.wants_effects),
+        )
+        if on
+    ]
+    mode = "HTML templates (full control)" if intent.html_sheets else "Declarative"
+    rows = [
+        ("Name", name),
+        ("Package id", _slugify(name)),
+        ("Actor types", ", ".join(intent.actor_types or ()) or "(none)"),
+        ("Item types", ", ".join(intent.item_types or ()) or "(none)"),
+        ("Core mechanic", mechanic_label),
+        ("Sheet sections", ", ".join(sections) or "(none)"),
+        ("Authoring mode", mode),
+    ]
+
+    try:
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.table import Table
+
+        console = Console()
+        if template is not None:
+            console.print(
+                Panel.fit(
+                    f"[bold]{template.label}[/bold]\n[dim]{template.description}[/dim]",
+                    title="Template",
+                    border_style="cyan",
+                    padding=(0, 2),
+                )
+            )
+        table = Table(
+            title="You're about to create",
+            title_justify="left",
+            show_edge=False,
+            pad_edge=False,
+        )
+        table.add_column("", style="dim", no_wrap=True)
+        table.add_column("", style="bold")
+        for key, value in rows:
+            table.add_row(key, value)
+        console.print(table)
+    except ImportError:  # pragma: no cover
+        if template is not None:
+            print(f"Template: {template.label}")
+            print(f"  {template.description}")
+        print("You're about to create:")
+        for key, value in rows:
+            print(f"  {key}: {value}")
 
 
 def _checkbox(
@@ -231,15 +330,122 @@ def _select_types(title: str, options: tuple[str, ...], preselected: list[str]) 
     return out
 
 
-def _run_ruleset(default_name: str | None) -> WizardResult | None:
-    _wizard_step(1, 5, "Ruleset name")
-    name = default_name or _ask_text("Ruleset name")
-    if not name:
+def _ask_ids(label: str, defaults: tuple[str, ...]) -> tuple[str, ...] | None:
+    raw = _ask_text(label, ", ".join(defaults))
+    if raw is None:
         return None
-    print(f"  package id: {_slugify(name)}")
+    values = []
+    for value in _split_ids(raw):
+        slug = _slugify(value)
+        if slug and slug not in values:
+            values.append(slug)
+    return tuple(values)
 
-    _wizard_step(2, 5, "Authoring mode")
-    sheet_mode = _choose(
+
+def _configure_mechanic(mechanic: str) -> tuple[tuple[str, ...], tuple[str, ...], tuple[tuple[str, str], ...]] | None:
+    """Ask the questions relevant to one mechanic preset."""
+    if not _interactive() or mechanic == "none":
+        return (), (), ()
+    attrs: tuple[str, ...] = ()
+    skills: tuple[str, ...] = ()
+    config: list[tuple[str, str]] = []
+    attribute_defaults = {
+        "d20-attribute-modifier-skill": _DND_ATTRIBUTE_DEFAULTS,
+        "d20-attribute-modifier": _DND_ATTRIBUTE_DEFAULTS,
+        "d20-roll-under": _DND_ATTRIBUTE_DEFAULTS,
+        "dice-pool-successes": ("strength", "agility", "mind"),
+        "dice-pool-count-hits": ("strength", "agility", "mind"),
+        "exploding-dice": ("strength", "agility", "mind"),
+        "step-dice": ("strength", "agility", "mind", "spirit"),
+        "fudge-fate": ("careful", "clever", "flashy", "forceful", "quick", "sneaky"),
+        "2d6-pbta": ("cool", "hard", "hot", "sharp", "weird"),
+        "2d20": ("agility", "brawn", "coordination", "insight"),
+        "year-zero-d6-pool": ("strength", "agility", "wits", "empathy"),
+        "custom": ("resource",),
+    }
+    if mechanic in attribute_defaults:
+        label = "Approaches (comma-separated)" if mechanic == "fudge-fate" else "Attributes (comma-separated)"
+        attrs = _ask_ids(label, attribute_defaults[mechanic])
+        if attrs is None:
+            return None
+    skill_defaults = {
+        "d20-attribute-modifier-skill": ("athletics", "perception", "stealth"),
+        "d100-percentile": ("perception", "investigation", "medicine"),
+        "2d20": ("athletics", "survival", "technology"),
+    }
+    if mechanic in skill_defaults:
+        skills = _ask_ids("Skills (comma-separated)", skill_defaults[mechanic])
+        if skills is None:
+            return None
+    questions = {
+        "d20-roll-under": [("default", "Starting attribute value", "12")],
+        "d100-percentile": [("default", "Starting skill percentage", "50")],
+        "dice-pool-successes": [("default", "Starting pool size", "3"), ("target", "Success result on d6", "6")],
+        "dice-pool-count-hits": [("default", "Starting pool size", "6"), ("target", "Hit result on d6", "5")],
+        "year-zero-d6-pool": [("default", "Starting attribute dice", "3"), ("target", "Success result on d6", "6")],
+        "exploding-dice": [("sides", "Default die sides", "6"), ("threshold", "Explosion threshold", "6")],
+        "step-dice": [("default", "Default step die sides", "6")],
+        "cards": [("deck-size", "Number of cards in the deck", "52")],
+        "custom": [("formula", "Roll formula", "1d20 + @sheet.resource")],
+    }
+    for key, label, default in questions.get(mechanic, []):
+        value = _ask_text(label, default)
+        if value is None:
+            return None
+        config.append((key, value))
+    return attrs, skills, tuple(config)
+
+
+def _configure_item(item_type: str, fields: list[str]) -> tuple[tuple[str, str], ...] | None:
+    """Follow the conditional configuration tree for one selected item type."""
+    if not _interactive():
+        return ()
+    config: list[tuple[str, str]] = []
+    defaults = {
+        "weight": "0", "cost": "0", "quantity": "1", "damage": "1d6",
+        "attack-bonus": "0", "damage-type": "physical", "armor": "1",
+        "level": "0", "effect": "",
+    }
+    labels = {
+        "weight": "Starting weight", "cost": "Starting cost",
+        "quantity": "Starting quantity", "damage": "Starting damage formula",
+        "attack-bonus": "Starting attack bonus", "damage-type": "Default damage type",
+        "armor": "Starting armor value", "level": "Starting level",
+        "effect": "Default effect text",
+    }
+    for field_id in fields:
+        if field_id in defaults:
+            value = _ask_text(labels[field_id], defaults[field_id])
+            if value is None:
+                return None
+            config.append((f"{field_id}.default", value))
+        if field_id == "damage":
+            roll = _choose(
+                "Create an executable damage roll for this item type?",
+                [("yes", "Yes - add a Roll damage action"), ("no", "No - store damage only")],
+            )
+            if roll is None:
+                return None
+            config.append(("damage.roll", roll))
+        elif field_id == "equipped":
+            equipped = _choose(
+                "Should newly created items start equipped?",
+                [("no", "No"), ("yes", "Yes")],
+            )
+            if equipped is None:
+                return None
+            config.append(("equipped.default", equipped))
+    return tuple(config)
+
+
+_DND_ATTRIBUTE_DEFAULTS = (
+    "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
+)
+
+
+def _ask_authoring_mode() -> str | None:
+    """The shared declarative-vs-HTML sheet authoring question."""
+    return _choose(
         "How do you want to build the sheets?",
         [
             (
@@ -252,10 +458,83 @@ def _run_ruleset(default_name: str | None) -> WizardResult | None:
             ),
         ],
     )
+
+
+def _run_ruleset(default_name: str | None) -> WizardResult | None:
+    """Top-level ruleset wizard: offer a template or the from-scratch path."""
+    _wizard_intro("ruleset")
+    start = _choose(
+        "How would you like to start your ruleset?",
+        [
+            (
+                "template",
+                "Start from a template - a ready-made system you can tweak (recommended)",
+            ),
+            (
+                "scratch",
+                "Build from scratch - answer a few quick questions",
+            ),
+        ],
+    )
+    if start is None:
+        return None
+    if start == "template":
+        return _run_ruleset_from_template(default_name)
+    return _run_ruleset_scratch(default_name)
+
+
+def _run_ruleset_from_template(default_name: str | None) -> WizardResult | None:
+    """Pick a ready-made template, choose an authoring mode, then confirm."""
+    templates = templates_for_kind("ruleset")
+    choice = _choose(
+        "Which template fits your game best?",
+        [(t.id, f"{t.label}  -  {t.tagline}") for t in templates],
+    )
+    if choice is None:
+        return None
+    template = get_template(choice)
+    if template is None:  # pragma: no cover - choices come from the catalog
+        return None
+
+    mode = _ask_authoring_mode()
+    if mode is None:
+        return None
+
+    name = default_name or _ask_text("Ruleset name", template.name_suggestion)
+    if not name:
+        return None
+
+    intent = replace(template.intent, html_sheets=mode == "html")
+    _clear_screen()
+    _render_intent_summary(name, "ruleset", intent, template=template)
+    return WizardResult(name=name, intent=intent)
+
+
+def _run_ruleset_scratch(default_name: str | None) -> WizardResult | None:
+    _wizard_step(1, 5, "Ruleset name")
+    name = default_name or _ask_text("Ruleset name")
+    if not name:
+        return None
+    print(f"  package id: {_slugify(name)}")
+
+    _wizard_step(2, 5, "Core mechanic")
+    mechanic = _choose(
+        "Which core mechanic does the system use?",
+        [(mid, f"{mid}  —  {MECHANICS[mid]['label']}") for mid in mechanic_ids()],
+    )
+    if mechanic is None:
+        return None
+    mechanic_setup = _configure_mechanic(mechanic)
+    if mechanic_setup is None:
+        return None
+    mechanic_attributes, mechanic_skills, mechanic_config = mechanic_setup
+
+    _wizard_step(3, 5, "Authoring mode")
+    sheet_mode = _ask_authoring_mode()
     if sheet_mode is None:
         return None
 
-    _wizard_step(3, 5, "Document types")
+    _wizard_step(4, 5, "Document types")
     actor_types = _select_types(
         "Which actor sheet types should this ruleset have?",
         ACTOR_SHEET_OPTIONS,
@@ -265,8 +544,20 @@ def _run_ruleset(default_name: str | None) -> WizardResult | None:
         return None
     if not actor_types:
         actor_types = ["character"]
+    actor_fields: list[tuple[str, tuple[str, ...]]] = []
+    for actor_type in actor_types:
+        selected = _checkbox(
+            f"Which fields should {actor_type} have?",
+            actor_field_options(actor_type),
+            preselected=default_actor_field_ids(actor_type),
+        )
+        if selected is None:
+            return None
+        actor_fields.append((actor_type, tuple(selected)))
 
     item_types: list[str] = []
+    item_fields: list[tuple[str, tuple[str, ...]]] = []
+    item_config: list[tuple[str, tuple[tuple[str, str], ...]]] = []
     create_items = _choose(
         "Create item sheet types?",
         [("no", "No"), ("yes", "Yes")],
@@ -282,6 +573,19 @@ def _run_ruleset(default_name: str | None) -> WizardResult | None:
         if chosen_items is None:
             return None
         item_types = chosen_items
+        for item_type in item_types:
+            selected = _checkbox(
+                f"Which fields should {item_type} have?",
+                item_field_options(item_type),
+                preselected=default_item_field_ids(item_type),
+            )
+            if selected is None:
+                return None
+            item_fields.append((item_type, tuple(selected)))
+            configured = _configure_item(item_type, selected)
+            if configured is None:
+                return None
+            item_config.append((item_type, configured))
 
     effects = _choose(
         "Include Active Effects?",
@@ -291,14 +595,6 @@ def _run_ruleset(default_name: str | None) -> WizardResult | None:
         ],
     )
     if effects is None:
-        return None
-
-    _wizard_step(4, 5, "Core mechanic")
-    mechanic = _choose(
-        "Which core mechanic does the system use?",
-        [(mid, f"{mid}  —  {MECHANICS[mid]['label']}") for mid in mechanic_ids()],
-    )
-    if mechanic is None:
         return None
 
     _wizard_step(5, 5, "Sheet sections")
@@ -321,19 +617,27 @@ def _run_ruleset(default_name: str | None) -> WizardResult | None:
     intent = Intent(
         has_sheets=True,
         actor_types=tuple(actor_types),
+        actor_fields=tuple(actor_fields),
         item_types=tuple(item_types),
+        item_fields=tuple(item_fields),
+        item_config=tuple(item_config),
         mechanic=mechanic,
+        mechanic_attributes=mechanic_attributes,
+        mechanic_skills=mechanic_skills,
+        mechanic_config=mechanic_config,
         wants_biography=biography == "yes",
         wants_notes=notes == "yes",
         wants_effects=effects == "yes",
         html_sheets=sheet_mode == "html",
     )
     _clear_screen()
+    _render_intent_summary(name, "ruleset", intent)
     return WizardResult(name=name, intent=intent)
 
 
 def _run_simple(kind: str, default_name: str | None) -> WizardResult | None:
     """Wizard for non-ruleset kinds (feature/asset checkboxes only)."""
+    _wizard_intro(kind)
     name = default_name or _ask_text("Package name")
     if not name:
         return None

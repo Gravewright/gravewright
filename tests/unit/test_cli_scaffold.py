@@ -103,6 +103,22 @@ def test_actor_gets_items_list_when_ruleset_has_items():
         assert schema["properties"]["items"]["type"] == "array"
 
 
+@pytest.mark.parametrize("html_sheets", [False, True])
+def test_actor_field_selection_drives_schema_and_sheet(html_sheets):
+    pkg = _ruleset(
+        html_sheets=html_sheets, actor_types=("character",),
+        actor_fields=(("character", ("health", "health-max", "mana", "description")),),
+    )
+    schema = json.loads(pkg.files["schemas/actors/character.schema.json"])
+    assert set(schema["properties"]) == {"resources", "description"}
+    assert set(schema["properties"]["resources"]["properties"]) == {
+        "health", "healthMax", "mana",
+    }
+    path = "sheets/character.html" if html_sheets else "layouts/character.sheet.gw.json"
+    assert "resources.health" in pkg.files[path]
+    assert "resources.stamina" not in pkg.files[path]
+
+
 def test_items_become_a_tab_alongside_other_panels():
     # With a mechanic (Main) plus Items there are >=2 panels -> real tabs.
     pkg = _ruleset(actor_types=("character",), item_types=("weapon",), mechanic="d20-attribute-modifier")
@@ -267,6 +283,53 @@ def test_item_family_gets_symbolic_starter_fields(item_type, expected_path):
     assert f'data-bind="system.{expected_path}"' in pkg.files[f"sheets/{item_type}.html"]
 
 
+@pytest.mark.parametrize("html_sheets", [False, True])
+def test_equipment_field_preset_generates_selected_fields_and_roll(html_sheets):
+    pkg = _ruleset(
+        html_sheets=html_sheets, actor_types=("character",), item_types=("equipment",),
+        item_fields=(("equipment", ("weight", "cost", "damage", "description")),),
+    )
+    schema = json.loads(pkg.files["schemas/items/equipment.schema.json"])
+    assert set(schema["properties"]) == {"weight", "cost", "damage", "description"}
+    actions = json.loads(pkg.files["rules/actions.gw.json"])["actions"]
+    assert actions["roll-item-damage"]["formula"] == "@item.data.damage"
+    if html_sheets:
+        sheet = pkg.files["sheets/equipment.html"]
+        assert 'data-bind="system.weight"' in sheet
+        assert 'data-action="roll-item-damage"' in sheet
+        assert "system.quantity" not in sheet
+    else:
+        layout = json.loads(pkg.files["layouts/character.sheet.gw.json"])
+        item_list = next(n for n in layout["body"]["children"] if n["type"] == "itemList")
+        assert item_list["row"]["actions"][0]["action"] == "roll-item-damage"
+
+
+def test_item_damage_formula_resolves_to_executable_expression():
+    from app.engine.sheets.sheet_action_service import _resolve_template
+    formula = _resolve_template("@item.data.damage", {"item": {"data": {"damage": "2d6"}}})
+    assert evaluate(formula, roller=lambda count, sides: [3] * count).total == 6
+
+
+def test_item_decision_config_sets_defaults_and_can_disable_roll():
+    pkg = _ruleset(
+        actor_types=("character",), item_types=("equipment",),
+        item_fields=(("equipment", ("weight", "cost", "damage", "equipped")),),
+        item_config=(("equipment", (
+            ("weight.default", "2.5"), ("cost.default", "75"),
+            ("damage.default", "2d8 + 3"), ("damage.roll", "no"),
+            ("equipped.default", "yes"),
+        )),),
+    )
+    schema = json.loads(pkg.files["schemas/items/equipment.schema.json"])
+    assert schema["properties"]["weight"]["default"] == 2.5
+    assert schema["properties"]["cost"]["default"] == 75
+    assert schema["properties"]["damage"]["default"] == "2d8 + 3"
+    assert schema["properties"]["equipped"]["default"] is True
+    actions = json.loads(pkg.files["rules/actions.gw.json"])["actions"]
+    assert "roll-item-damage" not in actions
+    assert 'data-action="roll-item-damage"' not in pkg.files["sheets/equipment.html"]
+
+
 def test_mechanic_writes_executable_roll_action():
     pkg = _ruleset(actor_types=("character",), mechanic="2d6-pbta")
     actions = json.loads(pkg.files["rules/actions.gw.json"])["actions"]
@@ -281,6 +344,33 @@ def test_exploding_mechanic_uses_sheet_parameters():
     pkg = _ruleset(actor_types=("character",), mechanic="exploding-dice")
     action = json.loads(pkg.files["rules/actions.gw.json"])["actions"]["exploding-roll"]
     assert action["formula"] == "explode(@sheet.die.size, @sheet.die.explode)"
+
+
+def test_guided_exploding_mechanic_uses_selected_attributes_and_parameters():
+    pkg = _ruleset(
+        actor_types=("character",), mechanic="exploding-dice",
+        mechanic_attributes=("forca", "agilidade"),
+        mechanic_config=(("sides", "8"), ("threshold", "8")),
+    )
+    schema = json.loads(pkg.files["schemas/actors/character.schema.json"])
+    assert set(schema["properties"]["attributes"]["properties"]) == {"forca", "agilidade"}
+    assert schema["properties"]["attributes"]["properties"]["forca"]["default"] == 8
+    action = json.loads(pkg.files["rules/actions.gw.json"])["actions"]["exploding-roll"]
+    assert action["formula"] == "explode(@sheet.attributes.forca, 8)"
+
+
+def test_guided_d20_mechanic_generates_selected_attributes_and_skills():
+    pkg = _ruleset(
+        actor_types=("character",), mechanic="d20-attribute-modifier-skill",
+        mechanic_attributes=("forca", "destreza"),
+        mechanic_skills=("atletismo", "furtividade"),
+    )
+    schema = json.loads(pkg.files["schemas/actors/character.schema.json"])
+    assert set(schema["properties"]["attributes"]["properties"]) == {"forca", "destreza"}
+    assert set(schema["properties"]["skills"]["properties"]) == {"atletismo", "furtividade"}
+    action = json.loads(pkg.files["rules/actions.gw.json"])["actions"]["strength-check"]
+    assert "@sheet.attributes.forca" in action["formula"]
+    assert "@sheet.skills.atletismo" in action["formula"]
 
 
 @pytest.mark.parametrize(
@@ -447,3 +537,31 @@ def test_new_writes_grouped_kind_layout(tmp_path):
     assert args.func(args) == 0
     assert (tmp_path / "rulesets" / "my-rpg" / "manifest.json").is_file()
     assert not (tmp_path / "my-rpg").exists()
+
+
+def test_new_from_template_builds_full_package(tmp_path):
+    from app.cli import build_parser
+
+    args = build_parser().parse_args(
+        ["ruleset", "new", "heroes", "--template", "fantasy-d20", "--name", "Heroes",
+         "--yes", "--output-dir", str(tmp_path)]
+    )
+    assert args.func(args) == 0
+    manifest = json.loads(
+        (tmp_path / "rulesets" / "heroes" / "manifest.json").read_text()
+    )
+    actor_ids = [a["id"] for a in manifest["provides"]["actorTypes"]]
+    item_ids = [i["id"] for i in manifest["provides"]["itemTypes"]]
+    assert actor_ids == ["character", "npc", "monster"]
+    assert {"weapon", "armor", "spell", "consumable"} <= set(item_ids)
+
+
+def test_new_rejects_unknown_template(tmp_path):
+    from app.cli import build_parser
+
+    args = build_parser().parse_args(
+        ["ruleset", "new", "x", "--template", "does-not-exist", "--name", "X",
+         "--yes", "--output-dir", str(tmp_path)]
+    )
+    assert args.func(args) != 0
+    assert not (tmp_path / "rulesets" / "x").exists()

@@ -71,9 +71,17 @@ class Intent:
     # /has_items booleans. Ids are normalized to lowercase kebab-case.
     actor_types: tuple[str, ...] | None = None
     item_types: tuple[str, ...] | None = None
+    actor_fields: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    # Wizard-selected fields per item type; empty preserves family defaults.
+    item_fields: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    # Per-type answers from the conditional item decision tree.
+    item_config: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = ()
     # The system's core dice mechanic; seeds the character schema and sheet with
     # one minimal example. See MECHANICS for the supported ids.
     mechanic: str = "none"
+    mechanic_attributes: tuple[str, ...] = ()
+    mechanic_skills: tuple[str, ...] = ()
+    mechanic_config: tuple[tuple[str, str], ...] = ()
     # Optional text-only sheet sections added to every actor sheet.
     wants_biography: bool = False
     wants_notes: bool = False
@@ -907,9 +915,84 @@ def _mechanic(mechanic_id: str) -> dict:
     return MECHANICS.get(mechanic_id, MECHANICS["none"])
 
 
+def _config_int(value: str | None, default: int) -> int:
+    try:
+        return int(value or default)
+    except (TypeError, ValueError):
+        return default
+
+
+def _configured_mechanic(intent: Intent) -> dict:
+    """Apply guided wizard choices to a core-mechanic preset."""
+    base = _mechanic(intent.mechanic)
+    if not (intent.mechanic_attributes or intent.mechanic_skills or intent.mechanic_config):
+        return base
+    config = dict(intent.mechanic_config)
+    attrs = list(intent.mechanic_attributes)
+    skills = list(intent.mechanic_skills)
+    first_attr = attrs[0] if attrs else "strength"
+    first_skill = skills[0] if skills else "athletics"
+    fields: list[dict] = []
+    roll = dict(base["roll"]) if isinstance(base.get("roll"), dict) else None
+
+    if intent.mechanic in {"d20-attribute-modifier-skill", "d20-attribute-modifier"}:
+        fields = _ability_fields(attrs or _DND_ABILITIES)
+        if intent.mechanic == "d20-attribute-modifier-skill":
+            fields += [{"path": f"skills.{name}", "label": _title(name), "type": "number", "default": 0} for name in skills or ("athletics",)]
+            roll["formula"] = f"1d20 + floor((@sheet.attributes.{first_attr} - 10) / 2) + @sheet.skills.{first_skill}"
+            roll["label"] = f"{_title(first_attr)} + {_title(first_skill)} check"
+        else:
+            roll["formula"] = f"1d20 + floor((@sheet.attributes.{first_attr} - 10) / 2)"
+            roll["label"] = f"{_title(first_attr)} check"
+    elif intent.mechanic == "d20-roll-under":
+        fields = _ability_fields(attrs or _DND_ABILITIES, default=_config_int(config.get("default"), 12))
+        roll["formula"] = f"under(1, 20, clamp(@sheet.attributes.{first_attr}, 1, 20))"
+    elif intent.mechanic == "d100-percentile":
+        fields = [{"path": f"skills.{name}", "label": f"{_title(name)} %", "type": "number", "default": _config_int(config.get("default"), 50)} for name in skills or ("perception",)]
+        roll["formula"] = f"under(1, 100, clamp(@sheet.skills.{first_skill}, 1, 100))"
+    elif intent.mechanic in {"dice-pool-successes", "dice-pool-count-hits", "year-zero-d6-pool"}:
+        names = attrs or ("strength",)
+        default = _config_int(config.get("default"), 3)
+        target = _config_int(config.get("target"), 6)
+        fields = _ability_fields(names, default=default)
+        roll["formula"] = f"successes(clamp(@sheet.attributes.{first_attr}, 1, 100), 6, {target})"
+        roll["label"] = f"{_title(first_attr)} pool"
+    elif intent.mechanic == "exploding-dice":
+        sides = _config_int(config.get("sides"), 6)
+        threshold = _config_int(config.get("threshold"), sides)
+        fields = _ability_fields(attrs or ("strength",), default=sides)
+        roll["formula"] = f"explode(@sheet.attributes.{first_attr}, {threshold})"
+        roll["label"] = f"Exploding {_title(first_attr)} roll"
+    elif intent.mechanic == "step-dice":
+        fields = [{
+            "path": f"attributes.{name}", "label": _title(name), "type": "select",
+            "options": [{"value": sides, "label": f"d{sides}"} for sides in (4, 6, 8, 10, 12)],
+            "default": _config_int(config.get("default"), 6),
+        } for name in attrs or ("strength", "agility", "mind", "spirit")]
+        roll["formula"] = f"die(@sheet.attributes.{first_attr})"
+    elif intent.mechanic in {"fudge-fate", "2d6-pbta"}:
+        names = attrs or (("careful",) if intent.mechanic == "fudge-fate" else ("cool",))
+        root = "approaches" if intent.mechanic == "fudge-fate" else "stats"
+        fields = [{"path": f"{root}.{name}", "label": _title(name), "type": "number", "default": 0} for name in names]
+        prefix = "fate()" if intent.mechanic == "fudge-fate" else "2d6"
+        roll["formula"] = f"{prefix} + @sheet.{root}.{first_attr}"
+    elif intent.mechanic == "2d20":
+        fields = _ability_fields(attrs or ("agility",), default=8)
+        fields += [{"path": f"skills.{name}", "label": _title(name), "type": "number", "default": 1} for name in skills or ("athletics",)]
+        roll["formula"] = f"under(2, 20, clamp(@sheet.attributes.{first_attr} + @sheet.skills.{first_skill}, 1, 20))"
+    elif intent.mechanic == "cards":
+        fields = [{"path": "hand", "label": "Hand", "type": "text", "default": ""}]
+        roll["formula"] = f"draw({_config_int(config.get('deck-size'), 52)})"
+    elif intent.mechanic == "custom":
+        names = attrs or ("resource",)
+        fields = [{"path": name, "label": _title(name), "type": "number", "default": 0} for name in names]
+        roll["formula"] = config.get("formula", "1d20 + @sheet.resource")
+    return {"label": base["label"], "fields": fields or base["fields"], "roll": roll}
+
+
 def _ruleset_roll_action(intent: Intent) -> dict | None:
     """Return the generated action for the selected mechanic, when it rolls."""
-    roll = _mechanic(intent.mechanic).get("roll")
+    roll = _configured_mechanic(intent).get("roll")
     if not isinstance(roll, dict):
         return None
     return {
@@ -931,6 +1014,11 @@ def _actions_rules(intent: Intent) -> dict:
             "type": "append",
             "target": "items",
             "value": "@drop.entry",
+        }
+    if any(_item_has_damage_roll(t, intent) for t in _ruleset_inventory_type_ids(intent)):
+        actions["roll-item-damage"] = {
+            "type": "roll", "label": "Roll damage",
+            "formula": "@item.data.damage", "intent": "damage",
         }
     if intent.wants_effects:
         actions["add-effect"] = {
@@ -976,9 +1064,9 @@ def _schema_from_fields(fields: list[dict]) -> dict:
 
 
 def _actor_schema(type_id: str, intent: Intent, *, is_mechanic: bool) -> dict:
-    properties: dict = {}
+    properties: dict = _schema_from_fields(_actor_fields(type_id, intent))
     if is_mechanic:
-        properties.update(_schema_from_fields(_mechanic(intent.mechanic)["fields"]))
+        properties.update(_schema_from_fields(_configured_mechanic(intent)["fields"]))
     # Biography/Notes are stored as rich-text documents (the block-editor shape).
     if intent.wants_biography:
         properties["biography"] = _rich_doc_schema()
@@ -992,45 +1080,132 @@ def _actor_schema(type_id: str, intent: Intent, *, is_mechanic: bool) -> dict:
     return {"type": "object", "title": _title(type_id), "properties": properties}
 
 
+ACTOR_FIELD_CATALOG: dict[str, dict] = {
+    "level": {"path": "level", "label": "Level", "type": "number", "default": 1},
+    "health": {"path": "resources.health", "label": "Health", "type": "number", "default": 10},
+    "health-max": {"path": "resources.healthMax", "label": "Maximum health", "type": "number", "default": 10},
+    "mana": {"path": "resources.mana", "label": "Mana", "type": "number", "default": 0},
+    "stamina": {"path": "resources.stamina", "label": "Stamina", "type": "number", "default": 0},
+    "defense": {"path": "defense", "label": "Defense", "type": "number", "default": 10},
+    "armor": {"path": "armor", "label": "Armor", "type": "number", "default": 0},
+    "speed": {"path": "speed", "label": "Speed", "type": "number", "default": 6},
+    "experience": {"path": "experience", "label": "Experience", "type": "number", "default": 0},
+    "description": {"path": "description", "label": "Description", "type": "textarea", "default": ""},
+}
+
+
+def actor_field_options(type_id: str) -> list[tuple[str, str]]:
+    return [(key, value["label"]) for key, value in ACTOR_FIELD_CATALOG.items()]
+
+
+def default_actor_field_ids(type_id: str) -> list[str]:
+    if type_id in {"character", "npc", "companion", "familiar"}:
+        return ["level", "health", "health-max", "defense", "speed", "experience", "description"]
+    if type_id in {"monster", "beast", "dragon", "construct", "undead"}:
+        return ["health", "health-max", "armor", "speed", "description"]
+    if type_id in {"vehicle", "starship", "mecha", "mount", "drone", "robot"}:
+        return ["health", "health-max", "armor", "speed", "description"]
+    return ["description"]
+
+
+def _actor_fields(type_id: str, intent: Intent) -> list[dict]:
+    selected = dict(intent.actor_fields).get(type_id)
+    ids = list(selected) if selected is not None else default_actor_field_ids(type_id)
+    return [dict(ACTOR_FIELD_CATALOG[field_id]) for field_id in ids if field_id in ACTOR_FIELD_CATALOG]
+
+
 _WEAPON_TYPES = {"weapon", "ammunition", "wand", "rod", "staff", "grenade", "explosive", "maneuver", "technique"}
 _ARMOR_TYPES = {"armor", "shield", "clothing"}
 _POWER_TYPES = {"spell", "power", "ability", "feat", "talent", "trait", "ritual", "cantrip", "prayer", "blessing", "curse", "invocation"}
 _CONSUMABLE_TYPES = {"consumable", "potion", "scroll", "poison", "drug", "food"}
 
 
-def _item_fields(type_id: str) -> list[dict]:
-    fields: list[dict] = [
-        {"path": "category", "label": "Category", "type": "text", "default": type_id}
-    ]
-    if type_id in _WEAPON_TYPES:
-        fields += [
-            {"path": "damage", "label": "Damage", "type": "text", "default": "1d6"},
-            {"path": "attackBonus", "label": "Attack bonus", "type": "number", "default": 0},
-            {"path": "damageType", "label": "Damage type", "type": "text", "default": "physical"},
-            {"path": "equipped", "label": "Equipped", "type": "bool", "default": False},
-        ]
+ITEM_FIELD_CATALOG: dict[str, dict] = {
+    "category": {"path": "category", "label": "Category", "type": "text", "default": ""},
+    "weight": {"path": "weight", "label": "Weight", "type": "number", "default": 0},
+    "cost": {"path": "cost", "label": "Cost", "type": "number", "default": 0},
+    "quantity": {"path": "quantity", "label": "Quantity", "type": "number", "default": 1},
+    "damage": {"path": "damage", "label": "Damage", "type": "text", "default": "1d6"},
+    "attack-bonus": {"path": "attackBonus", "label": "Attack bonus", "type": "number", "default": 0},
+    "damage-type": {"path": "damageType", "label": "Damage type", "type": "text", "default": "physical"},
+    "armor": {"path": "armor", "label": "Armor", "type": "number", "default": 1},
+    "equipped": {"path": "equipped", "label": "Equipped", "type": "bool", "default": False},
+    "level": {"path": "level", "label": "Level", "type": "number", "default": 0},
+    "effect": {"path": "effect", "label": "Effect", "type": "text", "default": ""},
+    "description": {"path": "description", "label": "Description", "type": "richtext"},
+}
+
+
+def item_field_options(type_id: str) -> list[tuple[str, str]]:
+    common = ["weight", "cost", "quantity", "description"]
+    if type_id in _WEAPON_TYPES or type_id in {"equipment", "gear"}:
+        preferred = ["damage", "attack-bonus", "damage-type", "equipped"]
     elif type_id in _ARMOR_TYPES:
-        fields += [
-            {"path": "armor", "label": "Armor", "type": "number", "default": 1},
-            {"path": "equipped", "label": "Equipped", "type": "bool", "default": False},
-        ]
+        preferred = ["armor", "equipped"]
     elif type_id in _POWER_TYPES:
-        fields += [
-            {"path": "level", "label": "Level", "type": "number", "default": 0},
-            {"path": "cost", "label": "Cost", "type": "number", "default": 0},
-            {"path": "damage", "label": "Effect / damage", "type": "text", "default": ""},
-        ]
+        preferred = ["level", "damage", "effect"]
     elif type_id in _CONSUMABLE_TYPES:
-        fields += [
-            {"path": "quantity", "label": "Quantity", "type": "number", "default": 1},
-            {"path": "effect", "label": "Effect", "type": "text", "default": ""},
-        ]
+        preferred = ["effect"]
     else:
-        fields.append({"path": "quantity", "label": "Quantity", "type": "number", "default": 1})
+        preferred = []
+    keys = list(dict.fromkeys(["category", *preferred, *common]))
+    return [(key, ITEM_FIELD_CATALOG[key]["label"]) for key in keys]
+
+
+def default_item_field_ids(type_id: str) -> list[str]:
+    if type_id in _WEAPON_TYPES:
+        return ["category", "damage", "attack-bonus", "damage-type", "equipped", "description"]
+    if type_id in _ARMOR_TYPES:
+        return ["category", "armor", "equipped", "weight", "cost", "description"]
+    if type_id in _POWER_TYPES:
+        return ["category", "level", "cost", "damage", "description"]
+    if type_id in _CONSUMABLE_TYPES:
+        return ["category", "quantity", "effect", "cost", "description"]
+    if type_id in {"equipment", "gear"}:
+        return ["category", "weight", "cost", "damage", "description"]
+    return ["category", "quantity", "description"]
+
+
+def _selected_item_field_ids(type_id: str, intent: Intent) -> list[str]:
+    selected = dict(intent.item_fields).get(type_id)
+    return list(selected) if selected is not None else default_item_field_ids(type_id)
+
+
+def _item_config(type_id: str, intent: Intent) -> dict[str, str]:
+    return dict(dict(intent.item_config).get(type_id, ()))
+
+
+def _item_has_damage_roll(type_id: str, intent: Intent) -> bool:
+    if "damage" not in _selected_item_field_ids(type_id, intent):
+        return False
+    return _item_config(type_id, intent).get("damage.roll", "yes") == "yes"
+
+
+def _item_fields(type_id: str, intent: Intent) -> list[dict]:
+    fields: list[dict] = []
+    config = _item_config(type_id, intent)
+    for field_id in _selected_item_field_ids(type_id, intent):
+        spec = ITEM_FIELD_CATALOG.get(field_id)
+        if spec and spec["type"] != "richtext":
+            field = dict(spec)
+            if field_id == "category":
+                field["default"] = type_id
+            configured_default = config.get(f"{field_id}.default")
+            if configured_default is not None:
+                if field["type"] == "number":
+                    try:
+                        field["default"] = float(configured_default) if "." in configured_default else int(configured_default)
+                    except ValueError:
+                        pass
+                elif field["type"] == "bool":
+                    field["default"] = configured_default == "yes"
+                else:
+                    field["default"] = configured_default
+            fields.append(field)
     return fields
 
 
-def _item_schema(type_id: str) -> dict:
+def _item_schema(type_id: str, intent: Intent) -> dict:
     if type_id == "effect":
         return {
             "type": "object",
@@ -1046,8 +1221,9 @@ def _item_schema(type_id: str) -> dict:
                 "description": _rich_doc_schema(),
             },
         }
-    properties = _schema_from_fields(_item_fields(type_id))
-    properties["description"] = _rich_doc_schema()
+    properties = _schema_from_fields(_item_fields(type_id, intent))
+    if "description" in _selected_item_field_ids(type_id, intent):
+        properties["description"] = _rich_doc_schema()
     return {"type": "object", "title": _title(type_id), "properties": properties}
 
 
@@ -1101,11 +1277,12 @@ def _actor_html(package_id: str, type_id: str, intent: Intent, *, is_mechanic: b
     # Each panel is (label, [content lines]); two or more panels render as tabs.
     panels: list[tuple[str, list[str]]] = []
     if is_mechanic:
-        mechanic = _mechanic(intent.mechanic)
+        mechanic = _configured_mechanic(intent)
         content: list[str] = []
-        if mechanic["fields"]:
+        fields = [*_actor_fields(type_id, intent), *mechanic["fields"]]
+        if fields:
             content.append(f'    <div class="{root}__fields">')
-            for field in mechanic["fields"]:
+            for field in fields:
                 content.append("      <label>")
                 content.append(_field_html(field))
                 content.append("      </label>")
@@ -1116,6 +1293,14 @@ def _actor_html(package_id: str, type_id: str, intent: Intent, *, is_mechanic: b
                 f'    <button type="button" data-action="{roll["action"]}">{roll["label"]}</button>'
             )
         if content:
+            panels.append(("Main", content))
+    else:
+        fields = _actor_fields(type_id, intent)
+        if fields:
+            content = [f'    <div class="{root}__fields">']
+            for field in fields:
+                content.extend(["      <label>", _field_html(field), "      </label>"])
+            content.append("    </div>")
             panels.append(("Main", content))
     if intent.wants_biography:
         panels.append(("Biography", _rich_editor_html(root, "biography")))
@@ -1175,7 +1360,7 @@ def _render_panels(root: str, panels: list[tuple[str, list[str]]]) -> list[str]:
     return body
 
 
-def _item_html(package_id: str, type_id: str) -> str:
+def _item_html(package_id: str, type_id: str, intent: Intent) -> str:
     root = _sheet_class(package_id)
     title = _title(type_id)
     fields = (
@@ -1193,14 +1378,19 @@ def _item_html(package_id: str, type_id: str) -> str:
             {"path": "modifiers.0.value", "label": "Value / dice", "type": "text"},
         ]
         if type_id == "effect"
-        else _item_fields(type_id)
+        else _item_fields(type_id, intent)
     )
     field_lines = [f'  <div class="{root}__fields">']
     for field in fields:
         field_lines.extend(["    <label>", _field_html(field), "    </label>"])
     field_lines.append("  </div>")
     fields_html = "\n".join(field_lines)
-    editor = "\n".join(_rich_editor_html(root, "description"))
+    editor = "\n".join(_rich_editor_html(root, "description")) if (
+        type_id == "effect" or "description" in _selected_item_field_ids(type_id, intent)
+    ) else ""
+    roll = '  <button type="button" data-action="roll-item-damage">Roll damage</button>' if (
+        type_id != "effect" and _item_has_damage_roll(type_id, intent)
+    ) else ""
     return f"""<form class="{root}" data-sheet-type="{type_id}">
   <header class="{root}__header">
     <label>
@@ -1211,6 +1401,7 @@ def _item_html(package_id: str, type_id: str) -> str:
   </header>
 
 {fields_html}
+{roll}
 {editor}
 </form>
 """
@@ -1234,9 +1425,9 @@ def _declarative_field(field: dict) -> dict:
 
 
 def _declarative_actor_sheet(type_id: str, intent: Intent, *, is_mechanic: bool) -> dict:
-    children: list[dict] = []
+    children: list[dict] = [_declarative_field(field) for field in _actor_fields(type_id, intent)]
     if is_mechanic:
-        children.extend(_declarative_field(field) for field in _mechanic(intent.mechanic)["fields"])
+        children.extend(_declarative_field(field) for field in _configured_mechanic(intent)["fields"])
         action = _ruleset_roll_action(intent)
         if action:
             children.append({
@@ -1249,11 +1440,20 @@ def _declarative_actor_sheet(type_id: str, intent: Intent, *, is_mechanic: bool)
     if intent.wants_notes:
         children.append({"type": "textArea", "label": "Notes", "path": "sheet.notes"})
     if _ruleset_inventory_type_ids(intent):
+        row_actions = [
+            {"type": "openEmbeddedItemAction", "label": "Edit"},
+            {"type": "removeAction", "label": "Remove"},
+        ]
+        if any(_item_has_damage_roll(t, intent) for t in _ruleset_inventory_type_ids(intent)):
+            row_actions.insert(0, {
+                "type": "itemAction", "label": "Roll damage", "action": "roll-item-damage",
+            })
         children.append(
             {
                 "type": "itemList",
                 "label": "Items",
                 "path": "sheet.items",
+                "row": {"type": "inventoryRow", "actions": row_actions},
                 "dropZone": {
                     "type": "dropZone",
                     "id": "items",
@@ -1285,7 +1485,7 @@ def _declarative_actor_sheet(type_id: str, intent: Intent, *, is_mechanic: bool)
     }
 
 
-def _declarative_item_sheet(type_id: str) -> dict:
+def _declarative_item_sheet(type_id: str, intent: Intent) -> dict:
     fields = (
         [
             {"path": "category", "label": "Category", "type": "text"},
@@ -1296,7 +1496,7 @@ def _declarative_item_sheet(type_id: str) -> dict:
             {"path": "modifiers.0.value", "label": "Value / dice", "type": "text"},
         ]
         if type_id == "effect"
-        else _item_fields(type_id)
+        else _item_fields(type_id, intent)
     )
     return {
         "kind": "itemSheet",
@@ -1307,7 +1507,9 @@ def _declarative_item_sheet(type_id: str) -> dict:
             "variant": "main",
             "children": [
                 *[_declarative_field(field) for field in fields],
-                {"type": "textArea", "label": "Description", "path": "sheet.description"},
+                *([{"type": "textArea", "label": "Description", "path": "sheet.description"}]
+                  if type_id == "effect" or "description" in _selected_item_field_ids(type_id, intent)
+                  else []),
             ],
         },
     }
@@ -1539,11 +1741,11 @@ def build_files(*, manifest: dict, intent: Intent) -> dict[str, str]:
         sheet = item.get("sheet")
         has_html_sheet = isinstance(sheet, dict) and sheet.get("mode") == "html"
         if item.get("schema"):
-            files[item["schema"]] = _json(_item_schema(item_id))
+            files[item["schema"]] = _json(_item_schema(item_id, intent))
         if has_html_sheet:
-            files[sheet["template"]] = _item_html(package_id, item_id)
+            files[sheet["template"]] = _item_html(package_id, item_id, intent)
         elif isinstance(sheet, str):
-            files[sheet] = _json(_declarative_item_sheet(item_id))
+            files[sheet] = _json(_declarative_item_sheet(item_id, intent))
 
     if intent.html_sheets and _ruleset_has_any_sheet(intent):
         files[SHARED_SHEET_STYLE] = _shared_sheet_css(package_id)
