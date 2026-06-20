@@ -59,6 +59,14 @@ venv/
 *.log
 /logs/
 /reports/
+/.tmp/
+
+# PyInstaller / desktop distribution artifacts
+/build/
+/dist/
+/GravewrightData/
+/*.exe
+/Gravewright*.zip
 
 # Performance outputs
 tests/performance/*.txt
@@ -73,8 +81,6 @@ tests/performance/chunk_stream/load/
 
 # Node / frontend artifacts
 node_modules/
-dist/
-build/
 .vite/
 .next/
 .svelte-kit/

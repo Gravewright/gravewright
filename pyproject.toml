@@ -7,6 +7,7 @@ dependencies = [
   "alembic==1.18.4",
   "litestar[jinja]==2.22.0",
   "pillow==12.2.0",
+  "pywebview==6.2.1",
   "sqlalchemy==2.0.50",
   "uvicorn[standard]==0.47.0",
   "xdice==1.2.1",
@@ -35,6 +36,7 @@ line-length = 100
 
 [dependency-groups]
 dev = [
+    "pyinstaller==6.21.0",
     "pytest==9.0.3",
     "pytest-asyncio==1.4.0",
 ]

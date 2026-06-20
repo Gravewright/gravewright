@@ -18,6 +18,7 @@ Brazilian Portuguese documentation is available in `pt-br/README.md`.
 - `development.md` documents the local workflow and contribution expectations.
 - `testing.md` documents unit, CLI, E2E, Docker, and performance tests.
 - `deployment.md` documents production deployment requirements.
+- `desktop-distribution.md` documents building and shipping the unzip-and-run desktop app to end users.
 - `security.md` documents the security model and hardening checklist.
 - `licensing.md` documents the Apache-2.0 core and MIT API-material split.
 - `storage.md` documents uploaded files, package-scoped data, and cleanup behavior.
