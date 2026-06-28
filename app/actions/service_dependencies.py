@@ -22,10 +22,14 @@ from app.business.users import UserPreferenceService
 from app.engine.actors.actor_asset_read_service import ActorAssetReadService
 from app.engine.actors.actor_asset_service import ActorAssetService
 from app.engine.actors.actor_service import ActorService
+from app.engine.assets.asset_library_service import AssetLibraryService
+from app.engine.assets.asset_read_service import AssetReadService
 from app.engine.chat.chat_service import ChatService
 from app.engine.combat.turn_order_service import TurnOrderService
 from app.engine.content.content_import_service import ContentImportService
 from app.engine.content.content_pack_service import ContentPackService
+from app.engine.decks.card_asset_service import CardAssetService
+from app.engine.decks.card_service import CardService
 from app.engine.items.item_service import ItemService
 from app.engine.sdk.package_activation_service import PackageActivationService
 from app.engine.sdk.package_asset_service import PackageAssetService
@@ -41,6 +45,7 @@ from app.engine.resources.resource_permission_page_service import ResourcePermis
 from app.engine.rolls.roll_presentation_service import RollPresentationService
 from app.engine.scenes.map_upload_service import MapUploadService
 from app.engine.scenes.scene_asset_read_service import SceneAssetReadService
+from app.engine.scenes.scene_image_service import SceneImageService
 from app.engine.scenes.scene_service import SceneService
 from app.engine.scenes.scene_tile_read_service import SceneTileReadService
 from app.engine.sheets.actor_sheet_service import ActorSheetService
@@ -73,10 +78,14 @@ SERVICE_DEPENDENCIES = {
     "actor_asset_service": _singleton(ActorAssetService),
     "actor_service": _singleton(ActorService),
     "actor_sheet_service": _singleton(ActorSheetService),
+    "asset_library_service": _singleton(AssetLibraryService),
+    "asset_read_service": _singleton(AssetReadService),
     "auth_service": _singleton(_provide_auth_service),
     "campaign_service": _singleton(CampaignService),
     "campaign_invitation_service": _singleton(CampaignInvitationService),
     "campaign_system_service": _singleton(CampaignSystemService),
+    "card_asset_service": _singleton(CardAssetService),
+    "card_service": _singleton(CardService),
     "chat_service": _singleton(ChatService),
     "content_import_service": _singleton(ContentImportService),
     "content_pack_service": _singleton(ContentPackService),
@@ -100,6 +109,7 @@ SERVICE_DEPENDENCIES = {
     "resource_permission_page_service": _singleton(ResourcePermissionPageService),
     "roll_presentation_service": _singleton(RollPresentationService),
     "scene_asset_read_service": _singleton(SceneAssetReadService),
+    "scene_image_service": _singleton(SceneImageService),
     "scene_service": _singleton(SceneService),
     "scene_tile_read_service": _singleton(SceneTileReadService),
     "sheet_action_service": _singleton(SheetActionService),

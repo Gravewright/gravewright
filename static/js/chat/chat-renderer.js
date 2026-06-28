@@ -63,6 +63,34 @@
             .replace(/"/g, "&quot;");
     }
 
+    function assetUrl(assetId) {
+        return `/game/journal/asset/${encodeURIComponent(assetId)}`;
+    }
+
+    function cardName(card) {
+        return card && typeof card === "object" ? String(card.name || "Card") : "Card";
+    }
+
+    function buildCardRevealHtml(payload) {
+        const metadata = payload && typeof payload.metadata === "object" ? payload.metadata : {};
+        if (metadata.type !== "cards.revealed" || !Array.isArray(metadata.cards) || !metadata.cards.length) {
+            return "";
+        }
+        const cards = metadata.cards.map((card) => {
+            const name = cardName(card);
+            const image = card.front_asset_id
+                ? `<img src="${assetUrl(card.front_asset_id)}" alt="${escapeHtml(name)}" loading="lazy">`
+                : '<i class="ph ph-cardholder" aria-hidden="true"></i>';
+            return `
+                <article class="chat-card-preview">
+                    <div class="chat-card-preview__image">${image}</div>
+                    <strong>${escapeHtml(name)}</strong>
+                </article>
+            `;
+        }).join("");
+        return `<div class="chat-card-reveal">${cards}</div>`;
+    }
+
     function whisperTargetLabel(payload) {
         const targets = Array.isArray(payload.target_names) ? payload.target_names : [];
         if (!targets.length) {
@@ -114,9 +142,11 @@
         el.className = "chat-message chat-message--system";
         el.dataset.messageId = payload.message_id || "";
         el.dataset.authorId = payload.author_id || "";
+        const cardRevealHtml = buildCardRevealHtml(payload);
         el.innerHTML = `
             <div class="chat-message-content">
                 <span class="chat-content">${escapeHtml(payload.content || "")}</span>
+                ${cardRevealHtml}
             </div>
         `;
         return el;

@@ -884,6 +884,35 @@
     });
 
     const ACTOR_DROP_MIME = "application/x-gravewright-actors+json";
+    const CARD_DROP_MIME = "application/x-gravewright-card+json";
+    const ASSET_DROP_MIME = "application/x-gravewright-asset+json";
+
+    function canvasFromDragEvent(event) {
+        const target = event.target;
+        if (!target || typeof target.closest !== "function") return null;
+        return target.closest("[data-map-canvas]")
+            || target.closest("[data-map-viewport]")?.querySelector("[data-map-canvas]")
+            || null;
+    }
+
+    function imageFilesFrom(dataTransfer) {
+        return Array.from(dataTransfer?.files || []).filter((file) => (file.type || "").startsWith("image/"));
+    }
+
+    function handleCardDrop(canvas, raw, clientX, clientY) {
+        let parsed = null;
+        try {
+            parsed = JSON.parse(raw);
+        } catch {
+            return;
+        }
+        const cardId = parsed?.card_id;
+        const sceneId = canvas.dataset.sceneId || "";
+        if (!cardId || !sceneId) return;
+        // Cards are owned entirely by the cards domain — a card dropped on the table
+        // is placed through its own scene-placement layer, not scene images.
+        window.GravewrightCards?.placeCardAtScene?.(canvas, parsed, clientX, clientY);
+    }
 
     function actorDropPayload(event) {
         try {
@@ -901,17 +930,71 @@
     }
 
     document.addEventListener("dragover", (event) => {
-        const canvas = event.target.closest("[data-map-canvas]");
-        if (!canvas || !isGmForCanvas(canvas)) return;
-        const types = Array.from(event.dataTransfer?.types || []);
+        const canvas = canvasFromDragEvent(event);
+        if (!canvas) return;
+        const dt = event.dataTransfer;
+        const types = Array.from(dt?.types || []);
+
+
+        if (window.GravewrightSceneImages?.hasImageFiles?.(dt)) {
+            event.preventDefault();
+            dt.dropEffect = "copy";
+            return;
+        }
+
+
+        if (types.includes(CARD_DROP_MIME)) {
+            event.preventDefault();
+            dt.dropEffect = "move";
+            return;
+        }
+
+
+        if (types.includes(ASSET_DROP_MIME)) {
+            event.preventDefault();
+            dt.dropEffect = "copy";
+            return;
+        }
+
+
+        if (!isGmForCanvas(canvas)) return;
         if (!types.includes(ACTOR_DROP_MIME) && !window.GravewrightActorsInternals?.currentTableDropPayload?.()) return;
         event.preventDefault();
-        event.dataTransfer.dropEffect = "copy";
+        dt.dropEffect = "copy";
     });
 
     document.addEventListener("drop", (event) => {
-        const canvas = event.target.closest("[data-map-canvas]");
-        if (!canvas || !isGmForCanvas(canvas)) return;
+        const canvas = canvasFromDragEvent(event);
+        if (!canvas) return;
+        const dt = event.dataTransfer;
+
+
+        const imageFiles = imageFilesFrom(dt);
+        if (imageFiles.length && window.GravewrightSceneImages?.uploadFilesAt && canvas.dataset.sceneId) {
+            event.preventDefault();
+
+            window.GravewrightSceneImages.uploadFilesAt(canvas, imageFiles, event.clientX, event.clientY);
+            return;
+        }
+
+
+        const cardRaw = dt?.getData?.(CARD_DROP_MIME);
+        if (cardRaw) {
+            event.preventDefault();
+            handleCardDrop(canvas, cardRaw, event.clientX, event.clientY);
+            return;
+        }
+
+
+        const assetRaw = dt?.getData?.(ASSET_DROP_MIME);
+        if (assetRaw) {
+            event.preventDefault();
+            window.GravewrightSceneImages?.placeLibraryAssetAt?.(canvas, assetRaw, event.clientX, event.clientY);
+            return;
+        }
+
+
+        if (!isGmForCanvas(canvas)) return;
         const payload = actorDropPayload(event);
         if (!payload?.actorIds.length) return;
         const scene = sceneDataFor(canvas);
@@ -926,6 +1009,16 @@
             screenX: event.clientX,
             screenY: event.clientY,
         });
+    });
+    document.addEventListener("dragleave", (event) => {
+        const canvas = canvasFromDragEvent(event);
+        if (!canvas) return;
+        const related = event.relatedTarget;
+        if (related && typeof related.closest === "function" && related.closest("[data-map-viewport]")) return;
+        window.GravewrightSceneImages?.clearPreview?.(canvas);
+    });
+    document.addEventListener("dragend", () => {
+        window.GravewrightSceneImages?.clearPreview?.();
     });
 
     document.addEventListener("pointermove", (event) => {
@@ -1136,6 +1229,7 @@
     window.GravewrightMap = {
         redraw: drawAll,
         activeCanvas,
+        stateFor,
         activeCameraForScene,
         worldFromScreen,
         startAddToScene,

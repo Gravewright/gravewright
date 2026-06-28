@@ -1,7 +1,7 @@
 # Alpha Status
 
 > [!WARNING]
-> **Gravewright v2.0.0-alpha.0 — SDK Freeze.**
+> **Gravewright v2.1.0-alpha — SDK Freeze.**
 >
 > The planned **SDK 1 extension surface is now frozen**. Real campaigns are no longer discouraged, provided you keep regular backups and accept that bugs, migrations, and compatibility fixes may still happen before LTS 1.
 >
@@ -9,9 +9,9 @@
 >
 > Test it, break it, and report problems or suggestions in [issues](https://github.com/gravewright/gravewright/issues).
 
-## What Alpha 2.0.0 SDK Freeze Means
+## What the SDK Freeze Means
 
-Alpha 2.0.0 freezes the SDK 1 extension surface. After this release, SDK 1 receives no new extension primitives; work toward LTS 1 focuses on hardening, security, documentation, compatibility, backup/restore, doctor coverage, migration reliability, examples, and bug fixes.
+Gravewright v2.1.0-alpha keeps the **SDK 1 extension surface frozen**: SDK 1 receives no new extension primitives; work toward LTS 1 focuses on hardening, security, documentation, compatibility, backup/restore, doctor coverage, migration reliability, examples, and bug fixes.
 
 The frozen SDK 1 surface includes:
 
@@ -33,7 +33,7 @@ Changes may still occur between Alpha releases in:
 
 ## Recommended Use
 
-Gravewright v2.0.0-alpha.0 is suitable for real campaigns if you keep regular backups. It is well suited to:
+Gravewright v2.1.0-alpha is suitable for real campaigns if you keep regular backups. It is well suited to:
 
 - campaigns and one-shots with a backup routine;
 - ruleset, addon, and HTML-sheet authoring against the frozen SDK 1 surface;

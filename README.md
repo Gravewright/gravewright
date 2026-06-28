@@ -5,7 +5,7 @@ Gravewright is an open-source virtual tabletop platform for tabletop RPGs.
 It is built for self-hosted tables that want server-authoritative gameplay, a documented SDK with declarative ruleset/addon/library/theme/content/asset packages, a first-class operator CLI, and predictable performance under large maps and realtime collaboration.
 
 > [!WARNING]
-> **ALPHA 2.0.0 — SDK FREEZE. BACK UP REGULARLY.**
+> **v2.1.0-alpha — SDK 1 FROZEN. BACK UP REGULARLY.**
 >
 > Gravewright is still Alpha software, but the planned **SDK 1 extension surface is now frozen**. Real campaigns are no longer discouraged, provided you keep regular backups and accept that bugs, migrations, and compatibility fixes may still happen before LTS 1.
 >
@@ -169,9 +169,9 @@ Restore is destructive. Gravewright keeps a `*.pre-restore` safety copy of the p
 
 ## Current Status
 
-Gravewright is currently **v2.0.0-alpha.0 — SDK Freeze**.
+Gravewright is currently **v2.1.0-alpha — SDK Freeze**.
 
-Alpha 2.0.0 freezes the planned SDK 1 extension surface: package manifests, package kinds, canonical capabilities, settings, assets, content packs, frontend lifecycle, managed `storage.sqlite`, the `sdk.bus` package-to-package channel, and HTML sheets. After this release SDK 1 receives no new extension surfaces.
+The planned SDK 1 extension surface is frozen: package manifests, package kinds, canonical capabilities, settings, assets, content packs, frontend lifecycle, managed `storage.sqlite`, the `sdk.bus` package-to-package channel, and HTML sheets. SDK 1 receives no new extension surfaces.
 
 Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, and browser SDK runtime continue to be hardened toward LTS 1. Migrations and compatibility fixes may still happen between Alpha releases.
 

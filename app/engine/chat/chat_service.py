@@ -73,6 +73,60 @@ class ChatService:
         )
         return ChatResult(success=True)
 
+    async def send_card_message(
+        self,
+        *,
+        campaign_id: str,
+        sender_user_id: str,
+        sender_name: str,
+        content: str,
+        cards: list[dict],
+        card_event: dict,
+        transport: RealtimeGatewayContract,
+    ) -> ChatResult:
+        role = self.campaigns.get_member_role(campaign_id=campaign_id, user_id=sender_user_id)
+        if role is None:
+            return ChatResult(success=False, error_key="game.chat.errors.not_a_member")
+        content = (content or "").strip()
+        if not content:
+            return ChatResult(success=False, error_key="game.chat.errors.empty_message")
+        content = content[: self.MAX_CONTENT_LEN]
+        metadata = {
+            "type": "cards.revealed",
+            "card_event": card_event,
+            "cards": cards,
+        }
+        message_id = self.messages.generate_id()
+        self.messages.create(
+            message_id=message_id,
+            campaign_id=campaign_id,
+            author_user_id=sender_user_id,
+            author_name=sender_name,
+            author_role=role,
+            kind=ChatMessageKind.SYSTEM,
+            content=content,
+            expression=None,
+            groups=None,
+            modifier=None,
+            total=None,
+            visibility=ChatVisibility.PUBLIC,
+            metadata=metadata,
+        )
+        await transport.chat_to_room(
+            room_id=campaign_id,
+            message={
+                "message_id": message_id,
+                "room_id": campaign_id,
+                "author": sender_name,
+                "author_id": sender_user_id,
+                "role": role,
+                "kind": ChatMessageKind.SYSTEM,
+                "content": content,
+                "metadata": metadata,
+            },
+        )
+        return ChatResult(success=True)
+
     def create_roll_message(
         self,
         *,

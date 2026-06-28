@@ -51,6 +51,11 @@ class TransportEvent(StrEnum):
 
     ROLL_CREATED = "roll.created"
 
+    CARDS_STATE_UPDATED = "cards.state.updated"
+
+    ASSETS_LIBRARY_UPDATED = "assets.library.updated"
+    SCENE_IMAGES_UPDATED = "scene.images.updated"
+
     SCENE_UPLOAD_PROGRESS = "scene.upload.progress"
     SCENE_CREATED = "scene.created"
     SCENE_ACTIVATED = "scene.activated"

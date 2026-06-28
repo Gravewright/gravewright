@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gravewright.local/schemas/gravewright-card-event-v1.schema.json",
+  "title": "Gravewright Card Event",
+  "type": "object",
+  "required": ["id", "campaignId", "actorUserId", "eventType", "payload", "visibility", "createdAt"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "campaignId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "roomId": {
+      "type": ["string", "null"],
+      "maxLength": 64
+    },
+    "actorUserId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "eventType": {
+      "type": "string",
+      "enum": [
+        "deck.created",
+        "deck.updated",
+        "deck.deleted",
+        "deck.instantiated",
+        "deck.shuffled",
+        "deck.reset",
+        "card.drawn",
+        "cards.dealt",
+        "card.moved",
+        "card.revealed",
+        "card.hidden",
+        "card.discarded",
+        "card.played_to_scene",
+        "card.removed_from_scene",
+        "pile.created",
+        "pile.updated"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": ["gm_only", "owner_only", "players", "room", "public", "hidden_until_revealed", "secret"]
+    },
+    "createdAt": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

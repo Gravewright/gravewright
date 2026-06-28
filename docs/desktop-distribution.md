@@ -36,11 +36,11 @@ needs `_internal/` beside it. Keep that folder as the ZIP root so users extract 
 single self-contained directory:
 
 ```powershell
-Compress-Archive -Path dist/Gravewright -DestinationPath Gravewright-2.0.0-alpha.0-win64.zip
+Compress-Archive -Path dist/Gravewright -DestinationPath Gravewright-2.1.0-alpha-win64.zip
 ```
 
 Name the file with the version and architecture, e.g.
-`Gravewright-2.0.0-alpha.0-win64.zip`.
+`Gravewright-2.1.0-alpha-win64.zip`.
 
 ## 3. Publish
 

@@ -6,8 +6,25 @@ The project is currently in Alpha. Breaking changes may occur between Alpha rele
 
 ## Unreleased
 
+## v2.1.0-alpha — 2026-06-24
+
 ### Added
 
+- Added the backend foundation for generic card decks, piles, private hands, card events,
+  redacted card state, and deck draw/shuffle/reset flows.
+- Added card scene-placement backend flows for playing, moving/flipping, and discarding
+  cards from scenes.
+- Added GM-only card image upload backend support for card fronts and backs.
+- Added a card table layer on the board: cards played to a scene are anchored to world
+  coordinates and can be moved, resized, rotated, and z-ordered, matching the scene-image
+  (asset) interaction model.
+- Added drag-and-drop of hand cards onto the table; the hand "flip" control chooses which
+  face (front/back) a card lands on, and the hand can draw a card straight to chat.
+- Added multi-selection for table cards and scene images: Shift/Ctrl-click to toggle, or a
+  right-to-left marquee drag to box-select (left-to-right still selects tokens). Selected
+  items move, rotate, delete, and z-order as a group, and Delete/Backspace removes them.
+- Added a GM control to remove a deck and all of its cards.
+- Added owner permissions so a player can manipulate the cards they played to the table.
 - Added complete `grave` operator CLI wiring for local operation and SDK package tooling.
 - Added local launchers: `grave` for Linux/macOS and `grave.bat` for Windows.
 - Added `grave run` for first-run setup, dependency checks, schema initialization, diagnostics summary, and server launch.
@@ -21,6 +38,8 @@ The project is currently in Alpha. Breaking changes may occur between Alpha rele
 
 ### Changed
 
+- Cards and assets a player does not own are no longer interactive for them, and the
+  asset (image) library is now GM-only.
 - Quick start now uses the `grave` CLI instead of calling `uvicorn` directly.
 - Documentation now treats Gravewright SDK packages as the only extension model.
 - Documentation now uses ruleset/addon/library/theme/content/assets terminology instead of the old system/module split.

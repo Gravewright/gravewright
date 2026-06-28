@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="/static/css/game.css?v=20260604-modal-fit2" />
+    <link rel="stylesheet" href="/static/css/game.css?v=20260624-cards-multiselect" />
     
     {% for href in system_styles %}<link rel="stylesheet" href="{{ href }}" />
     {% endfor %}
@@ -58,7 +58,7 @@
     <script defer src="/static/js/map/streaming/map-streaming.js?v=20260605-scene-runtime-cache"></script>
     <script defer src="/static/js/map/board-history.js?v=20260605-board-history"></script>
     <script defer src="/static/js/map/selection/map-selection.js"></script>
-    <script defer src="/static/js/map/selection/map-marquee.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/selection/map-marquee.js?v=20260624-marquee-overlay-select"></script>
     <script defer src="/static/js/map/drag/map-drag.js"></script>
     <script defer src="/static/js/map/drag/map-token-drag.js?v=20260604-map-controller"></script>
     <script defer src="/static/js/map/tokens/map-tokens.js"></script>
@@ -78,7 +78,7 @@
     <script defer src="/static/js/map/measures/map-measures.js"></script>
     <script defer src="/static/js/map/measures/map-measure-controller.js"></script>
     <script defer src="/static/js/map/map-debug.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/map-controller.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/map/map-controller.js?v=20260623-card-to-image-layer"></script>
     <script defer src="/static/js/ui/status-zones.js?v=20260603-effects-board3"></script>
     <script defer src="/static/js/ui/invitations.js"></script>
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
@@ -100,6 +100,12 @@
     <script defer src="/static/js/chat/chat-api.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/chat/chat-commands.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/chat/chat-controller.js?v=20260604-chat-split"></script>
+    <script defer src="/static/js/cards/card-api.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/cards/card-state.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/cards/card-panel.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/ui/context-menu.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/assets/asset-library.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/scene-images/scene-image-layer.js?v={{ asset_version }}"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
@@ -241,7 +247,59 @@
     data-toast-add-to-scene="{{ t('game.map.add_to_scene.toast') }}"
     data-toast-roll-result="{{ t('game.toast.roll_result') }}"
     data-fog-status-enabled="{{ t('game.fog.status_enabled') }}"
-    data-fog-status-disabled="{{ t('game.fog.status_disabled') }}">
+    data-fog-status-disabled="{{ t('game.fog.status_disabled') }}"
+    data-asset-label-root="{{ t('game.assets.root') }}"
+    data-asset-label-image="{{ t('game.assets.image') }}"
+    data-asset-label-drag-title="{{ t('game.assets.drag_title') }}"
+    data-asset-label-delete-image="{{ t('game.assets.delete_image') }}"
+    data-asset-label-empty-folder="{{ t('game.assets.empty_folder') }}"
+    data-scene-image-label-resize="{{ t('game.scene_images.resize') }}"
+    data-scene-image-label-upload-failed="{{ t('game.scene_images.errors.upload_failed') }}"
+    data-scene-image-label-bring-front="{{ t('game.scene_images.bring_front') }}"
+    data-scene-image-label-send-back="{{ t('game.scene_images.send_back') }}"
+    data-scene-image-label-send-everyone="{{ t('game.scene_images.send_everyone') }}"
+    data-scene-image-label-send-gm="{{ t('game.scene_images.send_gm') }}"
+    data-scene-image-label-delete="{{ t('game.scene_images.delete') }}"
+    data-card-label-request-failed="{{ t('game.cards.errors.request_failed') }}"
+    data-card-label-uploading="{{ t('game.cards.uploading') }}"
+    data-card-label-deck-created="{{ t('game.cards.deck_created') }}"
+    data-card-label-deck-creation-failed="{{ t('game.cards.errors.deck_creation_failed') }}"
+    data-card-label-deck-shuffled="{{ t('game.cards.deck_shuffled') }}"
+    data-card-label-deck-removed="{{ t('game.cards.deck_removed') }}"
+    data-card-label-delete-deck-confirm="{{ t('game.cards.delete_deck_confirm') }}"
+    data-card-label-this-deck="{{ t('game.cards.this_deck') }}"
+    data-card-label-card-name="{{ t('game.cards.card_name') }}"
+    data-card-label-card-number="{{ t('game.cards.card_number') }}"
+    data-card-label-card-back="{{ t('game.cards.card_back') }}"
+    data-card-label-flip-down="{{ t('game.cards.flip_down') }}"
+    data-card-label-flip-up="{{ t('game.cards.flip_up') }}"
+    data-card-label-bring-front="{{ t('game.cards.bring_front') }}"
+    data-card-label-send-back="{{ t('game.cards.send_back') }}"
+    data-card-label-remove-table="{{ t('game.cards.remove_table') }}"
+    data-card-label-empty-decks="{{ t('game.cards.empty_decks') }}"
+    data-card-label-deck-ready="{{ t('game.cards.deck_ready') }}"
+    data-card-label-cards-remaining="{{ t('game.cards.cards_remaining') }}"
+    data-card-label-shuffle="{{ t('game.cards.shuffle') }}"
+    data-card-label-reset="{{ t('game.cards.reset') }}"
+    data-card-label-remove-deck="{{ t('game.cards.remove_deck') }}"
+    data-card-label-no-deck="{{ t('game.cards.no_deck') }}"
+    data-card-label-remaining="{{ t('game.cards.remaining') }}"
+    data-card-label-deck-select="{{ t('game.cards.deck_select') }}"
+    data-card-label-draw="{{ t('game.cards.draw') }}"
+    data-card-label-draw-chat="{{ t('game.cards.draw_chat') }}"
+    data-card-label-to-chat="{{ t('game.cards.to_chat') }}"
+    data-card-label-hand-empty="{{ t('game.cards.hand_empty') }}"
+    data-card-label-show-front="{{ t('game.cards.show_front') }}"
+    data-card-label-show-back="{{ t('game.cards.show_back') }}"
+    data-card-label-drag-table="{{ t('game.cards.drag_table') }}"
+    data-card-label-discard="{{ t('game.cards.discard') }}"
+    data-card-label-empty-scene="{{ t('game.cards.empty_scene') }}"
+    data-card-label-hidden-card="{{ t('game.cards.hidden_card') }}"
+    data-card-label-flip="{{ t('game.cards.flip') }}"
+    data-card-label-error-invalid-draw="{{ t('game.cards.errors.invalid_draw') }}"
+    data-card-label-error-deck-not-found="{{ t('game.cards.errors.deck_not_found') }}"
+    data-card-label-error-pile-not-found="{{ t('game.cards.errors.pile_not_found') }}"
+    data-card-label-error-denied="{{ t('permissions.errors.denied') }}">
 
     <div id="ctx-menu" class="ctx-menu" hidden>
         <div class="ctx-menu-inner"></div>
@@ -257,7 +315,7 @@
 
             <section class="game-board">
                 {% set show_journal_panel = true %}
-                {% set show_library_panel = false %}
+                {% set show_library_panel = true %}
                 {% set show_combat_panel = true %}
                 {% for room in rooms %}
                 <article class="room-workspace {% if room.id == active_room_id %}is-active{% endif %}"
@@ -291,6 +349,30 @@
                             data-scene-tile-version="{{ room.active_scene['tile_table_version'] }}"
                             data-measure-flash-seconds="{{ room.measure_flash_seconds | default(6) }}" {% endif %}
                             aria-label="{{ t('game.table.eyebrow') }}"></canvas>
+                        <div class="scene-image-layer" data-scene-image-layer data-room-id="{{ room.id }}"
+                            data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"></div>
+                        <div class="card-scene-layer" data-card-scene-layer data-room-id="{{ room.id }}" aria-hidden="true"></div>
+                        {% if room.member_role in ('gm', 'assistant_gm') %}
+                        <div class="layer-hud" data-layer-hud role="group"
+                            aria-label="{{ t('game.tool_dock.layers') }}">
+                            <button type="button" class="layer-hud__title" data-layer-hud-toggle
+                                title="{{ t('game.tool_dock.layers.toggle') }}"><i class="ph ph-stack" aria-hidden="true"></i>{{
+                                t('game.tool_dock.layers') }}</button>
+                            <button type="button" class="layer-hud__btn" data-active-layer="game" aria-pressed="true">
+                                <i class="ph ph-game-controller" aria-hidden="true"></i>
+                                <span>{{ t('game.tool_dock.layers.game') }}</span>
+                            </button>
+                            <button type="button" class="layer-hud__btn" data-active-layer="gm" aria-pressed="false">
+                                <i class="ph ph-eye-slash" aria-hidden="true"></i>
+                                <span>{{ t('game.tool_dock.layers.gm') }}</span>
+                            </button>
+                            <button type="button" class="layer-hud__btn" data-active-layer="composition"
+                                aria-pressed="false" title="{{ t('game.tool_dock.layers.composition_hint') }}">
+                                <i class="ph ph-images" aria-hidden="true"></i>
+                                <span>{{ t("game.tool_dock.layers.composition") }}</span>
+                            </button>
+                        </div>
+                        {% endif %}
                         {% if not room.active_scene %}
                         <div class="table-empty" data-map-overlay>
                             <span class="table-marker"></span>
@@ -493,6 +575,22 @@
                                 data-author-id="{{ msg.author_user_id }}">
                                 <div class="chat-message-content">
                                     <span class="chat-content">{{ msg.content }}</span>
+                                    {% if msg.metadata and msg.metadata.type == "cards.revealed" and msg.metadata.cards %}
+                                    <div class="chat-card-reveal">
+                                        {% for card in msg.metadata.cards %}
+                                        <article class="chat-card-preview">
+                                            <div class="chat-card-preview__image">
+                                                {% if card.front_asset_id %}
+                                                <img src="/game/journal/asset/{{ card.front_asset_id }}" alt="{{ card.name or t('game.cards.card_name') }}" loading="lazy" />
+                                                {% else %}
+                                                <i class="ph ph-cardholder" aria-hidden="true"></i>
+                                                {% endif %}
+                                            </div>
+                                            <strong>{{ card.name or t("game.cards.card_name") }}</strong>
+                                        </article>
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 {% if can_delete_message %}
                                 <button class="chat-message-delete" type="button" data-chat-delete="{{ msg.id }}"
@@ -544,6 +642,94 @@
                             <span>{{ t("game.streamer.readonly_note") }}</span>
                         </div>
                         {% endif %}
+                    </div>
+                </article>
+
+                
+                <article class="game-modal-window cards-table-modal" data-modal-window data-modal-id="panel-cards-{{ room.id }}"
+                    data-window-key="panel-cards-{{ room.id }}" data-panel-room="{{ room.id }}" data-auto-fit-width="520"
+                    data-auto-fit-min-width="420" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.cards.decks_title") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body cards-panel" data-card-panel data-room-id="{{ room.id }}"
+                        data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}">
+                        <div class="cards-notice" data-card-notice hidden></div>
+                        {% if room.member_role in ("gm", "assistant_gm") %}
+                        <section class="cards-section cards-create-section">
+                            <header>
+                                <h3>{{ t("game.cards.create_deck") }}</h3>
+                            </header>
+                            <form class="cards-create" data-card-create-form>
+                                <label class="game-field">
+                                    <span>{{ t("game.cards.deck_name") }}</span>
+                                    <input type="text" name="name" maxlength="120" placeholder="{{ t('game.cards.deck_name_placeholder') }}" required />
+                                </label>
+                                <label class="game-field">
+                                    <span>{{ t("game.cards.card_fronts") }}</span>
+                                    <input type="file" name="fronts" accept="image/png,image/jpeg,image/webp" multiple required />
+                                </label>
+                                <label class="game-field">
+                                    <span>{{ t("game.cards.card_back_optional") }}</span>
+                                    <input type="file" name="back" accept="image/png,image/jpeg,image/webp" />
+                                </label>
+                                <button class="primary-action" type="submit">
+                                    <i class="ph ph-upload-simple" aria-hidden="true"></i>
+                                    <span>{{ t("game.cards.create_deck") }}</span>
+                                </button>
+                            </form>
+                        </section>
+                        {% endif %}
+                        <section class="cards-section cards-section--table">
+                            <header>
+                                <h3>{{ t("game.cards.decks_in_play") }}</h3>
+                                <button type="button" class="directory-icon-btn" data-card-action="refresh" title="{{ t('game.cards.refresh') }}" aria-label="{{ t('game.cards.refresh') }}">
+                                    <i class="ph ph-arrow-clockwise" aria-hidden="true"></i>
+                                </button>
+                            </header>
+                            <div class="cards-deck-table" data-card-decks></div>
+                        </section>
+                    </div>
+                </article>
+
+                <article class="game-modal-window cards-hand-modal" data-modal-window data-modal-id="panel-hand-{{ room.id }}"
+                    data-window-key="panel-hand-{{ room.id }}" data-panel-room="{{ room.id }}" data-auto-fit-width="620"
+                    data-auto-fit-min-width="600" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.cards.your_hand") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body cards-panel cards-hand-panel" data-card-panel data-room-id="{{ room.id }}"
+                        data-card-panel-mode="hand" data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}">
+                        <div class="cards-notice" data-card-notice hidden></div>
+                        <section class="cards-section cards-hand-section">
+                            <div class="cards-hand" data-card-hand></div>
+                        </section>
                     </div>
                 </article>
 
@@ -978,8 +1164,8 @@
                 {% endif %}
                 {% endif %}
 
-                {% if show_library_panel %}
-                
+                {% if show_library_panel and room.member_role in ('gm', 'assistant_gm') %}
+
                 <article class="game-modal-window game-panel" data-modal-window
                     data-modal-id="panel-library-{{ room.id }}" data-window-key="panel-library-{{ room.id }}"
                     data-panel-room="{{ room.id }}" hidden>
@@ -988,11 +1174,8 @@
                         <span class="game-panel-title">{{ t("game.tools.library") }}</span>
                         <div class="game-modal-controls">
                             <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
-
                                 <i class="ph ph-arrows-out" aria-hidden="true"></i>
-
                             </button>
-
                             <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
                                 <i class="ph ph-minus" aria-hidden="true"></i>
                             </button>
@@ -1004,19 +1187,53 @@
                     </header>
                     <div class="game-panel-body">
                         <div class="library-actions">
-                            <button type="button">
+                            <button type="button" data-modal-open="library-images-{{ room.id }}">
                                 <i class="ph ph-image-square" aria-hidden="true"></i>
                                 <span>{{ t("game.library.images") }}</span>
                             </button>
-                            <button type="button">
-                                <i class="ph ph-speaker-high" aria-hidden="true"></i>
-                                <span>{{ t("game.library.audio") }}</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="game-modal-window library-images-modal" data-modal-window
+                    data-modal-id="library-images-{{ room.id }}" data-window-key="library-images-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" data-auto-fit-width="520" data-auto-fit-min-width="420" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.library.images") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div class="tool-empty">
+                    </header>
+                    <div class="game-panel-body asset-panel-body" data-scene-assets-workspace data-room-id="{{ room.id }}">
+                        <header class="asset-panel-head">
                             <i class="ph ph-images" aria-hidden="true"></i>
-                            <p>{{ t("game.library.empty") }}</p>
+                            <span>{{ t("game.assets.image_library") }}</span>
+                        </header>
+                        <div class="asset-upload-strip">
+                            <button type="button" class="primary-action" data-scene-asset-upload>
+                                <i class="ph ph-upload-simple" aria-hidden="true"></i>
+                                <span>{{ t("game.assets.upload_image") }}</span>
+                            </button>
+                            <input type="file" accept="image/png,image/jpeg,image/webp" multiple hidden
+                                data-scene-asset-upload-input>
                         </div>
+                        <div class="asset-folder-create">
+                            <input type="text" maxlength="120" placeholder="{{ t('game.assets.new_folder') }}" data-scene-asset-folder-name>
+                            <button type="button" data-scene-asset-create-folder title="{{ t('game.assets.create_folder') }}" aria-label="{{ t('game.assets.create_folder') }}">
+                                <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="asset-list" data-scene-assets-panel data-room-id="{{ room.id }}"></div>
                     </div>
                 </article>
                 {% endif %}
@@ -1050,6 +1267,10 @@
                             <button type="button" data-modal-open="scene-manager-{{ room.id }}"><i
                                     class="ph ph-map-trifold" aria-hidden="true"></i><span>{{ t("game.gm.scenes")
                                     }}</span></button>
+                            {% endif %}
+                            {% if room.member_role in ('gm', 'assistant_gm') %}
+                            <button type="button" data-modal-open="panel-cards-{{ room.id }}"><i
+                                    class="ph ph-cards" aria-hidden="true"></i><span>{{ t("game.cards.decks_title") }}</span></button>
                             {% endif %}
                             <button type="button" data-modal-open="fog-panel-{{ room.id }}"><i class="ph ph-cloud"
                                     aria-hidden="true"></i><span>{{ t("game.fog.title") }}</span></button>
@@ -1710,6 +1931,15 @@
                             <i class="ph ph-shapes" aria-hidden="true"></i>
                         </button>
                     </div>
+                    {% if not room.is_streamer %}
+                    <div class="tool-dock-sep"></div>
+                    <div class="tool-dock-group">
+                        <button class="tool-dock-btn tool-dock-btn--hand" type="button"
+                            data-modal-open="panel-hand-{{ room.id }}" data-tooltip="{{ t('game.cards.your_hand') }}">
+                            <i class="ph ph-cards" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    {% endif %}
                     {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
                     <div class="tool-dock-sep"></div>
                     <div class="tool-dock-group">
@@ -1928,7 +2158,7 @@
                         <span class="sr-only">{{ t("game.tools.journal") }}</span>
                     </button>
                     {% endif %}
-                    {% if show_library_panel %}
+                    {% if show_library_panel and room.member_role in ('gm', 'assistant_gm') %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-library-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.tools.library') }}"
                         title="{{ t('game.tools.library') }}">

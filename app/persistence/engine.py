@@ -155,3 +155,14 @@ def _ensure_incremental_columns(engine: Engine) -> None:
                 connection.execute(
                     text("ALTER TABLE scenes ADD COLUMN board_version INTEGER NOT NULL DEFAULT 1")
                 )
+    if "journal_assets" in table_names:
+        journal_asset_columns = {column["name"] for column in inspector.get_columns("journal_assets")}
+        if "folder_id" not in journal_asset_columns:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE journal_assets ADD COLUMN folder_id VARCHAR(64)"))
+                connection.execute(
+                    text(
+                        "CREATE INDEX IF NOT EXISTS idx_journal_assets_folder "
+                        "ON journal_assets (campaign_id, folder_id)"
+                    )
+                )

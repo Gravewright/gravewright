@@ -55,6 +55,30 @@ from app.actions.game.manage_combat import roll_combat_monster_initiative
 from app.actions.game.manage_combat import roll_combat_participant_initiative
 from app.actions.game.manage_combat import set_combat_turn
 from app.actions.game.manage_combat import start_combat
+from app.actions.game.manage_cards import create_card_deck
+from app.actions.game.manage_cards import delete_card_deck
+from app.actions.game.manage_cards import discard_cards
+from app.actions.game.manage_cards import discard_scene_card_placement
+from app.actions.game.manage_cards import draw_cards
+from app.actions.game.manage_cards import get_card_state
+from app.actions.game.manage_cards import instantiate_card_deck
+from app.actions.game.manage_cards import play_card_to_scene
+from app.actions.game.manage_cards import reveal_cards
+from app.actions.game.manage_cards import reset_card_deck
+from app.actions.game.manage_cards import shuffle_card_deck
+from app.actions.game.manage_cards import update_scene_card_placement
+from app.actions.game.manage_cards import upload_card_asset
+from app.actions.game.manage_assets import create_asset_folder
+from app.actions.game.manage_assets import delete_library_asset
+from app.actions.game.manage_assets import get_asset_library_state
+from app.actions.game.manage_assets import move_asset_to_folder
+from app.actions.game.manage_assets import serve_asset
+from app.actions.game.manage_assets import upload_asset_library_image
+from app.actions.game.manage_scene_images import delete_scene_image
+from app.actions.game.manage_scene_images import get_scene_images_state
+from app.actions.game.manage_scene_images import place_asset_on_scene
+from app.actions.game.manage_scene_images import update_scene_image
+from app.actions.game.manage_scene_images import upload_scene_image
 from app.actions.game.manage_item_folders import create_item_folder
 from app.actions.game.manage_item_folders import delete_item_folder
 from app.actions.game.manage_item_folders import items_panel_fragment
@@ -135,6 +159,30 @@ _protected_handlers = [
     upload_actor_image,
     serve_actor_image,
     get_combat_state,
+    get_card_state,
+    upload_card_asset,
+    create_card_deck,
+    instantiate_card_deck,
+    delete_card_deck,
+    shuffle_card_deck,
+    reset_card_deck,
+    draw_cards,
+    reveal_cards,
+    discard_cards,
+    play_card_to_scene,
+    update_scene_card_placement,
+    discard_scene_card_placement,
+    get_asset_library_state,
+    create_asset_folder,
+    move_asset_to_folder,
+    upload_asset_library_image,
+    delete_library_asset,
+    serve_asset,
+    get_scene_images_state,
+    place_asset_on_scene,
+    upload_scene_image,
+    update_scene_image,
+    delete_scene_image,
     start_combat,
     add_combat_participants,
     remove_combat_participant,

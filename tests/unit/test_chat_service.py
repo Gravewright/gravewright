@@ -117,6 +117,29 @@ async def test_system_message_rejects_empty(db, transport):
     assert len(transport.room_messages) == 0
 
 
+async def test_card_message_saved_with_card_metadata_and_emitted(db, transport):
+    gm_id = seed_user(name="GM", email="card-chat@test.com")
+    campaign_id = seed_campaign(gm_id)
+
+    result = await ChatService().send_card_message(
+        campaign_id=campaign_id,
+        sender_user_id=gm_id,
+        sender_name="GM",
+        content="GM revealed 1 card: Ace",
+        cards=[{"id": "card-1", "name": "Ace", "front_asset_id": "front"}],
+        card_event={"id": "event-1", "event_type": "card.drawn"},
+        transport=transport,
+    )
+
+    assert result.success
+    assert len(transport.room_messages) == 1
+    assert transport.room_messages[0]["metadata"]["type"] == "cards.revealed"
+    messages = ChatMessageRepository().list_for_campaign(campaign_id=campaign_id)
+    assert len(messages) == 1
+    assert messages[0]["kind"] == "system"
+    assert messages[0]["metadata"]["cards"][0]["front_asset_id"] == "front"
+
+
 async def test_gm_message_only_goes_to_gm(db, transport):
     gm_id = seed_user(name="GM", email="gm@test.com")
     campaign_id = seed_campaign(gm_id)

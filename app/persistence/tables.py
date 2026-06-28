@@ -591,6 +591,7 @@ journal_assets = Table(
     Column("id", _ID, primary_key=True),
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
     Column("journal_id", _ID, ForeignKey("journals.id", ondelete="SET NULL"), nullable=True),
+    Column("folder_id", _ID, nullable=True),
     Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("purpose", _STR, nullable=False, server_default=text("'journal_image'")),
     Column("filename", Text, nullable=False),
@@ -603,6 +604,43 @@ journal_assets = Table(
     Column("created_at", Integer, nullable=False),
     Index("idx_journal_assets_campaign", "campaign_id"),
     Index("idx_journal_assets_journal", "journal_id"),
+    Index("idx_journal_assets_folder", "campaign_id", "folder_id"),
+)
+
+
+asset_folders = Table(
+    "asset_folders",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("parent_id", _ID, nullable=True),
+    Column("name", _STR, nullable=False),
+    Column("sort_order", Integer, nullable=False, server_default=text("0")),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_asset_folders_campaign_parent", "campaign_id", "parent_id", "sort_order", "name"),
+)
+
+
+# Dedicated asset library (independent of journals). Library images are organised
+# into ``asset_folders`` and consumed by scene image placements.
+library_assets = Table(
+    "library_assets",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("folder_id", _ID, nullable=True),
+    Column("filename", Text, nullable=False),
+    Column("content_type", _STR, nullable=False),
+    Column("byte_size", Integer, nullable=False),
+    Column("width", Integer, nullable=True),
+    Column("height", Integer, nullable=True),
+    Column("storage_path", Text, nullable=False),
+    Column("hash", _STR, nullable=False),
+    Column("created_at", Integer, nullable=False),
+    Index("idx_library_assets_campaign", "campaign_id", "created_at"),
+    Index("idx_library_assets_folder", "campaign_id", "folder_id"),
 )
 
 
@@ -794,6 +832,186 @@ chat_messages = Table(
     Column("metadata_json", Text, nullable=False, default="{}"),
     Column("created_at", Integer, nullable=False),
     Index("idx_chat_messages_campaign_created", "campaign_id", "created_at"),
+)
+
+
+                                                                              
+# --- Cards and deck piles ----------------------------------------------------
+
+card_deck_definitions = Table(
+    "card_deck_definitions",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True),
+    Column("package_id", _ID, nullable=True),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("scope", _STR, nullable=False),
+    Column("name", _STR, nullable=False),
+    Column("description", Text, nullable=True),
+    Column("default_back_asset_id", _ID, nullable=True),
+    Column("editable", Integer, nullable=False, server_default=text("1")),
+    Column("metadata_json", Text, nullable=False, default="{}"),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_card_deck_definitions_campaign", "campaign_id"),
+    Index("idx_card_deck_definitions_package", "package_id"),
+    Index("idx_card_deck_definitions_owner", "owner_user_id"),
+    Index("idx_card_deck_definitions_scope", "scope"),
+)
+
+card_definitions = Table(
+    "card_definitions",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("deck_definition_id", _ID, ForeignKey("card_deck_definitions.id", ondelete="CASCADE"), nullable=False),
+    Column("name", _STR, nullable=False),
+    Column("subtitle", _STR, nullable=True),
+    Column("description", Text, nullable=True),
+    Column("front_asset_id", _ID, nullable=False),
+    Column("back_asset_id", _ID, nullable=True),
+    Column("tags_json", Text, nullable=False, default="[]"),
+    Column("metadata_json", Text, nullable=False, default="{}"),
+    Column("sort_key", _STR, nullable=True),
+    Column("quantity", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_card_definitions_deck", "deck_definition_id"),
+)
+
+card_deck_instances = Table(
+    "card_deck_instances",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("room_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True),
+    Column("deck_definition_id", _ID, ForeignKey("card_deck_definitions.id", ondelete="CASCADE"), nullable=False),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("name", _STR, nullable=False),
+    Column("active", Integer, nullable=False, server_default=text("1")),
+    Column("metadata_json", Text, nullable=False, default="{}"),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_card_deck_instances_campaign", "campaign_id"),
+    Index("idx_card_deck_instances_definition", "deck_definition_id"),
+)
+
+card_piles = Table(
+    "card_piles",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("deck_instance_id", _ID, ForeignKey("card_deck_instances.id", ondelete="CASCADE"), nullable=True),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("kind", _STR, nullable=False),
+    Column("name", _STR, nullable=False),
+    Column("visibility", _STR, nullable=False),
+    Column("ordered", Integer, nullable=False, server_default=text("1")),
+    Column("metadata_json", Text, nullable=False, default="{}"),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_card_piles_campaign", "campaign_id"),
+    Index("idx_card_piles_deck", "deck_instance_id", "kind"),
+    Index("idx_card_piles_owner", "owner_user_id"),
+)
+
+card_instances = Table(
+    "card_instances",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("deck_instance_id", _ID, ForeignKey("card_deck_instances.id", ondelete="CASCADE"), nullable=False),
+    Column("card_definition_id", _ID, ForeignKey("card_definitions.id", ondelete="CASCADE"), nullable=False),
+    Column("current_pile_id", _ID, ForeignKey("card_piles.id", ondelete="SET NULL"), nullable=True),
+    Column("current_scene_id", _ID, ForeignKey("scenes.id", ondelete="SET NULL"), nullable=True),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("face_state", _STR, nullable=False),
+    Column("visibility", _STR, nullable=False),
+    Column("locked", Integer, nullable=False, server_default=text("0")),
+    Column("metadata_json", Text, nullable=False, default="{}"),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_card_instances_campaign", "campaign_id"),
+    Index("idx_card_instances_deck", "deck_instance_id"),
+    Index("idx_card_instances_pile", "current_pile_id"),
+)
+
+card_pile_entries = Table(
+    "card_pile_entries",
+    metadata,
+    Column("pile_id", _ID, ForeignKey("card_piles.id", ondelete="CASCADE"), nullable=False),
+    Column("card_instance_id", _ID, ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False),
+    Column("position", Integer, nullable=False),
+    Column("inserted_at", Integer, nullable=False),
+    PrimaryKeyConstraint("pile_id", "card_instance_id"),
+    UniqueConstraint("pile_id", "position"),
+    UniqueConstraint("card_instance_id"),
+    Index("idx_card_pile_entries_pile_order", "pile_id", "position"),
+)
+
+scene_card_placements = Table(
+    "scene_card_placements",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("card_instance_id", _ID, ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("x", Float, nullable=False),
+    Column("y", Float, nullable=False),
+    Column("rotation", Float, nullable=False, server_default=text("0")),
+    Column("scale", Float, nullable=False, server_default=text("1")),
+    Column("z_index", Integer, nullable=False, server_default=text("0")),
+    Column("face_state", _STR, nullable=False),
+    Column("visibility", _STR, nullable=False),
+    Column("locked", Integer, nullable=False, server_default=text("0")),
+    Column("metadata_json", Text, nullable=False, default="{}"),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    UniqueConstraint("card_instance_id"),
+    Index("idx_scene_card_placements_scene", "scene_id", "z_index"),
+    Index("idx_scene_card_placements_card", "card_instance_id"),
+)
+
+scene_image_placements = Table(
+    "scene_image_placements",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("asset_id", _ID, nullable=False),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("x", Float, nullable=False),
+    Column("y", Float, nullable=False),
+    Column("rotation", Float, nullable=False, server_default=text("0")),
+    Column("scale", Float, nullable=False, server_default=text("1")),
+    Column("z_index", Integer, nullable=False, server_default=text("0")),
+    Column("natural_width", Integer, nullable=False, server_default=text("0")),
+    Column("natural_height", Integer, nullable=False, server_default=text("0")),
+    Column("locked", Integer, nullable=False, server_default=text("0")),
+    Column("gm_only", Integer, nullable=False, server_default=text("0")),
+    # Layer: "game" (screen-fixed, all), "gm" (screen-fixed, GM-only),
+    # "composition" (anchored to the scene world position; pans/zooms with the map).
+    Column("layer", _STR, nullable=False, server_default=text("'game'")),
+    Column("metadata_json", Text, nullable=False, default="{}"),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_scene_image_placements_scene", "scene_id", "z_index"),
+    Index("idx_scene_image_placements_campaign", "campaign_id"),
+)
+
+card_events = Table(
+    "card_events",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("room_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True),
+    Column("actor_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("event_type", _STR, nullable=False),
+    Column("payload_json", Text, nullable=False, default="{}"),
+    Column("visibility", _STR, nullable=False),
+    Column("created_at", Integer, nullable=False),
+    Index("idx_card_events_campaign", "campaign_id", "created_at"),
+    Index("idx_card_events_type", "event_type"),
 )
 
 transport_messages = Table(

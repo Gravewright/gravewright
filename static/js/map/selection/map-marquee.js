@@ -26,6 +26,8 @@
             el.style.top = `${Math.min(marquee.startY, marquee.y)}px`;
             el.style.width = `${Math.abs(marquee.x - marquee.startX)}px`;
             el.style.height = `${Math.abs(marquee.y - marquee.startY)}px`;
+            // Right-to-left selects cards/assets; show a distinct frame for it.
+            el.classList.toggle("board-marquee--overlay", marquee.x < marquee.startX);
             el.style.display = "block";
         }
 
@@ -37,6 +39,20 @@
             const canvas = marquee.canvas;
             const scene = sceneDataFor(canvas);
             if (!scene) return;
+
+            // Drag direction picks what the marquee grabs: left-to-right selects
+            // tokens (below); right-to-left selects table cards / scene images.
+            if (marquee.x < marquee.startX) {
+                const rect = {
+                    left: Math.min(marquee.startX, marquee.x),
+                    top: Math.min(marquee.startY, marquee.y),
+                    right: Math.max(marquee.startX, marquee.x),
+                    bottom: Math.max(marquee.startY, marquee.y),
+                };
+                window.GravewrightCards?.selectInRect?.(canvas, rect, { additive: marquee.additive });
+                window.GravewrightSceneImages?.selectInRect?.(canvas, rect, { additive: marquee.additive });
+                return;
+            }
 
             const state = stateFor(canvas);
             const minWorld = screenToWorldXY(

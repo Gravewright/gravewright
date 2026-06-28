@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gravewright.local/schemas/gravewright-card-deck-v1.schema.json",
+  "title": "Gravewright Card Deck",
+  "type": "object",
+  "required": ["schemaVersion", "name", "cards"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 191
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 191
+    },
+    "description": {
+      "type": "string"
+    },
+    "defaultBack": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "cards": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "required": ["name", "front"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 191
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 191
+          },
+          "subtitle": {
+            "type": "string",
+            "maxLength": 191
+          },
+          "description": {
+            "type": "string"
+          },
+          "front": {
+            "type": "string"
+          },
+          "back": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 64
+            }
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "sortKey": {
+            "type": "string",
+            "maxLength": 191
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 999,
+            "default": 1
+          }
+        }
+      }
+    }
+  }
+}

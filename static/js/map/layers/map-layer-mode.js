@@ -79,7 +79,7 @@
         }
 
         function setActiveLayer(layer) {
-            activeDrawLayer = layer === "gm" ? "gm" : "game";
+            activeDrawLayer = (layer === "gm" || layer === "composition") ? layer : "game";
             updateGmLayerIndicator();
         }
 

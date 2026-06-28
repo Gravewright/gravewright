@@ -1,6 +1,6 @@
 # Documentation Update Summary
 
-This bundle is corrected for **Gravewright v1.0.0-alpha.1**.
+This bundle is corrected for **Gravewright v2.1.0-alpha**.
 
 ## Included
 
@@ -13,19 +13,19 @@ This bundle is corrected for **Gravewright v1.0.0-alpha.1**.
   - `CODE_OF_CONDUCT.md`
   - `NOTICE`
 - Release notes:
-  - `RELEASE_v1.0.0-alpha.1.md`
+  - `RELEASE_v2.1.0-alpha.md`
 - GitHub org/profile README:
   - `ORG_PROFILE_README.md`
   - `.github/profile/README.md`
-- English and Brazilian Portuguese Alpha docs updated for `v1.0.0-alpha.1`.
-- Public status language uses the explicit `v1.0.0-alpha.1` release name.
+- English and Brazilian Portuguese Alpha docs updated for `v2.1.0-alpha`.
+- Public status language uses the explicit `v2.1.0-alpha` release name.
 
 ## Version language
 
 Use:
 
 ```text
-Gravewright v1.0.0-alpha.1
+Gravewright v2.1.0-alpha
 ```
 
 Avoid old generic pre-release labels. Use the explicit release name instead.

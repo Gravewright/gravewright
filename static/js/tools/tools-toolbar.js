@@ -186,7 +186,7 @@
     }
 
     function setActiveLayer(layer) {
-        const value = layer === "gm" ? "gm" : "game";
+        const value = ["game", "gm", "composition"].includes(layer) ? layer : "game";
         document.querySelectorAll("[data-active-layer]").forEach((btn) => {
             btn.setAttribute("aria-pressed", btn.dataset.activeLayer === value ? "true" : "false");
         });
