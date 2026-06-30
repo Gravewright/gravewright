@@ -46,7 +46,7 @@ seus arquivos de schema, ficha e regra:
   "kind": "ruleset",
   "id": "my-rpg",
   "name": "My RPG",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1" },
+  "compatibility": { "minimum": "1", "verified": "1" },
   "capabilities": [
     "actors.register",
     "items.register",

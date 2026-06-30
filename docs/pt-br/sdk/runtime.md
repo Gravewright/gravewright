@@ -106,6 +106,8 @@ sdk.bus
 sdk.commands
 sdk.ui
 sdk.chat
+sdk.dice
+sdk.rolls
 sdk.settings
 sdk.sheets
 sdk.combat

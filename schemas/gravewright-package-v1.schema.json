@@ -109,7 +109,54 @@
     },
     "provides": {
       "type": "object",
-      "additionalProperties": true
+      "additionalProperties": true,
+      "properties": {
+        "storage": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "model": { "type": "string" }
+          }
+        },
+        "actorTypes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/typeDef" }
+        },
+        "itemTypes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/typeDef" }
+        },
+        "rules": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "mappings": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "contentPacks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/contentPack" }
+        },
+        "locales": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "assets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/assetEntry" }
+          }
+        },
+        "areaMarkers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
     },
     "settings": {
       "type": "array",
@@ -174,6 +221,69 @@
           "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
           "reason": { "type": "string" }
         }
+      }
+    }
+  },
+  "$defs": {
+    "typeDef": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "labelKey": { "type": "string" },
+        "schema": { "type": "string" },
+        "sheet": {
+          "oneOf": [
+            { "type": "string" },
+            { "$ref": "#/$defs/sheetDescriptor" }
+          ]
+        }
+      }
+    },
+    "sheetDescriptor": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "mode": { "type": "string", "enum": ["html"] },
+        "template": { "type": "string" },
+        "controller": { "type": "string" },
+        "style": { "type": "string" },
+        "path": { "type": "string" }
+      }
+    },
+    "contentPack": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "type", "path"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": {
+          "type": "string",
+          "enum": [
+            "actor_pack",
+            "item_pack",
+            "spell_pack",
+            "journal_pack",
+            "table_pack",
+            "condition_pack"
+          ]
+        },
+        "label": { "type": "string" },
+        "labelKey": { "type": "string" },
+        "path": { "type": "string" }
+      }
+    },
+    "assetEntry": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["id", "label", "path"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string" },
+        "label": { "type": "string" },
+        "path": { "type": "string" }
       }
     }
   }

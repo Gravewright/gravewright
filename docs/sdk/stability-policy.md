@@ -12,6 +12,10 @@ The SDK is considered stable when a package valid for `sdkVersion: "1"` keeps
 installing, enabling, and running across `1.x` releases — unless it uses
 capabilities marked `forbidden`.
 
+Package authors should target the final SDK line with `compatibility.minimum`
+and `compatibility.verified` set to `"1"`; pre-release values such as
+`1.0.0-rc.1` are historical and validate as unverified against SDK 1 final.
+
 ## Stability levels
 
 | Status | Meaning |

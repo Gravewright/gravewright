@@ -836,8 +836,10 @@
       plugin.renderHeaderIdentity(main, bundle, sheetHelpers);
       return;
     }
+    // headerSubtitle returns a plain string; a system without a header plugin
+    // (e.g. a declarative ruleset) still needs it wrapped in a real Node.
     const subtitle = headerSubtitle(bundle);
-    if (subtitle) main.appendChild(subtitle);
+    if (subtitle) main.appendChild(el("p", "ash-subtitle", subtitle));
   }
 
   function renderSheetHeader(root, bundle, systemId) {

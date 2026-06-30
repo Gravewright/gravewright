@@ -3,6 +3,7 @@
     role="button" tabindex="0"
     {% if room.member_role == 'gm' %}draggable="true"{% endif %}
     data-can-edit="{{ 'true' if item.can_edit else 'false' }}"
+    data-item-type="{{ item.type }}"
     data-owners-json="{{ item.owners_json | default('[]') }}">
     <i class="ph ph-sword item-card-icon" aria-hidden="true"></i>
     <span class="item-card-info">

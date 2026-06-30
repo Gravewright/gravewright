@@ -21,6 +21,7 @@ htmlcov/
 /uploads/
 /tmp/
 /temp/
+/data/
 
 # Databases and SQLite sidecars
 *.sqlite

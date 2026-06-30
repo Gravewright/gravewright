@@ -189,6 +189,8 @@ def _validate_html_sheets_on_disk(
                     uses_rich_text = "data-rich-text" in html or "data-rich-editor" in html
                     if uses_rich_text and "sheets.richText" not in manifest.capabilities:
                         codes.append("sdk.sheets.html.rich_text_capability_missing")
+                    if "data-roll" in html and "dice.roll" not in manifest.capabilities:
+                        codes.append("sdk.sheets.html.roll_capability_missing")
 
         controller = sheet.get("controller")
         if isinstance(controller, str) and controller:

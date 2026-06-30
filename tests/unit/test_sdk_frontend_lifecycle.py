@@ -101,3 +101,13 @@ def test_frontend_storage_sqlite_requires_capability():
     gates = get_registry().method_to_capability()
     assert gates["storage.sqlite.query"] == "storage.sqlite"
     assert gates["storage.sqlite.execute"] == "storage.sqlite"
+
+
+def test_frontend_rolls_require_capabilities():
+    gates = get_registry().method_to_capability()
+    assert gates["dice.roll"] == "dice.roll"
+    assert gates["rolls.intent"] == "rolls.intent"
+    assert 'requireCap("dice.roll")' in RUNTIME
+    assert 'requireCap("rolls.intent")' in RUNTIME
+    assert 'postJson("/game/actor/roll"' in RUNTIME
+    assert 'postJson("/game/actor/action"' in RUNTIME

@@ -41,8 +41,8 @@ def _manifest(sheet: object, *, capabilities=None) -> dict:
         "name": "HTML Ruleset",
         "version": "1.0.0",
         "compatibility": {
-            "minimum": "1.0.0-rc.1",
-            "verified": "1.0.0-rc.1",
+            "minimum": "1",
+            "verified": "1",
             "maximum": "1.x",
         },
         "capabilities": capabilities
@@ -181,6 +181,15 @@ def test_html_sheet_rich_editor_requires_capability(tmp_path):
     (pkg / "manifest.json").write_text(json.dumps(raw), encoding="utf-8")
     loaded = load_package(pkg, expected_id="html-ruleset", expected_kind_root="rulesets")
     assert "sdk.sheets.html.rich_text_capability_missing" in loaded.validation.errors
+
+
+def test_html_sheet_data_roll_requires_dice_capability(tmp_path):
+    pkg = _write_package(tmp_path, html='<button data-roll="1d20">Roll</button>')
+    raw = json.loads((pkg / "manifest.json").read_text(encoding="utf-8"))
+    raw["capabilities"] = ["sheets.html"]
+    (pkg / "manifest.json").write_text(json.dumps(raw), encoding="utf-8")
+    loaded = load_package(pkg, expected_id="html-ruleset", expected_kind_root="rulesets")
+    assert "sdk.sheets.html.roll_capability_missing" in loaded.validation.errors
 
 
 def test_register_controller_lifecycle_and_bindings_present():
@@ -370,6 +379,13 @@ def test_html_sheet_data_bind_writes_back_through_normal_path():
 
 def test_html_sheet_data_action_calls_controller():
     assert "controller.onAction?.(" in RUNTIME
+
+
+def test_html_sheet_data_roll_posts_authoritative_roll_with_capability_gate():
+    assert "[data-roll]" in RUNTIME
+    assert 'requirePackageApi(ctx.packageId, "dice.roll")' in RUNTIME
+    assert "postRollFormula(" in RUNTIME
+    assert "node.dataset.rollLabel" in RUNTIME
 
 
 def test_html_sheet_declarative_path_preserved():

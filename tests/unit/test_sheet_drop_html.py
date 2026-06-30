@@ -3,7 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.engine.sdk.package_manifest import PackageManifest
-from app.engine.sheets.sheet_drop_service import HTML_DROP_LIST, HTML_EFFECT_LIST, SheetDropService
+from app.engine.sheets.sheet_drop_service import (
+    HTML_DROP_LIST,
+    HTML_EFFECT_LIST,
+    SheetDropService,
+    _html_list_path,
+)
 from app.engine.sheets.sheet_ir_validator import accepts_entry
 
 
@@ -48,6 +53,22 @@ def _manifest(sheet):
             "provides": {"actorTypes": [{"id": "character", "schema": "s.json", "sheet": sheet}]},
         }
     )
+
+
+def test_html_list_path_routes_to_named_zone():
+    # A sheet template names per-category lists (skills, edges, gear). Each
+    # resolves to its own data key so dropped items land where the sheet reads.
+    assert _html_list_path("skillItems") == "skillItems"
+    assert _html_list_path("equipmentItems") == "equipmentItems"
+    assert _html_list_path("effects") == "effects"
+
+
+def test_html_list_path_sanitizes_unsafe_zone_names():
+    # The zone name is used as a single data key, never a path, so dots and other
+    # traversal characters are stripped rather than trusted.
+    assert _html_list_path("system.skills.../../x") == "systemskillsx"
+    assert _html_list_path("") == HTML_DROP_LIST
+    assert _html_list_path("   ") == HTML_DROP_LIST
 
 
 def test_append_to_html_list_creates_items_array():

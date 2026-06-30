@@ -32,10 +32,10 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `combat.runtime` | Use `sdk.combat.*` runtime methods and panel registration. |
 | `commands.register` | Register client commands. |
 | `content.packs` | Provide and read content packs. |
-| `dice.roll` | Participate in dice roll behavior. |
+| `dice.roll` | Request server-authoritative dice rolls through `sdk.dice`. |
 | `items.register` | Register item type behavior/data through package metadata. |
 | `locales` | Provide locales and use `sdk.i18n.t`. |
-| `rolls.intent` | Submit or map roll intentions. |
+| `rolls.intent` | Request server-authoritative declarative roll/action intents. |
 | `rules.declarative` | Provide declarative rules documents. |
 | `rules.extends` | Extend rule behavior. |
 | `scene.overlays` | Provide scene overlays. |
@@ -87,7 +87,9 @@ There is no backend plugin execution in SDK v1. Packages are declarative plus br
 | `sdk.commands.register` | `commands.register` |
 | `sdk.content.pack` | `content.packs` |
 | `sdk.content.packs` | `content.packs` |
+| `sdk.dice.roll` | `dice.roll` |
 | `sdk.i18n.t` | `locales` |
+| `sdk.rolls.intent` | `rolls.intent` |
 | `sdk.scene.activeCameraForScene` | `scene.tools` |
 | `sdk.scene.activeCanvas` | `scene.tools` |
 | `sdk.settings.all` | `settings` |

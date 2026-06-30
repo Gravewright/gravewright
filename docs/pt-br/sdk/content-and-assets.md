@@ -14,7 +14,7 @@ Use `content`/`provides.contentPacks` para dados que o usuário pode importar, c
       "id": "encounters",
       "label": "Starter Encounters",
       "path": "content/encounters.json",
-      "type": "encounter"
+      "type": "journal_pack"
     }
   ]
 }

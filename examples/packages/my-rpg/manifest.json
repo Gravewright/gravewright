@@ -10,8 +10,8 @@
   "authors": ["Example Author"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1"
+    "minimum": "1",
+    "verified": "1"
   },
   "capabilities": [
     "actors.register",
@@ -46,7 +46,8 @@
       }
     ],
     "rules": {
-      "formulas": "rules/formulas.gw.json"
+      "formulas": "rules/formulas.gw.json",
+      "actions": "rules/actions.gw.json"
     },
     "locales": {
       "en": "locales/en.json"

@@ -150,6 +150,46 @@ sdk.chat.send({
 
 O servidor e o runtime do core permanecem autoritativos. Trate isto como uma intenção, não como uma escrita direta de persistência.
 
+## `sdk.dice`
+
+Requer `dice.roll`.
+
+### `sdk.dice.roll({ formula, label = "", actorId = "" })`
+
+Pede uma rolagem autoritativa de ator via `POST /game/actor/roll`. A resposta
+inclui total, grupos de dados, metadados renderizados do chat e os campos de
+apresentacao retornados pelo engine.
+
+```js
+await sdk.dice.roll({
+  actorId: ctx.actor.id,
+  label: "Attack",
+  formula: "2d20kh1 + @sheet.attackBonus",
+});
+```
+
+## `sdk.rolls`
+
+Requer `rolls.intent`.
+
+### `sdk.rolls.intent({ actorId, actionId, inputs = {}, rollOptions = {}, target = {} })`
+
+Pede uma action declarativa autoritativa via `POST /game/actor/action`. Use para
+actions de Sheet IR, targets, dano aplicado, iniciativa e outros efeitos
+declarados em `rules/actions.gw.json`.
+
+```js
+await sdk.rolls.intent({
+  actorId: ctx.actor.id,
+  actionId: "attack.primary",
+  inputs: {},
+  rollOptions: { visibility: "public" },
+  target: { actorId: targetActorId, tokenId: targetTokenId },
+});
+```
+
+Veja [`rolls.md`](rolls.md) para sintaxe de formulas e padroes de sistema.
+
 ## `sdk.settings`
 
 Requer `settings`.

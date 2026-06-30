@@ -150,6 +150,46 @@ sdk.chat.send({
 
 The server and core runtime remain authoritative. Treat this as an intent, not a direct persistence write.
 
+## `sdk.dice`
+
+Requires `dice.roll`.
+
+### `sdk.dice.roll({ formula, label = "", actorId = "" })`
+
+Requests a server-authoritative actor roll through `POST /game/actor/roll`.
+The response includes total, dice groups, rendered chat metadata, and any
+presentation fields returned by the engine.
+
+```js
+await sdk.dice.roll({
+  actorId: ctx.actor.id,
+  label: "Attack",
+  formula: "2d20kh1 + @sheet.attackBonus",
+});
+```
+
+## `sdk.rolls`
+
+Requires `rolls.intent`.
+
+### `sdk.rolls.intent({ actorId, actionId, inputs = {}, rollOptions = {}, target = {} })`
+
+Requests a server-authoritative declarative action through
+`POST /game/actor/action`. Use this for Sheet IR actions, targets, damage
+application, initiative, and other effects declared in `rules/actions.gw.json`.
+
+```js
+await sdk.rolls.intent({
+  actorId: ctx.actor.id,
+  actionId: "attack.primary",
+  inputs: {},
+  rollOptions: { visibility: "public" },
+  target: { actorId: targetActorId, tokenId: targetTokenId },
+});
+```
+
+See [`rolls.md`](rolls.md) for formula syntax and system patterns.
+
 ## `sdk.settings`
 
 Requires `settings`.

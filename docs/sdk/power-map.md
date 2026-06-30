@@ -21,14 +21,14 @@ Use it when you know what you want to build but do not yet know which SDK surfac
 |---|---|---|---|
 | Actor types | `provides.actorTypes` | `schemas/*.schema.json`, `sheets/*.sheet.json` | `actors.register` |
 | Item types | `provides.itemTypes` | `schemas/*.schema.json`, `sheets/*.sheet.json` | `items.register` |
-| Declarative sheets | `provides.sheets`, actor/item sheet references | `sheets/*.json` | `sheets.declarative` |
-| Sheet components | `provides.sheetComponents` | `sheets/components/*.json` | `sheets.components` |
+| Declarative sheets | `provides.actorTypes[].sheet`, `provides.itemTypes[].sheet` | `sheets/*.json` | `sheets.declarative` |
+| Sheet components | declarative layouts using `sheets/components/` | `sheets/components/*.json` | `sheets.components` |
 | Rules documents | `provides.rules` | `rules/*.json` | `rules.declarative` |
 | Rule extensions | `provides.rules`, runtime behavior | `rules/*.json`, `assets/*.js` | `rules.extends`, `assets.scripts` |
-| Dice/roll metadata | `provides.rolls`, `provides.mappings` | `rules/*.json`, `mappings/*.json` | `dice.roll`, `rolls.intent` |
-| Combat defaults | `provides.combat` | `rules/combat.json` or manifest object | `combat.config` |
+| Dice/roll metadata | actions/formulas in `provides.rules`, `provides.mappings` | `rules/*.json`, `mappings/*.json` | `dice.roll`, `rolls.intent` |
+| Combat defaults | documents in `provides.rules` | `rules/combat.json` | `combat.config` |
 | Token mappings | `provides.mappings` | `mappings/token-*.json` | `tokens.mappings` |
-| Scene overlays | `provides.sceneOverlays` | `assets/*.js`, `assets/*.css` | `scene.overlays`, maybe `assets.scripts` |
+| Scene overlays | runtime and declared entrypoints | `assets/*.js`, `assets/*.css` | `scene.overlays`, `assets.scripts` |
 | Content packs | `provides.contentPacks` | `content/*.json` | `content.packs` |
 | Locales | `provides.locales` | `locales/en.json`, `locales/pt-BR.json` | `locales` |
 | Settings | `settings` | manifest only | `settings` |
@@ -56,6 +56,8 @@ Use it when you know what you want to build but do not yet know which SDK surfac
 | Show toast | `sdk.ui.toast`, `sdk.toast` | `assets.ui` | UI helper. |
 | Open/close modal | `sdk.ui.openModal`, `sdk.ui.closeModal` | `assets.ui` | Only documented/core modal ids. |
 | Send chat card/intent | `sdk.chat.send` | `chat.cards` | Treat as an intent; core remains authoritative. |
+| Roll a formula | `sdk.dice.roll` | `dice.roll` | Server-authoritative formula roll and chat card. |
+| Execute roll/action intent | `sdk.rolls.intent` | `rolls.intent` | Server-authoritative Sheet IR action, targets, damage, and initiative. |
 | List settings | `sdk.settings.definitions`, `sdk.settings.all` | `settings` | Values visible to current package. |
 | Read setting | `sdk.settings.get`, `sdk.setting(key)` | `settings` | Use fallback values. |
 | Write setting | `sdk.settings.set`, `sdk.setting(key, value)` | `settings` | Persists through SDK settings endpoint. |
@@ -83,10 +85,9 @@ Use:
 - `activation.mode: "exclusive"`
 - `provides.actorTypes`
 - `provides.itemTypes`
-- `provides.sheets`
+- `provides.actorTypes[].sheet` / `provides.itemTypes[].sheet`
 - `provides.rules`
 - `provides.mappings`
-- `provides.combat`
 - `provides.contentPacks`
 - `provides.locales`
 - `settings`
@@ -117,6 +118,8 @@ Add runtime capabilities only if using runtime methods:
   "assets.scripts",
   "sheets.runtime",
   "combat.runtime",
+  "dice.roll",
+  "rolls.intent",
   "chat.cards",
   "assets.ui"
 ]

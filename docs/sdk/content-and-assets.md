@@ -69,7 +69,7 @@ Asset packages use `kind: "assets"` and provide media under `provides.assets`.
   "name": "My Assets",
   "version": "0.1.0",
   "compatibility": {
-    "verified": "1.0.0-rc.1"
+    "verified": "1"
   },
   "capabilities": ["assets.pack", "assets.images", "assets.maps", "assets.icons"],
   "activation": {

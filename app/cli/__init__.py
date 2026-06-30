@@ -107,6 +107,10 @@ _VALIDATION_LABELS = {
     "sdk.validation.id_invalid": "Package id is invalid",
     "sdk.validation.kind": "Package kind is invalid",
     "sdk.validation.path_unsafe": "A referenced path is unsafe",
+    "sdk.validation.compatibility_prerelease": 'Pre-release compatibility is unverified against SDK 1; use "1"',
+    "sdk.validation.provides_key_unknown": "provides contains an unsupported key",
+    "sdk.validation.rules_shape_invalid": "provides.rules must be an object of name-to-path entries",
+    "sdk.sheets.html.roll_capability_missing": "data-roll requires the dice.roll capability",
     "sdk.manifest.id_mismatch": "Package id does not match its directory",
     "sdk.manifest.kind_root_mismatch": "Package kind does not match its parent directory",
 }

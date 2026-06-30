@@ -64,6 +64,7 @@ The validator checks:
 | `sdk.validation.library_activation_mode` | Library does not use `passive`. | Set `activation.mode: "passive"`. |
 | `sdk.validation.assets_activation_mode` | Assets package does not use `multiple`. | Set `activation.mode: "multiple"`. |
 | `sdk.validation.assets_invalid_assets` | Invalid assets package shape. | Add valid asset ids/labels/paths and remove game model fields. |
+| `sdk.validation.rules_shape_invalid` | `provides.rules` is not an object. | Use name-to-path entries, for example `{ "formulas": "rules/formulas.gw.json" }`. |
 | `sdk.validation.setting_invalid` | Invalid setting definition. | Fix key, scope, type, or enum options. |
 | `sdk.validation.content_pack_invalid` | Invalid content pack. | Fix id, type, or path. |
 | `sdk.validation.entrypoint_invalid` | `entrypoints` is not an object. | Use an object, even when empty. |
@@ -77,6 +78,8 @@ The validator checks:
 | Warning key | Meaning | Typical fix |
 |---|---|---|
 | `sdk.validation.incompatible` | Package is outside the running version compatibility window. | Update compatibility or use a compatible Gravewright version. |
+| `sdk.validation.compatibility_prerelease` | `verified` points at a pre-release older than SDK 1 final. | Set `compatibility.verified` to `"1"`. |
+| `sdk.validation.provides_key_unknown` | `provides` contains a key the engine does not consume. | Use supported `provides` keys or wait for that surface to become active. |
 | `sdk.validation.assets_image_extension` | Image-like asset has an unexpected extension. | Use `.png`, `.jpg`, `.jpeg`, `.webp`, or `.svg`. |
 | `sdk.validation.assets_map_extension` | Map asset has an unexpected extension. | Use `.png`, `.jpg`, `.jpeg`, or `.webp`. |
 | `sdk.validation.assets_audio_extension` | Audio asset has an unexpected extension. | Use `.mp3`, `.ogg`, or `.wav`. |

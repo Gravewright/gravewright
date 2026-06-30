@@ -42,6 +42,8 @@
     const CAPABILITY_REQUIREMENTS = Object.freeze({
         "commands.register": CAPABILITIES.COMMANDS_REGISTER,
         "chat.send": CAPABILITIES.CHAT_CARDS,
+        "dice.roll": CAPABILITIES.DICE_ROLL,
+        "rolls.intent": CAPABILITIES.ROLLS_INTENT,
         "ui.toast": CAPABILITIES.ASSETS_UI,
         "ui.openModal": CAPABILITIES.ASSETS_UI,
         "ui.closeModal": CAPABILITIES.ASSETS_UI,

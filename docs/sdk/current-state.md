@@ -117,10 +117,11 @@ capability_unknown, activation_required, activation_invalid,
 ruleset_activation_mode, ruleset_storage_required, ruleset_actor_types_required,
 addon_activation_mode, library_activation_mode, assets_activation_mode,
 assets_invalid_assets, assets_image_extension (warn), assets_map_extension (warn),
-assets_audio_extension (warn), setting_invalid, content_pack_invalid,
-entrypoint_invalid, path_unsafe, dependency_invalid, conflict_invalid,
-distribution_invalid, incompatible (warn), manifest_missing, manifest_unreadable,
-file_missing
+assets_audio_extension (warn), compatibility_prerelease (warn),
+provides_key_unknown (warn), rules_shape_invalid, setting_invalid,
+content_pack_invalid, entrypoint_invalid, path_unsafe, dependency_invalid,
+conflict_invalid, distribution_invalid, incompatible (warn), manifest_missing,
+manifest_unreadable, file_missing
 ```
 
 ### DRIFT — error contract

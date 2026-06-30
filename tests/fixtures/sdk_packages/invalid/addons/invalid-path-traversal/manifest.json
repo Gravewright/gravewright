@@ -4,8 +4,8 @@
   "name": "Fixture",
   "version": "1.0.0",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1",
+    "minimum": "1",
+    "verified": "1",
     "maximum": "1.x"
   },
   "entrypoints": {

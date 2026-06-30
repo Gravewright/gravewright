@@ -26,7 +26,7 @@ def _manifest(**overrides) -> dict:
         "id": "store-addon",
         "name": "Store Addon",
         "version": "0.1.0",
-        "compatibility": {"minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1", "maximum": "1.x"},
+        "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"},
         "capabilities": ["storage.sqlite"],
         "activation": {"scope": "campaign", "mode": "multiple"},
         "entrypoints": {},

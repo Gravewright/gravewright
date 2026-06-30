@@ -206,7 +206,7 @@ Supported package kinds:
 | `content` | Importable content-only package. |
 | `assets` | Reusable media package for images, maps, icons, audio, and similar assets. |
 
-Unsafe capabilities such as backend execution, raw database access, raw filesystem access, raw network access, and permission override are not part of the public SDK.
+Unsafe capabilities such as backend execution, direct unmanaged database access, raw filesystem access, raw network access, and permission override are not part of the public SDK. Packages that need SQL use the managed, scoped `storage.sqlite` capability.
 
 ## Creating Packages
 

@@ -40,7 +40,7 @@ def _manifest(**overrides) -> dict:
         "id": "my-addon",
         "name": "My Addon",
         "version": "0.1.0",
-        "compatibility": {"minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1", "maximum": "1.x"},
+        "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"},
         "capabilities": ["assets.scripts"],
         "activation": {"scope": "campaign", "mode": "multiple"},
         "entrypoints": {},

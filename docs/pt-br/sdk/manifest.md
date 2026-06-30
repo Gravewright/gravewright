@@ -17,8 +17,8 @@
   "authors": ["Author Name"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1",
+    "minimum": "1",
+    "verified": "1",
     "maximum": "1.x"
   },
   "capabilities": [],
@@ -55,8 +55,8 @@
 
 ```json
 "compatibility": {
-  "minimum": "1.0.0-rc.1",
-  "verified": "1.0.0-rc.1",
+  "minimum": "1",
+  "verified": "1",
   "maximum": "1.x"
 }
 ```
@@ -168,19 +168,29 @@ Campos comuns:
 
 ```json
 "provides": {
+  "storage": { "model": "scoped-json-v1" },
   "actorTypes": [],
   "itemTypes": [],
-  "sheets": [],
-  "sheetComponents": [],
-  "rules": [],
-  "mappings": [],
-  "rolls": [],
-  "combat": {},
+  "rules": {
+    "formulas": "rules/formulas.gw.json"
+  },
+  "mappings": {
+    "tokens": "mappings/tokens.gw.json"
+  },
   "contentPacks": [],
-  "assets": [],
-  "locales": []
+  "assets": {},
+  "locales": {},
+  "areaMarkers": []
 }
 ```
+
+Esses são os campos de `provides` consumidos hoje pela engine. Fichas são
+referenciadas em `provides.actorTypes[].sheet` e `provides.itemTypes[].sheet`;
+não existe um `provides.sheets` de topo ativo. Chaves como `sheets`,
+`sheetComponents`, `rolls`, `combat` e `sceneOverlays` são reservadas/planejadas
+e geram warning de validação enquanto não tiverem consumo canônico. Para
+rolagens, declare fórmulas/actions em `provides.rules` e chame via Sheet IR,
+`sdk.dice.roll` ou `sdk.rolls.intent`.
 
 Nem todo kind deve usar todos os campos. Por exemplo, `content` normalmente declara `contentPacks`, enquanto `assets` declara `assets`.
 

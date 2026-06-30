@@ -15,13 +15,15 @@
         const folder = event.target.closest(".item-folder[draggable='true']");
         if (card) {
             dragKind = "item"; dragId = card.dataset.itemCard;
-            
-            
-            
+
+
+
             try {
                 event.dataTransfer.setData(
                     "application/x-gravewright-drop-source+json",
-                    JSON.stringify({ kind: "item", item_id: dragId }),
+                    // item_type lets a sheet dropzone accept/reject by type client-side
+                    // before the drop ever hits the server (see content-drag.js).
+                    JSON.stringify({ kind: "item", item_id: dragId, item_type: card.dataset.itemType || "" }),
                 );
             } catch {  }
             event.dataTransfer.effectAllowed = "copyMove";

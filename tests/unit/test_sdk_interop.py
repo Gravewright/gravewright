@@ -31,7 +31,7 @@ def _manifest(interop: dict, *, package_id: str = "my-addon") -> dict:
         "id": package_id,
         "name": "My Addon",
         "version": "1.0.0",
-        "compatibility": {"minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1", "maximum": "1.x"},
+        "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"},
         "capabilities": ["bus.publish", "bus.subscribe"],
         "activation": {"scope": "campaign", "mode": "multiple"},
         "entrypoints": {},

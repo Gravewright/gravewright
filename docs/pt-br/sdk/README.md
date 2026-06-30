@@ -5,7 +5,7 @@ A Gravewright SDK é o único modelo suportado para extensões do Gravewright.
 Toda extensão instalável é um **pacote**. Um pacote é um diretório em `data/packages/{kind_plural}/{id}/` que contém um `manifest.json` e os arquivos declarados por esse manifesto. O comportamento do pacote é definido por um contrato único de SDK v1.
 
 > [!WARNING]
-> Gravewright é software Alpha. A SDK v1 é documentada como o contrato público para autores de pacote, mas mudanças incompatíveis ainda podem ocorrer antes da versão estável 1.0. Autores devem declarar compatibilidade e validar seus pacotes contra a versão exata do Gravewright que pretendem suportar.
+> Gravewright e software Alpha, mas a superficie de autoria de pacotes da SDK 1 esta congelada. Pacotes novos devem declarar `compatibility: { "minimum": "1", "verified": "1" }` e podem adicionar `"maximum": "1.x"` quando quiserem que um engine SDK 2 futuro marque o pacote como incompativel.
 
 ## Tipos de pacote suportados
 
@@ -123,6 +123,7 @@ grave package doctor my-rpg
 - [`runtime.md`](runtime.md) — ciclo de vida do runtime e `window.GravewrightSDK`.
 - [`html-sheets.md`](html-sheets.md) — guia completo de fichas HTML de ator/item, do template ao controller.
 - [`reference.md`](reference.md) — referência completa dos namespaces do `sdk` escopado.
+- [`rolls.md`](rolls.md) - rolagens autoritativas, intents de rolagem e sintaxe de dados.
 - [`authoring-guide.md`](authoring-guide.md) — workflow de autoria, scaffold e publicação.
 - [`settings.md`](settings.md) — settings no manifesto e API de runtime.
 - [`content-and-assets.md`](content-and-assets.md) — content packs, asset packs e paths seguros.
@@ -138,7 +139,7 @@ grave package doctor my-rpg
 Não são APIs públicas de pacote:
 
 - execução de backend a partir de pacotes;
-- acesso cru ao banco de dados;
+- acesso direto/não gerenciado ao banco de dados; use `storage.sqlite` quando precisar da via SQL gerenciada e escopada;
 - acesso cru ao sistema de arquivos;
 - acesso cru à rede;
 - override de permissões;

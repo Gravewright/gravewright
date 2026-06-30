@@ -11,7 +11,7 @@ def _base(**overrides) -> dict:
         "id": "my-addon",
         "name": "My Addon",
         "version": "0.1.0",
-        "compatibility": {"minimum": "1.0.0-rc.1", "verified": "1.0.0", "maximum": "1.x"},
+        "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"},
         "capabilities": ["assets.scripts"],
         "activation": {"scope": "campaign", "mode": "multiple"},
         "entrypoints": {},
@@ -49,6 +49,15 @@ def test_forbidden_and_unknown_capabilities():
     assert "sdk.validation.capability_unknown" in r.errors
 
 
+def test_prerelease_verified_warns_against_final_sdk():
+    r = validate_manifest(
+        _base(compatibility={"minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1"})
+    )
+    assert r.ok
+    assert r.compatibility_status == "unverified"
+    assert "sdk.validation.compatibility_prerelease" in r.warnings
+
+
 def test_addon_activation_mode_must_be_multiple():
     r = validate_manifest(_base(activation={"mode": "exclusive"}))
     assert "sdk.validation.addon_activation_mode" in r.errors
@@ -75,6 +84,17 @@ def test_ruleset_valid():
         )
     )
     assert r.ok
+
+
+def test_unknown_provides_key_warns():
+    r = validate_manifest(_base(provides={"rolls": []}))
+    assert r.ok
+    assert "sdk.validation.provides_key_unknown" in r.warnings
+
+
+def test_rules_must_be_object():
+    r = validate_manifest(_base(provides={"rules": [{"id": "core", "path": "rules/core.json"}]}))
+    assert "sdk.validation.rules_shape_invalid" in r.errors
 
 
 def test_assets_must_not_declare_actor_types():

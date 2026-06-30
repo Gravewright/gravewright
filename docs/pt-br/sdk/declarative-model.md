@@ -58,12 +58,12 @@ Use dados declarativos para:
 | Settings de usuário/campanha | `settings` | `settings` |
 | Tipos de actor | `provides.actorTypes` ou definições equivalentes | `actors.register` |
 | Tipos de item | `provides.itemTypes` ou definições equivalentes | `items.register` |
-| Layouts de sheet | `provides.sheets`, `sheets/` | `sheets.declarative` |
-| Componentes de sheet | `provides.sheetComponents`, `sheets/components/` | `sheets.components` |
+| Layouts de sheet | `provides.actorTypes[].sheet`, `provides.itemTypes[].sheet`, `sheets/` | `sheets.declarative` |
+| Componentes de sheet | `sheets/components/` usados por layouts declarativos | `sheets.components` |
 | Documentos de regras | `provides.rules`, `rules/` | `rules.declarative` |
-| Configuração de combate | `provides.combat` | `combat.config` |
+| Configuração de combate | documentos em `provides.rules` | `combat.config` |
 | Mappings de token | `provides.mappings`, `mappings/` | `tokens.mappings` |
-| Rolls/intents | `provides.rolls`, `provides.mappings` | `rolls.intent`, `dice.roll` |
+| Rolls/intents | actions/fórmulas em `provides.rules`, mappings quando necessário | `rolls.intent`, `dice.roll` |
 | Content packs importáveis | `provides.contentPacks`, `content/` | `content.packs` |
 | Locales | `provides.locales`, `locales/` | `locales` |
 | Bibliotecas de assets | `provides.assets`, `assets/` | `assets.pack`, `assets.images`, `assets.audio`, `assets.maps`, `assets.icons` |
@@ -156,8 +156,8 @@ Este addon contribui CSS e settings. Ele não executa JavaScript.
   "authors": ["Example Author"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1",
+    "minimum": "1",
+    "verified": "1",
     "maximum": "1.x"
   },
   "capabilities": ["assets.styles", "settings"],
@@ -195,7 +195,7 @@ Um pacote `content` deve ser importável sem executar scripts.
   "id": "starter-encounters",
   "name": "Starter Encounters",
   "version": "0.1.0",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1" },
+  "compatibility": { "minimum": "1", "verified": "1" },
   "capabilities": ["content.packs"],
   "activation": { "scope": "campaign", "mode": "multiple" },
   "entrypoints": { "game": {} },
@@ -205,7 +205,7 @@ Um pacote `content` deve ser importável sem executar scripts.
         "id": "encounters",
         "label": "Starter Encounters",
         "path": "content/encounters.json",
-        "type": "encounter"
+        "type": "journal_pack"
       }
     ]
   }
@@ -224,7 +224,7 @@ Um pacote `assets` contribui mídia reutilizável para campanhas e outros pacote
   "id": "dark-forest-assets",
   "name": "Dark Forest Assets",
   "version": "0.1.0",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1" },
+  "compatibility": { "minimum": "1", "verified": "1" },
   "capabilities": ["assets.pack", "assets.images", "assets.maps", "assets.icons"],
   "activation": { "scope": "campaign", "mode": "multiple" },
   "entrypoints": { "game": {} },
@@ -249,7 +249,7 @@ Um `ruleset` é o sistema-base da campanha. Ele deve declarar a estrutura do jog
   "id": "my-rpg",
   "name": "My RPG",
   "version": "0.1.0",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1", "maximum": "1.x" },
+  "compatibility": { "minimum": "1", "verified": "1", "maximum": "1.x" },
   "capabilities": [
     "actors.register",
     "items.register",
@@ -261,10 +261,15 @@ Um `ruleset` é o sistema-base da campanha. Ele deve declarar a estrutura do jog
   "activation": { "scope": "campaign", "mode": "exclusive" },
   "entrypoints": { "game": {} },
   "provides": {
-    "actorTypes": [{ "id": "character", "label": "Character", "schema": "schemas/character.json" }],
+    "storage": { "model": "scoped-json-v1" },
+    "actorTypes": [{
+      "id": "character",
+      "label": "Character",
+      "schema": "schemas/character.json",
+      "sheet": "sheets/character.json"
+    }],
     "itemTypes": [{ "id": "weapon", "label": "Weapon", "schema": "schemas/weapon.json" }],
-    "sheets": [{ "id": "character-sheet", "type": "actor", "for": "character", "path": "sheets/character.json" }],
-    "rules": [{ "id": "core-rules", "path": "rules/core.json" }]
+    "rules": { "core": "rules/core.json" }
   }
 }
 ```

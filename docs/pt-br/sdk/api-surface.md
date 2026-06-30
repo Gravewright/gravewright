@@ -28,6 +28,8 @@ de `sdk.bus` fazem parte do contrato estavel de interop.
 | `sdk.i18n.t` | `locales` | `stable` |
 | `sdk.commands.register` | `commands.register` | `stable` |
 | `sdk.chat.send` | `chat.cards` | `stable` |
+| `sdk.dice.roll` | `dice.roll` | `stable` |
+| `sdk.rolls.intent` | `rolls.intent` | `stable` |
 | `sdk.ui.toast/openModal/closeModal` | `assets.ui` | `stable` |
 | `sdk.tokens.centerOn` | `tokens.extends` | `stable` |
 | `sdk.scene.activeCanvas/activeCameraForScene` | `scene.tools` | `stable` |

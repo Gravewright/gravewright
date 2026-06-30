@@ -32,6 +32,8 @@ services/validation), **frontend** (`window.GravewrightSDK` + the scoped `sdk`),
 | `sdk.i18n.t` | `locales` | `stable` |
 | `sdk.commands.register` | `commands.register` | `stable` |
 | `sdk.chat.send` | `chat.cards` | `stable` |
+| `sdk.dice.roll` | `dice.roll` | `stable` |
+| `sdk.rolls.intent` | `rolls.intent` | `stable` |
 | `sdk.ui.toast/openModal/closeModal` | `assets.ui` | `stable` |
 | `sdk.sheets.helpers/register` | `sheets.runtime` | `stable` |
 | `sdk.combat.register/registerPanel/dispatch/renderSlot` | `combat.runtime` | `stable` |

@@ -9,6 +9,10 @@ Estabilizar apenas comportamento intencional. Um package valido para
 `sdkVersion: "1"` deve continuar instalando, ativando e executando em releases
 `1.x`, salvo quando depender de capabilities `forbidden`.
 
+Autores de pacote devem mirar a linha final da SDK com `compatibility.minimum`
+e `compatibility.verified` definidos como `"1"`; valores pre-release como
+`1.0.0-rc.1` sao historicos e validam como unverified contra a SDK 1 final.
+
 ## Niveis de Estabilidade
 
 | Status | Significado |

@@ -21,14 +21,14 @@ Use-a quando você sabe o que quer construir mas ainda não sabe qual superfíci
 |---|---|---|---|
 | Tipos de ator | `provides.actorTypes` | `schemas/*.schema.json`, `sheets/*.sheet.json` | `actors.register` |
 | Tipos de item | `provides.itemTypes` | `schemas/*.schema.json`, `sheets/*.sheet.json` | `items.register` |
-| Fichas declarativas | `provides.sheets`, referências de ficha de actor/item | `sheets/*.json` | `sheets.declarative` |
-| Componentes de ficha | `provides.sheetComponents` | `sheets/components/*.json` | `sheets.components` |
+| Fichas declarativas | `provides.actorTypes[].sheet`, `provides.itemTypes[].sheet` | `sheets/*.json` | `sheets.declarative` |
+| Componentes de ficha | layouts declarativos que usam `sheets/components/` | `sheets/components/*.json` | `sheets.components` |
 | Documentos de regras | `provides.rules` | `rules/*.json` | `rules.declarative` |
 | Extensões de regra | `provides.rules`, comportamento de runtime | `rules/*.json`, `assets/*.js` | `rules.extends`, `assets.scripts` |
-| Metadados de dados/rolagem | `provides.rolls`, `provides.mappings` | `rules/*.json`, `mappings/*.json` | `dice.roll`, `rolls.intent` |
-| Defaults de combate | `provides.combat` | `rules/combat.json` ou objeto no manifesto | `combat.config` |
+| Metadados de dados/rolagem | actions/fórmulas em `provides.rules`, `provides.mappings` | `rules/*.json`, `mappings/*.json` | `dice.roll`, `rolls.intent` |
+| Defaults de combate | documentos em `provides.rules` | `rules/combat.json` | `combat.config` |
 | Mappings de token | `provides.mappings` | `mappings/token-*.json` | `tokens.mappings` |
-| Overlays de cena | `provides.sceneOverlays` | `assets/*.js`, `assets/*.css` | `scene.overlays`, talvez `assets.scripts` |
+| Overlays de cena | runtime e entrypoints declarados | `assets/*.js`, `assets/*.css` | `scene.overlays`, `assets.scripts` |
 | Content packs | `provides.contentPacks` | `content/*.json` | `content.packs` |
 | Locales | `provides.locales` | `locales/en.json`, `locales/pt-BR.json` | `locales` |
 | Settings | `settings` | só manifesto | `settings` |
@@ -56,6 +56,8 @@ Use-a quando você sabe o que quer construir mas ainda não sabe qual superfíci
 | Mostrar toast | `sdk.ui.toast`, `sdk.toast` | `assets.ui` | Helper de UI. |
 | Abrir/fechar modal | `sdk.ui.openModal`, `sdk.ui.closeModal` | `assets.ui` | Apenas ids de modal documentados/do core. |
 | Enviar chat card/intent | `sdk.chat.send` | `chat.cards` | Trate como intent; o core permanece autoritativo. |
+| Rolar uma fÃ³rmula | `sdk.dice.roll` | `dice.roll` | Rolagem autoritativa no servidor com card de chat. |
+| Executar intent de rolagem/action | `sdk.rolls.intent` | `rolls.intent` | Action de Sheet IR autoritativa, targets, dano e iniciativa. |
 | Listar settings | `sdk.settings.definitions`, `sdk.settings.all` | `settings` | Valores visíveis ao pacote atual. |
 | Ler setting | `sdk.settings.get`, `sdk.setting(key)` | `settings` | Use valores de fallback. |
 | Gravar setting | `sdk.settings.set`, `sdk.setting(key, value)` | `settings` | Persiste pelo endpoint de settings da SDK. |
@@ -83,10 +85,9 @@ Use:
 - `activation.mode: "exclusive"`
 - `provides.actorTypes`
 - `provides.itemTypes`
-- `provides.sheets`
+- `provides.actorTypes[].sheet` / `provides.itemTypes[].sheet`
 - `provides.rules`
 - `provides.mappings`
-- `provides.combat`
 - `provides.contentPacks`
 - `provides.locales`
 - `settings`
@@ -117,6 +118,8 @@ Adicione capabilities de runtime apenas se usar métodos de runtime:
   "assets.scripts",
   "sheets.runtime",
   "combat.runtime",
+  "dice.roll",
+  "rolls.intent",
   "chat.cards",
   "assets.ui"
 ]

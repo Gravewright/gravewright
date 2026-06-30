@@ -72,6 +72,23 @@ def test_multiple_dice_groups():
     assert result.total == 9
 
 
+def test_keep_highest_and_lowest_notation():
+    rolls = iter(([4, 17], [4, 17]))
+    result = evaluate("2d20kh1 + 2d20kl1", roller=lambda count, sides: next(rolls))
+    assert result.total == 21
+    assert result.groups == [
+        {"notation": "2d20kh1", "results": [4, 17], "subtotal": 17},
+        {"notation": "2d20kl1", "results": [4, 17], "subtotal": 4},
+    ]
+
+
+def test_builtin_max_can_compare_rolls():
+    rolls = iter((7, 13))
+    result = evaluate("max(1d20, 1d20)", roller=lambda count, sides: [next(rolls)])
+    assert result.total == 13
+    assert [group["subtotal"] for group in result.groups] == [7, 13]
+
+
 def test_exploding_die_rerolls_until_below_threshold():
     rolls = iter((6, 6, 2))
     result = evaluate("explode(6, 6)", roller=lambda count, sides: [next(rolls)])
@@ -97,6 +114,16 @@ def test_dynamic_die_uses_runtime_sides():
     result = evaluate("die(@sheet.step)", context={"sheet": {"step": 10}}, roller=_fixed_roller(7))
     assert result.total == 7
     assert result.groups[0]["notation"] == "1d10"
+
+
+def test_dynamic_die_accepts_count_and_sides():
+    result = evaluate(
+        "die(@sheet.count, @sheet.sides)",
+        context={"sheet": {"count": 3, "sides": 8}},
+        roller=_fixed_roller(5),
+    )
+    assert result.total == 15
+    assert result.groups == [{"notation": "3d8", "results": [5, 5, 5], "subtotal": 15}]
 
 
 def test_success_pool_counts_results_at_or_above_target():

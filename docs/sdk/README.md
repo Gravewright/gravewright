@@ -5,7 +5,7 @@ The Gravewright SDK is the only supported extension model for Gravewright.
 Every installable extension is a package. A package is a directory under `data/packages/{kind_plural}/{id}/` containing a `manifest.json` plus the files declared by that manifest. Package behavior is defined through a single SDK v1 contract.
 
 > [!WARNING]
-> Gravewright is Alpha software. SDK v1 is documented as the public package authoring contract, but breaking changes may still occur before stable 1.0. Package authors should declare compatibility and validate packages against the exact Gravewright release they target.
+> Gravewright is Alpha software, but the SDK 1 package authoring surface is frozen. New packages should declare `compatibility: { "minimum": "1", "verified": "1" }` and may add `"maximum": "1.x"` when they want a future SDK 2 engine to mark the package incompatible.
 
 ## Supported package kinds
 
@@ -123,6 +123,7 @@ grave package doctor my-rpg
 - [`runtime.md`](runtime.md) — browser runtime lifecycle and `window.GravewrightSDK`.
 - [`html-sheets.md`](html-sheets.md) — complete HTML actor/item sheet guide, from templates to controllers.
 - [`reference.md`](reference.md) — complete scoped SDK namespace reference.
+- [`rolls.md`](rolls.md) - authoritative formula rolls, roll intents, and dice syntax.
 - [`authoring-guide.md`](authoring-guide.md) — package author workflow from scaffold to publish.
 - [`settings.md`](settings.md) — manifest settings and runtime settings API.
 - [`content-and-assets.md`](content-and-assets.md) — content packs, asset packs, and safe paths.

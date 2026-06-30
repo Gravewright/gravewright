@@ -60,12 +60,12 @@ Use declarative data for:
 | User/campaign settings | `settings` | `settings` |
 | Actor types | `provides.actorTypes` or package-specific type definitions | `actors.register` |
 | Item types | `provides.itemTypes` or package-specific type definitions | `items.register` |
-| Sheet layouts | `provides.sheets`, `sheets/` | `sheets.declarative` |
-| Sheet components | `provides.sheetComponents`, `sheets/components/` | `sheets.components` |
+| Sheet layouts | `provides.actorTypes[].sheet`, `provides.itemTypes[].sheet`, `sheets/` | `sheets.declarative` |
+| Sheet components | `sheets/components/` used by declarative layouts | `sheets.components` |
 | Rules documents | `provides.rules`, `rules/` | `rules.declarative` |
-| Combat configuration | `provides.combat` | `combat.config` |
+| Combat configuration | documents in `provides.rules` | `combat.config` |
 | Token mappings | `provides.mappings`, `mappings/` | `tokens.mappings` |
-| Roll mappings/intents | `provides.rolls`, `provides.mappings` | `rolls.intent`, `dice.roll` |
+| Roll mappings/intents | actions/formulas in `provides.rules`, mappings when needed | `rolls.intent`, `dice.roll` |
 | Importable content packs | `provides.contentPacks`, `content/` | `content.packs` |
 | Locales | `provides.locales`, `locales/` | `locales` |
 | Asset libraries | `provides.assets`, `assets/` | `assets.pack`, `assets.images`, `assets.audio`, `assets.maps`, `assets.icons` |
@@ -157,8 +157,8 @@ This addon contributes CSS and settings. It does not run JavaScript.
   "authors": ["Example Author"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1",
+    "minimum": "1",
+    "verified": "1",
     "maximum": "1.x"
   },
   "capabilities": ["assets.styles", "settings"],
@@ -197,7 +197,7 @@ A content package should be importable without script execution.
   "id": "starter-encounters",
   "name": "Starter Encounters",
   "version": "0.1.0",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1" },
+  "compatibility": { "minimum": "1", "verified": "1" },
   "capabilities": ["content.packs"],
   "activation": { "scope": "campaign", "mode": "multiple" },
   "entrypoints": { "game": {} },
@@ -227,7 +227,7 @@ An asset package contributes media for other packages or campaigns.
   "id": "dark-forest-assets",
   "name": "Dark Forest Assets",
   "version": "0.1.0",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1" },
+  "compatibility": { "minimum": "1", "verified": "1" },
   "capabilities": ["assets.pack", "assets.images", "assets.maps", "assets.icons"],
   "activation": { "scope": "campaign", "mode": "multiple" },
   "entrypoints": { "game": {} },
@@ -253,7 +253,7 @@ A ruleset is the campaign's base game system. It should declare the game structu
   "id": "my-rpg",
   "name": "My RPG",
   "version": "0.1.0",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1", "maximum": "1.x" },
+  "compatibility": { "minimum": "1", "verified": "1", "maximum": "1.x" },
   "capabilities": [
     "actors.register",
     "items.register",

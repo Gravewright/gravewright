@@ -225,6 +225,46 @@
         return template.innerHTML;
     }
 
+    function actorIdFromContext(ctx) {
+        return String(ctx?.actor?.id || ctx?.data?.actor?.id || ctx?.data?.id || "");
+    }
+
+    function postRollFormula(actorId, formula, label) {
+        const client = window.GravewrightCore && window.GravewrightCore.http;
+        if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
+        return client.postJson("/game/actor/roll", {
+            actor_id: String(actorId || ""),
+            formula: String(formula || ""),
+            label: String(label || ""),
+        });
+    }
+
+    function postRollIntent(payload) {
+        const client = window.GravewrightCore && window.GravewrightCore.http;
+        if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
+        const target = payload?.target && typeof payload.target === "object" ? payload.target : {};
+        return client.postJson("/game/actor/action", {
+            actor_id: String(payload?.actorId || payload?.actor_id || ""),
+            action_id: String(payload?.actionId || payload?.action_id || ""),
+            inputs: payload?.inputs && typeof payload.inputs === "object" ? payload.inputs : {},
+            rollOptions:
+                payload?.rollOptions && typeof payload.rollOptions === "object"
+                    ? payload.rollOptions
+                    : undefined,
+            target_actor_id: String(
+                payload?.targetActorId || payload?.target_actor_id || target.actorId || target.actor_id || ""
+            ),
+            target_token_id: String(
+                payload?.targetTokenId || payload?.target_token_id || target.tokenId || target.token_id || ""
+            ),
+        });
+    }
+
+    function requirePackageApi(packageId, apiName) {
+        const pkg = manifestsById.get(String(packageId || ""));
+        caps.requireApiCapability(pkg, apiName);
+    }
+
     // The Notion-style block editor (TipTap) ships with journals and exposes a
     // global once its ES module has loaded; sheets reuse it for rich fields.
     function whenBlockEditorReady(callback) {
@@ -452,6 +492,19 @@
             node.addEventListener("click", onClick);
             cleanups.push(() => node.removeEventListener("click", onClick));
         });
+        root.querySelectorAll("[data-roll]").forEach((node) => {
+            const onClick = (event) => {
+                event.preventDefault();
+                requirePackageApi(ctx.packageId, "dice.roll");
+                void postRollFormula(
+                    actorIdFromContext(ctx),
+                    node.dataset.roll,
+                    node.dataset.rollLabel || node.textContent || ""
+                );
+            };
+            node.addEventListener("click", onClick);
+            cleanups.push(() => node.removeEventListener("click", onClick));
+        });
         return cleanups;
     }
 
@@ -638,6 +691,18 @@
                             detail: { message, packageId: pkg.id },
                         })
                     );
+                },
+            }),
+            dice: Object.freeze({
+                roll({ formula, label = "", actorId = "" } = {}) {
+                    requireCap("dice.roll");
+                    return postRollFormula(actorId, formula, label);
+                },
+            }),
+            rolls: Object.freeze({
+                intent(payload = {}) {
+                    requireCap("rolls.intent");
+                    return postRollIntent(payload);
                 },
             }),
             settings: Object.freeze({

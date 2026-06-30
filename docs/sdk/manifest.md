@@ -25,8 +25,8 @@ schemas/gravewright-package-v1.schema.json
   "authors": ["Example Author"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1",
+    "minimum": "1",
+    "verified": "1",
     "maximum": "1.x"
   },
   "capabilities": ["assets.scripts"],
@@ -79,8 +79,8 @@ schemas/gravewright-package-v1.schema.json
 
 ```json
 "compatibility": {
-  "minimum": "1.0.0-rc.1",
-  "verified": "1.0.0-rc.1",
+  "minimum": "1",
+  "verified": "1",
   "maximum": "1.x"
 }
 ```
@@ -204,6 +204,10 @@ Rulesets can provide rules documents by named purpose.
   "combat": "rules/combat.gw.json"
 }
 ```
+
+`provides.rolls` is reserved and is not consumed by the engine today. Declare
+reusable formulas/actions through `provides.rules`; call them from Sheet IR or
+the browser APIs `sdk.dice.roll` and `sdk.rolls.intent`.
 
 ### `provides.mappings`
 
@@ -375,8 +379,8 @@ Conflicts communicate packages that should not be installed or activated togethe
   "authors": ["Example Author"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1",
+    "minimum": "1",
+    "verified": "1",
     "maximum": "1.x"
   },
   "capabilities": [

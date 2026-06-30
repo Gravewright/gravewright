@@ -11,6 +11,7 @@ The heavy lifting (the append action + template resolution) lives in
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from app.engine.actors.actor_permissions import can_edit_actor
@@ -32,6 +33,16 @@ from app.persistence.repositories.campaign_repository import CampaignRepository
 # they have no declarative dropZone/onDrop action to target.
 HTML_DROP_LIST = "items"
 HTML_EFFECT_LIST = "effects"
+
+# An HTML sheet template names its target list through ``data-drop-zone``. We
+# only ever use it as a single key under the actor's data envelope, so strip it
+# to a safe identifier rather than trusting an arbitrary client-supplied path.
+_LIST_KEY_RE = re.compile(r"[^A-Za-z0-9_]")
+
+
+def _html_list_path(drop_zone: str) -> str:
+    key = _LIST_KEY_RE.sub("", str(drop_zone or ""))
+    return key or HTML_DROP_LIST
 
 
 @dataclass(frozen=True)
@@ -95,15 +106,14 @@ class SheetDropService:
             zone = find_drop_zone(layout, drop_zone) if layout else None
             if zone is None:
                 if self._is_html_sheet(system_id, actor["type"]):
-                    list_path = HTML_EFFECT_LIST if drop_zone == HTML_EFFECT_LIST else HTML_DROP_LIST
-                    is_effect = (
-                        entry.drop_type == "effect"
-                        or entry.drop_type.startswith("effect.")
-                        or entry.drop_type == "item.effect"
+                    # HTML-mode sheets have no declarative dropZone; the template
+                    # names its target list via ``data-drop-zone`` and we collect
+                    # the resolved entry into that (sanitized) data key. Per-type
+                    # routing (skills vs. edges vs. gear) is the sheet's concern,
+                    # enforced client-side through ``data-drop-accepts``.
+                    return self._append_to_html_list(
+                        actor, entry, list_path=_html_list_path(drop_zone)
                     )
-                    if (list_path == HTML_EFFECT_LIST) != is_effect:
-                        return DropResult(success=False, error_key="game.drop.errors.not_accepted")
-                    return self._append_to_html_list(actor, entry, list_path=list_path)
                 return DropResult(success=False, error_key="game.drop.errors.zone_not_found")
             if not accepts_entry(zone["accepts"], entry.drop_type):
                 return DropResult(success=False, error_key="game.drop.errors.not_accepted")

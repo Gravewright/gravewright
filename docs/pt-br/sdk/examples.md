@@ -32,8 +32,8 @@ examples/packages/hello-toast/
   "authors": ["Example Author"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1"
+    "minimum": "1",
+    "verified": "1"
   },
   "capabilities": ["assets.scripts", "assets.ui"],
   "activation": {
@@ -188,8 +188,8 @@ examples/packages/my-rpg/
   "authors": ["Example Author"],
   "license": "MIT",
   "compatibility": {
-    "minimum": "1.0.0-rc.1",
-    "verified": "1.0.0-rc.1"
+    "minimum": "1",
+    "verified": "1"
   },
   "capabilities": [
     "actors.register",
@@ -251,7 +251,7 @@ Pacote: [`examples/packages/dark-fantasy-assets`](../../../examples/packages/dar
   "id": "dark-fantasy-assets",
   "name": "Dark Fantasy Assets",
   "version": "0.1.0",
-  "compatibility": { "minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1" },
+  "compatibility": { "minimum": "1", "verified": "1" },
   "capabilities": ["assets.pack", "assets.images", "assets.maps", "assets.icons"],
   "activation": { "scope": "campaign", "mode": "multiple" },
   "entrypoints": {},

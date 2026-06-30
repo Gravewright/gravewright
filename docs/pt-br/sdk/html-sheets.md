@@ -3,6 +3,11 @@
 > **Status: estável.** `sheets.html`, `sheets.controller` e
 > `sheets.richText` fazem parte do contrato da SDK 1.
 
+> **Rolagem autoritativa.** Fichas HTML podem pedir rolagens no servidor com
+> `data-roll` ou `sdk.dice.roll`. Use actions de Sheet IR ou `sdk.rolls.intent`
+> quando a rolagem tambem precisa de target, dano aplicado, iniciativa ou outros
+> efeitos declarativos. Veja [`rolls.md`](rolls.md).
+
 Fichas HTML permitem que um ruleset forneça uma interface personalizada para
 atores ou itens, mantendo armazenamento, permissões, assets e identidade do
 pacote sob controle do Gravewright. Uma ficha HTML substitui a Sheet IR
@@ -294,6 +299,8 @@ identidade.
   `sheets.richText`.
 - `data-bind="path"` inicializa o `value`, escuta o evento `input`, atualiza o
   contexto local e solicita persistência pelo fluxo normal de ator/item.
+- `data-roll="formula"` pede uma rolagem autoritativa no clique e exige
+  `dice.roll`. Use `data-roll-label` para definir o label do chat.
 - `type="number"` é convertido com `Number(value)`. Outros controles atualmente
   produzem strings.
 - `actor.name`, `item.name` e `core.name` atualizam o nome principal.
@@ -487,12 +494,10 @@ Dentro do handler, use somente métodos públicos do SDK escopado, como `sdk.ui`
 `sdk.settings`, `sdk.bus` ou `sdk.chat`, com as capabilities correspondentes.
 Não use globals privados do renderer nem dependa de detalhes internos do DOM.
 
-A Sheet IR declarativa possui execução autoritativa de actions no servidor. A
-SDK atual de fichas HTML não expõe um método público
-`sdk.sheets.executeAction`. Se a ficha depender de actions declarativas, use
-Sheet IR naquela interação ou mantenha o controller HTML dentro das operações
-públicas documentadas até que esse método exista. Não trate uma rota privada do
-core como API de pacote.
+Use `sdk.dice.roll` dentro de um controller para formulas dinamicas. Use
+`sdk.rolls.intent` ou actions de Sheet IR quando a interacao deve executar uma
+entrada de `rules/actions.gw.json`, aplicar dano, mirar ator/token ou registrar
+iniciativa. Nao trate uma rota privada do core como API de pacote.
 
 ## 8. Rich text e segurança
 
@@ -557,6 +562,7 @@ Erros comuns:
 | `sdk.sheets.html.inline_script_forbidden` | Template contém `<script>`. |
 | `sdk.sheets.html.inline_handler_forbidden` | Template contém `onclick` ou similar. |
 | `sdk.sheets.html.rich_text_capability_missing` | `data-rich-text` sem capability. |
+| `sdk.sheets.html.roll_capability_missing` | `data-roll` sem `dice.roll`. |
 
 ## 11. Checklist de diagnóstico
 

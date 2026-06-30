@@ -3,6 +3,11 @@
 > **Status: stable.** `sheets.html`, `sheets.controller`, and
 > `sheets.richText` are part of the SDK 1 contract.
 
+> **Authoritative rolls.** HTML sheets can request server-side rolls with
+> `data-roll` or `sdk.dice.roll`. Use Sheet IR actions or `sdk.rolls.intent`
+> when the roll also needs targets, damage application, initiative, or other
+> declarative action effects. See [`rolls.md`](rolls.md).
+
 HTML sheets let a ruleset provide custom actor or item markup while keeping data
 storage, permissions, asset loading, and package identity under Gravewright's
 control. An HTML sheet replaces the declarative Sheet IR for that type.
@@ -294,6 +299,8 @@ templates should use `system.*` for data and `actor.*`/`item.*` for identity.
 - `data-bind="path"` initializes an element's `value`, listens to `input`,
   updates local context, and requests persistence through the normal actor/item
   patch path.
+- `data-roll="formula"` requests a server-authoritative roll on click and
+  requires `dice.roll`. Use `data-roll-label` to set the chat label.
 - `type="number"` is converted with `Number(value)`. Other controls currently
   produce strings.
 - `actor.name`, `item.name`, and `core.name` update the core name. `system.x`
@@ -488,11 +495,10 @@ Use documented scoped SDK methods inside the handler, for example `sdk.ui`,
 `sdk.settings`, `sdk.bus`, or `sdk.chat`, with their matching capabilities.
 Do not call private renderer globals or depend on undocumented DOM internals.
 
-Declarative Sheet IR has first-class server-authoritative action execution. The
-current HTML-sheet SDK does not expose a public `sdk.sheets.executeAction`
-method. If a sheet depends on declarative rules actions, either use Sheet IR for
-that interaction or keep the HTML controller within documented SDK operations
-until such a method exists. Do not present a private core route as package API.
+Use `sdk.dice.roll` inside a controller for dynamic formulas. Use
+`sdk.rolls.intent` or Sheet IR actions when the interaction should execute an
+entry from `rules/actions.gw.json`, apply damage, target an actor/token, or
+record initiative. Do not present a private core route as package API.
 
 ## 8. Rich Text and Security
 
@@ -558,6 +564,7 @@ Common errors:
 | `sdk.sheets.html.inline_script_forbidden` | Template contains a `<script>` tag. |
 | `sdk.sheets.html.inline_handler_forbidden` | Template contains `onclick` or similar. |
 | `sdk.sheets.html.rich_text_capability_missing` | `data-rich-text` lacks its capability. |
+| `sdk.sheets.html.roll_capability_missing` | `data-roll` lacks `dice.roll`. |
 
 ## 11. Troubleshooting Checklist
 

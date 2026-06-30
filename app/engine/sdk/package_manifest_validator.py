@@ -17,6 +17,7 @@ from app.engine.sdk.package_compatibility import (
     COMPAT_INCOMPATIBLE,
     COMPAT_UNVERIFIED,
     compute_compatibility_status,
+    version_key,
 )
 from app.engine.sdk.package_manifest import SDK_VERSION, PackageKind, PackageManifest
 from app.engine.sdk.package_interop import validate_interop_manifest
@@ -34,6 +35,17 @@ ACTIVATION_SCOPES = {"campaign", "global", "user"}
 SETTING_SCOPES = {"global", "campaign", "user"}
 SETTING_TYPES = {"boolean", "string", "number", "integer", "enum"}
 DISTRIBUTION_TYPES = {"zip", "git", "directory"}
+KNOWN_PROVIDES_KEYS = {
+    "storage",
+    "actorTypes",
+    "itemTypes",
+    "rules",
+    "mappings",
+    "contentPacks",
+    "locales",
+    "assets",
+    "areaMarkers",
+}
 
 CONTENT_PACK_TYPES = {
     "actor_pack",
@@ -127,6 +139,7 @@ def validate_manifest(raw: object) -> PackageManifestValidation:
 
     # 11. Kind-specific rules.
     _validate_kind_rules(manifest, result)
+    _validate_provides(raw, result)
 
     # 12. Settings.
     _validate_settings(manifest, result)
@@ -175,6 +188,12 @@ def validate_manifest(raw: object) -> PackageManifestValidation:
     )
     if result.compatibility_status == COMPAT_INCOMPATIBLE:
         result.warn("sdk.validation.incompatible")
+    if (
+        compat.verified
+        and "-" in compat.verified
+        and version_key(compat.verified) < version_key(SDK_VERSION)
+    ):
+        result.warn("sdk.validation.compatibility_prerelease")
 
     return result
 
@@ -212,6 +231,18 @@ def _validate_kind_rules(manifest: PackageManifest, result: PackageManifestValid
         if mode != "multiple":
             result.add("sdk.validation.assets_activation_mode")
         _validate_assets(manifest, result)
+
+
+def _validate_provides(raw: dict, result: PackageManifestValidation) -> None:
+    provides = raw.get("provides")
+    if not isinstance(provides, dict):
+        return
+
+    if any(key not in KNOWN_PROVIDES_KEYS for key in provides):
+        result.warn("sdk.validation.provides_key_unknown")
+
+    if "rules" in provides and not isinstance(provides.get("rules"), dict):
+        result.add("sdk.validation.rules_shape_invalid")
 
 
 def _validate_assets(manifest: PackageManifest, result: PackageManifestValidation) -> None:

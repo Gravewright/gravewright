@@ -1,0 +1,10 @@
+{
+  "actions": {
+    "character.check": {
+      "type": "roll",
+      "label": "Character Check",
+      "formula": "1d20 + strengthMod(@sheet.strength)",
+      "visibility": "public"
+    }
+  }
+}
