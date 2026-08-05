@@ -45,6 +45,4 @@ class AssetReadService:
         if not path.exists():
             return AssetReadResult(success=False, error_key="not_found")
 
-        return AssetReadResult(
-            success=True, path=path, media_type=asset["content_type"] or "image/png"
-        )
+        return AssetReadResult(success=True, path=path, media_type=asset["content_type"] or "image/png")

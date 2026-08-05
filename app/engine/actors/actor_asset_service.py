@@ -21,7 +21,7 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 4_000
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
-
+                                                       
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
 VALID_KINDS = {"portrait", "token"}
 

@@ -157,7 +157,10 @@ class SceneManifestService:
         }
 
     def _tile_url(self, *, scene: Row, layer: Row, tile: Row) -> str:
-
+                                                                                
+                                                                               
+                                                                              
+                                                                            
         return (
             f"/game/scenes/{scene['id']}/layers/{layer['id']}/tiles/"
             f"{tile['tx']}/{tile['ty']}?v={tile['hash']}"

@@ -1,1 +1,0 @@
-{"schemaVersion": 1, "sdkVersion": "1", "name": "Uploaded", "version": "1.1.0", "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"}, "entrypoints": {}, "provides": {}, "capabilities": ["assets.scripts"], "activation": {"scope": "campaign", "mode": "multiple"}, "id": "uploaded-addon", "kind": "addon"}

@@ -86,38 +86,23 @@ def test_render_priority_aging_promotes_waiting_items_without_passing_cap():
         max_aged_priority=RenderPriority.HIGH,
     )
 
-    assert (
-        policy.effective_priority(
-            base_priority=RenderPriority.BACKGROUND,
-            waited_ms=0,
-        )
-        == RenderPriority.BACKGROUND
-    )
-    assert (
-        policy.effective_priority(
-            base_priority=RenderPriority.BACKGROUND,
-            waited_ms=100,
-        )
-        == RenderPriority.LOW
-    )
-    assert (
-        policy.effective_priority(
-            base_priority=RenderPriority.BACKGROUND,
-            waited_ms=200,
-        )
-        == RenderPriority.NORMAL
-    )
-    assert (
-        policy.effective_priority(
-            base_priority=RenderPriority.BACKGROUND,
-            waited_ms=300,
-        )
-        == RenderPriority.HIGH
-    )
-    assert (
-        policy.effective_priority(
-            base_priority=RenderPriority.BACKGROUND,
-            waited_ms=1000,
-        )
-        == RenderPriority.HIGH
-    )
+    assert policy.effective_priority(
+        base_priority=RenderPriority.BACKGROUND,
+        waited_ms=0,
+    ) == RenderPriority.BACKGROUND
+    assert policy.effective_priority(
+        base_priority=RenderPriority.BACKGROUND,
+        waited_ms=100,
+    ) == RenderPriority.LOW
+    assert policy.effective_priority(
+        base_priority=RenderPriority.BACKGROUND,
+        waited_ms=200,
+    ) == RenderPriority.NORMAL
+    assert policy.effective_priority(
+        base_priority=RenderPriority.BACKGROUND,
+        waited_ms=300,
+    ) == RenderPriority.HIGH
+    assert policy.effective_priority(
+        base_priority=RenderPriority.BACKGROUND,
+        waited_ms=1000,
+    ) == RenderPriority.HIGH

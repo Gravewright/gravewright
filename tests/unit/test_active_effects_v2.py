@@ -42,6 +42,9 @@ def _equipped_item(target: str, operation: str, value, *, equipped=None):
     return entry
 
 
+                                                                                
+
+
 def test_equipped_item_grants_effect_and_unequipped_does_not():
     equipped = {"inventory": [_equipped_item("sheet.ac", "add", 2, equipped=True)]}
     unequipped = {"inventory": [_equipped_item("sheet.ac", "add", 2, equipped=False)]}
@@ -86,6 +89,9 @@ def test_manual_effect_can_be_disabled_inside_snapshot_data():
     assert active_effects(sheet) == []
 
 
+                                                                                
+
+
 def test_condition_gates_manual_effect():
     def sheet(hp):
         return {
@@ -103,8 +109,11 @@ def test_condition_gates_manual_effect():
             ],
         }
 
-    assert apply_stat_modifiers(sheet(10))["ac"] == 10
-    assert apply_stat_modifiers(sheet(3))["ac"] == 15
+    assert apply_stat_modifiers(sheet(10))["ac"] == 10                              
+    assert apply_stat_modifiers(sheet(3))["ac"] == 15                       
+
+
+                                                                                
 
 
 def test_apply_stat_modifiers_uses_item_grant():
@@ -118,6 +127,9 @@ def test_effect_modifiers_picks_up_equipped_weapon_roll_bonus():
     assert len(applied) == 1
     assert applied[0]["operation"] == "add_dice"
     assert applied[0]["value"] == "1d4"
+
+
+                                                                                
 
 
 def test_periodic_modifiers_rolls_damage_and_heal():
@@ -141,7 +153,7 @@ def test_periodic_modifiers_rolls_dice_value(monkeypatch):
 def test_periodic_modifiers_respects_disabled_and_condition():
     assert periodic_modifiers(_dot_sheet("damage_over_time", 4, enabled=False)) == []
     gated = _dot_sheet("damage_over_time", 4, condition="@sheet.hp.value < 5", hp={"value": 10})
-    assert periodic_modifiers(gated) == []
+    assert periodic_modifiers(gated) == []                             
 
 
 def test_periodic_modifiers_ignores_non_periodic_ops():
@@ -152,6 +164,8 @@ def test_periodic_modifiers_carry_target():
     assert periodic_modifiers(_dot_sheet("damage_over_time", 4))[0]["target"] == "damage.self"
 
 
+                                                                                
+
 _HP_RESOURCES = {"hp": {"path": "sheet.hp.value", "maxPath": "sheet.hp.max", "min": 0}}
 
 
@@ -161,7 +175,7 @@ def test_resolve_explicit_sheet_path():
 
 def test_resolve_named_and_primary_resource_from_config():
     assert resolve_resource_target("resource.hp", _HP_RESOURCES) == ("hp.value", "hp.max", 0)
-
+                                                                         
     assert resolve_resource_target("damage.self", _HP_RESOURCES) == ("hp.value", "hp.max", 0)
 
 
@@ -174,14 +188,14 @@ def test_resolve_unknown_named_resource_is_none():
 
 
 def test_apply_resource_delta_clamps_floor_and_sibling_max():
-
+                                                                            
     sheet = {"vitality": {"value": 18, "max": 20}}
     assert apply_resource_delta(sheet, "vitality.value", "", 0, 10) == 20
     assert sheet["vitality"]["value"] == 20
 
     sheet = {"vitality": {"value": 5}}
-    assert apply_resource_delta(sheet, "vitality.value", "", 0, -8) == 0
-    assert apply_resource_delta({}, "", "", 0, -5) is None
+    assert apply_resource_delta(sheet, "vitality.value", "", 0, -8) == 0         
+    assert apply_resource_delta({}, "", "", 0, -5) is None                      
 
 
 def test_apply_resource_delta_explicit_max_path():
@@ -189,10 +203,13 @@ def test_apply_resource_delta_explicit_max_path():
     assert apply_resource_delta(sheet, "hp.value", "hp.max", 0, 99) == 12
 
 
+                                                                                
+
+
 def test_adjust_incoming_damage_resistance_and_vulnerability():
     resist = {"effects": [_dmg_adj("resistance", "fire")]}
-    assert adjust_incoming_damage(resist, 7, "fire") == 3
-    assert adjust_incoming_damage(resist, 7, "cold") == 7
+    assert adjust_incoming_damage(resist, 7, "fire") == 3                      
+    assert adjust_incoming_damage(resist, 7, "cold") == 7                          
     vuln = {"effects": [_dmg_adj("vulnerability", "fire")]}
     assert adjust_incoming_damage(vuln, 5, "fire") == 10
 
@@ -200,9 +217,9 @@ def test_adjust_incoming_damage_resistance_and_vulnerability():
 def test_adjust_incoming_damage_immunity_and_reduce():
     immune = {"effects": [_dmg_adj("immunity", "fire")]}
     assert adjust_incoming_damage(immune, 99, "fire") == 0
-    reduce = {"effects": [_dmg_adj("reduce", "", 3)]}
+    reduce = {"effects": [_dmg_adj("reduce", "", 3)]}                          
     assert adjust_incoming_damage(reduce, 5) == 2
-    assert adjust_incoming_damage(reduce, 2) == 0
+    assert adjust_incoming_damage(reduce, 2) == 0                
 
 
 def test_periodic_damage_routes_through_resistance():
@@ -213,12 +230,7 @@ def test_periodic_damage_routes_through_resistance():
                 "enabled": True,
                 "data": {
                     "modifiers": [
-                        {
-                            "target": "damage.self",
-                            "operation": "damage_over_time",
-                            "value": 8,
-                            "damageType": "fire",
-                        }
+                        {"target": "damage.self", "operation": "damage_over_time", "value": 8, "damageType": "fire"}
                     ]
                 },
             },
@@ -227,7 +239,7 @@ def test_periodic_damage_routes_through_resistance():
     }
     entry = next(e for e in periodic_modifiers(sheet) if e["operation"] == "damage_over_time")
     assert entry["rawAmount"] == 8
-    assert entry["amount"] == 4 and entry["delta"] == -4
+    assert entry["amount"] == 4 and entry["delta"] == -4                          
 
 
 def test_periodic_damage_immunity_yields_no_entry():
@@ -238,12 +250,7 @@ def test_periodic_damage_immunity_yields_no_entry():
                 "enabled": True,
                 "data": {
                     "modifiers": [
-                        {
-                            "target": "damage.self",
-                            "operation": "damage_over_time",
-                            "value": 6,
-                            "damageType": "fire",
-                        }
+                        {"target": "damage.self", "operation": "damage_over_time", "value": 6, "damageType": "fire"}
                     ]
                 },
             },

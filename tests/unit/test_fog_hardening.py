@@ -59,7 +59,7 @@ async def test_paint_requires_expected_version(db):
         _cmd(
             ClientCommand.FOG_PAINT.value,
             campaign_id,
-            {"scene_id": scene["id"], "ops": [_circle_op()]},
+            {"scene_id": scene["id"], "ops": [_circle_op()]},                       
         ),
         context=ClientCommandContext(user_id=gm_id, room_ids=(campaign_id,)),
         transport=_transport(),
@@ -119,6 +119,7 @@ def test_service_caps_total_ops(db, monkeypatch):
     service = FogService()
     service.enable(scene_id=scene["id"], user_id=gm_id, initial=FogInitialState.HIDE_ALL)
 
+                                                                  
     monkeypatch.setattr(fog_service_module, "MAX_FOG_TOTAL_OPS", 1)
 
     ops = [

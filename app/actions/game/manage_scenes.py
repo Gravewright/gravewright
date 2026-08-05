@@ -212,9 +212,7 @@ async def update_scene(
 ) -> Redirect:
     user = current_user
 
-    scene_result = scene_service.get_scene_for_management(
-        scene_id=data.scene_id, user_id=user["id"]
-    )
+    scene_result = scene_service.get_scene_for_management(scene_id=data.scene_id, user_id=user["id"])
     if scene_result.scene is None:
         return _redirect_error("game.scenes.errors.not_found", campaign_id=data.campaign_id)
     scene = scene_result.scene
@@ -334,9 +332,7 @@ async def update_scene_start_point(
 ) -> Redirect:
     user = current_user
 
-    scene_result = scene_service.get_scene_for_management(
-        scene_id=data.scene_id, user_id=user["id"]
-    )
+    scene_result = scene_service.get_scene_for_management(scene_id=data.scene_id, user_id=user["id"])
     if scene_result.scene is None:
         return _redirect_error("game.scenes.errors.not_found", campaign_id=data.campaign_id)
     scene = scene_result.scene

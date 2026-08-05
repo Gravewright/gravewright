@@ -73,16 +73,13 @@ def test_chunk_batch_rejects_invalid_magic():
 
 
 def test_chunk_batch_rejects_truncated_header():
-    encoded = (
-        CHUNK_BATCH_HEADER.pack(
-            CHUNK_BATCH_MAGIC,
-            1,
-            1,
-            0,
-            10,
-        )
-        + b"{}"
-    )
+    encoded = CHUNK_BATCH_HEADER.pack(
+        CHUNK_BATCH_MAGIC,
+        1,
+        1,
+        0,
+        10,
+    ) + b"{}"
 
     with pytest.raises(ValueError, match="truncated header"):
         decode_chunk_batch_frame(encoded)
@@ -121,8 +118,7 @@ def test_chunk_batch_rejects_unsupported_version():
             1,
             0,
             2,
-        )
-        + b"{}"
+        ) + b"{}"
     )
 
     with pytest.raises(ValueError, match="unsupported version"):

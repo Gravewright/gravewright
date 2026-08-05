@@ -8,7 +8,6 @@ Emits into ``realtime_metrics``:
     http.request.duration_ms              — every request
     http.request.<sanitized-path>.duration_ms  — per route (ids collapsed)
 """
-
 from __future__ import annotations
 
 import re

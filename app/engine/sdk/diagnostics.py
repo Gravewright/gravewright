@@ -95,7 +95,8 @@ def is_machine_readable_code(code: str) -> bool:
 def is_known_namespace(code: str) -> bool:
     """True when ``code`` lives under one of the declared public namespaces."""
     return any(
-        code == namespace or code.startswith(f"{namespace}.") for namespace in CODE_NAMESPACES
+        code == namespace or code.startswith(f"{namespace}.")
+        for namespace in CODE_NAMESPACES
     )
 
 
@@ -207,3 +208,5 @@ class DoctorFinding:
         if self.campaign_id is not None:
             data["campaign_id"] = self.campaign_id
         return data
+
+

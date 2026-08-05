@@ -63,16 +63,12 @@ class RealtimeRecipientRepository:
     def list_room_member_user_ids(self, room_id: str) -> list[str]:
         return [user_id for user_id, _ in self._members(room_id)]
 
-    def list_room_member_user_ids_except(
-        self, *, room_id: str, excluded_player_ids: list[str]
-    ) -> list[str]:
+    def list_room_member_user_ids_except(self, *, room_id: str, excluded_player_ids: list[str]) -> list[str]:
         excluded = set(excluded_player_ids)
         return [user_id for user_id, _ in self._members(room_id) if user_id not in excluded]
 
     def list_role_member_user_ids(self, *, room_id: str, role: PlayerRole) -> list[str]:
-        return [
-            user_id for user_id, member_role in self._members(room_id) if member_role == role.value
-        ]
+        return [user_id for user_id, member_role in self._members(room_id) if member_role == role.value]
 
     def list_gm_user_ids(self, room_id: str) -> list[str]:
         return [user_id for user_id, role in self._members(room_id) if role in _GM_ROLES]
@@ -90,12 +86,12 @@ class RealtimeRecipientRepository:
         if include_players:
             return [user_id for user_id, _ in self._members(room_id)]
         return [
-            user_id for user_id, role in self._members(room_id) if role != PlayerRole.PLAYER.value
+            user_id
+            for user_id, role in self._members(room_id)
+            if role != PlayerRole.PLAYER.value
         ]
 
     def list_all_user_ids(self) -> list[str]:
         with engine_connect() as conn:
-            rows = all_dicts(
-                conn.execute(select(users_table.c.id).order_by(users_table.c.created_at.asc()))
-            )
+            rows = all_dicts(conn.execute(select(users_table.c.id).order_by(users_table.c.created_at.asc())))
         return [row["id"] for row in rows]

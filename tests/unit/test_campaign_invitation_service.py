@@ -12,9 +12,7 @@ def _get_pending_invitation_id(user_id: str, campaign_id: str) -> str:
     for inv in invitations:
         if inv["campaign_id"] == campaign_id:
             return inv["id"]
-    raise AssertionError(
-        f"No pending invitation found for user {user_id} in campaign {campaign_id}"
-    )
+    raise AssertionError(f"No pending invitation found for user {user_id} in campaign {campaign_id}")
 
 
 def test_gm_creates_invitation(db):
@@ -84,12 +82,8 @@ def test_re_accepting_invitation_is_idempotent(db):
     )
     invitation_id = _get_pending_invitation_id(player_id, campaign_id)
 
-    first = CampaignInvitationService().accept_invitation(
-        invitation_id=invitation_id, user_id=player_id
-    )
-    second = CampaignInvitationService().accept_invitation(
-        invitation_id=invitation_id, user_id=player_id
-    )
+    first = CampaignInvitationService().accept_invitation(invitation_id=invitation_id, user_id=player_id)
+    second = CampaignInvitationService().accept_invitation(invitation_id=invitation_id, user_id=player_id)
 
     assert first.success and first.payload["membership_created"] is True
     # Idempotent: still success, but no new membership and no join event.
@@ -117,9 +111,7 @@ def test_accepting_does_not_duplicate_membership(db):
     CampaignInvitationService().accept_invitation(invitation_id=invitation_id, user_id=player_id)
 
     members = CampaignRepository().list_members_for_user_campaigns(player_id)
-    player_memberships = [
-        m for m in members if m["user_id"] == player_id and m["campaign_id"] == campaign_id
-    ]
+    player_memberships = [m for m in members if m["user_id"] == player_id and m["campaign_id"] == campaign_id]
     assert len(player_memberships) == 1
 
 
@@ -131,7 +123,7 @@ def test_invitation_invalid_role_rejected(db):
         campaign_id=campaign_id,
         invited_by_user_id=gm_id,
         invited_email="player@test.com",
-        role="gm",
+        role="gm",                         
     )
     assert not result.success
     assert result.error_key == "game.invite.errors.invalid_role"

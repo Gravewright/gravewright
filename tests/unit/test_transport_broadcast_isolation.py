@@ -34,7 +34,9 @@ async def test_send_to_users_isolates_a_dead_socket():
     dead = _DeadSocket()
 
     await manager.connect(user_id="alive", room_ids=["room-1"], websocket=ok)
-    dead_conn_id = await manager.connect(user_id="dead", room_ids=["room-1"], websocket=dead)
+    dead_conn_id = await manager.connect(
+        user_id="dead", room_ids=["room-1"], websocket=dead
+    )
 
     await manager.send_to_users(
         user_ids=["dead", "alive"],
@@ -43,9 +45,11 @@ async def test_send_to_users_isolates_a_dead_socket():
         payload={"room_id": "room-1", "scene_id": "scene-1"},
     )
 
+                                                                           
     assert len(ok.messages) == 1
     assert ok.messages[0]["event"] == TransportEvent.SCENE_UPDATED.value
 
+                                                                    
     assert await manager.is_user_connected("dead") is False
     assert await manager.disconnect(dead_conn_id) is None
     assert await manager.is_user_connected("alive") is True

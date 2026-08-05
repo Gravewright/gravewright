@@ -201,7 +201,9 @@ def validate_manifest(raw: object) -> PackageManifestValidation:
 def _validate_authors_and_license(raw: dict, result: PackageManifestValidation) -> None:
     authors = raw.get("authors")
     if authors is not None:
-        if not isinstance(authors, list) or any(not isinstance(a, (str, dict)) for a in authors):
+        if not isinstance(authors, list) or any(
+            not isinstance(a, (str, dict)) for a in authors
+        ):
             result.add("sdk.validation.authors_invalid")
     license_value = raw.get("license")
     if license_value is not None and not isinstance(license_value, str):
@@ -291,7 +293,9 @@ def _validate_settings(manifest: PackageManifest, result: PackageManifestValidat
             result.add("sdk.validation.setting_invalid")
 
 
-def _validate_html_sheets(manifest: PackageManifest, result: PackageManifestValidation) -> None:
+def _validate_html_sheets(
+    manifest: PackageManifest, result: PackageManifestValidation
+) -> None:
     for type_def in (*manifest.provides.actor_types, *manifest.provides.item_types):
         sheet = type_def.sheet
         if not isinstance(sheet, dict):

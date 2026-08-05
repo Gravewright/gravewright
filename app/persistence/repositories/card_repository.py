@@ -78,12 +78,8 @@ class CardRepository:
                         description=raw.get("description"),
                         front_asset_id=raw.get("front_asset_id"),
                         back_asset_id=raw.get("back_asset_id"),
-                        tags_json=_dump(
-                            raw.get("tags") if isinstance(raw.get("tags"), list) else []
-                        ),
-                        metadata_json=_dump(
-                            raw.get("metadata") if isinstance(raw.get("metadata"), dict) else {}
-                        ),
+                        tags_json=_dump(raw.get("tags") if isinstance(raw.get("tags"), list) else []),
+                        metadata_json=_dump(raw.get("metadata") if isinstance(raw.get("metadata"), dict) else {}),
                         sort_key=raw.get("sort_key"),
                         quantity=quantity,
                         created_at=now,
@@ -120,9 +116,7 @@ class CardRepository:
                 conn.execute(
                     select(card_definitions)
                     .where(card_definitions.c.deck_definition_id == deck_definition_id)
-                    .order_by(
-                        card_definitions.c.sort_key.asc(), card_definitions.c.created_at.asc()
-                    )
+                    .order_by(card_definitions.c.sort_key.asc(), card_definitions.c.created_at.asc())
                 )
             )
         return [_decode_card_definition(row) for row in rows]
@@ -184,9 +178,7 @@ class CardRepository:
                 conn.execute(
                     select(card_definitions)
                     .where(card_definitions.c.deck_definition_id == deck_definition_id)
-                    .order_by(
-                        card_definitions.c.sort_key.asc(), card_definitions.c.created_at.asc()
-                    )
+                    .order_by(card_definitions.c.sort_key.asc(), card_definitions.c.created_at.asc())
                 )
             )
             for definition in definitions:
@@ -249,9 +241,8 @@ class CardRepository:
                 str(row["id"])
                 for row in all_dicts(
                     conn.execute(
-                        select(card_instances.c.id).where(
-                            card_instances.c.deck_instance_id == deck_instance_id
-                        )
+                        select(card_instances.c.id)
+                        .where(card_instances.c.deck_instance_id == deck_instance_id)
                     )
                 )
             ]
@@ -259,39 +250,22 @@ class CardRepository:
                 str(row["id"])
                 for row in all_dicts(
                     conn.execute(
-                        select(card_piles.c.id).where(
-                            card_piles.c.deck_instance_id == deck_instance_id
-                        )
+                        select(card_piles.c.id)
+                        .where(card_piles.c.deck_instance_id == deck_instance_id)
                     )
                 )
             ]
             if card_ids:
-                conn.execute(
-                    delete(scene_card_placements).where(
-                        scene_card_placements.c.card_instance_id.in_(card_ids)
-                    )
-                )
-                conn.execute(
-                    delete(card_pile_entries).where(
-                        card_pile_entries.c.card_instance_id.in_(card_ids)
-                    )
-                )
+                conn.execute(delete(scene_card_placements).where(scene_card_placements.c.card_instance_id.in_(card_ids)))
+                conn.execute(delete(card_pile_entries).where(card_pile_entries.c.card_instance_id.in_(card_ids)))
             if pile_ids:
-                conn.execute(
-                    delete(card_pile_entries).where(card_pile_entries.c.pile_id.in_(pile_ids))
-                )
+                conn.execute(delete(card_pile_entries).where(card_pile_entries.c.pile_id.in_(pile_ids)))
             if card_ids:
                 conn.execute(delete(card_instances).where(card_instances.c.id.in_(card_ids)))
-            conn.execute(
-                delete(card_piles).where(card_piles.c.deck_instance_id == deck_instance_id)
-            )
-            conn.execute(
-                delete(card_deck_instances).where(card_deck_instances.c.id == deck_instance_id)
-            )
+            conn.execute(delete(card_piles).where(card_piles.c.deck_instance_id == deck_instance_id))
+            conn.execute(delete(card_deck_instances).where(card_deck_instances.c.id == deck_instance_id))
 
-    def create_hand_pile(
-        self, *, campaign_id: str, owner_user_id: str, name: str | None = None
-    ) -> dict:
+    def create_hand_pile(self, *, campaign_id: str, owner_user_id: str, name: str | None = None) -> dict:
         now = int(time.time())
         pile_id = uuid.uuid4().hex
         with engine_begin() as conn:
@@ -529,9 +503,7 @@ class CardRepository:
     def list_cards_for_campaign(self, *, campaign_id: str) -> list[dict]:
         with engine_connect() as conn:
             rows = all_dicts(
-                conn.execute(
-                    select(card_instances).where(card_instances.c.campaign_id == campaign_id)
-                )
+                conn.execute(select(card_instances).where(card_instances.c.campaign_id == campaign_id))
             )
         return [_decode_card_instance(row) for row in rows]
 
@@ -589,9 +561,7 @@ class CardRepository:
                 raise InvalidCardMoveError("card is already on a scene")
             if card.get("current_pile_id"):
                 conn.execute(
-                    delete(card_pile_entries).where(
-                        card_pile_entries.c.card_instance_id == card_instance_id
-                    )
+                    delete(card_pile_entries).where(card_pile_entries.c.card_instance_id == card_instance_id)
                 )
             if z_index is None:
                 current_top = one_or_none(
@@ -662,10 +632,7 @@ class CardRepository:
                 conn.execute(
                     select(scene_card_placements)
                     .where(scene_card_placements.c.campaign_id == campaign_id)
-                    .order_by(
-                        scene_card_placements.c.scene_id.asc(),
-                        scene_card_placements.c.z_index.asc(),
-                    )
+                    .order_by(scene_card_placements.c.scene_id.asc(), scene_card_placements.c.z_index.asc())
                 )
             )
         return [_decode_scene_card_placement(row) for row in rows]
@@ -705,11 +672,7 @@ class CardRepository:
             placement = self._get_scene_card_placement(conn, placement_id)
             if placement is None:
                 return None
-            conn.execute(
-                update(scene_card_placements)
-                .where(scene_card_placements.c.id == placement_id)
-                .values(**values)
-            )
+            conn.execute(update(scene_card_placements).where(scene_card_placements.c.id == placement_id).values(**values))
             card_values = {"updated_at": now}
             if face_state is not None:
                 card_values["face_state"] = face_state.value
@@ -748,9 +711,7 @@ class CardRepository:
             )
             next_position = int(target_count["position"]) + 1 if target_count is not None else 0
             card_id = str(placement["card_instance_id"])
-            conn.execute(
-                delete(scene_card_placements).where(scene_card_placements.c.id == placement_id)
-            )
+            conn.execute(delete(scene_card_placements).where(scene_card_placements.c.id == placement_id))
             conn.execute(
                 insert(card_pile_entries).values(
                     pile_id=target_pile_id,
@@ -788,9 +749,7 @@ class CardRepository:
                     scene_card_placements.c.card_instance_id.in_(card_ids)
                 )
             )
-            conn.execute(
-                delete(card_pile_entries).where(card_pile_entries.c.card_instance_id.in_(card_ids))
-            )
+            conn.execute(delete(card_pile_entries).where(card_pile_entries.c.card_instance_id.in_(card_ids)))
             for index, card_id in enumerate(card_ids):
                 conn.execute(
                     insert(card_pile_entries).values(
@@ -818,9 +777,7 @@ class CardRepository:
         if not ids:
             return {}
         with engine_connect() as conn:
-            rows = all_dicts(
-                conn.execute(select(card_definitions).where(card_definitions.c.id.in_(ids)))
-            )
+            rows = all_dicts(conn.execute(select(card_definitions).where(card_definitions.c.id.in_(ids))))
         return {row["id"]: _decode_card_definition(row) for row in rows}
 
     def update_cards_face_visibility(
@@ -866,49 +823,25 @@ class CardRepository:
                     created_at=now,
                 )
             )
-            row = one_or_none(
-                conn.execute(select(card_events).where(card_events.c.id == event_id).limit(1))
-            )
+            row = one_or_none(conn.execute(select(card_events).where(card_events.c.id == event_id).limit(1)))
         if row is None:
             raise RuntimeError("Created card event could not be read back.")
         return _decode_event(row)
 
     def _get_deck_definition(self, conn, deck_definition_id: str) -> dict | None:
-        return one_or_none(
-            conn.execute(
-                select(card_deck_definitions)
-                .where(card_deck_definitions.c.id == deck_definition_id)
-                .limit(1)
-            )
-        )
+        return one_or_none(conn.execute(select(card_deck_definitions).where(card_deck_definitions.c.id == deck_definition_id).limit(1)))
 
     def _get_deck_instance(self, conn, deck_instance_id: str) -> dict | None:
-        return one_or_none(
-            conn.execute(
-                select(card_deck_instances)
-                .where(card_deck_instances.c.id == deck_instance_id)
-                .limit(1)
-            )
-        )
+        return one_or_none(conn.execute(select(card_deck_instances).where(card_deck_instances.c.id == deck_instance_id).limit(1)))
 
     def _get_pile(self, conn, pile_id: str) -> dict | None:
-        return one_or_none(
-            conn.execute(select(card_piles).where(card_piles.c.id == pile_id).limit(1))
-        )
+        return one_or_none(conn.execute(select(card_piles).where(card_piles.c.id == pile_id).limit(1)))
 
     def _get_card(self, conn, card_id: str) -> dict | None:
-        return one_or_none(
-            conn.execute(select(card_instances).where(card_instances.c.id == card_id).limit(1))
-        )
+        return one_or_none(conn.execute(select(card_instances).where(card_instances.c.id == card_id).limit(1)))
 
     def _get_scene_card_placement(self, conn, placement_id: str) -> dict | None:
-        return one_or_none(
-            conn.execute(
-                select(scene_card_placements)
-                .where(scene_card_placements.c.id == placement_id)
-                .limit(1)
-            )
-        )
+        return one_or_none(conn.execute(select(scene_card_placements).where(scene_card_placements.c.id == placement_id).limit(1)))
 
 
 def _dump(value: Any) -> str:

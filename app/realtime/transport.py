@@ -78,13 +78,20 @@ class WebSocketConnectionManager:
 
     async def connected_user_ids(self, user_ids: list[str]) -> set[str]:
         async with self._lock:
-            return {user_id for user_id in user_ids if self._connections_by_user.get(user_id)}
+            return {
+                user_id
+                for user_id in user_ids
+                if self._connections_by_user.get(user_id)
+            }
 
     async def connected_user_ids_by_room(self, room_ids: list[str]) -> dict[str, set[str]]:
         room_id_set = set(room_ids)
 
         async with self._lock:
-            connected_by_room: dict[str, set[str]] = {room_id: set() for room_id in room_ids}
+            connected_by_room: dict[str, set[str]] = {
+                room_id: set()
+                for room_id in room_ids
+            }
 
             for connection in self._connections.values():
                 for room_id in connection.room_ids:
@@ -135,7 +142,9 @@ class WebSocketConnectionManager:
                     ts=now,
                     extra=extra,
                 )
-                await connection.websocket.send_json(envelope)
+                await connection.websocket.send_json(
+                    envelope
+                )
             except Exception:
                 stale_connection_ids.append(connection.id)
 
@@ -168,9 +177,7 @@ class RealtimeTransport(RealtimeGatewayContract):
     ) -> None:
         event_seq = None
         if room_id is not None:
-            event_seq = await run_blocking(
-                self.event_log.append, room_id=room_id, event=event, payload=payload
-            )
+            event_seq = await run_blocking(self.event_log.append, room_id=room_id, event=event, payload=payload)
 
         unique_user_ids = list(dict.fromkeys(user_ids))
 
@@ -178,7 +185,11 @@ class RealtimeTransport(RealtimeGatewayContract):
             return
 
         connected_user_ids = await self.manager.connected_user_ids(unique_user_ids)
-        connected = [user_id for user_id in unique_user_ids if user_id in connected_user_ids]
+        connected = [
+            user_id
+            for user_id in unique_user_ids
+            if user_id in connected_user_ids
+        ]
 
         await self.manager.send_to_users(
             user_ids=connected,
@@ -234,9 +245,7 @@ class RealtimeTransport(RealtimeGatewayContract):
         event: TransportEvent,
         payload: Payload,
     ) -> None:
-        user_ids = await run_blocking(
-            self.recipients.list_role_member_user_ids, room_id=room_id, role=role
-        )
+        user_ids = await run_blocking(self.recipients.list_role_member_user_ids, room_id=room_id, role=role)
         await self._deliver(user_ids=user_ids, room_id=room_id, event=event, payload=payload)
 
     async def to_gm(

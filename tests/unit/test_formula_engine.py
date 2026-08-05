@@ -27,7 +27,7 @@ def test_arithmetic_and_precedence():
 
 def test_path_resolution():
     assert evaluate("@sheet.hp.value + @sheet.attributes.dex.mod", context=CTX).total == 23
-
+                                 
     assert evaluate("@sheet.nope.here", context=CTX).total == 0
 
 
@@ -47,9 +47,7 @@ def test_if_and_comparisons():
 
 
 def test_helpers():
-    assert (
-        evaluate("abilityMod(@sheet.attributes.str.score)", context=CTX, helpers=HELPERS).total == 2
-    )
+    assert evaluate("abilityMod(@sheet.attributes.str.score)", context=CTX, helpers=HELPERS).total == 2
 
 
 def test_input_scope():
@@ -95,7 +93,9 @@ def test_exploding_die_rerolls_until_below_threshold():
     rolls = iter((6, 6, 2))
     result = evaluate("explode(6, 6)", roller=lambda count, sides: [next(rolls)])
     assert result.total == 14
-    assert result.groups == [{"notation": "1d6!>=6", "results": [6, 6, 2], "subtotal": 14}]
+    assert result.groups == [
+        {"notation": "1d6!>=6", "results": [6, 6, 2], "subtotal": 14}
+    ]
 
 
 def test_exploding_die_supports_sheet_values():
@@ -129,7 +129,9 @@ def test_dynamic_die_accepts_count_and_sides():
 def test_success_pool_counts_results_at_or_above_target():
     result = evaluate("successes(4, 6, 5)", roller=lambda count, sides: [1, 5, 6, 4])
     assert result.total == 2
-    assert result.groups == [{"notation": "4d6>=5", "results": [1, 5, 6, 4], "subtotal": 2}]
+    assert result.groups == [
+        {"notation": "4d6>=5", "results": [1, 5, 6, 4], "subtotal": 2}
+    ]
 
 
 def test_roll_under_counts_results_at_or_below_target():
@@ -141,7 +143,9 @@ def test_roll_under_counts_results_at_or_below_target():
 def test_fate_roll_records_minus_blank_plus_faces():
     result = evaluate("fate() + 2", roller=lambda count, sides: [1, 2, 3, 3])
     assert result.total == 3
-    assert result.groups == [{"notation": "4dF", "results": [-1, 0, 1, 1], "subtotal": 1}]
+    assert result.groups == [
+        {"notation": "4dF", "results": [-1, 0, 1, 1], "subtotal": 1}
+    ]
 
 
 def test_draw_returns_card_index():
@@ -156,4 +160,4 @@ def test_errors():
     with pytest.raises(FormulaError):
         evaluate("floor(")
     with pytest.raises(FormulaError):
-        evaluate("9999d6")
+        evaluate("9999d6")                      

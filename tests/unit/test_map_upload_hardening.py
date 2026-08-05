@@ -36,7 +36,7 @@ def test_image_decoder_rejects_oversized_dimensions() -> None:
 
 
 class _FailingChunkStorage(LocalChunkStorage):
-    def write_chunk(self, **kwargs):
+    def write_chunk(self, **kwargs):                          
         raise RuntimeError("disk exploded")
 
 
@@ -65,6 +65,7 @@ async def test_failed_upload_discards_partial_scene(db, tmp_path):
     assert result.success is False
     assert result.error_key == "game.maps.errors.processing_failed"
 
+                                                   
     assert SceneRepository().list_by_campaign(campaign_id) == []
     assert not (storage_root).exists() or list(storage_root.iterdir()) == []
 
@@ -94,19 +95,18 @@ async def test_staged_retile_generation_failure_preserves_existing_scene(db, tmp
     before = len(SceneTileRepository().list_by_layer(layer_id))
     assert before > 0
 
+                                                                              
+                                               
     def _boom(**_kwargs):
         raise RuntimeError("render exploded")
 
-    service._render_tiles = _boom
+    service._render_tiles = _boom                               
 
-    result = await service.retile_scene(
-        scene_id=upload.scene["id"], user_id=gm_id, new_tile_size=35
-    )
+    result = await service.retile_scene(scene_id=upload.scene["id"], user_id=gm_id, new_tile_size=35)
 
     assert result.success is False
     assert result.error_key == "game.maps.errors.processing_failed"
     assert len(SceneTileRepository().list_by_layer(layer_id)) == before
-
 
 @pytest.mark.asyncio
 async def test_staged_retile_commit_failure_restores_existing_artifacts(db, tmp_path):
@@ -140,11 +140,9 @@ async def test_staged_retile_commit_failure_restores_existing_artifacts(db, tmp_
     def _explode_metadata(*_args, **_kwargs):
         raise RuntimeError("metadata commit exploded")
 
-    service._replace_retile_metadata_atomic = _explode_metadata
+    service._replace_retile_metadata_atomic = _explode_metadata                               
 
-    result = await service.retile_scene(
-        scene_id=upload.scene["id"], user_id=gm_id, new_tile_size=35
-    )
+    result = await service.retile_scene(scene_id=upload.scene["id"], user_id=gm_id, new_tile_size=35)
 
     assert result.success is False
     assert result.error_key == "game.maps.errors.processing_failed"

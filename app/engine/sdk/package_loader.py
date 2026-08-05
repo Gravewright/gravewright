@@ -160,7 +160,9 @@ def _validate_storage_on_disk(package_dir: Path, raw: dict) -> list[str]:
 _INLINE_HANDLER = re.compile(r"\s(on[a-zA-Z][a-zA-Z0-9_-]*)\s*=")
 
 
-def _validate_html_sheets_on_disk(package_dir: Path, manifest: PackageManifest) -> list[str]:
+def _validate_html_sheets_on_disk(
+    package_dir: Path, manifest: PackageManifest
+) -> list[str]:
     codes: list[str] = []
     for type_def in (*manifest.provides.actor_types, *manifest.provides.item_types):
         sheet = type_def.sheet

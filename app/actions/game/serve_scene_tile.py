@@ -11,6 +11,8 @@ from litestar.response import File
 from app.engine.scenes.scene_tile_read_service import SceneTileReadService
 
 
+                                                                                
+
 _TILE_CACHE_HEADERS = {"Cache-Control": "private, max-age=31536000, immutable"}
 
 

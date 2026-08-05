@@ -52,9 +52,7 @@ class InsideSettingsService:
         app = data.get("app") if isinstance(data.get("app"), dict) else {}
         privacy = data.get("privacy") if isinstance(data.get("privacy"), dict) else {}
 
-        default_locale = get_supported_locale(
-            str(app.get("default_locale") or config.default_locale)
-        )
+        default_locale = get_supported_locale(str(app.get("default_locale") or config.default_locale))
         return {
             "app": {
                 "app_name": str(app.get("app_name") or config.app_name),
@@ -110,11 +108,7 @@ class InsideSettingsService:
             privacy.get("retention_policy", ""),
             privacy.get("data_subject_rights", ""),
         ]
-        contacts = [
-            privacy.get("data_controller", ""),
-            privacy.get("dpo_contact", ""),
-            privacy.get("contact_email", ""),
-        ]
+        contacts = [privacy.get("data_controller", ""), privacy.get("dpo_contact", ""), privacy.get("contact_email", "")]
         contact_text = " · ".join(part for part in contacts if part)
         if contact_text:
             content_parts.append(contact_text)

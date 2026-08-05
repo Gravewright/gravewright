@@ -46,11 +46,7 @@ def _response_error_code(response: dict[str, Any] | None) -> str | None:
     if response.get("type") == "error" and isinstance(response.get("code"), str):
         return str(response["code"])
     payload = response.get("payload")
-    if (
-        isinstance(payload, dict)
-        and payload.get("success") is False
-        and isinstance(payload.get("code"), str)
-    ):
+    if isinstance(payload, dict) and payload.get("success") is False and isinstance(payload.get("code"), str):
         return str(payload["code"])
     return None
 
@@ -83,6 +79,7 @@ def _command_name(message: dict[str, Any]) -> str:
 def _room_id(message: dict[str, Any]) -> str | None:
     value = message.get("room_id")
     return value if isinstance(value, str) and value else None
+
 
 
 def _members_by_campaign(
@@ -177,12 +174,7 @@ async def game_websocket(
             decision = guard.inspect(raw)
             if decision.should_close:
                 realtime_metrics.increment("ws.ingress.closed")
-                emit_diagnostic(
-                    "ws.ingress.closed",
-                    user_id=user["id"],
-                    reason=decision.close_reason,
-                    code=decision.close_code,
-                )
+                emit_diagnostic("ws.ingress.closed", user_id=user["id"], reason=decision.close_reason, code=decision.close_code)
                 await socket.close(
                     code=decision.close_code or 1008,
                     reason=decision.close_reason or "",
@@ -190,11 +182,7 @@ async def game_websocket(
                 return
             if decision.error is not None:
                 realtime_metrics.increment("ws.ingress.rejected")
-                emit_diagnostic(
-                    "ws.ingress.rejected",
-                    user_id=user["id"],
-                    error_code=_response_error_code(decision.error),
-                )
+                emit_diagnostic("ws.ingress.rejected", user_id=user["id"], error_code=_response_error_code(decision.error))
                 await socket.send_json(decision.error)
                 continue
 
@@ -252,7 +240,7 @@ async def game_websocket(
                 )
             except WebSocketDisconnect:
                 raise
-            except Exception as exc:
+            except Exception as exc:                                                          
                 elapsed_ms = (time.perf_counter() - started) * 1000.0
                 realtime_metrics.increment("ws.command.error")
                 realtime_metrics.increment(f"ws.command.{command_metric}.error")

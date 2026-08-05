@@ -56,16 +56,12 @@ def test_ruleset_with_sheets_derives_html_capabilities():
 def test_rich_text_capability_follows_block_editors():
     # Item descriptions use the block editor -> richText.
     with_items = derive_capabilities(
-        "ruleset",
-        Intent(
-            has_sheets=True, html_sheets=True, actor_types=("character",), item_types=("weapon",)
-        ),
+        "ruleset", Intent(has_sheets=True, html_sheets=True, actor_types=("character",), item_types=("weapon",))
     )
     assert "sheets.richText" in with_items
     # Actor biography/notes tabs also use the block editor -> richText.
     with_bio = derive_capabilities(
-        "ruleset",
-        Intent(has_sheets=True, html_sheets=True, actor_types=("character",), wants_biography=True),
+        "ruleset", Intent(has_sheets=True, html_sheets=True, actor_types=("character",), wants_biography=True)
     )
     assert "sheets.richText" in with_bio
     # Plain actor-only ruleset (no editors) -> html but no richText.
@@ -81,10 +77,8 @@ def test_rich_text_capability_follows_block_editors():
 
 def test_biography_and_notes_render_as_tabs_with_block_editors():
     pkg = _ruleset(
-        actor_types=("character",),
-        mechanic="d20-attribute-modifier",
-        wants_biography=True,
-        wants_notes=True,
+        actor_types=("character",), mechanic="d20-attribute-modifier",
+        wants_biography=True, wants_notes=True,
     )
     sheet = pkg.files["sheets/character.html"]
     # Real, root-scoped tabs (Main / Biography / Notes).
@@ -112,16 +106,13 @@ def test_actor_gets_items_list_when_ruleset_has_items():
 @pytest.mark.parametrize("html_sheets", [False, True])
 def test_actor_field_selection_drives_schema_and_sheet(html_sheets):
     pkg = _ruleset(
-        html_sheets=html_sheets,
-        actor_types=("character",),
+        html_sheets=html_sheets, actor_types=("character",),
         actor_fields=(("character", ("health", "health-max", "mana", "description")),),
     )
     schema = json.loads(pkg.files["schemas/actors/character.schema.json"])
     assert set(schema["properties"]) == {"resources", "description"}
     assert set(schema["properties"]["resources"]["properties"]) == {
-        "health",
-        "healthMax",
-        "mana",
+        "health", "healthMax", "mana",
     }
     path = "sheets/character.html" if html_sheets else "layouts/character.sheet.gw.json"
     assert "resources.health" in pkg.files[path]
@@ -130,9 +121,7 @@ def test_actor_field_selection_drives_schema_and_sheet(html_sheets):
 
 def test_items_become_a_tab_alongside_other_panels():
     # With a mechanic (Main) plus Items there are >=2 panels -> real tabs.
-    pkg = _ruleset(
-        actor_types=("character",), item_types=("weapon",), mechanic="d20-attribute-modifier"
-    )
+    pkg = _ruleset(actor_types=("character",), item_types=("weapon",), mechanic="d20-attribute-modifier")
     sheet = pkg.files["sheets/character.html"]
     assert 'data-tab="main"' in sheet and 'data-tab="items"' in sheet
     assert 'data-tab-panel="items"' in sheet
@@ -215,9 +204,7 @@ def test_default_declarative_scaffold_is_simple_and_valid(tmp_path):
     layout = json.loads(pkg.files[sheet_path])
     assert layout["body"]["type"] == "section"
     assert any(node["type"] == "rollButton" for node in layout["body"]["children"])
-    loaded = load_package(
-        _write(tmp_path, pkg), expected_id="simple", expected_kind_root="rulesets"
-    )
+    loaded = load_package(_write(tmp_path, pkg), expected_id="simple", expected_kind_root="rulesets")
     assert loaded.ok, loaded.validation.errors
 
 
@@ -299,9 +286,7 @@ def test_item_family_gets_symbolic_starter_fields(item_type, expected_path):
 @pytest.mark.parametrize("html_sheets", [False, True])
 def test_equipment_field_preset_generates_selected_fields_and_roll(html_sheets):
     pkg = _ruleset(
-        html_sheets=html_sheets,
-        actor_types=("character",),
-        item_types=("equipment",),
+        html_sheets=html_sheets, actor_types=("character",), item_types=("equipment",),
         item_fields=(("equipment", ("weight", "cost", "damage", "description")),),
     )
     schema = json.loads(pkg.files["schemas/items/equipment.schema.json"])
@@ -321,28 +306,19 @@ def test_equipment_field_preset_generates_selected_fields_and_roll(html_sheets):
 
 def test_item_damage_formula_resolves_to_executable_expression():
     from app.engine.sheets.sheet_action_service import _resolve_template
-
     formula = _resolve_template("@item.data.damage", {"item": {"data": {"damage": "2d6"}}})
     assert evaluate(formula, roller=lambda count, sides: [3] * count).total == 6
 
 
 def test_item_decision_config_sets_defaults_and_can_disable_roll():
     pkg = _ruleset(
-        actor_types=("character",),
-        item_types=("equipment",),
+        actor_types=("character",), item_types=("equipment",),
         item_fields=(("equipment", ("weight", "cost", "damage", "equipped")),),
-        item_config=(
-            (
-                "equipment",
-                (
-                    ("weight.default", "2.5"),
-                    ("cost.default", "75"),
-                    ("damage.default", "2d8 + 3"),
-                    ("damage.roll", "no"),
-                    ("equipped.default", "yes"),
-                ),
-            ),
-        ),
+        item_config=(("equipment", (
+            ("weight.default", "2.5"), ("cost.default", "75"),
+            ("damage.default", "2d8 + 3"), ("damage.roll", "no"),
+            ("equipped.default", "yes"),
+        )),),
     )
     schema = json.loads(pkg.files["schemas/items/equipment.schema.json"])
     assert schema["properties"]["weight"]["default"] == 2.5
@@ -372,8 +348,7 @@ def test_exploding_mechanic_uses_sheet_parameters():
 
 def test_guided_exploding_mechanic_uses_selected_attributes_and_parameters():
     pkg = _ruleset(
-        actor_types=("character",),
-        mechanic="exploding-dice",
+        actor_types=("character",), mechanic="exploding-dice",
         mechanic_attributes=("forca", "agilidade"),
         mechanic_config=(("sides", "8"), ("threshold", "8")),
     )
@@ -386,8 +361,7 @@ def test_guided_exploding_mechanic_uses_selected_attributes_and_parameters():
 
 def test_guided_d20_mechanic_generates_selected_attributes_and_skills():
     pkg = _ruleset(
-        actor_types=("character",),
-        mechanic="d20-attribute-modifier-skill",
+        actor_types=("character",), mechanic="d20-attribute-modifier-skill",
         mechanic_attributes=("forca", "destreza"),
         mechanic_skills=("atletismo", "furtividade"),
     )
@@ -402,21 +376,12 @@ def test_guided_d20_mechanic_generates_selected_attributes_and_skills():
 @pytest.mark.parametrize(
     ("mechanic", "formula"),
     [
-        (
-            "d20-attribute-modifier-skill",
-            "1d20 + floor((@sheet.attributes.strength - 10) / 2) + @sheet.skills.athletics",
-        ),
+        ("d20-attribute-modifier-skill", "1d20 + floor((@sheet.attributes.strength - 10) / 2) + @sheet.skills.athletics"),
         ("d20-attribute-modifier", "1d20 + floor((@sheet.attributes.strength - 10) / 2)"),
         ("d20-roll-under", "under(1, 20, clamp(@sheet.attributes.strength, 1, 20))"),
         ("d100-percentile", "under(1, 100, clamp(@sheet.skills.perception, 1, 100))"),
-        (
-            "dice-pool-successes",
-            "successes(clamp(@sheet.pool.size, 1, 100), 6, clamp(@sheet.pool.target, 1, 6))",
-        ),
-        (
-            "dice-pool-count-hits",
-            "successes(clamp(@sheet.pool.size, 1, 100), 6, clamp(@sheet.pool.hit, 1, 6))",
-        ),
+        ("dice-pool-successes", "successes(clamp(@sheet.pool.size, 1, 100), 6, clamp(@sheet.pool.target, 1, 6))"),
+        ("dice-pool-count-hits", "successes(clamp(@sheet.pool.size, 1, 100), 6, clamp(@sheet.pool.hit, 1, 6))"),
         ("step-dice", "die(@sheet.attributes.strength)"),
         ("fudge-fate", "fate() + @sheet.approaches.careful"),
         ("2d6-pbta", "2d6 + @sheet.stats.cool"),
@@ -461,9 +426,7 @@ def test_multiple_actor_sheet_types(tmp_path):
     for tid in ids:
         assert f"sheets/{tid}.html" in pkg.files
         assert f"schemas/actors/{tid}.schema.json" in pkg.files
-    loaded = load_package(
-        _write(tmp_path, pkg), expected_id="my-rpg", expected_kind_root="rulesets"
-    )
+    loaded = load_package(_write(tmp_path, pkg), expected_id="my-rpg", expected_kind_root="rulesets")
     assert loaded.ok, loaded.validation.errors
 
 
@@ -473,9 +436,7 @@ def test_multiple_item_sheet_types(tmp_path):
     assert ids == ["weapon", "spell", "consumable"]
     for tid in ids:
         assert f"sheets/{tid}.html" in pkg.files
-    loaded = load_package(
-        _write(tmp_path, pkg), expected_id="my-rpg", expected_kind_root="rulesets"
-    )
+    loaded = load_package(_write(tmp_path, pkg), expected_id="my-rpg", expected_kind_root="rulesets")
     assert loaded.ok, loaded.validation.errors
 
 
@@ -516,9 +477,7 @@ def test_custom_actor_type_is_normalized(tmp_path):
     ids = [a["id"] for a in pkg.manifest["provides"]["actorTypes"]]
     assert ids == ["star-ship", "mecha"]
     assert "sheets/star-ship.html" in pkg.files
-    loaded = load_package(
-        _write(tmp_path, pkg), expected_id="my-rpg", expected_kind_root="rulesets"
-    )
+    loaded = load_package(_write(tmp_path, pkg), expected_id="my-rpg", expected_kind_root="rulesets")
     assert loaded.ok, loaded.validation.errors
 
 
@@ -535,9 +494,7 @@ def test_duplicate_ids_after_normalization_are_collapsed():
 
 
 def test_no_package_id_in_manifest_paths():
-    pkg = _ruleset(
-        package_id="sexto-elemento-rpg-oficial", actor_types=("character",), item_types=("weapon",)
-    )
+    pkg = _ruleset(package_id="sexto-elemento-rpg-oficial", actor_types=("character",), item_types=("weapon",))
     # Every generated file path is package-relative and never prefixed with id.
     for path in pkg.files:
         assert not path.startswith("sexto-elemento-rpg-oficial")
@@ -558,9 +515,7 @@ def test_all_manifest_paths_exist_in_generated_files():
 
 def test_legacy_boolean_intent_still_generates_declarative_sheet(tmp_path):
     pkg = build_package(
-        package_id="legacy",
-        name="Legacy",
-        kind="ruleset",
+        package_id="legacy", name="Legacy", kind="ruleset",
         intent=Intent(has_characters=True, has_monsters=True, has_items=True, has_sheets=True),
     )
     actor_ids = {a["id"] for a in pkg.manifest["provides"]["actorTypes"]}
@@ -568,9 +523,7 @@ def test_legacy_boolean_intent_still_generates_declarative_sheet(tmp_path):
     assert declared_sheet_type_ids(
         Intent(has_characters=True, has_monsters=True, has_items=True, has_sheets=True)
     ) == ["character", "monster", "item"]
-    loaded = load_package(
-        _write(tmp_path, pkg), expected_id="legacy", expected_kind_root="rulesets"
-    )
+    loaded = load_package(_write(tmp_path, pkg), expected_id="legacy", expected_kind_root="rulesets")
     assert loaded.ok, loaded.validation.errors
 
 
@@ -578,18 +531,8 @@ def test_new_writes_grouped_kind_layout(tmp_path):
     from app.cli import build_parser
 
     args = build_parser().parse_args(
-        [
-            "ruleset",
-            "new",
-            "my-rpg",
-            "--name",
-            "My RPG",
-            "--actor-types",
-            "character",
-            "--yes",
-            "--output-dir",
-            str(tmp_path),
-        ]
+        ["ruleset", "new", "my-rpg", "--name", "My RPG", "--actor-types", "character",
+         "--yes", "--output-dir", str(tmp_path)]
     )
     assert args.func(args) == 0
     assert (tmp_path / "rulesets" / "my-rpg" / "manifest.json").is_file()
@@ -600,21 +543,13 @@ def test_new_from_template_builds_full_package(tmp_path):
     from app.cli import build_parser
 
     args = build_parser().parse_args(
-        [
-            "ruleset",
-            "new",
-            "heroes",
-            "--template",
-            "fantasy-d20",
-            "--name",
-            "Heroes",
-            "--yes",
-            "--output-dir",
-            str(tmp_path),
-        ]
+        ["ruleset", "new", "heroes", "--template", "fantasy-d20", "--name", "Heroes",
+         "--yes", "--output-dir", str(tmp_path)]
     )
     assert args.func(args) == 0
-    manifest = json.loads((tmp_path / "rulesets" / "heroes" / "manifest.json").read_text())
+    manifest = json.loads(
+        (tmp_path / "rulesets" / "heroes" / "manifest.json").read_text()
+    )
     actor_ids = [a["id"] for a in manifest["provides"]["actorTypes"]]
     item_ids = [i["id"] for i in manifest["provides"]["itemTypes"]]
     assert actor_ids == ["character", "npc", "monster"]
@@ -625,18 +560,8 @@ def test_new_rejects_unknown_template(tmp_path):
     from app.cli import build_parser
 
     args = build_parser().parse_args(
-        [
-            "ruleset",
-            "new",
-            "x",
-            "--template",
-            "does-not-exist",
-            "--name",
-            "X",
-            "--yes",
-            "--output-dir",
-            str(tmp_path),
-        ]
+        ["ruleset", "new", "x", "--template", "does-not-exist", "--name", "X",
+         "--yes", "--output-dir", str(tmp_path)]
     )
     assert args.func(args) != 0
     assert not (tmp_path / "rulesets" / "x").exists()

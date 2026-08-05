@@ -7,6 +7,10 @@ from app.persistence.repositories.user_repository import UserRepository
 from tests.conftest import seed_campaign, seed_user
 
 
+                                                                 
+                                                            
+
+
 def _campaign_exists(campaign_id: str) -> bool:
     with engine_connect() as conn:
         return (
@@ -16,7 +20,7 @@ def _campaign_exists(campaign_id: str) -> bool:
 
 
 def test_owner_lists_users(db):
-    seed_user(name="Owner", email="owner@test.com")
+    seed_user(name="Owner", email="owner@test.com")                                
     seed_user(name="Bob", email="bob@test.com")
     emails = {u["email"] for u in AdminService().list_users()}
     assert {"owner@test.com", "bob@test.com"} <= emails
@@ -31,7 +35,7 @@ def test_delete_user_cascades_their_campaigns(db):
 
     assert result.success
     assert UserRepository().get_by_id(player) is None
-    assert not _campaign_exists(cid)
+    assert not _campaign_exists(cid)                        
 
 
 def test_cannot_delete_self(db):

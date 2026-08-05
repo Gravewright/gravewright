@@ -100,9 +100,7 @@ async def import_package_content_entry(
             event = TransportEvent.JOURNAL_CREATED
             payload.update({"journal_id": result.journal_id})
         if event is not None:
-            await RealtimeTransport().to_room(
-                room_id=result.campaign_id, event=event, payload=payload
-            )
+            await RealtimeTransport().to_room(room_id=result.campaign_id, event=event, payload=payload)
 
     return Response(
         {

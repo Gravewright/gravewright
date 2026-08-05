@@ -91,9 +91,7 @@ class SceneImageService:
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         scene = self.scenes.get_by_id(scene_id)
         if scene is None or scene.get("campaign_id") != campaign_id:
-            return SceneImageResult(
-                success=False, error_key="game.scene_images.errors.scene_not_found"
-            )
+            return SceneImageResult(success=False, error_key="game.scene_images.errors.scene_not_found")
 
         created = self.library.create_asset(
             campaign_id=campaign_id,
@@ -141,14 +139,10 @@ class SceneImageService:
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         scene = self.scenes.get_by_id(scene_id)
         if scene is None or scene.get("campaign_id") != campaign_id:
-            return SceneImageResult(
-                success=False, error_key="game.scene_images.errors.scene_not_found"
-            )
+            return SceneImageResult(success=False, error_key="game.scene_images.errors.scene_not_found")
         asset = self.assets.get_by_id(asset_id)
         if asset is None or asset.get("campaign_id") != campaign_id:
-            return SceneImageResult(
-                success=False, error_key="game.scene_images.errors.invalid_image"
-            )
+            return SceneImageResult(success=False, error_key="game.scene_images.errors.invalid_image")
         placement = self.placements.create(
             campaign_id=campaign_id,
             scene_id=scene_id,
@@ -159,9 +153,7 @@ class SceneImageService:
             natural_width=int(asset.get("width") or 0),
             natural_height=int(asset.get("height") or 0),
             rotation=float(rotation),
-            scale=scale
-            if scale is not None
-            else _default_scale(int(asset.get("width") or 0), int(asset.get("height") or 0)),
+            scale=scale if scale is not None else _default_scale(int(asset.get("width") or 0), int(asset.get("height") or 0)),
             layer=layer,
         )
         return SceneImageResult(success=True, payload={"placement": self._present(placement)})
@@ -184,9 +176,7 @@ class SceneImageService:
         if role is None:
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         if placement is None or placement.get("campaign_id") != campaign_id:
-            return SceneImageResult(
-                success=False, error_key="game.scene_images.errors.placement_not_found"
-            )
+            return SceneImageResult(success=False, error_key="game.scene_images.errors.placement_not_found")
         if not can_move_scene_image(actor_user_id=user_id, actor_role=role, placement=placement):
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         if layer is not None and not self._layer_allowed(role=role, layer=layer):
@@ -201,22 +191,16 @@ class SceneImageService:
             layer=layer,
         )
         if updated is None:
-            return SceneImageResult(
-                success=False, error_key="game.scene_images.errors.placement_not_found"
-            )
+            return SceneImageResult(success=False, error_key="game.scene_images.errors.placement_not_found")
         return SceneImageResult(success=True, payload={"placement": self._present(updated)})
 
-    def delete_placement(
-        self, *, campaign_id: str, user_id: str, placement_id: str
-    ) -> SceneImageResult:
+    def delete_placement(self, *, campaign_id: str, user_id: str, placement_id: str) -> SceneImageResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         placement = self.placements.get(placement_id)
         if role is None:
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         if placement is None or placement.get("campaign_id") != campaign_id:
-            return SceneImageResult(
-                success=False, error_key="game.scene_images.errors.placement_not_found"
-            )
+            return SceneImageResult(success=False, error_key="game.scene_images.errors.placement_not_found")
         if not can_delete_scene_image(actor_user_id=user_id, actor_role=role, placement=placement):
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         self.placements.delete(placement_id)

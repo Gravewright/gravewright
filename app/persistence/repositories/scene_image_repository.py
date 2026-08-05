@@ -24,10 +24,7 @@ class SceneImageRepository:
                 conn.execute(
                     select(scene_image_placements)
                     .where(scene_image_placements.c.campaign_id == campaign_id)
-                    .order_by(
-                        scene_image_placements.c.scene_id.asc(),
-                        scene_image_placements.c.z_index.asc(),
-                    )
+                    .order_by(scene_image_placements.c.scene_id.asc(), scene_image_placements.c.z_index.asc())
                 )
             )
         return [_decode(row) for row in rows]

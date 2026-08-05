@@ -204,11 +204,7 @@ def cmd_disable(args: argparse.Namespace) -> int:
         return rc
     result = svc.disable(package_id=args.id, force=args.force)
     if not result.success:
-        code = (
-            EXIT_UNSAFE
-            if result.error_key == "sdk.errors.package_active_in_campaign"
-            else EXIT_DOCTOR_ERROR
-        )
+        code = EXIT_UNSAFE if result.error_key == "sdk.errors.package_active_in_campaign" else EXIT_DOCTOR_ERROR
         if result.active_campaign_ids:
             print(f"       active in campaigns: {', '.join(result.active_campaign_ids)}")
         return _fail(result.error_key, code=code)
@@ -222,11 +218,7 @@ def cmd_remove(args: argparse.Namespace) -> int:
         return rc
     result = svc.remove(package_id=args.id, force=args.force)
     if not result.success:
-        code = (
-            EXIT_UNSAFE
-            if result.error_key == "sdk.errors.package_active_in_campaign"
-            else EXIT_DOCTOR_ERROR
-        )
+        code = EXIT_UNSAFE if result.error_key == "sdk.errors.package_active_in_campaign" else EXIT_DOCTOR_ERROR
         if result.active_campaign_ids:
             print(f"       active in campaigns: {', '.join(result.active_campaign_ids)}")
         return _fail(result.error_key, code=code)
@@ -254,7 +246,9 @@ def _update_one(svc, package_id: str) -> tuple[bool, str | None]:
 
 def cmd_update(args: argparse.Namespace) -> int:
     svc = _install_service()
-    targets = [r["id"] for r in svc.installed.list_all()] if args.id == "all" else [args.id]
+    targets = (
+        [r["id"] for r in svc.installed.list_all()] if args.id == "all" else [args.id]
+    )
     updated, failed = [], []
     for package_id in targets:
         ok, error_key = _update_one(svc, package_id)
@@ -286,9 +280,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     checks: list[Check] = []
     loaded = load_by_package_id(args.id)
     if loaded is None:
-        checks.append(
-            Check("disk", ERROR, f"{args.id} not found on disk", fix="Check data/packages/")
-        )
+        checks.append(Check("disk", ERROR, f"{args.id} not found on disk", fix="Check data/packages/"))
     else:
         if loaded.ok:
             checks.append(Check("manifest", OK, f"{args.id} manifest valid"))
@@ -301,22 +293,13 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     svc = _install_service()
     record = svc.get(args.id)
     if record is None:
-        checks.append(
-            Check(
-                "install",
-                WARN,
-                f"{args.id} is not installed",
-                fix=f"grave package install {args.id}",
-            )
-        )
+        checks.append(Check("install", WARN, f"{args.id} is not installed", fix=f"grave package install {args.id}"))
     else:
         checks.append(Check("install", OK, f"installed (status: {record['status']})"))
         if record["status"] == "enabled":
             report = PackageDependencyService().check(args.id)
             for key in PackageDependencyService.blocking_error_keys(report):
-                checks.append(
-                    Check("dependency", ERROR, f"{args.id}: {key}", fix=_ERROR_FIX.get(key))
-                )
+                checks.append(Check("dependency", ERROR, f"{args.id}: {key}", fix=_ERROR_FIX.get(key)))
 
     if args.json:
         from app.cli.doctor import render_json
@@ -333,9 +316,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 def _campaign_guard(campaign_id: str) -> int | None:
     if not _campaign_exists(campaign_id):
         print(f"ERROR  campaign not found: {campaign_id}")
-        print(
-            "FIX    grave campaign package list <campaign_id> uses the campaign's id, not its title."
-        )
+        print("FIX    grave campaign package list <campaign_id> uses the campaign's id, not its title.")
         return EXIT_DOCTOR_ERROR
     return None
 

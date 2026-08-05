@@ -98,16 +98,13 @@ async def test_write_chunk_stores_data_versions_metadata_and_emits_small_event(d
     assert second.chunk["version"] == 2
     assert second.chunk["hash"] == hashlib.sha256(data_v2).hexdigest()
     assert second.chunk["byte_size"] == len(data_v2)
-    assert (
-        service.read_chunk(
-            scene_id=scene["id"],
-            layer_id=layer["id"],
-            cx=0,
-            cy=0,
-            user_id=gm_id,
-        ).data
-        == data_v2
-    )
+    assert service.read_chunk(
+        scene_id=scene["id"],
+        layer_id=layer["id"],
+        cx=0,
+        cy=0,
+        user_id=gm_id,
+    ).data == data_v2
     assert transport.room_events[-1] == {
         "room_id": campaign_id,
         "event": TransportEvent.SCENE_CHUNK_UPDATED,

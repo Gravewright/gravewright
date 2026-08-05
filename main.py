@@ -29,10 +29,11 @@ from app.routes import route_handlers
 
 BASE_DIR = Path(__file__).resolve().parent
 
-
+                                                                                    
+                                                             
 _AUTH_EXCLUDE = ["^/static", "^/sdk/packages/[^/]+/asset/", "^/schema"]
 
-
+                                                                                        
 _session_config = ServerSideSessionConfig(
     key=config.session_cookie_name,
     max_age=config.session_max_age,
@@ -82,6 +83,9 @@ app = Litestar(
     ),
     compression_config=CompressionConfig(backend="gzip"),
     logging_config=LoggingConfig(
+                                                                                  
+                                                                                    
+                                                                  
         log_exceptions="debug",
         configure_root_logger=True,
     ),

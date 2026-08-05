@@ -20,15 +20,12 @@ def test_local_chunk_storage_write_and_read(tmp_path):
     )
 
     assert digest == hashlib.sha256(data).hexdigest()
-    assert (
-        storage.read_chunk(
-            scene_id="scene_1",
-            layer_id="layer_1",
-            cx=0,
-            cy=0,
-        )
-        == data
-    )
+    assert storage.read_chunk(
+        scene_id="scene_1",
+        layer_id="layer_1",
+        cx=0,
+        cy=0,
+    ) == data
 
 
 def test_local_chunk_storage_reads_multiple_chunks(tmp_path):
@@ -77,15 +74,12 @@ def test_local_chunk_storage_overwrites_atomically(tmp_path):
     )
 
     assert digest == hashlib.sha256(b"second").hexdigest()
-    assert (
-        storage.read_chunk(
-            scene_id="scene_1",
-            layer_id="layer_1",
-            cx=0,
-            cy=0,
-        )
-        == b"second"
-    )
+    assert storage.read_chunk(
+        scene_id="scene_1",
+        layer_id="layer_1",
+        cx=0,
+        cy=0,
+    ) == b"second"
 
 
 def test_local_chunk_storage_delete_is_idempotent(tmp_path):

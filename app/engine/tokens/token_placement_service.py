@@ -19,5 +19,8 @@ class TokenPlacementService:
         if count <= 0:
             return []
 
-        columns = ceil(count**0.5)
-        return [(origin_x + (i % columns), origin_y + (i // columns)) for i in range(count)]
+        columns = ceil(count ** 0.5)
+        return [
+            (origin_x + (i % columns), origin_y + (i // columns))
+            for i in range(count)
+        ]

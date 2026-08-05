@@ -45,9 +45,7 @@ class ItemSheetService:
         self.rules = SystemRulesService()
         self.layouts = SystemLayoutService()
 
-    def build_bundle(
-        self, *, item_id: str, user_id: str, locale: str | None = None
-    ) -> ItemSheetBundle | None:
+    def build_bundle(self, *, item_id: str, user_id: str, locale: str | None = None) -> ItemSheetBundle | None:
         item = self.items.get(item_id)
         if item is None or item["status"] != "active":
             return None
@@ -68,7 +66,9 @@ class ItemSheetService:
         sheet: dict | None = None
         data = raw_data
         if self.systems.get_active_manifest(system_id) is not None:
-            sheet = self.layouts.get_item_html_sheet(system_id=system_id, item_type=item["type"])
+            sheet = self.layouts.get_item_html_sheet(
+                system_id=system_id, item_type=item["type"]
+            )
             if sheet is None:
                 candidate = self.layouts.get_item_sheet(
                     system_id=system_id,

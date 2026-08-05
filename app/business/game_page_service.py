@@ -78,6 +78,8 @@ class GamePageService:
                 }
             )
 
+                                                                                  
+                                                                
         enabled_systems = [
             {
                 "id": item["id"],
@@ -121,7 +123,12 @@ class GamePageService:
             )
             recent_messages = self.chat.list_for_campaign(campaign_id=campaign["id"])
             if room["is_streamer"]:
-                recent_messages = [m for m in recent_messages if m.get("visibility") == "public"]
+                                                                                  
+                                                                               
+                                                             
+                recent_messages = [
+                    m for m in recent_messages if m.get("visibility") == "public"
+                ]
             room["recent_messages"] = recent_messages
             room["scene_groups"] = self.scene_groups.list_by_campaign(campaign["id"])
             room["scenes"] = self.scenes.list_by_campaign(campaign["id"])
@@ -155,7 +162,7 @@ class GamePageService:
             room["ungrouped_scenes_has_active"] = any(scene["active"] for scene in ungrouped_scenes)
 
             sys_id = room.get("active_system_id")
-
+                                                                               
             record = self.system_install.installed.get(sys_id) if sys_id else None
             active_system = enabled_systems_by_id.get(sys_id or "")
             room["active_system"] = (
@@ -186,6 +193,9 @@ class GamePageService:
             )
             all_journals = []
             for journal in self.journals.list_active_for_campaign(campaign_id=campaign["id"]):
+                                                                              
+                                                                                
+                                                                       
                 if not self.journal_service.can_view_journal_directly(
                     journal=journal,
                     campaign=room,
@@ -243,7 +253,8 @@ class GamePageService:
             room["unfoldered_journals"] = unfoldered_journals
 
             is_gm_room = room["member_role"] == "gm"
-
+                                                                                  
+                                                     
             sees_all = has_full_view(room["member_role"])
             owners_by_actor = self.actors.list_owners_for_campaign_actors(
                 campaign_id=campaign["id"]
@@ -295,6 +306,7 @@ class GamePageService:
             room["unfoldered_actors"] = unfoldered_actors
             room["enabled_systems"] = enabled_systems if is_gm_room else []
 
+                                                                              
             owners_by_item = self.items.list_owners_for_campaign_items(campaign_id=campaign["id"])
             all_items = []
             for item in self.item_service.list_for_campaign(

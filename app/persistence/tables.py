@@ -57,10 +57,14 @@ def enum_check(column: str, enum, name: str) -> CheckConstraint:
     allowed = ", ".join(f"'{member.value}'" for member in enum)
     return CheckConstraint(f"{column} IN ({allowed})", name=name)
 
-
+                                                                                
+                                                                        
+                                                                               
 _ID = String(64)
 _STR = String(191)
 
+
+                                                                              
 
 users = Table(
     "users",
@@ -138,6 +142,8 @@ auth_attempts = Table(
 )
 
 
+                                                                              
+
 campaigns = Table(
     "campaigns",
     metadata,
@@ -194,9 +200,7 @@ combat_participants = Table(
     "combat_participants",
     metadata,
     Column("id", _ID, primary_key=True),
-    Column(
-        "combat_id", _ID, ForeignKey("combat_encounters.id", ondelete="CASCADE"), nullable=False
-    ),
+    Column("combat_id", _ID, ForeignKey("combat_encounters.id", ondelete="CASCADE"), nullable=False),
     Column("actor_id", _ID, ForeignKey("actors_core.id", ondelete="SET NULL"), nullable=True),
     Column("token_id", _ID, nullable=True),
     Column("name", _STR, nullable=False),
@@ -217,9 +221,7 @@ combat_events = Table(
     "combat_events",
     metadata,
     Column("id", _ID, primary_key=True),
-    Column(
-        "combat_id", _ID, ForeignKey("combat_encounters.id", ondelete="CASCADE"), nullable=False
-    ),
+    Column("combat_id", _ID, ForeignKey("combat_encounters.id", ondelete="CASCADE"), nullable=False),
     Column("round_number", Integer, nullable=False, server_default=text("1")),
     Column("turn_index", Integer, nullable=False, server_default=text("0")),
     Column("participant_id", _ID, nullable=True),
@@ -266,14 +268,16 @@ campaign_invitations = Table(
     Column("responded_at", Integer, nullable=True),
     enum_check("role", PlayerRole, "role"),
     enum_check("status", InvitationStatus, "status"),
-    Index(
-        "idx_campaign_invitations_invited_user_status", "invited_user_id", "status", "created_at"
-    ),
+    Index("idx_campaign_invitations_invited_user_status", "invited_user_id", "status", "created_at"),
     Index("idx_campaign_invitations_campaign_status", "campaign_id", "status", "created_at"),
     Index("idx_campaign_invitations_invited_by", "invited_by_user_id"),
 )
 
-
+                                                                              
+                                                                              
+                                                                           
+                                                                           
+                                                              
 streamer_links = Table(
     "streamer_links",
     metadata,
@@ -353,9 +357,7 @@ campaign_packages = Table(
     "campaign_packages",
     metadata,
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
-    Column(
-        "package_id", _ID, ForeignKey("installed_packages.id", ondelete="CASCADE"), nullable=False
-    ),
+    Column("package_id", _ID, ForeignKey("installed_packages.id", ondelete="CASCADE"), nullable=False),
     Column("activation_role", _STR, nullable=False),
     Column("status", _STR, nullable=False, server_default=text("'active'")),
     Column("load_order", Integer, nullable=False, server_default=text("0")),
@@ -401,6 +403,8 @@ package_content_imports = Table(
     Index("idx_package_content_imports_package", "package_id"),
 )
 
+
+                                                                              
 
 actors_core = Table(
     "actors_core",
@@ -463,6 +467,8 @@ actor_permissions = Table(
 )
 
 
+                                                                              
+
 items_core = Table(
     "items_core",
     metadata,
@@ -521,6 +527,8 @@ item_permissions = Table(
     Index("idx_item_permissions_user_id", "user_id"),
 )
 
+
+                                                                              
 
 journal_folders = Table(
     "journal_folders",
@@ -655,6 +663,8 @@ library_assets = Table(
 )
 
 
+                                                                              
+
 scene_groups = Table(
     "scene_groups",
     metadata,
@@ -772,6 +782,8 @@ scene_chunks = Table(
 )
 
 
+                                                                              
+
 tokens = Table(
     "tokens",
     metadata,
@@ -819,6 +831,8 @@ token_conditions = Table(
 )
 
 
+                                                                              
+
 chat_messages = Table(
     "chat_messages",
     metadata,
@@ -840,6 +854,7 @@ chat_messages = Table(
 )
 
 
+                                                                              
 # --- Cards and deck piles ----------------------------------------------------
 
 card_deck_definitions = Table(
@@ -867,12 +882,7 @@ card_definitions = Table(
     "card_definitions",
     metadata,
     Column("id", _ID, primary_key=True),
-    Column(
-        "deck_definition_id",
-        _ID,
-        ForeignKey("card_deck_definitions.id", ondelete="CASCADE"),
-        nullable=False,
-    ),
+    Column("deck_definition_id", _ID, ForeignKey("card_deck_definitions.id", ondelete="CASCADE"), nullable=False),
     Column("name", _STR, nullable=False),
     Column("subtitle", _STR, nullable=True),
     Column("description", Text, nullable=True),
@@ -893,12 +903,7 @@ card_deck_instances = Table(
     Column("id", _ID, primary_key=True),
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
     Column("room_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True),
-    Column(
-        "deck_definition_id",
-        _ID,
-        ForeignKey("card_deck_definitions.id", ondelete="CASCADE"),
-        nullable=False,
-    ),
+    Column("deck_definition_id", _ID, ForeignKey("card_deck_definitions.id", ondelete="CASCADE"), nullable=False),
     Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
     Column("name", _STR, nullable=False),
     Column("active", Integer, nullable=False, server_default=text("1")),
@@ -914,12 +919,7 @@ card_piles = Table(
     metadata,
     Column("id", _ID, primary_key=True),
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
-    Column(
-        "deck_instance_id",
-        _ID,
-        ForeignKey("card_deck_instances.id", ondelete="CASCADE"),
-        nullable=True,
-    ),
+    Column("deck_instance_id", _ID, ForeignKey("card_deck_instances.id", ondelete="CASCADE"), nullable=True),
     Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
     Column("kind", _STR, nullable=False),
     Column("name", _STR, nullable=False),
@@ -938,18 +938,8 @@ card_instances = Table(
     metadata,
     Column("id", _ID, primary_key=True),
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
-    Column(
-        "deck_instance_id",
-        _ID,
-        ForeignKey("card_deck_instances.id", ondelete="CASCADE"),
-        nullable=False,
-    ),
-    Column(
-        "card_definition_id",
-        _ID,
-        ForeignKey("card_definitions.id", ondelete="CASCADE"),
-        nullable=False,
-    ),
+    Column("deck_instance_id", _ID, ForeignKey("card_deck_instances.id", ondelete="CASCADE"), nullable=False),
+    Column("card_definition_id", _ID, ForeignKey("card_definitions.id", ondelete="CASCADE"), nullable=False),
     Column("current_pile_id", _ID, ForeignKey("card_piles.id", ondelete="SET NULL"), nullable=True),
     Column("current_scene_id", _ID, ForeignKey("scenes.id", ondelete="SET NULL"), nullable=True),
     Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
@@ -968,9 +958,7 @@ card_pile_entries = Table(
     "card_pile_entries",
     metadata,
     Column("pile_id", _ID, ForeignKey("card_piles.id", ondelete="CASCADE"), nullable=False),
-    Column(
-        "card_instance_id", _ID, ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False
-    ),
+    Column("card_instance_id", _ID, ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False),
     Column("position", Integer, nullable=False),
     Column("inserted_at", Integer, nullable=False),
     PrimaryKeyConstraint("pile_id", "card_instance_id"),
@@ -985,9 +973,7 @@ scene_card_placements = Table(
     Column("id", _ID, primary_key=True),
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
     Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
-    Column(
-        "card_instance_id", _ID, ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False
-    ),
+    Column("card_instance_id", _ID, ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False),
     Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
     Column("x", Float, nullable=False),
     Column("y", Float, nullable=False),
@@ -1073,9 +1059,7 @@ transport_messages = Table(
 room_event_log = Table(
     "room_event_log",
     metadata,
-    Column(
-        "seq", BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True
-    ),
+    Column("seq", BigInteger().with_variant(Integer, "sqlite"), primary_key=True, autoincrement=True),
     Column("id", _ID, nullable=False, unique=True),
     Column("room_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
     Column("event", _STR, nullable=False),
@@ -1086,6 +1070,8 @@ room_event_log = Table(
     Index("idx_room_event_log_expires_at", "expires_at"),
 )
 
+
+                                                                                
 
 schema_migrations = Table(
     "schema_migrations",

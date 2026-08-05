@@ -40,6 +40,8 @@ class SecurityHeadersMiddleware:
                         b"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
                         b"img-src 'self' data: blob:; "
                         b"font-src 'self' data: https://cdn.jsdelivr.net; "
+                                                                                
+                                                                              
                         b"connect-src 'self' data: blob: ws: wss: https://esm.sh https://cdn.jsdelivr.net; "
                         b"worker-src 'self' blob:; "
                         b"object-src 'none'; "

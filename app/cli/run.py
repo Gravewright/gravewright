@@ -69,9 +69,7 @@ def _ensure_dependencies(*, no_install: bool) -> Check:
         )
     result = subprocess.run(["uv", "sync"], cwd=str(PROJECT_ROOT))
     if result.returncode != 0 or not _dependencies_present():
-        return Check(
-            "dependencies", ERROR, "uv sync failed", fix="Run uv sync manually and inspect output"
-        )
+        return Check("dependencies", ERROR, "uv sync failed", fix="Run uv sync manually and inspect output")
     return Check("dependencies", OK, "dependencies installed via uv sync")
 
 
@@ -172,8 +170,6 @@ def serve(*, host: str, port: int, dev: bool, open_browser: bool) -> int:
         _open_browser_when_ready(f"http://{shown}:{port}/")
     print(f"Starting Gravewright on http://{host}:{port}/  (Ctrl+C to stop)", flush=True)
     try:
-        return subprocess.run(
-            uvicorn_command(host=host, port=port, dev=dev), cwd=str(PROJECT_ROOT)
-        ).returncode
+        return subprocess.run(uvicorn_command(host=host, port=port, dev=dev), cwd=str(PROJECT_ROOT)).returncode
     except KeyboardInterrupt:
         return 0

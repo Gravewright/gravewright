@@ -29,11 +29,7 @@ class JournalPermissionRepository:
     def list_for_journal(self, *, journal_id: str) -> dict[str, dict]:
         with engine_connect() as connection:
             rows = (
-                connection.execute(
-                    select(journal_permissions).where(
-                        journal_permissions.c.journal_id == journal_id
-                    )
-                )
+                connection.execute(select(journal_permissions).where(journal_permissions.c.journal_id == journal_id))
                 .mappings()
                 .all()
             )
@@ -63,10 +59,7 @@ class JournalPermissionRepository:
                     dialect_name=connection.dialect.name,
                     table=journal_permissions,
                     values=values,
-                    index_elements=[
-                        journal_permissions.c.journal_id,
-                        journal_permissions.c.user_id,
-                    ],
+                    index_elements=[journal_permissions.c.journal_id, journal_permissions.c.user_id],
                     set_={
                         "can_view": values["can_view"],
                         "can_edit": values["can_edit"],

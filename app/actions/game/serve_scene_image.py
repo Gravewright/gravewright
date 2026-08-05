@@ -10,6 +10,8 @@ from app.persistence.rows import Row
 from app.engine.scenes.scene_asset_read_service import SceneAssetReadService
 
 
+                                                                             
+                                                                                     
 @get("/game/scenes/{scene_id:str}/image")
 async def serve_scene_image(
     scene_id: FromPath[str],

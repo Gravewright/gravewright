@@ -21,20 +21,14 @@ from app.helpers.view import view_context
 
 @get("/game/items/panel/{campaign_id:str}")
 async def items_panel_fragment(
-    campaign_id: FromPath[str],
-    cookies: dict[str, str],
-    current_user: Row,
-    game_page_service: GamePageService,
+    campaign_id: FromPath[str], cookies: dict[str, str], current_user: Row, game_page_service: GamePageService
 ) -> Redirect | Template:
     """Server-rendered Items panel body, fetched by the client to refresh the
     panel in place after a mutation (no full-page reload)."""
     user = current_user
     room = next(
-        (
-            r
-            for r in game_page_service.build_context(user_id=user["id"]).rooms
-            if r["id"] == campaign_id
-        ),
+        (r for r in game_page_service.build_context(user_id=user["id"]).rooms
+         if r["id"] == campaign_id),
         None,
     )
     if room is None:
@@ -58,9 +52,7 @@ async def _authenticated_form(request: Request, cookies: dict[str, str], current
     return current_user, form, None
 
 
-def _result_response(
-    request: Request, result, *, payload: dict | None = None, created: bool = False
-):
+def _result_response(request: Request, result, *, payload: dict | None = None, created: bool = False):
     if _wants_json(request):
         if not result.success:
             return Response({"error_key": result.error_key}, status_code=400)
@@ -69,9 +61,7 @@ def _result_response(
 
 
 @post("/game/item/owner")
-async def toggle_item_owner(
-    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
-) -> Response[dict[str, Any]] | Redirect:
+async def toggle_item_owner(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -96,9 +86,7 @@ async def toggle_item_owner(
 
 
 @post("/game/item/move")
-async def move_item(
-    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
-) -> Response[dict[str, Any]] | Redirect:
+async def move_item(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -112,9 +100,7 @@ async def move_item(
 
 
 @post("/game/item-folder")
-async def create_item_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
-) -> Response[dict[str, Any]] | Redirect:
+async def create_item_folder(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -130,9 +116,7 @@ async def create_item_folder(
 
 
 @post("/game/item-folder/rename")
-async def rename_item_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
-) -> Response[dict[str, Any]] | Redirect:
+async def rename_item_folder(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -144,9 +128,7 @@ async def rename_item_folder(
 
 
 @post("/game/item-folder/color")
-async def set_item_folder_color(
-    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
-) -> Response[dict[str, Any]] | Redirect:
+async def set_item_folder_color(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -158,9 +140,7 @@ async def set_item_folder_color(
 
 
 @post("/game/item-folder/delete")
-async def delete_item_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
-) -> Response[dict[str, Any]] | Redirect:
+async def delete_item_folder(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -170,9 +150,7 @@ async def delete_item_folder(
 
 
 @post("/game/item-folder/move")
-async def move_item_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
-) -> Response[dict[str, Any]] | Redirect:
+async def move_item_folder(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early

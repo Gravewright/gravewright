@@ -40,10 +40,12 @@ from app.realtime.events import TransportEvent
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.scene_repository import SceneRepository
 
-
+                                                                                    
 _GM_ROLES = {"gm", "assistant_gm"}
 
-
+                                                                                 
+                                                                                
+                                             
 _BOARD_COMMAND_PERMISSIONS = {
     ClientCommand.BOARD_PING.value: TablePermission.BOARD_PING,
     ClientCommand.BOARD_AREA_MARKER_UPSERT.value: TablePermission.BOARD_MARKER_CREATE,
@@ -130,6 +132,7 @@ class BoardCommandHandler:
         if board_version is not None:
             full["board_version"] = board_version
         if item.get("layer") == "gm":
+                                                                                 
             await transport.to_gm(room_id=room_id, event=upsert_event, payload=full)
             await transport.to_players_in_room(
                 room_id=room_id,
@@ -197,33 +200,21 @@ class BoardCommandHandler:
         if command == ClientCommand.BOARD_PING.value:
             return await self._handle_ping(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_AREA_MARKER_UPSERT.value:
-            return await self._handle_area_marker_upsert(
-                command_id, room_id, payload, context, transport
-            )
+            return await self._handle_area_marker_upsert(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_AREA_MARKER_DELETE.value:
-            return await self._handle_area_marker_delete(
-                command_id, room_id, payload, context, transport
-            )
+            return await self._handle_area_marker_delete(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_AREA_MARKER_CLEAR.value:
-            return await self._handle_area_marker_clear(
-                command_id, room_id, payload, context, transport
-            )
+            return await self._handle_area_marker_clear(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_DRAW_UPSERT.value:
             return await self._handle_draw_upsert(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_DRAW_CLEAR.value:
             return await self._handle_draw_clear(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_MEASURE_FLASH.value:
-            return await self._handle_measure_flash(
-                command_id, room_id, payload, context, transport
-            )
+            return await self._handle_measure_flash(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_MEASURE_DELETE.value:
-            return await self._handle_measure_delete(
-                command_id, room_id, payload, context, transport
-            )
+            return await self._handle_measure_delete(command_id, room_id, payload, context, transport)
         if command == ClientCommand.BOARD_MEASURE_CLEAR.value:
-            return await self._handle_measure_clear(
-                command_id, room_id, payload, context, transport
-            )
+            return await self._handle_measure_clear(command_id, room_id, payload, context, transport)
 
         return BoardCommandResult(handled=False)
 
@@ -309,15 +300,16 @@ class BoardCommandHandler:
                 ),
             )
 
-        existing_items = await run_blocking(
-            self.scenes.list_board_area_markers, normalized["scene_id"]
-        )
+                                                                              
+                                                        
+        existing_items = await run_blocking(self.scenes.list_board_area_markers, normalized["scene_id"])
         is_new = not any(item.get("id") == normalized["id"] for item in existing_items)
         if is_new:
             marker_count = sum(1 for item in existing_items if not self._is_drawing(item))
             if marker_count >= config.board_markers_max_per_scene:
                 return _limit_reached(command_id, "This scene has too many markers.")
 
+                                                               
         if await self._is_gm(context.user_id, room_id) and marker.get("layer") == "gm":
             normalized["layer"] = "gm"
 
@@ -325,11 +317,7 @@ class BoardCommandHandler:
             self.scenes.upsert_board_area_marker,
             scene_id=normalized["scene_id"],
             marker=normalized,
-            **(
-                {"expected_board_version": expected_board_version}
-                if expected_board_version is not None
-                else {}
-            ),
+            **({"expected_board_version": expected_board_version} if expected_board_version is not None else {}),
         )
         if updated_markers is None:
             return _board_conflict(command_id)
@@ -386,14 +374,11 @@ class BoardCommandHandler:
                 ),
             )
 
+                                                                              
         existing = await self._find_board_item(scene_id, marker_id)
         if existing is not None and existing.get("kind") in ("freehand", "text"):
             owner = existing.get("owner_id")
-            if (
-                owner is not None
-                and owner != context.user_id
-                and not await self._is_gm(context.user_id, room_id)
-            ):
+            if owner is not None and owner != context.user_id and not await self._is_gm(context.user_id, room_id):
                 return BoardCommandResult(
                     handled=True,
                     response=error_envelope(
@@ -407,11 +392,7 @@ class BoardCommandHandler:
             self.scenes.delete_board_area_marker,
             scene_id=scene_id,
             marker_id=marker_id,
-            **(
-                {"expected_board_version": expected_board_version}
-                if expected_board_version is not None
-                else {}
-            ),
+            **({"expected_board_version": expected_board_version} if expected_board_version is not None else {}),
         )
         if updated_markers is None:
             return _board_conflict(command_id)
@@ -473,11 +454,7 @@ class BoardCommandHandler:
             self.scenes.clear_board_area_markers,
             scene_id,
             keep_gm_layer=not is_gm,
-            **(
-                {"expected_board_version": expected_board_version}
-                if expected_board_version is not None
-                else {}
-            ),
+            **({"expected_board_version": expected_board_version} if expected_board_version is not None else {}),
         )
         if not updated:
             return _board_conflict(command_id)
@@ -542,13 +519,13 @@ class BoardCommandHandler:
             )
 
         is_gm = await self._is_gm(context.user_id, room_id)
-        existing_items = await run_blocking(
-            self.scenes.list_board_area_markers, normalized["scene_id"]
-        )
+        existing_items = await run_blocking(self.scenes.list_board_area_markers, normalized["scene_id"])
         existing = next(
             (item for item in existing_items if item.get("id") == normalized["id"]), None
         )
 
+                                                                                
+                                                                    
         if existing is None:
             own_drawings = sum(
                 1
@@ -558,6 +535,7 @@ class BoardCommandHandler:
             if own_drawings >= config.board_measurements_max_per_user:
                 return _limit_reached(command_id, "You have too many drawings on this scene.")
 
+                                                                     
         existing_owner = existing.get("owner_id") if existing is not None else None
         if existing_owner is not None and existing_owner != context.user_id and not is_gm:
             return BoardCommandResult(
@@ -570,6 +548,7 @@ class BoardCommandHandler:
             )
         normalized["owner_id"] = existing_owner or context.user_id
 
+                                                                      
         if is_gm and drawing.get("layer") == "gm":
             normalized["layer"] = "gm"
 
@@ -577,11 +556,7 @@ class BoardCommandHandler:
             self.scenes.upsert_board_area_marker,
             scene_id=normalized["scene_id"],
             marker=normalized,
-            **(
-                {"expected_board_version": expected_board_version}
-                if expected_board_version is not None
-                else {}
-            ),
+            **({"expected_board_version": expected_board_version} if expected_board_version is not None else {}),
         )
         if updated_markers is None:
             return _board_conflict(command_id)
@@ -635,16 +610,13 @@ class BoardCommandHandler:
                 ),
             )
 
+                                                                            
         owner_filter = None if await self._is_gm(context.user_id, room_id) else context.user_id
         updated_markers = await run_blocking(
             self.scenes.clear_board_drawings,
             scene_id,
             owner_id=owner_filter,
-            **(
-                {"expected_board_version": expected_board_version}
-                if expected_board_version is not None
-                else {}
-            ),
+            **({"expected_board_version": expected_board_version} if expected_board_version is not None else {}),
         )
         if updated_markers is None:
             return _board_conflict(command_id)
@@ -718,9 +690,7 @@ class BoardCommandHandler:
                 payload=broadcast,
             )
 
-        return _ack(
-            command_id, room_id, ClientCommand.BOARD_MEASURE_FLASH.value, normalized["scene_id"]
-        )
+        return _ack(command_id, room_id, ClientCommand.BOARD_MEASURE_FLASH.value, normalized["scene_id"])
 
     async def _handle_measure_delete(
         self,

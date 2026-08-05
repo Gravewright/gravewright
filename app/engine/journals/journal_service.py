@@ -48,18 +48,20 @@ class JournalService:
         self.folders = JournalFolderRepository()
         self.journal_permissions = JournalPermissionRepository()
 
+                                                                             
+
     def can_view_journal_directly(self, *, journal: dict, campaign: dict, user_id: str) -> bool:
         """Direct view access: GM, owner, shared/handout, or explicit permission.
 
         This is what the sidebar lists. It does NOT include access granted only
         by virtue of a quest being shown on a board (see ``can_view_journal``).
         """
-
+                                                                            
         if has_full_view(campaign.get("member_role")):
             return True
         if self.journals.has_owner(journal_id=journal["id"], user_id=user_id):
             return True
-
+                                                                               
         if journal.get("visibility") in {"shared", "handout"}:
             return True
         permission = self.journal_permissions.get_for_user(
@@ -101,6 +103,8 @@ class JournalService:
         )
         return bool(permission and permission["can_edit"])
 
+                                                                             
+
     def create_folder(
         self,
         *,
@@ -116,18 +120,14 @@ class JournalService:
 
         name = name.strip()[:60]
         if not name:
-            return JournalResult(
-                success=False, error_key="game.journal.folders.errors.name_required"
-            )
+            return JournalResult(success=False, error_key="game.journal.folders.errors.name_required")
 
         resolved_parent: str | None = None
         campaign_dict = dict(campaign)
         if parent_id:
             parent = self.folders.get(folder_id=parent_id, campaign_id=campaign_id)
             if parent is None:
-                return JournalResult(
-                    success=False, error_key="game.journal.folders.errors.not_found"
-                )
+                return JournalResult(success=False, error_key="game.journal.folders.errors.not_found")
             if not _is_gm(campaign_dict) and parent["created_by_user_id"] != user_id:
                 return JournalResult(success=False, error_key="game.journal.errors.not_owner")
             resolved_parent = parent_id
@@ -140,6 +140,8 @@ class JournalService:
             color=color.strip()[:32] or None,
         )
         return JournalResult(success=True, folder_id=folder_id, campaign_id=campaign_id)
+
+                                                                             
 
     def create_journal(
         self,
@@ -230,6 +232,9 @@ class JournalService:
         if not title:
             return JournalResult(success=False, error_key="game.journal.errors.title_required")
 
+                                                                                 
+                                                                               
+                                                                                     
         current_folder = journal.get("folder_id") or None
         if (folder_id or "") == (current_folder or ""):
             resolved_folder = current_folder
@@ -241,13 +246,12 @@ class JournalService:
                 user_id=user_id,
             )
             if resolved_folder == "":
-                return JournalResult(
-                    success=False, error_key="game.journal.folders.errors.not_found"
-                )
+                return JournalResult(success=False, error_key="game.journal.folders.errors.not_found")
 
         journal_type = journal["type"]
         normalized_data = journal_data.normalize_data_for(journal_type, data or {})
-
+                                                                              
+                                                                              
         if not _is_gm(campaign_dict):
             stored = _decode_data(journal)
             if journal_type == "diary":
@@ -318,6 +322,8 @@ class JournalService:
             journal_type=journal["type"],
         )
 
+                                                                             
+
     def set_quest_status(
         self,
         *,
@@ -378,6 +384,8 @@ class JournalService:
             version=version,
             changed_paths=["data.objectives"],
         )
+
+                                                                             
 
     def add_quest_to_board(
         self,
@@ -444,9 +452,7 @@ class JournalService:
         if error is not None:
             return error
 
-        existing = {
-            entry["quest_id"] for entry in self.journals.list_board_entries(board_id=board_id)
-        }
+        existing = {entry["quest_id"] for entry in self.journals.list_board_entries(board_id=board_id)}
         filtered = [quest_id for quest_id in ordered_quest_ids if quest_id in existing]
         self.journals.set_board_entry_order(board_id=board_id, ordered_quest_ids=filtered)
         return JournalResult(
@@ -479,6 +485,8 @@ class JournalService:
             journal_type="quest_board",
         )
 
+                                                                             
+
     def build_view(self, *, journal: dict, campaign: dict, user_id: str) -> dict:
         """Return a role-appropriate projection of a journal.
 
@@ -507,12 +515,17 @@ class JournalService:
             from app.engine.journals import journal_doc
 
             diary = journal_data.normalize_diary_data(data)
-
-            view["content_doc"] = journal_doc.filter_doc_for_role(diary["content"], is_gm=is_gm)
+                                                                              
+                                                                     
+            view["content_doc"] = journal_doc.filter_doc_for_role(
+                diary["content"], is_gm=is_gm
+            )
             view["cover_image"] = diary["cover"]
             if is_gm:
                 view["diary"] = {"gm": diary["gm"]}
-
+                                                                             
+                                                                              
+                                                                           
             view["content_markdown"] = (
                 journal.get("content_markdown", "")
                 if journal_doc.is_empty_document(view["content_doc"])
@@ -528,6 +541,8 @@ class JournalService:
             else:
                 quest = journal_data.build_quest_player_view(title=journal["title"], data=data)
             if not is_gm:
+                                                                              
+                                                                         
                 quest.pop("gm", None)
                 quest["public"]["description"] = journal_doc.filter_doc_for_role(
                     quest["public"]["description"], is_gm=False
@@ -541,7 +556,9 @@ class JournalService:
 
             board = journal_data.normalize_board_data(data)
             view["board"] = {
-                "description": journal_doc.filter_doc_for_role(board["description"], is_gm=is_gm),
+                "description": journal_doc.filter_doc_for_role(
+                    board["description"], is_gm=is_gm
+                ),
                 "description_markdown": board["description_markdown"],
                 "image": board["image"],
                 "filters": board["filters"],
@@ -577,6 +594,7 @@ class JournalService:
             status = card["status"]
 
             if not full_access:
+
                 if status not in journal_data.PLAYER_VISIBLE_STATUSES:
                     continue
                 if status == "available" and not filters.get("showAvailable", True):
@@ -597,6 +615,8 @@ class JournalService:
                 }
             )
         return result
+
+                                                                             
 
     def toggle_owner(
         self,
@@ -700,9 +720,9 @@ class JournalService:
                 can_edit=False,
             )
 
-        return JournalResult(
-            success=True, journal_id=journal_id, campaign_id=journal["campaign_id"]
-        )
+        return JournalResult(success=True, journal_id=journal_id, campaign_id=journal["campaign_id"])
+
+                                                                             
 
     def move_journal(
         self,
@@ -733,9 +753,7 @@ class JournalService:
                 campaign_id=journal["campaign_id"],
             )
             if folder is None:
-                return JournalResult(
-                    success=False, error_key="game.journal.folders.errors.not_found"
-                )
+                return JournalResult(success=False, error_key="game.journal.folders.errors.not_found")
             resolved = target_folder_id
         else:
             resolved = None
@@ -775,26 +793,20 @@ class JournalService:
         resolved_parent: str | None = None
         if target_parent_id:
             if target_parent_id == folder_id:
-                return JournalResult(
-                    success=False, error_key="game.journal.folders.errors.not_found"
-                )
+                return JournalResult(success=False, error_key="game.journal.folders.errors.not_found")
             parent = self.folders.get(
                 folder_id=target_parent_id,
                 campaign_id=with_campaign_id,
             )
             if parent is None:
-                return JournalResult(
-                    success=False, error_key="game.journal.folders.errors.not_found"
-                )
+                return JournalResult(success=False, error_key="game.journal.folders.errors.not_found")
             all_folders = self.folders.list_for_campaign(campaign_id=with_campaign_id)
             folder_by_id = {f["id"]: f for f in all_folders}
             cursor = parent
             seen: set[str] = set()
             while cursor is not None and cursor["id"] not in seen:
                 if cursor["id"] == folder_id:
-                    return JournalResult(
-                        success=False, error_key="game.journal.folders.errors.not_found"
-                    )
+                    return JournalResult(success=False, error_key="game.journal.folders.errors.not_found")
                 seen.add(cursor["id"])
                 parent_id = cursor.get("parent_id")
                 cursor = folder_by_id.get(parent_id) if parent_id else None
@@ -806,6 +818,8 @@ class JournalService:
             folder_id=folder_id,
             campaign_id=with_campaign_id,
         )
+
+                                                                             
 
     def _load_editable_quest(
         self, quest_id: str, requester_user_id: str
@@ -821,33 +835,23 @@ class JournalService:
         self, journal_id: str, requester_user_id: str, *, expected_type: str
     ) -> tuple[dict | None, dict | None, JournalResult | None]:
         journal = self.journals.get_by_id(journal_id)
-        if journal is None or journal["status"] != "active" or journal["type"] != expected_type:
-            return (
-                None,
-                None,
-                JournalResult(success=False, error_key="game.journal.errors.not_found"),
-            )
+        if (
+            journal is None
+            or journal["status"] != "active"
+            or journal["type"] != expected_type
+        ):
+            return None, None, JournalResult(success=False, error_key="game.journal.errors.not_found")
 
         campaign = self.campaigns.get_for_user(
             campaign_id=journal["campaign_id"],
             user_id=requester_user_id,
         )
         if campaign is None:
-            return (
-                None,
-                None,
-                JournalResult(success=False, error_key="game.journal.errors.not_found"),
-            )
+            return None, None, JournalResult(success=False, error_key="game.journal.errors.not_found")
 
         campaign_dict = dict(campaign)
-        if not self.can_edit_journal(
-            journal=journal, campaign=campaign_dict, user_id=requester_user_id
-        ):
-            return (
-                None,
-                None,
-                JournalResult(success=False, error_key="game.journal.errors.not_owner"),
-            )
+        if not self.can_edit_journal(journal=journal, campaign=campaign_dict, user_id=requester_user_id):
+            return None, None, JournalResult(success=False, error_key="game.journal.errors.not_owner")
 
         return journal, campaign_dict, None
 

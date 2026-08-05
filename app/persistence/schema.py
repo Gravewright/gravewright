@@ -250,8 +250,6 @@ def ensure_schema_ready(engine: Engine, *, auto_migrate: bool) -> None:
     )
     current = status["current"] or "none (uninitialized)"
     raise SchemaOutdatedError(
-        "Persistent databases must be initialized with Alembic. "
-        "Use 'grave db upgrade' or a disposable in-memory database for tests. "
         "Database schema is not up to date: "
         f"current revision {current}, expected head {status['head']}. "
         "Refusing to start to avoid running against an incomplete schema. "

@@ -82,6 +82,8 @@ async def _read_upload_file(upload: object) -> bytes:
 def _build_data(form: Any, journal_type: str) -> dict | None:
     """Translate flat form fields into the structured ``data`` dict per type."""
     if journal_type == "diary":
+                                                                                
+                                                                              
         if not _has_field(form, "content_doc"):
             return None
         return {
@@ -180,9 +182,7 @@ async def create_journal(
         visibility=_str(form, "visibility", "private"),
         content_markdown=_str(form, "content_markdown"),
         data=_build_data(form, journal_type),
-        owner_user_ids=_list(form, "owner_user_ids")
-        if _has_field(form, "owner_user_ids")
-        else None,
+        owner_user_ids=_list(form, "owner_user_ids") if _has_field(form, "owner_user_ids") else None,
     )
     await _emit(TransportEvent.JOURNAL_CREATED, result, user_id=user["id"])
 
@@ -192,12 +192,10 @@ async def create_journal(
         return Response({"error_key": result.error_key}, status_code=400)
 
     if result.success and result.journal_id:
-        query = urlencode(
-            {
-                "room": _str(form, "campaign_id"),
-                "open_modal": f"journal-{result.journal_id}",
-            }
-        )
+        query = urlencode({
+            "room": _str(form, "campaign_id"),
+            "open_modal": f"journal-{result.journal_id}",
+        })
         return Redirect(path=f"/game?{query}")
     return _journal_redirect(_str(form, "campaign_id"))
 
@@ -223,9 +221,7 @@ async def update_journal(
         visibility=_str(form, "visibility", "private"),
         content_markdown=_str(form, "content_markdown"),
         data=_build_data(form, journal_type),
-        owner_user_ids=_list(form, "owner_user_ids")
-        if _has_field(form, "owner_user_ids")
-        else None,
+        owner_user_ids=_list(form, "owner_user_ids") if _has_field(form, "owner_user_ids") else None,
     )
     if result.success:
         result = JournalResult(
@@ -482,19 +478,13 @@ async def create_journal_folder(
 
 @get("/game/journals/panel/{campaign_id:str}")
 async def journals_panel_fragment(
-    campaign_id: FromPath[str],
-    cookies: dict[str, str],
-    current_user: Row,
-    game_page_service: GamePageService,
+    campaign_id: FromPath[str], cookies: dict[str, str], current_user: Row, game_page_service: GamePageService
 ) -> Redirect | Template:
     """Server-rendered Journals tree, fetched to refresh the panel in place."""
     user = current_user
     room = next(
-        (
-            r
-            for r in game_page_service.build_context(user_id=user["id"]).rooms
-            if r["id"] == campaign_id
-        ),
+        (r for r in game_page_service.build_context(user_id=user["id"]).rooms
+         if r["id"] == campaign_id),
         None,
     )
     if room is None:
@@ -707,6 +697,8 @@ async def upload_journal_asset(
     return Response({"error_key": result.error_key}, status_code=400)
 
 
+                                                                             
+                                                                               
 @get("/game/journal/asset/{asset_id:str}")
 async def serve_journal_asset(
     asset_id: FromPath[str],

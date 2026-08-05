@@ -53,30 +53,19 @@ async def update_package_setting(
     definitions = {d["key"]: d for d in package_settings_service.definitions(package_id)}
     definition = definitions.get(key)
     if definition is None:
-        return Response(
-            {"success": False, "error_key": "sdk.errors.setting_unknown"}, status_code=400
-        )
+        return Response({"success": False, "error_key": "sdk.errors.setting_unknown"}, status_code=400)
 
     if definition["scope"] == "global":
         if str(current_user["system_role"]) != SystemRole.OWNER.value:
-            return Response(
-                {"success": False, "error_key": "sdk.errors.owner_required"}, status_code=403
-            )
+            return Response({"success": False, "error_key": "sdk.errors.owner_required"}, status_code=403)
 
     # Campaign-scoped writes are GM-only; user-scoped writes belong to the user.
     if definition["scope"] == "campaign":
         if not campaign_id:
-            return Response(
-                {"success": False, "error_key": "sdk.errors.campaign_required"}, status_code=400
-            )
-        role = CampaignRepository().get_member_role(
-            campaign_id=campaign_id, user_id=current_user["id"]
-        )
+            return Response({"success": False, "error_key": "sdk.errors.campaign_required"}, status_code=400)
+        role = CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=current_user["id"])
         if role != PlayerRole.GM.value:
-            return Response(
-                {"success": False, "error_key": "inside.campaigns.errors.gm_required"},
-                status_code=403,
-            )
+            return Response({"success": False, "error_key": "inside.campaigns.errors.gm_required"}, status_code=403)
 
     result = package_settings_service.set(
         package_id=package_id,

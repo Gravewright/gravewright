@@ -16,9 +16,7 @@ def test_compact_effects_keeps_hud_details_for_buff_debuff_and_condition():
                         "description": "Adiciona 1d4 em ataques e salvaguardas.",
                         "duration": {"type": "rounds", "remaining": 4},
                         "concentration": True,
-                        "modifiers": [
-                            {"target": "roll.attack", "operation": "add_dice", "value": "1d4"}
-                        ],
+                        "modifiers": [{"target": "roll.attack", "operation": "add_dice", "value": "1d4"}],
                     },
                 },
                 {
@@ -30,12 +28,7 @@ def test_compact_effects_keeps_hud_details_for_buff_debuff_and_condition():
                     },
                 },
                 {"id": "stance", "name": "Postura", "data": {"category": "stance"}},
-                {
-                    "id": "off",
-                    "name": "Desligado",
-                    "enabled": False,
-                    "data": {"category": "debuff"},
-                },
+                {"id": "off", "name": "Desligado", "enabled": False, "data": {"category": "debuff"}},
             ]
         }
     )

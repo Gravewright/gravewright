@@ -54,11 +54,13 @@ UPLOAD_PHASE_TILING = "tiling"
 UPLOAD_PHASE_CHUNKING = "chunking"
 UPLOAD_PHASE_COMPLETE = "complete"
 
-
+                                                                                 
+                                                                             
 _TILING_REPORT_STEPS = 200
 _CHUNKING_REPORT_STEPS = 100
 
-
+                                                                                
+                                               
 MAX_UPLOAD_BYTES = config.map_upload_max_bytes
 MAX_IMAGE_WIDTH = config.map_image_max_width
 MAX_IMAGE_HEIGHT = config.map_image_max_height
@@ -131,7 +133,7 @@ class _UploadProgressReporter:
                 "percent": percent,
             },
         )
-
+                                                                          
         await asyncio.sleep(0)
 
 
@@ -144,6 +146,8 @@ class MapUploadResult:
     tile_count: int = 0
     chunk_count: int = 0
     error_key: str | None = None
+
+
 
 
 def _record_map_operation(
@@ -333,6 +337,9 @@ class MapUploadService:
             encoding=SceneChunkEncoding.UINT32_TILE_REFS_V1,
         )
 
+                                                                                
+                                                                                
+                                                              
         try:
             original_path = self.asset_storage.write_original(
                 scene_id=scene["id"],
@@ -856,15 +863,9 @@ class MapUploadService:
                 asset_subquery = select(scene_tiles_table.c.asset_id).where(
                     scene_tiles_table.c.layer_id == layer_id
                 )
-                conn.execute(
-                    delete(scene_assets_table).where(scene_assets_table.c.id.in_(asset_subquery))
-                )
-                conn.execute(
-                    delete(scene_tiles_table).where(scene_tiles_table.c.layer_id == layer_id)
-                )
-                conn.execute(
-                    delete(scene_chunks_table).where(scene_chunks_table.c.layer_id == layer_id)
-                )
+                conn.execute(delete(scene_assets_table).where(scene_assets_table.c.id.in_(asset_subquery)))
+                conn.execute(delete(scene_tiles_table).where(scene_tiles_table.c.layer_id == layer_id))
+                conn.execute(delete(scene_chunks_table).where(scene_chunks_table.c.layer_id == layer_id))
 
                 for tile in staged.tiles:
                     asset_id = uuid.uuid4().hex

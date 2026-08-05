@@ -112,9 +112,7 @@ async def update_token_hp(
             "updated_by": current_user["id"],
             "changed_paths": result.changed_paths,
         }
-        await transport.to_gm(
-            room_id=result.campaign_id or "", event=TransportEvent.TOKENS_UPDATED, payload=payload
-        )
+        await transport.to_gm(room_id=result.campaign_id or "", event=TransportEvent.TOKENS_UPDATED, payload=payload)
         if token is not None and not token.get("hidden"):
             await transport.to_players_in_room(
                 room_id=result.campaign_id or "",

@@ -192,16 +192,12 @@ class ActorService:
             return None, None, ActorResult(success=False, error_key="game.actors.errors.not_found")
         campaign_dict = dict(campaign)
         if not can_edit_actor(actor=actor, campaign=campaign_dict, user_id=user_id):
-            return (
-                None,
-                None,
-                ActorResult(success=False, error_key="game.actors.errors.not_allowed"),
-            )
+            return None, None, ActorResult(success=False, error_key="game.actors.errors.not_allowed")
         return actor, campaign_dict, None
 
-    def _load_gm_actor(
-        self, actor_id: str, requester_user_id: str
-    ) -> tuple[dict | None, ActorResult | None]:
+                                                                              
+
+    def _load_gm_actor(self, actor_id: str, requester_user_id: str) -> tuple[dict | None, ActorResult | None]:
         actor = self.actors.get(actor_id)
         if actor is None or actor["status"] != "active":
             return None, ActorResult(success=False, error_key="game.actors.errors.not_found")
@@ -251,7 +247,9 @@ class ActorService:
         actor, error = self._load_gm_actor(actor_id, requester_user_id)
         if error is not None:
             return error
-        member = self.campaigns.get_member(campaign_id=actor["campaign_id"], user_id=target_user_id)
+        member = self.campaigns.get_member(
+            campaign_id=actor["campaign_id"], user_id=target_user_id
+        )
         if member is None or member["role"] == "gm":
             return ActorResult(success=False, error_key="game.actors.errors.not_found")
 
@@ -273,6 +271,8 @@ class ActorService:
             )
         return ActorResult(success=True, actor_id=actor_id, campaign_id=actor["campaign_id"])
 
+                                                                              
+
     def create_folder(
         self, *, campaign_id: str, user_id: str, name: str, parent_id: str = "", color: str = ""
     ) -> ActorResult:
@@ -291,11 +291,8 @@ class ActorService:
                 return ActorResult(success=False, error_key="game.actors.folders.errors.not_found")
             resolved_parent = parent_id
         folder_id = self.folders.create(
-            campaign_id=campaign_id,
-            created_by_user_id=user_id,
-            name=name,
-            parent_id=resolved_parent,
-            color=color.strip()[:32] or None,
+            campaign_id=campaign_id, created_by_user_id=user_id, name=name,
+            parent_id=resolved_parent, color=color.strip()[:32] or None,
         )
         return ActorResult(success=True, folder_id=folder_id, campaign_id=campaign_id)
 
@@ -364,9 +361,7 @@ class ActorService:
     ) -> tuple[dict | None, ActorResult | None]:
         folder = self._find_folder(folder_id)
         if folder is None:
-            return None, ActorResult(
-                success=False, error_key="game.actors.folders.errors.not_found"
-            )
+            return None, ActorResult(success=False, error_key="game.actors.folders.errors.not_found")
         campaign = self.campaigns.get_for_user(campaign_id=folder["campaign_id"], user_id=user_id)
         if campaign is None or not _is_gm(dict(campaign)):
             return None, ActorResult(success=False, error_key="game.actors.errors.gm_required")

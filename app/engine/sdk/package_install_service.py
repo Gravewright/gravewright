@@ -219,9 +219,7 @@ class PackageInstallService:
         except Exception:  # noqa: BLE001 - report a clean error, never crash the route
             package_archive_installer.discard(staged.staging_dir)
             return PackageActionResult(
-                success=False,
-                package_id=package_id,
-                error_key="inside.addons.errors.package_invalid",
+                success=False, package_id=package_id, error_key="inside.addons.errors.package_invalid"
             )
 
         return self.install(package_id=package_id, user_id=user_id)

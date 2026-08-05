@@ -52,26 +52,14 @@ class JournalAssetRepository:
                     created_at=now,
                 )
             )
-            row = one_or_none(
-                conn.execute(
-                    select(journal_assets_table)
-                    .where(journal_assets_table.c.id == asset_id)
-                    .limit(1)
-                )
-            )
+            row = one_or_none(conn.execute(select(journal_assets_table).where(journal_assets_table.c.id == asset_id).limit(1)))
         if row is None:
             raise RuntimeError("Created journal asset could not be read back.")
         return row
 
     def get_by_id(self, asset_id: str) -> dict | None:
         with engine_connect() as conn:
-            return one_or_none(
-                conn.execute(
-                    select(journal_assets_table)
-                    .where(journal_assets_table.c.id == asset_id)
-                    .limit(1)
-                )
-            )
+            return one_or_none(conn.execute(select(journal_assets_table).where(journal_assets_table.c.id == asset_id).limit(1)))
 
     def list_for_campaign(self, *, campaign_id: str, purpose: str | None = None) -> list[dict]:
         stmt = select(journal_assets_table).where(journal_assets_table.c.campaign_id == campaign_id)
@@ -83,13 +71,7 @@ class JournalAssetRepository:
 
     def update_folder(self, *, asset_id: str, folder_id: str | None) -> dict | None:
         with engine_begin() as conn:
-            row = one_or_none(
-                conn.execute(
-                    select(journal_assets_table)
-                    .where(journal_assets_table.c.id == asset_id)
-                    .limit(1)
-                )
-            )
+            row = one_or_none(conn.execute(select(journal_assets_table).where(journal_assets_table.c.id == asset_id).limit(1)))
             if row is None:
                 return None
             conn.execute(
@@ -97,13 +79,7 @@ class JournalAssetRepository:
                 .where(journal_assets_table.c.id == asset_id)
                 .values(folder_id=folder_id)
             )
-            return one_or_none(
-                conn.execute(
-                    select(journal_assets_table)
-                    .where(journal_assets_table.c.id == asset_id)
-                    .limit(1)
-                )
-            )
+            return one_or_none(conn.execute(select(journal_assets_table).where(journal_assets_table.c.id == asset_id).limit(1)))
 
     def update_storage_path(self, *, asset_id: str, storage_path: str) -> None:
         with engine_begin() as conn:

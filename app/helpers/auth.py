@@ -35,9 +35,7 @@ def require_user(connection: ASGIConnection, _: BaseRouteHandler) -> None:
         raise NotAuthorizedException(detail=SESSION_EXPIRED_KEY)
 
 
-def auth_exception_handler(
-    request: Request[Any, Any, Any], exc: NotAuthorizedException
-) -> Response:
+def auth_exception_handler(request: Request[Any, Any, Any], exc: NotAuthorizedException) -> Response:
     """Render an auth failure as a login redirect for browsers, JSON 401 otherwise.
 
     The JSON body carries both ``ok: False`` and ``error_key`` so it is a superset of

@@ -15,7 +15,6 @@ broadcast fan-out correctly scoped per room.
 Writes ``fixtures_multiroom.json`` (per-player credentials + token) for the
 driver to consume in per-user-login mode.
 """
-
 from __future__ import annotations
 
 import argparse

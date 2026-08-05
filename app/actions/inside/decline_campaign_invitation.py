@@ -27,9 +27,7 @@ def decline_campaign_invitation(
     cookies: dict[str, str],
     current_user: Row | None,
     campaign_invitation_service: CampaignInvitationService,
-    data: Annotated[
-        DeclineCampaignInvitationForm, Body(media_type=RequestEncodingType.URL_ENCODED)
-    ],
+    data: Annotated[DeclineCampaignInvitationForm, Body(media_type=RequestEncodingType.URL_ENCODED)],
 ) -> Response[dict[str, str | bool]] | Redirect:
     user = current_user
     json_response = wants_json(request)

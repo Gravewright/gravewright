@@ -55,9 +55,7 @@ class ActorSheetService:
         self.layouts = SystemLayoutService()
         self.projector = ActorTokenProjector()
 
-    def build_bundle(
-        self, *, actor_id: str, user_id: str, locale: str | None = None
-    ) -> ActorSheetBundle | None:
+    def build_bundle(self, *, actor_id: str, user_id: str, locale: str | None = None) -> ActorSheetBundle | None:
         actor = self.actors.get(actor_id)
         if actor is None or actor["status"] != "active":
             return None
@@ -78,7 +76,9 @@ class ActorSheetService:
         sheet: dict | None = None
         data = raw_data
         if self.systems.get_active_manifest(system_id) is not None:
-            sheet = self.layouts.get_actor_html_sheet(system_id=system_id, actor_type=actor["type"])
+            sheet = self.layouts.get_actor_html_sheet(
+                system_id=system_id, actor_type=actor["type"]
+            )
             # An HTML-mode sheet replaces the declarative Sheet IR layout.
             if sheet is None:
                 candidate = self.layouts.get_actor_sheet(

@@ -34,26 +34,18 @@ class CampaignPermissionRepository:
             )
         return {row["permission_key"]: PermissionEffect(row["effect"]) for row in rows}
 
-    def list_all_role_effects_for_campaign(
-        self, *, campaign_id: str
-    ) -> dict[str, dict[str, PermissionEffect]]:
+    def list_all_role_effects_for_campaign(self, *, campaign_id: str) -> dict[str, dict[str, PermissionEffect]]:
         with engine_connect() as conn:
             rows = all_dicts(
                 conn.execute(
-                    select(
-                        overrides_table.c.subject_id,
-                        overrides_table.c.permission_key,
-                        overrides_table.c.effect,
-                    )
+                    select(overrides_table.c.subject_id, overrides_table.c.permission_key, overrides_table.c.effect)
                     .where(overrides_table.c.campaign_id == campaign_id)
                     .where(overrides_table.c.subject_type == PermissionSubjectType.ROLE.value)
                 )
             )
         result: dict[str, dict[str, PermissionEffect]] = {}
         for row in rows:
-            result.setdefault(row["subject_id"], {})[row["permission_key"]] = PermissionEffect(
-                row["effect"]
-            )
+            result.setdefault(row["subject_id"], {})[row["permission_key"]] = PermissionEffect(row["effect"])
         return result
 
     def list_campaign_overrides(self, *, campaign_id: str) -> list[dict]:

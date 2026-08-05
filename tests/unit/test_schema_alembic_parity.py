@@ -37,7 +37,9 @@ def _pk(inspector, table: str) -> list:
 
 
 def _uniques(inspector, table: str) -> set:
-    return {tuple(uc["column_names"]) for uc in inspector.get_unique_constraints(table)}
+    return {
+        tuple(uc["column_names"]) for uc in inspector.get_unique_constraints(table)
+    }
 
 
 def _indexes(inspector, table: str) -> dict:
@@ -167,7 +169,10 @@ def test_alembic_head_creates_partial_active_scene_index(tmp_path, monkeypatch):
 def test_initial_migration_does_not_import_metadata():
     """0001 must be self-contained static DDL, not derived from live metadata."""
     source = (
-        Path(__file__).resolve().parents[2] / "migrations" / "versions" / "0001_initial_schema.py"
+        Path(__file__).resolve().parents[2]
+        / "migrations"
+        / "versions"
+        / "0001_initial_schema.py"
     ).read_text(encoding="utf-8")
     assert "import metadata" not in source
     assert "metadata.create_all" not in source

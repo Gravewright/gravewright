@@ -333,9 +333,7 @@ class SceneRepository:
             next_marker = _normalize_board_area_marker(marker)
             if next_marker["scene_id"] != scene_id:
                 raise ValueError("marker.scene_id must match scene_id")
-            idx = next(
-                (i for i, existing in enumerate(markers) if existing["id"] == next_marker["id"]), -1
-            )
+            idx = next((i for i, existing in enumerate(markers) if existing["id"] == next_marker["id"]), -1)
             if idx >= 0:
                 markers[idx] = next_marker
             else:
@@ -365,7 +363,9 @@ class SceneRepository:
             raw, current_version = board_state
 
             markers = [
-                marker for marker in _load_board_area_markers(raw) if marker["id"] != marker_id
+                marker
+                for marker in _load_board_area_markers(raw)
+                if marker["id"] != marker_id
             ]
             result = self._write_board_area_markers(
                 conn,
@@ -390,8 +390,13 @@ class SceneRepository:
                 return False
             raw, current_version = board_state
 
+                                                                                         
             kept = (
-                [marker for marker in _load_board_area_markers(raw) if marker.get("layer") == "gm"]
+                [
+                    marker
+                    for marker in _load_board_area_markers(raw)
+                    if marker.get("layer") == "gm"
+                ]
                 if keep_gm_layer
                 else []
             )
@@ -416,7 +421,7 @@ class SceneRepository:
         def _keep(marker: dict[str, Any]) -> bool:
             if marker.get("kind") not in ("freehand", "text"):
                 return True
-
+                                                                                       
             return owner_id is not None and marker.get("owner_id") != owner_id
 
         with engine_begin() as conn:
@@ -477,7 +482,6 @@ class SceneRepository:
             )
         )
 
-
 def _load_board_area_markers(raw: str | None) -> list[dict[str, Any]]:
     if not raw:
         return []
@@ -530,7 +534,8 @@ def _normalize_board_area_marker(raw: dict[str, Any]) -> dict[str, Any]:
 
 
 def _normalize_board_layer(raw: Any) -> dict[str, str]:
-
+                                                                                  
+                                                
     return {"layer": "gm"} if raw == "gm" else {}
 
 
@@ -586,7 +591,9 @@ def _normalize_board_freehand(raw: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(points, list) or len(points) < 2 or len(points) > 512:
         raise ValueError("drawing.points must contain 2 to 512 points")
     normalized_points = [
-        _normalize_board_area_marker_point(point) for point in points if isinstance(point, dict)
+        _normalize_board_area_marker_point(point)
+        for point in points
+        if isinstance(point, dict)
     ]
     if len(normalized_points) < 2:
         raise ValueError("drawing.points must contain 2 valid points")

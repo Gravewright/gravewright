@@ -66,7 +66,9 @@ def _game_client_context(
     }
 
 
-def _package_assets(package_asset_service: PackageAssetService, *, campaign_id: str | None) -> dict:
+def _package_assets(
+    package_asset_service: PackageAssetService, *, campaign_id: str | None
+) -> dict:
     """Flatten the active packages' declared styles/scripts for this render.
 
     Each script carries its owning ``package_id`` plus a fresh per-render

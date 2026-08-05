@@ -58,25 +58,17 @@ def test_consume_mints_readonly_streamer_member(db):
     role = CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=guest_id)
     assert role == PlayerRole.STREAMER.value
 
+                                                                      
     permissions = PermissionService()
-    assert (
-        permissions.can(
-            user_id=guest_id, campaign_id=campaign_id, permission=TablePermission.SCENE_VIEW
-        )
-        is True
-    )
-    assert (
-        permissions.can(
-            user_id=guest_id, campaign_id=campaign_id, permission=TablePermission.TOKEN_MOVE
-        )
-        is False
-    )
-    assert (
-        permissions.can(
-            user_id=guest_id, campaign_id=campaign_id, permission=TablePermission.CHAT_SEND
-        )
-        is False
-    )
+    assert permissions.can(
+        user_id=guest_id, campaign_id=campaign_id, permission=TablePermission.SCENE_VIEW
+    ) is True
+    assert permissions.can(
+        user_id=guest_id, campaign_id=campaign_id, permission=TablePermission.TOKEN_MOVE
+    ) is False
+    assert permissions.can(
+        user_id=guest_id, campaign_id=campaign_id, permission=TablePermission.CHAT_SEND
+    ) is False
 
 
 def test_consume_reuses_same_guest_principal(db):

@@ -29,9 +29,7 @@ async def update_table_settings(
 ) -> Response[dict[str, Any]]:
     campaign_id = data.campaign_id.strip()
     if not campaign_id:
-        return Response(
-            {"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=400
-        )
+        return Response({"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=400)
 
     if not permission_service.can(
         campaign_id=campaign_id,
@@ -46,8 +44,6 @@ async def update_table_settings(
         seconds=seconds,
     )
     if not result.success:
-        return Response(
-            {"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=404
-        )
+        return Response({"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=404)
 
     return Response({"ok": True, "measure_flash_seconds": seconds}, status_code=200)

@@ -13,7 +13,7 @@ MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 8_000
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
-
+                                                                       
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
 VALID_PURPOSES = {"journal_image", "journal_cover", "quest_image", "quest_board_image"}
 
@@ -65,11 +65,13 @@ class JournalAssetService:
         if campaign is None:
             return JournalAssetResult(success=False, error_key="game.journal.errors.not_found")
 
+                                                                               
+                                                                            
+                                                                                 
+                                                   
         from app.engine.journals.journal_service import JournalService
 
-        if not JournalService().can_edit_journal(
-            journal=dict(journal), campaign=dict(campaign), user_id=user_id
-        ):
+        if not JournalService().can_edit_journal(journal=dict(journal), campaign=dict(campaign), user_id=user_id):
             return JournalAssetResult(success=False, error_key="game.journal.errors.not_owner")
 
         campaign_id = journal["campaign_id"]
@@ -81,18 +83,12 @@ class JournalAssetService:
         try:
             decoded = self.image_decoder.decode(data)
         except ValueError:
-            return JournalAssetResult(
-                success=False, error_key="game.journal.assets.errors.invalid_image"
-            )
+            return JournalAssetResult(success=False, error_key="game.journal.assets.errors.invalid_image")
 
         if decoded.format.upper() not in ALLOWED_FORMATS:
-            return JournalAssetResult(
-                success=False, error_key="game.journal.assets.errors.unsupported_type"
-            )
+            return JournalAssetResult(success=False, error_key="game.journal.assets.errors.unsupported_type")
         if decoded.width > MAX_IMAGE_DIMENSION or decoded.height > MAX_IMAGE_DIMENSION:
-            return JournalAssetResult(
-                success=False, error_key="game.journal.assets.errors.too_large"
-            )
+            return JournalAssetResult(success=False, error_key="game.journal.assets.errors.too_large")
 
         purpose = purpose if purpose in VALID_PURPOSES else "journal_image"
         asset = self.assets.create(
@@ -105,10 +101,10 @@ class JournalAssetService:
             byte_size=len(data),
             width=decoded.width,
             height=decoded.height,
-            storage_path="",
+            storage_path="",                                 
             hash=hashlib.sha256(data).hexdigest(),
         )
-
+                                                                            
         storage_path = self.storage.write_image(
             campaign_id=campaign_id,
             asset_id=asset["id"],

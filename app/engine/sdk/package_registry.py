@@ -107,7 +107,9 @@ def load_all(packages_dir: Path | None = None) -> list[LoadedPackage]:
     ]
 
 
-def load_by_package_id(package_id: str, packages_dir: Path | None = None) -> LoadedPackage | None:
+def load_by_package_id(
+    package_id: str, packages_dir: Path | None = None
+) -> LoadedPackage | None:
     if not package_id_is_safe(package_id):
         return None
     base = _base_dir(packages_dir)
@@ -118,7 +120,9 @@ def load_by_package_id(package_id: str, packages_dir: Path | None = None) -> Loa
     for kind_dir in sorted(_KIND_DIRS):
         candidate = base / kind_dir / package_id
         if candidate.is_dir():
-            return load_package(candidate, expected_id=package_id, expected_kind_root=kind_dir)
+            return load_package(
+                candidate, expected_id=package_id, expected_kind_root=kind_dir
+            )
     candidate = base / package_id
     if candidate.is_dir():
         return load_package(candidate, expected_id=package_id, expected_kind_root=None)

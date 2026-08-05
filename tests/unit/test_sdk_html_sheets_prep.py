@@ -45,7 +45,8 @@ def _manifest(sheet: object, *, capabilities=None) -> dict:
             "verified": "1",
             "maximum": "1.x",
         },
-        "capabilities": capabilities or ["sheets.html", "sheets.controller", "sheets.richText"],
+        "capabilities": capabilities
+        or ["sheets.html", "sheets.controller", "sheets.richText"],
         "activation": {"scope": "campaign", "mode": "exclusive"},
         "entrypoints": {},
         "provides": {

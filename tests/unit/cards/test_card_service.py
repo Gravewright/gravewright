@@ -68,9 +68,7 @@ def test_create_deck_definition_accepts_schema_front_alias(db):
     )
 
     assert result.success, result.error_key
-    definitions = CardRepository().list_card_definitions(
-        deck_definition_id=result.payload["deck"]["id"]
-    )
+    definitions = CardRepository().list_card_definitions(deck_definition_id=result.payload["deck"]["id"])
     assert definitions[0]["front_asset_id"] == "front-from-schema"
 
 

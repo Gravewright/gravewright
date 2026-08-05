@@ -77,11 +77,7 @@ def _compact_buff_debuff(data: dict) -> list[dict]:
         category = str(payload.get("category") or "").lower()
         if "buff" not in category and "debuff" not in category and "condition" not in category:
             continue
-        duration = (
-            effect.get("duration")
-            if isinstance(effect.get("duration"), dict)
-            else payload.get("duration")
-        )
+        duration = effect.get("duration") if isinstance(effect.get("duration"), dict) else payload.get("duration")
         out.append(
             {
                 "id": effect.get("id") or "",
@@ -91,9 +87,7 @@ def _compact_buff_debuff(data: dict) -> list[dict]:
                 "description": payload.get("description") or effect.get("description") or "",
                 "duration": duration if isinstance(duration, dict) else {},
                 "concentration": bool(payload.get("concentration") or effect.get("concentration")),
-                "modifiers": payload.get("modifiers")
-                if isinstance(payload.get("modifiers"), list)
-                else [],
+                "modifiers": payload.get("modifiers") if isinstance(payload.get("modifiers"), list) else [],
             }
         )
     return out

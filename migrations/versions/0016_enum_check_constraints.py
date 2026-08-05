@@ -26,30 +26,14 @@ depends_on = None
 
 # (table, column, constraint_name, allowed_values)
 _CHECKS = [
-    (
-        "campaign_members",
-        "role",
-        "ck_campaign_members_role",
-        ("gm", "assistant_gm", "player", "streamer"),
-    ),
-    (
-        "campaign_invitations",
-        "role",
-        "ck_campaign_invitations_role",
-        ("gm", "assistant_gm", "player", "streamer"),
-    ),
-    (
-        "campaign_invitations",
-        "status",
-        "ck_campaign_invitations_status",
-        ("pending", "accepted", "declined"),
-    ),
-    (
-        "campaign_permission_overrides",
-        "effect",
-        "ck_campaign_permission_overrides_effect",
-        ("allow", "deny"),
-    ),
+    ("campaign_members", "role", "ck_campaign_members_role",
+     ("gm", "assistant_gm", "player", "streamer")),
+    ("campaign_invitations", "role", "ck_campaign_invitations_role",
+     ("gm", "assistant_gm", "player", "streamer")),
+    ("campaign_invitations", "status", "ck_campaign_invitations_status",
+     ("pending", "accepted", "declined")),
+    ("campaign_permission_overrides", "effect", "ck_campaign_permission_overrides_effect",
+     ("allow", "deny")),
 ]
 
 
@@ -69,7 +53,8 @@ def _audit_or_fail(bind) -> None:
         allowed = ", ".join(f"'{value}'" for value in values)
         rows = bind.execute(
             text(
-                f"SELECT DISTINCT {column} AS value FROM {table} WHERE {column} NOT IN ({allowed})"
+                f"SELECT DISTINCT {column} AS value FROM {table} "
+                f"WHERE {column} NOT IN ({allowed})"
             )
         ).fetchall()
         bad = [row.value for row in rows]

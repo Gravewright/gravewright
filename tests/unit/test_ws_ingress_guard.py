@@ -66,6 +66,7 @@ def test_per_command_rate_limit_trips_then_recovers() -> None:
     clock = _Clock()
     guard = WebSocketIngressGuard(clock=clock)
 
+                                                                             
     limited = False
     for _ in range(200):
         decision = guard.inspect(_command("viewport.update"))
@@ -74,6 +75,7 @@ def test_per_command_rate_limit_trips_then_recovers() -> None:
             break
     assert limited is True
 
+                                                                   
     clock.advance(10.0)
     decision = guard.inspect(_command("viewport.update"))
     assert decision.message is not None
@@ -91,11 +93,12 @@ def test_expensive_commands_have_tight_budget() -> None:
         else:
             break
 
+                                                                          
     assert accepted <= 8
 
 
 def test_origin_allowlist() -> None:
-
+                                                                   
     assert is_origin_allowed(None, ()) is True
     assert is_origin_allowed("https://evil.test", ()) is True
 

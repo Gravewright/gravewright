@@ -9,7 +9,6 @@ This is a scenario that will practically never happen in a real session.
 Run once before the stress test:
     python tests/performance/max_stress/seed.py [--db storage/gravewright.sqlite3]
 """
-
 from __future__ import annotations
 
 import argparse
@@ -56,20 +55,20 @@ def _generate_tiles(scene_id: str, layer_id: str, storage_root: Path) -> list[di
     tx_count = math.ceil(SCENE_WIDTH / TILE_SIZE)
     ty_count = math.ceil(SCENE_HEIGHT / TILE_SIZE)
     total = tx_count * ty_count
-    print(
-        f"[seed] Generating {tx_count}×{ty_count} = {total} tiles for {SCENE_WIDTH}x{SCENE_HEIGHT} map..."
-    )
+    print(f"[seed] Generating {tx_count}×{ty_count} = {total} tiles for {SCENE_WIDTH}x{SCENE_HEIGHT} map...")
 
     tile_dir = storage_root / "scenes" / scene_id / "assets" / "tiles" / layer_id
     orig_dir = storage_root / "scenes" / scene_id / "assets" / "original"
     tile_dir.mkdir(parents=True, exist_ok=True)
     orig_dir.mkdir(parents=True, exist_ok=True)
 
+                                                                                        
     orig_path = orig_dir / "original.png"
 
+                                                                
     if not orig_path.exists():
         print("[seed] Rendering source image in bands...")
-
+                                                     
         full = Image.new("RGBA", (SCENE_WIDTH, SCENE_HEIGHT), (20, 24, 30, 255))
         draw = ImageDraw.Draw(full)
         for x in range(0, SCENE_WIDTH, TILE_SIZE):
@@ -86,12 +85,12 @@ def _generate_tiles(scene_id: str, layer_id: str, storage_root: Path) -> list[di
     else:
         print("[seed] Source image already exists, reusing.")
         from PIL import Image as _img
-
         full = _img.open(str(orig_path))
+                                          
 
+                      
     print("[seed] Slicing tiles...")
     from PIL import Image as PILImage
-
     source = PILImage.open(str(orig_path))
 
     tile_records = []
@@ -111,27 +110,24 @@ def _generate_tiles(scene_id: str, layer_id: str, storage_root: Path) -> list[di
 
             data = tile_path.read_bytes()
             tile_hash = hashlib.sha256(data).hexdigest()
-            tile_records.append(
-                {
-                    "asset_id": uuid.uuid4().hex,
-                    "tile_ref": tile_ref,
-                    "tx": tx,
-                    "ty": ty,
-                    "width": x1 - x0,
-                    "height": y1 - y0,
-                    "hash": tile_hash,
-                    "byte_size": len(data),
-                    "storage_path": str(tile_path.relative_to(storage_root)),
-                }
-            )
+            tile_records.append({
+                "asset_id": uuid.uuid4().hex,
+                "tile_ref": tile_ref,
+                "tx": tx, "ty": ty,
+                "width": x1 - x0, "height": y1 - y0,
+                "hash": tile_hash,
+                "byte_size": len(data),
+                "storage_path": str(tile_path.relative_to(storage_root)),
+            })
             tile_ref += 1
             done += 1
 
         if (ty + 1) % 20 == 0 or ty + 1 == ty_count:
-            print(f"  {done}/{total} tiles ({100 * done // total}%)")
+            print(f"  {done}/{total} tiles ({100*done//total}%)")
 
     source.close()
     return tile_records
+
 
 
 class _Result:
@@ -157,13 +153,12 @@ class _Connection:
         return _Result(self._conn.exec_driver_sql(statement, parameters))
 
     def commit(self) -> None:
-
+                                                                          
         return None
 
     def close(self) -> None:
         self._ctx.__exit__(None, None, None)
         self._engine.dispose()
-
 
 def seed(db_path: str) -> None:
     path = Path(db_path)
@@ -172,6 +167,7 @@ def seed(db_path: str) -> None:
     conn = _Connection(str(path))
     conn.execute("PRAGMA foreign_keys = ON")
 
+          
     existing = conn.execute("SELECT id FROM users WHERE email = ?", (STRESS_EMAIL,)).fetchone()
     if existing:
         user_id = existing["id"]
@@ -186,6 +182,7 @@ def seed(db_path: str) -> None:
         )
         print(f"[seed] Created user: {user_id}")
 
+              
     existing_campaign = conn.execute(
         "SELECT id FROM campaigns WHERE id IN "
         "(SELECT campaign_id FROM campaign_members WHERE user_id = ?)",
@@ -213,6 +210,7 @@ def seed(db_path: str) -> None:
         )
         print(f"[seed] Created campaign: {campaign_id}")
 
+           
     existing_scene = conn.execute(
         "SELECT id FROM scenes WHERE campaign_id = ? AND active = 1", (campaign_id,)
     ).fetchone()
@@ -235,46 +233,21 @@ def seed(db_path: str) -> None:
             "image_scale, grid_visible, grid_color, active, group_id, tile_table_version, "
             "created_at, updated_at) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                scene_id,
-                campaign_id,
-                "Max Stress Scene",
-                "active",
-                "players",
-                SCENE_WIDTH,
-                SCENE_HEIGHT,
-                TILE_SIZE,
-                16,
-                1.0,
-                1,
-                "#ededed",
-                1,
-                None,
-                1,
-                now,
-                now,
-            ),
+            (scene_id, campaign_id, "Max Stress Scene", "active", "players",
+             SCENE_WIDTH, SCENE_HEIGHT, TILE_SIZE, 16,
+             1.0, 1, "#ededed", 1, None, 1, now, now),
         )
         conn.execute(
             "INSERT INTO scene_layers "
             "(id, scene_id, kind, name, visibility, display_order, encoding, "
             "tile_table_version, created_at, updated_at) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-            (
-                layer_id,
-                scene_id,
-                "raster_tile_refs",
-                "Ground",
-                "visible",
-                0,
-                "uint32_tile_refs_v1",
-                1,
-                now,
-                now,
-            ),
+            (layer_id, scene_id, "raster_tile_refs", "Ground", "visible", 0,
+             "uint32_tile_refs_v1", 1, now, now),
         )
         print(f"[seed] Created scene: {scene_id}, layer: {layer_id}")
 
+                   
     tile_dir = storage_root / "scenes" / scene_id / "assets" / "tiles" / (layer_id or "")
     existing_db_tiles = conn.execute(
         "SELECT COUNT(*) as n FROM scene_tiles WHERE layer_id = ?", (layer_id,)
@@ -288,9 +261,7 @@ def seed(db_path: str) -> None:
     if existing_db_tiles >= expected and existing_disk_tiles >= expected:
         print(f"[seed] {existing_disk_tiles} tiles already on disk + DB — skipping generation")
     else:
-        print(
-            f"[seed] Found {existing_disk_tiles}/{expected} tiles on disk, {existing_db_tiles}/{expected} in DB"
-        )
+        print(f"[seed] Found {existing_disk_tiles}/{expected} tiles on disk, {existing_db_tiles}/{expected} in DB")
         tile_records = _generate_tiles(scene_id, layer_id, storage_root)
         now = int(time.time())
         for rec in tile_records:
@@ -299,36 +270,16 @@ def seed(db_path: str) -> None:
                 "INSERT INTO scene_assets "
                 "(id, scene_id, kind, storage_path, hash, byte_size, width, height, content_type, created_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-                (
-                    asset_id,
-                    scene_id,
-                    "tile",
-                    rec["storage_path"],
-                    rec["hash"],
-                    rec["byte_size"],
-                    rec["width"],
-                    rec["height"],
-                    "image/png",
-                    now,
-                ),
+                (asset_id, scene_id, "tile", rec["storage_path"], rec["hash"],
+                 rec["byte_size"], rec["width"], rec["height"], "image/png", now),
             )
             conn.execute(
                 "INSERT INTO scene_tiles "
                 "(scene_id, layer_id, tile_ref, asset_id, tx, ty, width, height, hash, byte_size, created_at) "
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-                (
-                    scene_id,
-                    layer_id,
-                    rec["tile_ref"],
-                    asset_id,
-                    rec["tx"],
-                    rec["ty"],
-                    rec["width"],
-                    rec["height"],
-                    rec["hash"],
-                    rec["byte_size"],
-                    now,
-                ),
+                (scene_id, layer_id, rec["tile_ref"], asset_id,
+                 rec["tx"], rec["ty"], rec["width"], rec["height"],
+                 rec["hash"], rec["byte_size"], now),
             )
         conn.commit()
         print(f"[seed] {len(tile_records)} tiles written to DB and disk.")
@@ -341,9 +292,7 @@ def seed(db_path: str) -> None:
     print(f"  password:  {STRESS_PASSWORD}")
     print(f"  scene_id:  {scene_id}")
     print(f"  layer_id:  {layer_id}")
-    print(
-        f"  map size:  {SCENE_WIDTH}x{SCENE_HEIGHT} @ {TILE_SIZE}px tiles = {tx_count}x{ty_count} = {expected} tiles"
-    )
+    print(f"  map size:  {SCENE_WIDTH}x{SCENE_HEIGHT} @ {TILE_SIZE}px tiles = {tx_count}x{ty_count} = {expected} tiles")
 
 
 if __name__ == "__main__":

@@ -52,18 +52,14 @@ class AssetRepository:
                     created_at=now,
                 )
             )
-            row = one_or_none(
-                conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1))
-            )
+            row = one_or_none(conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1)))
         if row is None:
             raise RuntimeError("Created library asset could not be read back.")
         return row
 
     def get_by_id(self, asset_id: str) -> dict | None:
         with engine_connect() as conn:
-            return one_or_none(
-                conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1))
-            )
+            return one_or_none(conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1)))
 
     def list_for_campaign(self, *, campaign_id: str) -> list[dict]:
         stmt = (
@@ -76,9 +72,7 @@ class AssetRepository:
 
     def update_folder(self, *, asset_id: str, folder_id: str | None) -> dict | None:
         with engine_begin() as conn:
-            row = one_or_none(
-                conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1))
-            )
+            row = one_or_none(conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1)))
             if row is None:
                 return None
             conn.execute(
@@ -86,9 +80,7 @@ class AssetRepository:
                 .where(library_assets.c.id == asset_id)
                 .values(folder_id=folder_id)
             )
-            return one_or_none(
-                conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1))
-            )
+            return one_or_none(conn.execute(select(library_assets).where(library_assets.c.id == asset_id).limit(1)))
 
     def update_storage_path(self, *, asset_id: str, storage_path: str) -> None:
         with engine_begin() as conn:
@@ -117,9 +109,7 @@ class AssetFolderRepository:
 
     def get(self, folder_id: str) -> dict | None:
         with engine_connect() as conn:
-            return one_or_none(
-                conn.execute(select(asset_folders).where(asset_folders.c.id == folder_id).limit(1))
-            )
+            return one_or_none(conn.execute(select(asset_folders).where(asset_folders.c.id == folder_id).limit(1)))
 
     def create(self, *, campaign_id: str, parent_id: str | None, name: str) -> dict:
         now = int(time.time())
@@ -137,19 +127,13 @@ class AssetFolderRepository:
                     updated_at=now,
                 )
             )
-            row = one_or_none(
-                conn.execute(select(asset_folders).where(asset_folders.c.id == folder_id).limit(1))
-            )
+            row = one_or_none(conn.execute(select(asset_folders).where(asset_folders.c.id == folder_id).limit(1)))
         if row is None:
             raise RuntimeError("Created asset folder could not be read back.")
         return row
 
     def delete(self, *, folder_id: str) -> bool:
         with engine_begin() as conn:
-            conn.execute(
-                update(library_assets)
-                .where(library_assets.c.folder_id == folder_id)
-                .values(folder_id=None)
-            )
+            conn.execute(update(library_assets).where(library_assets.c.folder_id == folder_id).values(folder_id=None))
             result = conn.execute(delete(asset_folders).where(asset_folders.c.id == folder_id))
         return bool(result.rowcount)

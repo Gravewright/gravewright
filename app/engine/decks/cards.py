@@ -194,11 +194,7 @@ def apply_move_between_piles(
     moving_set = set(moving)
     new_source = [card_id for card_id in source_order if card_id not in moving_set]
     new_target = [card_id for card_id in target_order if card_id not in moving_set]
-    insert_at = (
-        len(new_target)
-        if target_position is None
-        else max(0, min(target_position, len(new_target)))
-    )
+    insert_at = len(new_target) if target_position is None else max(0, min(target_position, len(new_target)))
     new_target[insert_at:insert_at] = moving
     return new_source, new_target
 
@@ -268,9 +264,7 @@ def redact_card_for_viewer(
         "deck_instance_id": card.deck_instance_id,
         "current_pile_id": card.current_pile_id,
         "current_scene_id": card.current_scene_id,
-        "owner_user_id": card.owner_user_id
-        if card.owner_user_id == viewer_user_id or viewer_role in {"gm", "assistant_gm"}
-        else None,
+        "owner_user_id": card.owner_user_id if card.owner_user_id == viewer_user_id or viewer_role in {"gm", "assistant_gm"} else None,
         "face_state": card.face_state.value,
         "visibility": card.visibility.value,
         "locked": card.locked,
@@ -283,7 +277,9 @@ def redact_card_for_viewer(
             "description": definition.description,
             "front_asset_id": definition.front_asset.asset_id if definition.front_asset else None,
             "back_asset_id": (
-                definition.back_asset.asset_id if definition.back_asset is not None else None
+                definition.back_asset.asset_id
+                if definition.back_asset is not None
+                else None
             ),
             "tags": list(definition.tags),
             "metadata": dict(definition.metadata),
@@ -294,9 +290,7 @@ def redact_card_for_viewer(
         "subtitle": None,
         "description": None,
         "front_asset_id": None,
-        "back_asset_id": definition.back_asset.asset_id
-        if definition and definition.back_asset
-        else None,
+        "back_asset_id": definition.back_asset.asset_id if definition and definition.back_asset else None,
         "tags": [],
         "metadata": {},
     }

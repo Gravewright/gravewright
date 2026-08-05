@@ -18,6 +18,8 @@ from app.persistence.tables import streamer_links as links_table
 from app.persistence.tables import users as users_table
 
 
+                                                                           
+                                                                
 _GUEST_PASSWORD_MARKER = "!streamer-guest-no-login"
 
 
@@ -101,6 +103,8 @@ class StreamerLinkRepository:
             campaign_id = link["campaign_id"]
             guest_user_id = link["guest_user_id"]
 
+                                                                                 
+                                                      
             if guest_user_id is not None and self._guest_is_valid(
                 conn, campaign_id=campaign_id, guest_user_id=guest_user_id
             ):
@@ -110,6 +114,10 @@ class StreamerLinkRepository:
                 conn, link_id=link["id"], campaign_id=campaign_id, now=timestamp
             )
             return {"campaign_id": campaign_id, "guest_user_id": guest_user_id}
+
+                                                                        
+               
+                                                                        
 
     def _revoke_active(self, conn: Connection, *, campaign_id: str, now: int) -> int:
         """Revoke active links and remove their orphaned guest members/users."""
@@ -126,6 +134,8 @@ class StreamerLinkRepository:
         )
         for (guest_user_id,) in active:
             if guest_user_id is not None:
+                                                                                 
+                                                                                 
                 conn.execute(users_table.delete().where(users_table.c.id == guest_user_id))
         return int(result.rowcount or 0)
 

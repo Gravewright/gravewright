@@ -90,7 +90,9 @@ class JournalPageService:
                 campaign_id=journal["campaign_id"]
             ):
                 if candidate["type"] == "quest" and candidate["id"] not in on_board:
-                    board_quest_options.append({"id": candidate["id"], "title": candidate["title"]})
+                    board_quest_options.append(
+                        {"id": candidate["id"], "title": candidate["title"]}
+                    )
 
         return JournalModalPage(
             journal=journal_dict,
@@ -119,10 +121,12 @@ class JournalPageService:
             campaign=campaign_dict,
             is_gm=campaign_dict.get("member_role") == "gm",
             journal_folders=[
-                dict(folder) for folder in self.folders.list_for_campaign(campaign_id=campaign_id)
+                dict(folder)
+                for folder in self.folders.list_for_campaign(campaign_id=campaign_id)
             ],
             room_members=[
-                dict(member) for member in self.campaigns.list_members(campaign_id=campaign_id)
+                dict(member)
+                for member in self.campaigns.list_members(campaign_id=campaign_id)
             ],
         )
 

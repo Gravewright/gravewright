@@ -28,7 +28,6 @@ Run (against a seeded single-room scene):
         tests/performance/browser_bench/browser_bench.py \
         --host http://localhost:8007 --time 3
 """
-
 from __future__ import annotations
 
 import argparse
@@ -131,7 +130,6 @@ def percentile(values: list[float], pct: float) -> float:
 # Browser process-tree RSS (best effort, OS-level so thread-safe)
 # ---------------------------------------------------------------------------
 
-
 class RssSampler(threading.Thread):
     """Sum RSS across the Chromium process tree matched by the unique
     user-data-dir we launch with. Captures renderer + GPU + main processes,
@@ -177,10 +175,11 @@ class RssSampler(threading.Thread):
 # In-page probes
 # ---------------------------------------------------------------------------
 
-
 def js_heap_mb(page: Page) -> float:
     return float(
-        page.evaluate("() => (performance.memory ? performance.memory.usedJSHeapSize/1048576 : 0)")
+        page.evaluate(
+            "() => (performance.memory ? performance.memory.usedJSHeapSize/1048576 : 0)"
+        )
     )
 
 
@@ -272,9 +271,8 @@ def run_pan_zoom(page: Page, results: Results, duration_s: float) -> None:
         page.mouse.down()
         for i in range(1, 9):
             f = i / 8.0
-            page.mouse.move(
-                cx + span_x * math.sin(f * math.pi), cy + span_y * math.cos(f * math.pi), steps=2
-            )
+            page.mouse.move(cx + span_x * math.sin(f * math.pi),
+                            cy + span_y * math.cos(f * math.pi), steps=2)
         page.mouse.up()
         gestures += 1
 
@@ -293,11 +291,9 @@ def run_pan_zoom(page: Page, results: Results, duration_s: float) -> None:
             heap = js_heap_mb(page)
             with _RSS_REF.lock if _RSS_REF else _DUMMY_LOCK:
                 rss = _RSS_REF.latest_mb if _RSS_REF else 0.0
-            results.samples.append(
-                Sample(
-                    t=round(now - _RUN_START, 2), js_heap_mb=round(heap, 1), rss_mb=round(rss, 1)
-                )
-            )
+            results.samples.append(Sample(t=round(now - _RUN_START, 2),
+                                          js_heap_mb=round(heap, 1),
+                                          rss_mb=round(rss, 1)))
             results.js_heap_peak_mb = max(results.js_heap_peak_mb, heap)
             next_heap_sample = now + 1.0
 
@@ -401,9 +397,8 @@ def run(args: argparse.Namespace) -> Results:
             else:
                 results.errors.append("skipped pan/zoom: map never became visible")
 
-            results.js_heap_peak_mb = round(
-                max(results.js_heap_peak_mb, results.js_heap_idle_mb), 1
-            )
+            results.js_heap_peak_mb = round(max(results.js_heap_peak_mb,
+                                                results.js_heap_idle_mb), 1)
         except Exception as exc:  # keep partial results on any failure
             results.errors.append(f"{type(exc).__name__}: {exc}")
         finally:
@@ -421,9 +416,8 @@ def run(args: argparse.Namespace) -> Results:
     return results
 
 
-def write_outputs(
-    *, output: Path, args: argparse.Namespace, results: Results, duration_s: float
-) -> None:
+def write_outputs(*, output: Path, args: argparse.Namespace, results: Results,
+                  duration_s: float) -> None:
     summary = {
         "host": args.host,
         "headed": args.headed,
@@ -474,9 +468,7 @@ def write_outputs(
         f.write("## Run\n\n```txt\n")
         f.write(f"host:           {args.host}\n")
         f.write(f"viewport:       {args.width}x{args.height}\n")
-        f.write(
-            f"headed:         {args.headed}   gpu: {args.gpu}   cpu_throttle: {args.cpu_throttle}x\n"
-        )
+        f.write(f"headed:         {args.headed}   gpu: {args.gpu}   cpu_throttle: {args.cpu_throttle}x\n")
         f.write(f"run_seconds:    {duration_s:.0f}\n")
         f.write(f"map_visible:    {results.map_visible}\n")
         f.write("```\n\n")
@@ -490,9 +482,7 @@ def write_outputs(
         f.write("```\n\n")
 
         f.write("## FPS / stutter during pan + zoom\n\n```txt\n")
-        f.write(
-            f"duration:           {results.pan_zoom_seconds:.0f}s   gestures: {results.gestures}\n"
-        )
+        f.write(f"duration:           {results.pan_zoom_seconds:.0f}s   gestures: {results.gestures}\n")
         f.write(f"frames captured:    {results.frames}\n")
         f.write(f"fps avg:            {results.fps_avg}\n")
         f.write(f"fps p50:            {results.fps_p50}\n")
@@ -500,19 +490,13 @@ def write_outputs(
         f.write(f"frame ms p95/p99:   {results.frame_ms_p95} / {results.frame_ms_p99}\n")
         f.write(f"worst frame ms:     {results.frame_ms_max}\n")
         f.write(f"janky frames >33ms: {results.jank_frame_pct}%\n")
-        f.write(
-            f"long tasks:         {results.long_tasks}   total blocking: {results.total_blocking_ms} ms\n"
-        )
+        f.write(f"long tasks:         {results.long_tasks}   total blocking: {results.total_blocking_ms} ms\n")
         f.write("```\n\n")
 
         f.write("## Memory (8 GB machine budget)\n\n```txt\n")
-        f.write(
-            f"JS heap idle / peak:       {results.js_heap_idle_mb} / {results.js_heap_peak_mb} MB\n"
-        )
+        f.write(f"JS heap idle / peak:       {results.js_heap_idle_mb} / {results.js_heap_peak_mb} MB\n")
         if psutil is not None:
-            f.write(
-                f"browser RSS idle / peak:   {results.rss_idle_mb} / {results.rss_peak_mb} MB\n"
-            )
+            f.write(f"browser RSS idle / peak:   {results.rss_idle_mb} / {results.rss_peak_mb} MB\n")
         else:
             f.write("browser RSS:               (psutil not installed — JS heap only)\n")
         f.write("```\n")
@@ -529,25 +513,12 @@ def main() -> None:
     parser.add_argument("--email", default="")
     parser.add_argument("--password", default="")
     parser.add_argument("--fixtures", default=str(FIXTURES_PATH))
-    parser.add_argument(
-        "--time", type=float, default=0.0, help="run time in MINUTES (overrides --duration)"
-    )
-    parser.add_argument(
-        "--duration", type=int, default=120, help="pan/zoom seconds if --time unset"
-    )
-    parser.add_argument(
-        "--load-timeout", type=float, default=60.0, help="seconds to wait for map visible"
-    )
-    parser.add_argument(
-        "--headed", action="store_true", help="show the browser (real GPU on a desktop)"
-    )
+    parser.add_argument("--time", type=float, default=0.0, help="run time in MINUTES (overrides --duration)")
+    parser.add_argument("--duration", type=int, default=120, help="pan/zoom seconds if --time unset")
+    parser.add_argument("--load-timeout", type=float, default=60.0, help="seconds to wait for map visible")
+    parser.add_argument("--headed", action="store_true", help="show the browser (real GPU on a desktop)")
     parser.add_argument("--gpu", choices=["on", "off"], default="on")
-    parser.add_argument(
-        "--cpu-throttle",
-        type=float,
-        default=1.0,
-        help="CDP CPU slowdown multiplier (e.g. 4 ~ weaker laptop)",
-    )
+    parser.add_argument("--cpu-throttle", type=float, default=1.0, help="CDP CPU slowdown multiplier (e.g. 4 ~ weaker laptop)")
     parser.add_argument("--width", type=int, default=1366)
     parser.add_argument("--height", type=int, default=768)
     parser.add_argument("--output", default="tests/performance/browser_bench/results")

@@ -28,10 +28,12 @@ _TOKEN_COMMANDS = frozenset(
     }
 )
 
-
+                                                                              
+                                                                             
+                          
 _MAX_TOKENS_PER_CREATE = config.token_create_many_max
-
-
+                                                                             
+                                                                           
 _MAX_OVERRIDE_KEYS = 64
 _MAX_OVERRIDE_BYTES = 64 * 1024
 _MAX_CONDITION_LABEL_LEN = 120
@@ -106,25 +108,21 @@ class TokenCommandHandler:
             case ClientCommand.TOKEN_UPDATE_OVERRIDE.value:
                 return await self._update_override(command_id, room_id, payload, context, transport)
             case ClientCommand.TOKEN_HIDE.value:
-                return await self._set_hidden(
-                    command_id, room_id, payload, context, transport, hidden=True
-                )
+                return await self._set_hidden(command_id, room_id, payload, context, transport, hidden=True)
             case ClientCommand.TOKEN_REVEAL.value:
-                return await self._set_hidden(
-                    command_id, room_id, payload, context, transport, hidden=False
-                )
+                return await self._set_hidden(command_id, room_id, payload, context, transport, hidden=False)
             case ClientCommand.TOKEN_REMOVE_FROM_SCENE.value:
-                return await self._remove_from_scene(
-                    command_id, room_id, payload, context, transport
-                )
+                return await self._remove_from_scene(command_id, room_id, payload, context, transport)
             case ClientCommand.TOKEN_CONDITION_ADD.value:
                 return await self._condition_add(command_id, room_id, payload, context, transport)
             case ClientCommand.TOKEN_CONDITION_REMOVE.value:
-                return await self._condition_remove(
-                    command_id, room_id, payload, context, transport
-                )
+                return await self._condition_remove(command_id, room_id, payload, context, transport)
 
-        return TokenCommandResult(handled=False)
+        return TokenCommandResult(handled=False)               
+
+                                                                        
+                              
+                                                                        
 
     async def _create_one(
         self,
@@ -243,9 +241,7 @@ class TokenCommandHandler:
         if not isinstance(grid_x, int) or not isinstance(grid_y, int):
             return _invalid(command_id, "grid_x and grid_y are required integers.")
         if not _valid_optional_version(expected_version):
-            return _invalid(
-                command_id, "expected_version must be a non-negative integer when provided."
-            )
+            return _invalid(command_id, "expected_version must be a non-negative integer when provided.")
 
         result = await self.service.move(
             campaign_id=campaign_id,
@@ -295,9 +291,7 @@ class TokenCommandHandler:
         if _json_size(overrides) > _MAX_OVERRIDE_BYTES:
             return _invalid(command_id, "overrides payload is too large.")
         if not _valid_optional_version(expected_version):
-            return _invalid(
-                command_id, "expected_version must be a non-negative integer when provided."
-            )
+            return _invalid(command_id, "expected_version must be a non-negative integer when provided.")
 
         result = await self.service.update_override(
             campaign_id=campaign_id,
@@ -341,9 +335,7 @@ class TokenCommandHandler:
         if not isinstance(token_id, str) or not token_id:
             return _invalid(command_id, "token_id is required.")
         if not _valid_optional_version(expected_version):
-            return _invalid(
-                command_id, "expected_version must be a non-negative integer when provided."
-            )
+            return _invalid(command_id, "expected_version must be a non-negative integer when provided.")
 
         result = await self.service.set_hidden(
             campaign_id=campaign_id,
@@ -500,6 +492,10 @@ class TokenCommandHandler:
         )
 
 
+                                                                    
+         
+                                                                    
+
 def _valid_optional_version(value: Any) -> bool:
     """``expected_version`` is optional; when present it must be a non-negative int."""
     if value is None:
@@ -511,6 +507,7 @@ def _json_size(value: Any) -> int:
     try:
         return len(json.dumps(value, separators=(",", ":")).encode("utf-8"))
     except (TypeError, ValueError):
+                                                                                
         return _MAX_OVERRIDE_BYTES + 1
 
 

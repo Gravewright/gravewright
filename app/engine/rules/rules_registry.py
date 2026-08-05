@@ -47,9 +47,7 @@ class SystemRulesService:
         if pair is None:
             return {}
         record, manifest = pair
-        helpers = self._read_json(record["package_dir"], manifest.rules.get("formulas", "")).get(
-            "helpers"
-        )
+        helpers = self._read_json(record["package_dir"], manifest.rules.get("formulas", "")).get("helpers")
         return helpers if isinstance(helpers, dict) else {}
 
     def get_derived(self, system_id: str) -> dict:
@@ -57,9 +55,7 @@ class SystemRulesService:
         if pair is None:
             return {}
         record, manifest = pair
-        derived = self._read_json(record["package_dir"], manifest.rules.get("derived", "")).get(
-            "derived"
-        )
+        derived = self._read_json(record["package_dir"], manifest.rules.get("derived", "")).get("derived")
         return derived if isinstance(derived, dict) else {}
 
     def get_actions(self, system_id: str) -> dict:
@@ -67,9 +63,7 @@ class SystemRulesService:
         if pair is None:
             return {}
         record, manifest = pair
-        actions = self._read_json(record["package_dir"], manifest.rules.get("actions", "")).get(
-            "actions"
-        )
+        actions = self._read_json(record["package_dir"], manifest.rules.get("actions", "")).get("actions")
         return actions if isinstance(actions, dict) else {}
 
     def get_action(self, system_id: str, action_id: str) -> dict | None:

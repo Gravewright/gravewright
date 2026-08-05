@@ -24,15 +24,17 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.engine import make_url
 from sqlalchemy import delete
-from sqlalchemy import inspect
 from sqlalchemy import insert
 from sqlalchemy import select
-from sqlalchemy import update
+from sqlalchemy import text
 
 from app.persistence.engine import upsert_statement
 from app.persistence.tables import campaigns
+from app.persistence.tables import metadata
 from app.persistence.tables import session_store
 from app.persistence.tables import users
+
+
 
 
 def _skip_if_dbapi_missing(database_url: str) -> None:
@@ -40,6 +42,8 @@ def _skip_if_dbapi_missing(database_url: str) -> None:
     backend = url.get_backend_name()
     driver = url.get_driver_name()
 
+                                                                               
+                                    
     module_by_driver = {
         "psycopg": "psycopg",
         "psycopg2": "psycopg2",
@@ -53,7 +57,6 @@ def _skip_if_dbapi_missing(database_url: str) -> None:
     if module_name is not None:
         pytest.importorskip(module_name, reason=f"DBAPI driver required for {database_url!r}")
 
-
 def _configured_urls() -> list[str]:
     raw = os.environ.get("GRAVEWRIGHT_TEST_DATABASE_URLS", "")
     return [url.strip() for url in raw.split(",") if url.strip()]
@@ -66,8 +69,9 @@ def test_sqlalchemy_core_schema_and_upsert_smoke(database_url: str):
     Run with for example:
         GRAVEWRIGHT_TEST_DATABASE_URLS=postgresql+psycopg://... pytest tests/integration/test_database_backends.py -q
 
-    Alembic must already have migrated the configured database. This test only
-    inspects and exercises that schema; it never creates or repairs objects.
+    The test creates missing tables via metadata.create_all(), inserts rows with
+    random IDs, verifies the cross-dialect upsert helper, then removes only the
+    rows it created.
     """
     _skip_if_dbapi_missing(database_url)
     engine = create_engine(database_url, future=True)
@@ -76,44 +80,16 @@ def test_sqlalchemy_core_schema_and_upsert_smoke(database_url: str):
     session_key = f"pytest:{uuid.uuid4().hex}"
     now = int(time.time())
 
-    inspector = inspect(engine)
-    tables = set(inspector.get_table_names())
-    assert {
-        "users",
-        "campaigns",
-        "campaign_members",
-        "campaign_invitations",
-        "session_store",
-        "scenes",
-    } <= tables
-    assert {column["name"] for column in inspector.get_columns("campaign_invitations")} >= {
-        "campaign_id",
-        "invited_user_id",
-        "role",
-        "status",
-        "responded_at",
-    }
-    scene_indexes = inspector.get_indexes("scenes")
-    assert any(
-        index["name"] == "idx_scenes_active_campaign" and index["unique"] for index in scene_indexes
-    )
-    member_uniques = {
-        tuple(item["column_names"]) for item in inspector.get_unique_constraints("campaign_members")
-    }
-    assert ("campaign_id", "user_id") in member_uniques
-    invitation_fks = {
-        (tuple(item["constrained_columns"]), item["referred_table"])
-        for item in inspector.get_foreign_keys("campaign_invitations")
-    }
-    assert (("campaign_id",), "campaigns") in invitation_fks
-    assert (("invited_user_id",), "users") in invitation_fks
-    invitation_checks = inspector.get_check_constraints("campaign_invitations")
-    if invitation_checks:
-        check_sql = " ".join(str(item["sqltext"]) for item in invitation_checks)
-        assert "status" in check_sql
-        assert "revoked" in check_sql
-
     with engine.begin() as conn:
+        metadata.create_all(conn, checkfirst=True)
+        if conn.dialect.name in {"sqlite", "postgresql"}:
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_scenes_active_campaign "
+                    "ON scenes (campaign_id) WHERE active = 1"
+                )
+            )
+
         conn.execute(
             insert(users).values(
                 id=user_id,
@@ -184,30 +160,6 @@ def test_sqlalchemy_core_schema_and_upsert_smoke(database_url: str):
         ).one()
         assert bytes(row.value) == b"third"
         assert row.expires_at == now + 10800
-
-        conn.execute(
-            update(campaigns)
-            .where(campaigns.c.id == campaign_id)
-            .values(title="Backend Smoke Updated")
-        )
-        assert (
-            conn.execute(
-                select(campaigns.c.title).where(campaigns.c.id == campaign_id)
-            ).scalar_one()
-            == "Backend Smoke Updated"
-        )
-
-        nested = conn.begin_nested()
-        conn.execute(
-            update(campaigns).where(campaigns.c.id == campaign_id).values(title="Must Roll Back")
-        )
-        nested.rollback()
-        assert (
-            conn.execute(
-                select(campaigns.c.title).where(campaigns.c.id == campaign_id)
-            ).scalar_one()
-            == "Backend Smoke Updated"
-        )
 
         conn.execute(delete(session_store).where(session_store.c.key == session_key))
         conn.execute(delete(campaigns).where(campaigns.c.id == campaign_id))

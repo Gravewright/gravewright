@@ -7,9 +7,14 @@ from PIL import Image
 from PIL import UnidentifiedImageError
 
 
+                                                                              
+                                                                               
+                                                                            
 DEFAULT_MAX_DIMENSION = 10_000
 
-
+                                                                            
+                                                                              
+                                         
 Image.MAX_IMAGE_PIXELS = DEFAULT_MAX_DIMENSION * DEFAULT_MAX_DIMENSION
 
 
@@ -29,13 +34,15 @@ class ImageDecoder:
         max_height: int = DEFAULT_MAX_DIMENSION,
         max_dimension: int | None = None,
     ) -> None:
-
+                                                                           
         self.max_width = max_dimension if max_dimension is not None else max_width
         self.max_height = max_dimension if max_dimension is not None else max_height
 
     def decode(self, data: bytes) -> DecodedImage:
         try:
             with Image.open(BytesIO(data)) as image:
+                                                                                
+                                                                               
                 if image.width > self.max_width or image.height > self.max_height:
                     raise ValueError("image dimensions out of range")
 

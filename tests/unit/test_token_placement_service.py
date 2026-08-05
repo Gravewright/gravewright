@@ -21,29 +21,27 @@ def test_negative_count_returns_empty():
 def test_four_tokens_form_2x2_grid():
     positions = TokenPlacementService().calculate_positions(origin_x=0, origin_y=0, count=4)
     assert positions == [(0, 0), (1, 0), (2, 0), (3, 0)] or positions == [
-        (0, 0),
-        (1, 0),
-        (0, 1),
-        (1, 1),
+        (0, 0), (1, 0),
+        (0, 1), (1, 1),
     ]
-
+                               
     assert positions == [(0, 0), (1, 0), (0, 1), (1, 1)]
 
 
 def test_nine_tokens_form_3x3_grid():
     positions = TokenPlacementService().calculate_positions(origin_x=0, origin_y=0, count=9)
     assert len(positions) == 9
-
+                               
     assert positions[0] == (0, 0)
-    assert positions[2] == (2, 0)
-    assert positions[3] == (0, 1)
-    assert positions[8] == (2, 2)
+    assert positions[2] == (2, 0)                 
+    assert positions[3] == (0, 1)                  
+    assert positions[8] == (2, 2)        
 
 
 def test_five_tokens_incomplete_last_row():
     positions = TokenPlacementService().calculate_positions(origin_x=0, origin_y=0, count=5)
     assert len(positions) == 5
-
+                               
     assert positions[0] == (0, 0)
     assert positions[1] == (1, 0)
     assert positions[2] == (2, 0)

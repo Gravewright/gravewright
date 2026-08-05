@@ -40,7 +40,7 @@ class LocalActorAssetStorage:
         extension = self._safe_extension(filename)
         target_dir = self.root / campaign_id / actor_id
         path = target_dir / f"{kind}{extension}"
-
+                                                                            
         for ext in SAFE_EXTENSIONS:
             other = target_dir / f"{kind}{ext}"
             if other != path and other.exists():

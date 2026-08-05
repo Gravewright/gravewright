@@ -19,9 +19,7 @@ def can_create_deck_instance(*, actor_role: str) -> bool:
     return _is_gm(actor_role)
 
 
-def can_shuffle_deck_instance(
-    *, actor_role: str, owner_user_id: str | None, actor_user_id: str
-) -> bool:
+def can_shuffle_deck_instance(*, actor_role: str, owner_user_id: str | None, actor_user_id: str) -> bool:
     return _is_gm(actor_role) or owner_user_id == actor_user_id
 
 
@@ -51,11 +49,7 @@ def can_view_pile(
     if _is_gm(viewer_role) and gm_can_peek:
         return True
     visibility = pile.get("visibility")
-    if visibility in {
-        CardVisibility.ROOM.value,
-        CardVisibility.PLAYERS.value,
-        CardVisibility.PUBLIC.value,
-    }:
+    if visibility in {CardVisibility.ROOM.value, CardVisibility.PLAYERS.value, CardVisibility.PUBLIC.value}:
         return True
     if visibility == CardVisibility.OWNER_ONLY.value:
         return pile.get("owner_user_id") == viewer_user_id
@@ -76,11 +70,7 @@ def can_view_card_front(
         return card_instance.get("owner_user_id") == viewer_user_id
     if card_instance.get("face_state") != "face_up":
         return False
-    if visibility in {
-        CardVisibility.ROOM.value,
-        CardVisibility.PLAYERS.value,
-        CardVisibility.PUBLIC.value,
-    }:
+    if visibility in {CardVisibility.ROOM.value, CardVisibility.PLAYERS.value, CardVisibility.PUBLIC.value}:
         return True
     return False
 
@@ -95,9 +85,7 @@ def can_move_card(
         return True
     if actor_role == PlayerRole.STREAMER.value:
         return False
-    return card_instance.get("owner_user_id") == actor_user_id and not bool(
-        card_instance.get("locked")
-    )
+    return card_instance.get("owner_user_id") == actor_user_id and not bool(card_instance.get("locked"))
 
 
 def can_play_card_to_scene(
@@ -106,18 +94,12 @@ def can_play_card_to_scene(
     actor_role: str,
     card_instance: dict,
 ) -> bool:
-    return can_move_card(
-        actor_user_id=actor_user_id, actor_role=actor_role, card_instance=card_instance
-    )
+    return can_move_card(actor_user_id=actor_user_id, actor_role=actor_role, card_instance=card_instance)
 
 
 def can_reveal_card(*, actor_user_id: str, actor_role: str, card_instance: dict) -> bool:
-    return can_move_card(
-        actor_user_id=actor_user_id, actor_role=actor_role, card_instance=card_instance
-    )
+    return can_move_card(actor_user_id=actor_user_id, actor_role=actor_role, card_instance=card_instance)
 
 
 def can_discard_card(*, actor_user_id: str, actor_role: str, card_instance: dict) -> bool:
-    return can_move_card(
-        actor_user_id=actor_user_id, actor_role=actor_role, card_instance=card_instance
-    )
+    return can_move_card(actor_user_id=actor_user_id, actor_role=actor_role, card_instance=card_instance)

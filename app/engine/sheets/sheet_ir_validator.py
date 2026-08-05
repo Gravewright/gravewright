@@ -21,34 +21,11 @@ FIELD_TYPES = {
     "modifierBuilder",
 }
 ACTION_TYPES = {"rollButton", "actionButton", "incrementButton", "decrementButton"}
-DISPLAY_TYPES = {
-    "text",
-    "badge",
-    "resourceBar",
-    "itemList",
-    "dropZone",
-    "abilityCard",
-    "combatStat",
-    "resourceBox",
-    "rollableStat",
-}
+DISPLAY_TYPES = {"text", "badge", "resourceBar", "itemList", "dropZone", "abilityCard", "combatStat", "resourceBox", "rollableStat"}
 
 KNOWN_TYPES = LAYOUT_TYPES | FIELD_TYPES | ACTION_TYPES | DISPLAY_TYPES
 
-_DIALOG_FIELD_TYPES = {
-    "boolean",
-    "number",
-    "text",
-    "select",
-    "segmented",
-    "radio",
-    "dice",
-    "diceList",
-    "formula",
-    "visibility",
-    "separator",
-    "hint",
-}
+_DIALOG_FIELD_TYPES = {"boolean", "number", "text", "select", "segmented", "radio", "dice", "diceList", "formula", "visibility", "separator", "hint"}
 _ITEM_ROW_TYPES = {"weaponRow", "spellRow", "featureRow", "inventoryRow", "effectRow"}
 _ITEM_ROW_ACTION_TYPES = {"itemAction", "openEmbeddedItemAction", "removeAction"}
 
@@ -127,9 +104,7 @@ def _validate_item_row(value: object, errors: list[str]) -> None:
         if action_type not in _ITEM_ROW_ACTION_TYPES:
             errors.append("game.sheet_ir.errors.item_row_action_type")
             continue
-        if action_type == "itemAction" and (
-            not isinstance(action.get("action"), str) or not action.get("action")
-        ):
+        if action_type == "itemAction" and (not isinstance(action.get("action"), str) or not action.get("action")):
             errors.append("game.sheet_ir.errors.item_row_action_target")
         if "dialog" in action:
             _validate_roll_dialog(action.get("dialog"), errors)
@@ -159,9 +134,7 @@ def _validate_interaction(value: object, errors: list[str]) -> None:
                 continue
             label = item.get("label")
             label_key = item.get("labelKey")
-            if not (isinstance(label, str) and label) and not (
-                isinstance(label_key, str) and label_key
-            ):
+            if not (isinstance(label, str) and label) and not (isinstance(label_key, str) and label_key):
                 errors.append("game.sheet_ir.errors.interaction_item_label")
             has_action = isinstance(item.get("action"), str) and bool(item.get("action"))
             has_command = isinstance(item.get("command"), str) and bool(item.get("command"))
@@ -191,24 +164,18 @@ def _walk(node: object, errors: list[str], depth: int = 0) -> None:
             errors.append("game.sheet_ir.errors.ability_card_score_path")
         if not isinstance(node.get("modPath"), str) or not node.get("modPath"):
             errors.append("game.sheet_ir.errors.ability_card_mod_path")
-        if (
-            "rollAction" in node
-            and node.get("rollAction") is not None
-            and not isinstance(node.get("rollAction"), str)
-        ):
+        if "rollAction" in node and node.get("rollAction") is not None and not isinstance(node.get("rollAction"), str):
             errors.append("game.sheet_ir.errors.ability_card_roll_action")
         _validate_interaction(node.get("interaction"), errors)
     if node_type == "combatStat":
         if not isinstance(node.get("valuePath"), str) or not node.get("valuePath"):
             errors.append("game.sheet_ir.errors.combat_stat_value_path")
-        if (
-            "rollAction" in node
-            and node.get("rollAction") is not None
-            and not isinstance(node.get("rollAction"), str)
-        ):
+        if "rollAction" in node and node.get("rollAction") is not None and not isinstance(node.get("rollAction"), str):
             errors.append("game.sheet_ir.errors.combat_stat_roll_action")
         _validate_interaction(node.get("interaction"), errors)
     if node_type == "rollableStat":
+                                                                             
+                                                   
         if node.get("interaction") is None and not node.get("rollAction"):
             errors.append("game.sheet_ir.errors.interaction_action")
         _validate_interaction(node.get("interaction"), errors)
@@ -269,20 +236,12 @@ def list_drop_zones(layout: object) -> list[dict]:
             return
         if node.get("type") == "dropZone":
             zones.append(
-                {
-                    "id": node.get("id", ""),
-                    "accepts": node.get("accepts") or [],
-                    "onDrop": node.get("onDrop", ""),
-                }
+                {"id": node.get("id", ""), "accepts": node.get("accepts") or [], "onDrop": node.get("onDrop", "")}
             )
         nested = node.get("dropZone")
         if isinstance(nested, dict):
             zones.append(
-                {
-                    "id": nested.get("id", ""),
-                    "accepts": nested.get("accepts") or [],
-                    "onDrop": nested.get("onDrop", ""),
-                }
+                {"id": nested.get("id", ""), "accepts": nested.get("accepts") or [], "onDrop": nested.get("onDrop", "")}
             )
         for key in ("children", "tabs"):
             if key in node:
@@ -333,7 +292,7 @@ def validate_sheet_ir(ir: object) -> list[str]:
         errors.append("game.sheet_ir.errors.body_required")
     else:
         _walk(ir["body"], errors)
-
+                                          
     seen: set[str] = set()
     unique: list[str] = []
     for error in errors:

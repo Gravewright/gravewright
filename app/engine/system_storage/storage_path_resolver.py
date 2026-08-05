@@ -17,7 +17,7 @@ from app.persistence import database
 
 _SAFE_SEGMENT = re.compile(r"^[A-Za-z0-9._-]+$")
 
-
+                                                           
 _KIND_DIRS = {"actor": "actors", "item": "items"}
 
 
@@ -29,14 +29,18 @@ def _safe(segment: str) -> bool:
     return bool(segment) and segment not in {".", ".."} and bool(_SAFE_SEGMENT.match(segment))
 
 
-def entity_data_path(*, kind: str, system_id: str, campaign_id: str, entity_id: str) -> Path | None:
+def entity_data_path(
+    *, kind: str, system_id: str, campaign_id: str, entity_id: str
+) -> Path | None:
     sub = _KIND_DIRS.get(kind)
     if sub is None:
         return None
     if not (_safe(system_id) and _safe(campaign_id) and _safe(entity_id)):
         return None
     root = system_data_root()
-    candidate = (root / system_id / "campaigns" / campaign_id / sub / f"{entity_id}.json").resolve()
+    candidate = (
+        root / system_id / "campaigns" / campaign_id / sub / f"{entity_id}.json"
+    ).resolve()
     try:
         candidate.relative_to(root)
     except ValueError:

@@ -54,9 +54,7 @@ def test_folders_and_move_present_with_src(db):
     folder_id = folder.payload["folder"]["id"]
 
     asset = _asset(campaign_id, gm_id)
-    moved = service.move_asset(
-        campaign_id=campaign_id, user_id=gm_id, asset_id=asset["id"], folder_id=folder_id
-    )
+    moved = service.move_asset(campaign_id=campaign_id, user_id=gm_id, asset_id=asset["id"], folder_id=folder_id)
 
     assert moved.success, moved.error_key
     assert moved.payload["asset"]["folder_id"] == folder_id
@@ -107,9 +105,7 @@ def test_player_cannot_manage_but_can_view(db):
     campaign_id = seed_campaign(gm_id)
     seed_member(campaign_id, spectator, "streamer")
 
-    denied = AssetLibraryService().create_folder(
-        campaign_id=campaign_id, user_id=spectator, name="Nope"
-    )
+    denied = AssetLibraryService().create_folder(campaign_id=campaign_id, user_id=spectator, name="Nope")
     assert not denied.success
     assert denied.error_key == "permissions.errors.denied"
 

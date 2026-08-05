@@ -48,7 +48,7 @@ class ActionResult:
     actor_name: str | None = None
     action_type: str | None = None
     label: str | None = None
-
+          
     expression: str | None = None
     groups: list[dict] = field(default_factory=list)
     modifier: int = 0
@@ -64,11 +64,11 @@ class ActionResult:
     intent: str | None = None
     source: dict = field(default_factory=dict)
     metadata: dict = field(default_factory=dict)
-
+                    
     version: int | None = None
     changed_paths: list[str] = field(default_factory=list)
     token_view: dict | None = None
-
+                                            
     applied: dict | None = None
     error_key: str | None = None
 
@@ -120,7 +120,8 @@ def _lookup_dotted(root: dict, dotted: str) -> Any:
 
 
 def _formula_value_for_display(value: Any) -> str:
-
+                                                                                 
+                                                                      
     if isinstance(value, bool):
         return "1" if value else "0"
     if isinstance(value, int):
@@ -162,9 +163,7 @@ def _input_value(inputs: dict, path: str) -> Any:
 
 def _literal_value(raw: str) -> Any:
     text = raw.strip()
-    if (text.startswith("'") and text.endswith("'")) or (
-        text.startswith('"') and text.endswith('"')
-    ):
+    if (text.startswith("'") and text.endswith("'")) or (text.startswith('"') and text.endswith('"')):
         return text[1:-1]
     if text.lower() == "true":
         return True
@@ -194,17 +193,17 @@ def _condition_matches(condition: object, inputs: dict) -> bool:
             left, right = [part.strip() for part in text.split(op, 1)]
             if not left.startswith("input."):
                 return False
-            value = _input_value(inputs, left[len("input.") :])
+            value = _input_value(inputs, left[len("input."):])
             expected = _literal_value(right)
             return (value == expected) if op == "==" else (value != expected)
     if text.startswith("input."):
-        return bool(_input_value(inputs, text[len("input.") :]))
+        return bool(_input_value(inputs, text[len("input."):]))
     return False
 
 
 def _resolve_input_ref(value: object, inputs: dict) -> Any:
     if isinstance(value, str) and value.startswith("@input."):
-        return _input_value(inputs, value[len("@input.") :])
+        return _input_value(inputs, value[len("@input."):])
     return value
 
 
@@ -219,7 +218,8 @@ def _append_formula_part(formula: str, value: Any, *, user_supplied: bool = Fals
     text = str(value).strip()
     if not text:
         return formula
-
+                                                                                    
+                                                                               
     if user_supplied and not _DICE_RE.fullmatch(text):
         return formula
     if text.startswith("-"):
@@ -248,19 +248,12 @@ def _apply_roll_transforms(formula: str, action: dict, roll_options: dict | None
             source = str(replace.get("from") or "")
             target = str(replace.get("to") or "")
             if source and target:
-                pattern = re.compile(
-                    rf"(?<![A-Za-z0-9_]){re.escape(source)}(?![A-Za-z0-9_])", re.IGNORECASE
-                )
+                pattern = re.compile(rf"(?<![A-Za-z0-9_]){re.escape(source)}(?![A-Za-z0-9_])", re.IGNORECASE)
                 next_formula = pattern.sub(target, next_formula, count=1)
 
         if "append" in transform:
             value = _resolve_input_ref(transform.get("append"), roll_options)
-            next_formula = _append_formula_part(
-                next_formula,
-                value,
-                user_supplied=isinstance(transform.get("append"), str)
-                and transform.get("append", "").startswith("@input."),
-            )
+            next_formula = _append_formula_part(next_formula, value, user_supplied=isinstance(transform.get("append"), str) and transform.get("append", "").startswith("@input."))
 
         if "appendEach" in transform:
             values = _resolve_input_ref(transform.get("appendEach"), roll_options)
@@ -301,16 +294,12 @@ def _roll_targets(action_id: str | None, action: dict) -> set[str]:
         targets.add("roll.attack")
     if "damage" in probe or "dano" in probe:
         targets.add("roll.damage")
-    if (
-        ".save" in lowered
-        or lowered.startswith("roll.save")
-        or "save" in probe
-        or "salvaguarda" in probe
-    ):
+    if ".save" in lowered or lowered.startswith("roll.save") or "save" in probe or "salvaguarda" in probe:
         targets.add("roll.save")
     if lowered.startswith("roll.ability") or "check" in probe or "teste" in probe:
         targets.add("roll.check")
     return targets
+
 
 
 class SheetActionService:
@@ -381,11 +370,7 @@ class SheetActionService:
                 roll_options=roll_options,
             )
             apply_directive = action.get("apply")
-            if (
-                result.success
-                and isinstance(apply_directive, dict)
-                and (target_token_id or target_actor_id)
-            ):
+            if result.success and isinstance(apply_directive, dict) and (target_token_id or target_actor_id):
                 lookup = {**context, "input": scope.get("input", {}), "drop": scope.get("drop", {})}
                 if target_token_id:
                     return self._apply_to_target_token(
@@ -404,23 +389,13 @@ class SheetActionService:
                 )
             return result
         if action_type == "patch":
-            return self._do_patch(
-                actor, action, data, context, scope, helpers, envelope, core, derived
-            )
+            return self._do_patch(actor, action, data, context, scope, helpers, envelope, core, derived)
         if action_type == "append":
-            return self._do_append(
-                actor, action, data, context, scope, envelope, core, derived, helpers
-            )
+            return self._do_append(actor, action, data, context, scope, envelope, core, derived, helpers)
         return ActionResult(success=False, error_key="game.actions.errors.unsupported_type")
 
     def roll_formula(
-        self,
-        *,
-        actor_id: str,
-        formula: str,
-        user_id: str,
-        label: str = "",
-        roll_options: dict | None = None,
+        self, *, actor_id: str, formula: str, user_id: str, label: str = "", roll_options: dict | None = None
     ) -> ActionResult:
         ctx = self._load(actor_id, user_id)
         if ctx.error is not None:
@@ -451,6 +426,8 @@ class SheetActionService:
             item=None,
             roll_options=roll_options,
         )
+
+                                                                                
 
     def _do_roll(
         self,
@@ -548,13 +525,8 @@ class SheetActionService:
         )
 
     def _apply_to_target(
-        self,
-        *,
-        roll_result: ActionResult,
-        requester_user_id: str,
-        target_actor_id: str,
-        directive: dict,
-        lookup: dict,
+        self, *, roll_result: ActionResult, requester_user_id: str, target_actor_id: str,
+        directive: dict, lookup: dict,
     ) -> ActionResult:
         """Apply a rolled total to a target actor's resource (damage or heal).
 
@@ -572,18 +544,14 @@ class SheetActionService:
         )
         if target_campaign is None:
             return ActionResult(success=False, error_key="game.actors.errors.not_found")
-        if not can_edit_actor(
-            actor=target, campaign=dict(target_campaign), user_id=requester_user_id
-        ):
+        if not can_edit_actor(actor=target, campaign=dict(target_campaign), user_id=requester_user_id):
             return ActionResult(success=False, error_key="game.actors.errors.not_allowed")
 
         mode = "heal" if str(directive.get("mode") or "damage") == "heal" else "damage"
         amount = max(0, int(roll_result.total))
 
         envelope = self.storage.read_actor(
-            system_id=target["system_id"],
-            campaign_id=target["campaign_id"],
-            actor_id=target_actor_id,
+            system_id=target["system_id"], campaign_id=target["campaign_id"], actor_id=target_actor_id
         ) or {"version": 1, "data": {}}
         target_data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
 
@@ -611,37 +579,26 @@ class SheetActionService:
 
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(
-            system_id=target["system_id"],
-            campaign_id=target["campaign_id"],
-            actor_id=target_actor_id,
-            version=version,
-            data=target_data,
+            system_id=target["system_id"], campaign_id=target["campaign_id"],
+            actor_id=target_actor_id, version=version, data=target_data,
         )
-        return replace(
-            roll_result,
-            applied={
-                "targetActorId": target_actor_id,
-                "targetName": target["name"],
-                "campaignId": target["campaign_id"],
-                "systemId": target["system_id"],
-                "mode": mode,
-                "rawAmount": amount,
-                "amount": applied,
-                "damageType": damage_type,
-                "resourcePath": value_path,
-                "valueAfter": value_after,
-                "version": version,
-            },
-        )
+        return replace(roll_result, applied={
+            "targetActorId": target_actor_id,
+            "targetName": target["name"],
+            "campaignId": target["campaign_id"],
+            "systemId": target["system_id"],
+            "mode": mode,
+            "rawAmount": amount,
+            "amount": applied,
+            "damageType": damage_type,
+            "resourcePath": value_path,
+            "valueAfter": value_after,
+            "version": version,
+        })
 
     def _apply_to_target_token(
-        self,
-        *,
-        roll_result: ActionResult,
-        requester_user_id: str,
-        target_token_id: str,
-        directive: dict,
-        lookup: dict,
+        self, *, roll_result: ActionResult, requester_user_id: str, target_token_id: str,
+        directive: dict, lookup: dict,
     ) -> ActionResult:
         token = self.tokens.get_by_id(target_token_id)
         if token is None or not token.get("actor_id"):
@@ -650,20 +607,14 @@ class SheetActionService:
         if scene is None or scene["campaign_id"] != roll_result.campaign_id:
             return ActionResult(success=False, error_key="tokens.errors.not_found")
         target = self.actors.get(token["actor_id"])
-        if (
-            target is None
-            or target["status"] != "active"
-            or target["campaign_id"] != scene["campaign_id"]
-        ):
+        if target is None or target["status"] != "active" or target["campaign_id"] != scene["campaign_id"]:
             return ActionResult(success=False, error_key="tokens.errors.not_found")
         target_campaign = self.campaigns.get_for_user(
             campaign_id=scene["campaign_id"], user_id=requester_user_id
         )
         if target_campaign is None:
             return ActionResult(success=False, error_key="tokens.errors.not_found")
-        if not can_edit_actor(
-            actor=target, campaign=dict(target_campaign), user_id=requester_user_id
-        ):
+        if not can_edit_actor(actor=target, campaign=dict(target_campaign), user_id=requester_user_id):
             return ActionResult(success=False, error_key="game.actors.errors.not_allowed")
 
         is_unlinked = token.get("actor_link_mode") == "unlinked"
@@ -672,9 +623,7 @@ class SheetActionService:
             instance = overrides.get("_actor_instance")
             if not isinstance(instance, dict):
                 base = self.storage.read_actor(
-                    system_id=target["system_id"],
-                    campaign_id=target["campaign_id"],
-                    actor_id=target["id"],
+                    system_id=target["system_id"], campaign_id=target["campaign_id"], actor_id=target["id"]
                 ) or {"version": 1, "data": {}}
                 instance = {
                     "source_actor_id": target["id"],
@@ -687,9 +636,7 @@ class SheetActionService:
             target_data = instance.get("data") if isinstance(instance.get("data"), dict) else {}
         else:
             envelope = self.storage.read_actor(
-                system_id=target["system_id"],
-                campaign_id=target["campaign_id"],
-                actor_id=target["id"],
+                system_id=target["system_id"], campaign_id=target["campaign_id"], actor_id=target["id"]
             ) or {"version": 1, "data": {}}
             target_data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
 
@@ -740,37 +687,29 @@ class SheetActionService:
         else:
             version = int(envelope.get("version", 1)) + 1
             self.storage.write_actor(
-                system_id=target["system_id"],
-                campaign_id=target["campaign_id"],
-                actor_id=target["id"],
-                version=version,
-                data=target_data,
+                system_id=target["system_id"], campaign_id=target["campaign_id"],
+                actor_id=target["id"], version=version, data=target_data,
             )
             token_version = token.get("version")
 
-        return replace(
-            roll_result,
-            applied={
-                "targetActorId": target["id"],
-                "targetTokenId": target_token_id,
-                "targetName": token.get("name") or target["name"],
-                "campaignId": target["campaign_id"],
-                "sceneId": token["scene_id"],
-                "systemId": target["system_id"],
-                "mode": mode,
-                "rawAmount": amount,
-                "amount": applied,
-                "damageType": damage_type,
-                "resourcePath": value_path,
-                "valueAfter": value_after,
-                "version": version,
-                "tokenVersion": token_version,
-            },
-        )
+        return replace(roll_result, applied={
+            "targetActorId": target["id"],
+            "targetTokenId": target_token_id,
+            "targetName": token.get("name") or target["name"],
+            "campaignId": target["campaign_id"],
+            "sceneId": token["scene_id"],
+            "systemId": target["system_id"],
+            "mode": mode,
+            "rawAmount": amount,
+            "amount": applied,
+            "damageType": damage_type,
+            "resourcePath": value_path,
+            "valueAfter": value_after,
+            "version": version,
+            "tokenVersion": token_version,
+        })
 
-    def _do_patch(
-        self, actor, action, data, context, scope, helpers, envelope, core, derived
-    ) -> ActionResult:
+    def _do_patch(self, actor, action, data, context, scope, helpers, envelope, core, derived) -> ActionResult:
         patch = action.get("patch")
         if not isinstance(patch, dict) or not patch:
             return ActionResult(success=False, error_key="game.actions.errors.invalid_patch")
@@ -787,19 +726,12 @@ class SheetActionService:
 
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(
-            system_id=actor["system_id"],
-            campaign_id=actor["campaign_id"],
-            actor_id=actor["id"],
-            version=version,
-            data=data,
+            system_id=actor["system_id"], campaign_id=actor["campaign_id"],
+            actor_id=actor["id"], version=version, data=data,
         )
-        return self._mutation_result(
-            actor, action, data, version, sorted(patch.keys()), core, derived, helpers
-        )
+        return self._mutation_result(actor, action, data, version, sorted(patch.keys()), core, derived, helpers)
 
-    def _do_append(
-        self, actor, action, data, context, scope, envelope, core, derived, helpers
-    ) -> ActionResult:
+    def _do_append(self, actor, action, data, context, scope, envelope, core, derived, helpers) -> ActionResult:
         target = action.get("target")
         if not isinstance(target, str) or not target:
             return ActionResult(success=False, error_key="game.actions.errors.invalid_target")
@@ -820,17 +752,12 @@ class SheetActionService:
 
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(
-            system_id=actor["system_id"],
-            campaign_id=actor["campaign_id"],
-            actor_id=actor["id"],
-            version=version,
-            data=data,
+            system_id=actor["system_id"], campaign_id=actor["campaign_id"],
+            actor_id=actor["id"], version=version, data=data,
         )
         return self._mutation_result(actor, action, data, version, [target], core, derived, helpers)
 
-    def _mutation_result(
-        self, actor, action, data, version, changed_paths, core, derived, helpers
-    ) -> ActionResult:
+    def _mutation_result(self, actor, action, data, version, changed_paths, core, derived, helpers) -> ActionResult:
         token_view = self._token_view(actor, data, core, derived, helpers)
         return ActionResult(
             success=True,
@@ -856,21 +783,17 @@ class SheetActionService:
             actor_type=actor["type"], sheet_data=derived_data, core=core, token_mappings=mappings
         )
 
+                                                                              
+
     def _load(self, actor_id: str, user_id: str) -> _LoadCtx:
         actor = self.actors.get(actor_id)
         if actor is None or actor["status"] != "active":
-            return _LoadCtx(
-                error=ActionResult(success=False, error_key="game.actors.errors.not_found")
-            )
+            return _LoadCtx(error=ActionResult(success=False, error_key="game.actors.errors.not_found"))
         campaign = self.campaigns.get_for_user(campaign_id=actor["campaign_id"], user_id=user_id)
         if campaign is None:
-            return _LoadCtx(
-                error=ActionResult(success=False, error_key="game.actors.errors.not_found")
-            )
+            return _LoadCtx(error=ActionResult(success=False, error_key="game.actors.errors.not_found"))
         if self.systems.get_active_manifest(actor["system_id"]) is None:
-            return _LoadCtx(
-                error=ActionResult(success=False, error_key="game.actors.errors.system_not_enabled")
-            )
+            return _LoadCtx(error=ActionResult(success=False, error_key="game.actors.errors.system_not_enabled"))
         return _LoadCtx(actor=actor, campaign=dict(campaign))
 
 

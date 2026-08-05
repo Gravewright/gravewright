@@ -83,9 +83,7 @@ class SceneTileRepository:
                         scene_tiles_table,
                         scene_assets_table.c.storage_path.label("storage_path"),
                     )
-                    .join(
-                        scene_assets_table, scene_assets_table.c.id == scene_tiles_table.c.asset_id
-                    )
+                    .join(scene_assets_table, scene_assets_table.c.id == scene_tiles_table.c.asset_id)
                     .where(scene_tiles_table.c.layer_id == layer_id)
                     .order_by(scene_tiles_table.c.tile_ref.asc())
                 )

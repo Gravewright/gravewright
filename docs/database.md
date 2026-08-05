@@ -167,10 +167,3 @@ is stamped and upgraded to head; drift is reported and leaves the original
 database unstamped. Keep the backup until the application and your data have
 been verified. PostgreSQL installations must be backed up with the backend's
 native tools and currently require operator-managed adoption.
-
-`metadata.create_all()` is limited to SQLite `:memory:` or an explicitly
-opted-in file below the test suite's temporary root. File-backed tests set
-`ALLOW_METADATA_BOOTSTRAP=true` together with
-`GRAVEWRIGHT_TEST_TEMP_ROOT=<pytest temp directory>`. Project, home, storage,
-development, production, and PostgreSQL databases are never eligible; initialize
-those with `grave db upgrade`.

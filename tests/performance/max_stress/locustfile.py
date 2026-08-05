@@ -19,7 +19,6 @@ This simulates a scenario that will practically never happen in a real session:
 
 Goal: find the saturation point, not to pass — failure is expected and informative.
 """
-
 from __future__ import annotations
 
 import random
@@ -29,12 +28,16 @@ import time
 from locust import HttpUser, between, constant, events, tag, task
 
 
+                                                                                
+
 STRESS_EMAIL = "stress@test.local"
 STRESS_PASSWORD = "StressMax1!"
 
+                                                                                
 
 _scene_meta: dict = {}
 
+                                                                                
 
 _CSRF_RE = re.compile(r'name="_csrf_token"\s+value="([^"]+)"')
 _CAMPAIGN_ID_RE = re.compile(r'data-room-id="([^"]+)"')
@@ -79,7 +82,6 @@ def _parse_meta(html: str) -> dict | None:
         return None
     try:
         import math
-
         w = int(matches["tile_w"].group(1))
         h = int(matches["tile_h"].group(1))
         ts = int(matches["tile_sz"].group(1))
@@ -95,6 +97,8 @@ def _parse_meta(html: str) -> dict | None:
         return None
 
 
+                                                                                
+
 class StressBase(HttpUser):
     abstract = True
 
@@ -108,11 +112,14 @@ class StressBase(HttpUser):
                 _scene_meta.update(meta)
 
 
+                                                                                
+                                              
+                                                                        
+
 class TileBombardier(StressBase):
     """Fires 20×15 viewport bursts with essentially no pause."""
-
     weight = 8
-    wait_time = constant(0)
+    wait_time = constant(0)                                      
 
     @tag("tiles")
     @task(15)
@@ -152,9 +159,11 @@ class TileBombardier(StressBase):
             )
 
 
+                                                                                
+                                                                   
+
 class PageHammer(StressBase):
     """Hammers the full game page HTML render."""
-
     weight = 3
     wait_time = between(0.1, 0.5)
 
@@ -164,11 +173,14 @@ class PageHammer(StressBase):
         self.client.get("/game", name="GET /game page", allow_redirects=True)
 
 
+                                                                                
+                                                                     
+                                                      
+
 class ParallelRetiler(StressBase):
     """Triggers retile as fast as possible — simulates 10 GMs spamming tile_size changes."""
-
     weight = 1
-    wait_time = between(2, 5)
+    wait_time = between(2, 5)                                             
 
     _sizes = [32, 40, 48, 32, 56, 32, 40, 48, 56, 32]
     _idx = 0
@@ -205,6 +217,8 @@ class ParallelRetiler(StressBase):
         print(f"[retile] size={new_size} status={resp.status_code} {elapsed_ms:.0f}ms")
 
 
+                                                                                
+
 @events.test_stop.add_listener
 def on_test_stop(environment, **_kwargs):
     stats = environment.stats
@@ -220,19 +234,17 @@ def on_test_stop(environment, **_kwargs):
     for name, entry in sorted(stats.entries.items(), key=lambda x: -x[1].num_requests):
         if entry.num_requests == 0:
             continue
-        fail_pct = f"{100 * entry.num_failures / entry.num_requests:.1f}%"
-        rows.append(
-            (
-                name[1] if isinstance(name, tuple) else name,
-                str(entry.num_requests),
-                fail_pct,
-                f"{entry.get_response_time_percentile(0.50):.0f}ms",
-                f"{entry.get_response_time_percentile(0.95):.0f}ms",
-                f"{entry.get_response_time_percentile(0.99):.0f}ms",
-                f"{entry.get_response_time_percentile(0.999):.0f}ms",
-                f"{entry.total_rps:.0f}",
-            )
-        )
+        fail_pct = f"{100*entry.num_failures/entry.num_requests:.1f}%"
+        rows.append((
+            name[1] if isinstance(name, tuple) else name,
+            str(entry.num_requests),
+            fail_pct,
+            f"{entry.get_response_time_percentile(0.50):.0f}ms",
+            f"{entry.get_response_time_percentile(0.95):.0f}ms",
+            f"{entry.get_response_time_percentile(0.99):.0f}ms",
+            f"{entry.get_response_time_percentile(0.999):.0f}ms",
+            f"{entry.total_rps:.0f}",
+        ))
 
     col_w = [max(len(r[i]) for r in rows) + 1 for i in range(len(rows[0]))]
     sep = "  ".join("-" * w for w in col_w)
@@ -242,9 +254,7 @@ def on_test_stop(environment, **_kwargs):
             print(sep)
 
     print(f"\nTotal requests : {total.num_requests:,}")
-    print(
-        f"Total failures : {total.num_failures:,} ({100 * total.num_failures / max(total.num_requests, 1):.2f}%)"
-    )
+    print(f"Total failures : {total.num_failures:,} ({100*total.num_failures/max(total.num_requests,1):.2f}%)")
     print(f"Peak RPS       : {total.total_rps:.0f} req/s")
     print(f"p50 latency    : {total.get_response_time_percentile(0.50):.0f} ms")
     print(f"p95 latency    : {total.get_response_time_percentile(0.95):.0f} ms")

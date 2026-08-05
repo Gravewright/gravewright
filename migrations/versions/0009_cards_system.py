@@ -28,13 +28,9 @@ def upgrade() -> None:
         op.create_table(
             "card_deck_definitions",
             sa.Column("id", ID, primary_key=True),
-            sa.Column(
-                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True
-            ),
+            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True),
             sa.Column("package_id", ID, nullable=True),
-            sa.Column(
-                "owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-            ),
+            sa.Column("owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
             sa.Column("scope", STR, nullable=False),
             sa.Column("name", STR, nullable=False),
             sa.Column("description", sa.Text(), nullable=True),
@@ -45,27 +41,16 @@ def upgrade() -> None:
             sa.Column("updated_at", sa.Integer(), nullable=False),
             sa.UniqueConstraint("card_instance_id"),
         )
-        op.create_index(
-            "idx_card_deck_definitions_campaign", "card_deck_definitions", ["campaign_id"]
-        )
-        op.create_index(
-            "idx_card_deck_definitions_package", "card_deck_definitions", ["package_id"]
-        )
-        op.create_index(
-            "idx_card_deck_definitions_owner", "card_deck_definitions", ["owner_user_id"]
-        )
+        op.create_index("idx_card_deck_definitions_campaign", "card_deck_definitions", ["campaign_id"])
+        op.create_index("idx_card_deck_definitions_package", "card_deck_definitions", ["package_id"])
+        op.create_index("idx_card_deck_definitions_owner", "card_deck_definitions", ["owner_user_id"])
         op.create_index("idx_card_deck_definitions_scope", "card_deck_definitions", ["scope"])
 
     if not _has_table("card_definitions"):
         op.create_table(
             "card_definitions",
             sa.Column("id", ID, primary_key=True),
-            sa.Column(
-                "deck_definition_id",
-                ID,
-                sa.ForeignKey("card_deck_definitions.id", ondelete="CASCADE"),
-                nullable=False,
-            ),
+            sa.Column("deck_definition_id", ID, sa.ForeignKey("card_deck_definitions.id", ondelete="CASCADE"), nullable=False),
             sa.Column("name", STR, nullable=False),
             sa.Column("subtitle", STR, nullable=True),
             sa.Column("description", sa.Text(), nullable=True),
@@ -84,21 +69,10 @@ def upgrade() -> None:
         op.create_table(
             "card_deck_instances",
             sa.Column("id", ID, primary_key=True),
-            sa.Column(
-                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
-            ),
-            sa.Column(
-                "room_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True
-            ),
-            sa.Column(
-                "deck_definition_id",
-                ID,
-                sa.ForeignKey("card_deck_definitions.id", ondelete="CASCADE"),
-                nullable=False,
-            ),
-            sa.Column(
-                "owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-            ),
+            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("room_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True),
+            sa.Column("deck_definition_id", ID, sa.ForeignKey("card_deck_definitions.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
             sa.Column("name", STR, nullable=False),
             sa.Column("active", sa.Integer(), nullable=False, server_default=sa.text("1")),
             sa.Column("metadata_json", sa.Text(), nullable=False),
@@ -106,26 +80,15 @@ def upgrade() -> None:
             sa.Column("updated_at", sa.Integer(), nullable=False),
         )
         op.create_index("idx_card_deck_instances_campaign", "card_deck_instances", ["campaign_id"])
-        op.create_index(
-            "idx_card_deck_instances_definition", "card_deck_instances", ["deck_definition_id"]
-        )
+        op.create_index("idx_card_deck_instances_definition", "card_deck_instances", ["deck_definition_id"])
 
     if not _has_table("card_piles"):
         op.create_table(
             "card_piles",
             sa.Column("id", ID, primary_key=True),
-            sa.Column(
-                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
-            ),
-            sa.Column(
-                "deck_instance_id",
-                ID,
-                sa.ForeignKey("card_deck_instances.id", ondelete="CASCADE"),
-                nullable=True,
-            ),
-            sa.Column(
-                "owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-            ),
+            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("deck_instance_id", ID, sa.ForeignKey("card_deck_instances.id", ondelete="CASCADE"), nullable=True),
+            sa.Column("owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
             sa.Column("kind", STR, nullable=False),
             sa.Column("name", STR, nullable=False),
             sa.Column("visibility", STR, nullable=False),
@@ -142,36 +105,12 @@ def upgrade() -> None:
         op.create_table(
             "card_instances",
             sa.Column("id", ID, primary_key=True),
-            sa.Column(
-                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
-            ),
-            sa.Column(
-                "deck_instance_id",
-                ID,
-                sa.ForeignKey("card_deck_instances.id", ondelete="CASCADE"),
-                nullable=False,
-            ),
-            sa.Column(
-                "card_definition_id",
-                ID,
-                sa.ForeignKey("card_definitions.id", ondelete="CASCADE"),
-                nullable=False,
-            ),
-            sa.Column(
-                "current_pile_id",
-                ID,
-                sa.ForeignKey("card_piles.id", ondelete="SET NULL"),
-                nullable=True,
-            ),
-            sa.Column(
-                "current_scene_id",
-                ID,
-                sa.ForeignKey("scenes.id", ondelete="SET NULL"),
-                nullable=True,
-            ),
-            sa.Column(
-                "owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-            ),
+            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("deck_instance_id", ID, sa.ForeignKey("card_deck_instances.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("card_definition_id", ID, sa.ForeignKey("card_definitions.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("current_pile_id", ID, sa.ForeignKey("card_piles.id", ondelete="SET NULL"), nullable=True),
+            sa.Column("current_scene_id", ID, sa.ForeignKey("scenes.id", ondelete="SET NULL"), nullable=True),
+            sa.Column("owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
             sa.Column("face_state", STR, nullable=False),
             sa.Column("visibility", STR, nullable=False),
             sa.Column("locked", sa.Integer(), nullable=False, server_default=sa.text("0")),
@@ -186,44 +125,24 @@ def upgrade() -> None:
     if not _has_table("card_pile_entries"):
         op.create_table(
             "card_pile_entries",
-            sa.Column(
-                "pile_id", ID, sa.ForeignKey("card_piles.id", ondelete="CASCADE"), nullable=False
-            ),
-            sa.Column(
-                "card_instance_id",
-                ID,
-                sa.ForeignKey("card_instances.id", ondelete="CASCADE"),
-                nullable=False,
-            ),
+            sa.Column("pile_id", ID, sa.ForeignKey("card_piles.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("card_instance_id", ID, sa.ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False),
             sa.Column("position", sa.Integer(), nullable=False),
             sa.Column("inserted_at", sa.Integer(), nullable=False),
             sa.PrimaryKeyConstraint("pile_id", "card_instance_id"),
             sa.UniqueConstraint("pile_id", "position"),
             sa.UniqueConstraint("card_instance_id"),
         )
-        op.create_index(
-            "idx_card_pile_entries_pile_order", "card_pile_entries", ["pile_id", "position"]
-        )
+        op.create_index("idx_card_pile_entries_pile_order", "card_pile_entries", ["pile_id", "position"])
 
     if not _has_table("scene_card_placements"):
         op.create_table(
             "scene_card_placements",
             sa.Column("id", ID, primary_key=True),
-            sa.Column(
-                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
-            ),
-            sa.Column(
-                "scene_id", ID, sa.ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False
-            ),
-            sa.Column(
-                "card_instance_id",
-                ID,
-                sa.ForeignKey("card_instances.id", ondelete="CASCADE"),
-                nullable=False,
-            ),
-            sa.Column(
-                "owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
-            ),
+            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("scene_id", ID, sa.ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("card_instance_id", ID, sa.ForeignKey("card_instances.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
             sa.Column("x", sa.Float(), nullable=False),
             sa.Column("y", sa.Float(), nullable=False),
             sa.Column("rotation", sa.Float(), nullable=False, server_default=sa.text("0")),
@@ -236,26 +155,16 @@ def upgrade() -> None:
             sa.Column("created_at", sa.Integer(), nullable=False),
             sa.Column("updated_at", sa.Integer(), nullable=False),
         )
-        op.create_index(
-            "idx_scene_card_placements_scene", "scene_card_placements", ["scene_id", "z_index"]
-        )
-        op.create_index(
-            "idx_scene_card_placements_card", "scene_card_placements", ["card_instance_id"]
-        )
+        op.create_index("idx_scene_card_placements_scene", "scene_card_placements", ["scene_id", "z_index"])
+        op.create_index("idx_scene_card_placements_card", "scene_card_placements", ["card_instance_id"])
 
     if not _has_table("card_events"):
         op.create_table(
             "card_events",
             sa.Column("id", ID, primary_key=True),
-            sa.Column(
-                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
-            ),
-            sa.Column(
-                "room_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True
-            ),
-            sa.Column(
-                "actor_user_id", ID, sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-            ),
+            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+            sa.Column("room_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=True),
+            sa.Column("actor_user_id", ID, sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
             sa.Column("event_type", STR, nullable=False),
             sa.Column("payload_json", sa.Text(), nullable=False),
             sa.Column("visibility", STR, nullable=False),

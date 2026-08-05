@@ -37,7 +37,9 @@ def test_room_event_log_replays_events_after_sequence(db):
 
     assert replay.expired is False
     assert replay.latest_seq == second_seq
-    assert [event["event"] for event in replay.events] == [TransportEvent.SCENE_CHUNK_UPDATED.value]
+    assert [event["event"] for event in replay.events] == [
+        TransportEvent.SCENE_CHUNK_UPDATED.value
+    ]
     assert replay.events[0]["event_seq"] == second_seq
     assert replay.events[0]["payload"]["version"] == 2
 
@@ -88,6 +90,8 @@ def test_replay_since_flags_gap_when_events_expired(db):
     campaign_id = seed_campaign(gm_id)
     event_log = RoomEventLog()
 
+                                                                                
+                                                                             
     seq1 = event_log.append(
         room_id=campaign_id,
         event=TransportEvent.SCENE_UPDATED,

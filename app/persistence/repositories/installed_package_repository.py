@@ -40,7 +40,9 @@ class InstalledPackageRepository:
         with engine_connect() as connection:
             row = (
                 connection.execute(
-                    select(installed_packages).where(installed_packages.c.id == package_id).limit(1)
+                    select(installed_packages)
+                    .where(installed_packages.c.id == package_id)
+                    .limit(1)
                 )
                 .mappings()
                 .first()

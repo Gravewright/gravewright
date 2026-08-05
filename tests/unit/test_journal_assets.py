@@ -18,13 +18,9 @@ def _png_bytes(width: int = 12, height: int = 8) -> bytes:
     return buffer.getvalue()
 
 
-def _journal(
-    campaign_id: str,
-    gm_id: str,
-    *,
-    title: str = "Asset Journal",
-    owner_user_ids: list[str] | None = None,
-) -> str:
+
+
+def _journal(campaign_id: str, gm_id: str, *, title: str = "Asset Journal", owner_user_ids: list[str] | None = None) -> str:
     result = JournalService().create_journal(
         campaign_id=campaign_id,
         user_id=gm_id,
@@ -37,7 +33,6 @@ def _journal(
     assert result.journal_id
     return result.journal_id
 
-
 def test_upload_valid_png(db, tmp_path):
     gm = seed_user(name="GM", email="gm-asset1@test.com")
     campaign_id = seed_campaign(gm)
@@ -45,11 +40,8 @@ def test_upload_valid_png(db, tmp_path):
     service = JournalAssetService(storage=LocalJournalAssetStorage(root=tmp_path / "ja"))
 
     result = service.upload_image(
-        journal_id=journal_id,
-        user_id=gm,
-        filename="cover.png",
-        content_type="image/png",
-        data=_png_bytes(),
+        journal_id=journal_id, user_id=gm,
+        filename="cover.png", content_type="image/png", data=_png_bytes(),
     )
 
     assert result.success
@@ -64,11 +56,8 @@ def test_upload_rejects_unsupported_type(db, tmp_path):
     service = JournalAssetService(storage=LocalJournalAssetStorage(root=tmp_path / "ja"))
 
     result = service.upload_image(
-        journal_id=journal_id,
-        user_id=gm,
-        filename="evil.gif",
-        content_type="image/gif",
-        data=b"GIF89a....",
+        journal_id=journal_id, user_id=gm,
+        filename="evil.gif", content_type="image/gif", data=b"GIF89a....",
     )
 
     assert not result.success
@@ -83,21 +72,17 @@ def test_upload_rejects_non_member(db, tmp_path):
     service = JournalAssetService(storage=LocalJournalAssetStorage(root=tmp_path / "ja"))
 
     result = service.upload_image(
-        journal_id=journal_id,
-        user_id=outsider,
-        filename="a.png",
-        content_type="image/png",
-        data=_png_bytes(),
+        journal_id=journal_id, user_id=outsider,
+        filename="a.png", content_type="image/png", data=_png_bytes(),
     )
 
     assert not result.success
 
 
 def test_upload_and_serve_route_is_membership_gated(db, tmp_path, monkeypatch):
-
+                                                                       
     import app.actions.game.manage_journals as mj
     import app.infrastructure.storage.local_journal_asset_storage as stormod
-
     monkeypatch.setattr(stormod, "PROJECT_ROOT", tmp_path)
     monkeypatch.setattr(mj, "PROJECT_ROOT", tmp_path)
 
@@ -109,13 +94,9 @@ def test_upload_and_serve_route_is_membership_gated(db, tmp_path, monkeypatch):
     campaign_id = seed_campaign(gm)
     seed_member(campaign_id, player, PlayerRole.PLAYER.value)
     journal_id = _journal(campaign_id, gm)
-    assert (
-        JournalService()
-        .set_member_access(
-            journal_id=journal_id, target_user_id=player, access_level="read", requester_user_id=gm
-        )
-        .success
-    )
+    assert JournalService().set_member_access(
+        journal_id=journal_id, target_user_id=player, access_level="read", requester_user_id=gm
+    ).success
 
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
         login(client, gm)
@@ -145,28 +126,18 @@ def test_owner_can_upload_but_read_user_cannot(db, tmp_path):
     seed_member(campaign_id, owner, PlayerRole.PLAYER.value)
     seed_member(campaign_id, reader, PlayerRole.PLAYER.value)
     journal_id = _journal(campaign_id, gm, owner_user_ids=[owner])
-    assert (
-        JournalService()
-        .set_member_access(
-            journal_id=journal_id, target_user_id=reader, access_level="read", requester_user_id=gm
-        )
-        .success
-    )
+    assert JournalService().set_member_access(
+        journal_id=journal_id, target_user_id=reader, access_level="read", requester_user_id=gm
+    ).success
 
     service = JournalAssetService(storage=LocalJournalAssetStorage(root=tmp_path / "ja"))
     owner_upload = service.upload_image(
-        journal_id=journal_id,
-        user_id=owner,
-        filename="owner.png",
-        content_type="image/png",
-        data=_png_bytes(),
+        journal_id=journal_id, user_id=owner,
+        filename="owner.png", content_type="image/png", data=_png_bytes(),
     )
     reader_upload = service.upload_image(
-        journal_id=journal_id,
-        user_id=reader,
-        filename="reader.png",
-        content_type="image/png",
-        data=_png_bytes(),
+        journal_id=journal_id, user_id=reader,
+        filename="reader.png", content_type="image/png", data=_png_bytes(),
     )
 
     assert owner_upload.success
@@ -179,11 +150,8 @@ def test_upload_rejects_missing_journal(db, tmp_path):
     service = JournalAssetService(storage=LocalJournalAssetStorage(root=tmp_path / "ja"))
 
     result = service.upload_image(
-        journal_id="missing",
-        user_id=gm,
-        filename="a.png",
-        content_type="image/png",
-        data=_png_bytes(),
+        journal_id="missing", user_id=gm,
+        filename="a.png", content_type="image/png", data=_png_bytes(),
     )
 
     assert not result.success

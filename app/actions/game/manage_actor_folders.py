@@ -21,20 +21,14 @@ from app.helpers.view import view_context
 
 @get("/game/actors/panel/{campaign_id:str}")
 async def actors_panel_fragment(
-    campaign_id: FromPath[str],
-    cookies: dict[str, str],
-    current_user: Row,
-    game_page_service: GamePageService,
+    campaign_id: FromPath[str], cookies: dict[str, str], current_user: Row, game_page_service: GamePageService
 ) -> Redirect | Template:
     """Server-rendered Actors panel body, fetched by the client to refresh the
     panel in place after a mutation (no full-page reload)."""
     user = current_user
     room = next(
-        (
-            r
-            for r in game_page_service.build_context(user_id=user["id"]).rooms
-            if r["id"] == campaign_id
-        ),
+        (r for r in game_page_service.build_context(user_id=user["id"]).rooms
+         if r["id"] == campaign_id),
         None,
     )
     if room is None:
@@ -58,9 +52,7 @@ async def _authenticated_form(request: Request, cookies: dict[str, str], current
     return current_user, form, None
 
 
-def _result_response(
-    request: Request, result, *, payload: dict | None = None, created: bool = False
-):
+def _result_response(request: Request, result, *, payload: dict | None = None, created: bool = False):
     if _wants_json(request):
         if not result.success:
             return Response({"error_key": result.error_key}, status_code=400)
@@ -69,9 +61,7 @@ def _result_response(
 
 
 @post("/game/actor/owner")
-async def toggle_actor_owner(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
-) -> Response[dict[str, Any]] | Redirect:
+async def toggle_actor_owner(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -96,9 +86,7 @@ async def toggle_actor_owner(
 
 
 @post("/game/actor/move")
-async def move_actor(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
-) -> Response[dict[str, Any]] | Redirect:
+async def move_actor(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -112,9 +100,7 @@ async def move_actor(
 
 
 @post("/game/actor-folder")
-async def create_actor_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
-) -> Response[dict[str, Any]] | Redirect:
+async def create_actor_folder(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -130,9 +116,7 @@ async def create_actor_folder(
 
 
 @post("/game/actor-folder/rename")
-async def rename_actor_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
-) -> Response[dict[str, Any]] | Redirect:
+async def rename_actor_folder(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -144,9 +128,7 @@ async def rename_actor_folder(
 
 
 @post("/game/actor-folder/color")
-async def set_actor_folder_color(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
-) -> Response[dict[str, Any]] | Redirect:
+async def set_actor_folder_color(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -158,9 +140,7 @@ async def set_actor_folder_color(
 
 
 @post("/game/actor-folder/delete")
-async def delete_actor_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
-) -> Response[dict[str, Any]] | Redirect:
+async def delete_actor_folder(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early
@@ -170,9 +150,7 @@ async def delete_actor_folder(
 
 
 @post("/game/actor-folder/move")
-async def move_actor_folder(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
-) -> Response[dict[str, Any]] | Redirect:
+async def move_actor_folder(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]] | Redirect:
     user, form, early = await _authenticated_form(request, cookies, current_user)
     if early is not None:
         return early

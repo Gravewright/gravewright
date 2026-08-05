@@ -67,11 +67,7 @@ async def create_asset_folder(
 ) -> Response[dict[str, Any]]:
     body = await _json_body(request)
     campaign_id = str(body.get("campaign_id") or "")
-    parent_id = (
-        body.get("parent_id")
-        if isinstance(body.get("parent_id"), str) and body.get("parent_id")
-        else None
-    )
+    parent_id = body.get("parent_id") if isinstance(body.get("parent_id"), str) and body.get("parent_id") else None
     result = asset_library_service.create_folder(
         campaign_id=campaign_id,
         user_id=current_user["id"],
@@ -91,11 +87,7 @@ async def move_asset_to_folder(
 ) -> Response[dict[str, Any]]:
     body = await _json_body(request)
     campaign_id = str(body.get("campaign_id") or "")
-    folder_id = (
-        body.get("folder_id")
-        if isinstance(body.get("folder_id"), str) and body.get("folder_id")
-        else None
-    )
+    folder_id = body.get("folder_id") if isinstance(body.get("folder_id"), str) and body.get("folder_id") else None
     result = asset_library_service.move_asset(
         campaign_id=campaign_id,
         user_id=current_user["id"],

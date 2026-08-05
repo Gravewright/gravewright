@@ -119,7 +119,9 @@ def test_initialize_database_production_requires_head(tmp_path, monkeypatch):
 
 def test_startup_engine_has_no_ad_hoc_schema_creation():
     """engine.py must not create_all / ALTER / build production indexes."""
-    source = Path(engine_module.__file__).read_text(encoding="utf-8")
+    source = (
+        Path(engine_module.__file__).read_text(encoding="utf-8")
+    )
     assert "create_all" not in source
     assert "ALTER TABLE" not in source
     assert "_ensure_incremental_columns" not in source

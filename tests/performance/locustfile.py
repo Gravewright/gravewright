@@ -11,7 +11,6 @@ Run headless via docker-compose.perf.yml or interactively:
 
     locust -f tests/performance/locustfile.py --host http://localhost:8000
 """
-
 from __future__ import annotations
 
 import html as html_lib

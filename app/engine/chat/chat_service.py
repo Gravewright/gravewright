@@ -26,7 +26,7 @@ def _strip_command(content: str, *names: str) -> str | None:
     for name in names:
         prefix = f"{name} "
         if content.startswith(prefix):
-            return content[len(prefix) :].strip()
+            return content[len(prefix):].strip()
     return None
 
 
@@ -363,7 +363,11 @@ class ChatService:
             return ChatResult(success=False, error_key="game.chat.errors.invalid_roll")
 
         members = await run_blocking(self.campaigns.list_members, campaign_id=campaign_id)
-        gm_ids = [member["user_id"] for member in members if member["role"] == PlayerRole.GM.value]
+        gm_ids = [
+            member["user_id"]
+            for member in members
+            if member["role"] == PlayerRole.GM.value
+        ]
         await transport.chat_whisper(
             room_id=campaign_id,
             sender_player_id=sender_user_id,
@@ -450,7 +454,7 @@ class ChatService:
             for member in members
             if (member["name"] or "").strip().lower() == best_name.lower()
         ]
-        message = arg[len(best_name) :].strip()
+        message = arg[len(best_name):].strip()
         return target_ids, best_name, message
 
     async def delete_message(
@@ -483,11 +487,14 @@ class ChatService:
             campaign_id=campaign_id,
             permission=TablePermission.CHAT_DELETE_ANY,
         )
-        can_delete_own = message["author_user_id"] == user_id and await run_blocking(
-            self.permissions.can,
-            user_id=user_id,
-            campaign_id=campaign_id,
-            permission=TablePermission.CHAT_DELETE_OWN,
+        can_delete_own = (
+            message["author_user_id"] == user_id
+            and await run_blocking(
+                self.permissions.can,
+                user_id=user_id,
+                campaign_id=campaign_id,
+                permission=TablePermission.CHAT_DELETE_OWN,
+            )
         )
 
         if not can_delete_any and not can_delete_own:

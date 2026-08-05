@@ -67,10 +67,10 @@ def test_span_too_large_rejected() -> None:
 
 
 def test_area_too_large_rejected(monkeypatch) -> None:
-
+                                                                             
     import app.realtime.scene_stream as scene_stream
 
     monkeypatch.setattr(scene_stream, "_MAX_VIEWPORT_CHUNK_AREA", 4)
-
+                                                                        
     parsed = _parse(_base_payload(cx0=0, cx1=2, cy0=0, cy1=2))
     assert parsed["type"] == "error"

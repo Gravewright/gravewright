@@ -142,6 +142,7 @@ async def update_resource_permissions(
                 return Response({"error_key": result.error_key}, status_code=400)
             return Redirect(path="/game")
 
+                                                                               
     if resource_type == "actor":
         await RealtimeTransport().to_room(
             room_id=resource["campaign_id"],
@@ -176,4 +177,6 @@ async def update_resource_permissions(
     if wants_json:
         return Response({"ok": True}, status_code=200)
 
-    return _redirect_to_resource(resource_type, resource_id, campaign_id=resource["campaign_id"])
+    return _redirect_to_resource(
+        resource_type, resource_id, campaign_id=resource["campaign_id"]
+    )

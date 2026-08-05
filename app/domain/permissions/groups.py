@@ -77,7 +77,9 @@ CORE_PERMISSION_GROUPS = [
 ]
 
 ALL_CORE_PERMISSION_KEYS = {
-    permission.value for group in CORE_PERMISSION_GROUPS for permission in group["permissions"]
+    permission.value
+    for group in CORE_PERMISSION_GROUPS
+    for permission in group["permissions"]
 }
 
 CONFIGURABLE_ROLES = [

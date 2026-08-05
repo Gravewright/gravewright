@@ -11,10 +11,14 @@ from app.config import config
 from app.realtime.commands import ClientCommand
 from app.realtime.envelopes import error_envelope
 
-
+                                                                              
+                                                                              
+                                                                    
+                                                                                
 MAX_MESSAGE_BYTES = config.ws_max_message_bytes
 
-
+                                                                               
+                                                
 EXPENSIVE_COMMANDS = frozenset(
     {
         ClientCommand.VIEWPORT_SUBSCRIBE.value,
@@ -53,6 +57,9 @@ class _BucketSpec:
     refill_per_sec: float
 
 
+                                                                
+                                                                               
+                                                                          
 _GLOBAL_SPEC = _BucketSpec(
     capacity=float(config.ws_burst_commands),
     refill_per_sec=float(config.ws_commands_per_second),
@@ -60,6 +67,7 @@ _GLOBAL_SPEC = _BucketSpec(
 _DEFAULT_COMMAND_SPEC = _BucketSpec(capacity=40.0, refill_per_sec=20.0)
 _EXPENSIVE_COMMAND_SPEC = _BucketSpec(capacity=8.0, refill_per_sec=2.0)
 _PER_COMMAND_SPECS: dict[str, _BucketSpec] = {
+                                                                          
     ClientCommand.VIEWPORT_UPDATE.value: _BucketSpec(capacity=40.0, refill_per_sec=25.0),
     ClientCommand.FOG_PAINT.value: _BucketSpec(capacity=30.0, refill_per_sec=15.0),
     ClientCommand.TOKEN_MOVE.value: _BucketSpec(capacity=40.0, refill_per_sec=20.0),
@@ -98,6 +106,8 @@ def is_origin_allowed(origin: str | None, allowed_origins: tuple[str, ...]) -> b
     if not allowed_origins:
         return True
     if not origin:
+                                                                             
+                                                                               
         return False
     normalized_origin = origin.rstrip("/")
     origin_parts = urlsplit(normalized_origin)

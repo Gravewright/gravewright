@@ -79,12 +79,7 @@ class ActorAssetReadService:
             ".webp": "image/webp",
         }
         media_type = media_types.get(path.suffix.lower())
-        if (
-            path.parent != expected_dir
-            or path.stem != kind
-            or media_type is None
-            or not path.is_file()
-        ):
+        if path.parent != expected_dir or path.stem != kind or media_type is None or not path.is_file():
             return ActorAssetReadResult(success=False, error_key="not_found")
 
         return ActorAssetReadResult(success=True, path=path, media_type=media_type)
@@ -119,4 +114,7 @@ class ActorAssetReadService:
         else:
             return False
 
-        return any(not token.get("hidden") for token in self.tokens.list_by_actor(actor["id"]))
+        return any(
+            not token.get("hidden")
+            for token in self.tokens.list_by_actor(actor["id"])
+        )

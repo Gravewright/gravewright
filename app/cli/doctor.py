@@ -65,9 +65,7 @@ def _environment_checks() -> list[Check]:
         checks.append(Check("uv", OK, "uv is available"))
     else:
         checks.append(
-            Check(
-                "uv", WARN, "uv was not found on PATH", fix="Install uv: https://docs.astral.sh/uv/"
-            )
+            Check("uv", WARN, "uv was not found on PATH", fix="Install uv: https://docs.astral.sh/uv/")
         )
 
     data_dir = Path(config.data_dir)
@@ -75,9 +73,7 @@ def _environment_checks() -> list[Check]:
         checks.append(Check("data_dir", OK, f"data dir exists ({data_dir})"))
     else:
         checks.append(
-            Check(
-                "data_dir", ERROR, f"data dir is missing ({data_dir})", fix=f"mkdir -p {data_dir}"
-            )
+            Check("data_dir", ERROR, f"data dir is missing ({data_dir})", fix=f"mkdir -p {data_dir}")
         )
 
     packages_dir = data_dir / "packages"
@@ -98,12 +94,7 @@ def _environment_checks() -> list[Check]:
         checks.append(Check("storage_dir", OK, "storage dir exists"))
     else:
         checks.append(
-            Check(
-                "storage_dir",
-                WARN,
-                "storage dir is missing (created on first run)",
-                fix="grave run",
-            )
+            Check("storage_dir", WARN, "storage dir is missing (created on first run)", fix="grave run")
         )
 
     schema = _schema_path()
@@ -331,7 +322,9 @@ def render_pretty(checks: list[Check], *, verbose: bool = False) -> str:
         else "[red bold]ERROR[/]  Gravewright Doctor"
     )
     if summary["ok"]:
-        verdict = f"[green bold]OK, ready to play.[/]  |  {summary['warn_count']} warning(s)"
+        verdict = (
+            f"[green bold]OK, ready to play.[/]  |  {summary['warn_count']} warning(s)"
+        )
         border = "green"
     else:
         verdict = (
@@ -340,12 +333,7 @@ def render_pretty(checks: list[Check], *, verbose: bool = False) -> str:
             "Fix the items above and run [bold]grave doctor[/bold] again."
         )
         border = "red"
-    console.print(
-        Panel(
-            "[bold]Gravewright Doctor[/bold]\n[dim]Environment, packages and database[/dim]",
-            border_style="yellow",
-        )
-    )
+    console.print(Panel("[bold]Gravewright Doctor[/bold]\n[dim]Environment, packages and database[/dim]", border_style="yellow"))
     console.print(table)
     console.print(Panel(verdict, border_style=border))
     return output.getvalue().rstrip()

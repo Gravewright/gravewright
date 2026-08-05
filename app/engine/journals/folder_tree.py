@@ -34,3 +34,4 @@ def build_journal_folder_tree(
 
     _annotate(roots)
     return roots
+

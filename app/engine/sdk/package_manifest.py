@@ -290,7 +290,9 @@ class PackageProvides:
             item_types=[TypeDef.from_dict(t) for t in _list(raw.get("itemTypes"))],
             rules={k: _str(v) for k, v in _dict(raw.get("rules")).items()},
             mappings={k: _str(v) for k, v in _dict(raw.get("mappings")).items()},
-            content_packs=[PackageContentPack.from_dict(p) for p in _list(raw.get("contentPacks"))],
+            content_packs=[
+                PackageContentPack.from_dict(p) for p in _list(raw.get("contentPacks"))
+            ],
             locales={k: _str(v) for k, v in _dict(raw.get("locales")).items()},
             assets=_dict(raw.get("assets")),
         )
@@ -496,17 +498,11 @@ class PackageManifest:
                 for m in self.area_markers
             ],
             "content_packs": [
-                {
-                    "id": p.id,
-                    "type": p.type,
-                    "label": self._resolve_label(p.label, p.label_key, locale_data),
-                }
+                {"id": p.id, "type": p.type, "label": self._resolve_label(p.label, p.label_key, locale_data)}
                 for p in self.provides.content_packs
             ],
             "settings": [s.to_dict() for s in self.settings],
-            "dependencies": [
-                {"id": d.id, "kind": d.kind, "minimum": d.minimum} for d in self.dependencies
-            ],
+            "dependencies": [{"id": d.id, "kind": d.kind, "minimum": d.minimum} for d in self.dependencies],
             "conflicts": [{"id": c.id, "reason": c.reason} for c in self.conflicts],
         }
 

@@ -101,7 +101,9 @@ class ActorFolderRepository:
         with engine_begin() as conn:
             row = one_or_none(
                 conn.execute(
-                    select(folder_table.c.parent_id).where(folder_table.c.id == folder_id).limit(1)
+                    select(folder_table.c.parent_id)
+                    .where(folder_table.c.id == folder_id)
+                    .limit(1)
                 )
             )
             parent_id = row["parent_id"] if row is not None else None

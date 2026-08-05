@@ -8,7 +8,7 @@ import xdice
 @dataclass(frozen=True)
 class RollResult:
     expression: str
-    groups: list[dict]
+    groups: list[dict]                                                           
     modifier: int
     total: int
 

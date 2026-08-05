@@ -9,6 +9,8 @@ from app.domain.permissions.permissions import TablePermission
 from app.persistence.repositories.streamer_link_repository import StreamerLinkRepository
 
 
+                                                                                
+                                                                 
 STREAMER_LINK_TTL_SECONDS = 24 * 60 * 60
 
 

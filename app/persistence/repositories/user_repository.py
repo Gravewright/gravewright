@@ -63,6 +63,7 @@ class UserRepository:
         user_id = uuid.uuid4().hex
 
         with engine_begin() as connection:
+                                                                      
             existing = connection.execute(select(func.count()).select_from(users)).scalar_one()
             system_role = SystemRole.OWNER if int(existing) == 0 else SystemRole.USER
 
@@ -97,6 +98,6 @@ class UserRepository:
             )
 
     def delete(self, *, user_id: str) -> None:
-
+                                                                       
         with engine_begin() as connection:
             connection.execute(delete(users).where(users.c.id == user_id))

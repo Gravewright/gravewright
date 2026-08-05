@@ -20,7 +20,7 @@ def _is_gm(campaign: dict) -> bool:
 
 
 def can_view_actor(*, actor: dict, campaign: dict, user_id: str) -> bool:
-
+                                                                
     if has_full_view(campaign.get("member_role")):
         return True
     if _actors.has_owner(actor_id=actor["id"], user_id=user_id):

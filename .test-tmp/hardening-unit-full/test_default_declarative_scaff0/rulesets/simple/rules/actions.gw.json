@@ -1,9 +1,0 @@
-{
-  "actions": {
-    "ability-check": {
-      "formula": "1d20 + floor((@sheet.attributes.strength - 10) / 2)",
-      "label": "Strength check",
-      "type": "roll"
-    }
-  }
-}

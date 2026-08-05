@@ -25,7 +25,7 @@ def decode_uint32_tile_refs(data: bytes) -> list[int]:
 
     return [
         int.from_bytes(
-            data[index : index + UINT32_REF_SIZE_BYTES],
+            data[index:index + UINT32_REF_SIZE_BYTES],
             byteorder="little",
             signed=False,
         )

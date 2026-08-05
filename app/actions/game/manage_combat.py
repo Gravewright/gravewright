@@ -56,9 +56,7 @@ def _response(result: CombatResult, *, status_code: int = 200) -> Response[dict[
     return Response(result.state_payload(), status_code=status_code)
 
 
-async def _broadcast(
-    result: CombatResult, *, user_id: str, event: TransportEvent, token_service: TokenService
-) -> None:
+async def _broadcast(result: CombatResult, *, user_id: str, event: TransportEvent, token_service: TokenService) -> None:
     if not result.success or not (result.campaign_id or (result.combat or {}).get("campaign_id")):
         return
     payload = result.state_payload() | {"updated_by": user_id}
@@ -83,9 +81,7 @@ async def _broadcast(
                 "changed_paths": ["sheet.effects"],
             },
         )
-        await token_service.refresh_actor_tokens(
-            campaign_id=room_id, actor_id=actor_id, transport=transport
-        )
+        await token_service.refresh_actor_tokens(campaign_id=room_id, actor_id=actor_id, transport=transport)
 
 
 async def _body_and_auth(
@@ -97,10 +93,7 @@ async def _body_and_auth(
 
 @get("/game/combat/state/{campaign_id:str}")
 async def get_combat_state(
-    campaign_id: FromPath[str],
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
+    campaign_id: FromPath[str], cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService
 ) -> Response[dict[str, Any]]:
     user = current_user
     result = turn_order_service.get_state(campaign_id=campaign_id, user_id=user["id"])
@@ -108,13 +101,7 @@ async def get_combat_state(
 
 
 @post("/game/combat/start")
-async def start_combat(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def start_combat(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
@@ -126,41 +113,23 @@ async def start_combat(
         scene_id=str(body.get("scene_id") or "") or None,
         actor_ids=[str(actor_id) for actor_id in actor_ids],
     )
-    await _broadcast(
-        result, user_id=user["id"], event=TransportEvent.COMBAT_STARTED, token_service=token_service
-    )
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_STARTED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/end")
-async def end_combat(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def end_combat(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
     assert body is not None and user is not None
-    result = turn_order_service.end(
-        campaign_id=str(body.get("campaign_id", "")), user_id=user["id"]
-    )
-    await _broadcast(
-        result, user_id=user["id"], event=TransportEvent.COMBAT_ENDED, token_service=token_service
-    )
+    result = turn_order_service.end(campaign_id=str(body.get("campaign_id", "")), user_id=user["id"])
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_ENDED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/participants/add")
-async def add_combat_participants(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def add_combat_participants(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
@@ -173,23 +142,12 @@ async def add_combat_participants(
         actor_ids=[str(actor_id) for actor_id in actor_ids],
         token_ids=[str(token_id) for token_id in token_ids],
     )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_PARTICIPANT_ADDED,
-        token_service=token_service,
-    )
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_PARTICIPANT_ADDED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/participants/remove")
-async def remove_combat_participant(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def remove_combat_participant(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
@@ -199,71 +157,34 @@ async def remove_combat_participant(
         user_id=user["id"],
         participant_id=str(body.get("participant_id", "")),
     )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_PARTICIPANT_REMOVED,
-        token_service=token_service,
-    )
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_PARTICIPANT_REMOVED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/initiative/roll")
-async def roll_combat_initiative(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def roll_combat_initiative(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
     assert body is not None and user is not None
-    result = turn_order_service.roll_initiative(
-        campaign_id=str(body.get("campaign_id", "")), user_id=user["id"]
-    )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_STATE_UPDATED,
-        token_service=token_service,
-    )
+    result = turn_order_service.roll_initiative(campaign_id=str(body.get("campaign_id", "")), user_id=user["id"])
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_STATE_UPDATED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/initiative/roll-monsters")
-async def roll_combat_monster_initiative(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def roll_combat_monster_initiative(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
     assert body is not None and user is not None
-    result = turn_order_service.roll_monster_initiative(
-        campaign_id=str(body.get("campaign_id", "")), user_id=user["id"]
-    )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_STATE_UPDATED,
-        token_service=token_service,
-    )
+    result = turn_order_service.roll_monster_initiative(campaign_id=str(body.get("campaign_id", "")), user_id=user["id"])
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_STATE_UPDATED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/initiative/participant/roll")
-async def roll_combat_participant_initiative(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def roll_combat_participant_initiative(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
@@ -273,72 +194,35 @@ async def roll_combat_participant_initiative(
         user_id=user["id"],
         participant_id=str(body.get("participant_id", "")),
     )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_STATE_UPDATED,
-        token_service=token_service,
-    )
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_STATE_UPDATED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/turn/next")
-async def next_combat_turn(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def next_combat_turn(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
     assert body is not None and user is not None
-    result = turn_order_service.next_turn(
-        campaign_id=str(body.get("campaign_id", "")), user_id=user["id"]
-    )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_TURN_STARTED,
-        token_service=token_service,
-    )
+    result = turn_order_service.next_turn(campaign_id=str(body.get("campaign_id", "")), user_id=user["id"])
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_TURN_STARTED, token_service=token_service)
     await _announce_effect_ticks(result)
     return _response(result)
 
 
 @post("/game/combat/turn/previous")
-async def previous_combat_turn(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def previous_combat_turn(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
     assert body is not None and user is not None
-    result = turn_order_service.previous_turn(
-        campaign_id=str(body.get("campaign_id", "")), user_id=user["id"]
-    )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_STATE_UPDATED,
-        token_service=token_service,
-    )
+    result = turn_order_service.previous_turn(campaign_id=str(body.get("campaign_id", "")), user_id=user["id"])
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_STATE_UPDATED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/turn/set")
-async def set_combat_turn(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def set_combat_turn(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
@@ -348,47 +232,22 @@ async def set_combat_turn(
         user_id=user["id"],
         turn_index=int(body.get("turn_index") or 0),
     )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_STATE_UPDATED,
-        token_service=token_service,
-    )
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_STATE_UPDATED, token_service=token_service)
     return _response(result)
 
 
 @post("/game/combat/round/next")
-async def next_combat_round_v1(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
+async def next_combat_round_v1(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
     body, user, early = await _body_and_auth(request, cookies, current_user)
     if early is not None:
         return early
     assert body is not None and user is not None
-    result = turn_order_service.next_round(
-        campaign_id=str(body.get("campaign_id", "")), user_id=user["id"]
-    )
-    await _broadcast(
-        result,
-        user_id=user["id"],
-        event=TransportEvent.COMBAT_ROUND_STARTED,
-        token_service=token_service,
-    )
+    result = turn_order_service.next_round(campaign_id=str(body.get("campaign_id", "")), user_id=user["id"])
+    await _broadcast(result, user_id=user["id"], event=TransportEvent.COMBAT_ROUND_STARTED, token_service=token_service)
     return _response(result)
 
 
+                                                                 
 @post("/game/combat/next-round")
-async def next_combat_round(
-    request: Request,
-    cookies: dict[str, str],
-    current_user: Row,
-    turn_order_service: TurnOrderService,
-    token_service: TokenService,
-) -> Response[dict[str, Any]]:
-    return await next_combat_round_v1(
-        request, cookies, current_user, turn_order_service, token_service
-    )
+async def next_combat_round(request: Request, cookies: dict[str, str], current_user: Row, turn_order_service: TurnOrderService, token_service: TokenService) -> Response[dict[str, Any]]:
+    return await next_combat_round_v1(request, cookies, current_user, turn_order_service, token_service)

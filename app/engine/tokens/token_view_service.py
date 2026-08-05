@@ -65,9 +65,7 @@ class TokenViewService:
             "locked": bool(token["locked"]),
             "bars": bars,
             "conditions": conds,
-            "effects": overrides.get("effects")
-            if isinstance(overrides.get("effects"), list)
-            else projection.get("effects") or [],
+            "effects": overrides.get("effects") if isinstance(overrides.get("effects"), list) else projection.get("effects") or [],
             "status_summary": status_summary,
             "controlled_by_role": token["controlled_by_role"],
             "controlled_by_user_ids": token.get("controlled_by_user_ids") or [],

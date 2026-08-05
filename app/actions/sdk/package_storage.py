@@ -42,7 +42,9 @@ def _context(current_user: Row, campaign_id: str | None) -> StorageContext:
     if not campaign_id:
         # Global scope: GM means the instance owner.
         return StorageContext(is_gm=is_owner, is_member=is_owner)
-    role = CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=current_user["id"])
+    role = CampaignRepository().get_member_role(
+        campaign_id=campaign_id, user_id=current_user["id"]
+    )
     return StorageContext(is_gm=role == PlayerRole.GM.value, is_member=role is not None)
 
 
