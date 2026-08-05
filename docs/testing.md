@@ -1,5 +1,33 @@
 # Testing
 
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs these jobs. **Merge-blocking:** `lint`, `unit`,
+`schema`, `postgres`. **Non-blocking:** `compose` (perf compose validation);
+performance/stress suites are run manually or nightly, never on the PR gate.
+
+| Job | What it guards | Reproduce locally |
+| --- | --- | --- |
+| `lint` | ruff pyflakes (unused imports, undefined names) | `uv run --extra dev ruff check .` |
+| `unit` | compile, SDK docs, package validation, unit + e2e | `uv run pytest tests/unit tests/e2e -q` |
+| `schema` | empty DB → `alembic upgrade head` → status; schema parity, legacy upgrade, enum constraints (SQLite) | `uv run python -m app.cli db upgrade && uv run python -m app.cli db status` then the schema test files |
+| `postgres` | full migration chain **on PostgreSQL** + backend repository/upsert smoke | see below |
+
+Run the PostgreSQL job locally against a throwaway database:
+
+```bash
+export DATABASE_URL="postgresql+psycopg://user:pass@localhost:5432/gravewright_test"
+export GRAVEWRIGHT_TEST_DATABASE_URLS="$DATABASE_URL"
+uv sync --frozen --extra postgres
+uv run alembic upgrade head
+uv run python -m app.cli db status
+uv run pytest tests/integration -q
+```
+
+`ruff format --check` is **not** enforced yet (a large one-time reformat is
+pending); it is a tracked follow-up. On-failure CI artifacts contain only JUnit
+XML (test names/timings) — no secrets, cookies, codes or payloads.
+
 ## Recommended Local Gate
 
 Before sharing a broad change:

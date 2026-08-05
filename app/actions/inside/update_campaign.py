@@ -17,8 +17,8 @@ from app.helpers.auth import require_user
 from app.helpers.view import view_context
 
 
-@post("/campaigns/update", guards=[require_user])
-async def update_campaign(
+@post("/campaigns/update", guards=[require_user], sync_to_thread=True)
+def update_campaign(
     cookies: dict[str, str],
     current_user: Row,
     campaign_service: CampaignService,

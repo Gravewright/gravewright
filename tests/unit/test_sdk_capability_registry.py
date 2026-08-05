@@ -15,7 +15,6 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
-import pytest
 
 from app.engine.sdk import package_manifest_validator as validator
 from app.engine.sdk.capability_registry import (

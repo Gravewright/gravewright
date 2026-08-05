@@ -92,16 +92,38 @@ def database_storage_root() -> Path:
     return Path(DATABASE_PATH).resolve().parent
 
 
+def _use_metadata_bootstrap() -> bool:
+    """Dev/test databases bootstrap from metadata; production must use Alembic.
+
+    Non-production environments (local development and the test suite) get the
+    fast ``create_all`` bootstrap. Production validates that the database is at
+    the expected Alembic head and refuses to start otherwise (unless
+    ``AUTO_MIGRATE`` is enabled).
+    """
+    return config.app_env != "production"
+
+
 def initialize_database() -> None:
-    """Create the portable SQLAlchemy Core schema for the configured backend."""
+    """Ready the schema for the configured backend.
+
+    - development/test: bootstrap directly from metadata (fast, throwaway DBs);
+    - production: require the database to be at Alembic head, or auto-migrate
+      when ``AUTO_MIGRATE`` is set. ``create_all`` is never the production
+      upgrade mechanism (maintenance plan, Etapa 2).
+    """
     if _backend() == "sqlite":
         sqlite_path = effective_sqlite_path()
         if sqlite_path != ":memory:":
             Path(sqlite_path).parent.mkdir(parents=True, exist_ok=True)
 
-    from app.persistence.engine import create_schema
+    from app.persistence import schema as schema_module
+    from app.persistence.engine import get_engine
 
-    create_schema()
+    engine = get_engine()
+    if _use_metadata_bootstrap():
+        schema_module.bootstrap_schema_from_metadata(engine)
+    else:
+        schema_module.ensure_schema_ready(engine, auto_migrate=config.auto_migrate)
 
 
 def _ensure_initialized() -> None:

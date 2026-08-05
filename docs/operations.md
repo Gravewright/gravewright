@@ -103,6 +103,42 @@ error_key
 
 Use these identifiers to correlate WebSocket, upload, import, package, and persistence issues without logging private campaign content.
 
+### Request correlation
+
+Every HTTP request is assigned a `request_id` (`RequestIdMiddleware`): an inbound
+`X-Request-ID` is honored (sanitized) or one is generated, and it is echoed on
+the response `X-Request-ID` header. The id is stored in a context variable and
+attached automatically to every `emit_diagnostic`/audit event for that request —
+including work offloaded via `run_blocking`. Correlate a user-reported failure to
+server logs by its `X-Request-ID` without touching any payload.
+
+### Redaction
+
+`emit_diagnostic` redacts sensitive field values (`token`, `password`, `cookie`,
+`csrf`, `authorization`, `api_key`, `session*`, `email`, …) to `[redacted]`
+before anything reaches the ring buffer or the logs, so a careless caller cannot
+leak secrets or PII. Raw redemption codes, tokens, cookies and `SESSION_SECRET`
+must never be passed to diagnostics; they are hashed at rest regardless.
+
+### Audit events
+
+Security-relevant operations emit `audit.<action>` events via `emit_audit` with
+`actor_id`, `result`, a `request_id`, internal ids and a timestamp — never a
+secret. Current actions include `schema.mismatch`, `membership.created`,
+`membership.removed` (extended incrementally to `login.blocked`,
+`permission.changed`, `package.activated`).
+
+### Log levels and retention
+
+- Levels: `error` for blocked/failed security events (e.g. `schema.mismatch`),
+  `warn` for degraded conditions (slow blocking calls, rate limiting), `info`
+  for normal audit/diagnostic events.
+- The in-process ring buffer keeps the most recent ~500 events for
+  `/inside/diagnostics`; it is not durable. For retention, ship the structured
+  JSON log lines to your log stack (recommend 30–90 days for audit events).
+- Metrics available in-process (`realtime_metrics`): HTTP/DB/blocking-call
+  latency, realtime queue depth, error and 429 rates, and migration failures.
+
 ## Campaign Deletion
 
 Deleting a campaign removes campaign-owned database rows through cascades and explicit cleanup. It also deletes uploaded campaign storage for scenes, actor images, journal images, and package-scoped sheet JSON.

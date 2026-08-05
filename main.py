@@ -21,6 +21,7 @@ from app.config import config
 from app.helpers.auth import auth_exception_handler, provide_current_user, provide_session
 from app.middleware.authentication import AuthenticationMiddleware
 from app.middleware.http_timing import HttpTimingMiddleware
+from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.persistence.session_store import SQLiteStore
 from app.routes import route_handlers
@@ -55,7 +56,10 @@ app = Litestar(
     ],
     stores={"sessions": SQLiteStore()},
     middleware=[
-        # Outermost: time the full request (incl. session/auth/csrf) server-side.
+        # Outermost: assign a correlation id so every downstream log/diagnostic
+        # for this request can be tied together.
+        DefineMiddleware(RequestIdMiddleware),
+        # Time the full request (incl. session/auth/csrf) server-side.
         DefineMiddleware(HttpTimingMiddleware),
         _session_config.middleware,
         DefineMiddleware(AuthenticationMiddleware, exclude=_AUTH_EXCLUDE),

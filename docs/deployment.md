@@ -88,13 +88,33 @@ with the `postgres` extra (`psycopg`), which the default image does not include.
 
 ## Migrations
 
-Run Alembic migrations as part of deployment:
+Alembic is the authority for schema creation and evolution. In production the
+application **refuses to start against a database that is behind head** (it
+reports the current and expected revisions) unless `AUTO_MIGRATE=true` is set —
+it will not silently `create_all`. Back up first, then upgrade as part of
+deployment:
 
 ```bash
-alembic upgrade head
+grave backup -o pre-upgrade.zip --include-packages --verify   # then test a restore
+grave db status                                               # current vs expected head
+grave db upgrade                                              # alembic upgrade head
 ```
 
-Startup can create missing runtime schema objects, but schema evolution should go through migrations.
+`grave run` performs `grave db upgrade` automatically before serving. Set
+`AUTO_MIGRATE=true` if you want a directly-launched production server to migrate
+on startup instead of failing fast. Local development bootstraps the schema from
+metadata for convenience, but that is **not** the supported upgrade path. See
+[`adr/ADR-migration-baseline.md`](adr/ADR-migration-baseline.md).
+
+### Recovery
+
+If an upgrade goes wrong:
+
+1. Stop the application.
+2. Restore the pre-upgrade backup into a throwaway data dir and verify it starts:
+   `grave restore pre-upgrade.zip --dry-run`, then restore for real.
+3. Re-run `grave db status` to confirm the restored revision, and only retry the
+   upgrade once the cause is understood.
 
 ## Health Check
 

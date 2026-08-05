@@ -169,11 +169,11 @@ def main() -> int:
     import uvicorn
     import webview
 
-    from app.persistence.database import initialize_database
+    from app.persistence.schema import upgrade_to_head
     from main import app
 
-    # Create any missing tables on first launch.
-    initialize_database()
+    # Create/upgrade the schema through the official Alembic path on launch.
+    upgrade_to_head()
 
     server = uvicorn.Server(
         uvicorn.Config(

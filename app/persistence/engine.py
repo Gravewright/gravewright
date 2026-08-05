@@ -13,15 +13,12 @@ from sqlalchemy import Engine
 from sqlalchemy import Table
 from sqlalchemy import create_engine
 from sqlalchemy import event
-from sqlalchemy import inspect
-from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.dialects.mysql import insert as mysql_insert
 from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from app.config import config
-from app.persistence.tables import metadata
 
 _engine: Engine | None = None
 _engine_url: str | None = None
@@ -119,50 +116,7 @@ def upsert_statement(
     return statement.on_conflict_do_update(index_elements=index_elements, set_=set_)
 
 
-def create_schema() -> None:
-    """Create every table (and the partial index) on the configured backend."""
-    engine = get_engine()
-    metadata.create_all(engine, checkfirst=True)
-    _ensure_incremental_columns(engine)
-
-                                                                               
-                                                                               
-                                                                   
-    dialect = engine.dialect.name
-    if dialect in ("sqlite", "postgresql"):
-        with engine.begin() as connection:
-            connection.execute(
-                text(
-                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_scenes_active_campaign "
-                    "ON scenes (campaign_id) WHERE active = 1"
-                )
-            )
-
-
-def _ensure_incremental_columns(engine: Engine) -> None:
-    """Small compatibility bridge for DBs created before Alembic migrations.
-
-    ``metadata.create_all()`` creates missing tables but does not alter existing
-    ones. Until production deployments run Alembic explicitly, keep additive
-    schema changes safe for self-hosted SQLite/PostgreSQL/MySQL databases.
-    """
-    inspector = inspect(engine)
-    table_names = set(inspector.get_table_names())
-    if "scenes" in table_names:
-        scene_columns = {column["name"] for column in inspector.get_columns("scenes")}
-        if "board_version" not in scene_columns:
-            with engine.begin() as connection:
-                connection.execute(
-                    text("ALTER TABLE scenes ADD COLUMN board_version INTEGER NOT NULL DEFAULT 1")
-                )
-    if "journal_assets" in table_names:
-        journal_asset_columns = {column["name"] for column in inspector.get_columns("journal_assets")}
-        if "folder_id" not in journal_asset_columns:
-            with engine.begin() as connection:
-                connection.execute(text("ALTER TABLE journal_assets ADD COLUMN folder_id VARCHAR(64)"))
-                connection.execute(
-                    text(
-                        "CREATE INDEX IF NOT EXISTS idx_journal_assets_folder "
-                        "ON journal_assets (campaign_id, folder_id)"
-                    )
-                )
+# Schema creation and evolution now live in ``app.persistence.schema``. Alembic
+# is the authority for production; the dev/test fast path builds from metadata
+# there. The former startup schema bootstrap and ad-hoc column bridge were
+# removed from this module (maintenance plan, Etapa 2).

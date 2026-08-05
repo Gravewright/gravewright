@@ -80,7 +80,6 @@ class CampaignRepository:
                         campaign_members.c.role,
                         users.c.id.label("user_id"),
                         users.c.name,
-                        users.c.email,
                     )
                     .select_from(campaign_members.join(users, users.c.id == campaign_members.c.user_id))
                     .where(campaign_members.c.campaign_id.in_(user_campaigns))
@@ -366,6 +365,10 @@ class CampaignRepository:
         from app.persistence.repositories import realtime_recipient_repository
 
         realtime_recipient_repository.invalidate(campaign_id)
+
+        from app.observability.audit import emit_audit
+
+        emit_audit("membership.removed", campaign_id=campaign_id, target_user_id=user_id)
 
     def update_system(
         self,

@@ -34,6 +34,13 @@ filterwarnings = ["error::DeprecationWarning"]
 [tool.ruff]
 line-length = 100
 
+[tool.ruff.lint]
+# High-signal pyflakes rules (unused imports, undefined names, f-string bugs).
+# The E402 "import not at top" pattern is intentional here (env setup precedes
+# imports in main/config/conftest), so the broader pycodestyle set is not
+# selected. `ruff format` is not yet enforced repo-wide (large reformat pending).
+select = ["F"]
+
 [dependency-groups]
 dev = [
     "pyinstaller==6.21.0",

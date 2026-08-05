@@ -17,7 +17,6 @@ token ids and chunk-grid bounds.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import json
 import math
 import sys
@@ -261,7 +260,7 @@ def seed(db_path: str, token_count: int = TOKEN_COUNT) -> None:
     print(f"  layer:      {layer_id}")
     print(f"  chunks:     {chunk_count} ({chunk_columns}x{chunk_rows})")
     print(f"  tokens:     {len(token_ids)}")
-    print(f"  fog:        enabled (hide_all)")
+    print("  fog:        enabled (hide_all)")
     print(f"  fixtures:   {FIXTURES_PATH}")
 
 

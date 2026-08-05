@@ -32,7 +32,7 @@ class SystemRulesService:
             return {}
         return parsed if isinstance(parsed, dict) else {}
 
-    def _record_and_manifest(self, system_id: str) -> tuple[dict, SystemManifest] | None:
+    def _record_and_manifest(self, system_id: str) -> tuple[dict, PackageManifest] | None:
         record = self.installed.get(system_id)
         if record is None:
             return None

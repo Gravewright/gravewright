@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 
 import app.persistence.database as db_module
 from app.helpers.env import PROJECT_ROOT

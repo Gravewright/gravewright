@@ -11,13 +11,14 @@ Type policy (important for MySQL portability):
 - ``LargeBinary`` for BLOBs, ``BigInteger`` for the autoincrement event sequence.
 
 The one construct that is genuinely not portable — the partial UNIQUE index
-``scenes(campaign_id) WHERE active = 1`` — is created out of band in
-``engine.create_schema`` for SQLite/PostgreSQL only.
+``scenes(campaign_id) WHERE active = 1`` — is created out of band by the schema
+bootstrap / migration for SQLite/PostgreSQL only (see ``app.persistence.schema``).
 """
 
 from __future__ import annotations
 
 from sqlalchemy import BigInteger
+from sqlalchemy import CheckConstraint
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import ForeignKey
@@ -32,6 +33,10 @@ from sqlalchemy import Text
 from sqlalchemy import UniqueConstraint
 from sqlalchemy import text
 
+from app.domain.campaigns import InvitationStatus
+from app.domain.permissions.permissions import PermissionEffect
+from app.domain.roles import PlayerRole
+
 metadata = MetaData(
     naming_convention={
         "ix": "ix_%(table_name)s_%(column_0_N_name)s",
@@ -41,6 +46,16 @@ metadata = MetaData(
         "pk": "pk_%(table_name)s",
     }
 )
+
+
+def enum_check(column: str, enum, name: str) -> CheckConstraint:
+    """A portable ``column IN (...)`` check whose allowed set is the domain enum.
+
+    Centralizing the value set on the enum keeps the database constraint and the
+    application's validation from drifting apart (maintenance plan, Etapa 6).
+    """
+    allowed = ", ".join(f"'{member.value}'" for member in enum)
+    return CheckConstraint(f"{column} IN ({allowed})", name=name)
 
                                                                                 
                                                                         
@@ -155,6 +170,7 @@ campaign_members = Table(
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
     UniqueConstraint("campaign_id", "user_id"),
+    enum_check("role", PlayerRole, "role"),
     Index("idx_campaign_members_campaign_id", "campaign_id"),
     Index("idx_campaign_members_user_id", "user_id"),
 )
@@ -228,6 +244,7 @@ campaign_permission_overrides = Table(
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
     UniqueConstraint("campaign_id", "subject_type", "subject_id", "permission_key"),
+    enum_check("effect", PermissionEffect, "effect"),
     Index(
         "idx_campaign_permission_overrides_campaign_subject",
         "campaign_id",
@@ -249,6 +266,8 @@ campaign_invitations = Table(
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
     Column("responded_at", Integer, nullable=True),
+    enum_check("role", PlayerRole, "role"),
+    enum_check("status", InvitationStatus, "status"),
     Index("idx_campaign_invitations_invited_user_status", "invited_user_id", "status", "created_at"),
     Index("idx_campaign_invitations_campaign_status", "campaign_id", "status", "created_at"),
     Index("idx_campaign_invitations_invited_by", "invited_by_user_id"),

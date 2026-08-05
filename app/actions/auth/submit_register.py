@@ -22,8 +22,8 @@ class RegisterForm:
     password: str
 
 
-@post("/register")
-async def submit_register(
+@post("/register", sync_to_thread=True)
+def submit_register(
     request: Request,
     cookies: dict[str, str],
     current_user: Row | None,

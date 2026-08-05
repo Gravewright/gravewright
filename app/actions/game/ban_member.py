@@ -13,6 +13,8 @@ from litestar.response import Redirect
 from litestar.response import Response
 
 from app.business.campaigns.campaign_service import CampaignService
+from app.helpers.async_blocking import run_blocking
+from app.helpers.http_responses import wants_json
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
 
@@ -21,10 +23,6 @@ from app.realtime.transport import RealtimeTransport
 class BanMemberForm:
     campaign_id: str = ""
     user_id: str = ""
-
-
-def _wants_json(request: Request) -> bool:
-    return "application/json" in request.headers.get("accept", "")
 
 
 @post("/game/member/ban")
@@ -36,9 +34,12 @@ async def ban_member(
     data: Annotated[BanMemberForm, Body(media_type=RequestEncodingType.URL_ENCODED)],
 ) -> Response[dict[str, Any]] | Redirect:
     user = current_user
-    json_response = _wants_json(request)
+    json_response = wants_json(request)
 
-    result = campaign_service.ban_member(
+    # Offload the synchronous DB transaction to a worker thread so it does not
+    # block the event loop; the realtime broadcast below stays on the loop.
+    result = await run_blocking(
+        campaign_service.ban_member,
         campaign_id=data.campaign_id,
         requester_user_id=user["id"],
         target_user_id=data.user_id,

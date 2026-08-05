@@ -20,8 +20,8 @@ from app.helpers.auth import require_user
 from app.helpers.view import view_context
 
 
-@get("/inside", guards=[require_user])
-async def show_inside(
+@get("/inside", guards=[require_user], sync_to_thread=True)
+def show_inside(
     cookies: dict[str, str],
     current_user: Row,
     campaign_service: CampaignService,

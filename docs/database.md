@@ -30,11 +30,26 @@ DATABASE_URL=postgresql+psycopg://gravewright:<password>@localhost:5432/gravewri
 
 Use PostgreSQL for production unless you have a deliberate reason to run SQLite and accept its operational limits.
 
-## Runtime Schema Creation
+## Schema Authority
 
-Application startup creates missing schema objects through SQLAlchemy Core metadata. This keeps fresh local and test databases easy to bootstrap.
+**Alembic is the authority for schema creation and evolution.** A fresh database
+must be created with `alembic upgrade head`, and every schema change ships as a
+new numbered Alembic revision with `upgrade`/`downgrade`. No migration
+reconstructs the whole schema from `metadata` — the baseline revision
+(`0001_initial_schema`) is a static, self-contained rendering so its result does
+not change when `tables.py` changes. See
+[`adr/ADR-migration-baseline.md`](adr/ADR-migration-baseline.md).
 
-Historical schema evolution should still go through Alembic migrations. Do not reintroduce raw `sqlite3` schema bootstrap packages.
+Parity between `alembic upgrade head` and the metadata declared in
+`app/persistence/tables.py` is enforced by
+`tests/unit/test_schema_alembic_parity.py`: changing `tables.py` without a
+matching migration fails CI.
+
+For convenience, application startup can still create missing objects from
+SQLAlchemy Core metadata to bootstrap local and test databases quickly. This is
+a developer convenience, **not** the supported upgrade mechanism — do not rely on
+it to evolve a database with data you care about, and do not reintroduce raw
+`sqlite3` schema bootstrap packages.
 
 ## Alembic
 
@@ -54,7 +69,31 @@ alembic current
 alembic revision --autogenerate -m "describe change"
 ```
 
-The initial migration creates the current SQLAlchemy Core schema. SQLite and PostgreSQL also get the partial unique index that enforces at most one active scene per campaign. MySQL/MariaDB do not support that partial index in the same form; application logic enforces the invariant during experimental portability checks.
+The initial migration (`0001_initial_schema`) is a static rendering of the base
+schema — it does not import `metadata` — so a fresh `alembic upgrade head`
+deterministically reproduces the schema declared in `tables.py`. SQLite and
+PostgreSQL also get the partial unique index that enforces at most one active
+scene per campaign. MySQL/MariaDB do not support that partial index in the same
+form; application logic enforces the invariant during experimental portability
+checks.
+
+### Enum check constraints
+
+Priority enum columns are guarded at the database level so out-of-domain values
+are rejected even if a service validation is bypassed: `campaign_members.role`
+and `campaign_invitations.role` (`PlayerRole`), `campaign_invitations.status`
+(`InvitationStatus`), and `campaign_permission_overrides.effect`
+(`PermissionEffect`). The allowed sets are derived from the domain enums in
+`app/persistence/tables.py` (`enum_check`), so the constraint and the
+application validation cannot drift — `tests/unit/test_enum_constraints.py`
+enforces this. The migration that adds them audits existing rows first and
+refuses to run against out-of-domain data rather than silently coercing it.
+
+### Backup before upgrading
+
+Always back up before running migrations against data you care about
+(`grave backup --include-packages`), and test a restore on a copy first. See
+[`alpha.md`](alpha.md) for the Alpha upgrade policy.
 
 ## Production Hardening
 
@@ -94,6 +133,12 @@ app.helpers.async_blocking.run_blocking(...)
 ```
 
 Realtime paths already offload recipient lookup, event-log append/replay, presence writes, fog mutations, viewport chunk reads, and board state mutations.
+
+HTTP action handlers follow the same principle: purely-synchronous handlers are
+declared `def` with `sync_to_thread=True` (Litestar offloads them whole), and
+mixed handlers wrap their sync unit in `await run_blocking(...)`. See
+[`development.md`](development.md) and
+[`adr/ADR-http-concurrency.md`](adr/ADR-http-concurrency.md).
 
 ## Diagnostics
 

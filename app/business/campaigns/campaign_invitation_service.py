@@ -95,15 +95,15 @@ class CampaignInvitationService:
         invitation_id: str,
         user_id: str,
     ) -> CampaignInvitationResult:
-        status = self.invitations.accept_for_user(
+        outcome = self.invitations.accept_for_user(
             invitation_id=invitation_id,
             user_id=user_id,
         )
 
-        if status != "accepted":
+        if outcome.status != "accepted":
             return CampaignInvitationResult(
                 success=False,
-                error_key=f"inside.invitations.errors.{status}",
+                error_key=f"inside.invitations.errors.{outcome.status}",
             )
 
         campaign = self.invitations.get_campaign_for_user_invitation(
@@ -118,12 +118,25 @@ class CampaignInvitationService:
                 user_id=user_id,
             )
 
+        if outcome.membership_created and campaign is not None:
+            from app.observability.audit import emit_audit
+
+            emit_audit(
+                "membership.created",
+                actor_id=user_id,
+                campaign_id=campaign["id"],
+                via="invitation",
+            )
+
         return CampaignInvitationResult(
             success=True,
             message_key="inside.invitations.accepted",
             payload={
                 "campaign": dict(campaign) if campaign is not None else None,
                 "member": dict(member) if member is not None else None,
+                # Only a real, first-time membership creation should trigger the
+                # realtime join event (published by the action after commit).
+                "membership_created": outcome.membership_created,
             },
         )
 

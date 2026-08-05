@@ -13,6 +13,7 @@ from litestar.response import Redirect
 from litestar.response import Response
 
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
+from app.helpers.http_responses import wants_json
 
 
 @dataclass
@@ -20,15 +21,8 @@ class DeclineCampaignInvitationForm:
     invitation_id: str = ""
 
 
-def wants_json(request: Request) -> bool:
-    accept = request.headers.get("accept", "")
-    requested_with = request.headers.get("x-requested-with", "")
-
-    return "application/json" in accept or requested_with == "XMLHttpRequest"
-
-
-@post("/campaigns/invitations/decline")
-async def decline_campaign_invitation(
+@post("/campaigns/invitations/decline", sync_to_thread=True)
+def decline_campaign_invitation(
     request: Request,
     cookies: dict[str, str],
     current_user: Row | None,

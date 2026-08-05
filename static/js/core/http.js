@@ -22,7 +22,25 @@
     return response.text().catch(() => null);
   }
 
-  
+  // Canonical error key per HTTP status so every caller maps failures the same
+  // way. Status 0 means the request never reached the server (offline/DNS/etc).
+  function errorKeyForStatus(status) {
+    switch (status) {
+      case 0:
+        return "http.errors.network";
+      case 401:
+        return "auth.errors.session_expired";
+      case 403:
+        return "http.errors.forbidden";
+      case 409:
+        return "http.errors.conflict";
+      case 429:
+        return "http.errors.rate_limited";
+      default:
+        return status >= 500 ? "http.errors.server" : "http.errors.request";
+    }
+  }
+
   function errorFrom(response, body) {
     const details = body && typeof body === "object" ? body : null;
     const message =
@@ -30,7 +48,10 @@
       (typeof body === "string" && body) ||
       response.statusText ||
       "Request failed";
-    return { ok: false, status: response.status, message, details };
+    // Prefer a specific error_key from the JSON envelope, else the status map.
+    const errorKey =
+      (details && details.error_key) || errorKeyForStatus(response.status);
+    return { ok: false, status: response.status, message, details, errorKey };
   }
 
   async function request(url, options) {
@@ -54,6 +75,7 @@
         status: 0,
         message: networkError?.message || "Network error",
         details: null,
+        errorKey: errorKeyForStatus(0),
       };
     }
 

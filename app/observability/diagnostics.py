@@ -28,6 +28,41 @@ from typing import Any
 _LOGGER = logging.getLogger("gravewright.diagnostics")
 _METRIC_SAFE_RE = re.compile(r"[^a-zA-Z0-9_.-]+")
 
+# Enforced redaction: even a careless caller must not leak secrets/PII into the
+# ring buffer or logs. Keys whose name contains one of these fragments are
+# masked. (Bare "code" is intentionally NOT matched — it is used for benign
+# values like WebSocket close codes; raw redemption codes must simply never be
+# passed here, and are hashed at rest regardless.)
+_SENSITIVE_FRAGMENTS = (
+    "token",
+    "secret",
+    "password",
+    "passwd",
+    "cookie",
+    "csrf",
+    "authorization",
+    "api_key",
+    "session",
+    "email",
+)
+_REDACTED = "[redacted]"
+
+
+def _is_sensitive_key(key: str) -> bool:
+    lowered = key.lower()
+    return any(fragment in lowered for fragment in _SENSITIVE_FRAGMENTS)
+
+
+def _redact(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: (_REDACTED if _is_sensitive_key(str(key)) else _redact(val))
+            for key, val in value.items()
+        }
+    if isinstance(value, (list, tuple)):
+        return [_redact(item) for item in value]
+    return value
+
 
 @dataclass(frozen=True)
 class DiagnosticEvent:
@@ -71,9 +106,18 @@ def emit_diagnostic(event: str, /, *, level: str = "info", **fields: Any) -> Non
     """Record and log one structured diagnostic event.
 
     ``fields`` are JSON-serialized with ``default=str`` so enums/paths don't
-    crash diagnostics. Values should be low-cardinality and non-sensitive.
+    crash diagnostics. Sensitive keys (tokens, codes, cookies, session secrets,
+    emails, …) are redacted before anything is recorded or logged, and the
+    current request's correlation id is attached when available.
     """
-    item = diagnostics_recorder.record(event, **fields)
+    from app.observability.request_context import get_request_id
+
+    safe_fields = _redact(fields)
+    request_id = get_request_id()
+    if request_id and "request_id" not in safe_fields:
+        safe_fields["request_id"] = request_id
+
+    item = diagnostics_recorder.record(event, **safe_fields)
     payload = {"ts": item.ts, "event": event, **item.fields}
     line = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
     log_method = getattr(_LOGGER, level, _LOGGER.info)

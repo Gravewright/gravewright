@@ -13,6 +13,7 @@ from litestar.response import Redirect
 from litestar.response import Response
 
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
+from app.helpers.http_responses import json_error, json_ok, wants_json
 
 
 @dataclass
@@ -22,12 +23,8 @@ class InviteToCampaignForm:
     role: str = ""
 
 
-def wants_json(request: Request) -> bool:
-    return "application/json" in request.headers.get("accept", "")
-
-
-@post("/campaigns/invitations")
-async def invite_to_campaign(
+@post("/campaigns/invitations", sync_to_thread=True)
+def invite_to_campaign(
     request: Request,
     cookies: dict[str, str],
     current_user: Row,
@@ -46,21 +43,8 @@ async def invite_to_campaign(
 
     if json_response:
         if result.success:
-            return Response(
-                content={
-                    "ok": True,
-                    "message_key": result.message_key or "game.invite.success",
-                },
-                status_code=200,
-            )
-
-        return Response(
-            content={
-                "ok": False,
-                "error_key": result.error_key or "game.invite.errors.invalid_email",
-            },
-            status_code=400,
-        )
+            return json_ok(message_key=result.message_key or "game.invite.success")
+        return json_error(error_key=result.error_key or "game.invite.errors.invalid_email")
 
     if result.success:
         return Redirect(path=f"/game?invite_message_key={quote(result.message_key or '')}")

@@ -57,6 +57,17 @@ Module ZIP uploads are treated as untrusted:
 
 System manifests are declarative. They authorize assets, schemas, layouts, mappings, rules, locales, and content packs. Paths must be package-relative and safe. Unknown or forbidden capabilities make a package invalid.
 
+## Logging and Diagnostics
+
+Structured diagnostics and audit events are scrubbed by construction:
+`emit_diagnostic` redacts any field whose name looks sensitive (`token`,
+`password`, `cookie`, `csrf`, `authorization`, `api_key`, `session*`, `email`)
+to `[redacted]` before it is recorded or logged. Redemption codes, tokens,
+cookies and `SESSION_SECRET` must never be passed to diagnostics. Each event is
+correlated by a non-sensitive `request_id` (also returned as the `X-Request-ID`
+response header). See [`operations.md`](operations.md) for audit events, log
+levels and retention.
+
 ## Production Checklist
 
 - HTTPS only.

@@ -22,8 +22,8 @@ class LoginForm:
     password: str
 
 
-@post("/login")
-async def submit_login(
+@post("/login", sync_to_thread=True)
+def submit_login(
     request: Request,
     cookies: dict[str, str],
     current_user: Row | None,

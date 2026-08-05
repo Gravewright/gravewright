@@ -10,7 +10,6 @@ declare every event/method it publishes, subscribes, provides, or requests.
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from types import SimpleNamespace
 

@@ -18,9 +18,10 @@ class PresencePlayerData(TypedDict):
 
 
 class MemberPlayerData(TypedDict):
+    # Data-minimized presence contract: no email or other PII. The frontend
+    # presence/roster only needs identity, role and online state (Etapa 4).
     user_id: str
     name: str
-    email: str
     role: str
     is_online: bool
 

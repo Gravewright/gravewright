@@ -21,8 +21,8 @@ class ResetPasswordForm:
     password: str
 
 
-@post("/reset-password")
-async def submit_reset_password(
+@post("/reset-password", sync_to_thread=True)
+def submit_reset_password(
     request: Request,
     cookies: dict[str, str],
     current_user: Row | None,

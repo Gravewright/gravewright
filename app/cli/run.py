@@ -77,18 +77,21 @@ def _ensure_schema(*, no_migrate: bool) -> Check:
     if no_migrate:
         return Check("schema", WARN, "schema step skipped (--no-migrate)")
     try:
-        from app.persistence.database import initialize_database
+        from app.persistence.engine import get_engine
+        from app.persistence.schema import schema_status, upgrade_to_head
 
-        # Idempotent: creates any missing tables for the configured backend.
-        initialize_database()
+        # Official path: create/evolve the schema through Alembic migrations
+        # (idempotent — a database already at head is a no-op).
+        upgrade_to_head()
+        head = schema_status(get_engine())["head"]
     except Exception as exc:  # noqa: BLE001 - report, don't crash the launcher
         return Check(
             "schema",
             ERROR,
-            f"could not ensure database schema: {type(exc).__name__}: {exc}",
-            fix="Check DATABASE_URL and database connectivity",
+            f"could not migrate database schema: {type(exc).__name__}: {exc}",
+            fix="Back up, then run: grave db upgrade  (check DATABASE_URL/connectivity)",
         )
-    return Check("schema", OK, "database schema ready")
+    return Check("schema", OK, f"database at head ({head})")
 
 
 def prepare(

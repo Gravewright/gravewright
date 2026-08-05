@@ -17,8 +17,8 @@ from app.helpers.auth import require_user
 from app.helpers.view import view_context
 
 
-@post("/campaigns/delete", guards=[require_user])
-async def delete_campaign(
+@post("/campaigns/delete", guards=[require_user], sync_to_thread=True)
+def delete_campaign(
     cookies: dict[str, str],
     current_user: Row,
     campaign_service: CampaignService,

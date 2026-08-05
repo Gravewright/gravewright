@@ -13,6 +13,8 @@ from litestar.response import Redirect
 from litestar.response import Response
 
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
+from app.helpers.async_blocking import run_blocking
+from app.helpers.http_responses import wants_json
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
 
@@ -20,13 +22,6 @@ from app.realtime.transport import RealtimeTransport
 @dataclass
 class AcceptCampaignInvitationForm:
     invitation_id: str = ""
-
-
-def wants_json(request: Request) -> bool:
-    accept = request.headers.get("accept", "")
-    requested_with = request.headers.get("x-requested-with", "")
-
-    return "application/json" in accept or requested_with == "XMLHttpRequest"
 
 
 @post("/campaigns/invitations/accept")
@@ -52,12 +47,22 @@ async def accept_campaign_invitation(
 
         return Redirect(path="/login")
 
-    result = campaign_invitation_service.accept_invitation(
+    # Offload the synchronous accept transaction to a worker thread; the
+    # realtime broadcast below runs on the event loop after it returns.
+    result = await run_blocking(
+        campaign_invitation_service.accept_invitation,
         invitation_id=data.invitation_id,
         user_id=user["id"],
     )
 
-    if result.success and result.payload.get("campaign") and result.payload.get("member"):
+    # Publish MEMBER_JOINED only after commit and only when this request created
+    # the membership — never on an idempotent re-accept (Etapa 5).
+    if (
+        result.success
+        and result.payload.get("membership_created")
+        and result.payload.get("campaign")
+        and result.payload.get("member")
+    ):
         campaign = result.payload["campaign"]
         member = result.payload["member"]
         await RealtimeTransport().to_room(
@@ -68,7 +73,6 @@ async def accept_campaign_invitation(
                 "player": {
                     "user_id": member["user_id"],
                     "name": member["name"],
-                    "email": member["email"],
                     "role": member["role"],
                     "is_online": False,
                 },

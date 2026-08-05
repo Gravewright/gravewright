@@ -9,6 +9,7 @@ moving those sync sections onto Python's default thread pool.
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import threading
 import time
 from collections.abc import Callable
@@ -66,7 +67,11 @@ async def run_blocking(func: Callable[P, R], /, *args: P.args, **kwargs: P.kwarg
     started = time.perf_counter()
     try:
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(_get_executor(), partial(func, *args, **kwargs))
+        # Run in a copy of the current context so contextvars (e.g. the request
+        # correlation id) propagate into the worker thread for diagnostics.
+        context = contextvars.copy_context()
+        call = partial(context.run, func, *args, **kwargs)
+        return await loop.run_in_executor(_get_executor(), call)
     finally:
         elapsed_ms = (time.perf_counter() - started) * 1000.0
         realtime_metrics.observe("blocking.call.duration_ms", elapsed_ms)

@@ -10,8 +10,8 @@ from litestar.response import Response
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
 
 
-@get("/inside/invitations/pending")
-async def list_campaign_invitations(
+@get("/inside/invitations/pending", sync_to_thread=True)
+def list_campaign_invitations(
     cookies: dict[str, str],
     current_user: Row | None,
     campaign_invitation_service: CampaignInvitationService,

@@ -86,6 +86,22 @@ grave.bat doctor
 grave.bat run --open
 ```
 
+## Database Schema
+
+`grave run` creates and upgrades the database through the official Alembic path
+(`alembic upgrade head`) before starting the server, so you normally don't touch
+migrations directly. To inspect or drive it yourself:
+
+```bash
+grave db status    # current revision, expected head, up-to-date?
+grave db upgrade   # alembic upgrade head (back up first)
+```
+
+Local development bootstraps the schema from metadata for convenience, but that
+is not the supported upgrade mechanism — always evolve real data with
+`grave db upgrade` / `alembic upgrade head`. See
+[`database.md`](database.md) and [`adr/ADR-migration-baseline.md`](adr/ADR-migration-baseline.md).
+
 ## First Local Flow
 
 1. Register a local user.

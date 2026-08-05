@@ -249,6 +249,7 @@ class AppConfig:
 
     database_url: str
     allow_sqlite_in_production: bool
+    auto_migrate: bool
     database_pool_size: int
     database_max_overflow: int
     database_pool_timeout: int
@@ -331,6 +332,7 @@ config = AppConfig(
     data_dir=_resolve_data_dir(),
     database_url=_resolve_database_url(),
     allow_sqlite_in_production=env_bool("ALLOW_SQLITE_IN_PRODUCTION", False),
+    auto_migrate=env_bool("AUTO_MIGRATE", False),
     database_pool_size=env_int("DATABASE_POOL_SIZE", 5),
     database_max_overflow=env_int("DATABASE_MAX_OVERFLOW", 10),
     database_pool_timeout=env_int("DATABASE_POOL_TIMEOUT", 30),

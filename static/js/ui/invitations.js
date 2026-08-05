@@ -1,4 +1,15 @@
 (() => {
+    // Generic transport/status messages (from the central HTTP client's
+    // errorKey) so a network or server failure is never shown as a form error.
+    const GENERIC_MESSAGES = {
+        "http.errors.network": "Network error. Check your connection and try again.",
+        "http.errors.forbidden": "You don't have permission to do that.",
+        "http.errors.conflict": "That action conflicts with the current state.",
+        "http.errors.rate_limited": "Too many requests. Please slow down and try again.",
+        "http.errors.server": "Something went wrong on the server. Please try again shortly.",
+        "http.errors.request": "The request could not be completed.",
+    };
+
     function getMessageForKey(key) {
         const messages = {
             "game.invite.success": document.body.dataset.inviteSuccess,
@@ -11,7 +22,7 @@
             "game.invite.errors.already_pending": document.body.dataset.inviteErrorAlreadyPending,
         };
 
-        return messages[key] || key || "";
+        return messages[key] || GENERIC_MESSAGES[key] || key || "";
     }
 
     function showNotice(kind, message) {
@@ -26,25 +37,30 @@
         notice.classList.toggle("game-notice--danger", kind === "error");
     }
 
-    function asUrlEncodedBody(form) {
-        return new URLSearchParams(new FormData(form));
-    }
-
     async function submitInvitationForm(form) {
-        const response = await fetch(form.action, {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/x-www-form-urlencoded",
-                "X-Requested-With": "XMLHttpRequest",
-            },
-            body: asUrlEncodedBody(form),
-            credentials: "same-origin",
+        const http = window.GravewrightCore && window.GravewrightCore.http;
+        if (!http) {
+            showNotice("error", getMessageForKey("http.errors.request"));
+            return;
+        }
+
+        // The central client never throws on network/non-JSON responses: it
+        // returns a normalized result with a canonical errorKey. This is what
+        // lets us tell a transport/server failure apart from a form validation
+        // error (previously any failure was mis-shown as "invalid email").
+        const result = await http.postForm(form.action, new FormData(form), {
+            headers: { "X-Requested-With": "XMLHttpRequest" },
         });
 
-        const data = await response.json();
+        if (!result.ok) {
+            // Network (status 0), 401/403/409/429, or 5xx — or a validation
+            // error_key carried in the JSON body (preferred by the client).
+            showNotice("error", getMessageForKey(result.errorKey));
+            return;
+        }
 
-        if (!response.ok || !data.ok) {
+        const data = result.data || {};
+        if (data.ok === false) {
             showNotice("error", getMessageForKey(data.error_key));
             return;
         }
@@ -62,8 +78,11 @@
 
         event.preventDefault();
 
+        // Safety net only — submitInvitationForm handles transport failures
+        // itself, so an unexpected error is a generic request failure, never a
+        // form-validation message.
         submitInvitationForm(form).catch(() => {
-            showNotice("error", getMessageForKey("game.invite.errors.invalid_email"));
+            showNotice("error", getMessageForKey("http.errors.request"));
         });
     });
 })();

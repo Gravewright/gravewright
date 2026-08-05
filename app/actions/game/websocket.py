@@ -95,7 +95,6 @@ def _members_by_campaign(
             {
                 "user_id": member["user_id"],
                 "name": member["name"],
-                "email": member["email"],
                 "role": member["role"],
                 "is_online": member["user_id"] in online_user_ids_by_room.get(campaign_id, set()),
             }

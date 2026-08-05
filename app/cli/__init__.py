@@ -252,6 +252,18 @@ def _cmd_run(args: argparse.Namespace) -> int:
     return serve(host=args.host, port=args.port, dev=args.dev, open_browser=args.open)
 
 
+def _cmd_db_status(args: argparse.Namespace) -> int:
+    from app.cli.database import cmd_status
+
+    return cmd_status(args)
+
+
+def _cmd_db_upgrade(args: argparse.Namespace) -> int:
+    from app.cli.database import cmd_upgrade
+
+    return cmd_upgrade(args)
+
+
 def _cmd_backup(args: argparse.Namespace) -> int:
     from app.cli.backup import create_backup, default_backup_name
 
@@ -1025,6 +1037,14 @@ def build_parser() -> argparse.ArgumentParser:
     restore.add_argument("--replace-assets", action="store_true")
     restore.add_argument("--replace-packages", action="store_true")
     restore.set_defaults(func=_cmd_restore)
+
+    db = sub.add_parser("db", help="database schema status and migrations")
+    db_sub = db.add_subparsers(dest="db_command", required=True)
+    db_status = db_sub.add_parser("status", help="show current vs expected schema revision")
+    _add_json(db_status)
+    db_status.set_defaults(func=_cmd_db_status)
+    db_upgrade = db_sub.add_parser("upgrade", help="run alembic upgrade head (official path)")
+    db_upgrade.set_defaults(func=_cmd_db_upgrade)
 
     lock = sub.add_parser("lock", help="write grave.lock.json")
     lock.add_argument("-o", "--output", dest="out", help="custom lockfile path")

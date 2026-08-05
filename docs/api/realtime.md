@@ -39,6 +39,25 @@ Large maps are streamed through viewport subscriptions. Clients subscribe to a v
 
 Presence is campaign-scoped. The server sends snapshots on connect and updates when users come online or go offline.
 
+### Data minimization
+
+Membership and presence payloads (`presence.snapshot`, `member.joined`, and the
+member roster embedded in the game page) are minimized to the fields the client
+actually needs: `user_id`, `name`, `role`, and `is_online`. They **must not**
+carry email or other PII. Email is used only where it is functional (inviting a
+member by email) or behind an authorized, owner-only admin endpoint. This
+contract is enforced by `tests/unit/test_realtime_pii.py`.
+
+### Membership idempotency
+
+Accepting a campaign invitation is idempotent and concurrency-safe: N concurrent
+or repeated accepts for the same user create exactly one membership (the
+`(campaign_id, user_id)` unique constraint plus `INSERT ... ON CONFLICT DO
+NOTHING` are the guard). `member.joined` is published **at most once** — only for
+the request that actually created the membership, and only after the transaction
+commits. A re-accept by an existing member returns a stable success with no new
+row and no event. Enforced by `tests/integration/test_membership_concurrency.py`.
+
 ## Common Server Events
 
 ```text
