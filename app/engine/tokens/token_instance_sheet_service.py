@@ -67,7 +67,9 @@ class TokenInstanceSheetService:
         self.schemas = SchemaService()
         self.projector = ActorTokenProjector()
 
-    def build_bundle(self, *, token_id: str, user_id: str, locale: str | None = None) -> ActorSheetBundle | None:
+    def build_bundle(
+        self, *, token_id: str, user_id: str, locale: str | None = None
+    ) -> ActorSheetBundle | None:
         loaded = self._load(token_id=token_id, user_id=user_id, require_edit=False)
         if loaded is None:
             return None
@@ -80,9 +82,7 @@ class TokenInstanceSheetService:
         sheet: dict | None = None
         data = raw_data
         if self.systems.get_active_manifest(system_id) is not None:
-            sheet = self.layouts.get_actor_html_sheet(
-                system_id=system_id, actor_type=actor["type"]
-            )
+            sheet = self.layouts.get_actor_html_sheet(system_id=system_id, actor_type=actor["type"])
             if sheet is None:
                 candidate = self.layouts.get_actor_sheet(
                     system_id=system_id,
@@ -114,19 +114,25 @@ class TokenInstanceSheetService:
             data=data,
             portrait_url=actor_image_url(actor, "portrait"),
             token_url=token.get("token_asset_url") or actor_image_url(actor, "token"),
-            summary=self._project_instance(actor=actor, name=instance.get("name") or actor["name"], data=raw_data),
+            summary=self._project_instance(
+                actor=actor, name=instance.get("name") or actor["name"], data=raw_data
+            ),
             token_id=token["id"],
             source_actor_id=actor["id"],
             token_link_mode=token.get("actor_link_mode"),
         )
 
-    def patch_data(self, *, token_id: str, user_id: str, patch: dict[str, Any]) -> TokenSheetDataResult:
+    def patch_data(
+        self, *, token_id: str, user_id: str, patch: dict[str, Any]
+    ) -> TokenSheetDataResult:
         loaded = self._load(token_id=token_id, user_id=user_id, require_edit=True)
         if loaded is None:
             return TokenSheetDataResult(success=False, error_key="tokens.errors.not_found")
         token, actor, _campaign = loaded
         if not isinstance(patch, dict) or not patch:
-            return TokenSheetDataResult(success=False, error_key="game.sheet_data.errors.empty_patch")
+            return TokenSheetDataResult(
+                success=False, error_key="game.sheet_data.errors.empty_patch"
+            )
 
         core_name = patch.get("core.name")
         sheet_patch = {key: value for key, value in patch.items() if key != "core.name"}
@@ -137,10 +143,14 @@ class TokenInstanceSheetService:
         )
         has_core_name = core_name is not None
         if not clean and not has_core_name:
-            return TokenSheetDataResult(success=False, error_key="game.sheet_data.errors.empty_patch")
+            return TokenSheetDataResult(
+                success=False, error_key="game.sheet_data.errors.empty_patch"
+            )
 
         overrides = deepcopy(token.get("overrides") or {})
-        instance = deepcopy(overrides.get(INSTANCE_KEY) or self._ensure_instance(token=token, actor=actor))
+        instance = deepcopy(
+            overrides.get(INSTANCE_KEY) or self._ensure_instance(token=token, actor=actor)
+        )
         data = instance.get("data") if isinstance(instance.get("data"), dict) else {}
         if has_core_name:
             instance["name"] = str(core_name)
@@ -150,8 +160,15 @@ class TokenInstanceSheetService:
         instance["data"] = data
         instance["version"] = int(instance.get("version", 1)) + 1
         overrides[INSTANCE_KEY] = instance
-        overrides.update(self._project_instance(actor=actor, name=instance.get("name") or actor["name"], data=data).get("bars") or {})
-        effects = self._project_instance(actor=actor, name=instance.get("name") or actor["name"], data=data).get("effects")
+        overrides.update(
+            self._project_instance(
+                actor=actor, name=instance.get("name") or actor["name"], data=data
+            ).get("bars")
+            or {}
+        )
+        effects = self._project_instance(
+            actor=actor, name=instance.get("name") or actor["name"], data=data
+        ).get("effects")
         if isinstance(effects, list):
             overrides["effects"] = effects
 
@@ -200,7 +217,9 @@ class TokenInstanceSheetService:
             "type": actor["type"],
             "system_id": actor["system_id"],
             "version": int(envelope.get("version", 1)),
-            "data": deepcopy(envelope.get("data") if isinstance(envelope.get("data"), dict) else {}),
+            "data": deepcopy(
+                envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
+            ),
         }
 
     def _ensure_instance(self, *, token: dict, actor: dict) -> dict:
@@ -216,7 +235,9 @@ class TokenInstanceSheetService:
         envelope = {"version": 1, "data": deepcopy(data)}
         return self.projector.project(pseudo_actor, envelope=envelope)
 
-    def _load(self, *, token_id: str, user_id: str, require_edit: bool) -> tuple[dict, dict, dict] | None:
+    def _load(
+        self, *, token_id: str, user_id: str, require_edit: bool
+    ) -> tuple[dict, dict, dict] | None:
         token = self.tokens.get_by_id(token_id)
         if token is None or not token.get("actor_id"):
             return None
@@ -224,7 +245,11 @@ class TokenInstanceSheetService:
         if scene is None:
             return None
         actor = self.actors.get(token["actor_id"])
-        if actor is None or actor["status"] != "active" or actor["campaign_id"] != scene["campaign_id"]:
+        if (
+            actor is None
+            or actor["status"] != "active"
+            or actor["campaign_id"] != scene["campaign_id"]
+        ):
             return None
         campaign = self.campaigns.get_for_user(campaign_id=scene["campaign_id"], user_id=user_id)
         if campaign is None:
@@ -234,7 +259,10 @@ class TokenInstanceSheetService:
         if require_edit:
             if not self._can_control_token(token=token, campaign=dict(campaign), user_id=user_id):
                 return None
-        elif not can_view_actor(actor=actor, campaign=dict(campaign), user_id=user_id) and campaign["member_role"] != PlayerRole.GM.value:
+        elif (
+            not can_view_actor(actor=actor, campaign=dict(campaign), user_id=user_id)
+            and campaign["member_role"] != PlayerRole.GM.value
+        ):
             return None
         return token, actor, dict(campaign)
 

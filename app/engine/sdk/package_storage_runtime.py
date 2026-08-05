@@ -136,7 +136,13 @@ class PackageStorageRuntime:
         ctx: StorageContext,
     ) -> list[dict]:
         return self._run(
-            package_id, scope, query_name, params or {}, campaign_id=campaign_id, ctx=ctx, write=False
+            package_id,
+            scope,
+            query_name,
+            params or {},
+            campaign_id=campaign_id,
+            ctx=ctx,
+            write=False,
         )
 
     def execute(
@@ -150,7 +156,13 @@ class PackageStorageRuntime:
         ctx: StorageContext,
     ) -> dict:
         return self._run(
-            package_id, scope, query_name, params or {}, campaign_id=campaign_id, ctx=ctx, write=True
+            package_id,
+            scope,
+            query_name,
+            params or {},
+            campaign_id=campaign_id,
+            ctx=ctx,
+            write=True,
         )
 
     # --- internals -------------------------------------------------------------
@@ -249,9 +261,7 @@ class PackageStorageRuntime:
             raise StorageError("sdk.storage.sqlite.query_missing", query=query_name)
         return query
 
-    def _ensure_campaign_package_active(
-        self, package_id: str, campaign_id: str | None
-    ) -> None:
+    def _ensure_campaign_package_active(self, package_id: str, campaign_id: str | None) -> None:
         if not campaign_id:
             raise StorageError("sdk.storage.scope_forbidden", reason="missing_campaign")
         campaign = self.campaigns.get(campaign_id)
@@ -272,9 +282,7 @@ class PackageStorageRuntime:
         declared_keys = set(declared)
         provided_keys = set(provided)
         if provided_keys - declared_keys:
-            raise StorageError(
-                "sdk.storage.sqlite.param_invalid", reason="extra", query=query_name
-            )
+            raise StorageError("sdk.storage.sqlite.param_invalid", reason="extra", query=query_name)
         if declared_keys - provided_keys:
             raise StorageError(
                 "sdk.storage.sqlite.param_invalid", reason="missing", query=query_name
@@ -283,9 +291,7 @@ class PackageStorageRuntime:
         for key, declared_type in declared.items():
             value = provided[key]
             if declared_type not in PARAM_TYPES or not _value_matches(declared_type, value):
-                raise StorageError(
-                    "sdk.storage.sqlite.param_invalid", reason="type", param=key
-                )
+                raise StorageError("sdk.storage.sqlite.param_invalid", reason="type", param=key)
             bound[key] = value
         return bound
 

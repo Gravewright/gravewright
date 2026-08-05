@@ -30,8 +30,6 @@ class AdminService:
         user = self.users.get_by_id(user_id)
         return user is not None and str(user["system_role"]) == SystemRole.OWNER.value
 
-                                                                             
-
     def list_users(self) -> list[Row]:
         return self.users.list_all()
 
@@ -47,7 +45,7 @@ class AdminService:
             return AdminResult(
                 success=False, error_key="inside.admin.errors.cannot_delete_last_owner"
             )
-                                                                                   
+
         self.users.delete(user_id=target_user_id)
         return AdminResult(success=True)
 

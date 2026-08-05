@@ -80,8 +80,7 @@ def _load(path: Path) -> CapabilityRegistry:
             methods=tuple(raw.get("methods", []) or []),
         )
     forbidden = {
-        name: str(raw.get("reason", ""))
-        for name, raw in data.get("forbidden", {}).items()
+        name: str(raw.get("reason", "")) for name, raw in data.get("forbidden", {}).items()
     }
     return CapabilityRegistry(capabilities=caps, forbidden=forbidden)
 

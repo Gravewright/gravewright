@@ -69,16 +69,13 @@ class SheetDataService:
             data=envelope.get("data", {}),
         )
 
-    def patch_data(
-        self, *, actor_id: str, user_id: str, patch: dict[str, Any]
-    ) -> SheetDataResult:
+    def patch_data(self, *, actor_id: str, user_id: str, patch: dict[str, Any]) -> SheetDataResult:
         actor, campaign, error = self._load(actor_id, user_id, require_edit=True)
         if error is not None:
             return error
         if not isinstance(patch, dict) or not patch:
             return SheetDataResult(success=False, error_key="game.sheet_data.errors.empty_patch")
 
-                                                                                        
         schema = self.schemas.get_actor_schema(
             system_id=actor["system_id"], actor_type=actor["type"]
         )
@@ -136,8 +133,6 @@ class SheetDataService:
             changed_paths=["*"],
         )
 
-                                                                                
-
     def _read(self, actor: dict) -> dict:
         envelope = self.storage.read_actor(
             system_id=actor["system_id"],
@@ -153,10 +148,18 @@ class SheetDataService:
     ) -> tuple[dict | None, dict | None, SheetDataResult | None]:
         actor = self.actors.get(actor_id)
         if actor is None or actor["status"] != "active":
-            return None, None, SheetDataResult(success=False, error_key="game.actors.errors.not_found")
+            return (
+                None,
+                None,
+                SheetDataResult(success=False, error_key="game.actors.errors.not_found"),
+            )
         campaign = self.campaigns.get_for_user(campaign_id=actor["campaign_id"], user_id=user_id)
         if campaign is None:
-            return None, None, SheetDataResult(success=False, error_key="game.actors.errors.not_found")
+            return (
+                None,
+                None,
+                SheetDataResult(success=False, error_key="game.actors.errors.not_found"),
+            )
         campaign_dict = dict(campaign)
         allowed = (
             can_edit_actor(actor=actor, campaign=campaign_dict, user_id=user_id)
@@ -164,5 +167,9 @@ class SheetDataService:
             else can_view_actor(actor=actor, campaign=campaign_dict, user_id=user_id)
         )
         if not allowed:
-            return None, None, SheetDataResult(success=False, error_key="game.actors.errors.not_allowed")
+            return (
+                None,
+                None,
+                SheetDataResult(success=False, error_key="game.actors.errors.not_allowed"),
+            )
         return actor, campaign_dict, None

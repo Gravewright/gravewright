@@ -66,6 +66,4 @@ class AuthAttemptRepository:
 
     def delete_old(self, older_than: int) -> None:
         with engine_begin() as connection:
-            connection.execute(
-                delete(auth_attempts).where(auth_attempts.c.created_at < older_than)
-            )
+            connection.execute(delete(auth_attempts).where(auth_attempts.c.created_at < older_than))

@@ -4,7 +4,7 @@ Seeds a WebSocket chunk-stream test scene.
 The scenario is intentionally smaller than max_stress: it exists to validate the
 binary viewport stream, reconnect, and session.resume path under Docker.
 """
-                  
+
 from __future__ import annotations
 
 import argparse
@@ -134,7 +134,9 @@ def _seed_chunks(*, scene_id: str, layer_id: str, storage_root: Path) -> int:
                 for local_x in range(CHUNK_SIZE):
                     tx = cx * CHUNK_SIZE + local_x
                     ty = cy * CHUNK_SIZE + local_y
-                    refs.append((ty * tile_columns + tx + 1) if tx < tile_columns and ty < tile_rows else 0)
+                    refs.append(
+                        (ty * tile_columns + tx + 1) if tx < tile_columns and ty < tile_rows else 0
+                    )
 
             data = encode_uint32_tile_refs(refs)
             chunk_hash = storage.write_chunk(

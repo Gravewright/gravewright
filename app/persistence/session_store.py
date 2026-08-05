@@ -52,7 +52,9 @@ class SQLiteStore(Store):
     wiring, but the implementation is backend-agnostic SQLAlchemy Core.
     """
 
-    async def set(self, key: str, value: str | bytes, expires_in: int | timedelta | None = None) -> None:
+    async def set(
+        self, key: str, value: str | bytes, expires_in: int | timedelta | None = None
+    ) -> None:
         data = value.encode() if isinstance(value, str) else value
         ttl = _seconds(expires_in)
         expires_at = int(time.time()) + ttl if ttl is not None else None

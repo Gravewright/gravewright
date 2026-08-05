@@ -55,7 +55,9 @@ class CombatResult:
             "is_active": self.is_active,
             "status": combat.get("status", "inactive") if combat else "inactive",
             "mode": combat.get("mode", self.config.get("defaultMode", "manual")),
-            "strategy": combat.get("strategy", self.config.get("turnOrder", {}).get("strategy", "manual")),
+            "strategy": combat.get(
+                "strategy", self.config.get("turnOrder", {}).get("strategy", "manual")
+            ),
             "round": self.round_number,
             "turn_index": turn_index,
             "turn_position": turn_index + 1 if self.participants else 0,
@@ -108,7 +110,13 @@ class TurnOrderService:
         if combat is None:
             return CombatResult(success=True, campaign_id=campaign_id, config=config)
         participants = self._visible_participants(combat=combat, user_id=user_id)
-        return CombatResult(success=True, campaign_id=campaign_id, combat=combat, participants=participants, config=config)
+        return CombatResult(
+            success=True,
+            campaign_id=campaign_id,
+            combat=combat,
+            participants=participants,
+            config=config,
+        )
 
     def start(
         self,
@@ -134,8 +142,13 @@ class TurnOrderService:
             created_by_user_id=user_id,
         )
         self.encounters.add_event(
-            combat_id=combat["id"], round_number=1, turn_index=0, participant_id=None,
-            actor_id=None, event_type="combat.start", payload={"strategy": config_obj.strategy},
+            combat_id=combat["id"],
+            round_number=1,
+            turn_index=0,
+            participant_id=None,
+            actor_id=None,
+            event_type="combat.start",
+            payload={"strategy": config_obj.strategy},
         )
         if actor_ids:
             self.add_participants(campaign_id=campaign_id, user_id=user_id, actor_ids=actor_ids)
@@ -175,7 +188,9 @@ class TurnOrderService:
         assert combat is not None
         existing = self.encounters.list_participants(combat_id=combat["id"])
         existing_token_ids = {str(p.get("token_id") or "") for p in existing if p.get("token_id")}
-        existing_actor_ids = {str(p.get("actor_id") or "") for p in existing if not p.get("token_id")}
+        existing_actor_ids = {
+            str(p.get("actor_id") or "") for p in existing if not p.get("token_id")
+        }
         for token_id in (token_ids or [])[:64]:
             if token_id in existing_token_ids:
                 continue
@@ -183,22 +198,39 @@ class TurnOrderService:
             if token is None or not token.get("actor_id"):
                 continue
             actor = self.actors.get(str(token.get("actor_id")))
-            if actor is None or actor.get("campaign_id") != campaign_id or actor.get("status") != "active":
+            if (
+                actor is None
+                or actor.get("campaign_id") != campaign_id
+                or actor.get("status") != "active"
+            ):
                 continue
             self.encounters.add_participant(
                 combat_id=combat["id"],
                 actor_id=actor["id"],
                 token_id=token_id,
-                name=str((token.get("overrides") or {}).get("name") or token.get("name") or actor.get("name") or "Actor"),
+                name=str(
+                    (token.get("overrides") or {}).get("name")
+                    or token.get("name")
+                    or actor.get("name")
+                    or "Actor"
+                ),
                 visible_to_players=not bool(token.get("hidden")),
                 group_key="players" if actor.get("type") == "character" else "monsters",
-                metadata={"actorType": actor.get("type"), "systemId": actor.get("system_id"), "tokenId": token_id},
+                metadata={
+                    "actorType": actor.get("type"),
+                    "systemId": actor.get("system_id"),
+                    "tokenId": token_id,
+                },
             )
             existing_token_ids.add(token_id)
             existing_actor_ids.add(actor["id"])
         for actor_id in actor_ids[:64]:
             actor = self.actors.get(actor_id)
-            if actor is None or actor.get("campaign_id") != campaign_id or actor.get("status") != "active":
+            if (
+                actor is None
+                or actor.get("campaign_id") != campaign_id
+                or actor.get("status") != "active"
+            ):
                 continue
             if actor_id in existing_actor_ids:
                 continue
@@ -211,17 +243,30 @@ class TurnOrderService:
                 group_key="players" if actor.get("type") == "character" else "monsters",
                 metadata={"actorType": actor.get("type"), "systemId": actor.get("system_id")},
             )
-        self._record_phase_event(combat, "combat.participant.added", {"actor_ids": actor_ids, "token_ids": token_ids or []})
+        self._record_phase_event(
+            combat,
+            "combat.participant.added",
+            {"actor_ids": actor_ids, "token_ids": token_ids or []},
+        )
         return self.get_state(campaign_id=campaign_id, user_id=user_id)
 
-    def remove_participant(self, *, campaign_id: str, user_id: str, participant_id: str) -> CombatResult:
+    def remove_participant(
+        self, *, campaign_id: str, user_id: str, participant_id: str
+    ) -> CombatResult:
         if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
             return CombatResult(success=False, error_key="game.combat.errors.gm_required")
         combat = self.encounters.get_active(campaign_id=campaign_id)
         if combat is None:
             return CombatResult(success=False, error_key="game.combat.errors.inactive")
         before = self.encounters.list_participants(combat_id=combat["id"])
-        removed_index = next((index for index, item in enumerate(before) if str(item.get("id") or "") == participant_id), None)
+        removed_index = next(
+            (
+                index
+                for index, item in enumerate(before)
+                if str(item.get("id") or "") == participant_id
+            ),
+            None,
+        )
         self.encounters.remove_participant(combat_id=combat["id"], participant_id=participant_id)
         after = self.encounters.list_participants(combat_id=combat["id"])
         current_index = int(combat.get("turn_index") or 0)
@@ -230,15 +275,24 @@ class TurnOrderService:
         max_index = max(0, len(after) - 1)
         next_index = min(max(0, current_index), max_index)
         if next_index != int(combat.get("turn_index") or 0):
-            combat = self.encounters.update_state(combat_id=combat["id"], turn_index=next_index, phase="turn.start") or combat
-        self._record_phase_event(combat, "combat.participant.removed", {"participant_id": participant_id})
+            combat = (
+                self.encounters.update_state(
+                    combat_id=combat["id"], turn_index=next_index, phase="turn.start"
+                )
+                or combat
+            )
+        self._record_phase_event(
+            combat, "combat.participant.removed", {"participant_id": participant_id}
+        )
         return self.get_state(campaign_id=campaign_id, user_id=user_id)
 
     def roll_initiative(self, *, campaign_id: str, user_id: str) -> CombatResult:
         return self._roll_initiative_scope(campaign_id=campaign_id, user_id=user_id, scope="all")
 
     def roll_monster_initiative(self, *, campaign_id: str, user_id: str) -> CombatResult:
-        return self._roll_initiative_scope(campaign_id=campaign_id, user_id=user_id, scope="monsters")
+        return self._roll_initiative_scope(
+            campaign_id=campaign_id, user_id=user_id, scope="monsters"
+        )
 
     def _roll_initiative_scope(self, *, campaign_id: str, user_id: str, scope: str) -> CombatResult:
         if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
@@ -247,7 +301,10 @@ class TurnOrderService:
         if not state.success or state.combat is None:
             return CombatResult(success=False, error_key="game.combat.errors.inactive")
         participants = self.encounters.list_participants(combat_id=state.combat["id"])
-        actors_by_id = {actor["id"]: actor for actor in self.actors.list_active_for_campaign(campaign_id=campaign_id)}
+        actors_by_id = {
+            actor["id"]: actor
+            for actor in self.actors.list_active_for_campaign(campaign_id=campaign_id)
+        }
         if scope == "monsters":
             participants_to_roll = [
                 participant
@@ -263,8 +320,16 @@ class TurnOrderService:
                 {"scope": scope, "reason": "no_eligible_participants"},
             )
             return self.get_state(campaign_id=campaign_id, user_id=user_id)
-        token_ids = [str(participant.get("token_id") or "") for participant in participants_to_roll if participant.get("token_id")]
-        tokens_by_id = {token_id: token for token_id in token_ids if (token := self.tokens.get_by_id(token_id)) is not None}
+        token_ids = [
+            str(participant.get("token_id") or "")
+            for participant in participants_to_roll
+            if participant.get("token_id")
+        ]
+        tokens_by_id = {
+            token_id: token
+            for token_id in token_ids
+            if (token := self.tokens.get_by_id(token_id)) is not None
+        }
         rolled = self.strategies.roll_order(
             combat_config=state.config,
             participants=participants_to_roll,
@@ -280,7 +345,9 @@ class TurnOrderService:
                 initiative_data={**item.data, "scope": scope},
                 sort_key=item.sort_key,
             )
-        self.encounters.update_state(combat_id=state.combat["id"], turn_index=0, phase="round.start")
+        self.encounters.update_state(
+            combat_id=state.combat["id"], turn_index=0, phase="round.start"
+        )
         self._record_phase_event(
             state.combat,
             "combat.initiative.rolled",
@@ -292,26 +359,46 @@ class TurnOrderService:
         )
         return self.get_state(campaign_id=campaign_id, user_id=user_id)
 
-    def roll_participant_initiative(self, *, campaign_id: str, user_id: str, participant_id: str) -> CombatResult:
+    def roll_participant_initiative(
+        self, *, campaign_id: str, user_id: str, participant_id: str
+    ) -> CombatResult:
         if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
             return CombatResult(success=False, error_key="game.combat.errors.gm_required")
         state = self.get_state(campaign_id=campaign_id, user_id=user_id)
         if not state.success or state.combat is None:
             return CombatResult(success=False, error_key="game.combat.errors.inactive")
         participants = self.encounters.list_participants(combat_id=state.combat["id"])
-        participant = next((item for item in participants if str(item.get("id") or "") == participant_id), None)
+        participant = next(
+            (item for item in participants if str(item.get("id") or "") == participant_id), None
+        )
         if participant is None:
             return CombatResult(success=False, error_key="game.combat.errors.participant_not_found")
 
-        actor = self.actors.get(str(participant.get("actor_id") or "")) if participant.get("actor_id") else None
-        if actor is None or actor.get("campaign_id") != campaign_id or actor.get("status") != "active":
+        actor = (
+            self.actors.get(str(participant.get("actor_id") or ""))
+            if participant.get("actor_id")
+            else None
+        )
+        if (
+            actor is None
+            or actor.get("campaign_id") != campaign_id
+            or actor.get("status") != "active"
+        ):
             return CombatResult(success=False, error_key="game.combat.errors.participant_not_found")
 
-        token = self.tokens.get_by_id(str(participant.get("token_id") or "")) if participant.get("token_id") else None
+        token = (
+            self.tokens.get_by_id(str(participant.get("token_id") or ""))
+            if participant.get("token_id")
+            else None
+        )
         if token is not None:
             scene = self.scenes.get_by_id(str(token.get("scene_id") or ""))
             scene_campaign_id = scene["campaign_id"] if scene is not None else None
-            if scene is None or scene_campaign_id != campaign_id or token.get("actor_id") != actor["id"]:
+            if (
+                scene is None
+                or scene_campaign_id != campaign_id
+                or token.get("actor_id") != actor["id"]
+            ):
                 token = None
 
         rolled = self.strategies.roll_participant_initiative(
@@ -322,7 +409,9 @@ class TurnOrderService:
             campaign_id=campaign_id,
         )
         if rolled is None:
-            return CombatResult(success=False, error_key="game.combat.errors.initiative_unavailable")
+            return CombatResult(
+                success=False, error_key="game.combat.errors.initiative_unavailable"
+            )
         self.encounters.update_participant_order(
             participant_id=rolled.participant_id,
             initiative_label=rolled.label,
@@ -333,7 +422,11 @@ class TurnOrderService:
         self._record_phase_event(
             state.combat,
             "combat.initiative.participant_rolled",
-            {"participant_id": participant_id, "actor_id": actor["id"], "token_id": participant.get("token_id")},
+            {
+                "participant_id": participant_id,
+                "actor_id": actor["id"],
+                "token_id": participant.get("token_id"),
+            },
         )
         return self.get_state(campaign_id=campaign_id, user_id=user_id)
 
@@ -347,7 +440,9 @@ class TurnOrderService:
         if not participants:
             return state
         previous = _current_participant(state.combat, participants)
-        self._record_phase_event(state.combat, "turn.end", {"participant_id": previous.get("id") if previous else None})
+        self._record_phase_event(
+            state.combat, "turn.end", {"participant_id": previous.get("id") if previous else None}
+        )
         next_index = int(state.combat.get("turn_index") or 0) + 1
         next_round = int(state.combat.get("round_number") or 1)
         if next_index >= len(participants):
@@ -355,21 +450,32 @@ class TurnOrderService:
             next_index = 0
             next_round += 1
             self._record_phase_event(state.combat, "round.start", {"round": next_round})
-        updated = self.encounters.update_state(combat_id=state.combat["id"], round_number=next_round, turn_index=next_index, phase="turn.start")
+        updated = self.encounters.update_state(
+            combat_id=state.combat["id"],
+            round_number=next_round,
+            turn_index=next_index,
+            phase="turn.start",
+        )
         ticks: list[dict] = []
         updated_actors: list[dict] = []
         if updated is not None:
             current = _current_participant(updated, participants)
-                                                                                
+
             actor_update, ticks = self._tick_actor_periodics(
-                campaign_id=campaign_id, actor_id=str(current.get("actor_id") or ""), resources_cache={}
+                campaign_id=campaign_id,
+                actor_id=str(current.get("actor_id") or ""),
+                resources_cache={},
             )
             if actor_update is not None:
                 updated_actors.append(actor_update)
-            self._record_phase_event(updated, "turn.start", {
-                "participant_id": current.get("id") if current else None,
-                "effect_ticks": ticks,
-            })
+            self._record_phase_event(
+                updated,
+                "turn.start",
+                {
+                    "participant_id": current.get("id") if current else None,
+                    "effect_ticks": ticks,
+                },
+            )
         refreshed = self.get_state(campaign_id=campaign_id, user_id=user_id)
         return CombatResult(
             success=refreshed.success,
@@ -428,12 +534,14 @@ class TurnOrderService:
             return start
         self._record_phase_event(state.combat, "round.end", {"round": state.round_number})
         next_round = state.round_number + 1
-                                                                           
-                                                                            
-                                                                         
+
         updated, expired = self._tick_round_effects(campaign_id=campaign_id)
-        self.encounters.update_state(combat_id=state.combat["id"], round_number=next_round, turn_index=0, phase="round.start")
-        self._record_phase_event(state.combat, "round.start", {"round": next_round, "expired_effects": expired})
+        self.encounters.update_state(
+            combat_id=state.combat["id"], round_number=next_round, turn_index=0, phase="round.start"
+        )
+        self._record_phase_event(
+            state.combat, "round.start", {"round": next_round, "expired_effects": expired}
+        )
         refreshed = self.get_state(campaign_id=campaign_id, user_id=user_id)
         return CombatResult(
             success=refreshed.success,
@@ -454,10 +562,16 @@ class TurnOrderService:
         if state.combat is None:
             return CombatResult(success=False, error_key="game.combat.errors.inactive")
         max_index = max(0, len(state.participants) - 1)
-        self.encounters.update_state(combat_id=state.combat["id"], turn_index=max(0, min(max_index, int(turn_index))), phase="turn.start")
+        self.encounters.update_state(
+            combat_id=state.combat["id"],
+            turn_index=max(0, min(max_index, int(turn_index))),
+            phase="turn.start",
+        )
         return self.get_state(campaign_id=campaign_id, user_id=user_id)
 
-    def record_actor_activity(self, *, campaign_id: str, actor_id: str, activity_type: str, payload: dict | None = None) -> None:
+    def record_actor_activity(
+        self, *, campaign_id: str, actor_id: str, activity_type: str, payload: dict | None = None
+    ) -> None:
         combat = self.encounters.get_active(campaign_id=campaign_id)
         if combat is None:
             return
@@ -506,7 +620,6 @@ class TurnOrderService:
                 sort_key=value,
             )
 
-
     def _tick_round_effects(self, *, campaign_id: str) -> tuple[list[dict], list[dict]]:
         """Count down round-based effect durations for every actor (no damage)."""
         updated: list[dict] = []
@@ -526,17 +639,25 @@ class TurnOrderService:
                 did_change, did_expire = _tick_effect(effect)
                 changed = changed or did_change
                 if did_expire:
-                    expired.append({
-                        "actor_id": actor["id"],
-                        "effect_id": str(effect.get("id") or ""),
-                        "name": str(effect.get("name") or ""),
-                    })
+                    expired.append(
+                        {
+                            "actor_id": actor["id"],
+                            "effect_id": str(effect.get("id") or ""),
+                            "name": str(effect.get("name") or ""),
+                        }
+                    )
             if changed:
                 version = int(envelope.get("version", 1)) + 1
                 self.storage.write_actor(
-                    system_id=actor["system_id"], campaign_id=campaign_id, actor_id=actor["id"], version=version, data=data
+                    system_id=actor["system_id"],
+                    campaign_id=campaign_id,
+                    actor_id=actor["id"],
+                    version=version,
+                    data=data,
                 )
-                updated.append({"actor_id": actor["id"], "system_id": actor["system_id"], "version": version})
+                updated.append(
+                    {"actor_id": actor["id"], "system_id": actor["system_id"], "version": version}
+                )
         return updated, expired
 
     def _tick_actor_periodics(
@@ -570,25 +691,33 @@ class TurnOrderService:
             if resolved is None:
                 continue
             value_path, max_path, floor = resolved
-            value_after = apply_resource_delta(data, value_path, max_path, floor, int(entry["delta"]))
+            value_after = apply_resource_delta(
+                data, value_path, max_path, floor, int(entry["delta"])
+            )
             if value_after is None:
                 continue
-            ticks.append({
-                "actor_id": actor_id,
-                "actor_name": actor["name"],
-                "effect_id": entry["effectId"],
-                "name": entry["effectName"],
-                "operation": entry["operation"],
-                "amount": entry["amount"],
-                "damage_type": entry["damageType"],
-                "resource_path": value_path,
-                "value_after": value_after,
-            })
+            ticks.append(
+                {
+                    "actor_id": actor_id,
+                    "actor_name": actor["name"],
+                    "effect_id": entry["effectId"],
+                    "name": entry["effectName"],
+                    "operation": entry["operation"],
+                    "amount": entry["amount"],
+                    "damage_type": entry["damageType"],
+                    "resource_path": value_path,
+                    "value_after": value_after,
+                }
+            )
         if not ticks:
             return None, []
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(
-            system_id=system_id, campaign_id=campaign_id, actor_id=actor_id, version=version, data=data
+            system_id=system_id,
+            campaign_id=campaign_id,
+            actor_id=actor_id,
+            version=version,
+            data=data,
         )
         return {"actor_id": actor_id, "system_id": system_id, "version": version}, ticks
 
@@ -604,12 +733,32 @@ class TurnOrderService:
         return role in {PlayerRole.GM.value, PlayerRole.ASSISTANT_GM.value}
 
     def _visible_participants(self, *, combat: dict, user_id: str) -> list[dict]:
-        include_hidden = self._can_manage(campaign_id=str(combat.get("campaign_id")), user_id=user_id)
-        participants = self.encounters.list_participants(combat_id=combat["id"], include_hidden=include_hidden)
-        actor_ids = {str(participant.get("actor_id") or "") for participant in participants if participant.get("actor_id")}
-        token_ids = {str(participant.get("token_id") or "") for participant in participants if participant.get("token_id")}
-        actors_by_id = {actor_id: actor for actor_id in actor_ids if (actor := self.actors.get(actor_id)) is not None}
-        tokens_by_id = {token_id: token for token_id in token_ids if (token := self.tokens.get_by_id(token_id)) is not None}
+        include_hidden = self._can_manage(
+            campaign_id=str(combat.get("campaign_id")), user_id=user_id
+        )
+        participants = self.encounters.list_participants(
+            combat_id=combat["id"], include_hidden=include_hidden
+        )
+        actor_ids = {
+            str(participant.get("actor_id") or "")
+            for participant in participants
+            if participant.get("actor_id")
+        }
+        token_ids = {
+            str(participant.get("token_id") or "")
+            for participant in participants
+            if participant.get("token_id")
+        }
+        actors_by_id = {
+            actor_id: actor
+            for actor_id in actor_ids
+            if (actor := self.actors.get(actor_id)) is not None
+        }
+        tokens_by_id = {
+            token_id: token
+            for token_id in token_ids
+            if (token := self.tokens.get_by_id(token_id)) is not None
+        }
         conditions_by_token = self.conditions.list_by_tokens(list(token_ids))
         projections_by_actor: dict[str, dict] = {}
 
@@ -624,7 +773,9 @@ class TurnOrderService:
             participant["is_active_turn"] = is_current
             participant["is_next"] = is_next
             participant["has_acted"] = index < current_index
-            participant["turn_status"] = "current" if is_current else ("acted" if index < current_index else "waiting")
+            participant["turn_status"] = (
+                "current" if is_current else ("acted" if index < current_index else "waiting")
+            )
             participant["resources"] = {}
             participant["conditions_count"] = 0
             participant["effects_count"] = 0
@@ -639,8 +790,12 @@ class TurnOrderService:
 
             token_asset_url = ""
             if token is not None:
-                overrides = token.get("overrides") if isinstance(token.get("overrides"), dict) else {}
-                token_asset_url = str(token.get("token_asset_url") or overrides.get("token_asset_url") or "")
+                overrides = (
+                    token.get("overrides") if isinstance(token.get("overrides"), dict) else {}
+                )
+                token_asset_url = str(
+                    token.get("token_asset_url") or overrides.get("token_asset_url") or ""
+                )
 
             projection = {}
             token_view = None
@@ -659,18 +814,32 @@ class TurnOrderService:
                 )
                 participant["resources"] = _participant_resources(token_view.get("bars"))
                 participant["conditions_count"] = len(token_conditions)
-                participant["effects_count"] = len(token_view.get("effects") or []) if isinstance(token_view.get("effects"), list) else 0
+                participant["effects_count"] = (
+                    len(token_view.get("effects") or [])
+                    if isinstance(token_view.get("effects"), list)
+                    else 0
+                )
             else:
-                participant["resources"] = _participant_resources(projection.get("bars") if isinstance(projection, dict) else {})
-                participant["effects_count"] = len(projection.get("effects") or []) if isinstance(projection.get("effects"), list) else 0
+                participant["resources"] = _participant_resources(
+                    projection.get("bars") if isinstance(projection, dict) else {}
+                )
+                participant["effects_count"] = (
+                    len(projection.get("effects") or [])
+                    if isinstance(projection.get("effects"), list)
+                    else 0
+                )
 
             actor_token_url = actor_token_image_url(actor) if actor is not None else None
             actor_portrait_url = actor_image_url(actor, "portrait") if actor is not None else None
-            participant["portrait_url"] = token_asset_url or actor_token_url or actor_portrait_url or ""
+            participant["portrait_url"] = (
+                token_asset_url or actor_token_url or actor_portrait_url or ""
+            )
             participant["token_asset_url"] = token_asset_url or actor_token_url or ""
         return participants
 
-    def _record_phase_event(self, combat: dict, event_type: str, payload: dict | None = None) -> None:
+    def _record_phase_event(
+        self, combat: dict, event_type: str, payload: dict | None = None
+    ) -> None:
         self.encounters.add_event(
             combat_id=combat["id"],
             round_number=int(combat.get("round_number") or 1),
@@ -680,7 +849,6 @@ class TurnOrderService:
             event_type=event_type,
             payload=payload or {},
         )
-
 
 
 def _participant_resources(bars: Any) -> dict:

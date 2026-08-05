@@ -60,7 +60,10 @@ async def send_chat_message(
         if result.success:
             return Response(content={"ok": True}, status_code=200)
         return Response(
-            content={"ok": False, "error_key": result.error_key or "game.chat.errors.empty_message"},
+            content={
+                "ok": False,
+                "error_key": result.error_key or "game.chat.errors.empty_message",
+            },
             status_code=400,
         )
 

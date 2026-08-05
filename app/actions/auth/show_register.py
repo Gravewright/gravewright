@@ -11,7 +11,9 @@ from app.helpers.view import view_context
 
 
 @get("/register")
-async def show_register(cookies: dict[str, str], current_user: Row | None, auth_service: AuthService) -> Redirect | Template:
+async def show_register(
+    cookies: dict[str, str], current_user: Row | None, auth_service: AuthService
+) -> Redirect | Template:
     if current_user is not None:
         return Redirect(path="/inside")
 

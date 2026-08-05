@@ -36,7 +36,12 @@ def upgrade() -> None:
         sa.Column("status", sa.String(length=191), nullable=False, server_default="installed"),
         sa.Column("package_dir", sa.Text(), nullable=False),
         sa.Column("manifest_json", sa.Text(), nullable=False),
-        sa.Column("compatibility_status", sa.String(length=191), nullable=False, server_default="unverified"),
+        sa.Column(
+            "compatibility_status",
+            sa.String(length=191),
+            nullable=False,
+            server_default="unverified",
+        ),
         sa.Column("validation_errors_json", sa.Text(), nullable=False, server_default="[]"),
         sa.Column("package_sha256", sa.String(length=64), nullable=True),
         sa.Column("installed_by_user_id", sa.String(length=64), nullable=True),
@@ -65,7 +70,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("campaign_id", "package_id"),
     )
     op.create_index("idx_campaign_packages_campaign", "campaign_packages", ["campaign_id"])
-    op.create_index("idx_campaign_packages_role", "campaign_packages", ["campaign_id", "activation_role"])
+    op.create_index(
+        "idx_campaign_packages_role", "campaign_packages", ["campaign_id", "activation_role"]
+    )
 
     op.create_table(
         "package_settings",
@@ -96,8 +103,12 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["imported_by_user_id"], ["users.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index("idx_package_content_imports_campaign", "package_content_imports", ["campaign_id"])
-    op.create_index("idx_package_content_imports_package", "package_content_imports", ["package_id"])
+    op.create_index(
+        "idx_package_content_imports_campaign", "package_content_imports", ["campaign_id"]
+    )
+    op.create_index(
+        "idx_package_content_imports_package", "package_content_imports", ["package_id"]
+    )
 
 
 def downgrade() -> None:

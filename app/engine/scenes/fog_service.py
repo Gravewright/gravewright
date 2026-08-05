@@ -13,8 +13,6 @@ from app.domain.permissions.permissions import TablePermission
 from app.persistence.repositories.scene_repository import SceneRepository
 
 
-                                                                               
-                                                                           
 MAX_FOG_TOTAL_OPS = 20_000
 
 
@@ -219,9 +217,6 @@ class FogService:
         existing = _load_ops(scene["fog_ops_json"])
         new_dicts = [_op_to_dict(op) for op in ops]
 
-                                                                               
-                                                                              
-                                                                         
         if len(existing) + len(new_dicts) > MAX_FOG_TOTAL_OPS:
             return FogServiceResult(success=False, error_key="game.fog.errors.too_many_ops")
 
@@ -230,8 +225,6 @@ class FogService:
         version = current_version + 1
 
         if expected_version is None:
-                                                                                  
-                              
             self.scenes.write_fog(
                 scene_id=scene_id,
                 enabled=True,
@@ -240,8 +233,6 @@ class FogService:
                 version=version,
             )
         else:
-                                                                              
-                                                                                  
             committed = self.scenes.write_fog_ops_cas(
                 scene_id=scene_id,
                 baseline=baseline,
@@ -250,9 +241,7 @@ class FogService:
                 new_version=version,
             )
             if not committed:
-                return FogServiceResult(
-                    success=False, error_key="game.fog.errors.version_conflict"
-                )
+                return FogServiceResult(success=False, error_key="game.fog.errors.version_conflict")
 
         return FogServiceResult(
             success=True,

@@ -97,7 +97,9 @@ class SceneChunkRepository:
 
     def delete_by_layer(self, layer_id: str) -> None:
         with engine_begin() as conn:
-            conn.execute(delete(scene_chunks_table).where(scene_chunks_table.c.layer_id == layer_id))
+            conn.execute(
+                delete(scene_chunks_table).where(scene_chunks_table.c.layer_id == layer_id)
+            )
 
     def record_write(
         self,
@@ -140,9 +142,7 @@ class SceneChunkRepository:
                     )
                 )
             else:
-                stmt = update(scene_chunks_table).where(
-                    scene_chunks_table.c.id == existing["id"]
-                )
+                stmt = update(scene_chunks_table).where(scene_chunks_table.c.id == existing["id"])
                 if expected_version is not None:
                     stmt = stmt.where(scene_chunks_table.c.version == expected_version)
                 result = conn.execute(
@@ -171,7 +171,10 @@ class SceneChunkRepository:
         if not coords:
             return []
         coord_filter = or_(
-            *(and_(scene_chunks_table.c.cx == cx, scene_chunks_table.c.cy == cy) for cx, cy in coords)
+            *(
+                and_(scene_chunks_table.c.cx == cx, scene_chunks_table.c.cy == cy)
+                for cx, cy in coords
+            )
         )
         with engine_connect() as conn:
             return all_dicts(

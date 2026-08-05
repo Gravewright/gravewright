@@ -37,14 +37,14 @@ class FormulaError(Exception):
 
 @dataclass
 class _Tok:
-    kind: str                                                                  
+    kind: str
     value: object = None
 
 
 @dataclass
 class FormulaResult:
     total: float
-    groups: list[dict] = field(default_factory=list)                                   
+    groups: list[dict] = field(default_factory=list)
 
     @property
     def int_total(self) -> int:
@@ -78,8 +78,7 @@ def _tokenize(text: str) -> list[_Tok]:
                 j += 1
                 while j < n and text[j].isdigit():
                     j += 1
-                                                                           
-                                                                                     
+
             if is_int and j < n and text[j] == "d" and j + 1 < n and text[j + 1].isdigit():
                 count = int(text[i:j])
                 k = j + 1

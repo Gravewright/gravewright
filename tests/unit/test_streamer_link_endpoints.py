@@ -25,17 +25,14 @@ def test_generate_and_consume_streamer_link(db):
 
     token = body["url"].split("/stream/", 1)[1]
 
-                                                          
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as viewer:
         resp = viewer.get(f"/stream/{token}", follow_redirects=False)
         assert resp.status_code in (301, 302, 303, 307, 308)
         assert resp.headers["location"] == "/game"
 
-                                                                            
         page = viewer.get("/game")
         assert page.status_code == 200
 
-                                                         
     members = CampaignRepository().list_members(campaign_id=campaign_id)
     roles = {m["role"] for m in members}
     assert PlayerRole.STREAMER.value in roles

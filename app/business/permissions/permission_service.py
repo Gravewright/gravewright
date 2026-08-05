@@ -34,7 +34,9 @@ class PermissionService:
         campaign_id: str,
         permission: TablePermission | str,
     ) -> bool:
-        permission_key = str(permission.value if isinstance(permission, TablePermission) else permission)
+        permission_key = str(
+            permission.value if isinstance(permission, TablePermission) else permission
+        )
 
         member_role = self.campaigns.get_member_role(
             campaign_id=campaign_id,
@@ -135,12 +137,10 @@ class PermissionService:
                 "roles": [],
             }
 
-                                                                           
         all_role_effects = self.permissions.list_all_role_effects_for_campaign(
             campaign_id=campaign_id,
         )
 
-                                                              
         user_effects = self.permissions.list_subject_effects(
             campaign_id=campaign_id,
             subject_type=PermissionSubjectType.USER,

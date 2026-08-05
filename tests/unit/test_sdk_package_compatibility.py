@@ -44,10 +44,7 @@ def test_maximum_blocks_new_sdk():
 
 def test_verified_exact_match_is_compatible():
     assert _status(verified="1.0.0", engine="1.0.0") == COMPAT_COMPATIBLE
-    assert (
-        _status(verified="1.0.0-rc.1", engine="1.0.0-rc.1", maximum="1.x")
-        == COMPAT_COMPATIBLE
-    )
+    assert _status(verified="1.0.0-rc.1", engine="1.0.0-rc.1", maximum="1.x") == COMPAT_COMPATIBLE
 
 
 def test_in_range_but_not_verified_is_unverified():
@@ -65,15 +62,11 @@ def test_wildcard_major_range():
 
 
 def test_incompatible_version_returns_stable_error_code():
-    too_low = compatibility_error(
-        minimum="1.2.0", verified="", maximum="", engine_version="1.1.0"
-    )
+    too_low = compatibility_error(minimum="1.2.0", verified="", maximum="", engine_version="1.1.0")
     assert too_low is not None
     assert too_low.code == "sdk.compatibility.version_too_low"
 
-    too_high = compatibility_error(
-        minimum="", verified="", maximum="1.0.0", engine_version="2.0.0"
-    )
+    too_high = compatibility_error(minimum="", verified="", maximum="1.0.0", engine_version="2.0.0")
     assert too_high is not None
     assert too_high.code == "sdk.compatibility.version_too_high"
 

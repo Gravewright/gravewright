@@ -23,8 +23,16 @@ def _script(checkbox_answers: dict, choose_answer=None):
     return fake_checkbox, fake_choose
 
 
-def _ruleset_script(actor_types, item_types, mechanic, *, create_items="yes",
-                    biography="yes", notes="yes", sheet_mode="html"):
+def _ruleset_script(
+    actor_types,
+    item_types,
+    mechanic,
+    *,
+    create_items="yes",
+    biography="yes",
+    notes="yes",
+    sheet_mode="html",
+):
     def fake_checkbox(title, options, *, preselected=None):
         if "actor sheet types" in title:
             return actor_types
@@ -51,7 +59,9 @@ def _ruleset_script(actor_types, item_types, mechanic, *, create_items="yes",
 
 
 def test_wizard_builds_ruleset_intent(monkeypatch):
-    cb, ch = _ruleset_script(["character", "npc"], ["weapon", "spell"], "d20-attribute-modifier-skill")
+    cb, ch = _ruleset_script(
+        ["character", "npc"], ["weapon", "spell"], "d20-attribute-modifier-skill"
+    )
     monkeypatch.setattr(wizard, "_checkbox", cb)
     monkeypatch.setattr(wizard, "_choose", ch)
 
@@ -68,6 +78,7 @@ def test_wizard_builds_ruleset_intent(monkeypatch):
 
 def test_wizard_collects_fields_for_each_item_type(monkeypatch):
     _cb, ch = _ruleset_script(["character"], ["equipment"], "none")
+
     def checkbox(title, options, *, preselected=None):
         if "actor sheet types" in title:
             return ["character"]
@@ -76,6 +87,7 @@ def test_wizard_collects_fields_for_each_item_type(monkeypatch):
         if "fields should equipment" in title:
             return ["weight", "cost", "damage", "description"]
         return list(preselected or [])
+
     monkeypatch.setattr(wizard, "_checkbox", checkbox)
     monkeypatch.setattr(wizard, "_choose", ch)
 
@@ -90,7 +102,8 @@ def test_item_decision_tree_only_asks_for_selected_fields(monkeypatch):
     answers = iter(["2.5", "75", "2d8 + 3"])
     monkeypatch.setattr(wizard, "_interactive", lambda: True)
     monkeypatch.setattr(
-        wizard, "_ask_text",
+        wizard,
+        "_ask_text",
         lambda label, default=None: prompts.append(label) or next(answers),
     )
     monkeypatch.setattr(wizard, "_choose", lambda title, options, *, default=0: "yes")
@@ -118,12 +131,14 @@ def test_armor_decision_tree_configures_armor_and_equipped(monkeypatch):
 
 def test_wizard_collects_fields_for_each_actor_type(monkeypatch):
     _cb, ch = _ruleset_script(["character"], [], "none", create_items="no")
+
     def checkbox(title, options, *, preselected=None):
         if "actor sheet types" in title:
             return ["character"]
         if "fields should character" in title:
             return ["health", "health-max", "mana", "description"]
         return list(preselected or [])
+
     monkeypatch.setattr(wizard, "_checkbox", checkbox)
     monkeypatch.setattr(wizard, "_choose", ch)
 
@@ -134,8 +149,9 @@ def test_wizard_collects_fields_for_each_actor_type(monkeypatch):
 
 
 def test_wizard_biography_and_notes_questions(monkeypatch):
-    cb, ch = _ruleset_script(["character"], [], "none", create_items="no",
-                             biography="yes", notes="no")
+    cb, ch = _ruleset_script(
+        ["character"], [], "none", create_items="no", biography="yes", notes="no"
+    )
     monkeypatch.setattr(wizard, "_checkbox", cb)
     monkeypatch.setattr(wizard, "_choose", ch)
     result = wizard.run_new_wizard("ruleset", default_name="My RPG")
@@ -144,9 +160,7 @@ def test_wizard_biography_and_notes_questions(monkeypatch):
 
 
 def test_wizard_defaults_to_declarative_beginner_mode(monkeypatch):
-    cb, ch = _ruleset_script(
-        ["character"], [], "none", create_items="no", sheet_mode="declarative"
-    )
+    cb, ch = _ruleset_script(["character"], [], "none", create_items="no", sheet_mode="declarative")
     monkeypatch.setattr(wizard, "_checkbox", cb)
     monkeypatch.setattr(wizard, "_choose", ch)
     result = wizard.run_new_wizard("ruleset", default_name="My RPG")
@@ -270,9 +284,7 @@ def test_wizard_assets_kind(monkeypatch):
 
 def test_text_checkbox_toggles_by_number(monkeypatch):
     monkeypatch.setattr(builtins, "input", lambda _prompt="": "2 3")
-    chosen = wizard._text_checkbox(
-        "pick", [("a", "A"), ("b", "B"), ("c", "C")], preselected=set()
-    )
+    chosen = wizard._text_checkbox("pick", [("a", "A"), ("b", "B"), ("c", "C")], preselected=set())
     assert chosen == ["b", "c"]
 
 

@@ -47,7 +47,9 @@ async def _emit_item(event: TransportEvent, result: ItemResult, *, user_id: str)
 
 
 @post("/game/item")
-async def create_item(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]]:
+async def create_item(
+    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = item_service.create_item(
@@ -68,7 +70,9 @@ async def create_item(request: Request, cookies: dict[str, str], current_user: R
 
 
 @post("/game/item/update-core")
-async def update_item_core(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]]:
+async def update_item_core(
+    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = item_service.update_core(
@@ -85,7 +89,9 @@ async def update_item_core(request: Request, cookies: dict[str, str], current_us
 
 
 @post("/game/item/delete")
-async def delete_item(request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService) -> Response[dict[str, Any]]:
+async def delete_item(
+    request: Request, cookies: dict[str, str], current_user: Row, item_service: ItemService
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = item_service.delete_item(item_id=str(body.get("item_id", "")), user_id=user["id"])
@@ -97,7 +103,10 @@ async def delete_item(request: Request, cookies: dict[str, str], current_user: R
 
 @get("/game/item/sheet/modal/{item_id:str}")
 async def show_item_sheet_modal(
-    item_id: FromPath[str], cookies: dict[str, str], current_user: Row, item_sheet_service: ItemSheetService
+    item_id: FromPath[str],
+    cookies: dict[str, str],
+    current_user: Row,
+    item_sheet_service: ItemSheetService,
 ) -> Redirect | Template:
     user = current_user
     base_context = view_context(cookies)
@@ -123,7 +132,11 @@ async def show_item_sheet_modal(
 
 @get("/game/item/{item_id:str}/sheet-bundle")
 async def get_item_sheet_bundle(
-    item_id: FromPath[str], request: Request, cookies: dict[str, str], current_user: Row, item_sheet_service: ItemSheetService
+    item_id: FromPath[str],
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    item_sheet_service: ItemSheetService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     locale = view_context(cookies)["locale"]
@@ -135,7 +148,11 @@ async def get_item_sheet_bundle(
 
 @get("/game/item/{item_id:str}/sheet-data")
 async def get_item_sheet_data(
-    item_id: FromPath[str], request: Request, cookies: dict[str, str], current_user: Row, item_sheet_data_service: ItemSheetDataService
+    item_id: FromPath[str],
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    item_sheet_data_service: ItemSheetDataService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     result = item_sheet_data_service.get_data(item_id=item_id, user_id=user["id"])
@@ -170,7 +187,12 @@ async def _emit_item_sheet_data(result: ItemSheetDataResult, *, user_id: str) ->
 
 
 @post("/game/item/sheet-data/patch")
-async def patch_item_sheet_data(request: Request, cookies: dict[str, str], current_user: Row, item_sheet_data_service: ItemSheetDataService) -> Response[dict[str, Any]]:
+async def patch_item_sheet_data(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    item_sheet_data_service: ItemSheetDataService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     patch = body.get("patch")
@@ -183,13 +205,22 @@ async def patch_item_sheet_data(request: Request, cookies: dict[str, str], curre
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
     return Response(
-        {"item_id": result.item_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "item_id": result.item_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
 @post("/game/item/sheet-data/set")
-async def set_item_sheet_data(request: Request, cookies: dict[str, str], current_user: Row, item_sheet_data_service: ItemSheetDataService) -> Response[dict[str, Any]]:
+async def set_item_sheet_data(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    item_sheet_data_service: ItemSheetDataService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     data = body.get("data")
@@ -205,7 +236,12 @@ async def set_item_sheet_data(request: Request, cookies: dict[str, str], current
 
 
 @post("/game/item/content/import")
-async def import_item_content(request: Request, cookies: dict[str, str], current_user: Row, content_import_service: ContentImportService) -> Response[dict[str, Any]]:
+async def import_item_content(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    content_import_service: ContentImportService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = content_import_service.import_item_entry(

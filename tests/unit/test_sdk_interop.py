@@ -19,7 +19,9 @@ from app.engine.sdk.package_interop import validate_interop_manifest
 from app.engine.sdk.package_loader import load_package
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-RUNTIME = (PROJECT_ROOT / "static" / "js" / "sdk" / "gravewright-sdk.js").read_text(encoding="utf-8")
+RUNTIME = (PROJECT_ROOT / "static" / "js" / "sdk" / "gravewright-sdk.js").read_text(
+    encoding="utf-8"
+)
 
 
 def _manifest(interop: dict, *, package_id: str = "my-addon") -> dict:
@@ -273,7 +275,7 @@ def test_bus_request_returns_structured_result_shape():
     body = _function_body(RUNTIME, "busRequest")
     # BusResult: { ok: true, value } | { ok: false, error: { code, message } }.
     assert "ok: true" in body
-    assert "Object.prototype.hasOwnProperty.call(value, \"value\")" in body
+    assert 'Object.prototype.hasOwnProperty.call(value, "value")' in body
     assert "busError(" in RUNTIME
 
 

@@ -17,8 +17,14 @@ import sys
 from dataclasses import dataclass, replace
 
 from app.cli.scaffold import (
-    MECHANICS, Intent, _slugify, actor_field_options, default_actor_field_ids,
-    default_item_field_ids, item_field_options, mechanic_ids,
+    MECHANICS,
+    Intent,
+    _slugify,
+    actor_field_options,
+    default_actor_field_ids,
+    default_item_field_ids,
+    item_field_options,
+    mechanic_ids,
 )
 from app.cli.templates import Template, get_template, templates_for_kind
 
@@ -219,8 +225,7 @@ def _checkbox(
     pre = set(preselected or [])
     if _QUESTIONARY and _interactive():
         choices = [
-            questionary.Choice(title=label, value=key, checked=key in pre)
-            for key, label in options
+            questionary.Choice(title=label, value=key, checked=key in pre) for key, label in options
         ]
         return questionary.checkbox(title, choices=choices, style=_WIZARD_STYLE).ask()
     return _text_checkbox(title, options, pre)
@@ -282,28 +287,121 @@ def _ask_text(label: str, default: str | None = None) -> str | None:
 # Common sheet types offered in the wizard. Ids are the generated, normalized
 # English type ids; "custom" lets the author enter their own.
 ACTOR_SHEET_OPTIONS = (
-    "character", "monster", "npc", "companion", "familiar", "mount", "vehicle",
-    "starship", "mecha", "drone", "robot", "spirit", "summon", "faction",
-    "organization", "settlement", "kingdom", "domain", "crew", "squad", "army",
-    "base", "location", "hazard", "trap",
+    "character",
+    "monster",
+    "npc",
+    "companion",
+    "familiar",
+    "mount",
+    "vehicle",
+    "starship",
+    "mecha",
+    "drone",
+    "robot",
+    "spirit",
+    "summon",
+    "faction",
+    "organization",
+    "settlement",
+    "kingdom",
+    "domain",
+    "crew",
+    "squad",
+    "army",
+    "base",
+    "location",
+    "hazard",
+    "trap",
     # extended
-    "deity", "swarm", "construct", "undead", "elemental", "dragon", "beast",
-    "plant", "guild", "party", "planet", "station", "colony", "fleet", "horde",
+    "deity",
+    "swarm",
+    "construct",
+    "undead",
+    "elemental",
+    "dragon",
+    "beast",
+    "plant",
+    "guild",
+    "party",
+    "planet",
+    "station",
+    "colony",
+    "fleet",
+    "horde",
 )
 ITEM_SHEET_OPTIONS = (
-    "item", "weapon", "armor", "shield", "gear", "equipment", "consumable",
-    "spell", "power", "ability", "skill", "feat", "talent", "trait", "ancestry",
-    "heritage", "background", "class", "subclass", "profession", "path",
-    "technique", "ritual", "condition", "injury", "cyberware", "implant",
-    "augmentation", "module", "vehicle-module", "starship-module", "mecha-module",
-    "treasure", "loot",
+    "item",
+    "weapon",
+    "armor",
+    "shield",
+    "gear",
+    "equipment",
+    "consumable",
+    "spell",
+    "power",
+    "ability",
+    "skill",
+    "feat",
+    "talent",
+    "trait",
+    "ancestry",
+    "heritage",
+    "background",
+    "class",
+    "subclass",
+    "profession",
+    "path",
+    "technique",
+    "ritual",
+    "condition",
+    "injury",
+    "cyberware",
+    "implant",
+    "augmentation",
+    "module",
+    "vehicle-module",
+    "starship-module",
+    "mecha-module",
+    "treasure",
+    "loot",
     # extended
-    "potion", "scroll", "wand", "rod", "staff", "ammunition", "currency", "tool",
-    "kit", "poison", "drug", "artifact", "relic", "rune", "enchantment",
-    "mutation", "perk", "flaw", "maneuver", "stance", "invocation", "cantrip",
-    "prayer", "blessing", "curse", "contract", "container", "clothing",
-    "jewelry", "material", "software", "program", "gadget", "grenade",
-    "explosive", "food", "vehicle",
+    "potion",
+    "scroll",
+    "wand",
+    "rod",
+    "staff",
+    "ammunition",
+    "currency",
+    "tool",
+    "kit",
+    "poison",
+    "drug",
+    "artifact",
+    "relic",
+    "rune",
+    "enchantment",
+    "mutation",
+    "perk",
+    "flaw",
+    "maneuver",
+    "stance",
+    "invocation",
+    "cantrip",
+    "prayer",
+    "blessing",
+    "curse",
+    "contract",
+    "container",
+    "clothing",
+    "jewelry",
+    "material",
+    "software",
+    "program",
+    "gadget",
+    "grenade",
+    "explosive",
+    "food",
+    "vehicle",
 )
 
 
@@ -342,7 +440,9 @@ def _ask_ids(label: str, defaults: tuple[str, ...]) -> tuple[str, ...] | None:
     return tuple(values)
 
 
-def _configure_mechanic(mechanic: str) -> tuple[tuple[str, ...], tuple[str, ...], tuple[tuple[str, str], ...]] | None:
+def _configure_mechanic(
+    mechanic: str,
+) -> tuple[tuple[str, ...], tuple[str, ...], tuple[tuple[str, str], ...]] | None:
     """Ask the questions relevant to one mechanic preset."""
     if not _interactive() or mechanic == "none":
         return (), (), ()
@@ -364,7 +464,11 @@ def _configure_mechanic(mechanic: str) -> tuple[tuple[str, ...], tuple[str, ...]
         "custom": ("resource",),
     }
     if mechanic in attribute_defaults:
-        label = "Approaches (comma-separated)" if mechanic == "fudge-fate" else "Attributes (comma-separated)"
+        label = (
+            "Approaches (comma-separated)"
+            if mechanic == "fudge-fate"
+            else "Attributes (comma-separated)"
+        )
         attrs = _ask_ids(label, attribute_defaults[mechanic])
         if attrs is None:
             return None
@@ -380,10 +484,22 @@ def _configure_mechanic(mechanic: str) -> tuple[tuple[str, ...], tuple[str, ...]
     questions = {
         "d20-roll-under": [("default", "Starting attribute value", "12")],
         "d100-percentile": [("default", "Starting skill percentage", "50")],
-        "dice-pool-successes": [("default", "Starting pool size", "3"), ("target", "Success result on d6", "6")],
-        "dice-pool-count-hits": [("default", "Starting pool size", "6"), ("target", "Hit result on d6", "5")],
-        "year-zero-d6-pool": [("default", "Starting attribute dice", "3"), ("target", "Success result on d6", "6")],
-        "exploding-dice": [("sides", "Default die sides", "6"), ("threshold", "Explosion threshold", "6")],
+        "dice-pool-successes": [
+            ("default", "Starting pool size", "3"),
+            ("target", "Success result on d6", "6"),
+        ],
+        "dice-pool-count-hits": [
+            ("default", "Starting pool size", "6"),
+            ("target", "Hit result on d6", "5"),
+        ],
+        "year-zero-d6-pool": [
+            ("default", "Starting attribute dice", "3"),
+            ("target", "Success result on d6", "6"),
+        ],
+        "exploding-dice": [
+            ("sides", "Default die sides", "6"),
+            ("threshold", "Explosion threshold", "6"),
+        ],
         "step-dice": [("default", "Default step die sides", "6")],
         "cards": [("deck-size", "Number of cards in the deck", "52")],
         "custom": [("formula", "Roll formula", "1d20 + @sheet.resource")],
@@ -402,15 +518,25 @@ def _configure_item(item_type: str, fields: list[str]) -> tuple[tuple[str, str],
         return ()
     config: list[tuple[str, str]] = []
     defaults = {
-        "weight": "0", "cost": "0", "quantity": "1", "damage": "1d6",
-        "attack-bonus": "0", "damage-type": "physical", "armor": "1",
-        "level": "0", "effect": "",
+        "weight": "0",
+        "cost": "0",
+        "quantity": "1",
+        "damage": "1d6",
+        "attack-bonus": "0",
+        "damage-type": "physical",
+        "armor": "1",
+        "level": "0",
+        "effect": "",
     }
     labels = {
-        "weight": "Starting weight", "cost": "Starting cost",
-        "quantity": "Starting quantity", "damage": "Starting damage formula",
-        "attack-bonus": "Starting attack bonus", "damage-type": "Default damage type",
-        "armor": "Starting armor value", "level": "Starting level",
+        "weight": "Starting weight",
+        "cost": "Starting cost",
+        "quantity": "Starting quantity",
+        "damage": "Starting damage formula",
+        "attack-bonus": "Starting attack bonus",
+        "damage-type": "Default damage type",
+        "armor": "Starting armor value",
+        "level": "Starting level",
         "effect": "Default effect text",
     }
     for field_id in fields:
@@ -439,7 +565,12 @@ def _configure_item(item_type: str, fields: list[str]) -> tuple[tuple[str, str],
 
 
 _DND_ATTRIBUTE_DEFAULTS = (
-    "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
 )
 
 

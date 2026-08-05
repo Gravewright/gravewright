@@ -40,7 +40,9 @@ async def generate_streamer_link(
 ) -> Response[dict[str, Any]]:
     campaign_id = data.campaign_id.strip()
     if not campaign_id:
-        return Response({"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=400)
+        return Response(
+            {"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=400
+        )
 
     result = streamer_link_service.generate(campaign_id=campaign_id, user_id=current_user["id"])
     if not result.success:
@@ -65,7 +67,9 @@ async def revoke_streamer_link(
 ) -> Response[dict[str, Any]]:
     campaign_id = data.campaign_id.strip()
     if not campaign_id:
-        return Response({"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=400)
+        return Response(
+            {"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=400
+        )
 
     result = streamer_link_service.revoke(campaign_id=campaign_id, user_id=current_user["id"])
     if not result.success:

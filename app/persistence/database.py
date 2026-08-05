@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import tempfile
 import threading
 from contextlib import contextmanager
 from pathlib import Path
@@ -96,9 +98,19 @@ def _use_metadata_bootstrap() -> bool:
     path = effective_sqlite_path()
     if path == ":memory:":
         return True
-    # APP_ENV=test is an explicit disposable-runtime contract. Development and
-    # production file databases always go through Alembic.
-    return config.app_env == "test"
+    if not config.allow_metadata_bootstrap or config.app_env != "test":
+        return False
+    return _is_disposable_test_path(Path(path))
+
+
+def _is_disposable_test_path(path: Path) -> bool:
+    """Accept file bootstrap only below an explicitly disposable temp root."""
+    resolved = path.resolve()
+    configured_root = os.environ.get("GRAVEWRIGHT_TEST_TEMP_ROOT", "").strip()
+    roots = [Path(tempfile.gettempdir()).resolve()]
+    if configured_root:
+        roots.insert(0, Path(configured_root).resolve())
+    return any(resolved != root and resolved.is_relative_to(root) for root in roots)
 
 
 def initialize_database() -> None:

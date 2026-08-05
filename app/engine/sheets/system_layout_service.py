@@ -18,10 +18,14 @@ class SystemLayoutService:
         self.installed = InstalledPackageRepository()
         self.locales = PackageLocaleService()
 
-    def get_actor_sheet(self, *, system_id: str, actor_type: str, locale: str | None = None) -> dict | None:
+    def get_actor_sheet(
+        self, *, system_id: str, actor_type: str, locale: str | None = None
+    ) -> dict | None:
         return self._get_sheet(system_id=system_id, type_id=actor_type, kind="actor", locale=locale)
 
-    def get_item_sheet(self, *, system_id: str, item_type: str, locale: str | None = None) -> dict | None:
+    def get_item_sheet(
+        self, *, system_id: str, item_type: str, locale: str | None = None
+    ) -> dict | None:
         return self._get_sheet(system_id=system_id, type_id=item_type, kind="item", locale=locale)
 
     def get_actor_html_sheet(self, *, system_id: str, actor_type: str) -> dict | None:
@@ -53,7 +57,9 @@ class SystemLayoutService:
         type_def = self._type_def(system_id=system_id, type_id=type_id, kind=kind)
         return type_def.html_sheet if type_def is not None else None
 
-    def _get_sheet(self, *, system_id: str, type_id: str, kind: str, locale: str | None) -> dict | None:
+    def _get_sheet(
+        self, *, system_id: str, type_id: str, kind: str, locale: str | None
+    ) -> dict | None:
         type_def = self._type_def(system_id=system_id, type_id=type_id, kind=kind)
         if type_def is None:
             return None

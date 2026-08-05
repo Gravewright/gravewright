@@ -18,7 +18,7 @@ from app.persistence.tables import chat_messages
 class ChatMessageRepository:
     """Chat message persistence implemented with SQLAlchemy Core."""
 
-    def _row_to_entry(self, row) -> dict:                
+    def _row_to_entry(self, row) -> dict:
         entry = dict(row)
         entry["groups"] = json.loads(row["groups_json"]) if row["groups_json"] else []
         entry["metadata"] = json.loads(row["metadata_json"]) if row["metadata_json"] else {}

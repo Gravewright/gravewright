@@ -51,9 +51,7 @@ class PackageActivationService:
                 return ActivationResult(success=False, error_key="sdk.errors.not_found")
             if record["kind"] != ROLE_RULESET:
                 return ActivationResult(success=False, error_key="sdk.errors.not_a_ruleset")
-            dependency_report = self.dependencies.check_campaign_activation(
-                package_id, campaign_id
-            )
+            dependency_report = self.dependencies.check_campaign_activation(package_id, campaign_id)
             if not dependency_report.ok:
                 return ActivationResult(
                     success=False,
@@ -77,9 +75,7 @@ class PackageActivationService:
             )
         return ActivationResult(success=True)
 
-    def activate_package(
-        self, campaign_id: str, package_id: str, user_id: str
-    ) -> ActivationResult:
+    def activate_package(self, campaign_id: str, package_id: str, user_id: str) -> ActivationResult:
         record = self._enabled(package_id)
         if record is None:
             return ActivationResult(success=False, error_key="sdk.errors.not_found")

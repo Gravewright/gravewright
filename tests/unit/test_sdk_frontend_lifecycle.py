@@ -13,59 +13,63 @@ from pathlib import Path
 from app.engine.sdk.capability_registry import get_registry
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-RUNTIME = (PROJECT_ROOT / "static" / "js" / "sdk" / "gravewright-sdk.js").read_text(encoding="utf-8")
-STABILITY_POLICY = (PROJECT_ROOT / "docs" / "sdk" / "stability-policy.md").read_text(encoding="utf-8")
+RUNTIME = (PROJECT_ROOT / "static" / "js" / "sdk" / "gravewright-sdk.js").read_text(
+    encoding="utf-8"
+)
+STABILITY_POLICY = (PROJECT_ROOT / "docs" / "sdk" / "stability-policy.md").read_text(
+    encoding="utf-8"
+)
 
 
 # --- register() guards -------------------------------------------------------
 
 
 def test_frontend_register_requires_id():
-    assert 'GravewrightSDK.register requires an id' in RUNTIME
+    assert "GravewrightSDK.register requires an id" in RUNTIME
 
 
 def test_frontend_register_requires_package_script():
-    assert 'outside a package script' in RUNTIME
+    assert "outside a package script" in RUNTIME
 
 
 def test_frontend_register_rejects_invalid_nonce():
-    assert 'missing or invalid nonce' in RUNTIME
+    assert "missing or invalid nonce" in RUNTIME
 
 
 def test_frontend_register_rejects_id_mismatch():
-    assert 'from script owned by' in RUNTIME
+    assert "from script owned by" in RUNTIME
 
 
 def test_frontend_register_rejects_inactive_package():
-    assert 'inactive package' in RUNTIME
+    assert "inactive package" in RUNTIME
 
 
 def test_frontend_register_rejects_duplicate_package():
-    assert 'duplicate package' in RUNTIME
+    assert "duplicate package" in RUNTIME
 
 
 # --- lifecycle idempotency + isolation ---------------------------------------
 
 
 def test_frontend_setup_runs_once():
-    assert 'if (setupDone.has(id)) return;' in RUNTIME
-    assert 'setupDone.add(id);' in RUNTIME
+    assert "if (setupDone.has(id)) return;" in RUNTIME
+    assert "setupDone.add(id);" in RUNTIME
 
 
 def test_frontend_ready_runs_once():
-    assert 'if (readyDone.has(id)) return;' in RUNTIME
-    assert 'readyDone.add(id);' in RUNTIME
+    assert "if (readyDone.has(id)) return;" in RUNTIME
+    assert "readyDone.add(id);" in RUNTIME
 
 
 def test_frontend_listener_error_isolated():
     # emit() wraps each listener call so one failing listener cannot break the rest.
-    assert 'try {' in RUNTIME and 'listener' in RUNTIME.lower()
-    assert 'console.error' in RUNTIME
+    assert "try {" in RUNTIME and "listener" in RUNTIME.lower()
+    assert "console.error" in RUNTIME
 
 
 def test_frontend_debug_api_gated_on_debug_flag():
-    assert 'context.debug === true' in RUNTIME
-    assert 'GravewrightSDKDebug' in RUNTIME
+    assert "context.debug === true" in RUNTIME
+    assert "GravewrightSDKDebug" in RUNTIME
 
 
 # --- capability map / status invariants --------------------------------------

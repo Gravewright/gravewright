@@ -27,10 +27,16 @@ def upgrade() -> None:
         op.create_table(
             "scene_image_placements",
             sa.Column("id", ID, primary_key=True),
-            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
-            sa.Column("scene_id", ID, sa.ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
+            ),
+            sa.Column(
+                "scene_id", ID, sa.ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False
+            ),
             sa.Column("asset_id", ID, nullable=False),
-            sa.Column("owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+            sa.Column(
+                "owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+            ),
             sa.Column("x", sa.Float(), nullable=False),
             sa.Column("y", sa.Float(), nullable=False),
             sa.Column("rotation", sa.Float(), nullable=False, server_default=sa.text("0")),
@@ -43,8 +49,12 @@ def upgrade() -> None:
             sa.Column("created_at", sa.Integer(), nullable=False),
             sa.Column("updated_at", sa.Integer(), nullable=False),
         )
-        op.create_index("idx_scene_image_placements_scene", "scene_image_placements", ["scene_id", "z_index"])
-        op.create_index("idx_scene_image_placements_campaign", "scene_image_placements", ["campaign_id"])
+        op.create_index(
+            "idx_scene_image_placements_scene", "scene_image_placements", ["scene_id", "z_index"]
+        )
+        op.create_index(
+            "idx_scene_image_placements_campaign", "scene_image_placements", ["campaign_id"]
+        )
 
 
 def downgrade() -> None:

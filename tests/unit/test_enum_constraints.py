@@ -99,6 +99,7 @@ def test_permission_effect_rejects_out_of_domain(db):
 
 # --- allowed set stays aligned with the domain enums ---------------------------
 
+
 def _check_allowed_values(table, column: str) -> set[str]:
     for constraint in table.constraints:
         if isinstance(constraint, CheckConstraint):
@@ -122,6 +123,7 @@ def test_check_constraint_matches_domain_enum(table, column, enum):
 
 
 # --- migration path enforces the same constraints ------------------------------
+
 
 def test_alembic_head_enforces_member_role_check(tmp_path, monkeypatch):
     from alembic import command
@@ -179,6 +181,7 @@ def test_alembic_head_enforces_member_role_check(tmp_path, monkeypatch):
 
 
 # --- migration audit refuses invalid legacy data -------------------------------
+
 
 def test_migration_audit_raises_on_out_of_domain_rows(tmp_path):
     # Build a campaign_members table WITHOUT the check and insert a bad row, then

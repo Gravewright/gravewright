@@ -27,29 +27,24 @@ from app.realtime.viewport_subscriptions import ViewportChunkPayload
 from app.realtime.viewport_subscriptions import ViewportSubscriptionService
 from app.persistence.repositories.campaign_repository import CampaignRepository
 
-                                                                           
-                                                                               
+
 _DEFAULT_DRAIN_MAX_ITEMS = 128
 _DEFAULT_DRAIN_MAX_COST = 512
-                                                                   
+
 _CHUNK_JOB_TTL_MS = 10_000
 _CHUNK_JOB_KIND = "scene-chunk"
 
-                                                                                   
+
 _GM_ROLES = {"gm", "assistant_gm"}
 
-                                                                              
-                                                                              
-                                                                           
-                                                                  
-                                                                       
+
 _MAX_VIEWPORT_ID_LEN = 128
 _MAX_VIEWPORT_WIDTH_CHUNKS = config.scene_viewport_max_width_chunks
 _MAX_VIEWPORT_HEIGHT_CHUNKS = config.scene_viewport_max_height_chunks
-                                                                         
+
 _MAX_VIEWPORT_CHUNK_AREA = config.scene_viewport_max_area_chunks
 _MAX_VIEWPORT_LAYERS = config.scene_viewport_max_layers
-                                                                           
+
 _MAX_KNOWN_CHUNKS = config.scene_viewport_max_known_chunks
 
 
@@ -79,8 +74,7 @@ class SceneStreamCommandHandler:
         self.event_log = event_log or RoomEventLog()
         self.metrics = metrics or realtime_metrics
         self.campaigns = campaigns or CampaignRepository()
-                                                                                
-                                                                          
+
         self.scheduler = scheduler or RenderPriorityScheduler()
         self.max_batch_bytes = max_batch_bytes
 
@@ -360,8 +354,6 @@ class SceneStreamCommandHandler:
 
         scene_epoch = candidate_result.scene_epoch or scene["scene_epoch"]
 
-                                                                               
-                                                                   
         self.scheduler.cancel_scope(
             scene_id=scene_id,
             viewport_id=viewport_id,
@@ -406,8 +398,6 @@ class SceneStreamCommandHandler:
 
         eligible_jobs = []
         for job in drained:
-                                                                              
-                                           
             if job.scene_epoch != scene_epoch:
                 continue
             if (
@@ -422,19 +412,14 @@ class SceneStreamCommandHandler:
             user_id=user_id,
             candidates=tuple(job.payload for job in eligible_jobs),
         )
-        payload_by_key = {
-            (chunk.layer_id, chunk.cx, chunk.cy): chunk
-            for chunk in payload_chunks
-        }
+        payload_by_key = {(chunk.layer_id, chunk.cx, chunk.cy): chunk for chunk in payload_chunks}
 
         chunk_payloads: list[ViewportChunkPayload] = []
         batch_items: list[ChunkBatchItem] = []
         batch_priorities: list[int] = []
         for job in eligible_jobs:
             candidate = job.payload
-            payload_chunk = payload_by_key.get(
-                (candidate.layer_id, candidate.cx, candidate.cy)
-            )
+            payload_chunk = payload_by_key.get((candidate.layer_id, candidate.cx, candidate.cy))
             if payload_chunk is None:
                 continue
 
@@ -513,17 +498,13 @@ class SceneStreamCommandHandler:
         )
 
     def _record_scheduler_metrics(self, *, now_ms: int) -> None:
-                                                                                
-                                                                              
-                                                    
+
         snapshot = self.scheduler.snapshot(now_ms=now_ms)
         self.metrics.observe("scheduler.queue.size", snapshot.queued_items)
         self.metrics.observe("scheduler.queue.bytes", snapshot.queued_bytes)
         self.metrics.observe("scheduler.queue.cost", snapshot.queued_cost)
         if snapshot.oldest_item_age_ms is not None:
-            self.metrics.observe(
-                "scheduler.queue.oldest_age_ms", snapshot.oldest_item_age_ms
-            )
+            self.metrics.observe("scheduler.queue.oldest_age_ms", snapshot.oldest_item_age_ms)
         for name in ("immediate", "high", "normal", "low", "background"):
             count = snapshot.by_effective_priority.get(name, 0)
             self.metrics.observe(f"scheduler.queue.{name}", count)
@@ -555,14 +536,14 @@ class SceneStreamCommandHandler:
                 chunks=tuple(current),
             )
             batches.append((batch_id, frame))
-                                                                              
+
             priority_by_id[batch_id] = current_priority
             current = []
             current_priority = int(RenderPriority.BACKGROUND)
 
         for index, chunk in enumerate(chunks):
-            chunk_priority = priorities[index] if index < len(priorities) else int(
-                RenderPriority.NORMAL
+            chunk_priority = (
+                priorities[index] if index < len(priorities) else int(RenderPriority.NORMAL)
             )
 
             if not current:
@@ -724,8 +705,6 @@ class SceneStreamCommandHandler:
                 message="viewport area exceeds the maximum.",
             )
 
-                                                                              
-                                                                       
         focus_cx = payload.get("focus_cx")
         focus_cy = payload.get("focus_cy")
         focus_cx = float(focus_cx) if isinstance(focus_cx, int | float) else None

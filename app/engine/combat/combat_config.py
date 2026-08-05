@@ -60,7 +60,9 @@ DEFAULT_COMBAT_UI = {
 class CombatConfig:
     system_id: str = ""
     default_mode: str = "manual"
-    turn_order: dict = field(default_factory=lambda: {"strategy": "manual", "label": "Ordem Manual"})
+    turn_order: dict = field(
+        default_factory=lambda: {"strategy": "manual", "label": "Ordem Manual"}
+    )
     initiative: dict = field(default_factory=lambda: dict(DEFAULT_INITIATIVE))
     resources: dict = field(default_factory=dict)
     ui: dict = field(default_factory=lambda: _deep_copy_dict(DEFAULT_COMBAT_UI))
@@ -68,7 +70,9 @@ class CombatConfig:
 
     @property
     def strategy(self) -> str:
-        strategy = self.turn_order.get("strategy") if isinstance(self.turn_order, dict) else "manual"
+        strategy = (
+            self.turn_order.get("strategy") if isinstance(self.turn_order, dict) else "manual"
+        )
         return str(strategy or _strategy_for_initiative(self.initiative))
 
     def payload(self) -> dict:
@@ -109,14 +113,25 @@ class CombatConfigService:
         raw_turn_order = raw.get("turnOrder") if isinstance(raw.get("turnOrder"), dict) else {}
         initiative = _normalize_initiative(raw.get("initiative"), raw_turn_order)
         ui = _normalize_ui(raw.get("ui"), initiative=initiative)
-        turn_order = dict(raw_turn_order) if raw_turn_order else _turn_order_from_initiative(initiative)
+        turn_order = (
+            dict(raw_turn_order) if raw_turn_order else _turn_order_from_initiative(initiative)
+        )
         if not turn_order:
             turn_order = {"strategy": "manual", "label": "Ordem Manual", "allowDragReorder": True}
         resources = raw.get("resources") if isinstance(raw.get("resources"), dict) else {}
-        activity_types = raw.get("activityTypes") if isinstance(raw.get("activityTypes"), list) else list(DEFAULT_ACTIVITY_TYPES)
+        activity_types = (
+            raw.get("activityTypes")
+            if isinstance(raw.get("activityTypes"), list)
+            else list(DEFAULT_ACTIVITY_TYPES)
+        )
         return CombatConfig(
             system_id=system_id,
-            default_mode=str(raw.get("defaultMode") or initiative.get("mode") or turn_order.get("strategy") or "manual"),
+            default_mode=str(
+                raw.get("defaultMode")
+                or initiative.get("mode")
+                or turn_order.get("strategy")
+                or "manual"
+            ),
             turn_order=turn_order,
             initiative=initiative,
             resources=resources,
@@ -214,14 +229,25 @@ def _normalize_ui(raw: Any, *, initiative: dict) -> dict:
     combat = combat if isinstance(combat, dict) else {}
     default_combat = defaults["combat"]
 
-    appearance = initiative.get("appearance") if isinstance(initiative.get("appearance"), dict) else {}
+    appearance = (
+        initiative.get("appearance") if isinstance(initiative.get("appearance"), dict) else {}
+    )
 
     normalized_combat: dict[str, Any] = {
-        "skin": _safe_token(combat.get("skin") or combat.get("theme") or appearance.get("theme") or default_combat["skin"]),
+        "skin": _safe_token(
+            combat.get("skin")
+            or combat.get("theme")
+            or appearance.get("theme")
+            or default_combat["skin"]
+        ),
         "density": _safe_token(combat.get("density") or default_combat["density"]),
         "palette": _normalize_palette(combat.get("palette"), fallback=default_combat["palette"]),
-        "initiative": _normalize_ui_initiative(combat.get("initiative"), initiative=initiative, appearance=appearance),
-        "statusLabels": _normalize_status_labels(combat.get("statusLabels"), fallback=default_combat["statusLabels"]),
+        "initiative": _normalize_ui_initiative(
+            combat.get("initiative"), initiative=initiative, appearance=appearance
+        ),
+        "statusLabels": _normalize_status_labels(
+            combat.get("statusLabels"), fallback=default_combat["statusLabels"]
+        ),
     }
     if isinstance(combat.get("hero"), dict):
         normalized_combat["hero"] = _normalize_small_string_dict(combat["hero"])
@@ -234,13 +260,37 @@ def _normalize_ui_initiative(raw: Any, *, initiative: dict, appearance: dict) ->
     raw_initiative = raw if isinstance(raw, dict) else {}
     defaults = DEFAULT_COMBAT_UI["combat"]["initiative"]
     return {
-        "icon": _safe_icon(raw_initiative.get("icon") or appearance.get("icon") or defaults["icon"]),
-        "monsterIcon": _safe_icon(raw_initiative.get("monsterIcon") or appearance.get("monsterIcon") or defaults["monsterIcon"]),
-        "rollAllLabel": _safe_label(raw_initiative.get("rollAllLabel") or appearance.get("rollAllLabel") or defaults["rollAllLabel"]),
-        "rollMonstersLabel": _safe_label(raw_initiative.get("rollMonstersLabel") or appearance.get("rollMonstersLabel") or defaults["rollMonstersLabel"]),
-        "rollSubtitle": _safe_label(raw_initiative.get("rollSubtitle") or appearance.get("rollSubtitle") or defaults["rollSubtitle"]),
-        "monsterSubtitle": _safe_label(raw_initiative.get("monsterSubtitle") or appearance.get("monsterSubtitle") or defaults["monsterSubtitle"]),
-        "scoreLabel": _safe_label(raw_initiative.get("scoreLabel") or initiative.get("label") or "Iniciativa"),
+        "icon": _safe_icon(
+            raw_initiative.get("icon") or appearance.get("icon") or defaults["icon"]
+        ),
+        "monsterIcon": _safe_icon(
+            raw_initiative.get("monsterIcon")
+            or appearance.get("monsterIcon")
+            or defaults["monsterIcon"]
+        ),
+        "rollAllLabel": _safe_label(
+            raw_initiative.get("rollAllLabel")
+            or appearance.get("rollAllLabel")
+            or defaults["rollAllLabel"]
+        ),
+        "rollMonstersLabel": _safe_label(
+            raw_initiative.get("rollMonstersLabel")
+            or appearance.get("rollMonstersLabel")
+            or defaults["rollMonstersLabel"]
+        ),
+        "rollSubtitle": _safe_label(
+            raw_initiative.get("rollSubtitle")
+            or appearance.get("rollSubtitle")
+            or defaults["rollSubtitle"]
+        ),
+        "monsterSubtitle": _safe_label(
+            raw_initiative.get("monsterSubtitle")
+            or appearance.get("monsterSubtitle")
+            or defaults["monsterSubtitle"]
+        ),
+        "scoreLabel": _safe_label(
+            raw_initiative.get("scoreLabel") or initiative.get("label") or "Iniciativa"
+        ),
     }
 
 
@@ -248,10 +298,20 @@ def _normalize_appearance(raw: Any) -> dict:
     if not isinstance(raw, dict):
         return {}
     out: dict[str, Any] = {}
-    for key in ("theme", "die", "rollAllLabel", "rollMonstersLabel", "rollSubtitle", "monsterSubtitle", "accent"):
+    for key in (
+        "theme",
+        "die",
+        "rollAllLabel",
+        "rollMonstersLabel",
+        "rollSubtitle",
+        "monsterSubtitle",
+        "accent",
+    ):
         value = raw.get(key)
         if value is not None:
-            out[key] = _safe_label(value) if "Label" in key or "Subtitle" in key else _safe_token(value)
+            out[key] = (
+                _safe_label(value) if "Label" in key or "Subtitle" in key else _safe_token(value)
+            )
     if raw.get("icon"):
         out["icon"] = _safe_icon(raw.get("icon"))
     if raw.get("monsterIcon"):
@@ -265,7 +325,15 @@ def _normalize_palette(raw: Any, *, fallback: dict) -> dict:
     palette = dict(fallback)
     if not isinstance(raw, dict):
         return palette
-    allowed = set(fallback) | {"surface", "surfaceRaised", "text", "muted", "border", "gold", "blood"}
+    allowed = set(fallback) | {
+        "surface",
+        "surfaceRaised",
+        "text",
+        "muted",
+        "border",
+        "gold",
+        "blood",
+    }
     key_aliases = {
         "accent-strong": "accentStrong",
         "accentstrong": "accentStrong",
@@ -278,7 +346,7 @@ def _normalize_palette(raw: Any, *, fallback: dict) -> dict:
         "surface-raised": "surfaceRaised",
         "surfaceraised": "surfaceRaised",
     }
-    canonical = { _safe_token(key): key for key in allowed }
+    canonical = {_safe_token(key): key for key in allowed}
     for key, value in raw.items():
         clean_key = _safe_token(key)
         normalized_key = key_aliases.get(clean_key, canonical.get(clean_key, clean_key))
@@ -354,7 +422,9 @@ def _deep_copy_dict(value: dict) -> dict:
 
 def _normalize_sort(raw: Any, *, fallback_direction: Any, fallback_tie_breakers: Any) -> dict:
     sort = dict(raw) if isinstance(raw, dict) else {}
-    direction = str(sort.get("direction") or sort.get("order") or fallback_direction or "desc").lower()
+    direction = str(
+        sort.get("direction") or sort.get("order") or fallback_direction or "desc"
+    ).lower()
     if direction in {"descending", "highest", "high_to_low"}:
         direction = "desc"
     elif direction in {"ascending", "lowest", "low_to_low", "low_to_high"}:
@@ -426,7 +496,11 @@ def _turn_order_from_initiative(initiative: dict) -> dict:
     if roll.get("formula"):
         out["formula"] = roll.get("formula")
     if mode == "manual":
-        out["allowDragReorder"] = bool((initiative.get("manual") or {}).get("allowDragReorder", True)) if isinstance(initiative.get("manual"), dict) else True
+        out["allowDragReorder"] = (
+            bool((initiative.get("manual") or {}).get("allowDragReorder", True))
+            if isinstance(initiative.get("manual"), dict)
+            else True
+        )
     if isinstance(initiative.get("groups"), list):
         out["groups"] = initiative["groups"]
     if isinstance(initiative.get("deck"), dict):

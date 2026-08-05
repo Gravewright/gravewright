@@ -18,6 +18,7 @@ Run headless (defaults target the docker-compose service):
 
     .venv/bin/python tests/performance/ws_live/ws_live_test.py --host http://app:8000
 """
+
 from __future__ import annotations
 
 import argparse
@@ -148,6 +149,7 @@ def summary_stats(values: list[float]) -> dict[str, float]:
 # HTTP: login, discovery, chat
 # ---------------------------------------------------------------------------
 
+
 def _first_match(pattern: re.Pattern[str], value: str, name: str) -> str:
     match = pattern.search(value)
     if not match:
@@ -253,6 +255,7 @@ def post_chat(host: str, session: SessionInfo, *, campaign_id: str, message: str
 # WebSocket helpers
 # ---------------------------------------------------------------------------
 
+
 def websocket_url(host: str) -> str:
     if host.startswith("https://"):
         return f"wss://{host.removeprefix('https://')}/game/ws"
@@ -347,7 +350,9 @@ async def await_response(
     return None
 
 
-def _viewport(session: SessionInfo, step: int, *, width: int = 2, height: int = 2) -> dict[str, Any]:
+def _viewport(
+    session: SessionInfo, step: int, *, width: int = 2, height: int = 2
+) -> dict[str, Any]:
     x_span = max(1, session.chunk_columns - width + 1)
     y_span = max(1, session.chunk_rows - height + 1)
     cx0 = step % x_span
@@ -615,6 +620,7 @@ async def do_chat(
 # Virtual user
 # ---------------------------------------------------------------------------
 
+
 async def virtual_user(
     user_index: int,
     *,
@@ -721,9 +727,7 @@ async def virtual_user(
                                 seq=seq,
                             )
 
-                        await asyncio.sleep(
-                            random.uniform(args.min_think, args.max_think)
-                        )
+                        await asyncio.sleep(random.uniform(args.min_think, args.max_think))
 
                         if actions_this_connection >= reconnect_after:
                             metrics.reconnects += 1
@@ -747,6 +751,7 @@ async def virtual_user(
 # ---------------------------------------------------------------------------
 # Output
 # ---------------------------------------------------------------------------
+
 
 def write_outputs(
     *,
@@ -781,9 +786,7 @@ def write_outputs(
         "pan_zoom_latency_ms": summary_stats(metrics.pan_zoom_latencies_ms),
     }
 
-    (output / "results_summary.json").write_text(
-        json.dumps(summary, indent=2), encoding="utf-8"
-    )
+    (output / "results_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     with (output / "summary.md").open("w", encoding="utf-8") as f:
         f.write("# WS Live Session — token / fog / chat / reconnect load\n\n")
@@ -837,6 +840,7 @@ def write_outputs(
 # ---------------------------------------------------------------------------
 # Orchestration
 # ---------------------------------------------------------------------------
+
 
 async def run(args: argparse.Namespace) -> Metrics:
     output = Path(args.output)
@@ -1016,7 +1020,10 @@ def main() -> None:
     parser.add_argument("--fog-every", type=int, default=5, help="fog.paint every N token moves")
     parser.add_argument("--chat-every", type=int, default=8, help="chat/roll every N token moves")
     parser.add_argument(
-        "--pan-every", type=int, default=6, help="pan/zoom (viewport re-subscribe) every N token moves"
+        "--pan-every",
+        type=int,
+        default=6,
+        help="pan/zoom (viewport re-subscribe) every N token moves",
     )
     parser.add_argument("--min-think", type=float, default=0.4)
     parser.add_argument("--max-think", type=float, default=1.5)

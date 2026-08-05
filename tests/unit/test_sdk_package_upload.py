@@ -122,7 +122,9 @@ def test_upload_rejects_missing_manifest(db, packages_dir):
 
 def test_upload_duplicate_requires_replace_then_replaces(db, packages_dir):
     svc = PackageInstallService()
-    assert svc.install_uploaded_archive(filename="pkg.zip", data=_manifest_zip(), user_id=None).success
+    assert svc.install_uploaded_archive(
+        filename="pkg.zip", data=_manifest_zip(), user_id=None
+    ).success
 
     # Without replace: blocked with a clear, recoverable error.
     blocked = svc.install_uploaded_archive(
@@ -144,7 +146,9 @@ def test_upload_duplicate_requires_replace_then_replaces(db, packages_dir):
 
 def test_upload_replace_blocked_while_enabled(db, packages_dir):
     svc = PackageInstallService()
-    assert svc.install_uploaded_archive(filename="pkg.zip", data=_manifest_zip(), user_id=None).success
+    assert svc.install_uploaded_archive(
+        filename="pkg.zip", data=_manifest_zip(), user_id=None
+    ).success
     assert svc.enable(package_id="uploaded-addon").success
 
     result = svc.install_uploaded_archive(
@@ -205,7 +209,9 @@ def test_upload_route_installs_for_owner(db, packages_dir):
 
 def test_remove_deletes_addon_files_from_disk(db, packages_dir):
     svc = PackageInstallService()
-    assert svc.install_uploaded_archive(filename="pkg.zip", data=_manifest_zip(), user_id=None).success
+    assert svc.install_uploaded_archive(
+        filename="pkg.zip", data=_manifest_zip(), user_id=None
+    ).success
     pkg_dir = packages_dir / "addons" / "uploaded-addon"
     assert pkg_dir.is_dir()
 
@@ -231,7 +237,9 @@ def test_remove_deletes_ruleset_files_from_disk(db, packages_dir):
 
 def test_remove_without_delete_files_keeps_dir(db, packages_dir):
     svc = PackageInstallService()
-    assert svc.install_uploaded_archive(filename="pkg.zip", data=_manifest_zip(), user_id=None).success
+    assert svc.install_uploaded_archive(
+        filename="pkg.zip", data=_manifest_zip(), user_id=None
+    ).success
     assert svc.remove(package_id="uploaded-addon", delete_files=False).success
     assert (packages_dir / "addons" / "uploaded-addon").is_dir()
 

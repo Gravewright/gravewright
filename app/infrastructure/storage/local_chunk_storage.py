@@ -202,6 +202,7 @@ class LocalChunkStorage:
 
     def delete_layer_chunks(self, *, scene_id: str, layer_id: str) -> None:
         import shutil
+
         self._validate_id(scene_id, "scene_id")
         self._validate_id(layer_id, "layer_id")
         path = self.root / scene_id / "chunks" / layer_id

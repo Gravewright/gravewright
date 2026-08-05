@@ -103,7 +103,7 @@ async def test_system_message_saved_and_emitted(db, transport):
     assert msg["kind"] == "system"
     assert msg["author"] == "Sistema"
     assert "Aria sofreu 4" in msg["content"]
-                                                                        
+
     assert ChatMessageRepository().list_for_campaign(campaign_id=campaign_id) == []
 
 
@@ -236,7 +236,7 @@ async def test_gmroll_is_secret_and_not_persisted(db, transport):
     assert gm_id in whisper["targets"]
     assert whisper["kind"] == "roll"
     assert whisper["secret"] is True
-                                               
+
     assert ChatMessageRepository().list_for_campaign(campaign_id=campaign_id) == []
 
 

@@ -23,7 +23,10 @@ def _has_table(table_name: str) -> bool:
 
 
 def _has_column(table_name: str, column_name: str) -> bool:
-    return any(column["name"] == column_name for column in sa.inspect(op.get_bind()).get_columns(table_name))
+    return any(
+        column["name"] == column_name
+        for column in sa.inspect(op.get_bind()).get_columns(table_name)
+    )
 
 
 def upgrade() -> None:
@@ -35,7 +38,9 @@ def upgrade() -> None:
         op.create_table(
             "asset_folders",
             sa.Column("id", ID, primary_key=True),
-            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+            sa.Column(
+                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
+            ),
             sa.Column("parent_id", ID, nullable=True),
             sa.Column("name", sa.String(length=191), nullable=False),
             sa.Column("sort_order", sa.Integer(), nullable=False, server_default=sa.text("0")),

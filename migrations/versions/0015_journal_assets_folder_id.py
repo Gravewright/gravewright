@@ -35,8 +35,7 @@ def _has_column(table_name: str, column_name: str) -> bool:
 
 def _has_index(table_name: str, index_name: str) -> bool:
     return any(
-        index["name"] == index_name
-        for index in sa.inspect(op.get_bind()).get_indexes(table_name)
+        index["name"] == index_name for index in sa.inspect(op.get_bind()).get_indexes(table_name)
     )
 
 

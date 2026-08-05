@@ -93,9 +93,7 @@ def test_invalid_setting_returns_stable_error_code():
 
 def test_set_invalid_value_returns_failed_action_result(db, monkeypatch):
     service = PackageSettingsService()
-    monkeypatch.setattr(
-        service, "_definitions", lambda pid: [_setting("boolean", scope="global")]
-    )
+    monkeypatch.setattr(service, "_definitions", lambda pid: [_setting("boolean", scope="global")])
     result = service.set(
         package_id="pkg", key="opt", value="not-a-bool", campaign_id=None, user_id=None
     )
@@ -124,21 +122,25 @@ def test_effective_values_precedence_default_campaign_user(db, monkeypatch):
     assert service.effective_values("pkg", "camp", "user")["opt"] == "g"
 
     # Campaign row overrides global.
-    repo.set(package_id="pkg", setting_key="opt", value_json='"c"', campaign_id="camp", user_id=None)
+    repo.set(
+        package_id="pkg", setting_key="opt", value_json='"c"', campaign_id="camp", user_id=None
+    )
     assert service.effective_values("pkg", "camp", None)["opt"] == "c"
 
     # User row overrides campaign.
-    repo.set(package_id="pkg", setting_key="opt", value_json='"u"', campaign_id=None, user_id="user")
+    repo.set(
+        package_id="pkg", setting_key="opt", value_json='"u"', campaign_id=None, user_id="user"
+    )
     assert service.effective_values("pkg", "camp", "user")["opt"] == "u"
 
 
 def test_corrupted_setting_value_does_not_crash_read(db, monkeypatch):
     service = PackageSettingsService()
     repo = PackageSettingRepository()
-    monkeypatch.setattr(
-        service, "_definitions", lambda pid: [_setting("string", default="safe")]
+    monkeypatch.setattr(service, "_definitions", lambda pid: [_setting("string", default="safe")])
+    repo.set(
+        package_id="pkg", setting_key="opt", value_json="{not json", campaign_id=None, user_id=None
     )
-    repo.set(package_id="pkg", setting_key="opt", value_json="{not json", campaign_id=None, user_id=None)
     # Falls back to the default rather than raising.
     assert service.effective_values("pkg", None, None)["opt"] == "safe"
 

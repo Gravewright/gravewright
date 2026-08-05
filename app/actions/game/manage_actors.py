@@ -71,7 +71,9 @@ async def _emit_actor(event: TransportEvent, result: ActorResult, *, user_id: st
 
 
 @post("/game/actor")
-async def create_actor(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]]:
+async def create_actor(
+    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = actor_service.create_actor(
@@ -92,7 +94,9 @@ async def create_actor(request: Request, cookies: dict[str, str], current_user: 
 
 
 @post("/game/actor/update-core")
-async def update_actor_core(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]]:
+async def update_actor_core(
+    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = actor_service.update_core(
@@ -149,7 +153,6 @@ async def upload_actor_image(
     return Response({"url": result.url}, status_code=201)
 
 
-                                                                   
 @get("/game/actor/{actor_id:str}/image/{kind:str}")
 async def serve_actor_image(
     actor_id: FromPath[str],
@@ -175,7 +178,9 @@ async def serve_actor_image(
 
 
 @post("/game/actor/delete")
-async def delete_actor(request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService) -> Response[dict[str, Any]]:
+async def delete_actor(
+    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = actor_service.delete_actor(actor_id=str(body.get("actor_id", "")), user_id=user["id"])
@@ -187,7 +192,10 @@ async def delete_actor(request: Request, cookies: dict[str, str], current_user: 
 
 @get("/game/actor/sheet/modal/{actor_id:str}")
 async def show_actor_sheet_modal(
-    actor_id: FromPath[str], cookies: dict[str, str], current_user: Row, actor_sheet_service: ActorSheetService
+    actor_id: FromPath[str],
+    cookies: dict[str, str],
+    current_user: Row,
+    actor_sheet_service: ActorSheetService,
 ) -> Redirect | Template:
     user = current_user
     base_context = view_context(cookies)
@@ -213,7 +221,11 @@ async def show_actor_sheet_modal(
 
 @get("/game/actor/{actor_id:str}/sheet-bundle")
 async def get_sheet_bundle(
-    actor_id: FromPath[str], request: Request, cookies: dict[str, str], current_user: Row, actor_sheet_service: ActorSheetService
+    actor_id: FromPath[str],
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    actor_sheet_service: ActorSheetService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     locale = view_context(cookies)["locale"]
@@ -225,7 +237,11 @@ async def get_sheet_bundle(
 
 @get("/game/actor/{actor_id:str}/sheet-data")
 async def get_sheet_data(
-    actor_id: FromPath[str], request: Request, cookies: dict[str, str], current_user: Row, sheet_data_service: SheetDataService
+    actor_id: FromPath[str],
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_data_service: SheetDataService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     result = sheet_data_service.get_data(actor_id=actor_id, user_id=user["id"])
@@ -265,7 +281,9 @@ async def show_token_sheet_modal(
     context = {
         **base_context,
         "actor": bundle,
-        "bundle_json": json.dumps(token_instance_sheet_service.to_dict(bundle), separators=(",", ":")),
+        "bundle_json": json.dumps(
+            token_instance_sheet_service.to_dict(bundle), separators=(",", ":")
+        ),
         "room_id": bundle.campaign_id,
         "is_gm": member_role == "gm",
     }
@@ -281,7 +299,9 @@ async def get_token_sheet_bundle(
 ) -> Response[dict[str, Any]]:
     user = current_user
     locale = view_context(cookies)["locale"]
-    bundle = token_instance_sheet_service.build_bundle(token_id=token_id, user_id=user["id"], locale=locale)
+    bundle = token_instance_sheet_service.build_bundle(
+        token_id=token_id, user_id=user["id"], locale=locale
+    )
     if bundle is None:
         return Response({"error_key": "tokens.errors.not_found"}, status_code=404)
     return Response(token_instance_sheet_service.to_dict(bundle), status_code=200)
@@ -319,7 +339,9 @@ async def patch_token_sheet_data(
             ],
         }
         transport = RealtimeTransport()
-        await transport.to_gm(room_id=result.campaign_id, event=TransportEvent.TOKENS_UPDATED, payload=payload)
+        await transport.to_gm(
+            room_id=result.campaign_id, event=TransportEvent.TOKENS_UPDATED, payload=payload
+        )
         if not token.get("hidden"):
             await transport.to_players_in_room(
                 room_id=result.campaign_id,
@@ -328,12 +350,18 @@ async def patch_token_sheet_data(
             )
 
     return Response(
-        {"token_id": result.token_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "token_id": result.token_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
-async def _refresh_actor_tokens(*, campaign_id: str | None, actor_id: str | None, token_service: TokenService) -> None:
+async def _refresh_actor_tokens(
+    *, campaign_id: str | None, actor_id: str | None, token_service: TokenService
+) -> None:
     """Recompute on-canvas tokens linked to an actor after its sheet data changes."""
     if not campaign_id or not actor_id:
         return
@@ -344,7 +372,9 @@ async def _refresh_actor_tokens(*, campaign_id: str | None, actor_id: str | None
     )
 
 
-async def _emit_sheet_data(result: SheetDataResult, *, user_id: str, token_service: TokenService) -> None:
+async def _emit_sheet_data(
+    result: SheetDataResult, *, user_id: str, token_service: TokenService
+) -> None:
     if not result.success or not result.campaign_id:
         return
     await RealtimeTransport().to_room(
@@ -359,7 +389,9 @@ async def _emit_sheet_data(result: SheetDataResult, *, user_id: str, token_servi
             "changed_paths": result.changed_paths,
         },
     )
-    await _refresh_actor_tokens(campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service)
+    await _refresh_actor_tokens(
+        campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service
+    )
 
 
 async def _emit_applied_damage(applied: dict, *, user_id: str, token_service: TokenService) -> None:
@@ -378,10 +410,12 @@ async def _emit_applied_damage(applied: dict, *, user_id: str, token_service: To
             payload={
                 "room_id": campaign_id,
                 "scene_id": scene_id,
-                "tokens": [{
-                    "token_id": target_token_id,
-                    "version": applied.get("tokenVersion") or applied.get("version") or 0,
-                }],
+                "tokens": [
+                    {
+                        "token_id": target_token_id,
+                        "version": applied.get("tokenVersion") or applied.get("version") or 0,
+                    }
+                ],
                 "updated_by": user_id,
                 "changed_paths": [applied.get("resourcePath") or ""],
             },
@@ -400,11 +434,19 @@ async def _emit_applied_damage(applied: dict, *, user_id: str, token_service: To
             "changed_paths": [applied.get("resourcePath") or ""],
         },
     )
-    await _refresh_actor_tokens(campaign_id=campaign_id, actor_id=actor_id, token_service=token_service)
+    await _refresh_actor_tokens(
+        campaign_id=campaign_id, actor_id=actor_id, token_service=token_service
+    )
 
 
 @post("/game/actor/sheet-data/patch")
-async def patch_sheet_data(request: Request, cookies: dict[str, str], current_user: Row, sheet_data_service: SheetDataService, token_service: TokenService) -> Response[dict[str, Any]]:
+async def patch_sheet_data(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_data_service: SheetDataService,
+    token_service: TokenService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     patch = body.get("patch")
@@ -417,17 +459,29 @@ async def patch_sheet_data(request: Request, cookies: dict[str, str], current_us
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
     return Response(
-        {"actor_id": result.actor_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "actor_id": result.actor_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
-async def _broadcast_roll(result: ActionResult, *, user: dict, chat_service: ChatService, roll_presentation_service: RollPresentationService) -> None:
+async def _broadcast_roll(
+    result: ActionResult,
+    *,
+    user: dict,
+    chat_service: ChatService,
+    roll_presentation_service: RollPresentationService,
+) -> None:
     """Persist + broadcast a sheet roll as a chat ROLL message (chat + toast)."""
     if not result.campaign_id:
         return
 
-    metadata = _roll_metadata_with_presentation(result, roll_presentation_service=roll_presentation_service)
+    metadata = _roll_metadata_with_presentation(
+        result, roll_presentation_service=roll_presentation_service
+    )
     message = chat_service.create_roll_message(
         campaign_id=result.campaign_id,
         author_user_id=user["id"],
@@ -452,7 +506,9 @@ async def _broadcast_roll(result: ActionResult, *, user: dict, chat_service: Cha
         await transport.chat_to_room(room_id=result.campaign_id, message=message)
 
 
-async def _emit_action_mutation(result: ActionResult, *, user_id: str, token_service: TokenService) -> None:
+async def _emit_action_mutation(
+    result: ActionResult, *, user_id: str, token_service: TokenService
+) -> None:
     if not result.campaign_id:
         return
     await RealtimeTransport().to_room(
@@ -468,10 +524,14 @@ async def _emit_action_mutation(result: ActionResult, *, user_id: str, token_ser
             "token_view": result.token_view or {},
         },
     )
-    await _refresh_actor_tokens(campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service)
+    await _refresh_actor_tokens(
+        campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service
+    )
 
 
-async def _emit_sheet_item_mutation(result: SheetItemResult, *, user_id: str, token_service: TokenService) -> None:
+async def _emit_sheet_item_mutation(
+    result: SheetItemResult, *, user_id: str, token_service: TokenService
+) -> None:
     if not result.campaign_id:
         return
     await RealtimeTransport().to_room(
@@ -487,11 +547,17 @@ async def _emit_sheet_item_mutation(result: SheetItemResult, *, user_id: str, to
             "token_view": result.token_view or {},
         },
     )
-    await _refresh_actor_tokens(campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service)
+    await _refresh_actor_tokens(
+        campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service
+    )
 
 
-def _roll_response(result: ActionResult, *, roll_presentation_service: RollPresentationService) -> Response[dict[str, Any]]:
-    metadata = _roll_metadata_with_presentation(result, roll_presentation_service=roll_presentation_service)
+def _roll_response(
+    result: ActionResult, *, roll_presentation_service: RollPresentationService
+) -> Response[dict[str, Any]]:
+    metadata = _roll_metadata_with_presentation(
+        result, roll_presentation_service=roll_presentation_service
+    )
 
     return Response(
         {
@@ -509,7 +575,10 @@ def _roll_response(result: ActionResult, *, roll_presentation_service: RollPrese
         status_code=200,
     )
 
-def _roll_metadata_with_presentation(result: ActionResult, *, roll_presentation_service: RollPresentationService) -> dict:
+
+def _roll_metadata_with_presentation(
+    result: ActionResult, *, roll_presentation_service: RollPresentationService
+) -> dict:
     metadata = dict(result.metadata or {})
 
     if "rendered" not in metadata:
@@ -531,7 +600,16 @@ def _roll_metadata_with_presentation(result: ActionResult, *, roll_presentation_
 
 
 @post("/game/actor/action")
-async def execute_action(request: Request, cookies: dict[str, str], current_user: Row, sheet_action_service: SheetActionService, turn_order_service: TurnOrderService, token_service: TokenService, chat_service: ChatService, roll_presentation_service: RollPresentationService) -> Response[dict[str, Any]]:
+async def execute_action(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_action_service: SheetActionService,
+    turn_order_service: TurnOrderService,
+    token_service: TokenService,
+    chat_service: ChatService,
+    roll_presentation_service: RollPresentationService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     inputs = body.get("inputs")
@@ -559,8 +637,17 @@ async def execute_action(request: Request, cookies: dict[str, str], current_user
         )
 
     if result.action_type == "roll":
-        await _broadcast_roll(result, user=user, chat_service=chat_service, roll_presentation_service=roll_presentation_service)
-        if str(body.get("action_id", "")) == "roll.initiative" and result.campaign_id and result.actor_id:
+        await _broadcast_roll(
+            result,
+            user=user,
+            chat_service=chat_service,
+            roll_presentation_service=roll_presentation_service,
+        )
+        if (
+            str(body.get("action_id", "")) == "roll.initiative"
+            and result.campaign_id
+            and result.actor_id
+        ):
             turn_order_service.record_initiative_roll(
                 campaign_id=result.campaign_id,
                 actor_id=result.actor_id,
@@ -569,7 +656,9 @@ async def execute_action(request: Request, cookies: dict[str, str], current_user
                 total=result.total,
                 metadata={"actionId": str(body.get("action_id", ""))},
             )
-            combat_state = turn_order_service.get_state(campaign_id=result.campaign_id, user_id=user["id"])
+            combat_state = turn_order_service.get_state(
+                campaign_id=result.campaign_id, user_id=user["id"]
+            )
             if combat_state.success and combat_state.combat is not None:
                 await RealtimeTransport().to_room(
                     room_id=result.campaign_id,
@@ -577,18 +666,31 @@ async def execute_action(request: Request, cookies: dict[str, str], current_user
                     payload=combat_state.state_payload() | {"updated_by": user["id"]},
                 )
         if result.applied:
-            await _emit_applied_damage(result.applied, user_id=user["id"], token_service=token_service)
+            await _emit_applied_damage(
+                result.applied, user_id=user["id"], token_service=token_service
+            )
         return _roll_response(result, roll_presentation_service=roll_presentation_service)
 
     await _emit_action_mutation(result, user_id=user["id"], token_service=token_service)
     return Response(
-        {"actor_id": result.actor_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "actor_id": result.actor_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
 @post("/game/actor/roll")
-async def roll_actor_formula(request: Request, cookies: dict[str, str], current_user: Row, sheet_action_service: SheetActionService, chat_service: ChatService, roll_presentation_service: RollPresentationService) -> Response[dict[str, Any]]:
+async def roll_actor_formula(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_action_service: SheetActionService,
+    chat_service: ChatService,
+    roll_presentation_service: RollPresentationService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = sheet_action_service.roll_formula(
@@ -599,12 +701,26 @@ async def roll_actor_formula(request: Request, cookies: dict[str, str], current_
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
-    await _broadcast_roll(result, user=user, chat_service=chat_service, roll_presentation_service=roll_presentation_service)
+    await _broadcast_roll(
+        result,
+        user=user,
+        chat_service=chat_service,
+        roll_presentation_service=roll_presentation_service,
+    )
     return _roll_response(result, roll_presentation_service=roll_presentation_service)
 
 
 @post("/game/actor/item/action")
-async def execute_item_action(request: Request, cookies: dict[str, str], current_user: Row, sheet_item_service: SheetItemService, turn_order_service: TurnOrderService, token_service: TokenService, chat_service: ChatService, roll_presentation_service: RollPresentationService) -> Response[dict[str, Any]]:
+async def execute_item_action(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_item_service: SheetItemService,
+    turn_order_service: TurnOrderService,
+    token_service: TokenService,
+    chat_service: ChatService,
+    roll_presentation_service: RollPresentationService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     inputs = body.get("inputs")
@@ -626,22 +742,42 @@ async def execute_item_action(request: Request, cookies: dict[str, str], current
             campaign_id=result.campaign_id,
             actor_id=result.actor_id,
             activity_type="sheet.item.action",
-            payload={"action_id": str(body.get("action_id", "")), "item_instance_id": str(body.get("item_instance_id", ""))},
+            payload={
+                "action_id": str(body.get("action_id", "")),
+                "item_instance_id": str(body.get("item_instance_id", "")),
+            },
         )
     if result.action_type == "roll":
-        await _broadcast_roll(result, user=user, chat_service=chat_service, roll_presentation_service=roll_presentation_service)
+        await _broadcast_roll(
+            result,
+            user=user,
+            chat_service=chat_service,
+            roll_presentation_service=roll_presentation_service,
+        )
         if result.applied:
-            await _emit_applied_damage(result.applied, user_id=user["id"], token_service=token_service)
+            await _emit_applied_damage(
+                result.applied, user_id=user["id"], token_service=token_service
+            )
         return _roll_response(result, roll_presentation_service=roll_presentation_service)
     await _emit_action_mutation(result, user_id=user["id"], token_service=token_service)
     return Response(
-        {"actor_id": result.actor_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "actor_id": result.actor_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
 @post("/game/actor/item/patch")
-async def patch_item_instance(request: Request, cookies: dict[str, str], current_user: Row, sheet_item_service: SheetItemService, token_service: TokenService) -> Response[dict[str, Any]]:
+async def patch_item_instance(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_item_service: SheetItemService,
+    token_service: TokenService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     patch = body.get("patch")
@@ -655,13 +791,23 @@ async def patch_item_instance(request: Request, cookies: dict[str, str], current
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
     return Response(
-        {"actor_id": result.actor_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "actor_id": result.actor_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
 @post("/game/actor/item/remove")
-async def remove_item_instance(request: Request, cookies: dict[str, str], current_user: Row, sheet_item_service: SheetItemService, token_service: TokenService) -> Response[dict[str, Any]]:
+async def remove_item_instance(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_item_service: SheetItemService,
+    token_service: TokenService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = sheet_item_service.remove_item(
@@ -673,21 +819,32 @@ async def remove_item_instance(request: Request, cookies: dict[str, str], curren
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
     return Response(
-        {"actor_id": result.actor_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "actor_id": result.actor_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
 @get("/game/content/packs/{system_id:str}")
 async def list_content_packs(
-    system_id: FromPath[str], request: Request, cookies: dict[str, str], content_pack_service: ContentPackService
+    system_id: FromPath[str],
+    request: Request,
+    cookies: dict[str, str],
+    content_pack_service: ContentPackService,
 ) -> Response[dict[str, Any]]:
     return Response({"packs": content_pack_service.list_packs(system_id)}, status_code=200)
 
 
 @get("/game/content/pack/{system_id:str}/{pack_id:str}")
 async def get_content_pack(
-    system_id: FromPath[str], pack_id: FromPath[str], request: Request, cookies: dict[str, str], content_pack_service: ContentPackService
+    system_id: FromPath[str],
+    pack_id: FromPath[str],
+    request: Request,
+    cookies: dict[str, str],
+    content_pack_service: ContentPackService,
 ) -> Response[dict[str, Any]]:
     pack = content_pack_service.get_pack(system_id, pack_id)
     if pack is None:
@@ -696,7 +853,13 @@ async def get_content_pack(
 
 
 @post("/game/actor/drop")
-async def drop_on_actor(request: Request, cookies: dict[str, str], current_user: Row, sheet_drop_service: SheetDropService, token_service: TokenService) -> Response[dict[str, Any]]:
+async def drop_on_actor(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_drop_service: SheetDropService,
+    token_service: TokenService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     source = body.get("source") if isinstance(body.get("source"), dict) else {}
@@ -724,15 +887,26 @@ async def drop_on_actor(request: Request, cookies: dict[str, str], current_user:
                 "token_view": result.token_view or {},
             },
         )
-        await _refresh_actor_tokens(campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service)
+        await _refresh_actor_tokens(
+            campaign_id=result.campaign_id, actor_id=result.actor_id, token_service=token_service
+        )
     return Response(
-        {"actor_id": result.actor_id, "version": result.version, "changed_paths": result.changed_paths},
+        {
+            "actor_id": result.actor_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
         status_code=200,
     )
 
 
 @post("/game/content/import")
-async def import_content_entry(request: Request, cookies: dict[str, str], current_user: Row, content_import_service: ContentImportService) -> Response[dict[str, Any]]:
+async def import_content_entry(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    content_import_service: ContentImportService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     result = content_import_service.import_entry(
@@ -759,7 +933,13 @@ async def import_content_entry(request: Request, cookies: dict[str, str], curren
 
 
 @post("/game/actor/sheet-data/set")
-async def set_sheet_data(request: Request, cookies: dict[str, str], current_user: Row, sheet_data_service: SheetDataService, token_service: TokenService) -> Response[dict[str, Any]]:
+async def set_sheet_data(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_data_service: SheetDataService,
+    token_service: TokenService,
+) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     data = body.get("data")

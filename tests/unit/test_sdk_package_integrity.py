@@ -1,4 +1,4 @@
-﻿"""Phase 6 â€” package integrity migration.
+"""Phase 6 â€” package integrity migration.
 
 The install registry stores a manifest hash and validation status; disk is the
 runtime authority; the doctor detects drift between the stored snapshot/hash and
@@ -239,9 +239,13 @@ def test_migration_preserves_existing_installed_packages(tmp_path):
         migration.upgrade()
 
     with eng.connect() as conn:
-        rows = conn.execute(
-            text("SELECT id, manifest_hash, last_validation_status FROM installed_packages")
-        ).mappings().all()
+        rows = (
+            conn.execute(
+                text("SELECT id, manifest_hash, last_validation_status FROM installed_packages")
+            )
+            .mappings()
+            .all()
+        )
     eng.dispose()
 
     assert len(rows) == 1

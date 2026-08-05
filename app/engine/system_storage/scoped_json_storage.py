@@ -34,8 +34,6 @@ def _safe_segment(segment: str) -> bool:
 
 
 class ScopedJsonStorage:
-                                                                              
-
     def read_entity(
         self, *, kind: str, system_id: str, campaign_id: str, entity_id: str
     ) -> dict | None:
@@ -75,9 +73,7 @@ class ScopedJsonStorage:
         atomic_write_text(path, json.dumps(envelope, ensure_ascii=False, separators=(",", ":")))
         return envelope
 
-    def delete_entity(
-        self, *, kind: str, system_id: str, campaign_id: str, entity_id: str
-    ) -> None:
+    def delete_entity(self, *, kind: str, system_id: str, campaign_id: str, entity_id: str) -> None:
         path = entity_data_path(
             kind=kind, system_id=system_id, campaign_id=campaign_id, entity_id=entity_id
         )
@@ -106,8 +102,6 @@ class ScopedJsonStorage:
             if path.exists():
                 shutil.rmtree(path)
 
-                                                                              
-
     def read_actor(self, *, system_id: str, campaign_id: str, actor_id: str) -> dict | None:
         return self.read_entity(
             kind="actor", system_id=system_id, campaign_id=campaign_id, entity_id=actor_id
@@ -129,8 +123,6 @@ class ScopedJsonStorage:
         self.delete_entity(
             kind="actor", system_id=system_id, campaign_id=campaign_id, entity_id=actor_id
         )
-
-                                                                              
 
     def read_item(self, *, system_id: str, campaign_id: str, item_id: str) -> dict | None:
         return self.read_entity(

@@ -149,11 +149,13 @@ class ViewportSubscriptionService:
                 )
 
             for chunk in metadata_result.chunks or []:
-                known_version = known.get(self.chunk_key(
-                    layer_id=layer_id,
-                    cx=chunk["cx"],
-                    cy=chunk["cy"],
-                ))
+                known_version = known.get(
+                    self.chunk_key(
+                        layer_id=layer_id,
+                        cx=chunk["cx"],
+                        cy=chunk["cy"],
+                    )
+                )
 
                 if known_version == chunk["version"]:
                     continue

@@ -117,7 +117,11 @@ class ActorRepository:
                 update(actors_core)
                 .where(actors_core.c.id == actor_id)
                 .values(
-                    {field.key: storage_path, "version": actors_core.c.version + 1, "updated_at": now}
+                    {
+                        field.key: storage_path,
+                        "version": actors_core.c.version + 1,
+                        "updated_at": now,
+                    }
                 )
             )
 
@@ -138,8 +142,6 @@ class ActorRepository:
                 .where(actors_core.c.folder_id == folder_id)
                 .values(folder_id=None, updated_at=now)
             )
-
-                                                                              
 
     def has_owner(self, *, actor_id: str, user_id: str) -> bool:
         with engine_connect() as conn:
@@ -187,9 +189,9 @@ class ActorRepository:
                         users.c.name.label("user_name"),
                     )
                     .select_from(
-                        actor_owners
-                        .join(users, users.c.id == actor_owners.c.user_id)
-                        .join(actors_core, actors_core.c.id == actor_owners.c.actor_id)
+                        actor_owners.join(users, users.c.id == actor_owners.c.user_id).join(
+                            actors_core, actors_core.c.id == actor_owners.c.actor_id
+                        )
                     )
                     .where(actors_core.c.campaign_id == campaign_id)
                     .order_by(users.c.name.asc())
@@ -213,7 +215,7 @@ class ActorRepository:
             )
 
     @staticmethod
-    def _insert_owner_ignore(conn, *, actor_id: str, user_id: str) -> None:                
+    def _insert_owner_ignore(conn, *, actor_id: str, user_id: str) -> None:
         values = {"actor_id": actor_id, "user_id": user_id}
         conn.execute(
             upsert_statement(

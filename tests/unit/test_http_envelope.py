@@ -26,6 +26,7 @@ STATIC_JS = Path(__file__).resolve().parents[2] / "static" / "js"
 
 # --- backend helper unit tests -------------------------------------------------
 
+
 def test_wants_json_detects_accept_and_xhr():
     assert wants_json(types.SimpleNamespace(headers={"accept": "application/json"}))
     assert wants_json(types.SimpleNamespace(headers={"x-requested-with": "XMLHttpRequest"}))
@@ -40,6 +41,7 @@ def test_json_ok_and_error_envelope_shapes():
 
 
 # --- backend endpoint envelope tests ------------------------------------------
+
 
 def _arm_csrf_only(client) -> None:
     token = generate_csrf_token(config.session_secret)
@@ -103,6 +105,7 @@ def test_accept_without_session_returns_session_expired(db):
 
 
 # --- frontend source guards ----------------------------------------------------
+
 
 def test_http_client_maps_status_codes_to_error_keys():
     source = (STATIC_JS / "core" / "http.js").read_text(encoding="utf-8")

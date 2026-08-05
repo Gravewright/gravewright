@@ -70,9 +70,7 @@ def test_concurrent_accepts_create_single_membership(db, concurrency):
 
 
 def test_already_member_accept_is_idempotent_success(db):
-    campaign_id, player_id, invitation_id = _setup_pending_invitation(
-        campaign_title="Idempotent"
-    )
+    campaign_id, player_id, invitation_id = _setup_pending_invitation(campaign_title="Idempotent")
 
     first = CampaignInvitationService().accept_invitation(
         invitation_id=invitation_id, user_id=player_id

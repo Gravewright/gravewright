@@ -108,14 +108,12 @@ def render_blocks(
     missing = sorted(cap for cap in known if cap not in descriptions)
     if missing:
         raise GenerationError(
-            "capabilities without a description (add them to the sidecar): "
-            + ", ".join(missing)
+            "capabilities without a description (add them to the sidecar): " + ", ".join(missing)
         )
 
     allowed_rows = [(f"`{cap}`", descriptions[cap]) for cap in sorted(known)]
     gate_rows = [
-        (f"`sdk.{method}`", f"`{cap}`")
-        for method, cap in sorted(method_to_capability.items())
+        (f"`sdk.{method}`", f"`{cap}`") for method, cap in sorted(method_to_capability.items())
     ]
     forbidden_block = "```text\n" + "\n".join(sorted(forbidden)) + "\n```"
 
@@ -176,9 +174,7 @@ def _process_language(lang: str, sources: dict, *, check: bool) -> list[str]:
     )
     if undocumented:
         rel = config["reference_md"].relative_to(PROJECT_ROOT)
-        raise GenerationError(
-            f"{rel} is missing gated methods: " + ", ".join(undocumented)
-        )
+        raise GenerationError(f"{rel} is missing gated methods: " + ", ".join(undocumented))
 
     return drift
 

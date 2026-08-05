@@ -51,10 +51,7 @@ class RealtimeMetrics:
         return {
             "counters": counters,
             "gauges": gauges,
-            "histograms": {
-                name: snapshot.__dict__
-                for name, snapshot in histograms.items()
-            },
+            "histograms": {name: snapshot.__dict__ for name, snapshot in histograms.items()},
         }
 
     def reset(self) -> None:

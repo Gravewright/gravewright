@@ -58,9 +58,7 @@ def _resolve_ws_allowed_origins(allowed_hosts: tuple[str, ...]) -> tuple[str, ..
     configured" and the guard falls back to allow-all (development).
     """
     explicit = tuple(
-        o.strip().rstrip("/")
-        for o in env_str("WS_ALLOWED_ORIGINS", "").split(",")
-        if o.strip()
+        o.strip().rstrip("/") for o in env_str("WS_ALLOWED_ORIGINS", "").split(",") if o.strip()
     )
     if explicit:
         return explicit
@@ -212,7 +210,9 @@ def _validate_config(cfg: "AppConfig") -> None:
         if any(host.strip() == "*" for host in cfg.allowed_hosts):
             raise RuntimeError("ALLOWED_HOSTS must not contain '*' in production")
         if not _allowed_host_matches(cfg.public_base_url, cfg.allowed_hosts):
-            raise RuntimeError("PUBLIC_BASE_URL host must be present in ALLOWED_HOSTS in production")
+            raise RuntimeError(
+                "PUBLIC_BASE_URL host must be present in ALLOWED_HOSTS in production"
+            )
         if not cfg.session_cookie_secure:
             raise RuntimeError("SESSION_COOKIE_SECURE must be true in production")
         if not cfg.session_cookie_httponly:
@@ -250,6 +250,7 @@ class AppConfig:
     database_url: str
     allow_sqlite_in_production: bool
     auto_migrate: bool
+    allow_metadata_bootstrap: bool
     database_pool_size: int
     database_max_overflow: int
     database_pool_timeout: int
@@ -283,30 +284,25 @@ class AppConfig:
     auth_password_reset_window_seconds: int
     auth_password_reset_token_ttl_seconds: int
 
-                                 
     ws_max_message_bytes: int
     ws_commands_per_second: int
     ws_burst_commands: int
 
-                                                                        
     scene_viewport_max_width_chunks: int
     scene_viewport_max_height_chunks: int
     scene_viewport_max_area_chunks: int
     scene_viewport_max_known_chunks: int
     scene_viewport_max_layers: int
 
-                 
     fog_max_ops_per_command: int
     fog_max_polygon_points: int
     fog_max_coordinate_abs: int
     fog_require_expected_version: bool
 
-                     
     token_create_many_max: int
     board_markers_max_per_scene: int
     board_measurements_max_per_user: int
 
-                          
     map_upload_max_bytes: int
     map_image_max_width: int
     map_image_max_height: int
@@ -333,6 +329,7 @@ config = AppConfig(
     database_url=_resolve_database_url(),
     allow_sqlite_in_production=env_bool("ALLOW_SQLITE_IN_PRODUCTION", False),
     auto_migrate=env_bool("AUTO_MIGRATE", False),
+    allow_metadata_bootstrap=env_bool("ALLOW_METADATA_BOOTSTRAP", False),
     database_pool_size=env_int("DATABASE_POOL_SIZE", 5),
     database_max_overflow=env_int("DATABASE_MAX_OVERFLOW", 10),
     database_pool_timeout=env_int("DATABASE_POOL_TIMEOUT", 30),

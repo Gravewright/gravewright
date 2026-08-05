@@ -63,13 +63,12 @@ from app.realtime.presence import PresenceService
 
 
 def _provide_auth_service() -> AuthService:
-                                                                                     
+
     return AuthService(email_sender=DevEmailSender())
 
 
 def _singleton(factory) -> Provide:
-                                                                               
-                                                                                
+
     return Provide(lambda: factory(), sync_to_thread=False, use_cache=True)
 
 

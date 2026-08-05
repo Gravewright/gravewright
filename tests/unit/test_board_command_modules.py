@@ -82,10 +82,16 @@ def test_normalize_board_shape_happy_and_error():
 
 
 def test_normalize_freehand_point_bounds():
-    too_few = _normalize_freehand({"id": "d", "scene_id": "s", "points": [{"worldX": 0, "worldY": 0}]}, "d")
+    too_few = _normalize_freehand(
+        {"id": "d", "scene_id": "s", "points": [{"worldX": 0, "worldY": 0}]}, "d"
+    )
     assert "2 to 512 points" in too_few
     ok = _normalize_freehand(
-        {"id": "d", "scene_id": "s", "points": [{"worldX": 0, "worldY": 0}, {"worldX": 1, "worldY": 1}]},
+        {
+            "id": "d",
+            "scene_id": "s",
+            "points": [{"worldX": 0, "worldY": 0}, {"worldX": 1, "worldY": 1}],
+        },
         "d",
     )
     assert ok["kind"] == "freehand" and len(ok["points"]) == 2
@@ -93,7 +99,13 @@ def test_normalize_freehand_point_bounds():
 
 def test_normalize_text_clamps_font_and_length():
     ok = _normalize_text(
-        {"id": "t", "scene_id": "s", "text": " hi ", "position": {"worldX": 0, "worldY": 0}, "fontSize": 5},
+        {
+            "id": "t",
+            "scene_id": "s",
+            "text": " hi ",
+            "position": {"worldX": 0, "worldY": 0},
+            "fontSize": 5,
+        },
         "t",
     )
     assert ok["kind"] == "text" and ok["text"] == "hi" and ok["fontSize"] == 8.0

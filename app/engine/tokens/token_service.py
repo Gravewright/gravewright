@@ -109,17 +109,8 @@ class TokenService:
         projections = {a["id"]: self.projector.project(a) for a in actors}
         actors_by_id = {a["id"]: a for a in actors}
         actor_id_counts = {aid: actor_ids.count(aid) for aid in set(actor_ids)}
-        actor_existing_tokens = {
-            aid: self.tokens.list_by_actor(aid)
-            for aid in actor_id_counts
-        }
+        actor_existing_tokens = {aid: self.tokens.list_by_actor(aid) for aid in actor_id_counts}
 
-                              
-                                                                                           
-                                                                                        
-                                                                                     
-                                                                                        
-                                                     
         promoted_views: list[dict] = []
         for aid, existing_tokens in actor_existing_tokens.items():
             creates_more_than_one = actor_id_counts[aid] > 1
@@ -168,19 +159,21 @@ class TokenService:
                 name = projection.get("name") or actor["name"]
                 token_asset_url = projection.get("token_asset_url")
                 overrides = self._snapshot_overrides(actor=actor, projection=projection)
-            specs.append({
-                "scene_id": scene_id,
-                "actor_id": actor["id"],
-                "grid_x": gx,
-                "grid_y": gy,
-                "width_cells": width_cells,
-                "height_cells": height_cells,
-                "disposition": config.get("disposition", TokenDisposition.NEUTRAL),
-                "actor_link_mode": actor_link_mode,
-                "name": name,
-                "token_asset_url": token_asset_url,
-                "overrides": overrides,
-            })
+            specs.append(
+                {
+                    "scene_id": scene_id,
+                    "actor_id": actor["id"],
+                    "grid_x": gx,
+                    "grid_y": gy,
+                    "width_cells": width_cells,
+                    "height_cells": height_cells,
+                    "disposition": config.get("disposition", TokenDisposition.NEUTRAL),
+                    "actor_link_mode": actor_link_mode,
+                    "name": name,
+                    "token_asset_url": token_asset_url,
+                    "overrides": overrides,
+                }
+            )
 
         created = self.tokens.create_many(specs)
 
@@ -247,15 +240,15 @@ class TokenService:
         if transport is None:
             return
         tokens = await run_blocking(self.tokens.list_by_actor, actor_id)
-        tokens = [token for token in tokens if token.get("actor_link_mode") == TokenActorLinkMode.LINKED]
+        tokens = [
+            token for token in tokens if token.get("actor_link_mode") == TokenActorLinkMode.LINKED
+        ]
         if not tokens:
             return
         tokens_by_scene: dict[str, list[dict]] = {}
         for token in tokens:
             tokens_by_scene.setdefault(token["scene_id"], []).append(token)
         for scene_id, scene_tokens in tokens_by_scene.items():
-                                                                              
-                                                                        
             await transport.to_room(
                 room_id=campaign_id,
                 event=TransportEvent.TOKENS_UPDATED,
@@ -291,7 +284,9 @@ class TokenService:
         if token is None:
             return TokenResult(success=False, error_key="tokens.errors.not_found")
 
-        if not await run_blocking(self._can_control_token, token=token, user_id=user_id, campaign_id=campaign_id):
+        if not await run_blocking(
+            self._can_control_token, token=token, user_id=user_id, campaign_id=campaign_id
+        ):
             return TokenResult(success=False, error_key="tokens.errors.permission_denied")
 
         if token.get("locked"):
@@ -305,7 +300,9 @@ class TokenService:
             expected_version=expected_version,
         )
         if updated is None:
-            return TokenResult(success=False, token=token, error_key="tokens.errors.version_conflict")
+            return TokenResult(
+                success=False, token=token, error_key="tokens.errors.version_conflict"
+            )
 
         if transport is not None:
             await self._emit_token_event_to_viewers(
@@ -367,7 +364,9 @@ class TokenService:
             expected_version=expected_version,
         )
         if updated is None:
-            return TokenResult(success=False, token=token, error_key="tokens.errors.version_conflict")
+            return TokenResult(
+                success=False, token=token, error_key="tokens.errors.version_conflict"
+            )
 
         if transport is not None:
             await self._emit_token_event_to_viewers(
@@ -428,7 +427,9 @@ class TokenService:
             expected_version=expected_version,
         )
         if updated is None:
-            return TokenResult(success=False, token=token, error_key="tokens.errors.version_conflict")
+            return TokenResult(
+                success=False, token=token, error_key="tokens.errors.version_conflict"
+            )
 
         if transport is not None:
             await self._emit_token_event_to_viewers(
@@ -584,7 +585,9 @@ class TokenService:
         ):
             return TokenResult(success=False, error_key="tokens.errors.permission_denied")
 
-        removed = await run_blocking(self.conditions.remove, token_id=token_id, condition_id=condition_id)
+        removed = await run_blocking(
+            self.conditions.remove, token_id=token_id, condition_id=condition_id
+        )
         if not removed:
             return TokenResult(success=False, error_key="tokens.errors.condition_not_found")
 
@@ -620,7 +623,6 @@ class TokenService:
         if campaign is None:
             return TokenResult(success=False, error_key="tokens.errors.permission_denied")
 
-                                                                                  
         is_gm = has_full_view(campaign["member_role"])
 
         all_tokens = self.tokens.list_by_scene(scene_id)
@@ -661,7 +663,7 @@ class TokenService:
         token_views: list[dict],
         transport: RealtimeGatewayContract,
     ) -> None:
-                                                     
+
         await transport.to_gm(
             room_id=campaign_id,
             event=TransportEvent.TOKENS_CREATED,
@@ -672,7 +674,6 @@ class TokenService:
             },
         )
 
-                                                                                        
         visible_tokens = [view for view in token_views if not view.get("hidden")]
         if visible_tokens:
             await transport.to_players_in_room(
@@ -708,8 +709,7 @@ class TokenService:
         )
 
     def _can_view_token(self, *, token: dict, user_id: str, is_gm: bool) -> bool:
-                                                                
-                                                                                                
+
         return is_gm or not token.get("hidden")
 
     def _authorize_token_management(
@@ -736,11 +736,9 @@ class TokenService:
         if member_role is None:
             return False
 
-                                                             
         if member_role == PlayerRole.GM.value:
             return True
 
-                                                                     
         actor_id = token.get("actor_id")
         if not actor_id:
             return False
@@ -773,6 +771,7 @@ class TokenService:
 
     def _load_token_config(self, actor: dict) -> dict:
         import json as _json
+
         config_json = actor.get("default_token_config_json")
         if config_json:
             try:

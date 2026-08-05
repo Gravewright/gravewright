@@ -63,7 +63,10 @@ class SceneLayerRepository:
                 conn.execute(
                     select(scene_layers_table)
                     .where(scene_layers_table.c.scene_id == scene_id)
-                    .order_by(scene_layers_table.c.display_order.asc(), scene_layers_table.c.created_at.asc())
+                    .order_by(
+                        scene_layers_table.c.display_order.asc(),
+                        scene_layers_table.c.created_at.asc(),
+                    )
                 )
             )
 
@@ -121,5 +124,7 @@ class SceneLayerRepository:
 
     def _get_by_id(self, conn, layer_id: str) -> dict | None:
         return one_or_none(
-            conn.execute(select(scene_layers_table).where(scene_layers_table.c.id == layer_id).limit(1))
+            conn.execute(
+                select(scene_layers_table).where(scene_layers_table.c.id == layer_id).limit(1)
+            )
         )

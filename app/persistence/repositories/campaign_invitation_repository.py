@@ -53,9 +53,9 @@ class CampaignInvitationRepository:
                         inviter.c.name.label("invited_by_name"),
                     )
                     .select_from(
-                        invitations_table
-                        .join(campaigns_table, campaigns_table.c.id == invitations_table.c.campaign_id)
-                        .join(inviter, inviter.c.id == invitations_table.c.invited_by_user_id)
+                        invitations_table.join(
+                            campaigns_table, campaigns_table.c.id == invitations_table.c.campaign_id
+                        ).join(inviter, inviter.c.id == invitations_table.c.invited_by_user_id)
                     )
                     .where(invitations_table.c.invited_user_id == user_id)
                     .where(invitations_table.c.status == "pending")
@@ -310,9 +310,9 @@ class CampaignInvitationRepository:
                         members_table.c.role.label("member_role"),
                     )
                     .select_from(
-                        invitations_table
-                        .join(campaigns_table, campaigns_table.c.id == invitations_table.c.campaign_id)
-                        .join(
+                        invitations_table.join(
+                            campaigns_table, campaigns_table.c.id == invitations_table.c.campaign_id
+                        ).join(
                             members_table,
                             (members_table.c.campaign_id == campaigns_table.c.id)
                             & (members_table.c.user_id == invitations_table.c.invited_user_id),

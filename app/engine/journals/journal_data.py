@@ -15,7 +15,7 @@ VISIBILITIES = {"private", "shared", "handout"}
 QUEST_STATUSES = ["draft", "available", "active", "completed", "failed", "archived"]
 BOARD_ENTRY_VISIBILITIES = {"public_card"}
 
-                                                                                     
+
 PLAYER_VISIBLE_STATUSES = {"available", "active", "completed", "failed"}
 
 RICHTEXT_LIMIT = 20000
@@ -192,9 +192,7 @@ def normalize_board_data(raw: object) -> dict:
         "showCompleted": _bool(filters.get("showCompleted", True)),
         "showFailed": _bool(filters.get("showFailed", True)),
     }
-                                                                                 
-                                                                            
-                                                                               
+
     if not any(status_filters.values()):
         status_filters = dict.fromkeys(status_filters, True)
     return {
@@ -213,9 +211,6 @@ def normalize_data_for(journal_type: str, raw: object) -> dict:
     if journal_type == "diary":
         return normalize_diary_data(raw)
     return {}
-
-
-                                                                            
 
 
 def build_quest_gm_view(*, title: str, data: dict) -> dict:

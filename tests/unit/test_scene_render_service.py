@@ -189,9 +189,12 @@ async def test_viewport_chunks_can_include_data_and_decoded_refs(db, tmp_path):
     assert result.success
     assert [(chunk.cx, chunk.cy) for chunk in result.chunks] == [(0, 0)]
     assert result.chunks[0].tile_refs[:4] == (1, 2, 3, 4)
-    assert result.chunks[0].tile_refs[
-        SCENE_NATIVE_CHUNK_SIZE:SCENE_NATIVE_CHUNK_SIZE + 4
-    ] == (5, 6, 7, 8)
+    assert result.chunks[0].tile_refs[SCENE_NATIVE_CHUNK_SIZE : SCENE_NATIVE_CHUNK_SIZE + 4] == (
+        5,
+        6,
+        7,
+        8,
+    )
     assert sum(1 for ref in result.chunks[0].tile_refs if ref != 0) == 8
     assert result.chunks[0].data is not None
 

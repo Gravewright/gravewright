@@ -181,12 +181,16 @@ def test_gm_edit_does_not_clear_resource_permissions(db):
         title="Shared",
     )
     assert created.success
-    assert JournalService().set_member_access(
-        journal_id=created.journal_id,
-        target_user_id=player_id,
-        access_level="owner",
-        requester_user_id=gm_id,
-    ).success
+    assert (
+        JournalService()
+        .set_member_access(
+            journal_id=created.journal_id,
+            target_user_id=player_id,
+            access_level="owner",
+            requester_user_id=gm_id,
+        )
+        .success
+    )
 
     update = JournalService().update_journal(
         journal_id=created.journal_id,
@@ -345,13 +349,19 @@ def test_board_player_sees_public_card_not_draft(db):
     # ``available`` is added without pinning: players still see it (every added
     # quest is visible); pinning only floats a quest to the top.
     assert service.add_quest_to_board(
-        board_id=board.journal_id, quest_id=available.journal_id, requester_user_id=gm_id,
+        board_id=board.journal_id,
+        quest_id=available.journal_id,
+        requester_user_id=gm_id,
     ).success
     assert service.add_quest_to_board(
-        board_id=board.journal_id, quest_id=draft.journal_id, requester_user_id=gm_id,
+        board_id=board.journal_id,
+        quest_id=draft.journal_id,
+        requester_user_id=gm_id,
     ).success
     assert service.add_quest_to_board(
-        board_id=board.journal_id, quest_id=pinned.journal_id, requester_user_id=gm_id,
+        board_id=board.journal_id,
+        quest_id=pinned.journal_id,
+        requester_user_id=gm_id,
         pinned=True,
     ).success
 
@@ -413,12 +423,23 @@ def test_diary_doc_round_trip_and_player_gm_block_filter(db):
     doc = {
         "format": "gw-journal-doc-v1",
         "version": 1,
-        "doc": {"type": "doc", "content": [
-            {"type": "paragraph", "attrs": {"visibility": "public"},
-             "content": [{"type": "text", "text": "Everyone sees this"}]},
-            {"type": "gwCallout", "attrs": {"kind": "secret", "visibility": "gm", "title": "Secret"},
-             "content": [{"type": "paragraph", "content": [{"type": "text", "text": "GM only"}]}]},
-        ]},
+        "doc": {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"visibility": "public"},
+                    "content": [{"type": "text", "text": "Everyone sees this"}],
+                },
+                {
+                    "type": "gwCallout",
+                    "attrs": {"kind": "secret", "visibility": "gm", "title": "Secret"},
+                    "content": [
+                        {"type": "paragraph", "content": [{"type": "text", "text": "GM only"}]}
+                    ],
+                },
+            ],
+        },
     }
     updated = JournalService().update_journal(
         journal_id=created.journal_id,
@@ -431,10 +452,14 @@ def test_diary_doc_round_trip_and_player_gm_block_filter(db):
 
     journal = JournalRepository().get_by_id(created.journal_id)
     gm_view = JournalService().build_view(
-        journal=journal, campaign={"member_role": PlayerRole.GM.value}, user_id=gm_id,
+        journal=journal,
+        campaign={"member_role": PlayerRole.GM.value},
+        user_id=gm_id,
     )
     player_view = JournalService().build_view(
-        journal=journal, campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player_id,
+        journal=journal,
+        campaign={"member_role": PlayerRole.PLAYER.value},
+        user_id=player_id,
     )
 
     gm_blocks = gm_view["content_doc"]["doc"]["content"]
@@ -451,16 +476,31 @@ def test_quest_public_description_strips_gm_blocks_for_players(db):
     seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
 
     description = {
-        "format": "gw-journal-doc-v1", "version": 1,
-        "doc": {"type": "doc", "content": [
-            {"type": "paragraph", "attrs": {"visibility": "public"},
-             "content": [{"type": "text", "text": "Public clue"}]},
-            {"type": "gwCallout", "attrs": {"kind": "secret", "visibility": "gm", "title": "S"},
-             "content": [{"type": "paragraph", "content": [{"type": "text", "text": "GM clue"}]}]},
-        ]},
+        "format": "gw-journal-doc-v1",
+        "version": 1,
+        "doc": {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"visibility": "public"},
+                    "content": [{"type": "text", "text": "Public clue"}],
+                },
+                {
+                    "type": "gwCallout",
+                    "attrs": {"kind": "secret", "visibility": "gm", "title": "S"},
+                    "content": [
+                        {"type": "paragraph", "content": [{"type": "text", "text": "GM clue"}]}
+                    ],
+                },
+            ],
+        },
     }
     created = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm_id, journal_type="quest", title="Crypt",
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        journal_type="quest",
+        title="Crypt",
         visibility="shared",
         data={"status": "available", "public": {"summary": "s", "description": description}},
     )
@@ -468,10 +508,14 @@ def test_quest_public_description_strips_gm_blocks_for_players(db):
     journal = JournalRepository().get_by_id(created.journal_id)
 
     player_view = JournalService().build_view(
-        journal=dict(journal), campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player_id,
+        journal=dict(journal),
+        campaign={"member_role": PlayerRole.PLAYER.value},
+        user_id=player_id,
     )
     gm_view = JournalService().build_view(
-        journal=dict(journal), campaign={"member_role": "gm"}, user_id=gm_id,
+        journal=dict(journal),
+        campaign={"member_role": "gm"},
+        user_id=gm_id,
     )
 
     player_blocks = player_view["quest"]["public"]["description"]["doc"]["content"]
@@ -488,45 +532,77 @@ def test_non_gm_owner_never_sees_gm_blocks_and_save_preserves_them(db):
     seed_member(campaign_id, player, PlayerRole.PLAYER.value)
 
     created = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="diary", title="Lore",
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="diary",
+        title="Lore",
     )
     doc = {
-        "format": "gw-journal-doc-v1", "version": 1,
-        "doc": {"type": "doc", "content": [
-            {"type": "paragraph", "attrs": {"visibility": "public"},
-             "content": [{"type": "text", "text": "Public"}]},
-            {"type": "gwCallout", "attrs": {"kind": "secret", "visibility": "gm", "title": "S"},
-             "content": [{"type": "paragraph", "content": [{"type": "text", "text": "GM secret"}]}]},
-        ]},
+        "format": "gw-journal-doc-v1",
+        "version": 1,
+        "doc": {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"visibility": "public"},
+                    "content": [{"type": "text", "text": "Public"}],
+                },
+                {
+                    "type": "gwCallout",
+                    "attrs": {"kind": "secret", "visibility": "gm", "title": "S"},
+                    "content": [
+                        {"type": "paragraph", "content": [{"type": "text", "text": "GM secret"}]}
+                    ],
+                },
+            ],
+        },
     }
-    JournalService().update_journal(journal_id=created.journal_id, user_id=gm, title="Lore", data={"content": doc})
-                                                                               
+    JournalService().update_journal(
+        journal_id=created.journal_id, user_id=gm, title="Lore", data={"content": doc}
+    )
+
     JournalService().toggle_owner(
-        journal_id=created.journal_id, user_id_to_toggle=player, requester_user_id=gm,
+        journal_id=created.journal_id,
+        user_id_to_toggle=player,
+        requester_user_id=gm,
     )
 
     journal = JournalRepository().get_by_id(created.journal_id)
     owner_view = JournalService().build_view(
-        journal=dict(journal), campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player,
+        journal=dict(journal),
+        campaign={"member_role": PlayerRole.PLAYER.value},
+        user_id=player,
     )
     assert [b["type"] for b in owner_view["content_doc"]["doc"]["content"]] == ["paragraph"]
 
-                                                                            
     edited = {
-        "format": "gw-journal-doc-v1", "version": 1,
-        "doc": {"type": "doc", "content": [
-            {"type": "paragraph", "attrs": {"visibility": "public"},
-             "content": [{"type": "text", "text": "Edited by owner"}]},
-        ]},
+        "format": "gw-journal-doc-v1",
+        "version": 1,
+        "doc": {
+            "type": "doc",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "attrs": {"visibility": "public"},
+                    "content": [{"type": "text", "text": "Edited by owner"}],
+                },
+            ],
+        },
     }
     saved = JournalService().update_journal(
-        journal_id=created.journal_id, user_id=player, title="Lore", data={"content": edited},
+        journal_id=created.journal_id,
+        user_id=player,
+        title="Lore",
+        data={"content": edited},
     )
     assert saved.success
 
     journal2 = JournalRepository().get_by_id(created.journal_id)
     gm_view = JournalService().build_view(
-        journal=dict(journal2), campaign={"member_role": "gm"}, user_id=gm,
+        journal=dict(journal2),
+        campaign={"member_role": "gm"},
+        user_id=gm,
     )
     types = [b["type"] for b in gm_view["content_doc"]["doc"]["content"]]
     assert "gwCallout" in types
@@ -539,32 +615,53 @@ def test_quest_is_viewable_via_shared_board(db):
     seed_member(campaign_id, player, PlayerRole.PLAYER.value)
 
     quest = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="quest", title="On Board",
-        visibility="private", data={"status": "available", "public": {"summary": "s"}},
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="quest",
+        title="On Board",
+        visibility="private",
+        data={"status": "available", "public": {"summary": "s"}},
     )
     board = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="quest_board", title="Board",
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="quest_board",
+        title="Board",
         visibility="shared",
     )
     added = JournalService().add_quest_to_board(
-        board_id=board.journal_id, quest_id=quest.journal_id, requester_user_id=gm,
+        board_id=board.journal_id,
+        quest_id=quest.journal_id,
+        requester_user_id=gm,
     )
     assert added.success
 
     on_board = JournalRepository().get_by_id(quest.journal_id)
-    assert JournalService().can_view_journal(
-        journal=dict(on_board), campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player,
-    ) is True
+    assert (
+        JournalService().can_view_journal(
+            journal=dict(on_board),
+            campaign={"member_role": PlayerRole.PLAYER.value},
+            user_id=player,
+        )
+        is True
+    )
 
-                                                                            
     hidden = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="quest", title="Hidden",
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="quest",
+        title="Hidden",
         visibility="private",
     )
     hidden_row = JournalRepository().get_by_id(hidden.journal_id)
-    assert JournalService().can_view_journal(
-        journal=dict(hidden_row), campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player,
-    ) is False
+    assert (
+        JournalService().can_view_journal(
+            journal=dict(hidden_row),
+            campaign={"member_role": PlayerRole.PLAYER.value},
+            user_id=player,
+        )
+        is False
+    )
 
 
 def test_diary_gm_fields_are_gm_only_and_preserved(db):
@@ -574,40 +671,58 @@ def test_diary_gm_fields_are_gm_only_and_preserved(db):
     seed_member(campaign_id, player, PlayerRole.PLAYER.value)
 
     created = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="diary", title="Lore",
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="diary",
+        title="Lore",
     )
     JournalService().toggle_owner(
-        journal_id=created.journal_id, user_id_to_toggle=player, requester_user_id=gm,
+        journal_id=created.journal_id,
+        user_id_to_toggle=player,
+        requester_user_id=gm,
     )
 
     def _doc(text):
-        return {"format": "gw-journal-doc-v1", "version": 1,
-                "doc": {"type": "doc", "content": [
-                    {"type": "paragraph", "content": [{"type": "text", "text": text}]}]}}
+        return {
+            "format": "gw-journal-doc-v1",
+            "version": 1,
+            "doc": {
+                "type": "doc",
+                "content": [{"type": "paragraph", "content": [{"type": "text", "text": text}]}],
+            },
+        }
 
     JournalService().update_journal(
-        journal_id=created.journal_id, user_id=gm, title="Lore",
-        data={"content": _doc("Public body"),
-              "gm": {"notes": _doc("Secret plan"), "secrets": _doc("Hidden twist")}},
+        journal_id=created.journal_id,
+        user_id=gm,
+        title="Lore",
+        data={
+            "content": _doc("Public body"),
+            "gm": {"notes": _doc("Secret plan"), "secrets": _doc("Hidden twist")},
+        },
     )
 
     journal = JournalRepository().get_by_id(created.journal_id)
     gm_view = JournalService().build_view(
-        journal=dict(journal), campaign={"member_role": "gm"}, user_id=gm)
+        journal=dict(journal), campaign={"member_role": "gm"}, user_id=gm
+    )
     player_view = JournalService().build_view(
-        journal=dict(journal), campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player)
+        journal=dict(journal), campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player
+    )
 
     assert gm_view["diary"]["gm"]["notes"]["doc"]["content"]
-    assert "diary" not in player_view                                          
+    assert "diary" not in player_view
 
-                                                                          
     JournalService().update_journal(
-        journal_id=created.journal_id, user_id=player, title="Lore",
+        journal_id=created.journal_id,
+        user_id=player,
+        title="Lore",
         data={"content": _doc("Edited body"), "gm": {"notes": _doc(""), "secrets": _doc("")}},
     )
     journal2 = JournalRepository().get_by_id(created.journal_id)
     gm_view2 = JournalService().build_view(
-        journal=dict(journal2), campaign={"member_role": "gm"}, user_id=gm)
+        journal=dict(journal2), campaign={"member_role": "gm"}, user_id=gm
+    )
     notes_text = gm_view2["diary"]["gm"]["notes"]["doc"]["content"][0]["content"][0]["text"]
     assert notes_text == "Secret plan"
 
@@ -620,21 +735,35 @@ def test_owner_can_edit_journal_in_another_users_folder(db):
 
     folder = JournalService().create_folder(campaign_id=campaign_id, user_id=gm, name="GM Folder")
     created = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="diary", title="Lore",
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="diary",
+        title="Lore",
         folder_id=folder.folder_id,
     )
     JournalService().toggle_owner(
-        journal_id=created.journal_id, user_id_to_toggle=player, requester_user_id=gm,
+        journal_id=created.journal_id,
+        user_id_to_toggle=player,
+        requester_user_id=gm,
     )
 
-                                                                                 
-                                                                                 
     result = JournalService().update_journal(
-        journal_id=created.journal_id, user_id=player, title="Lore",
+        journal_id=created.journal_id,
+        user_id=player,
+        title="Lore",
         folder_id=folder.folder_id,
-        data={"content": {"format": "gw-journal-doc-v1", "version": 1,
-                          "doc": {"type": "doc", "content": [
-                              {"type": "paragraph", "content": [{"type": "text", "text": "Edited"}]}]}}},
+        data={
+            "content": {
+                "format": "gw-journal-doc-v1",
+                "version": 1,
+                "doc": {
+                    "type": "doc",
+                    "content": [
+                        {"type": "paragraph", "content": [{"type": "text", "text": "Edited"}]}
+                    ],
+                },
+            }
+        },
     )
     assert result.success, result.error_key
 
@@ -649,56 +778,85 @@ def test_board_quest_opens_via_board_but_is_not_listed_in_sidebar(db):
     seed_member(campaign_id, player, PlayerRole.PLAYER.value)
 
     quest = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="quest", title="On Board",
-        visibility="private", data={"status": "available", "public": {"summary": "s"}},
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="quest",
+        title="On Board",
+        visibility="private",
+        data={"status": "available", "public": {"summary": "s"}},
     )
     board = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="quest_board", title="Board",
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="quest_board",
+        title="Board",
         visibility="shared",
     )
     JournalService().add_quest_to_board(
-        board_id=board.journal_id, quest_id=quest.journal_id, requester_user_id=gm,
+        board_id=board.journal_id,
+        quest_id=quest.journal_id,
+        requester_user_id=gm,
     )
 
     svc = JournalService()
     quest_row = dict(JournalRepository().get_by_id(quest.journal_id))
     player_campaign = {"member_role": PlayerRole.PLAYER.value}
 
-                                            
     assert svc.can_view_journal(journal=quest_row, campaign=player_campaign, user_id=player) is True
-                                                                            
-    assert svc.can_view_journal_directly(journal=quest_row, campaign=player_campaign, user_id=player) is False
 
-                                                 
+    assert (
+        svc.can_view_journal_directly(journal=quest_row, campaign=player_campaign, user_id=player)
+        is False
+    )
+
     board_row = dict(JournalRepository().get_by_id(board.journal_id))
-    assert svc.can_view_journal_directly(journal=board_row, campaign=player_campaign, user_id=player) is True
+    assert (
+        svc.can_view_journal_directly(journal=board_row, campaign=player_campaign, user_id=player)
+        is True
+    )
 
 
 def test_board_with_all_filters_off_still_shows_quests_to_players(db):
-                                                                                 
-                                                                                       
+
     gm = seed_user(name="GM", email="gm-boardfilters@test.com")
     player = seed_user(name="Player", email="player-boardfilters@test.com")
     campaign_id = seed_campaign(gm)
     seed_member(campaign_id, player, PlayerRole.PLAYER.value)
 
     quest = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="quest", title="Q",
-        visibility="private", data={"status": "available", "public": {"summary": "s"}},
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="quest",
+        title="Q",
+        visibility="private",
+        data={"status": "available", "public": {"summary": "s"}},
     )
     board = JournalService().create_journal(
-        campaign_id=campaign_id, user_id=gm, journal_type="quest_board", title="Board",
+        campaign_id=campaign_id,
+        user_id=gm,
+        journal_type="quest_board",
+        title="Board",
         visibility="shared",
-        data={"filters": {"showAvailable": False, "showActive": False,
-                          "showCompleted": False, "showFailed": False}},
+        data={
+            "filters": {
+                "showAvailable": False,
+                "showActive": False,
+                "showCompleted": False,
+                "showFailed": False,
+            }
+        },
     )
     JournalService().add_quest_to_board(
-        board_id=board.journal_id, quest_id=quest.journal_id, requester_user_id=gm,
+        board_id=board.journal_id,
+        quest_id=quest.journal_id,
+        requester_user_id=gm,
     )
 
     journal = dict(JournalRepository().get_by_id(board.journal_id))
     player_view = JournalService().build_view(
-        journal=journal, campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player,
+        journal=journal,
+        campaign={"member_role": PlayerRole.PLAYER.value},
+        user_id=player,
     )
     assert len(player_view["board_entries"]) == 1
     assert player_view["board_entries"][0]["quest_id"] == quest.journal_id

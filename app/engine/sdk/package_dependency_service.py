@@ -166,7 +166,11 @@ class PackageDependencyService:
             for conflict in active_manifest.conflicts:
                 if conflict.id == package_id:
                     report.conflicts.append(
-                        {"id": str(active_id), "reason": conflict.reason, "declared_by": str(active_id)}
+                        {
+                            "id": str(active_id),
+                            "reason": conflict.reason,
+                            "declared_by": str(active_id),
+                        }
                     )
 
         report.ok = not (

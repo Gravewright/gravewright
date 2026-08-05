@@ -37,7 +37,9 @@ class SceneGroupRepository:
                 )
             )
             row = one_or_none(
-                conn.execute(select(scene_groups_table).where(scene_groups_table.c.id == group_id).limit(1))
+                conn.execute(
+                    select(scene_groups_table).where(scene_groups_table.c.id == group_id).limit(1)
+                )
             )
         if row is None:
             raise RuntimeError("Created scene group could not be read back.")
@@ -46,7 +48,9 @@ class SceneGroupRepository:
     def get_by_id(self, group_id: str) -> dict | None:
         with engine_connect() as conn:
             return one_or_none(
-                conn.execute(select(scene_groups_table).where(scene_groups_table.c.id == group_id).limit(1))
+                conn.execute(
+                    select(scene_groups_table).where(scene_groups_table.c.id == group_id).limit(1)
+                )
             )
 
     def list_by_campaign(self, campaign_id: str) -> list[dict]:
@@ -55,6 +59,8 @@ class SceneGroupRepository:
                 conn.execute(
                     select(scene_groups_table)
                     .where(scene_groups_table.c.campaign_id == campaign_id)
-                    .order_by(scene_groups_table.c.sort_order.asc(), scene_groups_table.c.created_at.asc())
+                    .order_by(
+                        scene_groups_table.c.sort_order.asc(), scene_groups_table.c.created_at.asc()
+                    )
                 )
             )
