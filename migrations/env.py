@@ -12,7 +12,9 @@ from app.persistence.tables import metadata
 config = context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # Alembic may run in-process (CLI/tests/startup). Do not disable application
+    # loggers as a side effect, otherwise diagnostics become order-dependent.
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = metadata
 

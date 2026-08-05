@@ -112,11 +112,15 @@ jobs:
       - name: Backend repository/upsert smoke on PostgreSQL
         run: uv run pytest tests/integration -q
 
-  # --- non-blocking: validate test compose files ------------------------------
+  # --- required: validate every Compose file used by the project --------------
   compose:
     name: Compose config (perf)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate performance compose file
-        run: docker compose -f tests/docker-compose.perf.yml config
+      - name: Validate Compose files
+        run: |
+          docker compose -f docker-compose.yml config
+          for file in tests/docker-compose*.yml; do
+            docker compose -f "$file" config
+          done

@@ -31,13 +31,9 @@ class AcceptInvitationOutcome:
     for a real creation.
     """
 
-    status: str  # "accepted" | "not_found" | "not_pending"
+    # "accepted" | "not_found" | "not_pending" | "membership_removed"
+    status: str
     membership_created: bool = False
-
-
-# An invitation may be accepted while pending, and a repeated/concurrent accept
-# may observe it already flipped to "accepted" — both are idempotently OK.
-_ACCEPTABLE_STATUSES = {"pending", "accepted"}
 
 
 class CampaignInvitationRepository:
@@ -127,6 +123,15 @@ class CampaignInvitationRepository:
     def accept_for_user(self, *, invitation_id: str, user_id: str) -> AcceptInvitationOutcome:
         """Accept an invitation idempotently and concurrency-safely.
 
+        Each invitation status is handled explicitly:
+
+        - ``pending``: create the membership and flip the invitation to accepted;
+        - ``accepted``: idempotent success *only while the membership still
+          exists*. Once an administrator removed or banned the member the
+          invitation is spent — it reports ``membership_removed`` and touches
+          nothing, so an old invite can never undo a removal or a ban;
+        - anything else (``declined``, ``revoked``, …): ``not_pending``.
+
         Read, membership insert, and status update run in one transaction. The
         membership is inserted with ``ON CONFLICT DO NOTHING`` against the
         ``(campaign_id, user_id)`` unique constraint, so N concurrent accepts for
@@ -155,12 +160,23 @@ class CampaignInvitationRepository:
             invitation = one_or_none(conn.execute(invitation_query))
             if invitation is None:
                 return AcceptInvitationOutcome("not_found")
-            if invitation["status"] not in _ACCEPTABLE_STATUSES:
+
+            status = invitation["status"]
+            campaign_id = invitation["campaign_id"]
+
+            if status == "accepted":
+                # A concurrent accept may have flipped the row moments ago; the
+                # membership it created is what makes this call a success.
+                if self._membership_exists(conn, campaign_id=campaign_id, user_id=user_id):
+                    return AcceptInvitationOutcome("accepted", membership_created=False)
+                return AcceptInvitationOutcome("membership_removed")
+
+            if status != "pending":
                 return AcceptInvitationOutcome("not_pending")
 
             created = self._insert_membership_idempotent(
                 conn,
-                campaign_id=invitation["campaign_id"],
+                campaign_id=campaign_id,
                 user_id=user_id,
                 role=invitation["role"],
                 now=now,
@@ -173,18 +189,61 @@ class CampaignInvitationRepository:
             return AcceptInvitationOutcome("accepted", membership_created=created)
 
     @staticmethod
+    def revoke_pending_for_user(conn, *, campaign_id: str, user_id: str) -> int:
+        """Revoke this user's still-pending invitations to a campaign.
+
+        Called when a member is removed or banned so a leftover pending invite
+        cannot be used to walk straight back in. Already-answered invitations
+        (accepted/declined) are left untouched — they are history, and the accept
+        path no longer treats an accepted invite as a membership factory.
+
+        Takes the caller's connection so the revocation commits atomically with
+        the removal itself. Returns the number of invitations revoked.
+        """
+        now = int(time.time())
+        result = conn.execute(
+            update(invitations_table)
+            .where(invitations_table.c.campaign_id == campaign_id)
+            .where(invitations_table.c.invited_user_id == user_id)
+            .where(invitations_table.c.status == "pending")
+            .values(status="revoked", updated_at=now, responded_at=now)
+        )
+        return int(result.rowcount or 0)
+
+    @staticmethod
+    def _membership_exists(conn, *, campaign_id: str, user_id: str) -> bool:
+        return (
+            one_or_none(
+                conn.execute(
+                    select(members_table.c.id)
+                    .where(members_table.c.campaign_id == campaign_id)
+                    .where(members_table.c.user_id == user_id)
+                    .limit(1)
+                )
+            )
+            is not None
+        )
+
+    @staticmethod
     def _insert_membership_idempotent(
         conn, *, campaign_id: str, user_id: str, role: str, now: int
     ) -> bool:
         """Insert the membership if absent; return True only if this call created it.
 
         Uses ``INSERT ... ON CONFLICT DO NOTHING`` on SQLite/PostgreSQL so a
-        losing concurrent insert is a no-op (rowcount 0) instead of raising an
+        losing concurrent insert is a no-op instead of raising an
         ``IntegrityError``. The unique constraint on ``(campaign_id, user_id)``
         remains the last line of defense.
+
+        Whether *this* call won is decided by re-reading the surviving row and
+        comparing its id with the one we generated, not by ``rowcount``: driver
+        row counts for a skipped upsert are not uniformly reliable across
+        backends, and "who created the membership" is what gates the single
+        realtime join event.
         """
+        member_id = uuid.uuid4().hex
         values = {
-            "id": uuid.uuid4().hex,
+            "id": member_id,
             "campaign_id": campaign_id,
             "user_id": user_id,
             "role": role,
@@ -194,16 +253,20 @@ class CampaignInvitationRepository:
         dialect = conn.dialect.name
         if dialect in ("sqlite", "postgresql"):
             insert_fn = sqlite_insert if dialect == "sqlite" else postgresql_insert
-            statement = (
+            conn.execute(
                 insert_fn(members_table)
                 .values(**values)
                 .on_conflict_do_nothing(index_elements=["campaign_id", "user_id"])
             )
-            result = conn.execute(statement)
-            return bool(result.rowcount)
+        else:
+            # Fallback for backends without ON CONFLICT support.
+            if CampaignInvitationRepository._membership_exists(
+                conn, campaign_id=campaign_id, user_id=user_id
+            ):
+                return False
+            conn.execute(insert(members_table).values(**values))
 
-        # Fallback for non-production backends without ON CONFLICT support.
-        existing = one_or_none(
+        surviving = one_or_none(
             conn.execute(
                 select(members_table.c.id)
                 .where(members_table.c.campaign_id == campaign_id)
@@ -211,10 +274,7 @@ class CampaignInvitationRepository:
                 .limit(1)
             )
         )
-        if existing is not None:
-            return False
-        conn.execute(insert(members_table).values(**values))
-        return True
+        return surviving is not None and surviving["id"] == member_id
 
     def decline_for_user(self, *, invitation_id: str, user_id: str) -> str:
         now = int(time.time())

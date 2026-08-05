@@ -101,6 +101,18 @@ class CampaignInvitationService:
         )
 
         if outcome.status != "accepted":
+            if outcome.status == "membership_removed":
+                # Someone replayed an accepted invitation after being removed or
+                # banned. Nothing changed, but the attempt is worth recording.
+                from app.observability.audit import emit_audit
+
+                emit_audit(
+                    "invitation.replay_blocked",
+                    actor_id=user_id,
+                    result="denied",
+                    invitation_id=invitation_id,
+                )
+
             return CampaignInvitationResult(
                 success=False,
                 error_key=f"inside.invitations.errors.{outcome.status}",

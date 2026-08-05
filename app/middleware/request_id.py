@@ -12,6 +12,7 @@ from typing import Any
 
 from app.observability.request_context import (
     new_request_id,
+    reset_request_id,
     sanitize_request_id,
     set_request_id,
 )
@@ -41,11 +42,15 @@ class RequestIdMiddleware:
         request_id = (
             sanitize_request_id(inbound.decode("latin-1")) if inbound else None
         ) or new_request_id()
-        set_request_id(request_id)
+        token = set_request_id(request_id)
 
         async def send_wrapper(message: dict[str, Any]) -> None:
             if message["type"] == "http.response.start":
-                response_headers = list(message.get("headers") or [])
+                response_headers = [
+                    (name, value)
+                    for name, value in (message.get("headers") or [])
+                    if name.lower() != b"x-request-id"
+                ]
                 response_headers.append((b"x-request-id", request_id.encode("latin-1")))
                 message["headers"] = response_headers
             await send(message)
@@ -53,4 +58,4 @@ class RequestIdMiddleware:
         try:
             await self.app(scope, receive, send_wrapper)
         finally:
-            set_request_id(None)
+            reset_request_id(token)

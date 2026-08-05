@@ -81,7 +81,9 @@ class CampaignRepository:
                         users.c.id.label("user_id"),
                         users.c.name,
                     )
-                    .select_from(campaign_members.join(users, users.c.id == campaign_members.c.user_id))
+                    .select_from(
+                        campaign_members.join(users, users.c.id == campaign_members.c.user_id)
+                    )
                     .where(campaign_members.c.campaign_id.in_(user_campaigns))
                     .order_by(users.c.name.asc())
                 )
@@ -96,7 +98,9 @@ class CampaignRepository:
                         campaign_members.c.role,
                         users.c.name,
                     )
-                    .select_from(campaign_members.join(users, users.c.id == campaign_members.c.user_id))
+                    .select_from(
+                        campaign_members.join(users, users.c.id == campaign_members.c.user_id)
+                    )
                     .where(campaign_members.c.campaign_id == campaign_id)
                     .order_by(users.c.name.asc())
                 )
@@ -129,7 +133,9 @@ class CampaignRepository:
                         users.c.name,
                         users.c.email,
                     )
-                    .select_from(campaign_members.join(users, users.c.id == campaign_members.c.user_id))
+                    .select_from(
+                        campaign_members.join(users, users.c.id == campaign_members.c.user_id)
+                    )
                     .where(campaign_members.c.campaign_id == campaign_id)
                     .where(campaign_members.c.user_id == user_id)
                     .limit(1)
@@ -354,21 +360,29 @@ class CampaignRepository:
         campaign_id: str,
         user_id: str,
     ) -> None:
+        """Remove a member and burn their still-pending invitations.
+
+        Both happen in one transaction: a leftover pending invitation would
+        otherwise let a removed or banned user accept their way straight back in.
+        """
+        from app.persistence.repositories.campaign_invitation_repository import (
+            CampaignInvitationRepository,
+        )
+
         with engine_begin() as conn:
             conn.execute(
                 delete(campaign_members)
                 .where(campaign_members.c.campaign_id == campaign_id)
                 .where(campaign_members.c.user_id == user_id)
             )
+            CampaignInvitationRepository.revoke_pending_for_user(
+                conn, campaign_id=campaign_id, user_id=user_id
+            )
         # Drop the cached broadcast roster so a removed member stops receiving
         # realtime events immediately rather than within the cache TTL.
         from app.persistence.repositories import realtime_recipient_repository
 
         realtime_recipient_repository.invalidate(campaign_id)
-
-        from app.observability.audit import emit_audit
-
-        emit_audit("membership.removed", campaign_id=campaign_id, target_user_id=user_id)
 
     def update_system(
         self,
@@ -382,7 +396,9 @@ class CampaignRepository:
 
         with engine_begin() as conn:
             campaign = one_or_none(
-                conn.execute(select(campaigns_table).where(campaigns_table.c.id == campaign_id).limit(1))
+                conn.execute(
+                    select(campaigns_table).where(campaigns_table.c.id == campaign_id).limit(1)
+                )
             )
             if campaign is None:
                 raise ValueError("Campaign not found.")
@@ -408,7 +424,9 @@ class CampaignRepository:
                 )
             )
             row = one_or_none(
-                conn.execute(select(campaigns_table).where(campaigns_table.c.id == campaign_id).limit(1))
+                conn.execute(
+                    select(campaigns_table).where(campaigns_table.c.id == campaign_id).limit(1)
+                )
             )
 
         if row is None:
@@ -416,7 +434,7 @@ class CampaignRepository:
         return row
 
     @staticmethod
-    def _get_for_user(conn, *, campaign_id: str, user_id: str) -> dict | None:                
+    def _get_for_user(conn, *, campaign_id: str, user_id: str) -> dict | None:
         return one_or_none(
             conn.execute(
                 select(campaigns_table, campaign_members.c.role.label("member_role"))

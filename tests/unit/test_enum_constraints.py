@@ -160,6 +160,20 @@ def test_alembic_head_enforces_member_role_check(tmp_path, monkeypatch):
                     "VALUES ('m', 'c', 'u', 'wizard', ?, ?)",
                     (now, now),
                 )
+
+        # Revoking a pending invitation is a first-class state at head (Etapa 1).
+        def insert_invitation(invitation_id: str, status: str) -> None:
+            with engine.begin() as conn:
+                conn.exec_driver_sql(
+                    "INSERT INTO campaign_invitations (id, campaign_id, invited_user_id, "
+                    "invited_by_user_id, role, status, created_at, updated_at) "
+                    "VALUES (?, 'c', 'u', 'u', 'player', ?, ?, ?)",
+                    (invitation_id, status, now, now),
+                )
+
+        insert_invitation("i-revoked", "revoked")
+        with pytest.raises(IntegrityError):
+            insert_invitation("i-bogus", "rescinded")
     finally:
         engine.dispose()
 

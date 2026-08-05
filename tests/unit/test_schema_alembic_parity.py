@@ -51,6 +51,15 @@ def _indexes(inspector, table: str) -> dict:
     return result
 
 
+def _checks(inspector, table: str) -> dict:
+    # Name *and* condition: a migration that recreates a table under a different
+    # constraint name still drifts from metadata even if the rule is identical.
+    return {
+        check["name"]: " ".join(str(check["sqltext"]).split())
+        for check in inspector.get_check_constraints(table)
+    }
+
+
 def _foreign_keys(inspector, table: str) -> set:
     return {
         (
@@ -73,6 +82,7 @@ def _schema_fingerprint(engine) -> dict:
             "uniques": _uniques(inspector, table),
             "indexes": _indexes(inspector, table),
             "fks": _foreign_keys(inspector, table),
+            "checks": _checks(inspector, table),
         }
     return fingerprint
 

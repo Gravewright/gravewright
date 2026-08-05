@@ -86,6 +86,32 @@ def test_emit_audit_event_shape():
     assert event["campaign_id"] == "c1"
 
 
+def test_ban_audit_records_actor_target_campaign_and_request(db):
+    from app.business.campaigns.campaign_service import CampaignService
+    from tests.conftest import seed_campaign, seed_member, seed_user
+
+    gm_id = seed_user(name="GM")
+    player_id = seed_user(name="Player")
+    campaign_id = seed_campaign(gm_id)
+    seed_member(campaign_id, player_id, "player")
+    set_request_id("rid-ban")
+
+    result = CampaignService().ban_member(
+        campaign_id=campaign_id,
+        requester_user_id=gm_id,
+        target_user_id=player_id,
+    )
+
+    assert result.success is True
+    event = _last_event()
+    assert event["event"] == "audit.membership.banned"
+    assert event["actor_id"] == gm_id
+    assert event["target_user_id"] == player_id
+    assert event["campaign_id"] == campaign_id
+    assert event["request_id"] == "rid-ban"
+    assert event["result"] == "success"
+
+
 @pytest.mark.asyncio
 async def test_request_id_propagates_into_offloaded_work():
     from app.helpers.async_blocking import run_blocking

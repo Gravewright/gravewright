@@ -18,3 +18,4 @@ class InvitationStatus(StrEnum):
     PENDING = "pending"
     ACCEPTED = "accepted"
     DECLINED = "declined"
+    REVOKED = "revoked"

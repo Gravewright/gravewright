@@ -100,6 +100,10 @@ CATALOG = {
     "inside.invitations.declined": "Convite recusado.",
     "inside.invitations.errors.not_found": "Convite não encontrado.",
     "inside.invitations.errors.not_pending": "Este convite já foi respondido.",
+    "inside.invitations.errors.membership_removed": (
+        "Você não é mais membro desta mesa. Este convite não pode mais ser usado — "
+        "peça um novo convite ao mestre."
+    ),
     "inside.rulesets.title": "Sistemas de regras",
     "inside.rulesets.description": "Gerencie os sistemas de regras disponíveis para suas mesas.",
     "inside.rulesets.empty": "Nenhum sistema de regras disponível.",

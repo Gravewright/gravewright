@@ -149,3 +149,21 @@ GET /inside/diagnostics
 ```
 
 Diagnostics include in-process realtime metrics and scrubbed recent diagnostic events. They avoid raw payloads, cookies, password fields, session identifiers, and private content.
+
+## Adopting a legacy SQLite database
+
+Persistent databases are created and evolved only with Alembic. If an older
+SQLite database was created by `metadata.create_all()` and has no
+`alembic_version` table, do not stamp it manually. Stop the application and run:
+
+```bash
+grave db adopt
+```
+
+The command first creates a timestamped `.pre-adopt-*.bak` copy beside the
+database. It then compares tables, columns, primary/unique keys, indexes,
+foreign keys, and check constraints with the known schema. Only an exact match
+is stamped and upgraded to head; drift is reported and leaves the original
+database unstamped. Keep the backup until the application and your data have
+been verified. PostgreSQL installations must be backed up with the backend's
+native tools and currently require operator-managed adoption.

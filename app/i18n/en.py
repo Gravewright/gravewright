@@ -100,6 +100,10 @@ CATALOG = {
     "inside.invitations.declined": "Invitation declined.",
     "inside.invitations.errors.not_found": "Invitation not found.",
     "inside.invitations.errors.not_pending": "This invitation has already been answered.",
+    "inside.invitations.errors.membership_removed": (
+        "You are no longer a member of this table. This invitation can no longer be used — "
+        "ask the GM for a new one."
+    ),
     "inside.rulesets.title": "Rulesets",
     "inside.rulesets.description": "Manage rulesets available to your tables.",
     "inside.rulesets.empty": "No rulesets available.",

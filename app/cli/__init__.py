@@ -170,7 +170,9 @@ def _render_package_validation(packages: list[dict[str, Any]], target: Path) -> 
     package_table.add_column("Version")
     package_table.add_column("Path", style="dim")
     for package in packages:
-        status = Text("PASS", style="green bold") if package["ok"] else Text("FAIL", style="red bold")
+        status = (
+            Text("PASS", style="green bold") if package["ok"] else Text("FAIL", style="red bold")
+        )
         package_table.add_row(
             status,
             str(package["id"]),
@@ -262,6 +264,12 @@ def _cmd_db_upgrade(args: argparse.Namespace) -> int:
     from app.cli.database import cmd_upgrade
 
     return cmd_upgrade(args)
+
+
+def _cmd_db_adopt(args: argparse.Namespace) -> int:
+    from app.cli.database import cmd_adopt
+
+    return cmd_adopt(args)
 
 
 def _cmd_backup(args: argparse.Namespace) -> int:
@@ -444,12 +452,14 @@ def _cmd_new(args: argparse.Namespace) -> int:
         if template is None or template.kind != args.kind:
             available = ", ".join(t.id for t in templates_for_kind(args.kind)) or "(none)"
             if args.json:
-                _print_json({
-                    "ok": False,
-                    "error_key": "scaffold.unknown_template",
-                    "template": args.template,
-                    "available": [t.id for t in templates_for_kind(args.kind)],
-                })
+                _print_json(
+                    {
+                        "ok": False,
+                        "error_key": "scaffold.unknown_template",
+                        "template": args.template,
+                        "available": [t.id for t in templates_for_kind(args.kind)],
+                    }
+                )
             else:
                 print(f"ERROR  unknown {args.kind} template: {args.template}")
                 print(f"FIX    Available templates: {available}")
@@ -498,12 +508,14 @@ def _cmd_new(args: argparse.Namespace) -> int:
             unknown = [t for t in args.sheets if t not in declared]
             if unknown:
                 if args.json:
-                    _print_json({
-                        "ok": False,
-                        "error_key": "scaffold.unknown_sheet_types",
-                        "unknown": unknown,
-                        "declared": declared,
-                    })
+                    _print_json(
+                        {
+                            "ok": False,
+                            "error_key": "scaffold.unknown_sheet_types",
+                            "unknown": unknown,
+                            "declared": declared,
+                        }
+                    )
                 else:
                     print(f"ERROR  --sheets names unknown types: {', '.join(unknown)}")
                     print(f"FIX    Declared types: {', '.join(declared) or '(none)'}")
@@ -533,15 +545,17 @@ def _cmd_new(args: argparse.Namespace) -> int:
 
     if args.dry_run:
         if args.json:
-            _print_json({
-                "ok": True,
-                "dry_run": True,
-                "package_id": package_id,
-                "kind": args.kind,
-                "path": str(package_dir),
-                "files": sorted(files),
-                "manifest": scaffold.manifest,
-            })
+            _print_json(
+                {
+                    "ok": True,
+                    "dry_run": True,
+                    "package_id": package_id,
+                    "kind": args.kind,
+                    "path": str(package_dir),
+                    "files": sorted(files),
+                    "manifest": scaffold.manifest,
+                }
+            )
         else:
             print(f"Would create {package_dir}")
             for rel in sorted(files):
@@ -568,12 +582,14 @@ def _cmd_new(args: argparse.Namespace) -> int:
 
     if conflicts:
         if args.json:
-            _print_json({
-                "ok": False,
-                "error_key": "scaffold.files_exist",
-                "paths": conflicts,
-                "fix": "Pass --force to overwrite existing files.",
-            })
+            _print_json(
+                {
+                    "ok": False,
+                    "error_key": "scaffold.files_exist",
+                    "paths": conflicts,
+                    "fix": "Pass --force to overwrite existing files.",
+                }
+            )
         else:
             print(f"ERROR  {package_dir} already has files that would be overwritten:")
             for rel in conflicts:
@@ -605,18 +621,20 @@ def _cmd_new(args: argparse.Namespace) -> int:
     mechanic = intent.mechanic
 
     if args.json:
-        _print_json({
-            "ok": ok,
-            "package_id": package_id,
-            "kind": args.kind,
-            "path": str(package_dir),
-            "actor_sheets": actor_sheets,
-            "item_sheets": item_sheets,
-            "mechanic": mechanic,
-            "files": sorted(files),
-            "validation_errors": list(loaded.validation.errors),
-            "validation_warnings": list(loaded.validation.warnings),
-        })
+        _print_json(
+            {
+                "ok": ok,
+                "package_id": package_id,
+                "kind": args.kind,
+                "path": str(package_dir),
+                "actor_sheets": actor_sheets,
+                "item_sheets": item_sheets,
+                "mechanic": mechanic,
+                "files": sorted(files),
+                "validation_errors": list(loaded.validation.errors),
+                "validation_warnings": list(loaded.validation.warnings),
+            }
+        )
     else:
         _print_creation_summary(
             kind=args.kind,
@@ -666,8 +684,15 @@ def _print_creation_summary(
         from rich.table import Table
     except ImportError:  # pragma: no cover - rich ships with the runtime deps
         _print_creation_summary_plain(
-            kind, package_dir, actor_sheets, item_sheets, mechanic, file_count,
-            next_steps, warnings, errors,
+            kind,
+            package_dir,
+            actor_sheets,
+            item_sheets,
+            mechanic,
+            file_count,
+            next_steps,
+            warnings,
+            errors,
         )
         return
 
@@ -704,8 +729,15 @@ def _print_creation_summary(
 
 
 def _print_creation_summary_plain(
-    kind, package_dir, actor_sheets, item_sheets, mechanic, file_count,
-    next_steps, warnings, errors,
+    kind,
+    package_dir,
+    actor_sheets,
+    item_sheets,
+    mechanic,
+    file_count,
+    next_steps,
+    warnings,
+    errors,
 ) -> None:
     print(f"OK     Created {kind} package:")
     print(f"  {package_dir}")
@@ -738,19 +770,21 @@ def _print_templates(kind: str, *, as_json: bool) -> None:
 
     templates = templates_for_kind(kind)
     if as_json:
-        _print_json({
-            "ok": True,
-            "kind": kind,
-            "templates": [
-                {
-                    "id": t.id,
-                    "label": t.label,
-                    "tagline": t.tagline,
-                    "description": t.description,
-                }
-                for t in templates
-            ],
-        })
+        _print_json(
+            {
+                "ok": True,
+                "kind": kind,
+                "templates": [
+                    {
+                        "id": t.id,
+                        "label": t.label,
+                        "tagline": t.tagline,
+                        "description": t.description,
+                    }
+                    for t in templates
+                ],
+            }
+        )
         return
 
     if not templates:
@@ -777,14 +811,14 @@ def _print_templates(kind: str, *, as_json: bool) -> None:
         console.print(table)
         console.print(
             f"\n[bold]Use one:[/]  [green]$[/] grave {kind} new --template "
-            f"{templates[0].id} --name \"My Game\""
+            f'{templates[0].id} --name "My Game"'
         )
     except ImportError:  # pragma: no cover - rich ships with the runtime deps
         width = max(len(t.id) for t in templates)
         print(f"{kind} templates:")
         for t in templates:
             print(f"  {t.id.ljust(width)}  {t.label} - {t.tagline}")
-        print(f"\nUse one: grave {kind} new --template {templates[0].id} --name \"My Game\"")
+        print(f'\nUse one: grave {kind} new --template {templates[0].id} --name "My Game"')
 
 
 def _add_json(parser: argparse.ArgumentParser) -> None:
@@ -997,7 +1031,9 @@ def _add_kind_command(sub, *, kind: str) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="grave", description="Gravewright operator CLI")
-    parser.add_argument("--version", action="version", version=f"Gravewright {config.gravewright_version}")
+    parser.add_argument(
+        "--version", action="version", version=f"Gravewright {config.gravewright_version}"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     doctor = sub.add_parser("doctor", help="diagnose the local Gravewright install")
@@ -1045,6 +1081,10 @@ def build_parser() -> argparse.ArgumentParser:
     db_status.set_defaults(func=_cmd_db_status)
     db_upgrade = db_sub.add_parser("upgrade", help="run alembic upgrade head (official path)")
     db_upgrade.set_defaults(func=_cmd_db_upgrade)
+    db_adopt = db_sub.add_parser(
+        "adopt", help="verify, back up, and adopt an unversioned legacy database"
+    )
+    db_adopt.set_defaults(func=_cmd_db_adopt)
 
     lock = sub.add_parser("lock", help="write grave.lock.json")
     lock.add_argument("-o", "--output", dest="out", help="custom lockfile path")
@@ -1059,19 +1099,27 @@ def build_parser() -> argparse.ArgumentParser:
     campaign = sub.add_parser("campaign", help="campaign-level operations")
     campaign_sub = campaign.add_subparsers(dest="campaign_command", required=True)
     campaign_package = campaign_sub.add_parser("package", help="campaign package activation")
-    campaign_package_sub = campaign_package.add_subparsers(dest="campaign_package_command", required=True)
+    campaign_package_sub = campaign_package.add_subparsers(
+        dest="campaign_package_command", required=True
+    )
 
-    campaign_package_list = campaign_package_sub.add_parser("list", help="list active packages in a campaign")
+    campaign_package_list = campaign_package_sub.add_parser(
+        "list", help="list active packages in a campaign"
+    )
     campaign_package_list.add_argument("campaign")
     _add_json(campaign_package_list)
     campaign_package_list.set_defaults(func=_package_cmd("cmd_campaign_list"))
 
-    campaign_package_activate = campaign_package_sub.add_parser("activate", help="activate a package in a campaign")
+    campaign_package_activate = campaign_package_sub.add_parser(
+        "activate", help="activate a package in a campaign"
+    )
     campaign_package_activate.add_argument("campaign")
     campaign_package_activate.add_argument("id")
     campaign_package_activate.set_defaults(func=_package_cmd("cmd_campaign_activate"))
 
-    campaign_package_deactivate = campaign_package_sub.add_parser("deactivate", help="deactivate a package in a campaign")
+    campaign_package_deactivate = campaign_package_sub.add_parser(
+        "deactivate", help="deactivate a package in a campaign"
+    )
     campaign_package_deactivate.add_argument("campaign")
     campaign_package_deactivate.add_argument("id")
     campaign_package_deactivate.set_defaults(func=_package_cmd("cmd_campaign_deactivate"))

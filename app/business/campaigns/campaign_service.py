@@ -296,6 +296,18 @@ class CampaignService:
         room_user_ids = self.campaigns.list_member_user_ids(campaign_id=campaign_id)
         self.campaigns.remove_member(campaign_id=campaign_id, user_id=target_user_id)
 
+        # Audit only after authorization and persistence have succeeded. The
+        # repository deliberately does not know who initiated the operation.
+        from app.observability.audit import emit_audit
+
+        emit_audit(
+            "membership.banned",
+            actor_id=requester_user_id,
+            target_user_id=target_user_id,
+            campaign_id=campaign_id,
+            result="success",
+        )
+
         return CampaignResult(
             success=True,
             member=member,

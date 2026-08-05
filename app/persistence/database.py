@@ -22,9 +22,6 @@ from app.helpers.env import PROJECT_ROOT
 _SQLITE_WRITE_LOCK = threading.RLock()
 
 
-                                                                                
-                                                                         
-                                                    
 DEFAULT_DATABASE_PATH = (PROJECT_ROOT / "storage" / "gravewright.sqlite3").resolve()
 DATABASE_PATH = DEFAULT_DATABASE_PATH
 
@@ -93,23 +90,22 @@ def database_storage_root() -> Path:
 
 
 def _use_metadata_bootstrap() -> bool:
-    """Dev/test databases bootstrap from metadata; production must use Alembic.
-
-    Non-production environments (local development and the test suite) get the
-    fast ``create_all`` bootstrap. Production validates that the database is at
-    the expected Alembic head and refuses to start otherwise (unless
-    ``AUTO_MIGRATE`` is enabled).
-    """
-    return config.app_env != "production"
+    """Allow metadata bootstrap only for explicitly disposable test databases."""
+    if _backend() != "sqlite":
+        return False
+    path = effective_sqlite_path()
+    if path == ":memory:":
+        return True
+    # APP_ENV=test is an explicit disposable-runtime contract. Development and
+    # production file databases always go through Alembic.
+    return config.app_env == "test"
 
 
 def initialize_database() -> None:
     """Ready the schema for the configured backend.
 
-    - development/test: bootstrap directly from metadata (fast, throwaway DBs);
-    - production: require the database to be at Alembic head, or auto-migrate
-      when ``AUTO_MIGRATE`` is set. ``create_all`` is never the production
-      upgrade mechanism (maintenance plan, Etapa 2).
+    - disposable test DBs: bootstrap directly from metadata;
+    - persistent DBs: require Alembic head, optionally auto-migrating.
     """
     if _backend() == "sqlite":
         sqlite_path = effective_sqlite_path()

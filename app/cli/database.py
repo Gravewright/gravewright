@@ -4,6 +4,7 @@
   whether the database is up to date (JSON with ``--json``).
 - ``grave db upgrade`` runs ``alembic upgrade head`` — the supported way to
   create or evolve a database.
+- ``grave db adopt`` verifies and adopts an unversioned legacy SQLite database.
 """
 
 from __future__ import annotations
@@ -62,4 +63,20 @@ def cmd_upgrade(args: argparse.Namespace) -> int:
 
     status = schema_status(get_engine())
     print(f"OK     database at head: {status['head']}")
+    return EXIT_OK
+
+
+def cmd_adopt(args: argparse.Namespace) -> int:
+    from app.persistence.engine import get_engine
+    from app.persistence.schema import adopt_legacy_database
+
+    try:
+        result = adopt_legacy_database(get_engine())
+    except Exception as exc:  # noqa: BLE001
+        print(f"ERROR  adoption refused: {type(exc).__name__}: {exc}")
+        print("FIX    Inspect the reported drift; the database was not stamped.")
+        return EXIT_DOCTOR_ERROR
+    print(f"OK     adopted at revision: {result['revision']}")
+    print(f"Backup: {result['backup']}")
+    print(f"Schema fingerprint: {result['fingerprint']}")
     return EXIT_OK

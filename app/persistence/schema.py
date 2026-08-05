@@ -16,7 +16,14 @@ actionable message when it is not, unless auto-migrate is explicitly enabled.
 
 from __future__ import annotations
 
-from sqlalchemy import text
+import hashlib
+import json
+import shutil
+import time
+import uuid
+from pathlib import Path
+
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
 
 from app.helpers.env import PROJECT_ROOT
@@ -96,6 +103,125 @@ def bootstrap_schema_from_metadata(engine: Engine) -> None:
 
     metadata.create_all(engine, checkfirst=True)
     create_partial_active_scene_index(engine)
+
+
+def _schema_fingerprint(engine: Engine) -> dict:
+    """Return the structural schema identity used by the explicit adopter."""
+    inspector = inspect(engine)
+    result = {}
+    for table in sorted(set(inspector.get_table_names()) - {"alembic_version"}):
+        result[table] = {
+            "columns": {
+                col["name"]: (str(col["type"]), bool(col["nullable"]))
+                for col in inspector.get_columns(table)
+            },
+            "pk": inspector.get_pk_constraint(table).get("constrained_columns", []),
+            "uniques": sorted(
+                tuple(item["column_names"]) for item in inspector.get_unique_constraints(table)
+            ),
+            "indexes": sorted(
+                (tuple(item["column_names"]), bool(item["unique"]))
+                for item in inspector.get_indexes(table)
+            ),
+            "foreign_keys": sorted(
+                (
+                    tuple(item["constrained_columns"]),
+                    item["referred_table"],
+                    tuple(item["referred_columns"]),
+                )
+                for item in inspector.get_foreign_keys(table)
+            ),
+            "checks": {
+                str(item["name"] or ""): " ".join(str(item["sqltext"]).split())
+                for item in inspector.get_check_constraints(table)
+            },
+        }
+    return result
+
+
+def _fingerprint_digest(fingerprint: dict) -> str:
+    encoded = json.dumps(fingerprint, sort_keys=True, separators=(",", ":"), default=list)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def adopt_legacy_database(engine: Engine) -> dict:
+    """Safely adopt an unversioned SQLite DB that exactly matches metadata.
+
+    Adoption is intentionally explicit. A safety copy is made first, every
+    reflected structural category is compared with a same-dialect reference,
+    and Alembic is stamped only after exact equivalence is established.
+    """
+    if current_revision(engine) is not None:
+        raise RuntimeError("Database is already managed by Alembic; use 'grave db upgrade'.")
+    if engine.dialect.name != "sqlite":
+        raise RuntimeError(
+            "Automatic adoption currently requires SQLite so Gravewright can create "
+            "a verified local backup. Back up this database with your backend tools first."
+        )
+
+    from app.persistence.database import effective_sqlite_path
+
+    database_path = effective_sqlite_path()
+    if database_path == ":memory:":
+        raise RuntimeError("In-memory databases are disposable and cannot be adopted.")
+    source = Path(database_path)
+    if not source.is_file():
+        raise RuntimeError(f"Database file not found: {source}")
+
+    backup = source.with_name(f"{source.name}.pre-adopt-{int(time.time())}.bak")
+    shutil.copy2(source, backup)
+
+    reference_path = source.with_name(f".{source.name}.adopt-reference-{uuid.uuid4().hex}.tmp")
+    reference = create_engine(f"sqlite:///{reference_path.as_posix()}")
+    try:
+        bootstrap_schema_from_metadata(reference)
+        actual = _schema_fingerprint(engine)
+        expected = _schema_fingerprint(reference)
+    finally:
+        reference.dispose()
+        reference_path.unlink(missing_ok=True)
+
+    digest = _fingerprint_digest(actual)
+    if actual != expected:
+        from app.observability.audit import emit_audit
+
+        emit_audit(
+            "schema.adoption",
+            result="refused",
+            level="error",
+            backend="sqlite",
+            fingerprint=digest,
+        )
+        missing = sorted(set(expected) - set(actual))
+        extra = sorted(set(actual) - set(expected))
+        changed = sorted(
+            table for table in set(actual) & set(expected) if actual[table] != expected[table]
+        )
+        raise RuntimeError(
+            "Schema does not exactly match a known Gravewright revision; no stamp was made. "
+            f"Missing tables={missing}, extra tables={extra}, changed tables={changed}. "
+            f"Safety backup: {backup}"
+        )
+
+    from alembic import command
+
+    revision = head_revision()
+    command.stamp(_alembic_config(), revision)
+    upgrade_to_head()
+    status = schema_status(engine)
+    if not status["up_to_date"] or _schema_fingerprint(engine) != expected:
+        raise RuntimeError(f"Post-adoption schema audit failed. Restore backup: {backup}")
+
+    from app.observability.audit import emit_audit
+
+    emit_audit(
+        "schema.adoption",
+        result="success",
+        backend="sqlite",
+        revision=revision,
+        fingerprint=digest,
+    )
+    return {"revision": revision, "fingerprint": digest, "backup": str(backup)}
 
 
 def ensure_schema_ready(engine: Engine, *, auto_migrate: bool) -> None:
