@@ -73,6 +73,7 @@ def _seed_database(db_path: Path) -> str:
     import app.persistence.database as db_module
     from app.persistence import engine as engine_module
 
+    os.environ["GRAVEWRIGHT_TEST_TEMP_ROOT"] = str(db_path.parent.resolve())
     db_module.DATABASE_PATH = db_path.resolve()
     db_module._initialized = False
     engine_module.reset_engine()
@@ -107,6 +108,8 @@ def live_server(tmp_path_factory):
             # local test server trusts any host (safe: APP_ENV=test, loopback only).
             "ALLOWED_HOSTS": "*",
             "SESSION_COOKIE_SECURE": "false",
+            "ALLOW_METADATA_BOOTSTRAP": "true",
+            "GRAVEWRIGHT_TEST_TEMP_ROOT": str(tmp_dir.resolve()),
         }
     )
 
@@ -137,10 +140,13 @@ def live_server(tmp_path_factory):
             proc.kill()
 
 
-def _opener(*, follow_redirects: bool = True) -> tuple[urllib.request.OpenerDirector, http.cookiejar.CookieJar]:
+def _opener(
+    *, follow_redirects: bool = True
+) -> tuple[urllib.request.OpenerDirector, http.cookiejar.CookieJar]:
     jar = http.cookiejar.CookieJar()
     handlers: list = [urllib.request.HTTPCookieProcessor(jar)]
     if not follow_redirects:
+
         class _NoRedirect(urllib.request.HTTPRedirectHandler):
             def redirect_request(self, *args, **kwargs):  # noqa: ANN002, ANN003
                 return None

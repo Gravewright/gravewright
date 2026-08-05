@@ -136,9 +136,6 @@ from app.actions.game.websocket import game_websocket
 from app.helpers.auth import require_user
 
 
-                                                                                 
-                                                                                   
-                                                                
 _protected_handlers = [
     show_game,
     get_scene_manifest,
@@ -274,8 +271,6 @@ _protected_handlers = [
 
 route_handlers = [
     Router(path="/", route_handlers=_protected_handlers, guards=[require_user]),
-                                                                               
-                                                
     consume_streamer_link,
     game_websocket,
 ]

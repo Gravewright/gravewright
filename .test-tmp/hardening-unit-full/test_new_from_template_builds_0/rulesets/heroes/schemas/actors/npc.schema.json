@@ -1,0 +1,55 @@
+{
+  "properties": {
+    "biography": {
+      "default": {},
+      "type": "object"
+    },
+    "defense": {
+      "default": 10,
+      "type": "integer"
+    },
+    "description": {
+      "default": "",
+      "type": "string"
+    },
+    "effects": {
+      "default": [],
+      "type": "array"
+    },
+    "experience": {
+      "default": 0,
+      "type": "integer"
+    },
+    "items": {
+      "default": [],
+      "type": "array"
+    },
+    "level": {
+      "default": 1,
+      "type": "integer"
+    },
+    "notes": {
+      "default": {},
+      "type": "object"
+    },
+    "resources": {
+      "properties": {
+        "health": {
+          "default": 10,
+          "type": "integer"
+        },
+        "healthMax": {
+          "default": 10,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "speed": {
+      "default": 6,
+      "type": "integer"
+    }
+  },
+  "title": "Npc",
+  "type": "object"
+}

@@ -1,0 +1,20 @@
+{
+  "actions": {
+    "add-effect": {
+      "target": "effects",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "roll-item-damage": {
+      "formula": "@item.data.damage",
+      "intent": "damage",
+      "label": "Roll damage",
+      "type": "roll"
+    }
+  }
+}

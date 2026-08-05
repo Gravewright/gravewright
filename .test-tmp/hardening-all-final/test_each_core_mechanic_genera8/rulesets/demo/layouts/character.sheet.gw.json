@@ -1,0 +1,89 @@
+{
+  "actorType": "character",
+  "body": {
+    "children": [
+      {
+        "label": "Level",
+        "path": "sheet.level",
+        "type": "numberField"
+      },
+      {
+        "label": "Health",
+        "path": "sheet.resources.health",
+        "type": "numberField"
+      },
+      {
+        "label": "Maximum health",
+        "path": "sheet.resources.healthMax",
+        "type": "numberField"
+      },
+      {
+        "label": "Defense",
+        "path": "sheet.defense",
+        "type": "numberField"
+      },
+      {
+        "label": "Speed",
+        "path": "sheet.speed",
+        "type": "numberField"
+      },
+      {
+        "label": "Experience",
+        "path": "sheet.experience",
+        "type": "numberField"
+      },
+      {
+        "label": "Description",
+        "path": "sheet.description",
+        "type": "textArea"
+      },
+      {
+        "label": "Aspects",
+        "path": "sheet.aspects",
+        "type": "textField"
+      },
+      {
+        "label": "Careful",
+        "path": "sheet.approaches.careful",
+        "type": "numberField"
+      },
+      {
+        "action": "fate-roll",
+        "label": "Careful approach",
+        "type": "rollButton"
+      },
+      {
+        "dropZone": {
+          "accepts": [
+            "item"
+          ],
+          "id": "items",
+          "onDrop": "add-item",
+          "type": "dropZone"
+        },
+        "label": "Items",
+        "path": "sheet.items",
+        "row": {
+          "actions": [
+            {
+              "label": "Edit",
+              "type": "openEmbeddedItemAction"
+            },
+            {
+              "label": "Remove",
+              "type": "removeAction"
+            }
+          ],
+          "type": "inventoryRow"
+        },
+        "type": "itemList"
+      }
+    ],
+    "type": "section",
+    "variant": "main"
+  },
+  "kind": "actorSheet",
+  "title": {
+    "bind": "core.name"
+  }
+}

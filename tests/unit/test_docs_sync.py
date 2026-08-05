@@ -46,11 +46,7 @@ def _en_docs() -> list[Path]:
 def _api_tokens(text: str) -> set[str]:
     # Namespace-only mentions (sdk.combat) and full calls (sdk.combat.register) both count;
     # diagnostic keys (sdk.validation.*, sdk.errors.*) are not part of the API surface.
-    return {
-        token
-        for token in API_TOKEN.findall(text)
-        if not token.startswith(NON_API_PREFIXES)
-    }
+    return {token for token in API_TOKEN.findall(text) if not token.startswith(NON_API_PREFIXES)}
 
 
 @pytest.mark.parametrize("en_file", _en_docs(), ids=lambda p: p.name)

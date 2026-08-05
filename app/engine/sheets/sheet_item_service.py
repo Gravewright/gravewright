@@ -95,7 +95,9 @@ class SheetItemService:
         actor, envelope, data = loaded
         ref = _find_item_instance(data, item_instance_id)
         if ref is None:
-            return SheetItemResult(success=False, error_key="game.sheet_items.errors.item_not_found")
+            return SheetItemResult(
+                success=False, error_key="game.sheet_items.errors.item_not_found"
+            )
         if not isinstance(patch, dict) or not patch:
             return SheetItemResult(success=False, error_key="game.sheet_items.errors.invalid_patch")
         for path, value in patch.items():
@@ -111,14 +113,20 @@ class SheetItemService:
         actor, envelope, data = loaded
         ref = _find_item_instance(data, item_instance_id)
         if ref is None:
-            return SheetItemResult(success=False, error_key="game.sheet_items.errors.item_not_found")
+            return SheetItemResult(
+                success=False, error_key="game.sheet_items.errors.item_not_found"
+            )
         parent = _get_path(data, ref.list_path)
         if not isinstance(parent, list):
-            return SheetItemResult(success=False, error_key="game.sheet_items.errors.item_not_found")
+            return SheetItemResult(
+                success=False, error_key="game.sheet_items.errors.item_not_found"
+            )
         del parent[ref.index]
         return self._write(actor, envelope, data, _changed_path(ref))
 
-    def _load_editable(self, *, actor_id: str, user_id: str) -> tuple[dict, dict, dict] | SheetItemResult:
+    def _load_editable(
+        self, *, actor_id: str, user_id: str
+    ) -> tuple[dict, dict, dict] | SheetItemResult:
         actor = self.actors.get(actor_id)
         if actor is None or actor["status"] != "active":
             return SheetItemResult(success=False, error_key="game.actors.errors.not_found")
@@ -139,8 +147,11 @@ class SheetItemService:
     def _write(self, actor: dict, envelope: dict, data: dict, changed_path: str) -> SheetItemResult:
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(
-            system_id=actor["system_id"], campaign_id=actor["campaign_id"], actor_id=actor["id"],
-            version=version, data=data,
+            system_id=actor["system_id"],
+            campaign_id=actor["campaign_id"],
+            actor_id=actor["id"],
+            version=version,
+            data=data,
         )
         return SheetItemResult(
             success=True,

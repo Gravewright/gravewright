@@ -61,10 +61,7 @@ class CardService:
             deck_id: sum(1 for card in all_cards if card.get("current_pile_id") == pile_id)
             for deck_id, pile_id in draw_pile_ids.items()
         }
-        decks = [
-            {**deck, "draw_count": draw_counts.get(deck["id"], 0)}
-            for deck in deck_instances
-        ]
+        decks = [{**deck, "draw_count": draw_counts.get(deck["id"], 0)} for deck in deck_instances]
         piles = [
             pile
             for pile in all_piles
@@ -74,9 +71,12 @@ class CardService:
         raw_cards = [
             card
             for card in all_cards
-            if card.get("current_pile_id") in pile_ids or self._card_exists_visible(card=card, user_id=user_id, role=role)
+            if card.get("current_pile_id") in pile_ids
+            or self._card_exists_visible(card=card, user_id=user_id, role=role)
         ]
-        definitions = self.cards.definitions_by_id([card["card_definition_id"] for card in raw_cards])
+        definitions = self.cards.definitions_by_id(
+            [card["card_definition_id"] for card in raw_cards]
+        )
         placements = [
             placement
             for placement in self.cards.list_scene_card_placements(campaign_id=campaign_id)
@@ -90,7 +90,12 @@ class CardService:
                 "piles": piles,
                 "scene_placements": placements,
                 "cards": [
-                    self._redact(card, definitions.get(card["card_definition_id"]), user_id=user_id, role=role)
+                    self._redact(
+                        card,
+                        definitions.get(card["card_definition_id"]),
+                        user_id=user_id,
+                        role=role,
+                    )
                     for card in raw_cards
                 ],
             },
@@ -117,7 +122,9 @@ class CardService:
             return CardServiceResult(success=False, error_key="game.cards.errors.empty_deck")
         normalized_cards = [self._normalize_definition_input(card) for card in cards]
         if any(not str(card.get("front_asset_id") or "").strip() for card in normalized_cards):
-            return CardServiceResult(success=False, error_key="game.cards.errors.missing_front_asset")
+            return CardServiceResult(
+                success=False, error_key="game.cards.errors.missing_front_asset"
+            )
         deck = self.cards.create_deck_definition(
             campaign_id=campaign_id,
             package_id=None,
@@ -172,7 +179,9 @@ class CardService:
         )
         return CardServiceResult(success=True, payload={"deck": instance})
 
-    def delete_deck_instance(self, *, campaign_id: str, user_id: str, deck_instance_id: str) -> CardServiceResult:
+    def delete_deck_instance(
+        self, *, campaign_id: str, user_id: str, deck_instance_id: str
+    ) -> CardServiceResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         deck = self.cards.get_deck_instance(deck_instance_id)
         if role is None or deck is None or deck.get("campaign_id") != campaign_id:
@@ -190,12 +199,16 @@ class CardService:
         self.cards.delete_deck_instance(deck_instance_id=deck_instance_id)
         return CardServiceResult(success=True, payload={"deck_instance_id": deck_instance_id})
 
-    def shuffle(self, *, campaign_id: str, user_id: str, deck_instance_id: str) -> CardServiceResult:
+    def shuffle(
+        self, *, campaign_id: str, user_id: str, deck_instance_id: str
+    ) -> CardServiceResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         deck = self.cards.get_deck_instance(deck_instance_id)
         if role is None or deck is None or deck.get("campaign_id") != campaign_id:
             return CardServiceResult(success=False, error_key="game.cards.errors.deck_not_found")
-        if not can_shuffle_deck_instance(actor_role=role, owner_user_id=deck.get("owner_user_id"), actor_user_id=user_id):
+        if not can_shuffle_deck_instance(
+            actor_role=role, owner_user_id=deck.get("owner_user_id"), actor_user_id=user_id
+        ):
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
         draw = self.cards.find_pile(deck_instance_id=deck_instance_id, kind=PileKind.DRAW)
         if draw is None:
@@ -210,7 +223,10 @@ class CardService:
             payload={"deck_instance_id": deck_instance_id},
             visibility=CardVisibility.ROOM,
         )
-        return CardServiceResult(success=True, payload={"deck_instance_id": deck_instance_id, "draw_count": len(shuffled)})
+        return CardServiceResult(
+            success=True,
+            payload={"deck_instance_id": deck_instance_id, "draw_count": len(shuffled)},
+        )
 
     def reset(
         self,
@@ -224,12 +240,16 @@ class CardService:
         deck = self.cards.get_deck_instance(deck_instance_id)
         if role is None or deck is None or deck.get("campaign_id") != campaign_id:
             return CardServiceResult(success=False, error_key="game.cards.errors.deck_not_found")
-        if not can_shuffle_deck_instance(actor_role=role, owner_user_id=deck.get("owner_user_id"), actor_user_id=user_id):
+        if not can_shuffle_deck_instance(
+            actor_role=role, owner_user_id=deck.get("owner_user_id"), actor_user_id=user_id
+        ):
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
         draw = self.cards.find_pile(deck_instance_id=deck_instance_id, kind=PileKind.DRAW)
         if draw is None:
             return CardServiceResult(success=False, error_key="game.cards.errors.pile_not_found")
-        card_ids = [card["id"] for card in self.cards.list_cards_for_deck(deck_instance_id=deck_instance_id)]
+        card_ids = [
+            card["id"] for card in self.cards.list_cards_for_deck(deck_instance_id=deck_instance_id)
+        ]
         if shuffle:
             card_ids = compute_shuffled_order(card_ids)
         self.cards.reset_deck_instance(
@@ -245,7 +265,10 @@ class CardService:
             payload={"deck_instance_id": deck_instance_id, "shuffle": shuffle},
             visibility=CardVisibility.ROOM,
         )
-        return CardServiceResult(success=True, payload={"deck_instance_id": deck_instance_id, "draw_count": len(card_ids)})
+        return CardServiceResult(
+            success=True,
+            payload={"deck_instance_id": deck_instance_id, "draw_count": len(card_ids)},
+        )
 
     def draw(
         self,
@@ -288,9 +311,15 @@ class CardService:
         visibility = compute_visibility_for_destination(
             destination,
             owner_user_id=owner_user_id,
-            requested_visibility=CardVisibility.ROOM if reveal or destination == DrawDestination.CHAT else None,
+            requested_visibility=CardVisibility.ROOM
+            if reveal or destination == DrawDestination.CHAT
+            else None,
         )
-        face_state = CardFaceState.FACE_UP if reveal or destination == DrawDestination.CHAT else CardFaceState.FACE_DOWN
+        face_state = (
+            CardFaceState.FACE_UP
+            if reveal or destination == DrawDestination.CHAT
+            else CardFaceState.FACE_DOWN
+        )
         try:
             drawn = self.cards.draw_cards_between_piles(
                 source_pile_id=draw_pile["id"],
@@ -313,14 +342,26 @@ class CardService:
             room_id=campaign_id,
             actor_user_id=user_id,
             event_type=CardEventType.CARD_DRAWN,
-            payload={"deck_instance_id": deck_instance_id, "card_ids": drawn, "target_pile_id": target["id"]},
+            payload={
+                "deck_instance_id": deck_instance_id,
+                "card_ids": drawn,
+                "target_pile_id": target["id"],
+            },
             visibility=visibility,
         )
         return CardServiceResult(
             success=True,
             payload={
                 "event": event,
-                "cards": [self._redact(card, definitions.get(card["card_definition_id"]), user_id=user_id, role=role) for card in moved],
+                "cards": [
+                    self._redact(
+                        card,
+                        definitions.get(card["card_definition_id"]),
+                        user_id=user_id,
+                        role=role,
+                    )
+                    for card in moved
+                ],
                 "target_pile_id": target["id"],
             },
         )
@@ -332,10 +373,15 @@ class CardService:
         cards = [card for card_id in card_ids if (card := self.cards.get_card(card_id)) is not None]
         if not cards or any(card.get("campaign_id") != campaign_id for card in cards):
             return CardServiceResult(success=False, error_key="game.cards.errors.card_not_found")
-        if any(not can_reveal_card(actor_user_id=user_id, actor_role=role, card_instance=card) for card in cards):
+        if any(
+            not can_reveal_card(actor_user_id=user_id, actor_role=role, card_instance=card)
+            for card in cards
+        ):
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
         ids = [card["id"] for card in cards]
-        self.cards.update_cards_face_visibility(card_ids=ids, visibility=CardVisibility.ROOM, face_state=CardFaceState.FACE_UP)
+        self.cards.update_cards_face_visibility(
+            card_ids=ids, visibility=CardVisibility.ROOM, face_state=CardFaceState.FACE_UP
+        )
         self.cards.create_event(
             campaign_id=campaign_id,
             room_id=campaign_id,
@@ -353,7 +399,10 @@ class CardService:
         cards = [card for card_id in card_ids if (card := self.cards.get_card(card_id)) is not None]
         if not cards or any(card.get("campaign_id") != campaign_id for card in cards):
             return CardServiceResult(success=False, error_key="game.cards.errors.card_not_found")
-        if any(not can_discard_card(actor_user_id=user_id, actor_role=role, card_instance=card) for card in cards):
+        if any(
+            not can_discard_card(actor_user_id=user_id, actor_role=role, card_instance=card)
+            for card in cards
+        ):
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
         by_deck_and_pile: dict[tuple[str, str], list[dict]] = {}
         scene_cards: list[dict] = []
@@ -362,12 +411,18 @@ class CardService:
                 scene_cards.append(card)
                 continue
             current_pile_id = str(card.get("current_pile_id") or "")
-            by_deck_and_pile.setdefault((card["deck_instance_id"], current_pile_id), []).append(card)
+            by_deck_and_pile.setdefault((card["deck_instance_id"], current_pile_id), []).append(
+                card
+            )
         for card in scene_cards:
-            discard = self.cards.find_pile(deck_instance_id=card["deck_instance_id"], kind=PileKind.DISCARD)
+            discard = self.cards.find_pile(
+                deck_instance_id=card["deck_instance_id"], kind=PileKind.DISCARD
+            )
             placement = self.cards.get_scene_card_placement_for_card(card["id"])
             if discard is None or placement is None:
-                return CardServiceResult(success=False, error_key="game.cards.errors.pile_not_found")
+                return CardServiceResult(
+                    success=False, error_key="game.cards.errors.pile_not_found"
+                )
             self.cards.move_scene_card_to_pile(
                 placement_id=placement["id"],
                 target_pile_id=discard["id"],
@@ -378,7 +433,9 @@ class CardService:
         for (deck_instance_id, source_pile_id), deck_cards in by_deck_and_pile.items():
             discard = self.cards.find_pile(deck_instance_id=deck_instance_id, kind=PileKind.DISCARD)
             if discard is None:
-                return CardServiceResult(success=False, error_key="game.cards.errors.pile_not_found")
+                return CardServiceResult(
+                    success=False, error_key="game.cards.errors.pile_not_found"
+                )
             self.cards.move_cards_between_piles(
                 source_pile_id=source_pile_id,
                 target_pile_id=discard["id"],
@@ -398,7 +455,9 @@ class CardService:
         )
         return CardServiceResult(success=True, payload={"card_ids": ids})
 
-    def card_front_asset(self, *, campaign_id: str, user_id: str, card_id: str) -> CardServiceResult:
+    def card_front_asset(
+        self, *, campaign_id: str, user_id: str, card_id: str
+    ) -> CardServiceResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         card = self.cards.get_card(card_id)
         if role is None:
@@ -407,11 +466,17 @@ class CardService:
             return CardServiceResult(success=False, error_key="game.cards.errors.card_not_found")
         if not can_play_card_to_scene(actor_user_id=user_id, actor_role=role, card_instance=card):
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
-        definition = self.cards.definitions_by_id([card["card_definition_id"]]).get(card["card_definition_id"])
+        definition = self.cards.definitions_by_id([card["card_definition_id"]]).get(
+            card["card_definition_id"]
+        )
         front_asset_id = (definition or {}).get("front_asset_id")
         if not front_asset_id:
-            return CardServiceResult(success=False, error_key="game.cards.errors.missing_front_asset")
-        return CardServiceResult(success=True, payload={"asset_id": front_asset_id, "card_id": card_id})
+            return CardServiceResult(
+                success=False, error_key="game.cards.errors.missing_front_asset"
+            )
+        return CardServiceResult(
+            success=True, payload={"asset_id": front_asset_id, "card_id": card_id}
+        )
 
     def play_to_scene(
         self,
@@ -469,7 +534,11 @@ class CardService:
             payload={
                 "event": event,
                 "placement": placement,
-                "card": self._redact(moved, definitions.get(moved["card_definition_id"]), user_id=user_id, role=role) if moved else None,
+                "card": self._redact(
+                    moved, definitions.get(moved["card_definition_id"]), user_id=user_id, role=role
+                )
+                if moved
+                else None,
             },
         )
 
@@ -491,9 +560,13 @@ class CardService:
         if role is None:
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
         if placement is None or placement.get("campaign_id") != campaign_id:
-            return CardServiceResult(success=False, error_key="game.cards.errors.placement_not_found")
+            return CardServiceResult(
+                success=False, error_key="game.cards.errors.placement_not_found"
+            )
         card = self.cards.get_card(placement["card_instance_id"])
-        if card is None or not can_play_card_to_scene(actor_user_id=user_id, actor_role=role, card_instance=card):
+        if card is None or not can_play_card_to_scene(
+            actor_user_id=user_id, actor_role=role, card_instance=card
+        ):
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
         if placement.get("locked") and role not in {"gm", "assistant_gm"}:
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
@@ -523,17 +596,25 @@ class CardService:
         )
         return CardServiceResult(success=True, payload={"event": event, "placement": updated})
 
-    def discard_scene_placement(self, *, campaign_id: str, user_id: str, placement_id: str) -> CardServiceResult:
+    def discard_scene_placement(
+        self, *, campaign_id: str, user_id: str, placement_id: str
+    ) -> CardServiceResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         placement = self.cards.get_scene_card_placement(placement_id)
         if role is None:
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
         if placement is None or placement.get("campaign_id") != campaign_id:
-            return CardServiceResult(success=False, error_key="game.cards.errors.placement_not_found")
+            return CardServiceResult(
+                success=False, error_key="game.cards.errors.placement_not_found"
+            )
         card = self.cards.get_card(placement["card_instance_id"])
-        if card is None or not can_discard_card(actor_user_id=user_id, actor_role=role, card_instance=card):
+        if card is None or not can_discard_card(
+            actor_user_id=user_id, actor_role=role, card_instance=card
+        ):
             return CardServiceResult(success=False, error_key="permissions.errors.denied")
-        discard = self.cards.find_pile(deck_instance_id=card["deck_instance_id"], kind=PileKind.DISCARD)
+        discard = self.cards.find_pile(
+            deck_instance_id=card["deck_instance_id"], kind=PileKind.DISCARD
+        )
         if discard is None:
             return CardServiceResult(success=False, error_key="game.cards.errors.pile_not_found")
         card_id = self.cards.move_scene_card_to_pile(
@@ -568,7 +649,11 @@ class CardService:
         visibility = card.get("visibility")
         if role in {"gm", "assistant_gm"} and visibility != CardVisibility.SECRET.value:
             return True
-        if visibility in {CardVisibility.ROOM.value, CardVisibility.PLAYERS.value, CardVisibility.PUBLIC.value}:
+        if visibility in {
+            CardVisibility.ROOM.value,
+            CardVisibility.PLAYERS.value,
+            CardVisibility.PUBLIC.value,
+        }:
             return True
         if visibility == CardVisibility.OWNER_ONLY.value and card.get("owner_user_id") == user_id:
             return True

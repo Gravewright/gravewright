@@ -1,0 +1,1 @@
+{"schemaVersion": 1, "sdkVersion": "1", "kind": "addon", "id": "demo-addon", "name": "Demo Addon", "version": "0.1.0", "compatibility": {"minimum": "0.0.1", "verified": "0.0.1"}, "capabilities": [], "activation": {"mode": "multiple"}, "entrypoints": {"game": {"scripts": ["assets/demo.js"]}}, "provides": {}}

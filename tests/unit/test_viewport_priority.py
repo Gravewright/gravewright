@@ -24,7 +24,7 @@ def test_center_chunk_is_high_priority():
 
 
 def test_visible_edge_chunk_is_normal_priority():
-                                                                 
+
     result = _classify(3, 3, cx0=0, cy0=0, cx1=10, cy1=10)
     assert result.priority == RenderPriority.NORMAL
     assert result.ring == "visible_edge"

@@ -1,0 +1,43 @@
+{
+  "body": {
+    "children": [
+      {
+        "label": "Category",
+        "path": "sheet.category",
+        "type": "textField"
+      },
+      {
+        "label": "Damage",
+        "path": "sheet.damage",
+        "type": "textField"
+      },
+      {
+        "label": "Attack bonus",
+        "path": "sheet.attackBonus",
+        "type": "numberField"
+      },
+      {
+        "label": "Damage type",
+        "path": "sheet.damageType",
+        "type": "textField"
+      },
+      {
+        "label": "Equipped",
+        "path": "sheet.equipped",
+        "type": "checkboxField"
+      },
+      {
+        "label": "Description",
+        "path": "sheet.description",
+        "type": "textArea"
+      }
+    ],
+    "type": "section",
+    "variant": "main"
+  },
+  "itemType": "weapon",
+  "kind": "itemSheet",
+  "title": {
+    "bind": "core.name"
+  }
+}

@@ -60,13 +60,6 @@ class RoomEventLog:
         payload_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
         with engine_begin() as connection:
-                                                                           
-                                                                                   
-                                                                               
-                                                                            
-                                                                             
-                                                                                
-                                                                      
             result = connection.execute(
                 room_event_log_table.insert().values(
                     id=event_id,

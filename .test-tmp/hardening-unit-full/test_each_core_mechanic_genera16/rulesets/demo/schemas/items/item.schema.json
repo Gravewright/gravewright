@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "category": {
+      "default": "item",
+      "type": "string"
+    },
+    "description": {
+      "default": {},
+      "type": "object"
+    },
+    "quantity": {
+      "default": 1,
+      "type": "integer"
+    }
+  },
+  "title": "Item",
+  "type": "object"
+}

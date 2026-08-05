@@ -47,7 +47,9 @@ class SceneAssetRepository:
                 )
             )
             row = one_or_none(
-                conn.execute(select(scene_assets_table).where(scene_assets_table.c.id == asset_id).limit(1))
+                conn.execute(
+                    select(scene_assets_table).where(scene_assets_table.c.id == asset_id).limit(1)
+                )
             )
         if row is None:
             raise RuntimeError("Created scene asset could not be read back.")
@@ -56,7 +58,9 @@ class SceneAssetRepository:
     def get_by_id(self, asset_id: str) -> dict | None:
         with engine_connect() as conn:
             return one_or_none(
-                conn.execute(select(scene_assets_table).where(scene_assets_table.c.id == asset_id).limit(1))
+                conn.execute(
+                    select(scene_assets_table).where(scene_assets_table.c.id == asset_id).limit(1)
+                )
             )
 
     def get_original_for_scene(self, scene_id: str) -> dict | None:
@@ -71,7 +75,9 @@ class SceneAssetRepository:
             )
 
     def delete_tile_assets_by_layer(self, layer_id: str) -> None:
-        subquery = select(scene_tiles_table.c.asset_id).where(scene_tiles_table.c.layer_id == layer_id)
+        subquery = select(scene_tiles_table.c.asset_id).where(
+            scene_tiles_table.c.layer_id == layer_id
+        )
         with engine_begin() as conn:
             conn.execute(delete(scene_assets_table).where(scene_assets_table.c.id.in_(subquery)))
 

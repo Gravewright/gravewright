@@ -9,5 +9,4 @@ class EmailSenderContract(Protocol):
         *,
         to_email: str,
         reset_url: str,
-    ) -> None:
-        ...
+    ) -> None: ...

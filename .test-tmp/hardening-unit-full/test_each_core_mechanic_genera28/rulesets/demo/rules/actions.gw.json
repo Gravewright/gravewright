@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "custom-roll": {
+      "formula": "1d20 + @sheet.resource",
+      "label": "Custom resource roll",
+      "type": "roll"
+    }
+  }
+}

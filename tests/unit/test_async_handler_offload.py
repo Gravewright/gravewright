@@ -93,7 +93,14 @@ def _insert_user_then_fail() -> None:
         conn.exec_driver_sql(
             "INSERT INTO users (id, name, email, password_hash, system_role, created_at, updated_at) "
             "VALUES (?, ?, ?, ?, 'user', ?, ?)",
-            (uuid.uuid4().hex, "Rollback", "rollback@test.com", "x", int(time.time()), int(time.time())),
+            (
+                uuid.uuid4().hex,
+                "Rollback",
+                "rollback@test.com",
+                "x",
+                int(time.time()),
+                int(time.time()),
+            ),
         )
         raise RuntimeError("boom inside offloaded transaction")
 

@@ -12,6 +12,9 @@ env:
   ALLOWED_HOSTS: testserver.local,localhost,127.0.0.1
   WS_ALLOWED_ORIGINS: http://testserver.local,http://localhost,http://127.0.0.1
   SESSION_COOKIE_SECURE: "false"
+  # Test databases are isolated under pytest's temporary directory. This is
+  # the only file-backed context allowed to use metadata.create_all().
+  ALLOW_METADATA_BOOTSTRAP: "true"
 
 jobs:
   # --- required: fast lint gate ------------------------------------------------
@@ -25,8 +28,8 @@ jobs:
       - run: uv sync --frozen --extra dev
       - name: Ruff lint
         run: uv run ruff check .
-      # `ruff format --check` is not enforced repo-wide yet (a large one-time
-      # reformat is pending); track it as a follow-up before turning it on.
+      - name: Ruff format
+        run: uv run ruff format --check .
 
   # --- required: fast unit + compile + e2e ------------------------------------
   unit:

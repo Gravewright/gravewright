@@ -59,7 +59,10 @@ class JournalRepository:
                         dialect_name=conn.dialect.name,
                         table=journal_owners_table,
                         values={"journal_id": journal_id, "user_id": owner_id},
-                        index_elements=[journal_owners_table.c.journal_id, journal_owners_table.c.user_id],
+                        index_elements=[
+                            journal_owners_table.c.journal_id,
+                            journal_owners_table.c.user_id,
+                        ],
                         set_={"user_id": owner_id},
                     )
                 )
@@ -67,14 +70,22 @@ class JournalRepository:
 
     def get_by_id(self, journal_id: str) -> dict | None:
         with engine_connect() as conn:
-            return one_or_none(conn.execute(select(journals_table).where(journals_table.c.id == journal_id).limit(1)))
+            return one_or_none(
+                conn.execute(
+                    select(journals_table).where(journals_table.c.id == journal_id).limit(1)
+                )
+            )
 
     def list_active_for_campaign(self, *, campaign_id: str) -> list[dict]:
         with engine_connect() as conn:
             return all_dicts(
                 conn.execute(
                     select(journals_table, users_table.c.name.label("created_by_name"))
-                    .select_from(journals_table.join(users_table, users_table.c.id == journals_table.c.created_by_user_id))
+                    .select_from(
+                        journals_table.join(
+                            users_table, users_table.c.id == journals_table.c.created_by_user_id
+                        )
+                    )
                     .where(journals_table.c.campaign_id == campaign_id)
                     .where(journals_table.c.status == "active")
                     .order_by(journals_table.c.created_at.asc())
@@ -106,7 +117,11 @@ class JournalRepository:
                     updated_at=now,
                 )
             )
-            row = one_or_none(conn.execute(select(journals_table.c.version).where(journals_table.c.id == journal_id)))
+            row = one_or_none(
+                conn.execute(
+                    select(journals_table.c.version).where(journals_table.c.id == journal_id)
+                )
+            )
         return int(row["version"]) if row is not None else 0
 
     def update_data(self, *, journal_id: str, data_json: str) -> int:
@@ -117,13 +132,21 @@ class JournalRepository:
                 .where(journals_table.c.id == journal_id)
                 .values(data_json=data_json, version=journals_table.c.version + 1, updated_at=now)
             )
-            row = one_or_none(conn.execute(select(journals_table.c.version).where(journals_table.c.id == journal_id)))
+            row = one_or_none(
+                conn.execute(
+                    select(journals_table.c.version).where(journals_table.c.id == journal_id)
+                )
+            )
         return int(row["version"]) if row is not None else 0
 
     def clear_folder(self, *, folder_id: str) -> None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(update(journals_table).where(journals_table.c.folder_id == folder_id).values(folder_id=None, updated_at=now))
+            conn.execute(
+                update(journals_table)
+                .where(journals_table.c.folder_id == folder_id)
+                .values(folder_id=None, updated_at=now)
+            )
 
     def has_owner(self, *, journal_id: str, user_id: str) -> bool:
         with engine_connect() as conn:
@@ -139,14 +162,19 @@ class JournalRepository:
 
     def set_owners(self, *, journal_id: str, user_ids: list[str]) -> None:
         with engine_begin() as conn:
-            conn.execute(delete(journal_owners_table).where(journal_owners_table.c.journal_id == journal_id))
+            conn.execute(
+                delete(journal_owners_table).where(journal_owners_table.c.journal_id == journal_id)
+            )
             for user_id in user_ids:
                 conn.execute(
                     upsert_statement(
                         dialect_name=conn.dialect.name,
                         table=journal_owners_table,
                         values={"journal_id": journal_id, "user_id": user_id},
-                        index_elements=[journal_owners_table.c.journal_id, journal_owners_table.c.user_id],
+                        index_elements=[
+                            journal_owners_table.c.journal_id,
+                            journal_owners_table.c.user_id,
+                        ],
                         set_={"user_id": user_id},
                     )
                 )
@@ -158,7 +186,10 @@ class JournalRepository:
                     dialect_name=conn.dialect.name,
                     table=journal_owners_table,
                     values={"journal_id": journal_id, "user_id": user_id},
-                    index_elements=[journal_owners_table.c.journal_id, journal_owners_table.c.user_id],
+                    index_elements=[
+                        journal_owners_table.c.journal_id,
+                        journal_owners_table.c.user_id,
+                    ],
                     set_={"user_id": user_id},
                 )
             )
@@ -174,14 +205,22 @@ class JournalRepository:
     def set_folder(self, *, journal_id: str, folder_id: str | None) -> None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(update(journals_table).where(journals_table.c.id == journal_id).values(folder_id=folder_id, updated_at=now))
+            conn.execute(
+                update(journals_table)
+                .where(journals_table.c.id == journal_id)
+                .values(folder_id=folder_id, updated_at=now)
+            )
 
     def list_owners_for_journal(self, *, journal_id: str) -> list[dict]:
         with engine_connect() as conn:
             return all_dicts(
                 conn.execute(
                     select(users_table.c.id, users_table.c.name)
-                    .select_from(journal_owners_table.join(users_table, users_table.c.id == journal_owners_table.c.user_id))
+                    .select_from(
+                        journal_owners_table.join(
+                            users_table, users_table.c.id == journal_owners_table.c.user_id
+                        )
+                    )
                     .where(journal_owners_table.c.journal_id == journal_id)
                     .order_by(users_table.c.name.asc())
                 )
@@ -197,9 +236,11 @@ class JournalRepository:
                         users_table.c.name.label("user_name"),
                     )
                     .select_from(
-                        journal_owners_table
-                        .join(users_table, users_table.c.id == journal_owners_table.c.user_id)
-                        .join(journals_table, journals_table.c.id == journal_owners_table.c.journal_id)
+                        journal_owners_table.join(
+                            users_table, users_table.c.id == journal_owners_table.c.user_id
+                        ).join(
+                            journals_table, journals_table.c.id == journal_owners_table.c.journal_id
+                        )
                     )
                     .where(journals_table.c.campaign_id == campaign_id)
                     .order_by(users_table.c.name.asc())
@@ -215,7 +256,11 @@ class JournalRepository:
     def soft_delete(self, *, journal_id: str) -> None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(update(journals_table).where(journals_table.c.id == journal_id).values(status="deleted", updated_at=now))
+            conn.execute(
+                update(journals_table)
+                .where(journals_table.c.id == journal_id)
+                .values(status="deleted", updated_at=now)
+            )
 
     def list_board_entries(self, *, board_id: str) -> list[dict]:
         with engine_connect() as conn:
@@ -241,7 +286,11 @@ class JournalRepository:
     def list_boards_for_quest(self, *, quest_id: str) -> list[str]:
         with engine_connect() as conn:
             rows = all_dicts(
-                conn.execute(select(quest_board_entries_table.c.board_id).where(quest_board_entries_table.c.quest_id == quest_id))
+                conn.execute(
+                    select(quest_board_entries_table.c.board_id).where(
+                        quest_board_entries_table.c.quest_id == quest_id
+                    )
+                )
             )
         return [row["board_id"] for row in rows]
 
@@ -267,8 +316,11 @@ class JournalRepository:
         with engine_connect() as conn:
             row = one_or_none(
                 conn.execute(
-                    select(func.coalesce(func.max(quest_board_entries_table.c.sort_order), 0).label("max_order"))
-                    .where(quest_board_entries_table.c.board_id == board_id)
+                    select(
+                        func.coalesce(func.max(quest_board_entries_table.c.sort_order), 0).label(
+                            "max_order"
+                        )
+                    ).where(quest_board_entries_table.c.board_id == board_id)
                 )
             )
         return int(row["max_order"]) + 10 if row is not None else 10
@@ -297,8 +349,15 @@ class JournalRepository:
                     dialect_name=conn.dialect.name,
                     table=quest_board_entries_table,
                     values=values,
-                    index_elements=[quest_board_entries_table.c.board_id, quest_board_entries_table.c.quest_id],
-                    set_={"sort_order": sort_order, "pinned": values["pinned"], "visibility": visibility},
+                    index_elements=[
+                        quest_board_entries_table.c.board_id,
+                        quest_board_entries_table.c.quest_id,
+                    ],
+                    set_={
+                        "sort_order": sort_order,
+                        "pinned": values["pinned"],
+                        "visibility": visibility,
+                    },
                 )
             )
 

@@ -42,9 +42,7 @@ _NEW_STATUS_VALUES = ("pending", "accepted", "declined", "revoked")
 _LEGACY_MEMBER_ROLE_CK = "ck_campaign_members_ck_campaign_members_role"
 _LEGACY_INVITATION_ROLE_CK = "ck_campaign_invitations_ck_campaign_invitations_role"
 _LEGACY_INVITATION_STATUS_CK = "ck_campaign_invitations_ck_campaign_invitations_status"
-_LEGACY_EFFECT_CK = (
-    "ck_campaign_permission_overrides_ck_campaign_permission_overrides_effect"
-)
+_LEGACY_EFFECT_CK = "ck_campaign_permission_overrides_ck_campaign_permission_overrides_effect"
 
 
 def _in_clause(column: str, values: tuple[str, ...]) -> str:
@@ -119,9 +117,7 @@ def _invitations_snapshot(
             ondelete="CASCADE",
         ),
         sa.CheckConstraint(_in_clause("role", _ROLE_VALUES), name=role_check_name),
-        sa.CheckConstraint(
-            _in_clause("status", status_values), name=status_check_name
-        ),
+        sa.CheckConstraint(_in_clause("status", status_values), name=status_check_name),
         sa.Index(
             "idx_campaign_invitations_invited_user_status",
             "invited_user_id",
@@ -167,9 +163,7 @@ def _overrides_snapshot(effect_check_name: str) -> sa.Table:
             name="fk_campaign_permission_overrides_campaign_id_campaigns",
             ondelete="CASCADE",
         ),
-        sa.CheckConstraint(
-            _in_clause("effect", ("allow", "deny")), name=effect_check_name
-        ),
+        sa.CheckConstraint(_in_clause("effect", ("allow", "deny")), name=effect_check_name),
         sa.Index(
             "idx_campaign_permission_overrides_campaign_subject",
             "campaign_id",
@@ -221,9 +215,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     # No row is dropped: revoked invitations fold back into the closest legacy
     # state so the narrower CHECK can be restored.
-    op.execute(
-        "UPDATE campaign_invitations SET status = 'declined' WHERE status = 'revoked'"
-    )
+    op.execute("UPDATE campaign_invitations SET status = 'declined' WHERE status = 'revoked'")
 
     invitations = _invitations_snapshot(
         role_check_name="ck_campaign_invitations_role",

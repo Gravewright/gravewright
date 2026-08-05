@@ -1,0 +1,1 @@
+{"queries": {"getState": {"type": "read", "params": {"key": "string"}, "sql": "SELECT 1; DROP TABLE addon_state"}, "saveState": {"type": "write", "params": {"key": "string", "value_json": "json-string"}, "sql": "INSERT INTO addon_state (key, value_json) VALUES (:key, :value_json)"}}}

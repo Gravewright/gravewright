@@ -42,9 +42,7 @@ def _pending_invitation_id(user_id: str, campaign_id: str) -> str:
 def _invitation_status(invitation_id: str) -> str:
     with engine_begin() as conn:
         row = conn.execute(
-            select(campaign_invitations.c.status).where(
-                campaign_invitations.c.id == invitation_id
-            )
+            select(campaign_invitations.c.status).where(campaign_invitations.c.id == invitation_id)
         ).first()
     assert row is not None
     return row[0]
@@ -75,6 +73,7 @@ def _setup(email: str = "player-accept@test.com") -> tuple[str, str, str]:
 
 # --- Teste A: aceite normal ----------------------------------------------------
 
+
 def test_pending_accept_creates_membership_and_marks_invitation(db):
     campaign_id, player_id, invitation_id = _setup()
 
@@ -90,6 +89,7 @@ def test_pending_accept_creates_membership_and_marks_invitation(db):
 
 # --- Teste B: repetição idempotente --------------------------------------------
 
+
 def test_repeated_accept_with_live_membership_is_idempotent(db):
     campaign_id, player_id, invitation_id = _setup()
     repo = CampaignInvitationRepository()
@@ -104,6 +104,7 @@ def test_repeated_accept_with_live_membership_is_idempotent(db):
 
 
 # --- Teste C: membro removido --------------------------------------------------
+
 
 def test_accepted_invitation_does_not_restore_removed_membership(db):
     campaign_id, player_id, invitation_id = _setup()
@@ -135,6 +136,7 @@ def test_service_reports_membership_removed_without_side_effects(db):
 
 # --- Teste D: membro banido ----------------------------------------------------
 
+
 def test_ban_cannot_be_undone_by_replaying_the_invitation(db):
     from app.business.campaigns.campaign_service import CampaignService
 
@@ -162,6 +164,7 @@ def test_ban_cannot_be_undone_by_replaying_the_invitation(db):
 
 
 # --- convites pendentes são revogados na remoção -------------------------------
+
 
 def test_removing_a_member_revokes_their_pending_invitations(db):
     """A second, still-pending invite must not survive the removal."""

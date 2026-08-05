@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "fate-roll": {
+      "formula": "fate() + @sheet.approaches.careful",
+      "label": "Careful approach",
+      "type": "roll"
+    }
+  }
+}

@@ -119,6 +119,7 @@ def test_login_rejects_unknown_email(db):
 
 def test_password_hash_not_plaintext(db):
     from app.persistence.repositories.user_repository import UserRepository
+
     AuthService().register(
         name="Alice",
         email="alice@test.com",

@@ -24,7 +24,7 @@ def main() -> int:
         try:
             with path.open("r", encoding="utf-8") as handle:
                 json.load(handle)
-        except Exception as exc:                                                                
+        except Exception as exc:
             failures.append((path, str(exc)))
 
     if failures:

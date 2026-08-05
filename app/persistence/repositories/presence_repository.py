@@ -105,7 +105,10 @@ class PresenceRepository:
                         dialect_name=connection.dialect.name,
                         table=campaign_presence,
                         values=values,
-                        index_elements=[campaign_presence.c.campaign_id, campaign_presence.c.user_id],
+                        index_elements=[
+                            campaign_presence.c.campaign_id,
+                            campaign_presence.c.user_id,
+                        ],
                         set_={
                             "is_online": 1,
                             "last_seen_at": now,

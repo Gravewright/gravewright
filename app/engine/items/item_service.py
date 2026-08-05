@@ -195,8 +195,6 @@ class ItemService:
             return None, None, ItemResult(success=False, error_key="game.items.errors.not_allowed")
         return item, campaign_dict, None
 
-                                                                              
-
     def _load_gm_item(
         self, item_id: str, requester_user_id: str
     ) -> tuple[dict | None, ItemResult | None]:
@@ -270,8 +268,6 @@ class ItemService:
                 item_id=item_id, user_id=target_user_id, can_view=False, can_edit=False
             )
         return ItemResult(success=True, item_id=item_id, campaign_id=item["campaign_id"])
-
-                                                                              
 
     def create_folder(
         self, *, campaign_id: str, user_id: str, name: str, parent_id: str = "", color: str = ""

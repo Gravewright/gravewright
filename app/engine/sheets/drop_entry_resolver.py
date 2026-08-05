@@ -63,8 +63,6 @@ class DropEntryResolver:
             return self._from_item(system_id, campaign_id, campaign, user_id, source)
         return None, "game.drop.errors.unsupported_source"
 
-                                                                              
-
     def _from_content_pack(
         self, system_id: str, source: dict
     ) -> tuple[DropEntry | None, str | None]:
@@ -76,7 +74,9 @@ class DropEntryResolver:
         data = entry.get("data") if isinstance(entry.get("data"), dict) else {}
         entry_type = str(entry.get("type") or data.get("type") or "")
         category = str(data.get("category") or entry.get("category") or "")
-        drop_type = f"effect.{category}" if entry_type == "effect" and category else f"item.{entry_type}"
+        drop_type = (
+            f"effect.{category}" if entry_type == "effect" and category else f"item.{entry_type}"
+        )
         if entry_type == "effect" and not category:
             drop_type = "effect"
         return (
@@ -97,8 +97,6 @@ class DropEntryResolver:
             None,
         )
 
-                                                                              
-
     def _from_item(
         self, system_id: str, campaign_id: str, campaign: dict, user_id: str, source: dict
     ) -> tuple[DropEntry | None, str | None]:
@@ -106,7 +104,7 @@ class DropEntryResolver:
         item = self.items.get(item_id)
         if item is None or item["status"] != "active" or item["campaign_id"] != campaign_id:
             return None, "game.drop.errors.item_not_found"
-                                                                              
+
         if item["system_id"] != system_id:
             return None, "game.drop.errors.system_mismatch"
         if not can_view_item(item=item, campaign=campaign, user_id=user_id):

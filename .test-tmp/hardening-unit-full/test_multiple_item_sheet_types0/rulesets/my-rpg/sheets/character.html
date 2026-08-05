@@ -1,0 +1,48 @@
+<form class="gw-my-rpg-sheet" data-sheet-type="character">
+  <header class="gw-my-rpg-sheet__header">
+    <label>
+      Name
+      <input data-bind="actor.name" aria-label="Character name">
+    </label>
+    <span class="gw-my-rpg-sheet__type" data-text="actor.type"></span>
+  </header>
+  <nav class="gw-my-rpg-sheet__tabs" role="tablist" aria-label="Sheet sections">
+    <button type="button" class="gw-my-rpg-sheet__tab" data-tab="main" role="tab" aria-selected="true" aria-controls="panel-main">Main</button>
+    <button type="button" class="gw-my-rpg-sheet__tab" data-tab="items" role="tab" aria-selected="false" aria-controls="panel-items">Items</button>
+  </nav>
+  <section id="panel-main" class="gw-my-rpg-sheet__panel" data-tab-panel="main" role="tabpanel" aria-label="Main">
+    <div class="gw-my-rpg-sheet__fields">
+      <label>
+      Level
+      <input type="number" data-bind="system.level">
+      </label>
+      <label>
+      Health
+      <input type="number" data-bind="system.resources.health">
+      </label>
+      <label>
+      Maximum health
+      <input type="number" data-bind="system.resources.healthMax">
+      </label>
+      <label>
+      Defense
+      <input type="number" data-bind="system.defense">
+      </label>
+      <label>
+      Speed
+      <input type="number" data-bind="system.speed">
+      </label>
+      <label>
+      Experience
+      <input type="number" data-bind="system.experience">
+      </label>
+      <label>
+      Description
+      <textarea data-bind="system.description"></textarea>
+      </label>
+    </div>
+  </section>
+  <section id="panel-items" class="gw-my-rpg-sheet__panel" data-tab-panel="items" role="tabpanel" aria-label="Items" hidden>
+    <div class="gw-my-rpg-sheet__items" data-item-list="system.items" data-drop-zone="items" data-accepts="item" data-empty-text="Drag items here to add them."></div>
+  </section>
+</form>

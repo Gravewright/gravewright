@@ -20,11 +20,7 @@ class CampaignSystemService:
 
     def _is_assignable(self, system_id: str) -> bool:
         record = self.system_install.installed.get(system_id)
-        return (
-            record is not None
-            and record["status"] == "enabled"
-            and record["kind"] == "ruleset"
-        )
+        return record is not None and record["status"] == "enabled" and record["kind"] == "ruleset"
 
     def area_marker_presets(self, system_id: str | None) -> list[dict]:
         """Resolved area-marker presets for an enabled system (empty if none/detached).
@@ -48,9 +44,13 @@ class CampaignSystemService:
     ) -> CampaignSystemResult:
         campaign = self.campaigns.get_for_user(campaign_id=campaign_id, user_id=user_id)
         if campaign is None:
-            return CampaignSystemResult(success=False, error_key="inside.campaigns.errors.not_found")
+            return CampaignSystemResult(
+                success=False, error_key="inside.campaigns.errors.not_found"
+            )
         if campaign["member_role"] != PlayerRole.GM.value:
-            return CampaignSystemResult(success=False, error_key="inside.campaigns.errors.gm_required")
+            return CampaignSystemResult(
+                success=False, error_key="inside.campaigns.errors.gm_required"
+            )
         if system_id is not None and not self._is_assignable(system_id):
             return CampaignSystemResult(success=False, error_key="inside.rulesets.errors.not_found")
 

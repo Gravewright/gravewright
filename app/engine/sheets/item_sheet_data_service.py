@@ -68,7 +68,9 @@ class ItemSheetDataService:
         if error is not None:
             return error
         if not isinstance(patch, dict) or not patch:
-            return ItemSheetDataResult(success=False, error_key="game.sheet_data.errors.empty_patch")
+            return ItemSheetDataResult(
+                success=False, error_key="game.sheet_data.errors.empty_patch"
+            )
 
         envelope = self._read(item)
         data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
@@ -98,7 +100,9 @@ class ItemSheetDataService:
         if error is not None:
             return error
         if not isinstance(data, dict):
-            return ItemSheetDataResult(success=False, error_key="game.sheet_data.errors.invalid_data")
+            return ItemSheetDataResult(
+                success=False, error_key="game.sheet_data.errors.invalid_data"
+            )
 
         envelope = self._read(item)
         version = int(envelope.get("version", 1)) + 1
@@ -118,8 +122,6 @@ class ItemSheetDataService:
             data=data,
             changed_paths=["*"],
         )
-
-                                                                              
 
     def _read(self, item: dict) -> dict:
         envelope = self.storage.read_item(

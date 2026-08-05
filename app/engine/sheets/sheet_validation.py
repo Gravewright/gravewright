@@ -18,9 +18,6 @@ from copy import deepcopy
 from typing import Any
 
 
-                                                                                
-
-
 def apply_schema_defaults(schema: dict | None) -> dict:
     """Build the initial Sheet Data tree from a JSON Schema's ``default`` values."""
     if not isinstance(schema, dict):
@@ -65,9 +62,6 @@ def merge_defaults(defaults: dict, data: dict) -> dict:
         else:
             out[key] = deepcopy(value)
     return out
-
-
-                                                                                
 
 
 def sanitize_write(
@@ -131,7 +125,7 @@ def _coerce(declared_type: object, value: Any) -> Any:
         if isinstance(value, (int, float, bool)):
             return str(value)
         return _INVALID
-                                                                 
+
     return value
 
 

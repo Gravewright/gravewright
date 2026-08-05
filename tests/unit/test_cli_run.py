@@ -8,7 +8,16 @@ from app.cli.exit_codes import EXIT_MISSING_DEPENDENCY
 
 def test_uvicorn_command_default_and_dev():
     base = run_mod.uvicorn_command(host="0.0.0.0", port=9001, dev=False)
-    assert base == [sys.executable, "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9001"]
+    assert base == [
+        sys.executable,
+        "-m",
+        "uvicorn",
+        "main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "9001",
+    ]
     assert "--reload" in run_mod.uvicorn_command(host="127.0.0.1", port=8000, dev=True)
 
 

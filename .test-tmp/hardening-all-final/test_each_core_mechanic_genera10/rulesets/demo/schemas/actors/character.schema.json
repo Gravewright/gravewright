@@ -1,0 +1,73 @@
+{
+  "properties": {
+    "attributes": {
+      "properties": {
+        "agility": {
+          "default": 8,
+          "type": "integer"
+        },
+        "brawn": {
+          "default": 8,
+          "type": "integer"
+        },
+        "coordination": {
+          "default": 8,
+          "type": "integer"
+        },
+        "insight": {
+          "default": 8,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "defense": {
+      "default": 10,
+      "type": "integer"
+    },
+    "description": {
+      "default": "",
+      "type": "string"
+    },
+    "experience": {
+      "default": 0,
+      "type": "integer"
+    },
+    "items": {
+      "default": [],
+      "type": "array"
+    },
+    "level": {
+      "default": 1,
+      "type": "integer"
+    },
+    "resources": {
+      "properties": {
+        "health": {
+          "default": 10,
+          "type": "integer"
+        },
+        "healthMax": {
+          "default": 10,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "skills": {
+      "properties": {
+        "athletics": {
+          "default": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "speed": {
+      "default": 6,
+      "type": "integer"
+    }
+  },
+  "title": "Character",
+  "type": "object"
+}

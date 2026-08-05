@@ -27,7 +27,9 @@ class CombatEncounterRepository:
                     select(encounters_table)
                     .where(encounters_table.c.campaign_id == campaign_id)
                     .where(encounters_table.c.status.in_(["active", "paused"]))
-                    .order_by(encounters_table.c.started_at.desc(), encounters_table.c.created_at.desc())
+                    .order_by(
+                        encounters_table.c.started_at.desc(), encounters_table.c.created_at.desc()
+                    )
                     .limit(1)
                 )
             )
@@ -97,7 +99,9 @@ class CombatEncounterRepository:
             return None
         now = int(time.time())
         next_status = status or current["status"]
-        next_round = int(round_number if round_number is not None else current.get("round_number") or 1)
+        next_round = int(
+            round_number if round_number is not None else current.get("round_number") or 1
+        )
         next_turn = int(turn_index if turn_index is not None else current.get("turn_index") or 0)
         next_phase = phase or current.get("phase") or "round.start"
         next_settings = settings if settings is not None else current.get("settings", {})
@@ -120,7 +124,9 @@ class CombatEncounterRepository:
         return _decode_encounter(row) if row is not None else None
 
     def end(self, *, combat_id: str) -> dict | None:
-        return self.update_state(combat_id=combat_id, status="ended", phase="combat.end", ended_at=int(time.time()))
+        return self.update_state(
+            combat_id=combat_id, status="ended", phase="combat.end", ended_at=int(time.time())
+        )
 
     def list_participants(self, *, combat_id: str, include_hidden: bool = True) -> list[dict]:
         stmt = select(participants_table).where(participants_table.c.combat_id == combat_id)
@@ -169,7 +175,13 @@ class CombatEncounterRepository:
                     updated_at=now,
                 )
             )
-            row = one_or_none(conn.execute(select(participants_table).where(participants_table.c.id == participant_id).limit(1)))
+            row = one_or_none(
+                conn.execute(
+                    select(participants_table)
+                    .where(participants_table.c.id == participant_id)
+                    .limit(1)
+                )
+            )
         if row is None:
             raise RuntimeError("Created combat participant could not be read back.")
         return _decode_participant(row)
@@ -215,7 +227,12 @@ class CombatEncounterRepository:
                     update(participants_table)
                     .where(participants_table.c.combat_id == combat_id)
                     .where(participants_table.c.id == participant_id)
-                    .values(sort_key=sort_key, initiative_value=sort_key, initiative_label=str(index + 1), updated_at=now)
+                    .values(
+                        sort_key=sort_key,
+                        initiative_value=sort_key,
+                        initiative_label=str(index + 1),
+                        updated_at=now,
+                    )
                 )
 
     def add_event(
@@ -246,7 +263,11 @@ class CombatEncounterRepository:
             )
 
     def _get_encounter(self, conn, combat_id: str) -> dict | None:
-        return one_or_none(conn.execute(select(encounters_table).where(encounters_table.c.id == combat_id).limit(1)))
+        return one_or_none(
+            conn.execute(
+                select(encounters_table).where(encounters_table.c.id == combat_id).limit(1)
+            )
+        )
 
 
 def _decode_json(raw: Any) -> dict:

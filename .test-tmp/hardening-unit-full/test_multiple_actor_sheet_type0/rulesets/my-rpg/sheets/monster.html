@@ -1,0 +1,33 @@
+<form class="gw-my-rpg-sheet" data-sheet-type="monster">
+  <header class="gw-my-rpg-sheet__header">
+    <label>
+      Name
+      <input data-bind="actor.name" aria-label="Monster name">
+    </label>
+    <span class="gw-my-rpg-sheet__type" data-text="actor.type"></span>
+  </header>
+  <section class="gw-my-rpg-sheet__panel">
+    <div class="gw-my-rpg-sheet__fields">
+      <label>
+      Health
+      <input type="number" data-bind="system.resources.health">
+      </label>
+      <label>
+      Maximum health
+      <input type="number" data-bind="system.resources.healthMax">
+      </label>
+      <label>
+      Armor
+      <input type="number" data-bind="system.armor">
+      </label>
+      <label>
+      Speed
+      <input type="number" data-bind="system.speed">
+      </label>
+      <label>
+      Description
+      <textarea data-bind="system.description"></textarea>
+      </label>
+    </div>
+  </section>
+</form>

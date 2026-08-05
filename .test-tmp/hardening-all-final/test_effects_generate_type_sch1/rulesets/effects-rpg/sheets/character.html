@@ -1,0 +1,52 @@
+<form class="gw-effects-rpg-sheet" data-sheet-type="character">
+  <header class="gw-effects-rpg-sheet__header">
+    <label>
+      Name
+      <input data-bind="actor.name" aria-label="Character name">
+    </label>
+    <span class="gw-effects-rpg-sheet__type" data-text="actor.type"></span>
+  </header>
+  <nav class="gw-effects-rpg-sheet__tabs" role="tablist" aria-label="Sheet sections">
+    <button type="button" class="gw-effects-rpg-sheet__tab" data-tab="main" role="tab" aria-selected="true" aria-controls="panel-main">Main</button>
+    <button type="button" class="gw-effects-rpg-sheet__tab" data-tab="items" role="tab" aria-selected="false" aria-controls="panel-items">Items</button>
+    <button type="button" class="gw-effects-rpg-sheet__tab" data-tab="effects" role="tab" aria-selected="false" aria-controls="panel-effects">Effects</button>
+  </nav>
+  <section id="panel-main" class="gw-effects-rpg-sheet__panel" data-tab-panel="main" role="tabpanel" aria-label="Main">
+    <div class="gw-effects-rpg-sheet__fields">
+      <label>
+      Level
+      <input type="number" data-bind="system.level">
+      </label>
+      <label>
+      Health
+      <input type="number" data-bind="system.resources.health">
+      </label>
+      <label>
+      Maximum health
+      <input type="number" data-bind="system.resources.healthMax">
+      </label>
+      <label>
+      Defense
+      <input type="number" data-bind="system.defense">
+      </label>
+      <label>
+      Speed
+      <input type="number" data-bind="system.speed">
+      </label>
+      <label>
+      Experience
+      <input type="number" data-bind="system.experience">
+      </label>
+      <label>
+      Description
+      <textarea data-bind="system.description"></textarea>
+      </label>
+    </div>
+  </section>
+  <section id="panel-items" class="gw-effects-rpg-sheet__panel" data-tab-panel="items" role="tabpanel" aria-label="Items" hidden>
+    <div class="gw-effects-rpg-sheet__items" data-item-list="system.items" data-drop-zone="items" data-accepts="item" data-empty-text="Drag items here to add them."></div>
+  </section>
+  <section id="panel-effects" class="gw-effects-rpg-sheet__panel" data-tab-panel="effects" role="tabpanel" aria-label="Effects" hidden>
+    <div class="gw-effects-rpg-sheet__items" data-item-list="system.effects" data-drop-zone="effects" data-accepts="effect" data-empty-text="Drag effects here to apply them."></div>
+  </section>
+</form>

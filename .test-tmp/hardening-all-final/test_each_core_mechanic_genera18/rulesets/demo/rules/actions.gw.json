@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "percentile-check": {
+      "formula": "under(1, 100, clamp(@sheet.skills.perception, 1, 100))",
+      "label": "Perception percentile check",
+      "type": "roll"
+    }
+  }
+}

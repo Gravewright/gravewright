@@ -21,11 +21,16 @@ def _has_table(table_name: str) -> bool:
 
 
 def _has_column(table_name: str, column_name: str) -> bool:
-    return any(column["name"] == column_name for column in sa.inspect(op.get_bind()).get_columns(table_name))
+    return any(
+        column["name"] == column_name
+        for column in sa.inspect(op.get_bind()).get_columns(table_name)
+    )
 
 
 def upgrade() -> None:
-    if _has_table("scene_image_placements") and not _has_column("scene_image_placements", "gm_only"):
+    if _has_table("scene_image_placements") and not _has_column(
+        "scene_image_placements", "gm_only"
+    ):
         op.add_column(
             "scene_image_placements",
             sa.Column("gm_only", sa.Integer(), nullable=False, server_default=sa.text("0")),

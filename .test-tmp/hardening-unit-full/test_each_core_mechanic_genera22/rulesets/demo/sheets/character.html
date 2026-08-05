@@ -1,0 +1,65 @@
+<form class="gw-demo-sheet" data-sheet-type="character">
+  <header class="gw-demo-sheet__header">
+    <label>
+      Name
+      <input data-bind="actor.name" aria-label="Character name">
+    </label>
+    <span class="gw-demo-sheet__type" data-text="actor.type"></span>
+  </header>
+  <nav class="gw-demo-sheet__tabs" role="tablist" aria-label="Sheet sections">
+    <button type="button" class="gw-demo-sheet__tab" data-tab="main" role="tab" aria-selected="true" aria-controls="panel-main">Main</button>
+    <button type="button" class="gw-demo-sheet__tab" data-tab="items" role="tab" aria-selected="false" aria-controls="panel-items">Items</button>
+  </nav>
+  <section id="panel-main" class="gw-demo-sheet__panel" data-tab-panel="main" role="tabpanel" aria-label="Main">
+    <div class="gw-demo-sheet__fields">
+      <label>
+      Level
+      <input type="number" data-bind="system.level">
+      </label>
+      <label>
+      Health
+      <input type="number" data-bind="system.resources.health">
+      </label>
+      <label>
+      Maximum health
+      <input type="number" data-bind="system.resources.healthMax">
+      </label>
+      <label>
+      Defense
+      <input type="number" data-bind="system.defense">
+      </label>
+      <label>
+      Speed
+      <input type="number" data-bind="system.speed">
+      </label>
+      <label>
+      Experience
+      <input type="number" data-bind="system.experience">
+      </label>
+      <label>
+      Description
+      <textarea data-bind="system.description"></textarea>
+      </label>
+      <label>
+      Strength
+      <select data-bind="system.attributes.strength"><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
+      </label>
+      <label>
+      Agility
+      <select data-bind="system.attributes.agility"><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
+      </label>
+      <label>
+      Mind
+      <select data-bind="system.attributes.mind"><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
+      </label>
+      <label>
+      Spirit
+      <select data-bind="system.attributes.spirit"><option value="4">d4</option><option value="6">d6</option><option value="8">d8</option><option value="10">d10</option><option value="12">d12</option></select>
+      </label>
+    </div>
+    <button type="button" data-action="step-roll">Strength step die</button>
+  </section>
+  <section id="panel-items" class="gw-demo-sheet__panel" data-tab-panel="items" role="tabpanel" aria-label="Items" hidden>
+    <div class="gw-demo-sheet__items" data-item-list="system.items" data-drop-zone="items" data-accepts="item" data-empty-text="Drag items here to add them."></div>
+  </section>
+</form>

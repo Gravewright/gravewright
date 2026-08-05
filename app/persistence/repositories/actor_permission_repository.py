@@ -29,7 +29,9 @@ class ActorPermissionRepository:
     def list_for_actor(self, *, actor_id: str) -> dict[str, dict]:
         with engine_connect() as connection:
             rows = (
-                connection.execute(select(actor_permissions).where(actor_permissions.c.actor_id == actor_id))
+                connection.execute(
+                    select(actor_permissions).where(actor_permissions.c.actor_id == actor_id)
+                )
                 .mappings()
                 .all()
             )

@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "move-roll": {
+      "formula": "2d6 + @sheet.stats.cool",
+      "label": "Roll move",
+      "type": "roll"
+    }
+  }
+}

@@ -35,7 +35,9 @@ def _wants_json(request: Request) -> bool:
     return "application/json" in accept
 
 
-def _redirect(campaign_id: str, *, error_key: str | None = None, message_key: str | None = None) -> Redirect:
+def _redirect(
+    campaign_id: str, *, error_key: str | None = None, message_key: str | None = None
+) -> Redirect:
     query = f"room={quote(campaign_id)}"
     if error_key:
         query += f"&packages_error_key={quote(error_key)}"
@@ -137,7 +139,9 @@ async def set_campaign_ruleset(
     it redirects back to the table rather than returning JSON."""
     campaign_id = data.campaign_id
     if not _is_gm(campaign_id, current_user["id"]):
-        return Redirect(path=f"/game?room={campaign_id}&system_error_key=inside.campaigns.errors.gm_required")
+        return Redirect(
+            path=f"/game?room={campaign_id}&system_error_key=inside.campaigns.errors.gm_required"
+        )
     package_id = data.package_id.strip() or None
     result = package_activation_service.set_campaign_ruleset(
         campaign_id, package_id, current_user["id"]

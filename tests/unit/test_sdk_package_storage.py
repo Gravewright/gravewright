@@ -121,9 +121,7 @@ def test_storage_named_query_rejects_invalid_param_type():
 
 def test_storage_named_query_rejects_disallowed_sql():
     multi = {
-        "queries": {
-            "q": {"type": "read", "params": {}, "sql": "SELECT 1; DROP TABLE addon_state"}
-        }
+        "queries": {"q": {"type": "read", "params": {}, "sql": "SELECT 1; DROP TABLE addon_state"}}
     }
     assert "sdk.storage.sqlite.query_sql_disallowed" in validate_named_queries(multi)
     wrong_verb = {

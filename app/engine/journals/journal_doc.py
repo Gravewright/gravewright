@@ -25,7 +25,7 @@ IMAGE_ALIGN = {"left", "center", "right"}
 JOURNAL_ASSET_SRC_PREFIX = "/game/journal/asset/"
 ALLOWED_MARKS = {"bold", "italic", "strike", "code", "link"}
 
-                                          
+
 MAX_NODES = 4000
 MAX_DEPTH = 12
 TEXT_NODE_LIMIT = 20000
@@ -39,11 +39,11 @@ EMPTY_DOC: dict = {
     "doc": {"type": "doc", "content": []},
 }
 
-                                                        
+
 _CONTAINER_BLOCKS = {"blockquote", "listItem", "gwCallout"}
-                                                               
+
 _TEXT_BLOCKS = {"paragraph", "heading"}
-                                            
+
 _LIST_BLOCKS = {"bulletList", "orderedList"}
 
 
@@ -86,7 +86,7 @@ def _clean_image_ref(attrs: dict) -> tuple[str, str] | None:
     src = str(attrs.get("src") or "").strip()[:1024]
     if not src.startswith(JOURNAL_ASSET_SRC_PREFIX):
         return None
-    route_id = src[len(JOURNAL_ASSET_SRC_PREFIX):].split("?", 1)[0].split("#", 1)[0]
+    route_id = src[len(JOURNAL_ASSET_SRC_PREFIX) :].split("?", 1)[0].split("#", 1)[0]
     if "/" in route_id:
         return None
     route_id = _safe_asset_id(route_id)
@@ -185,7 +185,11 @@ class _Cleaner:
             items = self._list_items(node.get("content"), depth + 1)
             if not items:
                 return None
-            return {"type": node_type, "attrs": {"visibility": _visibility(attrs)}, "content": items}
+            return {
+                "type": node_type,
+                "attrs": {"visibility": _visibility(attrs)},
+                "content": items,
+            }
 
         if node_type == "horizontalRule":
             return {"type": "horizontalRule", "attrs": {"visibility": _visibility(attrs)}}
@@ -196,7 +200,6 @@ class _Cleaner:
             title = str(attrs.get("title") or "").strip()[:TITLE_LIMIT]
             return {
                 "type": "gwCallout",
-                                                               
                 "attrs": {"kind": kind, "visibility": "gm", "title": title},
                 "content": self.blocks(node.get("content"), depth + 1) or [_empty_paragraph()],
             }

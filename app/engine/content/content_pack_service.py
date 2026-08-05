@@ -74,7 +74,9 @@ class ContentPackService:
             "id": pack_id,
             "type": ref.type,
             "label": manifest._resolve_label(ref.label, ref.label_key, locale_data),
-            "entries": [e for e in entries if isinstance(e, dict)] if isinstance(entries, list) else [],
+            "entries": [e for e in entries if isinstance(e, dict)]
+            if isinstance(entries, list)
+            else [],
         }
 
     def get_entry(self, system_id: str, pack_id: str, entry_id: str) -> dict | None:

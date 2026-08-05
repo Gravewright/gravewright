@@ -209,9 +209,7 @@ async def test_scene_stream_filters_gm_layer_markers_for_players(db, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_scene_stream_session_resume_with_current_epoch_returns_missing_chunks(
-    db, tmp_path
-):
+async def test_scene_stream_session_resume_with_current_epoch_returns_missing_chunks(db, tmp_path):
     campaign_id, gm_id, player_id, scene, layer = create_scene_stack(db)
     chunk_service, handler = make_handler(tmp_path)
     await chunk_service.write_chunk(
@@ -419,7 +417,7 @@ async def test_scene_stream_splits_large_viewport_into_multiple_binary_batches(d
         for _batch_id, encoded_frame in result.binary_batches
         for chunk in decode_chunk_batch_frame(encoded_frame).chunks
     ]
-                                                                          
+
     assert decoded_chunks == [
         (1, 0, b"x" * 20),
         (0, 0, b"x" * 20),
@@ -470,8 +468,7 @@ async def test_scene_stream_orders_center_chunks_before_edge_chunks(db, tmp_path
         for _batch_id, encoded_frame in result.binary_batches
         for chunk in decode_chunk_batch_frame(encoded_frame).chunks
     ]
-                                                                                 
-                                                                  
+
     assert sent_cx == [2, 1, 3, 0, 4]
 
 

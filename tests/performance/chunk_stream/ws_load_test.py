@@ -256,7 +256,6 @@ async def recv_ready_and_frames(
                 metrics.acks_sent += 1
 
             if expected_batches is not None and metrics.binary_frames >= expected_batches:
-                                                                                          
                 pass
 
             continue
@@ -271,13 +270,13 @@ async def recv_ready_and_frames(
             else:
                 metrics.subscribe_latencies_ms.append((time.monotonic() - started_at) * 1000.0)
 
-                                                                                                               
-                                                                                          
             end_drain = time.monotonic() + min(3.0, timeout_seconds)
             local_frames = 0
             while local_frames < expected_batches and time.monotonic() < end_drain:
                 try:
-                    raw2 = await asyncio.wait_for(ws.recv(), timeout=max(0.1, end_drain - time.monotonic()))
+                    raw2 = await asyncio.wait_for(
+                        ws.recv(), timeout=max(0.1, end_drain - time.monotonic())
+                    )
                 except asyncio.TimeoutError:
                     break
 
@@ -285,7 +284,9 @@ async def recv_ready_and_frames(
                     continue
 
                 if not first_binary_seen:
-                    metrics.first_binary_latencies_ms.append((time.monotonic() - started_at) * 1000.0)
+                    metrics.first_binary_latencies_ms.append(
+                        (time.monotonic() - started_at) * 1000.0
+                    )
                     first_binary_seen = True
 
                 frame = decode_chunk_frame(raw2)
@@ -321,7 +322,7 @@ def viewport_for_step(
     max_cx: int,
     max_cy: int,
 ) -> dict[str, Any]:
-                                            
+
     x_span = max(1, max_cx - width)
     y_span = max(1, max_cy - height)
     cx0 = step % x_span
@@ -426,8 +427,7 @@ async def virtual_user(
                         room_id=session.room_id,
                         payload={**viewport, "known": known_chunks},
                     )
-                                                                                                     
-                                                                           
+
                     try:
                         await recv_ready_and_frames(
                             ws,
@@ -440,7 +440,6 @@ async def virtual_user(
                             ack=ack,
                         )
                     except TimeoutError:
-                                                                                                               
                         pass
 
                 if mode == "pan-reconnect" and generation % 20 == 0:
@@ -520,19 +519,21 @@ async def run(args: argparse.Namespace) -> Metrics:
     timeseries_path = output / "results_timeseries.csv"
     with timeseries_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow([
-            "timestamp",
-            "users_spawned",
-            "tasks_active",
-            "commands_sent",
-            "binary_frames",
-            "chunks_received",
-            "payload_bytes",
-            "acks_sent",
-            "reconnects",
-            "resumes",
-            "failures",
-        ])
+        writer.writerow(
+            [
+                "timestamp",
+                "users_spawned",
+                "tasks_active",
+                "commands_sent",
+                "binary_frames",
+                "chunks_received",
+                "payload_bytes",
+                "acks_sent",
+                "reconnects",
+                "resumes",
+                "failures",
+            ]
+        )
 
         while time.monotonic() < run_until:
             now = time.monotonic()
@@ -562,19 +563,21 @@ async def run(args: argparse.Namespace) -> Metrics:
                 metrics.merge(task.result())
             tasks -= done
 
-            writer.writerow([
-                int(time.time()),
-                users_created,
-                len(tasks),
-                metrics.commands_sent,
-                metrics.binary_frames,
-                metrics.chunks_received,
-                metrics.payload_bytes,
-                metrics.acks_sent,
-                metrics.reconnects,
-                metrics.resumes,
-                metrics.failures,
-            ])
+            writer.writerow(
+                [
+                    int(time.time()),
+                    users_created,
+                    len(tasks),
+                    metrics.commands_sent,
+                    metrics.binary_frames,
+                    metrics.chunks_received,
+                    metrics.payload_bytes,
+                    metrics.acks_sent,
+                    metrics.reconnects,
+                    metrics.resumes,
+                    metrics.failures,
+                ]
+            )
             f.flush()
 
             await asyncio.sleep(1.0)
@@ -636,12 +639,17 @@ async def run(args: argparse.Namespace) -> Metrics:
         f.write("```\n\n")
         f.write("## Latency\n\n")
         f.write("```json\n")
-        f.write(json.dumps({
-            "subscribe_latency_ms": summary["subscribe_latency_ms"],
-            "resume_latency_ms": summary["resume_latency_ms"],
-            "first_binary_latency_ms": summary["first_binary_latency_ms"],
-            "batch_payload_bytes": summary["batch_payload_bytes"],
-        }, indent=2))
+        f.write(
+            json.dumps(
+                {
+                    "subscribe_latency_ms": summary["subscribe_latency_ms"],
+                    "resume_latency_ms": summary["resume_latency_ms"],
+                    "first_binary_latency_ms": summary["first_binary_latency_ms"],
+                    "batch_payload_bytes": summary["batch_payload_bytes"],
+                },
+                indent=2,
+            )
+        )
         f.write("\n```\n")
 
     return metrics
@@ -657,7 +665,9 @@ def main() -> None:
     parser.add_argument("--users", type=int, default=100)
     parser.add_argument("--spawn-rate", type=float, default=10)
     parser.add_argument("--run-time", type=int, default=60)
-    parser.add_argument("--mode", choices=["subscribe", "pan", "pan-reconnect"], default="pan-reconnect")
+    parser.add_argument(
+        "--mode", choices=["subscribe", "pan", "pan-reconnect"], default="pan-reconnect"
+    )
     parser.add_argument("--viewport-width-chunks", type=int, default=5)
     parser.add_argument("--viewport-height-chunks", type=int, default=4)
     parser.add_argument("--ack", type=parse_bool, default=True)

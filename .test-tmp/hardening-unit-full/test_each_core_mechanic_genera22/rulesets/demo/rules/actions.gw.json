@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "step-roll": {
+      "formula": "die(@sheet.attributes.strength)",
+      "label": "Strength step die",
+      "type": "roll"
+    }
+  }
+}

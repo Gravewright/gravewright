@@ -1,0 +1,38 @@
+<form class="gw-effects-rpg-sheet" data-sheet-type="effect">
+  <header class="gw-effects-rpg-sheet__header">
+    <label>
+      Name
+      <input data-bind="item.name" aria-label="Effect name">
+    </label>
+    <span class="gw-effects-rpg-sheet__type" data-text="item.type"></span>
+  </header>
+
+  <div class="gw-effects-rpg-sheet__fields">
+    <label>
+      Category
+      <input data-bind="system.category">
+    </label>
+    <label>
+      Condition
+      <input data-bind="system.condition">
+    </label>
+    <label>
+      Enabled
+      <input type="checkbox" data-bind="system.enabled">
+    </label>
+    <label>
+      Modifier target
+      <input data-bind="system.modifiers.0.target">
+    </label>
+    <label>
+      Operation
+      <select data-bind="system.modifiers.0.operation"><option value="add">add</option><option value="subtract">subtract</option><option value="add_dice">add_dice</option><option value="advantage">advantage</option><option value="disadvantage">disadvantage</option><option value="resistance">resistance</option><option value="vulnerability">vulnerability</option><option value="immunity">immunity</option><option value="reduce">reduce</option><option value="damage_over_time">damage_over_time</option><option value="heal_over_time">heal_over_time</option></select>
+    </label>
+    <label>
+      Value / dice
+      <input data-bind="system.modifiers.0.value">
+    </label>
+  </div>
+
+    <div class="gw-effects-rpg-sheet__editor" data-rich-editor="system.description"></div>
+</form>

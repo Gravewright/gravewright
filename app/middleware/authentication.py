@@ -14,11 +14,7 @@ def _as_row(mapping: dict) -> dict:
     """Materialise repository mappings as plain dicts at the auth boundary."""
     return dict(mapping)
 
-                                                                               
-                                                                                
-                                                                                  
-                                                                                 
-                                                                      
+
 _USER_CACHE: OrderedDict[str, tuple[Row, float]] = OrderedDict()
 _USER_CACHE_TTL = 30.0
 _USER_CACHE_MAX = 10_000

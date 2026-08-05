@@ -1,0 +1,2 @@
+CREATE TABLE addon_state (key TEXT PRIMARY KEY, value_json TEXT);
+-- changed

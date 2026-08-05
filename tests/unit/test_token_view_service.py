@@ -33,19 +33,15 @@ def _projection(**kwargs) -> dict:
     return base
 
 
-                                                                             
-                 
-                                                                             
-
 def test_name_falls_back_to_projection():
-    view = TokenViewService().build_view(token=_token(), projection=_projection(name="Monstro Modelo"))
+    view = TokenViewService().build_view(
+        token=_token(), projection=_projection(name="Monstro Modelo")
+    )
     assert view["name"] == "Monstro Modelo"
 
 
 def test_name_falls_back_to_actor():
-    view = TokenViewService().build_view(
-        token=_token(), projection={}, actor={"name": "Aragorn"}
-    )
+    view = TokenViewService().build_view(token=_token(), projection={}, actor={"name": "Aragorn"})
     assert view["name"] == "Aragorn"
 
 
@@ -58,7 +54,8 @@ def test_token_name_overrides_projection():
 
 def test_overrides_dict_name_overrides_projection():
     view = TokenViewService().build_view(
-        token=_token(overrides={"name": "Monstro Modelo Captain"}), projection=_projection(name="Monstro Modelo")
+        token=_token(overrides={"name": "Monstro Modelo Captain"}),
+        projection=_projection(name="Monstro Modelo"),
     )
     assert view["name"] == "Monstro Modelo Captain"
 
@@ -88,10 +85,6 @@ def test_empty_name_without_projection_or_actor():
     assert view["name"] == ""
 
 
-                                                                             
-           
-                                                                             
-
 def test_asset_url_from_token_field():
     view = TokenViewService().build_view(
         token=_token(token_asset_url="/assets/template-monster.png"), projection=_projection()
@@ -117,10 +110,6 @@ def test_asset_url_none_by_default():
     view = TokenViewService().build_view(token=_token(), projection=_projection())
     assert view["asset_url"] is None
 
-
-                                                                             
-                            
-                                                                             
 
 def test_hp_bar_from_projection():
     view = TokenViewService().build_view(
@@ -160,10 +149,6 @@ def test_bar_with_null_value_is_skipped():
     assert view["bars"] == {}
 
 
-                                                                             
-                
-                                                                             
-
 def test_empty_conditions_status_summary():
     view = TokenViewService().build_view(token=_token(), projection=_projection())
     assert view["status_summary"] == {"count": 0, "has_negative": False, "has_positive": False}
@@ -182,10 +167,6 @@ def test_status_summary_with_conditions():
     assert view["status_summary"]["has_negative"] is True
     assert view["status_summary"]["has_positive"] is True
 
-
-                                                                             
-                       
-                                                                             
 
 def test_gm_sees_hidden_tokens():
     tokens = [_token(id="tok_1", hidden=0), _token(id="tok_2", hidden=1)]

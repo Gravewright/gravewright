@@ -108,9 +108,7 @@ class TokenRepository:
 
         with engine_begin() as conn:
             conn.execute(insert(tokens_table), values)
-            rows = all_dicts(
-                conn.execute(select(tokens_table).where(tokens_table.c.id.in_(ids)))
-            )
+            rows = all_dicts(conn.execute(select(tokens_table).where(tokens_table.c.id.in_(ids))))
 
         by_id = {row["id"]: self._hydrate(row) for row in rows}
         return [by_id[token_id] for token_id in ids]
@@ -323,7 +321,5 @@ class TokenRepository:
 
     def _hydrate(self, row: dict) -> dict:
         row["overrides"] = json.loads(row.get("overrides_json") or "{}")
-        row["controlled_by_user_ids"] = json.loads(
-            row.get("controlled_by_user_ids_json") or "[]"
-        )
+        row["controlled_by_user_ids"] = json.loads(row.get("controlled_by_user_ids_json") or "[]")
         return row

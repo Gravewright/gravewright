@@ -1,0 +1,10 @@
+{
+  "properties": {
+    "description": {
+      "default": "",
+      "type": "string"
+    }
+  },
+  "title": "Star Ship",
+  "type": "object"
+}

@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "d20-test": {
+      "formula": "under(2, 20, clamp(@sheet.attributes.agility + @sheet.skills.athletics, 1, 20))",
+      "label": "Agility + Athletics test",
+      "type": "roll"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+<form class="gw-my-rpg-sheet" data-sheet-type="weapon">
+  <header class="gw-my-rpg-sheet__header">
+    <label>
+      Name
+      <input data-bind="item.name" aria-label="Weapon name">
+    </label>
+    <span class="gw-my-rpg-sheet__type" data-text="item.type"></span>
+  </header>
+
+  <div class="gw-my-rpg-sheet__fields">
+    <label>
+      Category
+      <input data-bind="system.category">
+    </label>
+    <label>
+      Damage
+      <input data-bind="system.damage">
+    </label>
+    <label>
+      Attack bonus
+      <input type="number" data-bind="system.attackBonus">
+    </label>
+    <label>
+      Damage type
+      <input data-bind="system.damageType">
+    </label>
+    <label>
+      Equipped
+      <input type="checkbox" data-bind="system.equipped">
+    </label>
+  </div>
+  <button type="button" data-action="roll-item-damage">Roll damage</button>
+    <div class="gw-my-rpg-sheet__editor" data-rich-editor="system.description"></div>
+</form>

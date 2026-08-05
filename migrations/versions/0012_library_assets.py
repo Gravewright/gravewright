@@ -27,8 +27,12 @@ def upgrade() -> None:
         op.create_table(
             "library_assets",
             sa.Column("id", ID, primary_key=True),
-            sa.Column("campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
-            sa.Column("owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+            sa.Column(
+                "campaign_id", ID, sa.ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False
+            ),
+            sa.Column(
+                "owner_user_id", ID, sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+            ),
             sa.Column("folder_id", ID, nullable=True),
             sa.Column("filename", sa.Text(), nullable=False),
             sa.Column("content_type", sa.String(length=191), nullable=False),
@@ -39,7 +43,9 @@ def upgrade() -> None:
             sa.Column("hash", sa.String(length=191), nullable=False),
             sa.Column("created_at", sa.Integer(), nullable=False),
         )
-        op.create_index("idx_library_assets_campaign", "library_assets", ["campaign_id", "created_at"])
+        op.create_index(
+            "idx_library_assets_campaign", "library_assets", ["campaign_id", "created_at"]
+        )
         op.create_index("idx_library_assets_folder", "library_assets", ["campaign_id", "folder_id"])
 
     # Migrate existing scene-image library assets out of the journal asset table,

@@ -1,0 +1,33 @@
+{
+  "properties": {
+    "category": {
+      "default": "condition",
+      "type": "string"
+    },
+    "condition": {
+      "default": "",
+      "type": "string"
+    },
+    "description": {
+      "default": {},
+      "type": "object"
+    },
+    "enabled": {
+      "default": true,
+      "type": "boolean"
+    },
+    "modifiers": {
+      "default": [
+        {
+          "label": "Effect modifier",
+          "operation": "add",
+          "target": "roll.any",
+          "value": 0
+        }
+      ],
+      "type": "array"
+    }
+  },
+  "title": "Effect",
+  "type": "object"
+}

@@ -151,7 +151,9 @@ class PackageAssetService:
                     "capabilities": list(manifest.capabilities),
                     "interop": dict(manifest.raw.get("interop") or {}),
                     "settingDefinitions": self.settings.definitions(manifest.id),
-                    "settingValues": self.settings.effective_values(manifest.id, campaign_id, user_id),
+                    "settingValues": self.settings.effective_values(
+                        manifest.id, campaign_id, user_id
+                    ),
                     "locale": self.locales.get_locale(manifest.id, locale),
                 }
             )

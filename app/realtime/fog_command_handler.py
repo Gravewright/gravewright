@@ -31,15 +31,13 @@ _FOG_COMMANDS = frozenset(
     }
 )
 
-                                                                              
-                                                                          
-                                                                               
+
 _MAX_OPS_PER_COMMAND = config.fog_max_ops_per_command
 _MAX_POLYGON_POINTS = config.fog_max_polygon_points
-                                                                              
+
 _MAX_COORD_ABS = float(config.fog_max_coordinate_abs)
 _MAX_SIZE_CELLS = 10_000.0
-                                                                                
+
 _REQUIRE_EXPECTED_VERSION = config.fog_require_expected_version
 
 
@@ -99,7 +97,9 @@ class FogCommandHandler:
 
         match command:
             case ClientCommand.FOG_ENABLE.value:
-                return await self._enable(command_id, room_id, scene_id, payload, context, transport)
+                return await self._enable(
+                    command_id, room_id, scene_id, payload, context, transport
+                )
             case ClientCommand.FOG_DISABLE.value:
                 return await self._disable(command_id, room_id, scene_id, context, transport)
             case ClientCommand.FOG_RESET.value:
@@ -130,7 +130,9 @@ class FogCommandHandler:
             user_id=context.user_id,
             initial=initial,
         )
-        return await self._finalize(command_id, ClientCommand.FOG_ENABLE.value, campaign_id, result, transport)
+        return await self._finalize(
+            command_id, ClientCommand.FOG_ENABLE.value, campaign_id, result, transport
+        )
 
     async def _disable(
         self,
@@ -140,8 +142,12 @@ class FogCommandHandler:
         context: ClientCommandContext,
         transport: RealtimeGatewayContract | None,
     ) -> FogCommandResult:
-        result = await run_blocking(self.service.disable, scene_id=scene_id, user_id=context.user_id)
-        return await self._finalize(command_id, ClientCommand.FOG_DISABLE.value, campaign_id, result, transport)
+        result = await run_blocking(
+            self.service.disable, scene_id=scene_id, user_id=context.user_id
+        )
+        return await self._finalize(
+            command_id, ClientCommand.FOG_DISABLE.value, campaign_id, result, transport
+        )
 
     async def _reset(
         self,
@@ -158,8 +164,12 @@ class FogCommandHandler:
         except ValueError:
             return _invalid(command_id, "to must be 'hide_all' or 'reveal_all'.")
 
-        result = await run_blocking(self.service.reset, scene_id=scene_id, user_id=context.user_id, to=to)
-        return await self._finalize(command_id, ClientCommand.FOG_RESET.value, campaign_id, result, transport)
+        result = await run_blocking(
+            self.service.reset, scene_id=scene_id, user_id=context.user_id, to=to
+        )
+        return await self._finalize(
+            command_id, ClientCommand.FOG_RESET.value, campaign_id, result, transport
+        )
 
     async def _paint(
         self,
@@ -200,7 +210,9 @@ class FogCommandHandler:
             ops=ops,
             expected_version=expected_version,
         )
-        return await self._finalize(command_id, ClientCommand.FOG_PAINT.value, campaign_id, result, transport)
+        return await self._finalize(
+            command_id, ClientCommand.FOG_PAINT.value, campaign_id, result, transport
+        )
 
     async def _finalize(
         self,

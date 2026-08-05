@@ -94,7 +94,9 @@ class TokenHpService:
         if actor is None or actor["status"] != "active" or actor["campaign_id"] != campaign_id:
             return TokenHpResult(success=False, error_key="tokens.errors.not_found")
 
-        if not self._can_control_token(token=token, actor=actor, campaign_id=campaign_id, user_id=user_id):
+        if not self._can_control_token(
+            token=token, actor=actor, campaign_id=campaign_id, user_id=user_id
+        ):
             return TokenHpResult(success=False, error_key="tokens.errors.permission_denied")
 
         op = _normalize_operation(operation)
@@ -111,7 +113,10 @@ class TokenHpService:
         overrides = deepcopy(token.get("overrides") or {})
 
         if is_unlinked:
-            instance = deepcopy(overrides.get(INSTANCE_KEY) or self.token_instances.make_instance_snapshot(actor=actor))
+            instance = deepcopy(
+                overrides.get(INSTANCE_KEY)
+                or self.token_instances.make_instance_snapshot(actor=actor)
+            )
             data = instance.get("data") if isinstance(instance.get("data"), dict) else {}
         else:
             envelope = self.storage.read_actor(
@@ -138,7 +143,7 @@ class TokenHpService:
             delta = delta_amount
             applied_amount = delta_amount
             after = apply_resource_delta(data, value_path, max_path, floor, delta)
-        else:       
+        else:
             applied_amount = set_value
             after = _clamp_value(set_value, floor=floor, max_value=max_value)
             _set_path(data, value_path, after)
@@ -159,14 +164,19 @@ class TokenHpService:
             instance["data"] = data
             instance["version"] = int(instance.get("version", 1)) + 1
             overrides[INSTANCE_KEY] = instance
-            projection = self.projector.project(_actor_with_name(actor, instance.get("name") or actor["name"]), envelope={"version": instance["version"], "data": deepcopy(data)})
+            projection = self.projector.project(
+                _actor_with_name(actor, instance.get("name") or actor["name"]),
+                envelope={"version": instance["version"], "data": deepcopy(data)},
+            )
             bars = projection.get("bars")
             if isinstance(bars, dict):
                 overrides.update(bars)
             effects = projection.get("effects")
             if isinstance(effects, list):
                 overrides["effects"] = effects
-            updated_token = self.tokens.update_overrides(token_id=token_id, overrides=overrides) or token
+            updated_token = (
+                self.tokens.update_overrides(token_id=token_id, overrides=overrides) or token
+            )
             version = int(instance["version"])
             token_version = int(updated_token.get("version") or token.get("version") or 0)
             token_for_view = updated_token
@@ -182,10 +192,14 @@ class TokenHpService:
             )
             token_version = int(token.get("version") or 0)
             token_for_view = token
-            projection = self.projector.project(actor, envelope={"version": version, "data": deepcopy(data)})
+            projection = self.projector.project(
+                actor, envelope={"version": version, "data": deepcopy(data)}
+            )
 
         conditions = self.conditions.list_by_token(token_id)
-        token_view = self.views.build_view(token=token_for_view, projection=projection, actor=actor, conditions=conditions)
+        token_view = self.views.build_view(
+            token=token_for_view, projection=projection, actor=actor, conditions=conditions
+        )
         return TokenHpResult(
             success=True,
             token_id=token_id,
@@ -210,9 +224,13 @@ class TokenHpService:
     def _hp_resource(self, system_id: str) -> tuple[str, str, int] | None:
         config = self.combat_config.get_for_system(system_id)
         resources = config.resources if isinstance(config.resources, dict) else {}
-        return resolve_resource_target("resource.hp", resources) or resolve_resource_target("damage.self", resources)
+        return resolve_resource_target("resource.hp", resources) or resolve_resource_target(
+            "damage.self", resources
+        )
 
-    def _can_control_token(self, *, token: dict, actor: dict, campaign_id: str, user_id: str) -> bool:
+    def _can_control_token(
+        self, *, token: dict, actor: dict, campaign_id: str, user_id: str
+    ) -> bool:
         member_role = self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id)
         if member_role is None:
             return False

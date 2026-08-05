@@ -1,0 +1,30 @@
+{
+  "properties": {
+    "armor": {
+      "default": 1,
+      "type": "integer"
+    },
+    "category": {
+      "default": "armor",
+      "type": "string"
+    },
+    "cost": {
+      "default": 0,
+      "type": "integer"
+    },
+    "description": {
+      "default": {},
+      "type": "object"
+    },
+    "equipped": {
+      "default": false,
+      "type": "boolean"
+    },
+    "weight": {
+      "default": 0,
+      "type": "integer"
+    }
+  },
+  "title": "Armor",
+  "type": "object"
+}

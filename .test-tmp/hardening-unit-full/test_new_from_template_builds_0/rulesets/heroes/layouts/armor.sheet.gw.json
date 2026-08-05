@@ -1,0 +1,43 @@
+{
+  "body": {
+    "children": [
+      {
+        "label": "Category",
+        "path": "sheet.category",
+        "type": "textField"
+      },
+      {
+        "label": "Armor",
+        "path": "sheet.armor",
+        "type": "numberField"
+      },
+      {
+        "label": "Equipped",
+        "path": "sheet.equipped",
+        "type": "checkboxField"
+      },
+      {
+        "label": "Weight",
+        "path": "sheet.weight",
+        "type": "numberField"
+      },
+      {
+        "label": "Cost",
+        "path": "sheet.cost",
+        "type": "numberField"
+      },
+      {
+        "label": "Description",
+        "path": "sheet.description",
+        "type": "textArea"
+      }
+    ],
+    "type": "section",
+    "variant": "main"
+  },
+  "itemType": "armor",
+  "kind": "itemSheet",
+  "title": {
+    "bind": "core.name"
+  }
+}

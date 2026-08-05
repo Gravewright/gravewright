@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "roll-under-check": {
+      "formula": "under(1, 20, clamp(@sheet.attributes.strength, 1, 20))",
+      "label": "Strength roll-under",
+      "type": "roll"
+    }
+  }
+}

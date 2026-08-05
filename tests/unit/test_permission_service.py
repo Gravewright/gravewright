@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 from app.business.permissions.permission_service import PermissionService
-from app.domain.permissions.permissions import TablePermission, PermissionEffect, PermissionSubjectType
+from app.domain.permissions.permissions import (
+    TablePermission,
+    PermissionEffect,
+    PermissionSubjectType,
+)
 from app.domain.roles import PlayerRole
 from app.persistence.repositories.campaign_permission_repository import CampaignPermissionRepository
 from tests.conftest import seed_campaign, seed_member, seed_user
@@ -12,8 +16,14 @@ def test_gm_can_do_core_permissions(db):
     campaign_id = seed_campaign(gm_id)
     svc = PermissionService()
     assert svc.can(user_id=gm_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_VIEW)
-    assert svc.can(user_id=gm_id, campaign_id=campaign_id, permission=TablePermission.CAMPAIGN_INVITE_MEMBERS)
-    assert svc.can(user_id=gm_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_UPDATE_PERMISSIONS)
+    assert svc.can(
+        user_id=gm_id, campaign_id=campaign_id, permission=TablePermission.CAMPAIGN_INVITE_MEMBERS
+    )
+    assert svc.can(
+        user_id=gm_id,
+        campaign_id=campaign_id,
+        permission=TablePermission.SETTINGS_UPDATE_PERMISSIONS,
+    )
 
 
 def test_player_denied_gm_only_permission(db):
@@ -22,7 +32,11 @@ def test_player_denied_gm_only_permission(db):
     campaign_id = seed_campaign(gm_id)
     seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
     svc = PermissionService()
-    assert not svc.can(user_id=player_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_UPDATE_PERMISSIONS)
+    assert not svc.can(
+        user_id=player_id,
+        campaign_id=campaign_id,
+        permission=TablePermission.SETTINGS_UPDATE_PERMISSIONS,
+    )
 
 
 def test_player_has_default_chat_permissions(db):
@@ -45,10 +59,18 @@ def test_scene_map_permissions_follow_default_roles(db):
 
     assert svc.can(user_id=gm_id, campaign_id=campaign_id, permission=TablePermission.SCENE_CREATE)
     assert svc.can(user_id=gm_id, campaign_id=campaign_id, permission=TablePermission.MAP_UPLOAD)
-    assert svc.can(user_id=player_id, campaign_id=campaign_id, permission=TablePermission.SCENE_VIEW)
-    assert svc.can(user_id=player_id, campaign_id=campaign_id, permission=TablePermission.TOKEN_MOVE)
-    assert not svc.can(user_id=player_id, campaign_id=campaign_id, permission=TablePermission.MAP_UPLOAD)
-    assert not svc.can(user_id=player_id, campaign_id=campaign_id, permission=TablePermission.MAP_PAINT)
+    assert svc.can(
+        user_id=player_id, campaign_id=campaign_id, permission=TablePermission.SCENE_VIEW
+    )
+    assert svc.can(
+        user_id=player_id, campaign_id=campaign_id, permission=TablePermission.TOKEN_MOVE
+    )
+    assert not svc.can(
+        user_id=player_id, campaign_id=campaign_id, permission=TablePermission.MAP_UPLOAD
+    )
+    assert not svc.can(
+        user_id=player_id, campaign_id=campaign_id, permission=TablePermission.MAP_PAINT
+    )
 
 
 def test_non_member_denied(db):
@@ -56,7 +78,9 @@ def test_non_member_denied(db):
     outsider_id = seed_user(name="Outsider", email="out@test.com")
     campaign_id = seed_campaign(gm_id)
     svc = PermissionService()
-    assert not svc.can(user_id=outsider_id, campaign_id=campaign_id, permission=TablePermission.CHAT_SEND)
+    assert not svc.can(
+        user_id=outsider_id, campaign_id=campaign_id, permission=TablePermission.CHAT_SEND
+    )
 
 
 def test_override_allow_grants_extra_permission(db):
@@ -74,7 +98,9 @@ def test_override_allow_grants_extra_permission(db):
     )
 
     svc = PermissionService()
-    assert svc.can(user_id=player_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_VIEW)
+    assert svc.can(
+        user_id=player_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_VIEW
+    )
 
 
 def test_override_deny_removes_default_permission(db):
@@ -83,7 +109,6 @@ def test_override_deny_removes_default_permission(db):
     campaign_id = seed_campaign(gm_id)
     seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
 
-                                              
     perm_key = TablePermission.CHAT_SEND.value
     CampaignPermissionRepository().replace_subject_effects(
         campaign_id=campaign_id,
@@ -93,7 +118,9 @@ def test_override_deny_removes_default_permission(db):
     )
 
     svc = PermissionService()
-    assert not svc.can(user_id=player_id, campaign_id=campaign_id, permission=TablePermission.CHAT_SEND)
+    assert not svc.can(
+        user_id=player_id, campaign_id=campaign_id, permission=TablePermission.CHAT_SEND
+    )
 
 
 def test_role_level_override_applies_to_all_role_members(db):
@@ -113,5 +140,9 @@ def test_role_level_override_applies_to_all_role_members(db):
     )
 
     svc = PermissionService()
-    assert svc.can(user_id=player1_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_VIEW)
-    assert svc.can(user_id=player2_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_VIEW)
+    assert svc.can(
+        user_id=player1_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_VIEW
+    )
+    assert svc.can(
+        user_id=player2_id, campaign_id=campaign_id, permission=TablePermission.SETTINGS_VIEW
+    )

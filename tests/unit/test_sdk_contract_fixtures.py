@@ -126,7 +126,5 @@ def test_invalid_kind_root_mismatch_rejected():
 def test_invalid_fixtures_block_install(db, monkeypatch):
     monkeypatch.setattr(package_registry, "PACKAGES_DIR", INVALID_ROOT)
     gm = seed_user(email="fixture-invalid-install@test.com")
-    result = PackageInstallService().install(
-        package_id="invalid-unknown-capability", user_id=gm
-    )
+    result = PackageInstallService().install(package_id="invalid-unknown-capability", user_id=gm)
     assert result.success is False

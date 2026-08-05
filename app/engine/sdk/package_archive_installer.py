@@ -120,7 +120,7 @@ def _extract_normalized(zf: zipfile.ZipFile, *, prefix: str, staging_dir: Path) 
         if prefix:
             if not name.startswith(prefix):
                 continue
-            relative = name[len(prefix):]
+            relative = name[len(prefix) :]
         else:
             relative = name
         if not relative:

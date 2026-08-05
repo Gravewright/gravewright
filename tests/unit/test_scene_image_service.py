@@ -108,7 +108,12 @@ def test_place_asset_uses_existing_asset_dimensions(db):
     asset = _library_asset(campaign_id, gm_id)
 
     result = SceneImageService().place_asset(
-        campaign_id=campaign_id, user_id=gm_id, scene_id=scene["id"], asset_id=asset["id"], x=5.0, y=6.0
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        scene_id=scene["id"],
+        asset_id=asset["id"],
+        x=5.0,
+        y=6.0,
     )
 
     assert result.success, result.error_key
@@ -149,7 +154,12 @@ def test_place_asset_rejects_foreign_asset(db):
     scene = seed_scene(campaign_id)
 
     result = SceneImageService().place_asset(
-        campaign_id=campaign_id, user_id=gm_id, scene_id=scene["id"], asset_id="does-not-exist", x=0.0, y=0.0
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        scene_id=scene["id"],
+        asset_id="does-not-exist",
+        x=0.0,
+        y=0.0,
     )
 
     assert not result.success
@@ -213,15 +223,25 @@ def test_composition_layer_requires_gm_to_place(db):
     service = SceneImageService()
 
     denied = service.place_asset(
-        campaign_id=campaign_id, user_id=player_id, scene_id=scene["id"],
-        asset_id=asset["id"], x=1.0, y=2.0, layer="composition",
+        campaign_id=campaign_id,
+        user_id=player_id,
+        scene_id=scene["id"],
+        asset_id=asset["id"],
+        x=1.0,
+        y=2.0,
+        layer="composition",
     )
     assert not denied.success
     assert denied.error_key == "permissions.errors.denied"
 
     allowed = service.place_asset(
-        campaign_id=campaign_id, user_id=gm_id, scene_id=scene["id"],
-        asset_id=asset["id"], x=1.0, y=2.0, layer="composition",
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        scene_id=scene["id"],
+        asset_id=asset["id"],
+        x=1.0,
+        y=2.0,
+        layer="composition",
     )
     assert allowed.success, allowed.error_key
     assert allowed.payload["placement"]["layer"] == "composition"

@@ -33,7 +33,7 @@ def test_database_startup_uses_sqlalchemy_metadata_schema(db):
 
 
 def test_metadata_has_named_constraints_for_migrations():
-                                                                                
+
     assert metadata.naming_convention
     assert "pk" in metadata.naming_convention
     assert "fk" in metadata.naming_convention

@@ -17,7 +17,7 @@ def _is_gm(campaign: dict) -> bool:
 
 
 def can_view_item(*, item: dict, campaign: dict, user_id: str) -> bool:
-                                                                     
+
     if has_full_view(campaign.get("member_role")):
         return True
     if ItemRepository().has_owner(item_id=item["id"], user_id=user_id):

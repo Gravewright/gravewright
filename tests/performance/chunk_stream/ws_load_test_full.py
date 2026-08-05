@@ -310,9 +310,6 @@ async def process_binary_frame(
     metrics.batch_payload_bytes.append(float(payload_bytes))
     metrics.chunks_per_frame.append(float(len(chunks)))
 
-                                                                              
-                                                                           
-                                      
     for chunk in chunks:
         key = f"{chunk['layer_id']}:{chunk['cx']}:{chunk['cy']}"
         known_chunks[key] = int(chunk["version"])
@@ -414,8 +411,6 @@ async def recv_event_and_drain_frames(
             else:
                 metrics.clean_resumes += 1
 
-                                                                 
-                                                                                
         drain_deadline = time.monotonic() + min(5.0, timeout_seconds)
         while local_frames < batch_count and time.monotonic() < drain_deadline:
             try:
@@ -441,8 +436,6 @@ async def recv_event_and_drain_frames(
             )
             local_frames += 1
 
-                                                                               
-                                                                            
         _ = chunk_count
         return ready_payload
 
@@ -671,7 +664,6 @@ async def virtual_user(
                         )
 
                     if args.mode == "subscribe":
-                                                                       
                         while time.monotonic() < run_until:
                             await asyncio.sleep(1.0)
                         break
@@ -684,9 +676,13 @@ async def virtual_user(
 
                     while time.monotonic() < run_until:
                         if is_slow:
-                            await asyncio.sleep(random.uniform(args.slow_min_sleep, args.slow_max_sleep))
+                            await asyncio.sleep(
+                                random.uniform(args.slow_min_sleep, args.slow_max_sleep)
+                            )
                         else:
-                            await asyncio.sleep(random.uniform(args.fast_min_sleep, args.fast_max_sleep))
+                            await asyncio.sleep(
+                                random.uniform(args.fast_min_sleep, args.fast_max_sleep)
+                            )
 
                         generation += 1
                         step += 1
@@ -703,7 +699,10 @@ async def virtual_user(
                             args=args,
                         )
 
-                        if args.mode == "pan-reconnect" and updates_on_connection >= reconnect_after:
+                        if (
+                            args.mode == "pan-reconnect"
+                            and updates_on_connection >= reconnect_after
+                        ):
                             metrics.reconnects += 1
                             generation += 1
                             break
@@ -750,13 +749,15 @@ def write_outputs(
         "slow_client_ratio": args.slow_client_ratio,
         **snap,
         "failure_rate_by_started_users": metrics.failures / max(1, metrics.users_started),
-        "connection_failure_rate_by_started_users": metrics.connection_failures / max(1, metrics.users_started),
+        "connection_failure_rate_by_started_users": metrics.connection_failures
+        / max(1, metrics.users_started),
         "commands_per_second": metrics.commands_sent / duration,
         "binary_frames_per_second": metrics.binary_frames / duration,
         "chunks_per_second": metrics.chunks_received / duration,
         "payload_bytes_per_second": metrics.payload_bytes / duration,
         "payload_mb_total": metrics.payload_bytes / (1024 * 1024),
-        "payload_kb_per_started_user": (metrics.payload_bytes / 1024) / max(1, metrics.users_started),
+        "payload_kb_per_started_user": (metrics.payload_bytes / 1024)
+        / max(1, metrics.users_started),
         "chunks_per_started_user": metrics.chunks_received / max(1, metrics.users_started),
         "frames_per_started_user": metrics.binary_frames / max(1, metrics.users_started),
         "subscribe_latency_ms": summary_stats(metrics.subscribe_latencies_ms),
@@ -805,14 +806,19 @@ def write_outputs(
 
         f.write("## Latency and payload distribution\n\n")
         f.write("```json\n")
-        f.write(json.dumps({
-            "subscribe_latency_ms": summary["subscribe_latency_ms"],
-            "update_latency_ms": summary["update_latency_ms"],
-            "resume_latency_ms": summary["resume_latency_ms"],
-            "first_binary_latency_ms": summary["first_binary_latency_ms"],
-            "batch_payload_bytes": summary["batch_payload_bytes"],
-            "chunks_per_frame": summary["chunks_per_frame"],
-        }, indent=2))
+        f.write(
+            json.dumps(
+                {
+                    "subscribe_latency_ms": summary["subscribe_latency_ms"],
+                    "update_latency_ms": summary["update_latency_ms"],
+                    "resume_latency_ms": summary["resume_latency_ms"],
+                    "first_binary_latency_ms": summary["first_binary_latency_ms"],
+                    "batch_payload_bytes": summary["batch_payload_bytes"],
+                    "chunks_per_frame": summary["chunks_per_frame"],
+                },
+                indent=2,
+            )
+        )
         f.write("\n```\n")
 
 
@@ -844,23 +850,25 @@ async def run(args: argparse.Namespace) -> SharedMetrics:
     try:
         with timeseries_path.open("w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow([
-                "timestamp",
-                "elapsed_seconds",
-                "users_spawned",
-                "tasks_active",
-                "users_started",
-                "users_finished",
-                "failures",
-                "connection_failures",
-                "commands_sent",
-                "binary_frames",
-                "chunks_received",
-                "payload_bytes",
-                "acks_sent",
-                "reconnects",
-                "resumes",
-            ])
+            writer.writerow(
+                [
+                    "timestamp",
+                    "elapsed_seconds",
+                    "users_spawned",
+                    "tasks_active",
+                    "users_started",
+                    "users_finished",
+                    "failures",
+                    "connection_failures",
+                    "commands_sent",
+                    "binary_frames",
+                    "chunks_received",
+                    "payload_bytes",
+                    "acks_sent",
+                    "reconnects",
+                    "resumes",
+                ]
+            )
 
             users_created = 0
             spawn_interval = 1.0 / max(0.001, args.spawn_rate)
@@ -894,23 +902,25 @@ async def run(args: argparse.Namespace) -> SharedMetrics:
                 tasks -= done
 
                 snap = metrics.snapshot()
-                writer.writerow([
-                    int(time.time()),
-                    round(time.monotonic() - started_at, 3),
-                    users_created,
-                    len(tasks),
-                    snap["users_started"],
-                    snap["users_finished"],
-                    snap["failures"],
-                    snap["connection_failures"],
-                    snap["commands_sent"],
-                    snap["binary_frames"],
-                    snap["chunks_received"],
-                    snap["payload_bytes"],
-                    snap["acks_sent"],
-                    snap["reconnects"],
-                    snap["resumes"],
-                ])
+                writer.writerow(
+                    [
+                        int(time.time()),
+                        round(time.monotonic() - started_at, 3),
+                        users_created,
+                        len(tasks),
+                        snap["users_started"],
+                        snap["users_finished"],
+                        snap["failures"],
+                        snap["connection_failures"],
+                        snap["commands_sent"],
+                        snap["binary_frames"],
+                        snap["chunks_received"],
+                        snap["payload_bytes"],
+                        snap["acks_sent"],
+                        snap["reconnects"],
+                        snap["resumes"],
+                    ]
+                )
                 f.flush()
 
                 await asyncio.sleep(1.0)
@@ -954,7 +964,9 @@ def main() -> None:
     parser.add_argument("--users", type=int, default=100)
     parser.add_argument("--spawn-rate", type=float, default=10)
     parser.add_argument("--run-time", type=int, default=60)
-    parser.add_argument("--mode", choices=["subscribe", "pan", "pan-reconnect"], default="pan-reconnect")
+    parser.add_argument(
+        "--mode", choices=["subscribe", "pan", "pan-reconnect"], default="pan-reconnect"
+    )
 
     parser.add_argument("--viewport-width-chunks", type=int, default=5)
     parser.add_argument("--viewport-height-chunks", type=int, default=4)

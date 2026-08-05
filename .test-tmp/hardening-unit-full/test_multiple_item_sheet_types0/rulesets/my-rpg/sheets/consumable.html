@@ -1,0 +1,30 @@
+<form class="gw-my-rpg-sheet" data-sheet-type="consumable">
+  <header class="gw-my-rpg-sheet__header">
+    <label>
+      Name
+      <input data-bind="item.name" aria-label="Consumable name">
+    </label>
+    <span class="gw-my-rpg-sheet__type" data-text="item.type"></span>
+  </header>
+
+  <div class="gw-my-rpg-sheet__fields">
+    <label>
+      Category
+      <input data-bind="system.category">
+    </label>
+    <label>
+      Quantity
+      <input type="number" data-bind="system.quantity">
+    </label>
+    <label>
+      Effect
+      <input data-bind="system.effect">
+    </label>
+    <label>
+      Cost
+      <input type="number" data-bind="system.cost">
+    </label>
+  </div>
+
+    <div class="gw-my-rpg-sheet__editor" data-rich-editor="system.description"></div>
+</form>

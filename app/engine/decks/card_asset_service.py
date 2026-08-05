@@ -67,10 +67,14 @@ class CardAssetService:
         try:
             decoded = self.image_decoder.decode(data)
         except ValueError:
-            return CardAssetResult(success=False, error_key="game.cards.assets.errors.invalid_image")
+            return CardAssetResult(
+                success=False, error_key="game.cards.assets.errors.invalid_image"
+            )
 
         if decoded.format.upper() not in ALLOWED_CARD_FORMATS:
-            return CardAssetResult(success=False, error_key="game.cards.assets.errors.unsupported_type")
+            return CardAssetResult(
+                success=False, error_key="game.cards.assets.errors.unsupported_type"
+            )
 
         purpose = purpose if purpose in VALID_CARD_PURPOSES else "card_front"
         safe_filename = self._safe_filename(filename)

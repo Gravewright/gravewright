@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "draw-card": {
+      "formula": "draw(52)",
+      "label": "Draw card",
+      "type": "roll"
+    }
+  }
+}

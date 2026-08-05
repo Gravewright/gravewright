@@ -29,7 +29,9 @@ class ItemPermissionRepository:
     def list_for_item(self, *, item_id: str) -> dict[str, dict]:
         with engine_connect() as connection:
             rows = (
-                connection.execute(select(item_permissions).where(item_permissions.c.item_id == item_id))
+                connection.execute(
+                    select(item_permissions).where(item_permissions.c.item_id == item_id)
+                )
                 .mappings()
                 .all()
             )

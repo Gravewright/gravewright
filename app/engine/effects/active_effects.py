@@ -17,15 +17,11 @@ from app.engine.rules import formula_engine
 
 _DICE_RE = re.compile(r"^[1-9][0-9]?d[1-9][0-9]{0,2}$")
 
-                                                                                 
-                                                                                
-                                                                           
+
 _GRANTING_COLLECTIONS = ("inventory", "features", "weapons")
 _D20_RE = re.compile(r"(?<![A-Za-z0-9_])1d20(?![A-Za-z0-9_])", re.IGNORECASE)
 
-                                                                           
-                                                                               
-                   
+
 _STAT_TARGET_PATHS = {
     "stat.ac": "ac",
     "stat.armor_class": "ac",
@@ -92,7 +88,11 @@ def _effective_effects(sheet_data: dict) -> list[dict]:
     for effect in all_effects(sheet_data):
         payload = effect.get("data") if isinstance(effect.get("data"), dict) else {}
         condition = payload.get("condition")
-        if isinstance(condition, str) and condition.strip() and not _condition_passes(condition, sheet_data):
+        if (
+            isinstance(condition, str)
+            and condition.strip()
+            and not _condition_passes(condition, sheet_data)
+        ):
             continue
         result.append(effect)
     return result
@@ -200,7 +200,11 @@ def damage_adjustments(sheet_data: dict, damage_type: str = "") -> list[dict]:
     if damage_type:
         targets.add(f"damage.received.{str(damage_type).lower()}")
     _, applied = effect_modifiers(sheet_data, targets)
-    return [item for item in applied if str(item.get("operation") or "") in {"resistance", "vulnerability", "immunity", "reduce"}]
+    return [
+        item
+        for item in applied
+        if str(item.get("operation") or "") in {"resistance", "vulnerability", "immunity", "reduce"}
+    ]
 
 
 def adjust_incoming_damage(sheet_data: dict, amount: int, damage_type: str = "") -> int:
@@ -262,8 +266,7 @@ def periodic_modifiers(sheet_data: dict, *, roller: Any = None) -> list[dict]:
             if rolled <= 0:
                 continue
             damage_type = str(mod.get("damageType") or mod.get("damage_type") or "")
-                                                                                  
-                                                   
+
             amount = (
                 adjust_incoming_damage(sheet_data, rolled, damage_type)
                 if operation == "damage_over_time"
@@ -287,7 +290,6 @@ def periodic_modifiers(sheet_data: dict, *, roller: Any = None) -> list[dict]:
     return out
 
 
-                                                                       
 _SELF_RESOURCE_TARGETS = {"", "damage.self", "heal.self", "self"}
 
 

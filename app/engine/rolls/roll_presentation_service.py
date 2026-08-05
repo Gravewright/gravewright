@@ -49,11 +49,19 @@ class RollPresentationService:
     ) -> RollPresentation:
         if not system_id or not isinstance(metadata, dict):
             return RollPresentation(
-                chat_card=self._fallback_chat_card(label=label, expression=expression, groups=groups, modifier=modifier, total=total),
+                chat_card=self._fallback_chat_card(
+                    label=label,
+                    expression=expression,
+                    groups=groups,
+                    modifier=modifier,
+                    total=total,
+                ),
                 roll_toast=self._fallback_toast(label=label, expression=expression, total=total),
             )
 
-        presentation = metadata.get("presentation") if isinstance(metadata.get("presentation"), dict) else {}
+        presentation = (
+            metadata.get("presentation") if isinstance(metadata.get("presentation"), dict) else {}
+        )
         chat_card_id = presentation.get("chatCard")
         roll_toast_id = presentation.get("rollToast") or chat_card_id
 
@@ -67,12 +75,20 @@ class RollPresentationService:
             total=total,
         )
         catalog = self.locales.get_locale(system_id, config.default_locale)
-        chat_card = self._render_chat_card(system_id=system_id, card_id=chat_card_id, context=context, catalog=catalog)
-        roll_toast = self._render_roll_toast(system_id=system_id, toast_id=roll_toast_id, context=context, catalog=catalog)
+        chat_card = self._render_chat_card(
+            system_id=system_id, card_id=chat_card_id, context=context, catalog=catalog
+        )
+        roll_toast = self._render_roll_toast(
+            system_id=system_id, toast_id=roll_toast_id, context=context, catalog=catalog
+        )
 
         return RollPresentation(
-            chat_card=chat_card or self._fallback_chat_card(label=label, expression=expression, groups=groups, modifier=modifier, total=total),
-            roll_toast=roll_toast or self._fallback_toast(label=label, expression=expression, total=total),
+            chat_card=chat_card
+            or self._fallback_chat_card(
+                label=label, expression=expression, groups=groups, modifier=modifier, total=total
+            ),
+            roll_toast=roll_toast
+            or self._fallback_toast(label=label, expression=expression, total=total),
         )
 
     def _context(
@@ -87,7 +103,9 @@ class RollPresentationService:
         total: int | None,
     ) -> dict:
         source = metadata.get("source") if isinstance(metadata.get("source"), dict) else {}
-        formula_payload = metadata.get("formula") if isinstance(metadata.get("formula"), dict) else {}
+        formula_payload = (
+            metadata.get("formula") if isinstance(metadata.get("formula"), dict) else {}
+        )
         display_formula = (
             formula_payload.get("display")
             or formula_payload.get("resolved")
@@ -122,10 +140,14 @@ class RollPresentationService:
                 "kind": metadata.get("intent") or "roll",
                 "visibility": metadata.get("visibility") or "public",
             },
-            "input": metadata.get("rollInput") if isinstance(metadata.get("rollInput"), dict) else {},
+            "input": metadata.get("rollInput")
+            if isinstance(metadata.get("rollInput"), dict)
+            else {},
         }
 
-    def _render_chat_card(self, *, system_id: str, card_id: Any, context: dict, catalog: dict[str, str]) -> dict | None:
+    def _render_chat_card(
+        self, *, system_id: str, card_id: Any, context: dict, catalog: dict[str, str]
+    ) -> dict | None:
         if not isinstance(card_id, str) or not card_id:
             return None
         mappings = self.rules.get_chat_card_mappings(system_id)
@@ -154,7 +176,9 @@ class RollPresentationService:
             "total": context["roll"]["total"],
         }
 
-    def _render_roll_toast(self, *, system_id: str, toast_id: Any, context: dict, catalog: dict[str, str]) -> dict | None:
+    def _render_roll_toast(
+        self, *, system_id: str, toast_id: Any, context: dict, catalog: dict[str, str]
+    ) -> dict | None:
         if not isinstance(toast_id, str) or not toast_id:
             return None
         mappings = self.rules.get_roll_toast_mappings(system_id)
@@ -164,14 +188,20 @@ class RollPresentationService:
             return None
         return {
             "id": toast_id,
-            "title": str(self._resolve_field(spec, "title", context, catalog, default="@action.label") or ""),
-            "subtitle": str(self._resolve_field(spec, "subtitle", context, catalog, default="") or ""),
+            "title": str(
+                self._resolve_field(spec, "title", context, catalog, default="@action.label") or ""
+            ),
+            "subtitle": str(
+                self._resolve_field(spec, "subtitle", context, catalog, default="") or ""
+            ),
             "formula": str(self._resolve(spec.get("formula", "@roll.formula"), context) or ""),
             "total": self._resolve(spec.get("total", "@roll.total"), context),
             "kind": str(self._resolve(spec.get("kind", "@roll.kind"), context) or "roll"),
         }
 
-    def _resolve_field(self, spec: dict, field: str, context: dict, catalog: dict[str, str], *, default: str = "") -> Any:
+    def _resolve_field(
+        self, spec: dict, field: str, context: dict, catalog: dict[str, str], *, default: str = ""
+    ) -> Any:
         """Resolve a presentation field, preferring a ``{field}Key`` locale lookup.
 
         A ``labelKey``/``titleKey``/``subtitleKey`` resolves against the system
@@ -230,7 +260,9 @@ class RollPresentationService:
             "total": total if total is not None else "",
         }
 
-    def _fallback_toast(self, *, label: str | None, expression: str | None, total: int | None) -> dict:
+    def _fallback_toast(
+        self, *, label: str | None, expression: str | None, total: int | None
+    ) -> dict:
         return {
             "id": "default",
             "title": label or "Roll",

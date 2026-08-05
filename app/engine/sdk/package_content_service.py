@@ -84,7 +84,9 @@ class PackageContentService:
         if campaign is None:
             return ContentImportResult(success=False, error_key="inside.campaigns.errors.not_found")
         if campaign.get("member_role") != PlayerRole.GM.value:
-            return ContentImportResult(success=False, error_key="inside.campaigns.errors.gm_required")
+            return ContentImportResult(
+                success=False, error_key="inside.campaigns.errors.gm_required"
+            )
         if not self._content_enabled(package_id):
             return ContentImportResult(success=False, error_key="sdk.errors.capability_required")
         if not self._active_for_campaign(package_id=package_id, campaign=dict(campaign)):
@@ -106,7 +108,9 @@ class PackageContentService:
         elif pack_type == "journal_pack":
             result = self._import_journal(campaign, user_id, package_id, pack_type, entry)
         else:
-            return ContentImportResult(success=False, error_key="game.content.errors.not_importable")
+            return ContentImportResult(
+                success=False, error_key="game.content.errors.not_importable"
+            )
 
         if result.success:
             self.imports.record(
@@ -147,7 +151,9 @@ class PackageContentService:
     def _import_actor(self, campaign, user_id, package_id, pack_type, entry) -> ContentImportResult:
         system_id = self._entry_system_id(campaign, entry)
         if not system_id:
-            return ContentImportResult(success=False, error_key="game.items.errors.system_not_assigned")
+            return ContentImportResult(
+                success=False, error_key="game.items.errors.system_not_assigned"
+            )
         created = self.actors.create_actor(
             campaign_id=str(campaign["id"]),
             user_id=user_id,
@@ -172,7 +178,9 @@ class PackageContentService:
     def _import_item(self, campaign, user_id, package_id, pack_type, entry) -> ContentImportResult:
         system_id = self._entry_system_id(campaign, entry)
         if not system_id:
-            return ContentImportResult(success=False, error_key="game.items.errors.system_not_assigned")
+            return ContentImportResult(
+                success=False, error_key="game.items.errors.system_not_assigned"
+            )
         seed = entry.get("data") if isinstance(entry.get("data"), dict) else {}
         created = self.items.create_item(
             campaign_id=str(campaign["id"]),
@@ -193,7 +201,9 @@ class PackageContentService:
             system_id=system_id,
         )
 
-    def _import_journal(self, campaign, user_id, package_id, pack_type, entry) -> ContentImportResult:
+    def _import_journal(
+        self, campaign, user_id, package_id, pack_type, entry
+    ) -> ContentImportResult:
         journal_type = str(entry.get("type") or "handout")
         if journal_type not in _JOURNAL_TYPES:
             journal_type = "handout"

@@ -45,8 +45,7 @@ class RenderQueueItem:
     viewport_generation: int | None = None
     byte_size: int = 0
     cost: int = 1
-                                                                            
-                                                                        
+
     order: int = 0
     expires_at_ms: int | None = None
     metadata: Mapping[str, Any] = field(default_factory=dict)
@@ -199,8 +198,6 @@ class RenderPriorityScheduler:
                 and next_bytes > budget.max_payload_bytes
                 and drained
             ):
-                                                                           
-                                                                              
                 break
 
             next_cost = used_cost + item.cost
@@ -304,8 +301,7 @@ class RenderPriorityScheduler:
         heap: list[tuple[int, int, int, str]] = []
         for item in self._items.values():
             priority = self._effective_priority(item=item, now_ms=now_ms)
-                                                                                   
-                                                                                      
+
             heapq.heappush(heap, (int(priority), item.order, item.sequence, item.key))
         return heap
 

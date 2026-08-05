@@ -92,8 +92,12 @@ def test_global_storage_db_created_under_data_storage_packages(storage_env):
 
 def test_campaign_storage_db_created_under_data_storage_packages(storage_env):
     storage_env.execute(
-        STORAGE_PKG, "campaign", "saveState", {"key": "k", "value_json": "1"},
-        campaign_id=storage_env.campaign_id, ctx=GM,
+        STORAGE_PKG,
+        "campaign",
+        "saveState",
+        {"key": "k", "value_json": "1"},
+        campaign_id=storage_env.campaign_id,
+        ctx=GM,
     )
     path = storage_env.db_path(STORAGE_PKG, "campaign", storage_env.campaign_id)
     assert path.is_file()
@@ -102,7 +106,7 @@ def test_campaign_storage_db_created_under_data_storage_packages(storage_env):
 
 def test_storage_named_query_write_then_read_executes(storage_env):
     storage_env.execute(
-        STORAGE_PKG, "global", "saveState", {"key": "panel", "value_json": "\"open\""}, ctx=GM
+        STORAGE_PKG, "global", "saveState", {"key": "panel", "value_json": '"open"'}, ctx=GM
     )
     rows = storage_env.query(STORAGE_PKG, "global", "getState", {"key": "panel"}, ctx=GM)
     assert rows == [{"value_json": '"open"'}]
@@ -115,7 +119,9 @@ def test_storage_migrations_are_applied_on_first_use(storage_env):
     path = storage_env.db_path(STORAGE_PKG, "global", None)
     conn = sqlite3.connect(path)
     try:
-        versions = {r[0] for r in conn.execute("SELECT version FROM gravewright_package_migrations")}
+        versions = {
+            r[0] for r in conn.execute("SELECT version FROM gravewright_package_migrations")
+        }
     finally:
         conn.close()
     assert "001_init" in versions
@@ -141,17 +147,9 @@ def test_modified_applied_migration_is_detected(storage_env, monkeypatch, tmp_pa
     shutil.copytree(FIXTURES / "addons" / STORAGE_PKG, packages / "addons" / STORAGE_PKG)
     monkeypatch.setattr(package_registry, "PACKAGES_DIR", packages)
 
-    storage_env.execute(
-        STORAGE_PKG, "global", "saveState", {"key": "k", "value_json": "1"}, ctx=GM
-    )
+    storage_env.execute(STORAGE_PKG, "global", "saveState", {"key": "k", "value_json": "1"}, ctx=GM)
     migration = (
-        packages
-        / "addons"
-        / STORAGE_PKG
-        / "storage"
-        / "sqlite"
-        / "migrations"
-        / "001_init.sql"
+        packages / "addons" / STORAGE_PKG / "storage" / "sqlite" / "migrations" / "001_init.sql"
     )
     migration.write_text(migration.read_text(encoding="utf-8") + "\n-- changed\n", encoding="utf-8")
 
@@ -215,8 +213,12 @@ def test_storage_campaign_write_requires_gm(storage_env):
 
 def test_storage_campaign_read_allowed_for_member(storage_env):
     storage_env.execute(
-        STORAGE_PKG, "campaign", "saveState", {"key": "k", "value_json": "5"},
-        campaign_id=storage_env.campaign_id, ctx=GM,
+        STORAGE_PKG,
+        "campaign",
+        "saveState",
+        {"key": "k", "value_json": "5"},
+        campaign_id=storage_env.campaign_id,
+        ctx=GM,
     )
     rows = storage_env.query(
         STORAGE_PKG,

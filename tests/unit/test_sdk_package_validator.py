@@ -50,9 +50,7 @@ def test_forbidden_and_unknown_capabilities():
 
 
 def test_prerelease_verified_warns_against_final_sdk():
-    r = validate_manifest(
-        _base(compatibility={"minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1"})
-    )
+    r = validate_manifest(_base(compatibility={"minimum": "1.0.0-rc.1", "verified": "1.0.0-rc.1"}))
     assert r.ok
     assert r.compatibility_status == "unverified"
     assert "sdk.validation.compatibility_prerelease" in r.warnings
@@ -65,7 +63,12 @@ def test_addon_activation_mode_must_be_multiple():
 
 def test_ruleset_requires_storage_and_actor_types():
     r = validate_manifest(
-        _base(kind="ruleset", activation={"mode": "exclusive"}, capabilities=["actors.register"], provides={})
+        _base(
+            kind="ruleset",
+            activation={"mode": "exclusive"},
+            capabilities=["actors.register"],
+            provides={},
+        )
     )
     assert "sdk.validation.ruleset_storage_required" in r.errors
     assert "sdk.validation.ruleset_actor_types_required" in r.errors

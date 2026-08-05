@@ -1,0 +1,48 @@
+{
+  "actorType": "character",
+  "body": {
+    "children": [
+      {
+        "label": "Level",
+        "path": "sheet.level",
+        "type": "numberField"
+      },
+      {
+        "label": "Health",
+        "path": "sheet.resources.health",
+        "type": "numberField"
+      },
+      {
+        "label": "Maximum health",
+        "path": "sheet.resources.healthMax",
+        "type": "numberField"
+      },
+      {
+        "label": "Defense",
+        "path": "sheet.defense",
+        "type": "numberField"
+      },
+      {
+        "label": "Speed",
+        "path": "sheet.speed",
+        "type": "numberField"
+      },
+      {
+        "label": "Experience",
+        "path": "sheet.experience",
+        "type": "numberField"
+      },
+      {
+        "label": "Description",
+        "path": "sheet.description",
+        "type": "textArea"
+      }
+    ],
+    "type": "section",
+    "variant": "main"
+  },
+  "kind": "actorSheet",
+  "title": {
+    "bind": "core.name"
+  }
+}

@@ -54,11 +54,18 @@ class AssetLibraryService:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         if not can_view_assets(actor_role=role):
             return AssetResult(success=False, error_key="game.assets.errors.not_found")
-        assets = [self._present_asset(asset) for asset in self.assets.list_for_campaign(campaign_id=campaign_id)]
+        assets = [
+            self._present_asset(asset)
+            for asset in self.assets.list_for_campaign(campaign_id=campaign_id)
+        ]
         folders = self.folders.list_for_campaign(campaign_id=campaign_id)
-        return AssetResult(success=True, payload={"campaign_id": campaign_id, "folders": folders, "assets": assets})
+        return AssetResult(
+            success=True, payload={"campaign_id": campaign_id, "folders": folders, "assets": assets}
+        )
 
-    def create_folder(self, *, campaign_id: str, user_id: str, name: str, parent_id: str | None = None) -> AssetResult:
+    def create_folder(
+        self, *, campaign_id: str, user_id: str, name: str, parent_id: str | None = None
+    ) -> AssetResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         if not can_manage_assets(actor_role=role):
             return AssetResult(success=False, error_key="permissions.errors.denied")
@@ -69,7 +76,9 @@ class AssetLibraryService:
         folder = self.folders.create(campaign_id=campaign_id, parent_id=parent_id, name=name)
         return AssetResult(success=True, payload={"folder": folder})
 
-    def move_asset(self, *, campaign_id: str, user_id: str, asset_id: str, folder_id: str | None) -> AssetResult:
+    def move_asset(
+        self, *, campaign_id: str, user_id: str, asset_id: str, folder_id: str | None
+    ) -> AssetResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         if not can_manage_assets(actor_role=role):
             return AssetResult(success=False, error_key="permissions.errors.denied")
@@ -130,7 +139,9 @@ class AssetLibraryService:
         )
         if not created.success:
             return created
-        return AssetResult(success=True, payload={"asset": self._present_asset(created.payload["asset"])})
+        return AssetResult(
+            success=True, payload={"asset": self._present_asset(created.payload["asset"])}
+        )
 
     def create_asset(
         self,

@@ -102,7 +102,6 @@ class SheetDropService:
 
         layout = self.layouts.get_actor_sheet(system_id=system_id, actor_type=actor["type"])
         if drop_zone:
-
             zone = find_drop_zone(layout, drop_zone) if layout else None
             if zone is None:
                 if self._is_html_sheet(system_id, actor["type"]):
@@ -118,8 +117,6 @@ class SheetDropService:
             if not accepts_entry(zone["accepts"], entry.drop_type):
                 return DropResult(success=False, error_key="game.drop.errors.not_accepted")
         else:
-
-
             zone = find_matching_drop_zone(layout, entry.drop_type) if layout else None
             if zone is None:
                 # HTML-mode sheets have no declarative dropZone; collect the
@@ -132,8 +129,6 @@ class SheetDropService:
         if not action_id or self.rules.get_action(system_id, action_id) is None:
             return DropResult(success=False, error_key="game.drop.errors.action_not_found")
 
-                                                                                 
-                                                                  
         drop_context = {"entry": entry.as_dict(), "source": entry.source}
         result = self.actions.execute(
             actor_id=actor_id, action_id=action_id, user_id=user_id, drop=drop_context
@@ -173,8 +168,11 @@ class SheetDropService:
         items.append(entry.as_dict())
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(
-            system_id=actor["system_id"], campaign_id=actor["campaign_id"],
-            actor_id=actor["id"], version=version, data=data,
+            system_id=actor["system_id"],
+            campaign_id=actor["campaign_id"],
+            actor_id=actor["id"],
+            version=version,
+            data=data,
         )
         return DropResult(
             success=True,

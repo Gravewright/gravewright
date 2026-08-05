@@ -53,7 +53,7 @@ def png_bytes(width: int, height: int) -> bytes:
 
 def decode_uint32_refs(data: bytes) -> list[int]:
     return [
-        int.from_bytes(data[index:index + 4], byteorder="little", signed=False)
+        int.from_bytes(data[index : index + 4], byteorder="little", signed=False)
         for index in range(0, len(data), 4)
     ]
 
@@ -115,7 +115,7 @@ async def test_upload_raster_map_creates_scene_tiles_tile_table_and_chunks(db, t
     assert chunk["byte_size"] == SCENE_NATIVE_CHUNK_SIZE * SCENE_NATIVE_CHUNK_SIZE * 4
     refs = decode_uint32_refs(chunk_data)
     assert refs[:2] == [1, 2]
-    assert refs[SCENE_NATIVE_CHUNK_SIZE:SCENE_NATIVE_CHUNK_SIZE + 2] == [3, 4]
+    assert refs[SCENE_NATIVE_CHUNK_SIZE : SCENE_NATIVE_CHUNK_SIZE + 2] == [3, 4]
     assert sum(1 for ref in refs if ref != 0) == 4
     assert Path(result.original_asset["storage_path"]).exists()
     assert all(Path(tile_asset["storage_path"]).exists() for tile_asset in assets[1:])
@@ -237,7 +237,9 @@ async def test_player_cannot_upload_raster_map_by_default(db, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_upload_raster_map_processing_failure_logs_diagnostic(db, tmp_path, monkeypatch, caplog):
+async def test_upload_raster_map_processing_failure_logs_diagnostic(
+    db, tmp_path, monkeypatch, caplog
+):
     """A failure while writing tiles must surface the real cause, not just a
     generic ``processing_failed`` key. The broad except swallows the exception,
     so it has to be logged for the operator to diagnose it."""

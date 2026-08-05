@@ -1,0 +1,18 @@
+{
+  "app": {
+    "app_name": "Mesa Local",
+    "default_locale": "pt-BR"
+  },
+  "privacy": {
+    "contact_email": "owner@example.com",
+    "content": "Texto público.",
+    "data_controller": "Owner",
+    "data_subject_rights": "Acesso, correção e exclusão.",
+    "dpo_contact": "DPO",
+    "enabled": true,
+    "legal_basis": "Consentimento.",
+    "retention_policy": "Enquanto a conta existir.",
+    "title": "Política da mesa",
+    "updated_at": "2026-08-05"
+  }
+}

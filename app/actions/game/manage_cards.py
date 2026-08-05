@@ -77,7 +77,9 @@ async def create_card_deck(
         name=str(body.get("name") or ""),
         description=body.get("description") if isinstance(body.get("description"), str) else None,
         cards=[card for card in raw_cards if isinstance(card, dict)],
-        default_back_asset_id=body.get("default_back_asset_id") if isinstance(body.get("default_back_asset_id"), str) else None,
+        default_back_asset_id=body.get("default_back_asset_id")
+        if isinstance(body.get("default_back_asset_id"), str)
+        else None,
         metadata=body.get("metadata") if isinstance(body.get("metadata"), dict) else {},
     )
     if result.success:
@@ -216,12 +218,16 @@ async def draw_cards(
         count=int(body.get("count") or 1),
         destination=destination,
         mode=mode,
-        target_pile_id=body.get("target_pile_id") if isinstance(body.get("target_pile_id"), str) else None,
+        target_pile_id=body.get("target_pile_id")
+        if isinstance(body.get("target_pile_id"), str)
+        else None,
         reveal=bool(body.get("reveal")),
     )
     if result.success:
         if destination == DrawDestination.CHAT:
-            cards = result.payload.get("cards") if isinstance(result.payload.get("cards"), list) else []
+            cards = (
+                result.payload.get("cards") if isinstance(result.payload.get("cards"), list) else []
+            )
             count_label = len(cards) if cards else int(body.get("count") or 1)
             content = f"{current_user.get('name') or 'Player'} revealed {count_label} card"
             if count_label != 1:
@@ -232,7 +238,9 @@ async def draw_cards(
                 sender_name=str(current_user.get("name") or "Player"),
                 content=content,
                 cards=cards,
-                card_event=result.payload.get("event") if isinstance(result.payload.get("event"), dict) else {},
+                card_event=result.payload.get("event")
+                if isinstance(result.payload.get("event"), dict)
+                else {},
                 transport=RealtimeTransport(),
             )
         await _broadcast_state(campaign_id, current_user["id"])

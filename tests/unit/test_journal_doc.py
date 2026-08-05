@@ -4,14 +4,21 @@ from app.engine.journals import journal_doc
 
 
 def _doc(*blocks):
-    return {"format": "gw-journal-doc-v1", "version": 1, "doc": {"type": "doc", "content": list(blocks)}}
+    return {
+        "format": "gw-journal-doc-v1",
+        "version": 1,
+        "doc": {"type": "doc", "content": list(blocks)},
+    }
 
 
 def test_validate_drops_unknown_nodes_and_marks():
     raw = _doc(
-        {"type": "paragraph", "content": [
-            {"type": "text", "text": "ok", "marks": [{"type": "bold"}, {"type": "evil"}]},
-        ]},
+        {
+            "type": "paragraph",
+            "content": [
+                {"type": "text", "text": "ok", "marks": [{"type": "bold"}, {"type": "evil"}]},
+            ],
+        },
         {"type": "scriptBlock", "content": []},
     )
     out = journal_doc.validate_document(raw)
@@ -23,20 +30,30 @@ def test_validate_drops_unknown_nodes_and_marks():
 
 def test_validate_sanitizes_link_and_image_src():
     raw = _doc(
-        {"type": "paragraph", "content": [
-            {"type": "text", "text": "x", "marks": [{"type": "link", "attrs": {"href": "javascript:alert(1)"}}]},
-        ]},
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "x",
+                    "marks": [{"type": "link", "attrs": {"href": "javascript:alert(1)"}}],
+                },
+            ],
+        },
         {"type": "gwImage", "attrs": {"src": "data:image/png;base64,AAAA"}},
         {"type": "gwImage", "attrs": {"src": "https://example.com/a.webp"}},
-        {"type": "gwImage", "attrs": {
-            "assetId": "asset_123",
-            "src": "/game/journal/asset/asset_123",
-            "align": "weird",
-            "width": 99999,
-        }},
+        {
+            "type": "gwImage",
+            "attrs": {
+                "assetId": "asset_123",
+                "src": "/game/journal/asset/asset_123",
+                "align": "weird",
+                "width": 99999,
+            },
+        },
     )
     out = journal_doc.validate_document(raw)["doc"]["content"]
-                                                                    
+
     assert out[0]["content"][0].get("marks", []) == []
     images = [n for n in out if n["type"] == "gwImage"]
     assert len(images) == 1
@@ -47,11 +64,13 @@ def test_validate_sanitizes_link_and_image_src():
 
 
 def test_callout_is_forced_gm_visibility():
-    raw = _doc({
-        "type": "gwCallout",
-        "attrs": {"kind": "secret", "visibility": "public", "title": "S"},
-        "content": [{"type": "paragraph", "content": [{"type": "text", "text": "hidden"}]}],
-    })
+    raw = _doc(
+        {
+            "type": "gwCallout",
+            "attrs": {"kind": "secret", "visibility": "public", "title": "S"},
+            "content": [{"type": "paragraph", "content": [{"type": "text", "text": "hidden"}]}],
+        }
+    )
     out = journal_doc.validate_document(raw)["doc"]["content"][0]
     assert out["attrs"]["visibility"] == "gm"
     assert out["attrs"]["kind"] == "secret"
@@ -59,10 +78,16 @@ def test_callout_is_forced_gm_visibility():
 
 def test_filter_removes_gm_blocks_for_players():
     raw = _doc(
-        {"type": "paragraph", "attrs": {"visibility": "public"},
-         "content": [{"type": "text", "text": "public"}]},
-        {"type": "gwCallout", "attrs": {"kind": "gm_note", "visibility": "gm", "title": "N"},
-         "content": [{"type": "paragraph", "content": [{"type": "text", "text": "secret"}]}]},
+        {
+            "type": "paragraph",
+            "attrs": {"visibility": "public"},
+            "content": [{"type": "text", "text": "public"}],
+        },
+        {
+            "type": "gwCallout",
+            "attrs": {"kind": "gm_note", "visibility": "gm", "title": "N"},
+            "content": [{"type": "paragraph", "content": [{"type": "text", "text": "secret"}]}],
+        },
     )
     gm_view = journal_doc.filter_doc_for_role(raw, is_gm=True)["doc"]["content"]
     player_view = journal_doc.filter_doc_for_role(raw, is_gm=False)["doc"]["content"]
@@ -74,17 +99,26 @@ def test_filter_removes_gm_blocks_for_players():
 
 
 def test_filter_removes_gm_blocks_nested_in_list():
-    raw = _doc({
-        "type": "bulletList",
-        "content": [{
-            "type": "listItem",
+    raw = _doc(
+        {
+            "type": "bulletList",
             "content": [
-                {"type": "paragraph", "content": [{"type": "text", "text": "keep"}]},
-                {"type": "gwCallout", "attrs": {"kind": "secret", "visibility": "gm", "title": ""},
-                 "content": [{"type": "paragraph", "content": [{"type": "text", "text": "x"}]}]},
+                {
+                    "type": "listItem",
+                    "content": [
+                        {"type": "paragraph", "content": [{"type": "text", "text": "keep"}]},
+                        {
+                            "type": "gwCallout",
+                            "attrs": {"kind": "secret", "visibility": "gm", "title": ""},
+                            "content": [
+                                {"type": "paragraph", "content": [{"type": "text", "text": "x"}]}
+                            ],
+                        },
+                    ],
+                }
             ],
-        }],
-    })
+        }
+    )
     player_view = journal_doc.filter_doc_for_role(raw, is_gm=False)["doc"]["content"]
     item_content = player_view[0]["content"][0]["content"]
     assert [n["type"] for n in item_content] == ["paragraph"]
@@ -98,10 +132,13 @@ def test_empty_document_helper():
 
 def test_validate_rejects_mismatched_image_asset_id_and_src():
     raw = _doc(
-        {"type": "gwImage", "attrs": {
-            "assetId": "asset_a",
-            "src": "/game/journal/asset/asset_b",
-        }},
+        {
+            "type": "gwImage",
+            "attrs": {
+                "assetId": "asset_a",
+                "src": "/game/journal/asset/asset_b",
+            },
+        },
     )
 
     out = journal_doc.validate_document(raw)["doc"]["content"]

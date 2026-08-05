@@ -24,7 +24,12 @@ from app.cli.scaffold import Intent
 
 # The classic six-ability spread shared by the d20-family templates.
 _ABILITIES = (
-    "strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma",
+    "strength",
+    "dexterity",
+    "constitution",
+    "intelligence",
+    "wisdom",
+    "charisma",
 )
 
 
@@ -191,7 +196,12 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
             item_types=(),
             mechanic="fudge-fate",
             mechanic_attributes=(
-                "careful", "clever", "flashy", "forceful", "quick", "sneaky",
+                "careful",
+                "clever",
+                "flashy",
+                "forceful",
+                "quick",
+                "sneaky",
             ),
             wants_biography=True,
             wants_effects=True,

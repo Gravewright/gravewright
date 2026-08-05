@@ -64,7 +64,9 @@ class ItemRepository:
 
     def get(self, item_id: str) -> dict | None:
         with engine_connect() as conn:
-            return one_or_none(conn.execute(select(items_table).where(items_table.c.id == item_id).limit(1)))
+            return one_or_none(
+                conn.execute(select(items_table).where(items_table.c.id == item_id).limit(1))
+            )
 
     def list_active_for_campaign(self, *, campaign_id: str) -> list[dict]:
         with engine_connect() as conn:
@@ -77,7 +79,9 @@ class ItemRepository:
                 )
             )
 
-    def update_core(self, *, item_id: str, name: str, folder_id: str | None, portrait_asset_id: str | None) -> int:
+    def update_core(
+        self, *, item_id: str, name: str, folder_id: str | None, portrait_asset_id: str | None
+    ) -> int:
         now = int(time.time())
         with engine_begin() as conn:
             conn.execute(
@@ -91,18 +95,28 @@ class ItemRepository:
                     updated_at=now,
                 )
             )
-            row = one_or_none(conn.execute(select(items_table.c.version).where(items_table.c.id == item_id)))
+            row = one_or_none(
+                conn.execute(select(items_table.c.version).where(items_table.c.id == item_id))
+            )
         return int(row["version"]) if row is not None else 0
 
     def set_folder(self, *, item_id: str, folder_id: str | None) -> None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(update(items_table).where(items_table.c.id == item_id).values(folder_id=folder_id, updated_at=now))
+            conn.execute(
+                update(items_table)
+                .where(items_table.c.id == item_id)
+                .values(folder_id=folder_id, updated_at=now)
+            )
 
     def clear_folder(self, *, folder_id: str) -> None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(update(items_table).where(items_table.c.folder_id == folder_id).values(folder_id=None, updated_at=now))
+            conn.execute(
+                update(items_table)
+                .where(items_table.c.folder_id == folder_id)
+                .values(folder_id=None, updated_at=now)
+            )
 
     def has_owner(self, *, item_id: str, user_id: str) -> bool:
         with engine_connect() as conn:
@@ -141,7 +155,11 @@ class ItemRepository:
             rows = all_dicts(
                 conn.execute(
                     select(users_table.c.id, users_table.c.name)
-                    .select_from(item_owners_table.join(users_table, users_table.c.id == item_owners_table.c.user_id))
+                    .select_from(
+                        item_owners_table.join(
+                            users_table, users_table.c.id == item_owners_table.c.user_id
+                        )
+                    )
                     .where(item_owners_table.c.item_id == item_id)
                     .order_by(users_table.c.name.asc())
                 )
@@ -158,9 +176,9 @@ class ItemRepository:
                         users_table.c.name.label("user_name"),
                     )
                     .select_from(
-                        item_owners_table
-                        .join(users_table, users_table.c.id == item_owners_table.c.user_id)
-                        .join(items_table, items_table.c.id == item_owners_table.c.item_id)
+                        item_owners_table.join(
+                            users_table, users_table.c.id == item_owners_table.c.user_id
+                        ).join(items_table, items_table.c.id == item_owners_table.c.item_id)
                     )
                     .where(items_table.c.campaign_id == campaign_id)
                     .order_by(users_table.c.name.asc())
@@ -176,4 +194,8 @@ class ItemRepository:
     def soft_delete(self, *, item_id: str) -> None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(update(items_table).where(items_table.c.id == item_id).values(status="deleted", updated_at=now))
+            conn.execute(
+                update(items_table)
+                .where(items_table.c.id == item_id)
+                .values(status="deleted", updated_at=now)
+            )

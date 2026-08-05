@@ -74,8 +74,7 @@ def test_drain_returns_items_in_priority_order():
 
 def test_drain_orders_by_order_field_within_priority_tier():
     scheduler = RenderPriorityScheduler()
-                                                                          
-                                                                        
+
     scheduler.enqueue(key="far", payload=None, priority=RenderPriority.NORMAL, now_ms=0, order=3)
     scheduler.enqueue(key="near", payload=None, priority=RenderPriority.NORMAL, now_ms=0, order=0)
     scheduler.enqueue(key="mid", payload=None, priority=RenderPriority.NORMAL, now_ms=0, order=1)
@@ -87,9 +86,11 @@ def test_drain_orders_by_order_field_within_priority_tier():
 
 def test_priority_tier_beats_order():
     scheduler = RenderPriorityScheduler()
-                                                                             
+
     scheduler.enqueue(key="far_high", payload=None, priority=RenderPriority.HIGH, now_ms=0, order=9)
-    scheduler.enqueue(key="near_low", payload=None, priority=RenderPriority.NORMAL, now_ms=0, order=0)
+    scheduler.enqueue(
+        key="near_low", payload=None, priority=RenderPriority.NORMAL, now_ms=0, order=0
+    )
 
     drained = scheduler.drain(now_ms=0, budget=SchedulerBudget(max_items=10))
 
@@ -114,16 +115,10 @@ def test_drain_respects_max_items():
 
 def test_drain_respects_max_payload_bytes():
     scheduler = RenderPriorityScheduler()
-    scheduler.enqueue(
-        key="a", payload=None, priority=RenderPriority.HIGH, now_ms=0, byte_size=400
-    )
-    scheduler.enqueue(
-        key="b", payload=None, priority=RenderPriority.HIGH, now_ms=1, byte_size=400
-    )
+    scheduler.enqueue(key="a", payload=None, priority=RenderPriority.HIGH, now_ms=0, byte_size=400)
+    scheduler.enqueue(key="b", payload=None, priority=RenderPriority.HIGH, now_ms=1, byte_size=400)
 
-    drained = scheduler.drain(
-        now_ms=0, budget=SchedulerBudget(max_items=10, max_payload_bytes=500)
-    )
+    drained = scheduler.drain(now_ms=0, budget=SchedulerBudget(max_items=10, max_payload_bytes=500))
 
     assert [item.key for item in drained] == ["a"]
     assert len(scheduler) == 1
@@ -145,9 +140,7 @@ def test_drain_allows_single_item_larger_than_budget():
         key="huge", payload=None, priority=RenderPriority.HIGH, now_ms=0, byte_size=10_000
     )
 
-    drained = scheduler.drain(
-        now_ms=0, budget=SchedulerBudget(max_items=10, max_payload_bytes=500)
-    )
+    drained = scheduler.drain(now_ms=0, budget=SchedulerBudget(max_items=10, max_payload_bytes=500))
 
     assert [item.key for item in drained] == ["huge"]
 
@@ -223,12 +216,20 @@ def test_cancel_scope_removes_older_viewport_generation():
 def test_cancel_scope_removes_mismatched_scene_epoch():
     scheduler = RenderPriorityScheduler()
     scheduler.enqueue(
-        key="stale", payload=None, priority=RenderPriority.NORMAL, now_ms=0,
-        scene_id="s1", scene_epoch=3,
+        key="stale",
+        payload=None,
+        priority=RenderPriority.NORMAL,
+        now_ms=0,
+        scene_id="s1",
+        scene_epoch=3,
     )
     scheduler.enqueue(
-        key="fresh", payload=None, priority=RenderPriority.NORMAL, now_ms=0,
-        scene_id="s1", scene_epoch=4,
+        key="fresh",
+        payload=None,
+        priority=RenderPriority.NORMAL,
+        now_ms=0,
+        scene_id="s1",
+        scene_epoch=4,
     )
 
     removed = scheduler.cancel_scope(scene_id="s1", scene_epoch_not=4)
@@ -253,9 +254,7 @@ def test_snapshot_reports_counters_and_distribution():
     scheduler.enqueue(
         key="a", payload=None, priority=RenderPriority.HIGH, now_ms=0, byte_size=100, cost=2
     )
-    scheduler.enqueue(
-        key="b", payload=None, priority=RenderPriority.NORMAL, now_ms=0, byte_size=50
-    )
+    scheduler.enqueue(key="b", payload=None, priority=RenderPriority.NORMAL, now_ms=0, byte_size=50)
 
     snapshot = scheduler.snapshot(now_ms=0)
 

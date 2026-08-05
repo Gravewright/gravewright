@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "activation": {
+    "mode": "exclusive",
+    "scope": "campaign"
+  },
+  "authors": [
+    "You"
+  ],
+  "capabilities": [
+    "actors.register",
+    "sheets.html",
+    "assets.styles"
+  ],
+  "compatibility": {
+    "minimum": "1",
+    "verified": "1"
+  },
+  "conflicts": [],
+  "dependencies": [],
+  "description": "",
+  "entrypoints": {
+    "game": {
+      "styles": [
+        "styles/sheet.css"
+      ]
+    }
+  },
+  "id": "demo",
+  "kind": "ruleset",
+  "license": "MIT",
+  "name": "My RPG",
+  "provides": {
+    "actorTypes": [
+      {
+        "id": "character",
+        "label": "Character",
+        "schema": "schemas/actors/character.schema.json",
+        "sheet": {
+          "mode": "html",
+          "style": "styles/sheet.css",
+          "template": "sheets/character.html"
+        }
+      }
+    ],
+    "storage": {
+      "model": "scoped-json-v1"
+    }
+  },
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "settings": [],
+  "version": "0.1.0"
+}

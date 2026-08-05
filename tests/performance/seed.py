@@ -5,6 +5,7 @@ Run once before starting the app container:
 
     python tests/performance/seed.py [--db storage/gravewright.sqlite3]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -183,7 +184,9 @@ def _insert_dynamic(
         # - notnull: 1 when NOT NULL
         # - dflt_value: default expression, or None
         # - pk: 1-based primary key position, or 0
-        required = bool(meta.get("notnull")) and meta.get("dflt_value") is None and not meta.get("pk")
+        required = (
+            bool(meta.get("notnull")) and meta.get("dflt_value") is None and not meta.get("pk")
+        )
         if required:
             missing_required.append(name)
 

@@ -49,6 +49,7 @@ class LocalSceneAssetStorage:
 
     def delete_layer_tiles(self, *, scene_id: str, layer_id: str) -> None:
         import shutil
+
         self._validate_id(scene_id, "scene_id")
         self._validate_id(layer_id, "layer_id")
         path = self.root / scene_id / "assets" / "tiles" / layer_id
@@ -60,6 +61,7 @@ class LocalSceneAssetStorage:
         """Remove the entire on-disk tree for a scene (originals, tiles and
         chunks all live under ``<root>/<scene_id>/``)."""
         import shutil
+
         self._validate_id(scene_id, "scene_id")
         path = self.root / scene_id
         self._assert_inside_root(path)

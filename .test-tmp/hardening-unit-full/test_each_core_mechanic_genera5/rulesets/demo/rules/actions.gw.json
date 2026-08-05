@@ -1,0 +1,14 @@
+{
+  "actions": {
+    "add-item": {
+      "target": "items",
+      "type": "append",
+      "value": "@drop.entry"
+    },
+    "pool-roll": {
+      "formula": "successes(clamp(@sheet.pool.size, 1, 100), 6, clamp(@sheet.pool.hit, 1, 6))",
+      "label": "Roll hit pool",
+      "type": "roll"
+    }
+  }
+}

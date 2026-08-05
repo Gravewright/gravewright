@@ -1,0 +1,30 @@
+<form class="gw-my-rpg-sheet" data-sheet-type="spell">
+  <header class="gw-my-rpg-sheet__header">
+    <label>
+      Name
+      <input data-bind="item.name" aria-label="Spell name">
+    </label>
+    <span class="gw-my-rpg-sheet__type" data-text="item.type"></span>
+  </header>
+
+  <div class="gw-my-rpg-sheet__fields">
+    <label>
+      Category
+      <input data-bind="system.category">
+    </label>
+    <label>
+      Level
+      <input type="number" data-bind="system.level">
+    </label>
+    <label>
+      Cost
+      <input type="number" data-bind="system.cost">
+    </label>
+    <label>
+      Damage
+      <input data-bind="system.damage">
+    </label>
+  </div>
+  <button type="button" data-action="roll-item-damage">Roll damage</button>
+    <div class="gw-my-rpg-sheet__editor" data-rich-editor="system.description"></div>
+</form>

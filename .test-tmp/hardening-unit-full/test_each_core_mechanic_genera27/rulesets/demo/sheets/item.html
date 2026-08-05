@@ -1,0 +1,22 @@
+<form class="gw-demo-sheet" data-sheet-type="item">
+  <header class="gw-demo-sheet__header">
+    <label>
+      Name
+      <input data-bind="item.name" aria-label="Item name">
+    </label>
+    <span class="gw-demo-sheet__type" data-text="item.type"></span>
+  </header>
+
+  <div class="gw-demo-sheet__fields">
+    <label>
+      Category
+      <input data-bind="system.category">
+    </label>
+    <label>
+      Quantity
+      <input type="number" data-bind="system.quantity">
+    </label>
+  </div>
+
+    <div class="gw-demo-sheet__editor" data-rich-editor="system.description"></div>
+</form>

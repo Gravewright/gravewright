@@ -10,14 +10,23 @@ from tests.conftest import TEST_SESSION_CONFIG, login, seed_campaign, seed_user
 def _make_board_with_quests(gm_id, campaign_id):
     svc = JournalService()
     board = svc.create_journal(
-        campaign_id=campaign_id, user_id=gm_id, journal_type="quest_board", title="Board",
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        journal_type="quest_board",
+        title="Board",
     )
     q1 = svc.create_journal(
-        campaign_id=campaign_id, user_id=gm_id, journal_type="quest", title="Quest 1",
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        journal_type="quest",
+        title="Quest 1",
         data={"status": "available", "public": {"summary": "one"}},
     )
     q2 = svc.create_journal(
-        campaign_id=campaign_id, user_id=gm_id, journal_type="quest", title="Quest 2",
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        journal_type="quest",
+        title="Quest 2",
         data={"status": "available", "public": {"summary": "two"}},
     )
     assert svc.add_quest_to_board(

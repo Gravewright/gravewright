@@ -26,7 +26,7 @@ _engine_url: str | None = None
 
 def _resolve_url() -> str:
     """The SQLAlchemy URL after project-relative SQLite path resolution."""
-                                                                 
+
     from app.persistence import database
 
     return database.effective_database_url()
@@ -84,7 +84,7 @@ def _configure_sqlite_pragmas(engine: Engine) -> None:
         return
 
     @event.listens_for(engine, "connect")
-    def _set_pragmas(dbapi_connection, _record):                
+    def _set_pragmas(dbapi_connection, _record):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.execute("PRAGMA synchronous=NORMAL")
