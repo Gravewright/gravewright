@@ -209,6 +209,60 @@ Rulesets can provide rules documents by named purpose.
 reusable formulas/actions through `provides.rules`; call them from Sheet IR or
 the browser APIs `sdk.dice.roll` and `sdk.rolls.intent`.
 
+#### `rules/combat.gw.json`
+
+The core owns the combat tracker — the round, the turn order, the panel — but
+not what initiative *is*. It stores the value as text and never parses it. The
+ruleset decides how a value gets there and whether it means an ordering.
+
+```json
+{
+  "version": 2,
+  "initiative": {
+    "label": "Initiative",
+    "input": "roll",
+    "sort": "desc",
+    "formula": "1d20 + @sheet.combat.initiative",
+    "actionId": "roll.initiative",
+    "tieBreaker": "@sheet.abilities.dex.score",
+    "icon": "ph-dice-five",
+    "accent": "#b88a44"
+  },
+  "resources": {
+    "hp": { "label": "HP", "path": "sheet.hp.value", "maxPath": "sheet.hp.max", "min": 0 }
+  }
+}
+```
+
+`initiative.input` is the one field that changes how the panel behaves:
+
+| `input` | What the GM sees | How the order is decided |
+| --- | --- | --- |
+| `roll` | Roll buttons, plus a numeric field to override | By the value, using `sort` |
+| `number` | A numeric field only | By the value, using `sort` |
+| `text` | A free-text field | By hand: the GM moves rows up and down |
+
+Use `text` whenever the turn order is not a number the engine could compare —
+drawn cards, named phases, "ambushers first", or a sheet the table reads off
+paper. The core will not invent a ranking for a string.
+
+| Field | Meaning |
+| --- | --- |
+| `initiative.label` | What the value is called. A locale key resolves through the package catalog. |
+| `initiative.input` | `roll`, `number` or `text`. Defaults to `roll` when a `formula` is declared, `number` otherwise. |
+| `initiative.sort` | `desc` (default) or `asc`. Ignored when `input` is `text`. |
+| `initiative.formula` | Evaluated against the actor sheet. Omit it and the engine uses the formula on `actionId`. |
+| `initiative.actionId` | The declarative roll action a sheet button uses; its result is adopted by the tracker. Defaults to `roll.initiative`. |
+| `initiative.tieBreaker` | A sheet path that breaks ties without showing up in the displayed value. |
+| `initiative.icon` | Phosphor icon for the roll buttons. |
+| `initiative.accent` | One hex colour for the panel. |
+| `resources` | Named resources; `hp` (or `health`) is the bar drawn under each combatant. |
+
+The engine has no die of its own: a system that declares `input: "roll"` with
+neither a `formula` nor a rollable `actionId` simply has nothing to roll, and
+the roll buttons report as much. Everything else about the panel is core
+behaviour or the `combat.runtime` capability.
+
 ### `provides.mappings`
 
 Mappings connect declarative ruleset data to Gravewright runtime surfaces.

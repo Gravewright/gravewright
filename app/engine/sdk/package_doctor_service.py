@@ -94,8 +94,8 @@ class PackageDoctorService:
         findings: list[DoctorFinding] = []
         installed = {row["id"]: row for row in self.installed.list_all()}
 
-        # Each sub-audit is isolated: a broken package or corrupt row must never
-        # crash the whole audit — it is reported as an internal error finding.
+
+
         for name, audit in (
             ("installed", self._audit_installed),
             ("campaign_activations", self._audit_campaign_activations),
@@ -105,7 +105,7 @@ class PackageDoctorService:
         ):
             try:
                 findings.extend(audit(installed))
-            except Exception as exc:  # defensive: the doctor must not crash
+            except Exception as exc:
                 findings.append(
                     DoctorFinding(
                         code="sdk.doctor.audit_error",
@@ -126,7 +126,7 @@ class PackageDoctorService:
             "findings": [f.to_dict() for f in findings],
         }
 
-    # --- audits ----------------------------------------------------------------
+
 
     def _audit_installed(self, installed: dict[str, dict]) -> list[DoctorFinding]:
         findings: list[DoctorFinding] = []
@@ -145,8 +145,8 @@ class PackageDoctorService:
 
             findings.extend(self._audit_capabilities(package_id, loaded))
 
-            # Manifest identity binding (Phase 5): a directory/manifest mismatch
-            # is a structural error regardless of enabled state.
+
+
             for code in ("sdk.manifest.id_mismatch", "sdk.manifest.kind_root_mismatch"):
                 if code in loaded.validation.errors:
                     findings.append(
@@ -167,7 +167,7 @@ class PackageDoctorService:
                 )
             findings.extend(self._audit_manifest_integrity(package_id, record, loaded))
 
-            # Storage (Phase 7A) and interop (Phase 12): surface invalid contracts.
+
             for code in loaded.validation.errors:
                 if code.startswith("sdk.storage.") or code.startswith("sdk.interop."):
                     findings.append(
@@ -198,7 +198,7 @@ class PackageDoctorService:
                             details={"compatibility": loaded.validation.compatibility_status},
                         )
                     )
-                # Global dependency / conflict drift for enabled packages.
+
                 findings.extend(
                     _dependency_findings(
                         package_id, self.dependencies.check(package_id), campaign_id=None
@@ -276,8 +276,8 @@ class PackageDoctorService:
 
     def _audit_campaign_activations(self, installed: dict[str, dict]) -> list[DoctorFinding]:
         findings: list[DoctorFinding] = []
-        # Build the set of (campaign_id, package_id) activations from both the
-        # exclusive ruleset slot and the multi-activation table.
+
+
         activations: dict[str, set[str]] = {}
         for campaign in self.campaigns.list_with_active_system():
             ruleset_id = campaign.get("active_system_id")
@@ -399,8 +399,8 @@ class PackageDoctorService:
                     )
                 )
             else:
-                # Declared setting: flag a stored value that is not valid JSON so
-                # a corrupted row is diagnosed rather than crashing at read time.
+
+
                 try:
                     json.loads(row["value_json"])
                 except (TypeError, ValueError):

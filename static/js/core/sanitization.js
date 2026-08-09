@@ -18,8 +18,8 @@
       .replace(/'/g, "&#39;");
   }
 
-  
-  
+
+
   function sanitizeHtml(value) {
     const input = value == null ? "" : String(value);
     if (window.DOMPurify && typeof window.DOMPurify.sanitize === "function") {
@@ -28,8 +28,8 @@
     return escapeHtml(input);
   }
 
-  
-  
+
+
   function trustedTemplate(html) {
     return html == null ? "" : String(html);
   }

@@ -10,9 +10,11 @@ class TransportEvent(StrEnum):
     MEMBER_REMOVED = "member.removed"
     PRESENCE_UPDATED = "presence.updated"
     PRESENCE_SNAPSHOT = "presence.snapshot"
+    LOBBY_UPDATED = "lobby.updated"
 
     CAMPAIGN_SYSTEM_CHANGED = "campaign.system.changed"
     CAMPAIGN_PACKAGES_CHANGED = "campaign.packages.changed"
+    CAMPAIGN_TABLE_SETTINGS_CHANGED = "campaign.table_settings.changed"
 
     CHAT_MESSAGE_CREATED = "chat.message.created"
     CHAT_MESSAGE_DELETED = "chat.message.deleted"
@@ -22,6 +24,8 @@ class TransportEvent(StrEnum):
     JOURNAL_UPDATED = "journal.updated"
     JOURNAL_DELETED = "journal.deleted"
     JOURNAL_ACCESS_CHANGED = "journal.access_changed"
+    HANDOUT_ACCESS_CHANGED = "handout.access_changed"
+    HANDOUT_PRESENTED = "handout.presented"
     QUEST_STATUS_CHANGED = "quest.status_changed"
     QUEST_OBJECTIVE_UPDATED = "quest.objective_updated"
     QUEST_BOARD_UPDATED = "quest_board.updated"
@@ -55,6 +59,10 @@ class TransportEvent(StrEnum):
 
     ASSETS_LIBRARY_UPDATED = "assets.library.updated"
     SCENE_IMAGES_UPDATED = "scene.images.updated"
+    SCENE_WALLS_UPDATED = "scene.walls.updated"
+    SCENE_LIGHTS_UPDATED = "scene.lights.updated"
+    SCENE_PARTICLES_UPDATED = "scene.particles.updated"
+    SCENE_SHADERS_UPDATED = "scene.shaders.updated"
 
     SCENE_UPLOAD_PROGRESS = "scene.upload.progress"
     SCENE_CREATED = "scene.created"
@@ -79,15 +87,8 @@ class TransportEvent(StrEnum):
     BOARD_MEASURE_DELETED = "board.measure.deleted"
     BOARD_MEASURE_CLEARED = "board.measure.cleared"
 
+
+
     COMBAT_STARTED = "combat.started"
     COMBAT_UPDATED = "combat.updated"
     COMBAT_ENDED = "combat.ended"
-    COMBAT_STATE_UPDATED = "combat.state.updated"
-    COMBAT_PARTICIPANT_ADDED = "combat.participant.added"
-    COMBAT_PARTICIPANT_REMOVED = "combat.participant.removed"
-    COMBAT_TURN_STARTED = "combat.turn.started"
-    COMBAT_TURN_ENDED = "combat.turn.ended"
-    COMBAT_ROUND_STARTED = "combat.round.started"
-    COMBAT_ROUND_ENDED = "combat.round.ended"
-    COMBAT_ACTIVITY_RECORDED = "combat.activity.recorded"
-    COMBAT_EFFECT_TRIGGERED = "combat.effect.triggered"

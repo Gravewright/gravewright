@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.business.audit import AuditService
 from app.domain.permissions.defaults import DEFAULT_ROLE_PERMISSIONS
 from app.domain.permissions.groups import ALL_CORE_PERMISSION_KEYS
 from app.domain.permissions.groups import CONFIGURABLE_ROLES
@@ -26,6 +27,7 @@ class PermissionService:
     def __init__(self) -> None:
         self.campaigns = CampaignRepository()
         self.permissions = CampaignPermissionRepository()
+        self.audit = AuditService()
 
     def can(
         self,
@@ -261,6 +263,16 @@ class PermissionService:
                 subject_type=PermissionSubjectType.ROLE,
                 subject_id=role,
                 effects=effects,
+            )
+            self.audit.record(
+                campaign_id=campaign_id,
+                actor_user_id=user_id,
+                event_type="permission.updated",
+                subject_type="role",
+                subject_id=role,
+                action="replace_overrides",
+                result="success",
+                metadata={"role": role, "changed_count": len(effects)},
             )
 
         return PermissionUpdateResult(

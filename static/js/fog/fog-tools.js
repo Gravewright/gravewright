@@ -17,7 +17,7 @@
     const updatePreview = FI.updatePreview;
     const hidePreview = FI.hidePreview;
 
-    FI.activeBrush = null; 
+    FI.activeBrush = null;
 
     function cellToClientCoords(cellPoint) {
         const canvas = window.GravewrightMap?.activeCanvas?.();
@@ -165,7 +165,7 @@
         hidePreview();
     }
 
-    
+
     function handleAltWheel(event) {
         if (!isActive()) return false;
         const state = activePanelState();

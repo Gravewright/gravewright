@@ -74,7 +74,7 @@
             itemId: interaction.dataset.itemId || "",
           });
         } catch {
-          
+
         }
         return;
       }
@@ -113,7 +113,7 @@
       const action = event.target.closest("[data-action]");
       if (action && root.contains(action)) {
         await executeSheetAction(root, action.dataset.action);
-        return; 
+        return;
       }
 
       const step = event.target.closest("[data-step-path]");
@@ -155,9 +155,9 @@
       canEdit: !!bundle.can_edit,
       systemId: bundle.actor?.system_id || "",
     });
-    // HTML-mode sheets handle their own input/action wiring through
-    // GravewrightHTMLSheets; the declarative listeners would double-fire on
-    // shared data-action attributes, so they are skipped.
+
+
+
     const isHtmlSheet = bundle.sheet && bundle.sheet.mode === "html";
     if (!isHtmlSheet && !root.dataset.wired) {
       wire(root);

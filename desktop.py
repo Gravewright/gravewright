@@ -14,6 +14,7 @@ and ``main.py`` is not shipped as a loose source file).
 from __future__ import annotations
 
 import os
+import shutil
 import socket
 import sys
 import threading
@@ -88,6 +89,25 @@ def _configure_environment(host: str, port: int) -> None:
     os.environ["WS_ALLOWED_ORIGINS"] = ",".join(
         dict.fromkeys((*local_origins, *configured_origins))
     )
+
+
+def _install_bundled_packages() -> None:
+    if not getattr(sys, "frozen", False):
+        return
+    bundle_root = Path(getattr(sys, "_MEIPASS", "")) / "bundled-packages"
+    data_root = Path(os.environ["GRAVEWRIGHT_DATA_DIR"])
+    for kind in ("rulesets", "addons", "libraries", "themes", "content", "assets"):
+        source_kind = bundle_root / kind
+        if not source_kind.is_dir():
+            continue
+        target_kind = data_root / "packages" / kind
+        target_kind.mkdir(parents=True, exist_ok=True)
+        for source in source_kind.iterdir():
+            if not source.is_dir():
+                continue
+            target = target_kind / source.name
+            if not target.exists():
+                shutil.copytree(source, target)
 
 
 def _free_port() -> int:
@@ -167,6 +187,7 @@ def main() -> int:
     host = "127.0.0.1"
     port = _free_port()
     _configure_environment(host, port)
+    _install_bundled_packages()
 
     # Imported after the environment is configured so config picks up our paths.
     import uvicorn

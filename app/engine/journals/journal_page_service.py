@@ -42,7 +42,9 @@ class JournalPageService:
         self.folders = folders or JournalFolderRepository()
         self.journal_service = journal_service or JournalService()
 
-    def build_modal(self, *, journal_id: str, user_id: str) -> JournalModalPage | None:
+    def build_modal(
+        self, *, journal_id: str, user_id: str, presentation: bool = False
+    ) -> JournalModalPage | None:
         journal = self.journals.get_by_id(journal_id)
         if journal is None or journal["status"] != "active":
             return None
@@ -56,7 +58,7 @@ class JournalPageService:
 
         campaign_dict = dict(campaign)
         journal_dict = dict(journal)
-        if not self.journal_service.can_view_journal(
+        if not presentation and not self.journal_service.can_view_journal(
             journal=journal_dict,
             campaign=campaign_dict,
             user_id=user_id,
@@ -72,7 +74,7 @@ class JournalPageService:
         journal_dict["type_label_key"] = f"game.journal.types.{journal_dict['type']}"
 
         is_gm = campaign_dict.get("member_role") == "gm"
-        can_edit = self.journal_service.can_edit_journal(
+        can_edit = not presentation and self.journal_service.can_edit_journal(
             journal=journal_dict,
             campaign=campaign_dict,
             user_id=user_id,

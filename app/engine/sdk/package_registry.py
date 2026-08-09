@@ -49,7 +49,7 @@ def storage_dir_for(kind: str, package_id: str) -> Path | None:
 class PackageLocation:
     package_dir: Path
     package_id: str
-    kind_dir: str | None  # the kind_plural root the package was discovered under
+    kind_dir: str | None
 
 
 def _base_dir(packages_dir: Path | None) -> Path:
@@ -63,11 +63,11 @@ def _locations(base: Path) -> list[PackageLocation]:
     found: list[PackageLocation] = []
     seen: set[Path] = set()
 
-    # Universal grouped layout: data/packages/{kind_plural}/{id}.
-    # Do not require manifest.json during discovery: a directory under a known
-    # kind root is an operator intent to install/use a package. If the manifest
-    # is missing, load_package() returns sdk.validation.manifest_missing and
-    # doctor surfaces the broken package instead of hiding it.
+
+
+
+
+
     for kind_dir in sorted(_KIND_DIRS):
         kind_root = base / kind_dir
         if not kind_root.is_dir():
@@ -78,8 +78,8 @@ def _locations(base: Path) -> list[PackageLocation]:
             found.append(PackageLocation(child, child.name, kind_dir))
             seen.add(child.resolve())
 
-    # Legacy flat layout: data/packages/{id}. Keep discovery read-compatible so
-    # operators get an explicit doctor finding instead of a missing package.
+
+
     for child in sorted(base.iterdir()):
         if child.name in _KIND_DIRS:
             continue
@@ -112,9 +112,9 @@ def load_by_package_id(package_id: str, packages_dir: Path | None = None) -> Loa
         return None
     base = _base_dir(packages_dir)
 
-    # As with load_all(), return a LoadedPackage for existing directories even
-    # when manifest.json is missing so package-specific doctor/validate flows can
-    # report the error.
+
+
+
     for kind_dir in sorted(_KIND_DIRS):
         candidate = base / kind_dir / package_id
         if candidate.is_dir():

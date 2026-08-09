@@ -24,9 +24,9 @@ from app.engine.sdk.package_interop import validate_interop_manifest
 from app.engine.sdk.package_paths import package_id_is_safe, path_is_safe
 from app.engine.sdk.package_storage import validate_storage_manifest
 
-# Capabilities are owned by the canonical registry (``capabilities.json``); the
-# allow-list and forbidden set are derived from it so there is a single source
-# of truth across validator, doctor, frontend and docs.
+
+
+
 KNOWN_CAPABILITIES = get_registry().known_names()
 FORBIDDEN_CAPABILITIES = get_registry().forbidden_names()
 
@@ -83,7 +83,7 @@ class PackageManifestValidation:
 def validate_manifest(raw: object) -> PackageManifestValidation:
     result = PackageManifestValidation()
 
-    # 1. Reject non-object manifests.
+
     if not isinstance(raw, dict):
         result.add("sdk.validation.not_object")
         result.compatibility_status = COMPAT_INCOMPATIBLE
@@ -91,35 +91,35 @@ def validate_manifest(raw: object) -> PackageManifestValidation:
 
     manifest = PackageManifest.from_dict(raw)
 
-    # 2-3. Schema + SDK versions.
+
     if manifest.schema_version != 1:
         result.add("sdk.validation.schema_version")
     if manifest.sdk_version != SDK_VERSION:
         result.add("sdk.validation.sdk_version")
 
-    # 4. Kind.
+
     if manifest.kind not in PackageKind.values():
         result.add("sdk.validation.kind")
 
-    # 5. Id.
+
     if not manifest.id:
         result.add("sdk.validation.id_required")
     elif not package_id_is_safe(manifest.id):
         result.add("sdk.validation.id_invalid")
 
-    # 6. Required metadata.
+
     if not manifest.name:
         result.add("sdk.validation.name_required")
     if not manifest.version:
         result.add("sdk.validation.version_required")
     _validate_authors_and_license(raw, result)
 
-    # 7. Compatibility.
+
     compat = manifest.compatibility
     if not (compat.minimum or compat.maximum or compat.verified):
         result.add("sdk.validation.compatibility_required")
 
-    # 8-9. Capabilities allow-list + forbidden.
+
     if not isinstance(raw.get("capabilities"), list):
         result.add("sdk.validation.capabilities_required")
     for capability in manifest.capabilities:
@@ -128,7 +128,7 @@ def validate_manifest(raw: object) -> PackageManifestValidation:
         elif capability not in KNOWN_CAPABILITIES:
             result.add("sdk.validation.capability_unknown")
 
-    # 10. Activation.
+
     if not isinstance(raw.get("activation"), dict):
         result.add("sdk.validation.activation_required")
     else:
@@ -137,49 +137,49 @@ def validate_manifest(raw: object) -> PackageManifestValidation:
         if manifest.activation.scope and manifest.activation.scope not in ACTIVATION_SCOPES:
             result.add("sdk.validation.activation_invalid")
 
-    # 11. Kind-specific rules.
+
     _validate_kind_rules(manifest, result)
     _validate_provides(raw, result)
 
-    # 12. Settings.
+
     _validate_settings(manifest, result)
 
-    # 13. Content packs.
+
     for pack in manifest.provides.content_packs:
         if not pack.id or not pack.path or pack.type not in CONTENT_PACK_TYPES:
             result.add("sdk.validation.content_pack_invalid")
             break
 
-    # 13b. HTML sheet manifest contract.
+
     _validate_html_sheets(manifest, result)
 
-    # 14. Entrypoints.
+
     if not isinstance(raw.get("entrypoints"), dict):
         result.add("sdk.validation.entrypoint_invalid")
 
-    # 15. Referenced paths.
+
     for path in manifest.referenced_paths():
         if not path_is_safe(path):
             result.add("sdk.validation.path_unsafe")
             break
 
-    # 16. Dependency / conflict format + distribution.
+
     _validate_dependencies(manifest, result)
     _validate_distribution(raw, result)
 
-    # 16b. Storage contract (Phase 7A) — manifest-level declaration only.
+
     for code in validate_storage_manifest(raw):
         result.add(code)
 
-    # 16c. Interop contract (Phase 12) — manifest-level declaration only.
+
     for code in validate_interop_manifest(raw):
         result.add(code)
 
-    # 17. Compatibility status.
-    # A package's compatibility window targets the SDK API line (``SDK_VERSION``,
-    # frozen at "1" by Alpha 2.0.0), not the core marketing version — so a core
-    # bump (e.g. 1.0.0-rc.1 -> 2.0.0-alpha.0) does not retroactively make SDK 1
-    # packages incompatible. ``sdkVersion`` in the manifest names the same line.
+
+
+
+
+
     result.compatibility_status = compute_compatibility_status(
         minimum=compat.minimum,
         verified=compat.verified,
@@ -245,7 +245,7 @@ def _validate_provides(raw: dict, result: PackageManifestValidation) -> None:
 
 def _validate_assets(manifest: PackageManifest, result: PackageManifestValidation) -> None:
     provides = manifest.provides
-    # Assets packages must not declare game/data models.
+
     if provides.actor_types or provides.item_types or provides.rules or provides.storage_model:
         result.add("sdk.validation.assets_invalid_assets")
     seen: dict[str, set[str]] = {}

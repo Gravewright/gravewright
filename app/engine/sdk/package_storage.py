@@ -23,18 +23,18 @@ from app.engine.sdk.package_paths import path_is_safe
 STORAGE_SCOPES = frozenset({"campaign", "global"})
 QUERY_TYPES = frozenset({"read", "write"})
 
-# Parameter types a named query may whitelist.
+
 PARAM_TYPES = frozenset(
     {"string", "integer", "number", "boolean", "json", "json-string", "uuid", "id"}
 )
 
-# Leading SQL keyword allowed per query type.
+
 _READ_VERBS = frozenset({"SELECT", "WITH"})
 _WRITE_VERBS = frozenset({"INSERT", "UPDATE", "DELETE"})
 
-# Upper bound for a package's declared per-database size cap (``maxSizeMB``).
-# The runtime defaults to 50 MB; a package may raise it, but a managed SQLite
-# database is not meant to be a bulk store, so the manifest cap is bounded.
+
+
+
 MAX_SIZE_MB_LIMIT = 1024
 
 
@@ -59,7 +59,7 @@ def validate_storage_manifest(raw: dict) -> list[str]:
 
     if block is None:
         if has_capability:
-            # Capability declared without a storage.sqlite block.
+
             codes.append("sdk.storage.declaration_invalid")
         return codes
 
@@ -81,7 +81,7 @@ def validate_storage_manifest(raw: dict) -> list[str]:
 
     max_size = block.get("maxSizeMB")
     if max_size is not None:
-        # ``bool`` is an ``int`` subclass — reject it explicitly.
+
         if isinstance(max_size, bool) or not isinstance(max_size, (int, float)) or max_size <= 0:
             codes.append("sdk.storage.max_size_invalid")
         elif max_size > MAX_SIZE_MB_LIMIT:
@@ -127,7 +127,7 @@ def validate_named_queries(data: object) -> list[str]:
         elif not _sql_allowed(sql, query_type):
             codes.append("sdk.storage.sqlite.query_sql_disallowed")
 
-    # De-duplicate while keeping deterministic order.
+
     seen: set[str] = set()
     return [c for c in codes if not (c in seen or seen.add(c))]
 
@@ -135,7 +135,7 @@ def validate_named_queries(data: object) -> list[str]:
 def _sql_allowed(sql: str, query_type: Any) -> bool:
     """A single statement whose leading verb matches the declared type."""
     stripped = sql.strip().rstrip(";")
-    # Reject multiple statements (a ';' followed by more SQL).
+
     if ";" in stripped:
         return False
     upper = stripped.upper()

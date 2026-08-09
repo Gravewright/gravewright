@@ -29,8 +29,8 @@ class LoadedPackage:
     manifest: PackageManifest
     validation: PackageManifestValidation
     raw: dict
-    # The ``kind_plural`` directory the package was discovered under
-    # (``addons``, ``rulesets``, …).
+
+
     kind_dir: str | None = None
 
     @property
@@ -84,8 +84,8 @@ def load_package(
     manifest = PackageManifest.from_dict(raw)
     validation = validate_manifest(raw)
 
-    # Identity binding: the manifest id must match the directory name, and the
-    # kind must match the kind_plural root the package lives under.
+
+
     if expected_id and manifest.id and manifest.id != expected_id:
         validation.add("sdk.manifest.id_mismatch")
     if expected_kind_root is not None:
@@ -93,7 +93,7 @@ def load_package(
         if expected_kind and manifest.kind and manifest.kind != expected_kind:
             validation.add("sdk.manifest.kind_root_mismatch")
 
-    # Every declared path must resolve inside the package and exist on disk.
+
     for relative in manifest.referenced_paths():
         resolved = safe_join(package_dir, relative)
         if resolved is None:
@@ -101,11 +101,11 @@ def load_package(
         elif not resolved.exists():
             validation.add("sdk.validation.file_missing")
 
-    # Storage contract (Phase 7A): validate declared migrations dir + queries file.
+
     for code in _validate_storage_on_disk(package_dir, raw):
         validation.add(code)
 
-    # Interop contract (Phase 12): declared event/RPC schemas must exist on disk.
+
     for relative in interop_schema_paths(raw):
         resolved = safe_join(package_dir, relative)
         if resolved is None:

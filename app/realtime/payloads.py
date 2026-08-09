@@ -18,8 +18,8 @@ class PresencePlayerData(TypedDict):
 
 
 class MemberPlayerData(TypedDict):
-    # Data-minimized presence contract: no email or other PII. The frontend
-    # presence/roster only needs identity, role and online state (Etapa 4).
+
+
     user_id: str
     name: str
     role: str
@@ -165,8 +165,11 @@ class SceneChunkDeletedPayload(TypedDict):
 
 
 class TokenBarData(TypedDict):
+    """One of the token's two bars. Keyed ``bar_1`` (lower) or ``bar_2`` (upper)."""
+
     value: int | float
     max: int | float
+    color: str
     visibility: str
 
 

@@ -34,8 +34,10 @@
             boardRenderer.setCamera({ offsetX: state.offsetX, offsetY: state.offsetY, zoom: state.zoom });
             boardRenderer.setTiles(scene ? runtimeFor(canvas) : null);
             const allTokens = scene ? [...tokenStoreFor(canvas).values()] : [];
-            const visibleTokens = effectiveIsGm(canvas) ? allTokens : allTokens.filter((t) => !t.hidden);
             const roomId = canvas.dataset.roomId || "";
+            const layerVisible = (layer) => window.GravewrightTools?.isLayerVisible?.(layer, roomId) !== false;
+            const visibleTokens = (effectiveIsGm(canvas) ? allTokens : allTokens.filter((t) => !t.hidden))
+                .filter((token) => layerVisible(token.hidden ? "gm" : "game"));
             const markerForToken = window.GravewrightCombatState?.markerForToken;
             boardRenderer.setTokens(visibleTokens.map((token) => {
                 const marker = markerForToken?.(roomId, token.token_id) || null;

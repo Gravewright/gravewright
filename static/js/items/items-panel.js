@@ -10,7 +10,7 @@
     const postJson = FI.postJson;
     const refreshPanel = FI.refreshPanel;
 
-    
+
     document.addEventListener("submit", async (event) => {
         const form = event.target.closest("[data-item-create-form]");
         if (!form) return;
@@ -33,7 +33,7 @@
         }
     });
 
-    
+
     document.addEventListener("submit", async (event) => {
         const form = event.target.closest("[data-item-folder-create-form]");
         if (!form) return;
@@ -65,10 +65,10 @@
         }
     });
 
-    
+
     document.addEventListener("vtt:transport-event", (event) => {
         const env = event.detail || {};
-        if (!["item.created", "item.deleted", "item.updated"].includes(env.event)) return;
+        if (!["item.created", "item.deleted", "item.updated", "handout.access_changed"].includes(env.event)) return;
         const roomId = env.payload?.room_id;
         if (roomId && panelFor(roomId)) refreshPanel(roomId);
     });
@@ -77,6 +77,12 @@
         if (event.detail?.resourceType !== "item") return;
         document.querySelectorAll("[data-item-panel]").forEach((p) => {
             if (p.dataset.roomId) refreshPanel(p.dataset.roomId);
+        });
+    });
+
+    document.addEventListener("vtt:ws-open", () => {
+        document.querySelectorAll("[data-item-panel][data-room-id]").forEach((panel) => {
+            if (panel.dataset.roomId) refreshPanel(panel.dataset.roomId);
         });
     });
 })();

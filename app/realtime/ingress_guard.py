@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 
 from app.config import config
 from app.realtime.commands import ClientCommand
+from app.realtime.commands import command_label
 from app.realtime.envelopes import error_envelope
 
 
@@ -205,11 +206,15 @@ class WebSocketIngressGuard:
         if command in EXPENSIVE_COMMANDS and not self._expensive.allow(now=now):
             return self._rate_limited(command_id, "expensive")
 
-        bucket = self._by_command.get(command)
+
+
+
+        key = command_label(command)
+        bucket = self._by_command.get(key)
         if bucket is None:
-            spec = _PER_COMMAND_SPECS.get(command, _DEFAULT_COMMAND_SPEC)
+            spec = _PER_COMMAND_SPECS.get(key, _DEFAULT_COMMAND_SPEC)
             bucket = _bucket(spec, now)
-            self._by_command[command] = bucket
+            self._by_command[key] = bucket
 
         if not bucket.allow(now=now):
             return self._rate_limited(command_id, "command")

@@ -4,6 +4,11 @@
   const ASSET_DROP_MIME = "application/x-gravewright-asset+json";
   const IMAGE_MIME_PREFIX = "image/";
 
+  const PDF_MIME = "application/pdf";
+
+  const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+  const MAX_PDF_BYTES = 25 * 1024 * 1024;
+
   function esc(value) {
     return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
       "&": "&amp;",
@@ -73,7 +78,10 @@
         credentials: "same-origin",
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(data.error_key || "game.assets.errors.request_failed");
+
+
+
+      if (!response.ok) throw new Error(data.error_key || String(response.status));
       return data;
     },
   };
@@ -86,6 +94,37 @@
     return tail.length > 18 ? `${tail.slice(0, 18)}...` : tail;
   }
 
+
+
+  function uploadErrorLabel(error) {
+    const key = String(error?.message || "");
+    if (key.includes("too_large") || key === "413") {
+      return label("assetLabelTooLarge", "File is too large.");
+    }
+    if (key.includes("unsupported_type") || key.includes("invalid_image")) {
+      return label("assetLabelUnsupported", "Unsupported file.");
+    }
+    return label("assetLabelUploadFailed", "Could not upload the file.");
+  }
+
+  function reportUploadFailure(file, error) {
+    const message = `${file?.name || "?"}: ${uploadErrorLabel(error)}`;
+    if (window.GravewrightToasts?.show) {
+      window.GravewrightToasts.show(message, { type: "error" });
+    } else {
+      console.error("[assets]", message, error);
+    }
+  }
+
+
+
+  function formatBytes(bytes) {
+    const size = Number(bytes) || 0;
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
   class AssetLibrary {
     constructor(workspace) {
       this.workspace = workspace;
@@ -94,6 +133,8 @@
       this.assets = [];
       this.folders = [];
       this.selectedFolderId = "";
+      this.kind = "";
+      this.search = "";
       controllers.set(this.roomId, this);
       this.refresh();
     }
@@ -109,32 +150,103 @@
         }
         this.render();
       } catch {
-        /* keep last known state */
+
       }
+    }
+
+
+
+
+    visibleAssets() {
+      const termo = (this.search || "").trim().toLowerCase();
+      return (this.assets || []).filter((asset) => {
+        if ((asset.folder_id || "") !== this.selectedFolderId) return false;
+        if (this.kind && (asset.kind || "image") !== this.kind) return false;
+        if (!termo) return true;
+        return String(asset.filename || "").toLowerCase().includes(termo);
+      });
+    }
+
+    renderFolders() {
+      const rail = this.workspace.querySelector("[data-scene-asset-folder-list]");
+      if (!rail) return;
+      const contar = (id) => (this.assets || []).filter((a) => (a.folder_id || "") === id).length;
+
+      const item = (id, nome, icone) => `
+        <button type="button" class="asset-folder ${this.selectedFolderId === id ? "is-active" : ""}"
+                data-asset-folder="${esc(id)}">
+          <i class="ph ${icone}" aria-hidden="true"></i>
+          <span class="asset-folder__name">${esc(nome)}</span>
+          <span class="asset-folder__count">${contar(id)}</span>
+        </button>`;
+
+      rail.innerHTML =
+        item("", label("assetLabelRoot", "Root"), "ph-folder-open") +
+        (this.folders || []).map((f) => item(f.id, f.name, "ph-folder")).join("");
+    }
+
+    renderGrid() {
+      const assets = this.visibleAssets();
+      const podeApresentar = this.workspace.dataset.isCampaignGm === "true";
+
+      this.panel.innerHTML = assets.length
+        ? assets.map((asset) => {
+            const id = esc(asset.id);
+            const kind = asset.kind || "image";
+
+
+            const isPdf = kind === "pdf";
+            const preview = isPdf
+              ? `<span class="asset-card__icon" aria-hidden="true"><i class="ph ph-file-pdf"></i></span>`
+              : `<img class="asset-card__img" src="${esc(asset.src || "")}" alt="" loading="lazy">`;
+            const detail = isPdf
+              ? esc(formatBytes(asset.byte_size))
+              : `${Number(asset.width || 0)} × ${Number(asset.height || 0)}`;
+
+            return `<article class="asset-card" draggable="true"
+              data-library-asset-id="${id}"
+              data-library-asset-kind="${esc(kind)}"
+              data-library-asset-src="${esc(asset.src || "")}"
+              data-library-asset-name="${esc(asset.filename || label("assetLabelImage", "Image"))}"
+              title="${esc(asset.filename || "")}">
+              <div class="asset-card__thumb">${preview}</div>
+              <div class="asset-card__meta">
+                <strong>${esc(assetName(asset))}</strong>
+                <small>${detail}</small>
+              </div>
+              <div class="asset-card__actions">
+                ${podeApresentar ? `<button type="button" data-handout-resource="asset" data-resource-id="${id}" data-campaign-id="${esc(this.roomId)}" title="${esc(label("assetLabelShow", "Show to players"))}" aria-label="${esc(label("assetLabelShow", "Show to players"))}"><i class="ph ph-hand-pointing" aria-hidden="true"></i></button>` : ""}
+                <button type="button" class="asset-card__delete" data-asset-delete="${id}"
+                        title="${esc(label("assetLabelDeleteImage", "Delete"))}"
+                        aria-label="${esc(label("assetLabelDeleteImage", "Delete"))}"><i class="ph ph-trash" aria-hidden="true"></i></button>
+              </div>
+            </article>`;
+          }).join("")
+        : `<p class="asset-empty">${esc(this.emptyMessage())}</p>`;
+    }
+
+
+
+    emptyMessage() {
+      if ((this.search || "").trim()) return label("assetLabelNoMatch", "Nothing matches your search.");
+      if (this.kind) return label("assetLabelNoKind", "Nothing of this type in this folder.");
+      return label("assetLabelEmptyFolder", "This folder is empty.");
+    }
+
+    renderSummary() {
+      const rodape = this.workspace.querySelector("[data-asset-summary]");
+      if (!rodape) return;
+      const visiveis = this.visibleAssets();
+      const total = (this.assets || []).length;
+      const bytes = visiveis.reduce((soma, a) => soma + (Number(a.byte_size) || 0), 0);
+      rodape.textContent = `${visiveis.length}/${total} · ${formatBytes(bytes)}`;
     }
 
     render() {
       if (!this.panel) return;
-      const folders = this.folders || [];
-      const assets = (this.assets || []).filter((asset) => (asset.folder_id || "") === this.selectedFolderId);
-      const foldersHtml = `<div class="asset-folder-bar">
-        <button type="button" data-asset-folder="" class="${this.selectedFolderId ? "" : "is-active"}"><i class="ph ph-folder-open" aria-hidden="true"></i><span>${esc(label("assetLabelRoot", "Root"))}</span></button>
-        ${folders.map((folder) => `<button type="button" data-asset-folder="${esc(folder.id)}" class="${this.selectedFolderId === folder.id ? "is-active" : ""}"><i class="ph ph-folder" aria-hidden="true"></i><span>${esc(folder.name)}</span></button>`).join("")}
-      </div>`;
-      const assetsHtml = assets.length ? assets.map((asset) => {
-        const id = esc(asset.id);
-        return `<article class="asset-row" draggable="true" data-library-asset-id="${id}" data-library-asset-src="${esc(asset.src || "")}" data-library-asset-name="${esc(asset.filename || label("assetLabelImage", "Image"))}" title="${esc(label("assetLabelDragTitle", "Drag to the scene or to a folder"))}">
-          <img src="${esc(asset.src || "")}" alt="">
-          <div class="asset-row__meta">
-            <strong>${esc(assetName(asset))}</strong>
-            <small>${Number(asset.width || 0)} x ${Number(asset.height || 0)}</small>
-          </div>
-          <div class="asset-row__actions">
-            <button type="button" class="asset-row__delete" data-asset-delete="${id}" title="${esc(label("assetLabelDeleteImage", "Delete image"))}" aria-label="${esc(label("assetLabelDeleteImage", "Delete image"))}"><i class="ph ph-trash" aria-hidden="true"></i></button>
-          </div>
-        </article>`;
-      }).join("") : `<div class="cards-empty">${esc(label("assetLabelEmptyFolder", "No images in this folder."))}</div>`;
-      this.panel.innerHTML = foldersHtml + assetsHtml;
+      this.renderFolders();
+      this.renderGrid();
+      this.renderSummary();
     }
 
     async createFolder(name) {
@@ -156,10 +268,25 @@
     }
 
     async uploadFiles(files) {
-      const images = Array.from(files || []).filter((file) => file.type.startsWith(IMAGE_MIME_PREFIX));
-      if (!images.length) return false;
-      for (const file of images) {
-        await api.upload(this.roomId, file, this.selectedFolderId).catch(() => {});
+      const accepted = Array.from(files || []).filter(
+        (file) => file.type.startsWith(IMAGE_MIME_PREFIX) || file.type === PDF_MIME,
+      );
+      if (!accepted.length) return false;
+      for (const file of accepted) {
+
+
+
+        const cap = file.type === PDF_MIME ? MAX_PDF_BYTES : MAX_IMAGE_BYTES;
+        if (file.size > cap) {
+          reportUploadFailure(file, new Error("too_large"));
+          continue;
+        }
+
+
+
+        await api.upload(this.roomId, file, this.selectedFolderId).catch((error) => {
+          reportUploadFailure(file, error);
+        });
       }
       await this.refresh();
       return true;
@@ -204,9 +331,40 @@
     const uploadButton = event.target.closest("[data-scene-asset-upload]");
     if (uploadButton) {
       const workspace = uploadButton.closest("[data-scene-assets-workspace]");
-      const input = workspace?.querySelector("[data-scene-asset-upload-input]");
+
+
+
+      const kind = uploadButton.dataset.sceneAssetUpload || "image";
+      const input = workspace?.querySelector(`[data-scene-asset-upload-input="${kind}"]`);
       input?.click();
     }
+  });
+
+  document.addEventListener("input", (event) => {
+    const campo = event.target.closest("[data-asset-search]");
+    if (!campo) return;
+    const controller = controllerFromElement(campo);
+    if (!controller) return;
+
+
+    controller.search = campo.value;
+    controller.renderGrid();
+    controller.renderSummary();
+  });
+
+  document.addEventListener("click", (event) => {
+    const botao = event.target.closest("[data-asset-kind]");
+    if (!botao) return;
+    const controller = controllerFromElement(botao);
+    if (!controller) return;
+    controller.kind = botao.dataset.assetKind || "";
+    botao.parentElement?.querySelectorAll("[data-asset-kind]").forEach((outro) => {
+      const ativo = outro === botao;
+      outro.classList.toggle("is-active", ativo);
+      outro.setAttribute("aria-pressed", String(ativo));
+    });
+    controller.renderGrid();
+    controller.renderSummary();
   });
 
   document.addEventListener("change", (event) => {
@@ -220,8 +378,8 @@
     });
   });
 
-  // Drag source: library asset rows can be dropped onto the scene image layer
-  // (handled by the map controller) or onto a folder button to re-file them.
+
+
   document.addEventListener("dragstart", (event) => {
     const row = event.target.closest("[data-library-asset-id]");
     if (!row || !event.dataTransfer) return;
@@ -229,6 +387,9 @@
       asset_id: row.dataset.libraryAssetId,
       src: row.dataset.libraryAssetSrc || "",
       name: row.dataset.libraryAssetName || label("assetLabelImage", "Image"),
+
+
+      kind: row.dataset.libraryAssetKind || "image",
     }));
     event.dataTransfer.effectAllowed = "copyMove";
     row.classList.add("is-dragging");
@@ -238,7 +399,7 @@
     event.target.closest("[data-library-asset-id]")?.classList.remove("is-dragging");
   });
 
-  // Drag target: folder buttons accept a dropped asset to move it into the folder.
+
   document.addEventListener("dragover", (event) => {
     const folderButton = event.target.closest("[data-asset-folder]");
     if (!folderButton) return;
@@ -266,7 +427,7 @@
       const payload = JSON.parse(raw);
       if (payload.asset_id) controller.moveAsset(payload.asset_id, folderButton.dataset.assetFolder || null);
     } catch {
-      /* ignore malformed payload */
+
     }
   });
 
@@ -277,8 +438,11 @@
       new AssetLibrary(workspace);
     });
     document.addEventListener("vtt:transport-event", (event) => {
-      if (event.detail?.event !== "assets.library.updated") return;
+      if (!["assets.library.updated", "handout.access_changed"].includes(event.detail?.event)) return;
       controllers.get(event.detail?.payload?.room_id)?.refresh();
+    });
+    document.addEventListener("vtt:ws-open", () => {
+      controllers.forEach((controller) => controller.refresh());
     });
   }
 

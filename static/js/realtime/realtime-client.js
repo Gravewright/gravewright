@@ -19,7 +19,7 @@
   let reconnectTimer = null;
   let manualClose = false;
   const lastEventSeqByRoom = new Map();
-  
+
   const pendingCommands = new Map();
   const STREAMER_ALLOWED_COMMANDS = new Set([
     "chunk.ack",
@@ -152,7 +152,7 @@
       envelope.scene_id = options.sceneId;
     }
 
-    
+
     if (pendingCommands.size > 100) pendingCommands.clear();
     pendingCommands.set(envelope.id, command);
 
@@ -171,7 +171,7 @@
     }
   }
 
-  
+
 
   function recordEventSeq(eventEnvelope) {
     const roomId = eventEnvelope?.room_id || eventEnvelope?.payload?.room_id;
@@ -192,7 +192,7 @@
     recordEventSeq(event.detail);
   });
 
-  
+
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
       connectWebSocket();

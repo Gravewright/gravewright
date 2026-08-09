@@ -13,13 +13,14 @@ import json
 
 from app.engine.sdk import package_registry
 from app.engine.sdk.package_paths import safe_join
-from app.engine.sdk.package_manifest import PackageManifest
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
 
 class SchemaService:
     def __init__(self) -> None:
         self.installed = InstalledPackageRepository()
+        self.install = PackageInstallService()
 
     def get_actor_schema(self, *, system_id: str, actor_type: str) -> dict | None:
         return self._get_schema(system_id=system_id, type_id=actor_type, kind="actor")
@@ -31,9 +32,12 @@ class SchemaService:
         record = self.installed.get(system_id)
         if record is None:
             return None
-        try:
-            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
-        except (TypeError, ValueError):
+
+
+
+
+        manifest = self.install.get_manifest(system_id)
+        if manifest is None:
             return None
 
         type_defs = manifest.item_types if kind == "item" else manifest.actor_types

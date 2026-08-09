@@ -177,11 +177,11 @@
             modal.dataset.maximized = "false";
 
             if (options.framePrepared) {
-                
+
             } else if (options.sourcePanel) {
                 copyPanelFrame(options.sourcePanel, modal);
             } else if (modalLayout.restoreWindowState(modal)) {
-                
+
             } else if (!modalLayout.hasPosition(key) && modal.classList.contains("game-panel")) {
                 const x = Math.max(20, window.innerWidth - dockClearance - defaultPanelWidth);
                 modalLayout.setPosition(modal, x, defaultY);
@@ -196,10 +196,37 @@
 
             observeModal(modal);
             bringToFront(modal);
+            focusInitialField(modal);
 
             if (options.fit !== false) {
                 queueFitModalToContent(modal, { preserveWidth: Boolean(options.preserveWidth) });
             }
+        }
+
+
+
+
+
+
+
+
+
+
+
+        function focusInitialField(modal) {
+            const field = modal.querySelector("[data-modal-autofocus]");
+            if (!field || field.disabled || field.hidden) return;
+
+
+            requestAnimationFrame(() => {
+                if (modal.hidden || !modal.contains(field)) return;
+                try {
+                    field.focus({ preventScroll: true });
+                    field.select?.();
+                } catch {
+
+                }
+            });
         }
 
         function activateGravewrightPanel(group, panelId, sourcePanel = null) {
@@ -353,7 +380,7 @@
                     credentials: "same-origin",
                 });
             } catch {
-                
+
             }
         }
 
@@ -367,7 +394,7 @@
             try {
                 window.localStorage.setItem(layoutStorageKey, normalizedMode);
             } catch {
-                
+
             }
 
             updateLayoutButtons(normalizedMode);

@@ -43,12 +43,12 @@
     const registry = new Map();
 
     window.GravewrightBoard = {
-        
+
         registerRenderer(kind, factory) {
             registry.set(kind, factory);
         },
 
-        
+
         create(kind, deps) {
             const factory = registry.get(kind);
             if (!factory) {

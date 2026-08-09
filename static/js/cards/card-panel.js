@@ -23,7 +23,7 @@
     return String(template || "").replace(/\{(\w+)\}/g, (_, key) => String(values?.[key] ?? `{${key}}`));
   }
 
-  // Don't hijack Delete/Backspace while the user is typing in a field.
+
   function isEditableTarget(target) {
     const el = target instanceof Element ? target : null;
     if (!el) return false;
@@ -32,12 +32,12 @@
     return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
   }
 
-  // ── Card table layer ────────────────────────────────────────────────────
-  // Cards played to a scene live here, anchored to scene world coordinates so
-  // they pan/zoom with the board. The interaction model mirrors the scene-image
-  // (asset) layer — select, move, resize via the corner handle, rotate with
-  // Shift-drag or Shift+wheel, z-order — but cards stay in the cards domain so
-  // face state, ownership and discard-back-to-pile keep working.
+
+
+
+
+
+
   const tableControllers = new Set();
 
   function isGmForRoom(roomId) {
@@ -88,8 +88,8 @@
       return this.canvas()?.dataset.sceneId || "";
     }
 
-    // GM controls every table card; a player controls only the cards they own
-    // (and that aren't locked) — same rule the backend enforces.
+
+
     canMove(placement) {
       if (isGmForRoom(this.roomId)) return true;
       return !!placement && !placement.locked && !!placement.owner_user_id && placement.owner_user_id === this.userId;
@@ -108,8 +108,8 @@
       return this.cards.find((item) => item.id === placement.card_instance_id) || {};
     }
 
-    // Pull a fresh state snapshot and rebuild only when the placement set
-    // actually changed (signature); otherwise leave the DOM for follow() to nudge.
+
+
     update(state) {
       this.state = state || null;
       if (this.drag) return;
@@ -172,7 +172,7 @@
         const classes = ["table-card"];
         if (movable) classes.push("is-movable");
         if (selected) classes.push("is-selected");
-        // Resize handle only when exactly one card is selected.
+
         const handle = selected && this.selectedIds.size === 1
           ? '<span class="table-card__resize" data-table-card-handle="resize" aria-hidden="true"></span>'
           : "";
@@ -183,8 +183,8 @@
       }).join("");
     }
 
-    // Keep world-anchored cards glued to the board as the camera pans/zooms;
-    // a no-op unless the camera actually moved since the last frame.
+
+
     follow() {
       if (this.drag || !this.placements.length) return;
       const cam = this.camera();
@@ -209,7 +209,7 @@
       return { x: rect.left + g.left, y: rect.top + g.top };
     }
 
-    // The selected placements the viewer is actually allowed to manipulate.
+
     selectedMovable() {
       return [...this.selectedIds]
         .map((id) => this.placementById(id))
@@ -235,8 +235,8 @@
       this.render();
     }
 
-    // Marquee selection: pick every movable card whose on-screen box touches the
-    // screen-space rect (used by the board's right-to-left drag).
+
+
     selectInRect(rect, { additive = false } = {}) {
       if (!additive) this.selectedIds.clear();
       this.placements.forEach((p) => {
@@ -300,14 +300,14 @@
         if (!el) return;
         const placement = this.placementById(el.dataset.tableCardId);
         if (!placement || !this.canMove(placement)) return;
-        // Stop the map from panning under the card; let right-click fall through
-        // to the contextmenu handler without starting a drag.
+
+
         event.stopPropagation();
         if (event.button !== 0) return;
         event.preventDefault();
 
-        // Shift / Ctrl / Cmd + click toggles this card in the multi-selection
-        // (no drag). Rotation lives on Shift + mouse wheel.
+
+
         const additive = event.ctrlKey || event.metaKey || event.shiftKey;
         if (additive) {
           this.setSelection(placement.id, true);
@@ -319,8 +319,8 @@
         const node = this.nodeFor(placement.id);
         const center = this.centerScreen(placement);
 
-        // Resize acts on a single card; with several selected we move the whole
-        // group together.
+
+
         if (single && event.target.closest('[data-table-card-handle="resize"]')) {
           const startDist = Math.hypot(event.clientX - center.x, event.clientY - center.y) || 1;
           this.drag = {
@@ -400,8 +400,8 @@
         if (!placement || !this.canMove(placement)) return;
         event.preventDefault();
         event.stopPropagation();
-        // Right-clicking a card outside the current selection selects just it;
-        // otherwise the menu acts on the whole selection.
+
+
         if (!this.selectedIds.has(placement.id)) this.setSelection(placement.id, false);
         const targets = this.selectedMovable();
         const many = targets.length > 1;
@@ -453,8 +453,8 @@
     if (bindGlobalTableHandlers.bound) return;
     bindGlobalTableHandlers.bound = true;
 
-    // Deselect when clicking empty space (table cards stopPropagation on their
-    // own pointerdown, so this only fires off-card).
+
+
     document.addEventListener("pointerdown", (event) => {
       if (event.target.closest("[data-table-card-id]")) return;
       tableControllers.forEach((controller) => controller.deselect());
@@ -475,8 +475,8 @@
       }
     });
 
-    // Shift + wheel rotates the selected table card. Capture phase so it wins
-    // over the map zoom-wheel handler; only consumes the event if it rotated.
+
+
     document.addEventListener("wheel", (event) => {
       if (!event.shiftKey) return;
       const delta = event.deltaY || event.deltaX;
@@ -501,13 +501,13 @@
       this.isGm = root.dataset.isGm === "true";
       this.store = new Cards.CardStateStore();
       this.store.subscribe(() => this.render());
-      // Hand cards the player has flipped to their back face (local-only): the
-      // shown face decides which face the card lands on when dragged to the table.
+
+
       this.flipped = new Set();
       root.__cardPanel = this;
       this.bind();
-      // Re-fit the fan when the hand panel is shown or resized (modal open,
-      // window/modal resize) — innerHTML stays put, only the CSS vars change.
+
+
       if (this.mode === "hand" && typeof ResizeObserver !== "undefined") {
         this.handHost = root.querySelector("[data-card-hand]");
         if (this.handHost) {
@@ -566,7 +566,7 @@
         const article = event.target.closest("[data-card-drag-id]");
         if (!article || !event.dataTransfer) return;
         const img = article.querySelector("img");
-        // A card flipped to its back in hand lands face-down on the table.
+
         const flipped = article.dataset.cardFlipped === "true";
         const payload = {
           card_id: article.dataset.cardDragId,
@@ -622,8 +622,8 @@
     }
 
     async shuffle(deckId) {
-      // Shuffling only reorders the (hidden) draw pile, so confirm it visibly —
-      // otherwise the button looks like it does nothing.
+
+
       try {
         await Cards.api.shuffleDeck(this.roomId, deckId);
         await this.refresh();
@@ -640,7 +640,11 @@
     async removeDeck(deckId, deckName) {
       if (!deckId) return;
       const deckLabel = deckName ? `"${deckName}"` : label("cardLabelThisDeck", "this deck");
-      if (!window.confirm(format(label("cardLabelDeleteDeckConfirm", "Remove {deck}? All its cards in hands, discard and table will be deleted."), { deck: deckLabel }))) return;
+      const confirmed = await window.GravewrightCore.dialog.confirm(
+        format(label("cardLabelDeleteDeckConfirm", "Remove {deck}? All its cards in hands, discard and table will be deleted."), { deck: deckLabel }),
+        { variant: "danger" },
+      );
+      if (!confirmed) return;
       try {
         await Cards.api.deleteDeck(this.roomId, deckId);
         await this.refresh();
@@ -661,8 +665,8 @@
       await this.draw(deckId, destination);
     }
 
-    // Flip a hand card between its front and back face. Local-only — the player
-    // just decides which side to show before dragging it onto the table.
+
+
     toggleHandFlip(cardId) {
       if (!cardId) return;
       if (this.flipped.has(cardId)) this.flipped.delete(cardId);
@@ -765,13 +769,13 @@
       }
       host.innerHTML = drawbar + this.fanHtml(cards);
       this.layoutFan();
-      // Re-measure after layout settles (e.g. once the modal auto-fits its width).
+
       window.requestAnimationFrame(() => this.layoutFan());
     }
 
-    // Size and overlap the hand so all cards fit the panel width without
-    // scrolling: cards keep their natural size until space runs out, then
-    // overlap more and finally shrink. Re-runs on resize via a ResizeObserver.
+
+
+
     layoutFan() {
       const host = this.handHost || this.root.querySelector("[data-card-hand]");
       const fan = host?.querySelector(".cards-fan:not(.is-empty)");
@@ -783,8 +787,8 @@
       if (!avail || n <= 0) return;
       const CW_MAX = 130;
       const CW_MIN = 64;
-      const STEP_MAX = CW_MAX * 0.62;   // comfortable spread
-      const STEP_TIGHT = 0.26;          // tightest visible strip (fraction of card)
+      const STEP_MAX = CW_MAX * 0.62;
+      const STEP_TIGHT = 0.26;
       let cw = CW_MAX;
       let step = STEP_MAX;
       if (n > 1) {
@@ -851,8 +855,8 @@
       return `<div class="cards-fan" style="--count:${n}">${inner}</div>`;
     }
 
-    // The face shown in hand: front by default, the card's back (or a generic
-    // card-back) when the player has flipped it.
+
+
     handFace(card, flipped) {
       if (flipped) {
         if (card?.back_asset_id) {
@@ -904,8 +908,8 @@
     });
   }
 
-  // Drop a hand card onto the table: placed through the cards' own scene-placement
-  // layer (this domain), converting screen coordinates into scene coordinates.
+
+
   Cards.placeCardAtScene = async function placeCardAtScene(canvas, payload, clientX, clientY) {
     if (!canvas || !payload?.card_id) return false;
     const sceneId = canvas.dataset.sceneId || "";
@@ -935,7 +939,7 @@
     }
   };
 
-  // Marquee select hook for the board's right-to-left drag (map-marquee.js).
+
   Cards.selectInRect = function selectInRect(canvas, rect, opts) {
     const layer = canvas?.closest("[data-map-viewport]")?.querySelector("[data-card-scene-layer]");
     layer?.__cardTable?.selectInRect(rect, opts || {});

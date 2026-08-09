@@ -8,14 +8,65 @@
   const refresh = FI.refresh;
   const mount = FI.mount;
 
+
+
+
+
+
+  const pendente = new WeakSet();
+
+  function refreshQuandoOcioso(root) {
+    if (!root.contains(document.activeElement)) {
+      refresh(root);
+      return;
+    }
+    if (pendente.has(root)) return;
+    pendente.add(root);
+
+    const aoSair = () => {
+
+
+      setTimeout(() => {
+        if (root.contains(document.activeElement)) return;
+        root.removeEventListener("focusout", aoSair);
+        pendente.delete(root);
+        refresh(root);
+      }, 0);
+    };
+    root.addEventListener("focusout", aoSair);
+  }
+
+
+
+
+
+
+  const souEu = (payload) => {
+    const eu = document.body?.dataset?.currentUserId || "";
+    return Boolean(eu) && payload?.updated_by === eu;
+  };
+
   document.addEventListener("vtt:transport-event", (event) => {
     const envelope = event.detail || {};
-    if (envelope.event !== "sheet.data.updated") return;
+    if (!["sheet.data.updated", "actor.updated"].includes(envelope.event)) return;
     const actorId = envelope.payload?.actor_id;
     if (!actorId) return;
     const modal = document.querySelector(`[data-modal-id="actor-${CSS.escape(actorId)}"]`);
     const root = modal?.querySelector("[data-actor-sheet-root]");
-    if (root) refresh(root);
+    if (!root) return;
+
+
+
+
+
+    if (souEu(envelope.payload) && root.contains(document.activeElement)) return;
+    if (envelope.event === "actor.updated") {
+      void refresh(root).then((ok) => {
+        if (ok === false) modal.querySelector("[data-modal-close]")?.click();
+      });
+      return;
+    }
+    refreshQuandoOcioso(root);
   });
 
   document.addEventListener("vtt:actor-sheet-modal-mounted", (event) => {
@@ -29,7 +80,7 @@
     if (root) window.GravewrightHTMLSheets?.unmount?.(root);
   });
 
-  
+
   document.addEventListener("click", (event) => {
     const opener = event.target.closest("[data-actor-open]");
     if (!opener) return;
@@ -38,7 +89,7 @@
     }));
   });
 
-  
+
 
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-actor-sheet-root]").forEach((root) => {

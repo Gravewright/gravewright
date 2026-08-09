@@ -1,7 +1,7 @@
 # Estado Alpha
 
 > [!WARNING]
-> **Gravewright v2.1.0-alpha — SDK Freeze.**
+> **Gravewright v3.0.0-alpha — Efeitos Visuais e Operações de Campanha.**
 >
 > A superfície planejada da **SDK 1 agora está congelada**. Campanhas reais não são mais desencorajadas, desde que você mantenha backups regulares e aceite que bugs, migrations e correções de compatibilidade ainda podem acontecer antes da LTS 1.
 >
@@ -11,7 +11,7 @@
 
 ## O que significa o SDK Freeze
 
-O Gravewright v2.1.0-alpha mantém a **superfície de extensão da SDK 1 congelada**: a SDK 1 não recebe novas primitivas de extensão; o trabalho até a LTS 1 foca em hardening, segurança, documentação, compatibilidade, backup/restore, cobertura do doctor, confiabilidade de migrations, exemplos e correções de bugs.
+O Gravewright v3.0.0-alpha mantém a **superfície de extensão da SDK 1 congelada**. A Alpha 3 amplia os recursos centrais da mesa — especialmente efeitos visuais, iluminação, operações de campanha e a experiência de configuração — sem criar uma nova linha major da SDK.
 
 A superfície congelada da SDK 1 inclui:
 
@@ -33,7 +33,7 @@ Ainda podem ocorrer mudanças entre releases Alpha em:
 
 ## Uso recomendado
 
-O Gravewright v2.1.0-alpha é adequado para campanhas reais se você mantiver backups regulares. É bem indicado para:
+O Gravewright v3.0.0-alpha é adequado para campanhas reais se você mantiver backups regulares. É bem indicado para:
 
 - campanhas e one-shots com uma rotina de backup;
 - autoria de rulesets, addons e HTML sheets contra a superfície congelada da SDK 1;

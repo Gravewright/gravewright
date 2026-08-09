@@ -282,9 +282,14 @@ Token mappings dizem à mesa quais campos do actor alimentam a UI do token:
   "character": {
     "name": "core.name",
     "bars": {
-      "hp": {
+      "bar_1": {
         "value": "sheet.hp.value",
         "max": "sheet.hp.max"
+      },
+      "bar_2": {
+        "value": "sheet.stress.value",
+        "max": "sheet.stress.max",
+        "color": "#a020f0"
       }
     },
     "initiative": "sheet.init",
@@ -292,6 +297,20 @@ Token mappings dizem à mesa quais campos do actor alimentam a UI do token:
   }
 }
 ```
+
+Um token desenha exatamente duas barras: **`bar_1` embaixo dele e `bar_2` em
+cima**. Os slots são posições, não significados — aponte-os para o que o jogo
+acompanhar, seja vida, estresse, munição ou uma contagem regressiva. O core
+resolve os caminhos e desenha a proporção; ele nunca lê os números como saúde.
+
+| Chave | Significado |
+| --- | --- |
+| `value` | Caminho pontilhado da ficha. Slot cujo valor não resolve não é desenhado. |
+| `max` | Caminho pontilhado da ficha. Padrão: o próprio `value`, então barra sem máximo aparece cheia. |
+| `color` | Um hex literal, nunca um caminho. Padrão: verde na `bar_1` e azul na `bar_2`. |
+
+Mapear só um slot é normal: o outro simplesmente não é desenhado. Um mapeamento
+antigo que chamava sua única barra de `hp` continua sendo lido como `bar_1`.
 
 ## Locales
 

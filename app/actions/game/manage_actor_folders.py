@@ -17,6 +17,11 @@ from litestar.response import Redirect, Response, Template
 from app.business.game_page_service import GamePageService
 from app.engine.actors.actor_service import ActorService
 from app.helpers.view import view_context
+from app.realtime.resource_events import (
+    announce_resource_access_change,
+    announce_resource_tree_change,
+)
+from app.realtime.transport import RealtimeTransport
 
 
 @get("/game/actors/panel/{campaign_id:str}")
@@ -58,9 +63,19 @@ async def _authenticated_form(request: Request, cookies: dict[str, str], current
     return current_user, form, None
 
 
-def _result_response(
-    request: Request, result, *, payload: dict | None = None, created: bool = False
+async def _result_response(
+    request: Request, result, *, payload: dict | None = None, created: bool = False,
+    announce: bool = True,
 ):
+
+
+
+    if announce and result.success:
+        await announce_resource_tree_change(
+            resource_type="actor",
+            campaign_id=getattr(result, "campaign_id", None),
+            transport=RealtimeTransport(),
+        )
     if _wants_json(request):
         if not result.success:
             return Response({"error_key": result.error_key}, status_code=400)
@@ -81,6 +96,17 @@ async def toggle_actor_owner(
     result = actor_service.toggle_owner(
         actor_id=actor_id, user_id_to_toggle=owner_user_id, requester_user_id=user["id"]
     )
+    if result.success:
+
+
+        await announce_resource_access_change(
+            resource_type="actor",
+            resource_id=actor_id,
+            campaign_id=result.campaign_id,
+            updated_by=user["id"],
+            transport=RealtimeTransport(),
+        )
+
     if _wants_json(request) and result.success:
         owners = actor_service.list_owners(actor_id=actor_id)
         return Response(
@@ -92,7 +118,7 @@ async def toggle_actor_owner(
             },
             status_code=200,
         )
-    return _result_response(request, result)
+    return await _result_response(request, result, announce=False)
 
 
 @post("/game/actor/move")
@@ -108,7 +134,7 @@ async def move_actor(
         target_folder_id=_str(form, "folder_id"),
         user_id=user["id"],
     )
-    return _result_response(request, result, payload={"folder_id": result.folder_id or ""})
+    return await _result_response(request, result, payload={"folder_id": result.folder_id or ""})
 
 
 @post("/game/actor-folder")
@@ -126,7 +152,7 @@ async def create_actor_folder(
         parent_id=_str(form, "parent_id"),
         color=_str(form, "color"),
     )
-    return _result_response(request, result, payload={"folder_id": result.folder_id}, created=True)
+    return await _result_response(request, result, payload={"folder_id": result.folder_id}, created=True)
 
 
 @post("/game/actor-folder/rename")
@@ -140,7 +166,7 @@ async def rename_actor_folder(
     result = actor_service.rename_folder(
         folder_id=_str(form, "folder_id"), name=_str(form, "name"), user_id=user["id"]
     )
-    return _result_response(request, result, payload={"folder_id": result.folder_id or ""})
+    return await _result_response(request, result, payload={"folder_id": result.folder_id or ""})
 
 
 @post("/game/actor-folder/color")
@@ -154,7 +180,7 @@ async def set_actor_folder_color(
     result = actor_service.set_folder_color(
         folder_id=_str(form, "folder_id"), color=_str(form, "color"), user_id=user["id"]
     )
-    return _result_response(request, result, payload={"folder_id": result.folder_id or ""})
+    return await _result_response(request, result, payload={"folder_id": result.folder_id or ""})
 
 
 @post("/game/actor-folder/delete")
@@ -166,7 +192,7 @@ async def delete_actor_folder(
         return early
     assert user is not None
     result = actor_service.delete_folder(folder_id=_str(form, "folder_id"), user_id=user["id"])
-    return _result_response(request, result)
+    return await _result_response(request, result)
 
 
 @post("/game/actor-folder/move")
@@ -182,4 +208,4 @@ async def move_actor_folder(
         target_parent_id=_str(form, "parent_id"),
         user_id=user["id"],
     )
-    return _result_response(request, result, payload={"folder_id": result.folder_id or ""})
+    return await _result_response(request, result, payload={"folder_id": result.folder_id or ""})

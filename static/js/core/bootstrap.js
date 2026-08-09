@@ -7,7 +7,7 @@
 (function () {
   const Core = (window.GravewrightCore = window.GravewrightCore || {});
 
-  
+
   window.Gravewright = window.Gravewright || {};
 
   function detectEnvironment() {

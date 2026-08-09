@@ -54,7 +54,7 @@ def path_is_safe(path: object) -> bool:
         base_name = segment.split(".", 1)[0].upper()
         if base_name in _WINDOWS_RESERVED_NAMES:
             return False
-    # No empty segments (covers leading and double slashes).
+
     return "" not in segments
 
 

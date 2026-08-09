@@ -7,6 +7,7 @@
         "data-scene-grid-visible",
         "data-scene-grid-color",
         "data-scene-grid-opacity",
+        "data-scene-darkness",
         "data-scene-image-scale",
         "data-scene-start-world-x",
         "data-scene-start-world-y",
@@ -342,7 +343,7 @@
                 bringToFront(modal);
                 queueFitModalToContent(modal);
             } catch {
-                
+
             } finally {
                 if (submitter) {
                     submitter.disabled = false;
@@ -373,7 +374,7 @@
                     canvas.dataset.measureFlashSeconds = seconds;
                 });
             } catch {
-                
+
             } finally {
                 if (submitter) submitter.disabled = false;
             }
@@ -400,7 +401,7 @@
                 }));
                 if (modal) closeModal(modal);
             } catch {
-                
+
             } finally {
                 if (submitter) submitter.disabled = false;
             }
@@ -422,11 +423,12 @@
             warning.hidden = input.value === String(input.defaultValue);
         }
 
-        function confirmWarnOnChange(form) {
+
+
+        async function confirmWarnOnChange(form) {
             const warnInput = form.querySelector("[data-warn-on-change]");
-            return !warnInput
-                || warnInput.value === String(warnInput.defaultValue)
-                || window.confirm(warnInput.dataset.warnOnChange);
+            if (!warnInput || warnInput.value === String(warnInput.defaultValue)) return true;
+            return window.GravewrightCore.dialog.confirm(warnInput.dataset.warnOnChange);
         }
 
         return {

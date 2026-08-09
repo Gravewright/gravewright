@@ -241,9 +241,6 @@ class CardRepository:
         return [_decode_deck_instance(row) for row in rows]
 
     def delete_deck_instance(self, *, deck_instance_id: str) -> None:
-        # Tear down the whole deck instance: its placements, pile entries, cards
-        # and piles, then the instance row. Explicit (not relying on FK cascade)
-        # so it behaves the same regardless of SQLite PRAGMA settings.
         with engine_begin() as conn:
             card_ids = [
                 str(row["id"])

@@ -192,6 +192,60 @@ e geram warning de validação enquanto não tiverem consumo canônico. Para
 rolagens, declare fórmulas/actions em `provides.rules` e chame via Sheet IR,
 `sdk.dice.roll` ou `sdk.rolls.intent`.
 
+#### `rules/combat.gw.json`
+
+O core é dono do rastreador de combate — a rodada, a ordem de turnos, o painel —
+mas não do que a iniciativa *é*. Ele guarda o valor como texto e nunca o
+interpreta. O ruleset decide como o valor chega lá e se ele implica uma ordem.
+
+```json
+{
+  "version": 2,
+  "initiative": {
+    "label": "Iniciativa",
+    "input": "roll",
+    "sort": "desc",
+    "formula": "1d20 + @sheet.combat.initiative",
+    "actionId": "roll.initiative",
+    "tieBreaker": "@sheet.abilities.dex.score",
+    "icon": "ph-dice-five",
+    "accent": "#b88a44"
+  },
+  "resources": {
+    "hp": { "label": "PV", "path": "sheet.hp.value", "maxPath": "sheet.hp.max", "min": 0 }
+  }
+}
+```
+
+`initiative.input` é o único campo que muda o comportamento do painel:
+
+| `input` | O que o mestre vê | Como a ordem é decidida |
+| --- | --- | --- |
+| `roll` | Botões de rolagem, mais um campo numérico para sobrescrever | Pelo valor, usando `sort` |
+| `number` | Só um campo numérico | Pelo valor, usando `sort` |
+| `text` | Um campo de texto livre | Na mão: o mestre move as linhas para cima e para baixo |
+
+Use `text` sempre que a ordem de turnos não for um número que a engine pudesse
+comparar — cartas compradas, fases nomeadas, "quem emboscou age primeiro", ou
+uma ficha que a mesa lê no papel. O core não inventa ranking para uma string.
+
+| Campo | Significado |
+| --- | --- |
+| `initiative.label` | Como o valor se chama. Uma chave de locale é resolvida pelo catálogo do pacote. |
+| `initiative.input` | `roll`, `number` ou `text`. Padrão: `roll` quando há `formula`, `number` caso contrário. |
+| `initiative.sort` | `desc` (padrão) ou `asc`. Ignorado quando `input` é `text`. |
+| `initiative.formula` | Avaliada contra a ficha do ator. Sem ela, a engine usa a fórmula do `actionId`. |
+| `initiative.actionId` | A action declarativa que um botão de ficha usa; o resultado é adotado pelo rastreador. Padrão: `roll.initiative`. |
+| `initiative.tieBreaker` | Um caminho de ficha que desempata sem aparecer no valor exibido. |
+| `initiative.icon` | Ícone Phosphor dos botões de rolagem. |
+| `initiative.accent` | Uma cor hex para o painel. |
+| `resources` | Recursos nomeados; `hp` (ou `health`) é a barra desenhada sob cada combatente. |
+
+A engine não tem dado próprio: um sistema que declara `input: "roll"` sem
+`formula` e sem um `actionId` rolável simplesmente não tem o que rolar, e os
+botões de rolagem dizem isso. Todo o resto do painel é comportamento do core ou
+a capability `combat.runtime`.
+
 Nem todo kind deve usar todos os campos. Por exemplo, `content` normalmente declara `contentPacks`, enquanto `assets` declara `assets`.
 
 Rulesets devem declarar `provides.storage` (modelo de storage) e ao menos um tipo em `provides.actorTypes`. Os tipos de content pack permitidos são `actor_pack`, `item_pack`, `spell_pack`, `journal_pack`, `table_pack` e `condition_pack`.

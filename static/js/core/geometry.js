@@ -31,7 +31,7 @@
     );
   }
 
-  
+
   function pointInPolygon(point, points) {
     let inside = false;
     for (let i = 0, j = points.length - 1; i < points.length; j = i++) {

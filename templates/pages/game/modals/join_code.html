@@ -1,0 +1,78 @@
+<article class="game-modal-window dialog-modal join-code-modal" data-modal-window
+    data-modal-id="join-code-{{ room.id }}" data-window-key="join-code-{{ room.id }}" hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+        <span class="game-panel-title">{{ t("game.join_code.title") }}</span>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('inside.campaigns.cancel') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+    <div class="game-modal-body join-code-panel" data-join-code-panel data-campaign-id="{{ room.id }}"
+        data-label-active="{{ t('game.join_code.state.active') }}"
+        data-label-expired="{{ t('game.join_code.state.expired') }}"
+        data-label-revoked="{{ t('game.join_code.state.revoked') }}"
+        data-label-uses="{{ t('game.join_code.uses') }}"
+        data-label-unlimited="{{ t('game.join_code.unlimited') }}"
+        data-label-expires="{{ t('game.join_code.expires') }}"
+        data-label-copied="{{ t('game.join_code.copied') }}"
+        data-label-generate="{{ t('game.join_code.generate') }}"
+        data-label-rotate="{{ t('game.join_code.rotate') }}"
+        data-error-network="{{ t('http.errors.network') }}"
+        data-error-permission="{{ t('campaign.join_code.errors.permission_denied') }}"
+        data-error-session="{{ t('auth.errors.session_expired') }}"
+        data-error-generic="{{ t('game.join_code.errors.request') }}"
+        data-confirm-rotate="{{ t('game.join_code.confirm_rotate') }}"
+        data-confirm-revoke="{{ t('game.join_code.confirm_revoke') }}">
+        <p class="join-code-help">{{ t("game.join_code.help") }}</p>
+        <div class="game-notice" data-join-code-notice role="status" aria-live="polite" hidden></div>
+
+        <section class="join-code-status" data-join-code-status hidden aria-live="polite">
+            <div class="join-code-status-head">
+                <code data-join-code-display>****-****-****</code>
+                <span class="join-code-state" data-join-code-state></span>
+            </div>
+            <p data-join-code-expiry></p>
+            <p data-join-code-uses></p>
+        </section>
+
+        <div class="join-code-plaintext" data-join-code-plaintext hidden>
+            <p class="join-code-warning">{{ t("game.join_code.one_time_warning") }}</p>
+            <label class="game-field">
+                <span>{{ t("game.join_code.code_label") }}</span>
+                <input type="text" readonly data-join-code-value aria-describedby="join-code-once-{{ room.id }}" />
+            </label>
+            <small id="join-code-once-{{ room.id }}">{{ t("game.join_code.copy_now") }}</small>
+            <button class="secondary-action" type="button" data-join-code-copy>
+                <i class="ph ph-copy" aria-hidden="true"></i>
+                <span>{{ t("game.join_code.copy") }}</span>
+            </button>
+        </div>
+
+        <form class="join-code-form" data-join-code-form>
+            {{ csrf_input | safe }}
+            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+            <label class="game-field">
+                <span>{{ t("game.join_code.expiration") }}</span>
+                <input type="number" name="expires_in_hours" min="1" value="24" required />
+            </label>
+            <label class="game-field">
+                <span>{{ t("game.join_code.max_uses") }}</span>
+                <input type="number" name="max_uses" min="1"
+                    placeholder="{{ t('game.join_code.unlimited') }}" />
+            </label>
+            <div class="join-code-actions">
+                <button class="invite-submit" type="submit" data-join-code-generate>
+                    <i class="ph ph-key" aria-hidden="true"></i>
+                    <span data-join-code-generate-label>{{ t("game.join_code.generate") }}</span>
+                </button>
+                <button class="secondary-action" type="button" data-join-code-revoke hidden>
+                    <i class="ph ph-prohibit" aria-hidden="true"></i>
+                    <span>{{ t("game.join_code.revoke") }}</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</article>

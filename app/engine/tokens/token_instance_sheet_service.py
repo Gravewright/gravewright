@@ -10,8 +10,16 @@ from app.engine.actors.actor_permissions import can_edit_actor, can_view_actor
 from app.engine.effects.active_effects import apply_stat_modifiers
 from app.engine.rules.derived_field_service import apply_derived
 from app.engine.rules.rules_registry import SystemRulesService
-from app.engine.sheets.actor_sheet_service import ActorSheetBundle
+from app.config import config
+from app.engine.sdk.package_locale_service import PackageLocaleService
+from app.engine.sheets.actor_sheet_service import (
+    ActorSheetBundle,
+    action_dialogs,
+    bundle_to_dict,
+)
+from app.engine.sheets.drop_entry_resolver import DropEntryResolver
 from app.engine.sheets.schema_service import SchemaService
+from app.engine.sheets.sheet_drop_service import embedded_item_copy, html_drop_list
 from app.engine.sheets.sheet_validation import sanitize_write
 from app.engine.sheets.system_layout_service import SystemLayoutService
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
@@ -62,6 +70,8 @@ class TokenInstanceSheetService:
         self.campaigns = CampaignRepository()
         self.storage = ScopedJsonStorage()
         self.systems = PackageInstallService()
+        self.locales = PackageLocaleService()
+        self.drops = DropEntryResolver()
         self.layouts = SystemLayoutService()
         self.rules = SystemRulesService()
         self.schemas = SchemaService()
@@ -80,6 +90,7 @@ class TokenInstanceSheetService:
         system_id = actor["system_id"]
         layout: dict | None = None
         sheet: dict | None = None
+        dialogs: dict = {}
         data = raw_data
         if self.systems.get_active_manifest(system_id) is not None:
             sheet = self.layouts.get_actor_html_sheet(system_id=system_id, actor_type=actor["type"])
@@ -91,6 +102,13 @@ class TokenInstanceSheetService:
                 )
                 if candidate is not None:
                     layout = candidate
+
+
+
+            dialogs = action_dialogs(
+                self.rules.get_actions(system_id),
+                self.locales.get_locale(system_id, locale or config.default_locale),
+            )
             helpers = self.rules.get_helpers(system_id)
             data = apply_derived(
                 actor_type=actor["type"],
@@ -110,6 +128,7 @@ class TokenInstanceSheetService:
             version=int(instance.get("version", 1)),
             can_edit=self._can_control_token(token=token, campaign=campaign, user_id=user_id),
             layout=layout,
+            dialogs=dialogs,
             sheet=sheet,
             data=data,
             portrait_url=actor_image_url(actor, "portrait"),
@@ -121,6 +140,41 @@ class TokenInstanceSheetService:
             source_actor_id=actor["id"],
             token_link_mode=token.get("actor_link_mode"),
         )
+
+    def drop(
+        self, *, token_id: str, user_id: str, source: dict, drop_zone: str
+    ) -> TokenSheetDataResult:
+        """Append a dropped entry to an unlinked token's own sheet.
+
+        An unlinked token keeps its own copy of the sheet, so a drop routed to
+        the actor lands somewhere this sheet never reads: the item is saved and
+        stays invisible. This puts it where the open sheet is looking.
+        """
+        loaded = self._load(token_id=token_id, user_id=user_id, require_edit=True)
+        if loaded is None:
+            return TokenSheetDataResult(success=False, error_key="tokens.errors.not_found")
+        token, actor, campaign = loaded
+
+        entry, entry_error = self.drops.resolve(
+            system_id=actor["system_id"],
+            campaign_id=actor["campaign_id"],
+            campaign=dict(campaign),
+            user_id=user_id,
+            source=source if isinstance(source, dict) else {},
+        )
+        if entry is None:
+            return TokenSheetDataResult(success=False, error_key=entry_error)
+
+        sheet = self.layouts.get_actor_html_sheet(
+            system_id=actor["system_id"], actor_type=actor["type"]
+        )
+        list_path = html_drop_list(sheet, entry.drop_type, drop_zone)
+        instance = self._ensure_instance(token=token, actor=actor)
+        data = instance.get("data") if isinstance(instance.get("data"), dict) else {}
+        current = data.get(list_path)
+        items = list(current) if isinstance(current, list) else []
+        items.append(embedded_item_copy(entry))
+        return self.patch_data(token_id=token_id, user_id=user_id, patch={list_path: items})
 
     def patch_data(
         self, *, token_id: str, user_id: str, patch: dict[str, Any]
@@ -186,24 +240,7 @@ class TokenInstanceSheetService:
         )
 
     def to_dict(self, bundle: ActorSheetBundle) -> dict:
-        return {
-            "actor": {
-                "id": bundle.actor_id,
-                "name": bundle.name,
-                "type": bundle.type,
-                "system_id": bundle.system_id,
-                "token_id": bundle.token_id,
-                "source_actor_id": bundle.source_actor_id,
-            },
-            "version": bundle.version,
-            "can_edit": bundle.can_edit,
-            "layout": bundle.layout,
-            "sheet": bundle.sheet,
-            "data": bundle.data,
-            "portrait_url": bundle.portrait_url,
-            "token_url": bundle.token_url,
-            "summary": bundle.summary,
-        }
+        return bundle_to_dict(bundle)
 
     def make_instance_snapshot(self, *, actor: dict) -> dict:
         envelope = self.storage.read_actor(

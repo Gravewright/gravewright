@@ -152,6 +152,12 @@ def _validate_config(cfg: "AppConfig") -> None:
         "AUTH_PASSWORD_RESET_MAX_ATTEMPTS": cfg.auth_password_reset_max_attempts,
         "AUTH_PASSWORD_RESET_WINDOW_SECONDS": cfg.auth_password_reset_window_seconds,
         "AUTH_PASSWORD_RESET_TOKEN_TTL_SECONDS": cfg.auth_password_reset_token_ttl_seconds,
+        "JOIN_CODE_DEFAULT_EXPIRES_HOURS": cfg.join_code_default_expires_hours,
+        "JOIN_CODE_MIN_EXPIRES_HOURS": cfg.join_code_min_expires_hours,
+        "JOIN_CODE_MAX_EXPIRES_HOURS": cfg.join_code_max_expires_hours,
+        "JOIN_CODE_MAX_USES_LIMIT": cfg.join_code_max_uses_limit,
+        "JOIN_CODE_REDEEM_MAX_ATTEMPTS": cfg.join_code_redeem_max_attempts,
+        "JOIN_CODE_REDEEM_WINDOW_SECONDS": cfg.join_code_redeem_window_seconds,
         "WS_MAX_MESSAGE_BYTES": cfg.ws_max_message_bytes,
         "WS_COMMANDS_PER_SECOND": cfg.ws_commands_per_second,
         "WS_BURST_COMMANDS": cfg.ws_burst_commands,
@@ -174,6 +180,15 @@ def _validate_config(cfg: "AppConfig") -> None:
     }
     for name, value in positive_values.items():
         _validate_positive_int(name, value)
+
+    if not (
+        cfg.join_code_min_expires_hours
+        <= cfg.join_code_default_expires_hours
+        <= cfg.join_code_max_expires_hours
+    ):
+        raise RuntimeError(
+            "JOIN_CODE_DEFAULT_EXPIRES_HOURS must be between the configured minimum and maximum"
+        )
 
     if cfg.scene_viewport_max_area_chunks > (
         cfg.scene_viewport_max_width_chunks * cfg.scene_viewport_max_height_chunks
@@ -273,6 +288,19 @@ class AppConfig:
 
     privacy_enabled: bool
 
+    campaign_join_code_enabled: bool
+    campaign_email_invitation_creation_enabled: bool
+    command_palette_enabled: bool
+    campaign_clone_enabled: bool
+    campaign_snapshots_enabled: bool
+    campaign_snapshot_retention: int
+    administrative_audit_enabled: bool
+    administrative_audit_retention_days: int
+    targeted_handouts_enabled: bool
+    lobby_ready_check_enabled: bool
+    campaign_export_enabled: bool
+    dynamic_lighting_enabled: bool
+
     auth_login_max_attempts: int
     auth_login_window_seconds: int
     auth_login_block_seconds: int
@@ -283,6 +311,13 @@ class AppConfig:
     auth_password_reset_max_attempts: int
     auth_password_reset_window_seconds: int
     auth_password_reset_token_ttl_seconds: int
+
+    join_code_default_expires_hours: int
+    join_code_min_expires_hours: int
+    join_code_max_expires_hours: int
+    join_code_max_uses_limit: int
+    join_code_redeem_max_attempts: int
+    join_code_redeem_window_seconds: int
 
     ws_max_message_bytes: int
     ws_commands_per_second: int
@@ -324,7 +359,7 @@ config = AppConfig(
     allowed_hosts=_allowed_hosts,
     trusted_proxies=_csv("TRUSTED_PROXIES"),
     ws_allowed_origins=_resolve_ws_allowed_origins(_allowed_hosts),
-    gravewright_version=env_str("GRAVEWRIGHT_VERSION", "2.1.0-alpha"),
+    gravewright_version=env_str("GRAVEWRIGHT_VERSION", "3.0.0-alpha"),
     data_dir=_resolve_data_dir(),
     database_url=_resolve_database_url(),
     allow_sqlite_in_production=env_bool("ALLOW_SQLITE_IN_PRODUCTION", False),
@@ -348,6 +383,20 @@ config = AppConfig(
     session_cookie_samesite=env_str("SESSION_COOKIE_SAMESITE", "lax").strip().lower() or "lax",
     session_cookie_domain=_session_domain or None,
     privacy_enabled=env_bool("PRIVACY_ENABLED", False),
+    campaign_join_code_enabled=env_bool("CAMPAIGN_JOIN_CODE_ENABLED", True),
+    campaign_email_invitation_creation_enabled=env_bool(
+        "CAMPAIGN_EMAIL_INVITATION_CREATION_ENABLED", True
+    ),
+    command_palette_enabled=env_bool("COMMAND_PALETTE_ENABLED", True),
+    campaign_clone_enabled=env_bool("CAMPAIGN_CLONE_ENABLED", True),
+    campaign_snapshots_enabled=env_bool("CAMPAIGN_SNAPSHOTS_ENABLED", True),
+    campaign_snapshot_retention=env_int("CAMPAIGN_SNAPSHOT_RETENTION", 20),
+    administrative_audit_enabled=env_bool("ADMINISTRATIVE_AUDIT_ENABLED", True),
+    administrative_audit_retention_days=env_int("ADMINISTRATIVE_AUDIT_RETENTION_DAYS", 180),
+    targeted_handouts_enabled=env_bool("TARGETED_HANDOUTS_ENABLED", True),
+    lobby_ready_check_enabled=env_bool("LOBBY_READY_CHECK_ENABLED", True),
+    campaign_export_enabled=env_bool("CAMPAIGN_EXPORT_ENABLED", True),
+    dynamic_lighting_enabled=env_bool("DYNAMIC_LIGHTING_ENABLED", True),
     auth_login_max_attempts=env_int("AUTH_LOGIN_MAX_ATTEMPTS", 8),
     auth_login_window_seconds=env_int("AUTH_LOGIN_WINDOW_SECONDS", 15 * 60),
     auth_login_block_seconds=env_int("AUTH_LOGIN_BLOCK_SECONDS", 15 * 60),
@@ -356,6 +405,12 @@ config = AppConfig(
     auth_password_reset_max_attempts=env_int("AUTH_PASSWORD_RESET_MAX_ATTEMPTS", 6),
     auth_password_reset_window_seconds=env_int("AUTH_PASSWORD_RESET_WINDOW_SECONDS", 30 * 60),
     auth_password_reset_token_ttl_seconds=env_int("AUTH_PASSWORD_RESET_TOKEN_TTL_SECONDS", 60 * 60),
+    join_code_default_expires_hours=env_int("JOIN_CODE_DEFAULT_EXPIRES_HOURS", 7 * 24),
+    join_code_min_expires_hours=env_int("JOIN_CODE_MIN_EXPIRES_HOURS", 1),
+    join_code_max_expires_hours=env_int("JOIN_CODE_MAX_EXPIRES_HOURS", 30 * 24),
+    join_code_max_uses_limit=env_int("JOIN_CODE_MAX_USES_LIMIT", 1000),
+    join_code_redeem_max_attempts=env_int("JOIN_CODE_REDEEM_MAX_ATTEMPTS", 10),
+    join_code_redeem_window_seconds=env_int("JOIN_CODE_REDEEM_WINDOW_SECONDS", 10 * 60),
     ws_max_message_bytes=env_int("WS_MAX_MESSAGE_BYTES", 64 * 1024),
     ws_commands_per_second=env_int("WS_COMMANDS_PER_SECOND", 20),
     ws_burst_commands=env_int("WS_BURST_COMMANDS", 40),

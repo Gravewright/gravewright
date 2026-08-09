@@ -28,6 +28,31 @@
             board.fogScene = new PIXI.Container();
             board.fogLayer.addChild(board.fogSprite, board.fogUiGfx);
 
+            board.lightingLayer = new PIXI.Container();
+
+
+
+            board.lightingSprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
+            board.lightingScene = new PIXI.Container();
+
+
+            board.lightingGlowGfx = new PIXI.Container();
+            board.lightingWallsGfx = new PIXI.Graphics();
+
+
+            board.lightingDoorLayer = new PIXI.Container();
+
+
+
+            board.lightingParticleGfx = new PIXI.Container();
+            board.lightingLayer.addChild(
+                board.lightingParticleGfx,
+                board.lightingSprite,
+                board.lightingGlowGfx,
+                board.lightingWallsGfx,
+                board.lightingDoorLayer,
+            );
+
             board.ghostWorldLayer.addChild(board.ghostsGfx);
             board.originWorldLayer.addChild(board.originGfx);
             board.worldLayer.addChild(
@@ -38,12 +63,24 @@
             );
             board.gridLayer.addChild(board.gridGfx, board.borderGfx);
 
-            
-            
+
+
+
+
+
+
+
+
+            board.effectsLayer = new PIXI.Container();
+
+
+
             board.app.stage.addChild(
                 board.worldLayer,
                 board.gridLayer,
                 board.tokenLabelLayer,
+                board.effectsLayer,
+                board.lightingLayer,
                 board.fogLayer,
             );
         },

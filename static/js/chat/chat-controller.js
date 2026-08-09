@@ -136,7 +136,8 @@
         if (!form) return;
 
         const roomId = getFormRoomId(form);
-        if (!roomId || !window.confirm(clearConfirmLabel())) return;
+        if (!roomId) return;
+        if (!(await window.GravewrightCore.dialog.confirm(clearConfirmLabel(), { variant: "danger" }))) return;
 
         try {
             await postChatAction(form, "/game/chat/clear", {
@@ -145,7 +146,7 @@
         } catch { }
     });
 
-    
+
     document.querySelectorAll(".chat-messages").forEach((list) => {
         list.scrollTop = list.scrollHeight;
     });

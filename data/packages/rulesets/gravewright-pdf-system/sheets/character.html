@@ -1,0 +1,129 @@
+<!--
+  Ficha do Gravewright PDF System (mode: "html").
+
+  O host carrega este arquivo, chama o controlador registrado e depois liga os
+  atributos que ele conhece: data-bind (valor <-> caminho), data-action (botão) e
+  data-text (caminho de DADO, não chave de tradução). Os rótulos são preenchidos
+  pelo controlador via sdk.i18n.t, porque o host não traduz atributos.
+
+  Os campos não estão aqui: quem os cria é o controlador, a partir do mapeamento,
+  já com data-bind — é o mapeamento que decide quais campos existem.
+-->
+<div class="pdf-sheet" data-pdf-sheet>
+  <!-- O host liga as abas sozinho: [role=tablist] com filhos [data-tab], e os
+       painéis irmãos com [data-tab-panel] de mesmo nome. -->
+  <nav class="pdf-sheet-tabs" role="tablist">
+    <button type="button" class="pdf-sheet-tab" data-tab="ficha" data-pdf-title="tabSheet">
+      <i class="ph ph-file-pdf" aria-hidden="true"></i><span data-pdf-tab-label="tabSheet"></span>
+    </button>
+    <button type="button" class="pdf-sheet-tab" data-tab="token" data-pdf-title="tabToken">
+      <i class="ph ph-user-focus" aria-hidden="true"></i><span data-pdf-tab-label="tabToken"></span>
+    </button>
+    <button type="button" class="pdf-sheet-tab" data-tab="notas" data-pdf-title="tabNotes">
+      <i class="ph ph-notebook" aria-hidden="true"></i><span data-pdf-tab-label="tabNotes"></span>
+    </button>
+  </nav>
+
+  <section class="pdf-sheet-panel" data-tab-panel="ficha">
+  <header class="pdf-sheet-bar">
+    <div class="pdf-sheet-bar-group">
+      <button type="button" class="pdf-sheet-btn" data-action="pdf:prev-page" data-pdf-title="prevPage">
+        <i class="ph ph-arrow-left" aria-hidden="true"></i>
+      </button>
+      <span class="pdf-sheet-page" data-pdf-page-label>—</span>
+      <button type="button" class="pdf-sheet-btn" data-action="pdf:next-page" data-pdf-title="nextPage">
+        <i class="ph ph-arrow-right" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="pdf-sheet-bar-group">
+      <button type="button" class="pdf-sheet-btn" data-action="pdf:zoom-out" data-pdf-title="zoomOut">
+        <i class="ph ph-magnifying-glass-minus" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="pdf-sheet-btn" data-action="pdf:zoom-in" data-pdf-title="zoomIn">
+        <i class="ph ph-magnifying-glass-plus" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="pdf-sheet-btn" data-action="pdf:fit" data-pdf-title="fitPage">
+        <i class="ph ph-corners-in" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="pdf-sheet-btn" data-action="pdf:spread" data-pdf-title="spread"
+              aria-pressed="false">
+        <i class="ph ph-book-open" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <div class="pdf-sheet-bar-group pdf-sheet-bar-group--end">
+      <span class="pdf-sheet-status" data-pdf-status role="status" aria-live="polite"></span>
+      <div class="pdf-sheet-picker-wrap">
+        <button type="button" class="pdf-sheet-btn" data-action="pdf:choose"
+                data-pdf-title="chooseTemplate" aria-expanded="false" aria-haspopup="listbox">
+          <i class="ph ph-file-pdf" aria-hidden="true"></i>
+        </button>
+        <!-- O controlador preenche com um item por template do mapeamento. -->
+        <div class="pdf-sheet-picker" data-pdf-picker role="listbox" hidden></div>
+      </div>
+      <button type="button" class="pdf-sheet-btn" data-action="pdf:download" data-pdf-title="download">
+        <i class="ph ph-download-simple" aria-hidden="true"></i>
+      </button>
+    </div>
+  </header>
+
+  <section class="pdf-sheet-stage" data-pdf-stage>
+    <div class="pdf-sheet-empty" data-pdf-empty hidden>
+      <p data-pdf-empty-text></p>
+    </div>
+
+    <!-- Os dois precisam do MESMO referencial: as coordenadas dos campos vêm do
+         canvas, então a camada tem de estar sobre ele, não sobre o palco. Como o
+         canvas é centralizado, alinhar pelo palco desloca todo campo na
+         horizontal e desgruda ao rolar. -->
+    <div class="pdf-sheet-doc">
+      <div class="pdf-sheet-page-host" data-pdf-page-host></div>
+      <div class="pdf-sheet-fields" data-pdf-fields></div>
+    </div>
+  </section>
+  </section>
+
+  <section class="pdf-sheet-panel pdf-sheet-panel--form" data-tab-panel="token" hidden>
+    <div class="pdf-sheet-field-group">
+      <h3 data-pdf-heading="tokenImage"></h3>
+      <p class="pdf-sheet-hint" data-pdf-hint="tokenImage"></p>
+      <!-- O host injeta aqui o mesmo quadro de upload da ficha nativa. -->
+      <div class="pdf-sheet-image-slot" data-actor-image="token"></div>
+    </div>
+
+    <div class="pdf-sheet-field-group">
+      <h3 data-pdf-heading="textColor"></h3>
+      <p class="pdf-sheet-hint" data-pdf-hint="textColor"></p>
+      <label class="pdf-sheet-bar-row">
+        <span data-pdf-heading="textColorLabel"></span>
+        <input type="color" class="pdf-sheet-color" data-bind="system.pdf.textColor" />
+      </label>
+    </div>
+
+    <div class="pdf-sheet-field-group">
+      <h3 data-pdf-heading="bars"></h3>
+      <p class="pdf-sheet-hint" data-pdf-hint="bars"></p>
+      <!-- O controlador preenche as opções com os campos do PDF aberto. -->
+      <div class="pdf-sheet-bar-map" data-pdf-bar-map></div>
+    </div>
+  </section>
+
+  <section class="pdf-sheet-panel pdf-sheet-panel--form" data-tab-panel="notas" hidden>
+    <!-- data-rich-editor monta o mesmo editor de blocos dos diários (GWBlockEditor).
+         O host cuida de montar, desmontar e gravar no blur; aqui só se declara o
+         caminho do dado. -->
+    <div class="pdf-sheet-field-group">
+      <h3 data-pdf-heading="biography"></h3>
+      <div class="pdf-sheet-rich" data-rich-editor="system.bio"></div>
+    </div>
+    <div class="pdf-sheet-field-group">
+      <h3 data-pdf-heading="history"></h3>
+      <div class="pdf-sheet-rich" data-rich-editor="system.history"></div>
+    </div>
+    <div class="pdf-sheet-field-group">
+      <h3 data-pdf-heading="notes"></h3>
+      <div class="pdf-sheet-rich" data-rich-editor="system.notes"></div>
+    </div>
+  </section>
+</div>

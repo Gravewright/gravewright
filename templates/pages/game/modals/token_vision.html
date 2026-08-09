@@ -1,0 +1,37 @@
+<article class="game-modal-window dialog-modal token-vision-modal" data-modal-window
+    data-modal-id="token-vision-{{ room.id }}" data-window-key="token-vision-{{ room.id }}" hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+        <span class="game-panel-title">{{ t("game.token.vision.title") }}</span>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('lighting.editor.close') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+    <div class="game-modal-body token-vision-panel" data-token-vision-panel data-room-id="{{ room.id }}">
+        <p class="token-vision-subject" data-token-vision-name></p>
+        <div class="game-notice" data-token-vision-notice role="status" hidden>
+            {{ t("game.token.vision.needs_darkness") }}
+        </div>
+        <label class="scene-check">
+            <input type="checkbox" name="vision_enabled" data-vision-field="vision_enabled" />
+            <span>{{ t("game.token.vision.enabled") }}</span>
+        </label>
+        <label class="game-field">
+            <span>{{ t("game.token.vision.range") }}</span>
+            <span class="slider-row">
+                <input type="range" name="vision_range" min="0" max="60" step="1" value="0"
+                       data-vision-field="vision_range" data-limit-target="vision_range"
+                       data-limit-default="8" />
+                <output data-vision-output>{{ t("game.token.vision.unlimited") }}</output>
+            </span>
+        </label>
+        <label class="scene-check limit-check">
+            <input type="checkbox" data-limit-for="vision_range" />
+            <span>{{ t("lighting.editor.unlimited") }}</span>
+        </label>
+        <small class="scene-field-hint">{{ t("game.token.vision.hint") }}</small>
+    </div>
+</article>

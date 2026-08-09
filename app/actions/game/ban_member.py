@@ -36,8 +36,8 @@ async def ban_member(
     user = current_user
     json_response = wants_json(request)
 
-    # Offload the synchronous DB transaction to a worker thread so it does not
-    # block the event loop; the realtime broadcast below stays on the loop.
+
+
     result = await run_blocking(
         campaign_service.ban_member,
         campaign_id=data.campaign_id,

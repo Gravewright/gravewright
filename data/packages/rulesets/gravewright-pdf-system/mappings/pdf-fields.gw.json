@@ -1,0 +1,41 @@
+{
+  "$comment": "Campo do PDF -> caminho no dado da ficha. É este arquivo que faz um PDF virar dado: sem ele os valores ficariam presos dentro do arquivo, ilegíveis para rolagem, barra de token e combate. Um template por entrada de 'templates'.",
+  "version": 1,
+  "templates": {
+    "generic": {
+      "label": "Blank A4 sheet",
+      "file": "assets/sheets/blank-a4.pdf",
+      "fields": {
+        "CharacterName": {
+          "path": "core.name",
+          "type": "string"
+        },
+        "HP": {
+          "path": "sheet.bars.bar_1.value",
+          "type": "number"
+        },
+        "HPMax": {
+          "path": "sheet.bars.bar_1.max",
+          "type": "number"
+        },
+        "AC": {
+          "path": "sheet.ac",
+          "type": "number"
+        },
+        "Initiative": {
+          "path": "sheet.init",
+          "type": "number"
+        },
+        "Notes": {
+          "path": "sheet.fields.notes",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$rules": {
+    "path": "Caminho pontilhado. 'core.*' é o registro do ator (nome, retrato). 'sheet.*' é o dado do sistema, gravado por sheet.data.patch.",
+    "type": "string | number | boolean. Decide a coerção antes de gravar; um campo de PDF sempre chega como texto.",
+    "unmapped": "Campo do PDF sem entrada aqui cai em sheet.fields.<nome> e continua funcionando — só não é endereçável por regra."
+  }
+}

@@ -280,9 +280,14 @@ Token mappings tell the table which actor fields drive token UI:
   "character": {
     "name": "core.name",
     "bars": {
-      "hp": {
+      "bar_1": {
         "value": "sheet.hp.value",
         "max": "sheet.hp.max"
+      },
+      "bar_2": {
+        "value": "sheet.stress.value",
+        "max": "sheet.stress.max",
+        "color": "#a020f0"
       }
     },
     "initiative": "sheet.init",
@@ -290,6 +295,20 @@ Token mappings tell the table which actor fields drive token UI:
   }
 }
 ```
+
+A token draws exactly two bars: **`bar_1` under it and `bar_2` above it**. The
+slots are positions, not meanings — point them at whatever the game tracks, be
+it hit points, stress, ammunition or a countdown. The core resolves the paths
+and draws the ratio; it never reads the numbers as health.
+
+| Key | Meaning |
+| --- | --- |
+| `value` | Dotted sheet path. A slot whose value does not resolve is not drawn. |
+| `max` | Dotted sheet path. Defaults to `value`, so a bar with no maximum reads full. |
+| `color` | A literal hex, never a path. Defaults to green for `bar_1` and blue for `bar_2`. |
+
+Mapping only one slot is normal: the other simply is not drawn. A pre-slot
+mapping that named its single bar `hp` is still read as `bar_1`.
 
 ## Locales
 

@@ -1,6 +1,6 @@
 (() => {
-    // Generic transport/status messages (from the central HTTP client's
-    // errorKey) so a network or server failure is never shown as a form error.
+
+
     const GENERIC_MESSAGES = {
         "http.errors.network": "Network error. Check your connection and try again.",
         "http.errors.forbidden": "You don't have permission to do that.",
@@ -44,17 +44,17 @@
             return;
         }
 
-        // The central client never throws on network/non-JSON responses: it
-        // returns a normalized result with a canonical errorKey. This is what
-        // lets us tell a transport/server failure apart from a form validation
-        // error (previously any failure was mis-shown as "invalid email").
+
+
+
+
         const result = await http.postForm(form.action, new FormData(form), {
             headers: { "X-Requested-With": "XMLHttpRequest" },
         });
 
         if (!result.ok) {
-            // Network (status 0), 401/403/409/429, or 5xx — or a validation
-            // error_key carried in the JSON body (preferred by the client).
+
+
             showNotice("error", getMessageForKey(result.errorKey));
             return;
         }
@@ -78,9 +78,9 @@
 
         event.preventDefault();
 
-        // Safety net only — submitInvitationForm handles transport failures
-        // itself, so an unexpected error is a generic request failure, never a
-        // form-validation message.
+
+
+
         submitInvitationForm(form).catch(() => {
             showNotice("error", getMessageForKey("http.errors.request"));
         });

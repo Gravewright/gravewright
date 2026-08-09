@@ -108,6 +108,7 @@ class TokenService:
 
         projections = {a["id"]: self.projector.project(a) for a in actors}
         actors_by_id = {a["id"]: a for a in actors}
+        owners_by_actor = self._owner_ids_by_actor(campaign_id)
         actor_id_counts = {aid: actor_ids.count(aid) for aid in set(actor_ids)}
         actor_existing_tokens = {aid: self.tokens.list_by_actor(aid) for aid in actor_id_counts}
 
@@ -135,6 +136,7 @@ class TokenService:
                             token=promoted,
                             projection=projection,
                             actor=actor,
+                            owner_user_ids=owners_by_actor.get(actor["id"], []),
                         )
                     )
 
@@ -182,6 +184,7 @@ class TokenService:
                 token=t,
                 projection=projections.get(t.get("actor_id") or ""),
                 actor=actors_by_id.get(t.get("actor_id") or ""),
+                owner_user_ids=owners_by_actor.get(t.get("actor_id") or "", []),
             )
             for t in created
         ]
@@ -385,6 +388,75 @@ class TokenService:
                 },
                 token=updated,
                 transport=transport,
+            )
+
+        return TokenResult(success=True, token=updated)
+
+    async def set_vision(
+        self,
+        *,
+        campaign_id: str,
+        scene_id: str,
+        token_id: str,
+        vision_enabled: bool,
+        vision_range: float,
+        user_id: str,
+        expected_version: int | None = None,
+        transport: RealtimeGatewayContract | None = None,
+    ) -> TokenResult:
+        """Ajusta a visao do token. Reusa a permissao de visibilidade: quem decide o
+        que os jogadores enxergam ja e quem decide o que o token enxerga."""
+        scene, token = await run_blocking(
+            self._get_token_in_campaign,
+            campaign_id=campaign_id,
+            scene_id=scene_id,
+            token_id=token_id,
+        )
+        if scene is None:
+            return TokenResult(success=False, error_key="tokens.errors.scene_not_found")
+        if token is None:
+            return TokenResult(success=False, error_key="tokens.errors.not_found")
+
+        if not await run_blocking(
+            self._authorize_token_management,
+            token=token,
+            user_id=user_id,
+            campaign_id=campaign_id,
+            permission=TablePermission.TOKEN_VISIBILITY,
+        ):
+            return TokenResult(success=False, error_key="tokens.errors.permission_denied")
+
+        updated = await run_blocking(
+            self.tokens.set_vision,
+            token_id=token_id,
+            vision_enabled=vision_enabled,
+            vision_range=max(0.0, float(vision_range)),
+            expected_version=expected_version,
+        )
+        if updated is None:
+            return TokenResult(
+                success=False, token=token, error_key="tokens.errors.version_conflict"
+            )
+
+        if transport is not None:
+            await self._emit_token_event_to_viewers(
+                campaign_id=campaign_id,
+                event=TransportEvent.TOKENS_UPDATED,
+                payload={
+                    "room_id": campaign_id,
+                    "scene_id": scene_id,
+                    "tokens": [
+                        {
+                            "token_id": token_id,
+                            "vision_enabled": bool(updated["vision_enabled"]),
+                            "vision_range": float(updated["vision_range"]),
+                            "version": updated["version"],
+                        }
+                    ],
+                },
+                token=updated,
+                transport=transport,
+                include_hidden_players=True,
             )
 
         return TokenResult(success=True, token=updated)
@@ -608,6 +680,12 @@ class TokenService:
 
         return TokenResult(success=True)
 
+    def _owner_ids_by_actor(self, campaign_id: str) -> dict[str, list[str]]:
+        """Posse dos atores da campanha, achatada em ids: e o que diz a cada jogador
+        quais tokens sao dele — e portanto de onde ele enxerga."""
+        owners = self.actors.list_owners_for_campaign_actors(campaign_id=campaign_id)
+        return {actor_id: [owner["id"] for owner in people] for actor_id, people in owners.items()}
+
     def get_snapshot(
         self,
         *,
@@ -651,6 +729,7 @@ class TokenService:
             actors_by_id=actors_by_id,
             conditions_by_token_id=conditions_by_token,
             is_gm=is_gm,
+            owners_by_actor_id=self._owner_ids_by_actor(campaign_id),
         )
 
         return TokenResult(success=True, tokens=token_views)
@@ -696,10 +775,10 @@ class TokenService:
         transport: RealtimeGatewayContract,
         include_hidden_players: bool = False,
     ) -> None:
-        # Coalesced: GMs/assistant-GMs and streamers always see the event;
-        # plain players see it unless the token is hidden. A single delivery to
-        # that audience replaces the previous three broadcasts (3 recipient
-        # queries + 3 event-log writes -> 1 of each).
+
+
+
+
         include_players = include_hidden_players or not token.get("hidden")
         await transport.to_token_audience(
             room_id=campaign_id,

@@ -107,13 +107,18 @@ is not the supported upgrade mechanism — always evolve real data with
 1. Register a local user.
 2. Open `/inside`.
 3. Create a campaign.
-4. Check package availability:
+4. Open the campaign and use **Entry code** in Settings to generate a code for
+   players. Share either the code or `/join/<code>`; players can enter it from
+   Inside without sharing an email address. The full code is shown only once.
+   Email invitations remain visible as a legacy compatibility flow during the
+   transition release.
+5. Check package availability:
 
    ```bash
    ./grave package list
    ```
 
-5. Install and enable a ruleset package if needed:
+6. Install and enable a ruleset package if needed:
 
    ```bash
    ./grave package install <ruleset-id> --yes --enable
@@ -124,10 +129,10 @@ is not the supported upgrade mechanism — always evolve real data with
    overwrite a package with the same id. Uploaded packages are installed; enable
    them from the same screen.
 
-6. Assign the ruleset to the campaign from the UI or package activation flow.
-7. Open the campaign table.
-8. Upload a map from the Scenes panel.
-9. Create actors, items, journals, and tokens.
+7. Assign the ruleset to the campaign from the UI or package activation flow.
+8. Open the campaign table.
+9. Upload a map from the Scenes panel.
+10. Create actors, items, journals, and tokens.
 
 ## Back Up Before Updating
 

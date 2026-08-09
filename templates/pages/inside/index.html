@@ -8,11 +8,20 @@
     <title>{{ app_name }} - Inside</title>
 
     <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="/static/css/tokens.css" />
+    <link rel="stylesheet" href="/static/css/dialog.css" />
     <link rel="stylesheet" href="/static/css/inside.css" />
     <script defer src="/static/js/csrf.js"></script>
+    <script defer src="/static/js/core/csrf.js"></script>
+    <script defer src="/static/js/core/http.js"></script>
+    <script defer src="/static/js/core/dialog.js"></script>
     <script defer src="/static/js/inside/inside-invitations.js?v=20260525-no-polling"></script>
     <script defer src="/static/js/inside/inside-admin.js"></script>
     <script defer src="/static/js/inside/inside-ajax.js?v=20260607-inside-ajax"></script>
+    {% if campaign_join_code_enabled %}<script defer src="/static/js/inside/inside-join-code.js?v={{ asset_version }}"></script>{% endif %}
+    {% if campaign_clone_enabled %}<script defer src="/static/js/inside/campaign-clone.js?v={{ asset_version }}"></script>{% endif %}
+    {% if administrative_audit_enabled %}<script defer src="/static/js/inside/audit-log.js?v={{ asset_version }}"></script>{% endif %}
+    {% if campaign_snapshots_enabled %}<script defer src="/static/js/inside/campaign-snapshots.js?v={{ asset_version }}"></script>{% endif %}
     <script defer src="/static/js/inside/package-upload.js"></script>
 </head>
 
@@ -29,7 +38,19 @@
     data-campaign-systemless-label="{{ t('inside.campaigns.systemless') }}"
     data-campaign-member-role-template="{{ t('inside.campaigns.member_role', role='{role}') }}"
     data-role-gm="{{ t('roles.campaign.gm') }}" data-role-assistant-gm="{{ t('roles.campaign.assistant_gm') }}"
-    data-role-player="{{ t('roles.campaign.player') }}" data-role-streamer="{{ t('roles.campaign.streamer') }}">
+    data-role-player="{{ t('roles.campaign.player') }}" data-role-streamer="{{ t('roles.campaign.streamer') }}"
+    data-join-code-unavailable="{{ t('campaign.join_code.errors.unavailable') }}"
+    data-join-code-rate-limited="{{ t('http.errors.rate_limited') }}"
+    data-join-code-network="{{ t('http.errors.network') }}"
+    data-join-code-session="{{ t('auth.errors.session_expired') }}"
+    data-join-code-request-error="{{ t('inside.join_code.errors.request') }}"
+    data-clone-preview="{{ t('campaign.clone.preview_summary') }}"
+    data-clone-error="{{ t('campaign.clone.errors.failed') }}"
+    data-clone-packages="{{ t('campaign.clone.options.packages') }}"
+    data-clone-scenes="{{ t('campaign.clone.options.scenes') }}"
+    data-clone-actors="{{ t('campaign.clone.options.actors') }}"
+    data-clone-items="{{ t('campaign.clone.options.items') }}"
+    data-clone-journals="{{ t('campaign.clone.options.journals') }}" data-dialog-confirm-label="{{ t('dialog.confirm') }}" data-dialog-cancel-label="{{ t('dialog.cancel') }}">
     <main class="inside-page">
         <section class="inside-content">
             <input class="nav-control" type="radio" name="inside-section" id="section-campaigns" checked />
@@ -85,6 +106,38 @@
                         <div class="notice" role="status">
                             {{ t(invitation_message_key) }}
                         </div>
+                        {% endif %}
+
+                        {% if campaign_join_code_enabled %}
+                        <section class="join-campaign-block" data-inside-join-code>
+                            <div class="invitation-block-head">
+                                <p class="panel-eyebrow">{{ t("inside.join_code.title") }}</p>
+                                <p>{{ t("inside.join_code.description") }}</p>
+                            </div>
+                            <div class="notice" data-inside-join-code-notice role="status" aria-live="polite"
+                                hidden></div>
+                            {% if has_pending_join_code %}
+                            <div class="join-code-pending" data-inside-pending-code>
+                                <p>{{ t("inside.join_code.pending") }}</p>
+                                <button class="primary-action" type="button" data-inside-redeem-pending>
+                                    {{ t("inside.join_code.confirm") }}
+                                </button>
+                            </div>
+                            {% endif %}
+                            <form class="join-code-entry-form" data-inside-join-code-form
+                                action="/campaigns/join-code/redeem" method="post">
+                                {{ csrf_input | safe }}
+                                <label class="field">
+                                    <span>{{ t("inside.join_code.code_label") }}</span>
+                                    <input type="text" name="code" inputmode="text" autocomplete="off"
+                                        autocapitalize="characters" spellcheck="false" maxlength="32"
+                                        placeholder="ABCD-EFGH-JK23" required data-inside-join-code-input />
+                                </label>
+                                <button class="primary-action" type="submit">
+                                    {{ t("inside.join_code.submit") }}
+                                </button>
+                            </form>
+                        </section>
                         {% endif %}
 
                         <section id="pending-invitations-section" class="invitation-block" {% if not pending_invitations
@@ -193,56 +246,282 @@
                                         </div>
 
                                         {% if campaign.member_role == "gm" or user.is_owner %}
-                                        <div class="campaign-card-footer">
-                                            {% if campaign.member_role == "gm" %}
-                                            <details class="campaign-details">
-                                                <summary>{{ t("inside.campaigns.edit") }}</summary>
-
-                                                <form class="campaign-edit-form" method="post"
-                                                    action="/campaigns/update">
-                                                    {{ csrf_input | safe }}
-                                                    <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
-
-                                                    <label class="field">
-                                                        <span>{{ t("inside.campaigns.form.title") }}</span>
-                                                        <input type="text" name="title" value="{{ campaign.title }}"
-                                                            maxlength="120" required />
-                                                    </label>
-
-                                                    <label class="field">
-                                                        <span>{{ t("inside.campaigns.form.description") }}</span>
-                                                        <textarea name="description"
-                                                            maxlength="2000">{{ campaign.description }}</textarea>
-                                                    </label>
-
-                                                    <button class="primary-action" type="submit">
-                                                        {{ t("inside.campaigns.save") }}
-                                                    </button>
-                                                </form>
-                                            </details>
-
-                                            {% set active_package_count = campaign.available_packages | selectattr("active") | list | length %}
-                                            <button class="campaign-package-trigger" type="button"
-                                                data-inside-modal-open="campaign-packages-{{ campaign.id }}">
-                                                <span>{{ t("inside.campaigns.packages") }}</span>
-                                                <small>{{ active_package_count }}/{{ campaign.available_packages | length }}</small>
-                                            </button>
-                                            {% endif %}
-
-                                            <form class="campaign-delete-form" method="post"
-                                                action="/campaigns/request-delete">
-                                                {{ csrf_input | safe }}
-                                                <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
-                                                <button class="campaign-delete-link" type="submit">
-                                                    {{ t("inside.campaigns.delete") }}
-                                                </button>
-                                            </form>
-                                        </div>
+                                            <div class="campaign-card-footer">
+                                                <details class="campaign-manage">
+                                                    <summary>{{ t("inside.campaigns.manage") }}</summary>
+                                                    <div class="campaign-manage-menu">
+                                                        {% if campaign.member_role == "gm" %}
+                                                        <button class="manage-tool" type="button" data-inside-modal-open="campaign-edit-{{ campaign.id }}">{{ t("inside.campaigns.edit") }}</button>
+                                                        {% if campaign_clone_enabled %}
+                                                        <button class="manage-tool" type="button" data-inside-modal-open="campaign-clone-{{ campaign.id }}">{{ t("campaign.clone.title") }}</button>
+                                                        {% endif %}
+                                                        {% if campaign_export_enabled %}
+                                                        <button class="manage-tool" type="button" data-inside-modal-open="campaign-export-{{ campaign.id }}">{{ t("campaign.export.title") }}</button>
+                                                        {% endif %}
+                                                        {% if campaign_snapshots_enabled %}
+                                                        <button class="manage-tool" type="button" data-inside-modal-open="campaign-snapshots-{{ campaign.id }}">{{ t("campaign.snapshot.title") }}</button>
+                                                        {% endif %}
+                                                        {% if administrative_audit_enabled %}
+                                                        <button class="manage-tool" type="button" data-inside-modal-open="campaign-audit-{{ campaign.id }}">{{ t("audit.title") }}</button>
+                                                        {% endif %}
+                                                        {% set active_package_count = campaign.available_packages | selectattr("active") | list | length %}
+                                                        <button class="manage-tool" type="button" data-inside-modal-open="campaign-packages-{{ campaign.id }}">
+                                                            {{ t("inside.campaigns.packages") }} <small>{{ active_package_count }}/{{ campaign.available_packages | length }}</small>
+                                                        </button>
+                                                        {% endif %}
+                                                        <form class="campaign-delete-form" method="post" action="/campaigns/request-delete">
+                                                            {{ csrf_input | safe }}
+                                                            <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                            <button class="manage-tool manage-tool--danger" type="submit">{{ t("inside.campaigns.delete") }}</button>
+                                                        </form>
+                                                    </div>
+                                                </details>
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </article>
 
                                 {% if campaign.member_role == "gm" %}
+                                <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-edit-{{ campaign.id }}"
+                                    role="presentation" hidden>
+                                    <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                        aria-labelledby="edit-title-{{ campaign.id }}">
+                                        <div class="delete-modal-header">
+                                            <div>
+                                                <p class="panel-eyebrow">{{ t("inside.campaigns.edit") }}</p>
+                                                <h2 id="edit-title-{{ campaign.id }}">{{ campaign.title }}</h2>
+                                            </div>
+                                            <button class="modal-close" type="button" data-inside-modal-close
+                                                aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                        </div>
+                                        <div class="campaign-tool-body">
+
+                                            <form class="campaign-edit-form" method="post"
+                                                action="/campaigns/update">
+                                                {{ csrf_input | safe }}
+                                                <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+
+                                                <label class="field">
+                                                    <span>{{ t("inside.campaigns.form.title") }}</span>
+                                                    <input type="text" name="title" value="{{ campaign.title }}"
+                                                        maxlength="120" required />
+                                                </label>
+
+                                                <label class="field">
+                                                    <span>{{ t("inside.campaigns.form.description") }}</span>
+                                                    <textarea name="description"
+                                                        maxlength="2000">{{ campaign.description }}</textarea>
+                                                </label>
+
+                                                <button class="primary-action" type="submit">
+                                                    {{ t("inside.campaigns.save") }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </section>
+                                </div>
+
+                                {% if campaign_clone_enabled %}
+                                <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-clone-{{ campaign.id }}"
+                                    role="presentation" hidden>
+                                    <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                        aria-labelledby="clone-title-{{ campaign.id }}">
+                                        <div class="delete-modal-header">
+                                            <div>
+                                                <p class="panel-eyebrow">{{ t("campaign.clone.title") }}</p>
+                                                <h2 id="clone-title-{{ campaign.id }}">{{ campaign.title }}</h2>
+                                            </div>
+                                            <button class="modal-close" type="button" data-inside-modal-close
+                                                aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                        </div>
+                                        <div class="campaign-tool-body">
+                                            <form class="campaign-clone-form" method="post" action="/campaigns/clone"
+                                                data-campaign-clone-form>
+                                                {{ csrf_input | safe }}
+                                                <input type="hidden" name="source_campaign_id" value="{{ campaign.id }}" />
+                                                <label class="field">
+                                                    <span>{{ t("campaign.clone.new_title") }}</span>
+                                                    <input type="text" name="title"
+                                                        value="{{ t('campaign.clone.default_title', title=campaign.title) }}"
+                                                        maxlength="120" required />
+                                                </label>
+                                                <fieldset class="campaign-clone-options">
+                                                    <legend>{{ t("campaign.clone.copy") }}</legend>
+                                                    {% for option in ["packages", "scenes", "actors", "items", "journals", "settings"] %}
+                                                    <label><input type="checkbox" name="{{ option }}" value="true" checked />
+                                                        <span>{{ t("campaign.clone.options." ~ option) }}</span></label>
+                                                    {% endfor %}
+                                                </fieldset>
+                                                <p class="campaign-clone-warning">{{ t("campaign.clone.assets_warning") }}</p>
+                                                <div class="campaign-clone-preview" data-campaign-clone-preview
+                                                    aria-live="polite" hidden></div>
+                                                <div class="campaign-clone-actions">
+                                                    <button class="secondary-action" type="button" data-campaign-clone-dry-run>
+                                                        {{ t("campaign.clone.preview") }}
+                                                    </button>
+                                                    <button class="primary-action" type="submit">
+                                                        {{ t("campaign.clone.submit") }}
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </section>
+                                </div>
+                                {% endif %}
+
+                                {% if campaign_export_enabled %}
+                                <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-export-{{ campaign.id }}"
+                                    role="presentation" hidden>
+                                    <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                        aria-labelledby="export-title-{{ campaign.id }}">
+                                        <div class="delete-modal-header">
+                                            <div>
+                                                <p class="panel-eyebrow">{{ t("campaign.export.title") }}</p>
+                                                <h2 id="export-title-{{ campaign.id }}">{{ campaign.title }}</h2>
+                                            </div>
+                                            <button class="modal-close" type="button" data-inside-modal-close
+                                                aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                        </div>
+                                        <div class="campaign-tool-body">
+                                            <form method="post" action="/campaigns/export">
+                                                {{ csrf_input | safe }}
+                                                <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                <fieldset class="campaign-clone-options">
+                                                    <legend>{{ t("campaign.export.include") }}</legend>
+                                                    {% for option in ["packages", "scenes", "actors", "items", "journals", "settings"] %}
+                                                    <label><input type="checkbox" name="{{ option }}" value="true" checked />
+                                                        <span>{{ t("campaign.clone.options." ~ option) }}</span></label>
+                                                    {% endfor %}
+                                                </fieldset>
+                                                <p class="campaign-clone-warning">{{ t("campaign.export.security_note") }}</p>
+                                                <button class="primary-action" type="submit">
+                                                    {{ t("campaign.export.download") }}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </section>
+                                </div>
+                                {% endif %}
+
+                                {% if campaign_snapshots_enabled %}
+                                <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-snapshots-{{ campaign.id }}"
+                                    role="presentation" hidden>
+                                    <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                        aria-labelledby="snapshots-title-{{ campaign.id }}">
+                                        <div class="delete-modal-header">
+                                            <div>
+                                                <p class="panel-eyebrow">{{ t("campaign.snapshot.title") }}</p>
+                                                <h2 id="snapshots-title-{{ campaign.id }}">{{ campaign.title }}</h2>
+                                            </div>
+                                            <button class="modal-close" type="button" data-inside-modal-close
+                                                aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                        </div>
+                                        <div class="campaign-tool-body">
+                                            <form class="campaign-snapshot-create" method="post" action="/campaigns/snapshots">
+                                                {{ csrf_input | safe }}
+                                                <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                <label class="field"><span>{{ t("campaign.snapshot.name") }}</span>
+                                                    <input name="name" maxlength="120" required /></label>
+                                                <label class="field"><span>{{ t("campaign.snapshot.description") }}</span>
+                                                    <textarea name="description" maxlength="1000"></textarea></label>
+                                                <button class="primary-action" type="submit">{{ t("campaign.snapshot.create") }}</button>
+                                            </form>
+                                            <p class="campaign-clone-warning">{{ t("campaign.snapshot.scope_warning") }}</p>
+                                            {% if campaign.snapshots %}
+                                            <div class="campaign-snapshot-list">
+                                                {% for snapshot in campaign.snapshots %}
+                                                <article class="campaign-snapshot-item" data-snapshot-item>
+                                                    <div class="snapshot-head">
+                                                        <strong>{{ snapshot.name }}</strong>
+                                                        <span class="snapshot-kind snapshot-kind--{{ snapshot.kind }}">{{ t("campaign.snapshot.kind." ~ snapshot.kind) }}</span>
+                                                    </div>
+                                                    <time class="snapshot-when" data-snapshot-time="{{ snapshot.created_at }}"></time>
+                                                    {% if snapshot.description %}<p class="snapshot-note">{{ snapshot.description }}</p>{% endif %}
+
+                                                    <div class="snapshot-actions">
+                                                        <button class="secondary-action" type="button"
+                                                            data-snapshot-ask="restore">{{ t("campaign.snapshot.restore_intent") }}</button>
+                                                        <button class="campaign-delete-link" type="button"
+                                                            data-snapshot-ask="delete">{{ t("campaign.snapshot.delete_intent") }}</button>
+                                                    </div>
+
+                                                    <form class="snapshot-confirm" method="post" action="/campaigns/snapshots/restore"
+                                                        data-snapshot-confirm="restore" hidden>
+                                                        {{ csrf_input | safe }}
+                                                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                        <input type="hidden" name="snapshot_id" value="{{ snapshot.id }}" />
+                                                        <input type="hidden" name="confirm" value="RESTORE" />
+                                                        <p class="snapshot-explain">{{ t("campaign.snapshot.restore_explain") }}</p>
+                                                        <div class="snapshot-confirm-actions">
+                                                            <button class="primary-action" type="submit">{{ t("campaign.snapshot.restore") }}</button>
+                                                            <button class="secondary-action" type="button" data-snapshot-cancel>{{ t("campaign.snapshot.cancel") }}</button>
+                                                        </div>
+                                                    </form>
+
+                                                    <form class="snapshot-confirm" method="post" action="/campaigns/snapshots/delete"
+                                                        data-snapshot-confirm="delete" hidden>
+                                                        {{ csrf_input | safe }}
+                                                        <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
+                                                        <input type="hidden" name="snapshot_id" value="{{ snapshot.id }}" />
+                                                        <input type="hidden" name="confirm" value="DELETE" />
+                                                        <p class="snapshot-explain">{{ t("campaign.snapshot.delete_explain") }}</p>
+                                                        <div class="snapshot-confirm-actions">
+                                                            <button class="campaign-delete-link" type="submit">{{ t("campaign.snapshot.delete") }}</button>
+                                                            <button class="secondary-action" type="button" data-snapshot-cancel>{{ t("campaign.snapshot.cancel") }}</button>
+                                                        </div>
+                                                    </form>
+                                                </article>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}<p>{{ t("campaign.snapshot.empty") }}</p>{% endif %}
+                                        </div>
+                                    </section>
+                                </div>
+                                {% endif %}
+
+                                {% if administrative_audit_enabled %}
+                                <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-audit-{{ campaign.id }}"
+                                    role="presentation" hidden>
+                                    <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                        aria-labelledby="audit-title-{{ campaign.id }}"
+                                        data-audit-panel data-campaign-id="{{ campaign.id }}"
+                                        data-error="{{ t('audit.errors.failed') }}"
+                                        data-empty="{{ t('audit.empty') }}">
+                                        <div class="delete-modal-header">
+                                            <div>
+                                                <p class="panel-eyebrow">{{ t("audit.title") }}</p>
+                                                <h2 id="audit-title-{{ campaign.id }}">{{ campaign.title }}</h2>
+                                            </div>
+                                            <button class="modal-close" type="button" data-inside-modal-close
+                                                aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                        </div>
+                                        <div class="campaign-tool-body">
+                                            <div class="audit-log-controls">
+                                                <label class="field"><span>{{ t("audit.filter") }}</span>
+                                                    <select data-audit-filter>
+                                                        <option value="">{{ t("audit.all_events") }}</option>
+                                                        {% for event_type in audit_event_types %}
+                                                        <option value="{{ event_type }}">{{ t("audit.event." ~ event_type) }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </label>
+                                                <button class="secondary-action" type="button" data-audit-refresh>{{ t("audit.refresh") }}</button>
+                                                <a class="secondary-action" href="/campaigns/audit/export?campaign_id={{ campaign.id }}"
+                                                    data-audit-export>{{ t("audit.export") }}</a>
+                                            </div>
+                                            <script type="application/json" data-audit-labels>{
+                                                "events": { {% for et in audit_event_types %}{{ et | tojson }}: {{ t("audit.event." ~ et) | tojson }}{{ "," if not loop.last }}{% endfor %} },
+                                                "fields": { {% for f in audit_metadata_fields %}{{ f | tojson }}: {{ t("audit.field." ~ f) | tojson }}{{ "," if not loop.last }}{% endfor %} },
+                                                "results": { {% for r in ["ok", "denied", "failed"] %}{{ r | tojson }}: {{ t("audit.result." ~ r) | tojson }}{{ "," if not loop.last }}{% endfor %} },
+                                                "detailsToggle": {{ t("audit.details_toggle") | tojson }}
+                                            }</script>
+                                            <div class="audit-log-list" data-audit-list aria-live="polite"></div>
+                                            <button class="secondary-action" type="button" data-audit-more hidden>{{ t("audit.load_more") }}</button>
+                                        </div>
+                                    </section>
+                                </div>
+                                {% endif %}
+
                                 <div class="modal-backdrop inside-modal-backdrop"
                                     data-inside-modal="campaign-packages-{{ campaign.id }}" role="presentation" hidden>
                                     <section class="delete-modal campaign-package-modal" role="dialog" aria-modal="true"
@@ -455,6 +734,7 @@
                                     </span>
                                 </button>
                                 {% if user.is_owner %}
+                                <div class="card-actions">
                                 {% if system.can_install %}
                                 <form class="compact-card-action" method="post" action="/sdk/packages/install"
                                     {% if system.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
@@ -478,6 +758,7 @@
                                     <button type="submit" class="system-action">{{ t("inside.rulesets.actions.disable") }}</button>
                                 </form>
                                 {% endif %}
+                                </div>
                                 {% endif %}
                             </article>
 
@@ -605,9 +886,7 @@
                         <div class="system-banner system-banner--ok">{{ t(modules_message_key) }}</div>
                         {% endif %}
 
-                        {% if user.is_owner %}
-                        <div class="notice">{{ t("inside.addons.owner_note") }}</div>
-                        {% else %}
+                        {% if not user.is_owner %}
                         <div class="notice">{{ t("inside.addons.user_note") }}</div>
                         {% endif %}
 
@@ -680,6 +959,33 @@
                                         <span>{{ t("inside.addons.meta.version", version=module.version) }}</span>
                                     </span>
                                 </button>
+                                {% if user.is_owner %}
+                                <div class="card-actions">
+                                    {% if module.can_install %}
+                                    <form class="compact-card-action" method="post" action="/sdk/packages/install"
+                                        {% if module.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
+                                        {{ csrf_input | safe }}
+                                        <input type="hidden" name="package_id" value="{{ module.id }}" />
+                                        <button type="submit" class="system-action system-action--primary">{{ t("inside.addons.actions.install") }}</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if module.status == "installed" or module.status == "disabled" %}
+                                    <form class="compact-card-action" method="post" action="/sdk/packages/enable"
+                                        {% if module.trusted_code_required %}data-confirm="{{ t('inside.packages.trusted_code_confirm') }}"{% endif %}>
+                                        {{ csrf_input | safe }}
+                                        <input type="hidden" name="package_id" value="{{ module.id }}" />
+                                        <button type="submit" class="system-action system-action--primary">{{ t("inside.addons.actions.enable") }}</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if module.status == "enabled" %}
+                                    <form class="compact-card-action" method="post" action="/sdk/packages/disable">
+                                        {{ csrf_input | safe }}
+                                        <input type="hidden" name="package_id" value="{{ module.id }}" />
+                                        <button type="submit" class="system-action">{{ t("inside.addons.actions.disable") }}</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </article>
 
                             <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="module-detail-{{ module.id }}"

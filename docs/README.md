@@ -2,6 +2,9 @@
 
 This directory is the canonical documentation set for Gravewright.
 
+Current release: **Gravewright v3.0.0-alpha**. See
+`../RELEASE_v3.0.0-alpha.md` and `../CHANGELOG.md`.
+
 Brazilian Portuguese documentation is available in `pt-br/README.md`.
 
 ## Start Here
@@ -24,6 +27,7 @@ Brazilian Portuguese documentation is available in `pt-br/README.md`.
 - `storage.md` documents uploaded files, package-scoped data, and cleanup behavior.
 - `docker-tests.md` documents the test Docker Compose layout.
 - `publication-checklist.md` documents the public Alpha publication checklist.
+- `features/dynamic-lighting.md` documents walls, doors, scene shaders, blend modes, presets, and particles.
 
 ## API Guides
 

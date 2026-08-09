@@ -1,8 +1,27 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 import xdice
+
+
+
+
+
+_SIDES = re.compile(r"^\d*d(\d+|%|f)", re.IGNORECASE)
+
+
+def _sides_from_notation(notation: str) -> int:
+    match = _SIDES.match(str(notation or ""))
+    if match is None:
+        return 0
+    face = match.group(1).lower()
+    if face == "%":
+        return 100
+    if face == "f":
+        return 0
+    return int(face)
 
 
 @dataclass(frozen=True)
@@ -29,7 +48,14 @@ class RollService:
             {
                 "notation": s.name,
                 "results": list(s.detail),
+
+
+
+                "dropped": list(getattr(s, "dropped", []) or []),
                 "subtotal": int(s),
+
+
+                "sides": _sides_from_notation(s.name),
             }
             for s in pattern_score.scores()
         ]

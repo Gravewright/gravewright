@@ -223,7 +223,7 @@
     }
   }
 
-  
+
 
   function sendLeave() {
     const csrfToken = getCsrfToken();
@@ -234,8 +234,8 @@
 
     didSendLeave = true;
 
-    
-    
+
+
     const body = new URLSearchParams({ _csrf_token: csrfToken }).toString();
 
     if (navigator.sendBeacon) {
@@ -260,7 +260,7 @@
     }).catch(() => {});
   }
 
-  
+
 
   function showPlayerNotice(form, message) {
     let notice = form
@@ -282,7 +282,7 @@
 
   async function submitBanForm(form) {
     const confirmMessage = document.body.dataset.playerBanConfirm || "";
-    if (confirmMessage && !window.confirm(confirmMessage)) {
+    if (confirmMessage && !(await window.GravewrightCore.dialog.confirm(confirmMessage, { variant: "danger" }))) {
       return;
     }
 
@@ -321,8 +321,8 @@
     });
   });
 
-  // The current user is online the moment their socket is open — reflect it
-  // immediately instead of waiting on the server presence snapshot.
+
+
   document.addEventListener("vtt:ws-open", markCurrentUserOnline);
 
   window.addEventListener("pagehide", sendLeave);

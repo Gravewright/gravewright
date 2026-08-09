@@ -118,6 +118,43 @@ class SceneService:
     def update_scene_metadata(self, **kwargs: Any) -> None:
         self.scenes.update_metadata(**kwargs)
 
+    async def broadcast_scene_update(
+        self,
+        *,
+        scene_id: str,
+        transport: RealtimeGatewayContract | None = None,
+    ) -> bool:
+        """Avisa a sala que a cena na mesa mudou de metadados.
+
+        Sem isto, grade, escala e escuridao so chegavam a quem editou: o modal
+        atualiza o proprio canvas pela resposta, e os demais ficavam com a cena
+        antiga ate recarregar a pagina.
+
+        So a cena ATIVA e anunciada. Editar uma cena guardada nao interessa a
+        ninguem na mesa e nao deve espalhar o nome nem as dimensoes dela.
+        """
+        if transport is None:
+            return False
+
+        scene = self.scenes.get_by_id(scene_id)
+        if scene is None:
+            return False
+
+        active = self.scenes.get_active_scene(scene["campaign_id"])
+        if active is None or active["id"] != scene_id:
+            return False
+
+        await transport.to_room(
+            room_id=scene["campaign_id"],
+            event=TransportEvent.SCENE_UPDATED,
+            payload={
+                "room_id": scene["campaign_id"],
+                "scene_id": scene_id,
+                "scene": self._scene_activation_payload(scene),
+            },
+        )
+        return True
+
     def update_scene_start_point(self, **kwargs: Any) -> None:
         self.scenes.update_start_point(**kwargs)
 
@@ -214,6 +251,7 @@ class SceneService:
             "grid_visible": bool(scene["grid_visible"]),
             "grid_color": scene["grid_color"],
             "grid_opacity": float(scene["grid_opacity"]),
+            "darkness": float(scene["darkness"]),
             "image_scale": float(scene["image_scale"]),
             "start_world_x": float(scene["start_world_x"]),
             "start_world_y": float(scene["start_world_y"]),

@@ -16,6 +16,7 @@ from app.realtime.command_dispatcher import ClientCommandContext
 from app.realtime.command_dispatcher import CommandDispatcher
 from app.realtime.board_command_handler import BoardCommandHandler
 from app.realtime.commands import ClientCommand
+from app.realtime.commands import command_label
 from app.realtime.chunk_outbox import ChunkOutbox
 from app.realtime.chunk_outbox import OutboundChunkBatch
 from app.realtime.envelopes import error_envelope
@@ -200,7 +201,10 @@ async def game_websocket(
 
             message = decision.message
             command = _command_name(message)
-            command_metric = sanitize_metric_name(command)
+
+
+
+            command_metric = sanitize_metric_name(command_label(command))
             command_id = _command_id(message)
             trace_id = command_id or uuid.uuid4().hex
             room_id = _room_id(message)

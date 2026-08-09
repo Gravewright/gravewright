@@ -65,7 +65,7 @@ class StorageContext:
 
 def permission_allows(scope: str, *, write: bool, ctx: StorageContext) -> bool:
     if scope == "global":
-        return ctx.is_gm  # read and write are GM-only
+        return ctx.is_gm
     if scope == "campaign":
         return ctx.is_gm if write else ctx.is_member
     return False
@@ -77,7 +77,7 @@ class PackageStorageRuntime:
         self.campaigns = CampaignRepository()
         self.campaign_packages = CampaignPackageRepository()
 
-    # --- resolution ------------------------------------------------------------
+
 
     def _block(self, package_id: str) -> tuple[str, dict]:
         """Return ``(kind, storage_block)`` for an enabled package with storage."""
@@ -107,7 +107,7 @@ class PackageStorageRuntime:
             raise StorageError("sdk.storage.scope_forbidden", reason="missing_campaign")
         return root / "campaigns" / campaign_id / DB_FILENAME
 
-    # --- public operations -----------------------------------------------------
+
 
     def status(
         self,
@@ -165,7 +165,7 @@ class PackageStorageRuntime:
             write=True,
         )
 
-    # --- internals -------------------------------------------------------------
+
 
     def _run(
         self,

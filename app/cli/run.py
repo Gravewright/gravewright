@@ -82,8 +82,8 @@ def _ensure_schema(*, no_migrate: bool) -> Check:
         from app.persistence.engine import get_engine
         from app.persistence.schema import schema_status, upgrade_to_head
 
-        # Official path: create/evolve the schema through Alembic migrations
-        # (idempotent — a database already at head is a no-op).
+
+
         upgrade_to_head()
         head = schema_status(get_engine())["head"]
     except Exception as exc:  # noqa: BLE001 - report, don't crash the launcher
@@ -121,7 +121,7 @@ def prepare(
 
     checks.append(_ensure_schema(no_migrate=no_migrate))
 
-    # Non-blocking package/db validation by default.
+
     audit = run_doctor(packages_dir=Path(config.data_dir) / "packages", skip_db=no_migrate)
     s = summarize(audit)
 

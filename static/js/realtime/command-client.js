@@ -12,7 +12,7 @@
     return window.GravewrightRealtime || null;
   }
 
-  
+
   function send(command, payload = {}, options = {}) {
     const rt = realtime();
     return rt ? rt.sendCommand(command, payload, options) : false;
@@ -21,7 +21,7 @@
   const Commands = {
     send,
 
-    
+
     moveToken(payload, options) {
       return send("token.move", payload, options);
     },
@@ -40,7 +40,7 @@
       return send("token.remove_from_scene", payload, options);
     },
 
-    
+
     subscribeViewport(payload, options) {
       return send("viewport.subscribe", payload, options);
     },
@@ -51,7 +51,7 @@
       return send("chunk.ack", payload, options);
     },
 
-    
+
     resumeSession(payload, options) {
       return send("session.resume", payload, options);
     },

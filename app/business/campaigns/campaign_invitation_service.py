@@ -102,8 +102,8 @@ class CampaignInvitationService:
 
         if outcome.status != "accepted":
             if outcome.status == "membership_removed":
-                # Someone replayed an accepted invitation after being removed or
-                # banned. Nothing changed, but the attempt is worth recording.
+
+
                 from app.observability.audit import emit_audit
 
                 emit_audit(
@@ -146,8 +146,8 @@ class CampaignInvitationService:
             payload={
                 "campaign": dict(campaign) if campaign is not None else None,
                 "member": dict(member) if member is not None else None,
-                # Only a real, first-time membership creation should trigger the
-                # realtime join event (published by the action after commit).
+
+
                 "membership_created": outcome.membership_created,
             },
         )

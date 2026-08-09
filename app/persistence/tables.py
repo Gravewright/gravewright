@@ -98,6 +98,9 @@ user_preferences = Table(
     metadata,
     Column("user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
     Column("game_layout_mode", _STR, nullable=False, server_default=text("'gravewright'")),
+
+
+    Column("vision_mode", _STR, nullable=False, server_default=text("'cinematic'")),
     Column("updated_at", Integer, nullable=False),
 )
 
@@ -154,6 +157,80 @@ campaigns = Table(
     Index("idx_campaigns_owner_user_id", "owner_user_id"),
 )
 
+campaign_lobby_states = Table(
+    "campaign_lobby_states",
+    metadata,
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("is_ready", Integer, nullable=False, server_default=text("0")),
+    Column("selected_actor_id", _ID, ForeignKey("actors_core.id", ondelete="SET NULL"), nullable=True),
+    Column("assets_state", _STR, nullable=False, server_default=text("'unknown'")),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_campaign_lobby_states_campaign_ready", "campaign_id", "is_ready"),
+)
+
+campaign_gm_onboarding = Table(
+    "campaign_gm_onboarding",
+    metadata,
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("dismissed_at", Integer, nullable=True),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_campaign_gm_onboarding_user", "user_id", "updated_at"),
+)
+
+campaign_snapshots = Table(
+    "campaign_snapshots",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("name", _STR, nullable=False),
+    Column("description", Text, nullable=False, default=""),
+    Column("kind", _STR, nullable=False, server_default=text("'manual'")),
+    Column("format_version", Integer, nullable=False),
+    Column("manifest_json", Text, nullable=False),
+    Column("payload_json", Text, nullable=False),
+    Column("checksum", String(64), nullable=False),
+    Column("created_at", Integer, nullable=False),
+    Index("idx_campaign_snapshots_campaign_created", "campaign_id", "created_at"),
+)
+
+audit_events = Table(
+    "audit_events",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("actor_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("catalog_version", Integer, nullable=False),
+    Column("event_type", _STR, nullable=False),
+    Column("subject_type", _STR, nullable=True),
+    Column("subject_id", _ID, nullable=True),
+    Column("action", _STR, nullable=False),
+    Column("result", _STR, nullable=False),
+    Column("metadata_json", Text, nullable=False),
+    Column("created_at", Integer, nullable=False),
+    Index("idx_audit_events_campaign_created", "campaign_id", "created_at"),
+    Index("idx_audit_events_campaign_type_created", "campaign_id", "event_type", "created_at"),
+)
+
+handout_grants = Table(
+    "handout_grants",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("resource_type", _STR, nullable=False),
+    Column("resource_id", _ID, nullable=False),
+    Column("subject_type", _STR, nullable=False),
+    Column("subject_id", _ID, nullable=False, server_default=text("''")),
+    Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("created_at", Integer, nullable=False),
+    Column("revoked_at", Integer, nullable=True),
+    UniqueConstraint("campaign_id", "resource_type", "resource_id", "subject_type", "subject_id"),
+    Index("idx_handout_grants_resource", "campaign_id", "resource_type", "resource_id"),
+    Index("idx_handout_grants_subject", "campaign_id", "subject_type", "subject_id", "revoked_at"),
+)
+
 campaign_members = Table(
     "campaign_members",
     metadata,
@@ -176,12 +253,8 @@ combat_encounters = Table(
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
     Column("scene_id", _ID, nullable=True),
     Column("status", _STR, nullable=False, server_default=text("'active'")),
-    Column("mode", _STR, nullable=False, server_default=text("'manual'")),
-    Column("strategy", _STR, nullable=False, server_default=text("'manual'")),
     Column("round_number", Integer, nullable=False, server_default=text("1")),
     Column("turn_index", Integer, nullable=False, server_default=text("0")),
-    Column("phase", _STR, nullable=False, server_default=text("'combat.start'")),
-    Column("settings_json", Text, nullable=False, default="{}"),
     Column("created_by_user_id", _ID, nullable=False),
     Column("started_at", Integer, nullable=True),
     Column("ended_at", Integer, nullable=True),
@@ -190,8 +263,13 @@ combat_encounters = Table(
     Index("idx_combat_encounters_campaign_status", "campaign_id", "status"),
 )
 
-combat_participants = Table(
-    "combat_participants",
+
+
+
+
+
+combat_combatants = Table(
+    "combat_combatants",
     metadata,
     Column("id", _ID, primary_key=True),
     Column(
@@ -200,34 +278,14 @@ combat_participants = Table(
     Column("actor_id", _ID, ForeignKey("actors_core.id", ondelete="SET NULL"), nullable=True),
     Column("token_id", _ID, nullable=True),
     Column("name", _STR, nullable=False),
-    Column("initiative_label", _STR, nullable=False, server_default=text("''")),
-    Column("initiative_value", Float, nullable=True),
-    Column("initiative_data_json", Text, nullable=False, default="{}"),
-    Column("sort_key", Float, nullable=False, server_default=text("0")),
-    Column("group_key", _STR, nullable=True),
-    Column("visible_to_players", Integer, nullable=False, server_default=text("1")),
+    Column("initiative", _STR, nullable=True),
+    Column("sort_value", Float, nullable=True),
+    Column("tie_break", Float, nullable=False, server_default=text("0")),
+    Column("hidden", Integer, nullable=False, server_default=text("0")),
     Column("defeated", Integer, nullable=False, server_default=text("0")),
-    Column("metadata_json", Text, nullable=False, default="{}"),
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
-    Index("idx_combat_participants_combat", "combat_id", "sort_key"),
-)
-
-combat_events = Table(
-    "combat_events",
-    metadata,
-    Column("id", _ID, primary_key=True),
-    Column(
-        "combat_id", _ID, ForeignKey("combat_encounters.id", ondelete="CASCADE"), nullable=False
-    ),
-    Column("round_number", Integer, nullable=False, server_default=text("1")),
-    Column("turn_index", Integer, nullable=False, server_default=text("0")),
-    Column("participant_id", _ID, nullable=True),
-    Column("actor_id", _ID, nullable=True),
-    Column("event_type", _STR, nullable=False),
-    Column("payload_json", Text, nullable=False, default="{}"),
-    Column("created_at", Integer, nullable=False),
-    Index("idx_combat_events_combat", "combat_id", "created_at"),
+    Index("idx_combat_combatants_combat", "combat_id", "created_at"),
 )
 
 campaign_permission_overrides = Table(
@@ -274,6 +332,62 @@ campaign_invitations = Table(
 )
 
 
+campaign_join_codes = Table(
+    "campaign_join_codes",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("code_hash", String(64), nullable=False, unique=True),
+    Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("role", _STR, nullable=False, server_default=text("'player'")),
+    Column("max_uses", Integer, nullable=True),
+    Column("use_count", Integer, nullable=False, server_default=text("0")),
+    Column("expires_at", Integer, nullable=False),
+    Column("revoked_at", Integer, nullable=True),
+    Column("last_used_at", Integer, nullable=True),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    CheckConstraint("role = 'player'", name="role_player"),
+    CheckConstraint("use_count >= 0", name="use_count_nonnegative"),
+    CheckConstraint("max_uses IS NULL OR max_uses > 0", name="max_uses_positive"),
+    Index(
+        "idx_campaign_join_codes_campaign_state",
+        "campaign_id",
+        "revoked_at",
+        "expires_at",
+    ),
+    Index(
+        "uq_campaign_join_codes_active_campaign",
+        "campaign_id",
+        unique=True,
+        sqlite_where=text("revoked_at IS NULL"),
+        postgresql_where=text("revoked_at IS NULL"),
+    ),
+)
+
+
+campaign_join_code_redemptions = Table(
+    "campaign_join_code_redemptions",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column(
+        "join_code_id",
+        _ID,
+        ForeignKey("campaign_join_codes.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("redeemed_at", Integer, nullable=False),
+    UniqueConstraint("join_code_id", "user_id"),
+    Index(
+        "idx_campaign_join_code_redemptions_campaign_user",
+        "campaign_id",
+        "user_id",
+    ),
+)
+
+
 streamer_links = Table(
     "streamer_links",
     metadata,
@@ -315,11 +429,11 @@ campaign_system_history = Table(
     Index("idx_campaign_system_history_campaign_id", "campaign_id"),
 )
 
-# --- Gravewright SDK packages -------------------------------------------------
-# Every installable extension is a package: ruleset, addon, library, content,
-# theme, or assets. ``installed_packages`` is the global install registry;
-# ``campaign_packages`` records per-campaign activation; ``package_settings``
-# holds scoped setting values; ``package_content_imports`` tracks imports.
+
+
+
+
+
 
 installed_packages = Table(
     "installed_packages",
@@ -334,9 +448,9 @@ installed_packages = Table(
     Column("compatibility_status", _STR, nullable=False, server_default=text("'unverified'")),
     Column("validation_errors_json", Text, nullable=False, default="[]"),
     Column("package_sha256", String(64), nullable=True),
-    # Manifest integrity (Phase 6): hash of the installed manifest snapshot plus
-    # the outcome/time of the last validation. Disk stays the runtime authority;
-    # these let the doctor detect drift between snapshot and on-disk manifest.
+
+
+
     Column("manifest_hash", String(64), nullable=True),
     Column("last_validated_at", Integer, nullable=True),
     Column("last_validation_status", _STR, nullable=True),
@@ -373,8 +487,8 @@ package_settings = Table(
     metadata,
     Column("id", _ID, primary_key=True),
     Column("package_id", _ID, nullable=False),
-    # NULL scopes are stored as '' so the unique constraint behaves the same on
-    # SQLite (which treats NULLs as distinct) as it does on PostgreSQL.
+
+
     Column("campaign_id", _ID, nullable=False, server_default=text("''")),
     Column("user_id", _ID, nullable=False, server_default=text("''")),
     Column("setting_key", String(128), nullable=False),
@@ -633,8 +747,8 @@ asset_folders = Table(
 )
 
 
-# Dedicated asset library (independent of journals). Library images are organised
-# into ``asset_folders`` and consumed by scene image placements.
+
+
 library_assets = Table(
     "library_assets",
     metadata,
@@ -685,6 +799,7 @@ scenes = Table(
     Column("grid_visible", Integer, nullable=False, server_default=text("1")),
     Column("grid_color", _STR, nullable=False, server_default=text("'#6fddb4'")),
     Column("grid_opacity", Float, nullable=False, server_default=text("0.4")),
+    Column("darkness", Float, nullable=False, server_default=text("0.0")),
     Column("image_scale", Float, nullable=False, server_default=text("1.0")),
     Column("start_world_x", Float, nullable=False, server_default=text("0.0")),
     Column("start_world_y", Float, nullable=False, server_default=text("0.0")),
@@ -702,6 +817,111 @@ scenes = Table(
     Column("updated_at", Integer, nullable=False),
     Index("idx_scenes_campaign_id", "campaign_id", "created_at"),
     Index("idx_scenes_group_id", "group_id"),
+)
+
+scene_walls = Table(
+    "scene_walls", metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("kind", _STR, nullable=False, server_default=text("'wall'")),
+    Column("door_state", _STR, nullable=False, server_default=text("'closed'")),
+    Column("x1", Float, nullable=False), Column("y1", Float, nullable=False),
+    Column("x2", Float, nullable=False), Column("y2", Float, nullable=False),
+    Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    CheckConstraint("kind IN ('wall','door')", name="kind"),
+    CheckConstraint("door_state IN ('closed','open','locked')", name="door_state"),
+    Index("idx_scene_walls_scene", "scene_id", "created_at"),
+)
+
+scene_lights = Table(
+    "scene_lights", metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("x", Float, nullable=False), Column("y", Float, nullable=False),
+
+    Column("bright_radius", Float, nullable=False, server_default=text("2.0")),
+    Column("dim_radius", Float, nullable=False, server_default=text("4.0")),
+    Column("color", _STR, nullable=False, server_default=text("'#ffd8a8'")),
+    Column("intensity", Float, nullable=False, server_default=text("1.0")),
+    Column("animation", _STR, nullable=False, server_default=text("'none'")),
+
+
+    Column("angle", Float, nullable=False, server_default=text("360.0")),
+    Column("rotation", Float, nullable=False, server_default=text("0.0")),
+    Column("enabled", Integer, nullable=False, server_default=text("1")),
+    Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+
+
+
+
+    CheckConstraint("animation IN ('none','torch','pulse')", name="animation"),
+    Index("idx_scene_lights_scene", "scene_id", "created_at"),
+)
+
+
+
+
+scene_particles = Table(
+    "scene_particles", metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("x", Float, nullable=False), Column("y", Float, nullable=False),
+    Column("kind", _STR, nullable=False, server_default=text("'smoke'")),
+
+
+    Column("scale", Float, nullable=False, server_default=text("3.0")),
+
+
+    Column("density", Float, nullable=False, server_default=text("0.6")),
+    Column("color", _STR, nullable=False, server_default=text("'#9aa3ad'")),
+    Column("enabled", Integer, nullable=False, server_default=text("1")),
+    Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    CheckConstraint("kind IN ('smoke','ember','dust','arcane','rain','snow','firefly','leaves','bubbles','ash','blood','runes')", name="kind"),
+    Index("idx_scene_particles_scene", "scene_id", "created_at"),
+)
+
+
+
+
+
+scene_shaders = Table(
+    "scene_shaders", metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("name", _STR, nullable=False, server_default=text("''")),
+    Column("source", Text, nullable=False, server_default=text("''")),
+
+
+
+
+    Column("x", Float, nullable=False, server_default=text("0.0")),
+    Column("y", Float, nullable=False, server_default=text("0.0")),
+
+
+    Column("radius", Float, nullable=False, server_default=text("0.0")),
+
+
+    Column("rotation", Float, nullable=False, server_default=text("0.0")),
+
+    Column("blend_mode", _STR, nullable=False, server_default=text("'normal'")),
+    Column("opacity", Float, nullable=False, server_default=text("1.0")),
+
+
+    Column("intensity", Float, nullable=False, server_default=text("0.6")),
+    Column("scale", Float, nullable=False, server_default=text("1.0")),
+    Column("speed", Float, nullable=False, server_default=text("1.0")),
+    Column("color", _STR, nullable=False, server_default=text("'#8fb6ff'")),
+    Column("enabled", Integer, nullable=False, server_default=text("1")),
+    Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    Index("idx_scene_shaders_scene", "scene_id", "created_at"),
 )
 
 scene_layers = Table(
@@ -793,6 +1013,9 @@ tokens = Table(
     Column("overrides_json", Text, nullable=False, default="{}"),
     Column("controlled_by_user_ids_json", Text, nullable=False, default="[]"),
     Column("controlled_by_role", _STR, nullable=False, server_default=text("'gm'")),
+    Column("vision_enabled", Integer, nullable=False, server_default=text("1")),
+
+    Column("vision_range", Float, nullable=False, server_default=text("0.0")),
     Column("version", Integer, nullable=False, server_default=text("1")),
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
@@ -840,7 +1063,7 @@ chat_messages = Table(
 )
 
 
-# --- Cards and deck piles ----------------------------------------------------
+
 
 card_deck_definitions = Table(
     "card_deck_definitions",
@@ -1022,8 +1245,8 @@ scene_image_placements = Table(
     Column("natural_height", Integer, nullable=False, server_default=text("0")),
     Column("locked", Integer, nullable=False, server_default=text("0")),
     Column("gm_only", Integer, nullable=False, server_default=text("0")),
-    # Layer: "game" (screen-fixed, all), "gm" (screen-fixed, GM-only),
-    # "composition" (anchored to the scene world position; pans/zooms with the map).
+
+
     Column("layer", _STR, nullable=False, server_default=text("'game'")),
     Column("metadata_json", Text, nullable=False, default="{}"),
     Column("created_at", Integer, nullable=False),

@@ -342,8 +342,8 @@ def _intent_from_args(args: argparse.Namespace):
         has_characters=args.has_characters,
         has_monsters=args.has_monsters,
         has_items=args.has_items,
-        # ``--sheets`` is None (absent), [] (present, all types) or [names].
-        # Explicit --actor-types/--item-types or --html-sheets also imply sheets.
+
+
         has_sheets=(
             args.sheets is not None
             or args.html_sheets
@@ -386,7 +386,7 @@ def _is_interactive() -> bool:
 def _no_intent_flags(args: argparse.Namespace) -> bool:
     """True when ``new`` was given no intent flags (pure defaults)."""
     return (
-        args.has_characters is True  # the only flag defaulting on
+        args.has_characters is True
         and args.sheets is None
         and args.actor_types is None
         and args.item_types is None
@@ -466,10 +466,10 @@ def _cmd_new(args: argparse.Namespace) -> int:
                 print(f"       List them with: grave {args.kind} new --list-templates")
             return EXIT_DOCTOR_ERROR
 
-    # Pick the wizard when explicitly asked, or by default on an interactive
-    # terminal with no intent flags and no non-interactive markers (--yes/--json,
-    # --template). A --template selection is a complete intent, so it never opens
-    # the wizard.
+
+
+
+
     interactive = _is_interactive()
     use_wizard = args.wizard or (
         interactive
@@ -502,7 +502,7 @@ def _cmd_new(args: argparse.Namespace) -> int:
             return EXIT_DOCTOR_ERROR
         intent = _intent_from_args(args)
 
-        # A named --sheets selection must reference types the ruleset declares.
+
         if args.kind == "ruleset" and args.sheets:
             declared = declared_sheet_type_ids(intent)
             unknown = [t for t in args.sheets if t not in declared]
@@ -535,9 +535,9 @@ def _cmd_new(args: argparse.Namespace) -> int:
         kind=args.kind,
         intent=intent,
     )
-    # Packages live under the universal grouped layout
-    # ``data/packages/{kind_plural}/{id}`` — the same layout discovery, install,
-    # asset serving and storage expect. ``--output-dir`` is the packages root.
+
+
+
     root = Path(args.output_dir)
     kind_dir = KIND_TO_DIRECTORY.get(args.kind)
     package_dir = (root / kind_dir / package_id) if kind_dir else (root / package_id)

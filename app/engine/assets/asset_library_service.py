@@ -16,9 +16,23 @@ from app.security.asset_permissions import can_view_assets
 
 MAX_ASSET_BYTES = 10 * 1024 * 1024
 MAX_ASSET_DIMENSION = 8_000
+
+
+
+
+
+MAX_PDF_BYTES = 25 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
+
+
+
+
+
+PDF_CONTENT_TYPE = "application/pdf"
+PDF_EXTENSION = ".pdf"
+PDF_MAGIC = b"%PDF-"
 
 
 def asset_src(asset_id: str) -> str:
@@ -106,8 +120,8 @@ class AssetLibraryService:
             try:
                 self.storage.delete(storage_path)
             except ValueError:
-                # Legacy rows may point outside the library storage root; drop the
-                # database entry anyway and leave the stray file untouched.
+
+
                 pass
         self.assets.delete(asset_id)
         return AssetResult(success=True, payload={"asset_id": asset_id})
@@ -157,12 +171,15 @@ class AssetLibraryService:
         error = self._validate(filename=filename, content_type=content_type, data=data)
         if error is not None:
             return AssetResult(success=False, error_key=error)
-        try:
-            decoded = self.image_decoder.decode(data)
-        except ValueError:
-            return AssetResult(success=False, error_key="game.assets.errors.invalid_image")
-        if decoded.format.upper() not in ALLOWED_FORMATS:
-            return AssetResult(success=False, error_key="game.assets.errors.unsupported_type")
+
+        decoded = None
+        if not self._is_pdf(filename=filename, content_type=content_type):
+            try:
+                decoded = self.image_decoder.decode(data)
+            except ValueError:
+                return AssetResult(success=False, error_key="game.assets.errors.invalid_image")
+            if decoded.format.upper() not in ALLOWED_FORMATS:
+                return AssetResult(success=False, error_key="game.assets.errors.unsupported_type")
 
         safe_filename = self._safe_filename(filename)
         digest = hashlib.sha256(data).hexdigest()
@@ -172,8 +189,10 @@ class AssetLibraryService:
             filename=safe_filename,
             content_type=content_type,
             byte_size=len(data),
-            width=decoded.width,
-            height=decoded.height,
+
+
+            width=decoded.width if decoded else None,
+            height=decoded.height if decoded else None,
             storage_path="",
             hash=digest,
             folder_id=folder_id,
@@ -192,11 +211,30 @@ class AssetLibraryService:
         return self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id)
 
     def _present_asset(self, asset: dict) -> dict:
-        return {**asset, "src": asset_src(asset["id"])}
+
+
+        kind = "pdf" if asset.get("content_type") == PDF_CONTENT_TYPE else "image"
+        return {**asset, "src": asset_src(asset["id"]), "kind": kind}
+
+    def _is_pdf(self, *, filename: str, content_type: str) -> bool:
+        return (
+            content_type == PDF_CONTENT_TYPE
+            and Path(filename).suffix.lower() == PDF_EXTENSION
+        )
 
     def _validate(self, *, filename: str, content_type: str, data: bytes) -> str | None:
         if not data:
             return "game.assets.errors.empty"
+
+        if self._is_pdf(filename=filename, content_type=content_type):
+            if len(data) > MAX_PDF_BYTES:
+                return "game.assets.errors.too_large"
+
+
+            if not data.startswith(PDF_MAGIC):
+                return "game.assets.errors.unsupported_type"
+            return None
+
         if len(data) > MAX_ASSET_BYTES:
             return "game.assets.errors.too_large"
         if content_type not in ALLOWED_CONTENT_TYPES:

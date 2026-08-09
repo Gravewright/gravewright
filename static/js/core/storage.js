@@ -49,12 +49,12 @@
       try {
         store.removeItem(key);
       } catch {
-        
+
       }
     }
   }
 
-  
+
   function scoped(scopeParts, key) {
     const parts = Array.isArray(scopeParts) ? scopeParts : [scopeParts];
     return [...parts, key].filter((part) => part != null && part !== "").join(":");

@@ -10,12 +10,12 @@
     const SIZE_MIN = 1;
     const SIZE_MAX = 80;
 
-    
+
     const fogStates = new Map();
-    
+
     const panelStates = new Map();
 
-    
+
 
     function loadGmOpacity() {
         try {
@@ -28,7 +28,7 @@
         try { localStorage.setItem(OPACITY_STORAGE, String(v)); } catch {  }
     }
 
-    
+
 
     function panelStateFor(roomId) {
         let s = panelStates.get(roomId);
@@ -79,7 +79,7 @@
         return !!el;
     }
 
-    
+
 
     function isActive() {
         const panel = activeFogPanel();
@@ -93,11 +93,11 @@
     function applyFog(sceneId, fog) {
         if (!sceneId || !fog) return;
         const existing = fogStates.get(sceneId);
-        
-        
-        
-        
-        
+
+
+
+
+
         const isSnapshot = Array.isArray(fog.ops);
         if (existing && fog.version != null) {
             if (isSnapshot ? existing.version > fog.version : existing.version >= fog.version) return;
@@ -134,12 +134,12 @@
         window.GravewrightMap?.redraw?.();
     }
 
-    
 
-    
-    
-    
-    
+
+
+
+
+
     function fogViewFor(canvas, scene) {
         if (!canvas || !scene) return null;
 
@@ -147,7 +147,7 @@
         if (!fog || !fog.enabled) return null;
 
         const roomId = canvas.dataset.roomId || "";
-        
+
         const isGm = window.GravewrightMap?.viewerIsGm
             ? window.GravewrightMap.viewerIsGm(canvas)
             : isGmForRoom(roomId);
@@ -169,7 +169,7 @@
         };
     }
 
-    
+
 
     FI.SIZE_MIN = SIZE_MIN;
     FI.SIZE_MAX = SIZE_MAX;

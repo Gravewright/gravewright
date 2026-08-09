@@ -28,11 +28,11 @@ from typing import Any
 _LOGGER = logging.getLogger("gravewright.diagnostics")
 _METRIC_SAFE_RE = re.compile(r"[^a-zA-Z0-9_.-]+")
 
-# Enforced redaction: even a careless caller must not leak secrets/PII into the
-# ring buffer or logs. Keys whose name contains one of these fragments are
-# masked. (Bare "code" is intentionally NOT matched — it is used for benign
-# values like WebSocket close codes; raw redemption codes must simply never be
-# passed here, and are hashed at rest regardless.)
+
+
+
+
+
 _SENSITIVE_FRAGMENTS = (
     "token",
     "secret",

@@ -1,0 +1,156 @@
+/* A página do PDF e a camada de campos compartilham o mesmo sistema de
+   coordenadas: o host é o referencial, os campos são posicionados sobre ele. */
+.pdf-sheet { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+.pdf-sheet-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 6px 8px; border-bottom: 1px solid var(--line, rgba(255,255,255,.1));
+}
+.pdf-sheet-bar-group { display: flex; align-items: center; gap: 4px; }
+.pdf-sheet-bar-group--end { margin-left: auto; }
+
+.pdf-sheet-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; padding: 0;
+    border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 6px;
+    background: none; color: var(--text-muted, #cbd5e1); cursor: pointer;
+}
+.pdf-sheet-btn:hover { color: var(--text, #f8fafc); }
+.pdf-sheet-btn[aria-pressed="true"] { border-color: var(--accent, #c09a5a); }
+
+.pdf-sheet-page { min-width: 62px; text-align: center; font-variant-numeric: tabular-nums; }
+.pdf-sheet-status { color: var(--text-faint, #94a3b8); font-size: 11px; }
+
+.pdf-sheet-stage { flex: 1; min-height: 0; overflow: auto; }
+
+/* O referencial dos campos. Encolhe até a largura da página e centraliza, de modo
+   que a camada de campos (inset: 0) cubra exatamente o canvas. */
+.pdf-sheet-doc { position: relative; width: max-content; margin: 0 auto; }
+.pdf-sheet-page-host { display: block; }
+.pdf-sheet-fields { position: absolute; inset: 0; pointer-events: none; }
+.pdf-sheet-fields > .pdf-sheet-field { pointer-events: auto; }
+
+/* Sem renderizador a ficha não vira uma tela vazia: os campos empilham numa
+   coluna legível e continuam gravando. */
+.pdf-sheet-stage[data-viewer-missing="true"] .pdf-sheet-fields {
+    position: static; display: grid; gap: 8px; padding: 12px;
+}
+
+.pdf-sheet-field {
+    position: absolute;
+    border: 1px solid transparent; border-radius: 3px;
+    background: color-mix(in srgb, var(--accent, #c09a5a) 12%, transparent);
+    /* O campo fica sobre a PÁGINA do PDF, que é clara — herdar a cor do tema
+       escuro da modal deixava o texto num cinza quase ilegível. O padrão é
+       escuro; a ficha pode trocar pela variável. */
+    color: var(--pdf-field-text, #111111);
+    font: inherit; padding: 0 4px;
+}
+.pdf-sheet-stage[data-viewer-missing="true"] .pdf-sheet-field { position: static; }
+.pdf-sheet-field:focus { border-color: var(--accent, #c09a5a); outline: none; }
+.pdf-sheet-field[readonly] { background: none; }
+
+.pdf-sheet-empty {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%; padding: 24px; color: var(--text-faint, #94a3b8); text-align: center;
+}
+
+/* Quem centraliza é o .pdf-sheet-doc; centralizar aqui também deslocaria o
+   canvas dentro do próprio referencial dos campos. */
+.pdf-sheet-canvas { display: block; }
+
+/* Seletor de template. Fica ancorado ao botão, por cima do palco: a lista é
+   curta e abrir uma modal para trocar de ficha seria desproporcional. */
+.pdf-sheet-picker-wrap { position: relative; display: inline-flex; }
+
+.pdf-sheet-picker {
+    position: absolute; top: calc(100% + 4px); right: 0; z-index: 5;
+    min-width: 180px; padding: 4px; display: flex; flex-direction: column; gap: 2px;
+    border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 8px;
+    background: var(--surface-raised, #1b1f27);
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+.pdf-sheet-picker[hidden] { display: none; }
+
+.pdf-sheet-picker-option {
+    padding: 6px 8px; text-align: left; font-size: 12px;
+    border: 1px solid transparent; border-radius: 6px;
+    background: none; color: var(--text-muted, #cbd5e1); cursor: pointer;
+}
+.pdf-sheet-picker-option:hover { color: var(--text, #f8fafc); }
+.pdf-sheet-picker-option[aria-selected="true"] {
+    border-color: var(--accent, #c09a5a); color: var(--text, #f8fafc);
+}
+
+.pdf-sheet-picker-empty {
+    margin: 0; padding: 8px; font-size: 11px; line-height: 1.4;
+    color: var(--text-faint, #94a3b8);
+}
+
+/* --- abas ------------------------------------------------------------------
+   O host cuida do comportamento (troca o hidden dos painéis); aqui é só a
+   aparência. O painel da ficha precisa continuar ocupando a altura toda, senão
+   o palco do PDF perde o espaço para rolar. */
+.pdf-sheet-tabs {
+    display: flex; gap: 2px; padding: 6px 8px 0;
+    border-bottom: 1px solid var(--line, rgba(255,255,255,.1));
+}
+.pdf-sheet-tab {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; font-size: 12px;
+    border: 1px solid transparent; border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: none; color: var(--text-faint, #94a3b8); cursor: pointer;
+}
+.pdf-sheet-tab:hover { color: var(--text, #f8fafc); }
+.pdf-sheet-tab.is-active {
+    color: var(--text, #f8fafc);
+    border-color: var(--line, rgba(255,255,255,.12));
+    background: color-mix(in srgb, var(--accent, #c09a5a) 10%, transparent);
+}
+
+.pdf-sheet-panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.pdf-sheet-panel[hidden] { display: none; }
+.pdf-sheet-panel--form { gap: 18px; padding: 16px; overflow: auto; }
+
+.pdf-sheet-field-group { display: flex; flex-direction: column; gap: 6px; }
+.pdf-sheet-field-group h3 {
+    margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--text-muted, #cbd5e1);
+}
+.pdf-sheet-hint { margin: 0; font-size: 11px; line-height: 1.5; color: var(--text-faint, #94a3b8); }
+
+.pdf-sheet-image-slot { display: flex; }
+
+.pdf-sheet-bar-map { display: grid; gap: 8px; }
+.pdf-sheet-bar-row {
+    display: grid; grid-template-columns: 140px minmax(0, 1fr);
+    align-items: center; gap: 10px; font-size: 12px;
+}
+.pdf-sheet-select {
+    padding: 5px 8px; font: inherit; font-size: 12px;
+    border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 6px;
+    background: var(--surface-raised, #1b1f27); color: var(--text, #f8fafc);
+}
+
+.pdf-sheet-text {
+    padding: 8px 10px; font: inherit; font-size: 13px; line-height: 1.55; resize: vertical;
+    border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 6px;
+    background: color-mix(in srgb, var(--accent, #c09a5a) 6%, transparent);
+    color: inherit;
+}
+.pdf-sheet-text:focus { border-color: var(--accent, #c09a5a); outline: none; }
+
+/* O editor de blocos traz o próprio estilo; aqui só o enquadramento e uma altura
+   mínima, para não colapsar quando o documento está vazio. */
+.pdf-sheet-rich {
+    min-height: 120px; padding: 4px 6px;
+    border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 6px;
+    background: color-mix(in srgb, var(--accent, #c09a5a) 6%, transparent);
+}
+
+.pdf-sheet-color {
+    width: 100%; height: 30px; padding: 2px;
+    border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 6px;
+    background: var(--surface-raised, #1b1f27); cursor: pointer;
+}

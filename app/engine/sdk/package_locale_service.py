@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 
 from app.engine.sdk import package_registry
-from app.engine.sdk.package_manifest import PackageManifest
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.sdk.package_paths import safe_join
 from app.persistence.repositories.installed_package_repository import (
     InstalledPackageRepository,
@@ -22,14 +22,17 @@ DEFAULT_LOCALE = "en"
 class PackageLocaleService:
     def __init__(self) -> None:
         self.installed = InstalledPackageRepository()
+        self.install = PackageInstallService()
 
     def get_locale(self, package_id: str, locale: str) -> dict[str, str]:
         record = self.installed.get(package_id)
         if record is None:
             return {}
-        try:
-            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
-        except (TypeError, ValueError):
+
+
+
+        manifest = self.install.get_manifest(package_id)
+        if manifest is None:
             return {}
 
         path = self._pick_locale_path(manifest.locales, locale)

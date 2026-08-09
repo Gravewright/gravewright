@@ -15,6 +15,7 @@
             handleBoardPing,
             handleChunkUpdated,
             handleSceneActivated,
+            handleSceneUpdated,
             handleSessionResumed,
             handleViewportReady,
             handleTokensConditionsUpdated,
@@ -45,11 +46,23 @@
             if (evtName === "scene.session.resumed") handleSessionResumed(payload);
             if (evtName === "scene.viewport.ready") handleViewportReady(payload);
             if (evtName === "scene.activated") handleSceneActivated(payload);
+            if (evtName === "scene.updated") handleSceneUpdated(payload);
             if (evtName === "scene.deleted") {
                 const deletedId = payload?.scene_id;
                 const showing = deletedId && [...document.querySelectorAll("[data-map-canvas]")]
                     .some((canvas) => canvas.dataset.sceneId === deletedId);
                 if (showing) window.location.reload();
+            }
+
+
+            if (evtName === "campaign.table_settings.changed") {
+                const seconds = payload?.measure_flash_seconds;
+                const roomId = payload?.room_id;
+                if (seconds && roomId) {
+                    document
+                        .querySelectorAll(`[data-map-canvas][data-room-id="${CSS.escape(roomId)}"]`)
+                        .forEach((canvas) => { canvas.dataset.measureFlashSeconds = String(seconds); });
+                }
             }
             if (evtName === "campaign.packages.changed") {
                 const roomId = payload?.room_id;
@@ -73,7 +86,13 @@
             if (evtName === "board.measure.cleared") applyRemoteMeasureClear(payload);
             if (evtName === "board.draw.upserted") applyRemoteDrawUpsert(payload);
             if (evtName === "board.draw.cleared") applyRemoteDrawClear(payload);
-            if (evtName === "sheet.owners.updated" || evtName === "sheet.deleted") {
+
+
+
+
+
+
+            if (evtName === "actor.updated" || evtName === "actor.deleted") {
                 reloadTokensForRoom(payload?.room_id);
             }
         });

@@ -397,9 +397,9 @@ function mount(host, opts = {}) {
     editor.on("update", () => opts.onChange(wrapDoc(editor.getJSON())));
   }
 
-  
-  
-  
+
+
+
   if (slashMenu) {
     editor.on("blur", () => slashMenu.close());
     editor.on("destroy", () => slashMenu.close());

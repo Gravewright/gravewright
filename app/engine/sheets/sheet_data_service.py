@@ -12,7 +12,9 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.engine.actors.actor_permissions import can_edit_actor, can_view_actor
+from app.engine.rules.condition_effects import sync_condition_effects
 from app.engine.rules.rules_registry import SystemRulesService
+from app.engine.sdk.package_locale_service import PackageLocaleService
 from app.engine.sheets.schema_service import SchemaService
 from app.engine.sheets.sheet_validation import sanitize_write
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
@@ -54,6 +56,24 @@ class SheetDataService:
         self.storage = ScopedJsonStorage()
         self.schemas = SchemaService()
         self.rules = SystemRulesService()
+        self.locales = PackageLocaleService()
+
+    def _sync_conditions(self, system_id: str, data: dict) -> None:
+        """Keep ``sheet.effects`` in step with the condition flags on every write.
+
+        Reconciling on every patch rather than only when a ``conditions.*`` path
+        changed is what makes an actor created before the ruleset declared a
+        condition — or edited by a path that bypassed this service — converge on
+        the next save, instead of carrying a stale effects list forever.
+        """
+        declared = self.rules.get_conditions(system_id)
+        if not declared:
+            return
+        from app.config import config
+
+        sync_condition_effects(
+            data, declared, self.locales.get_locale(system_id, config.default_locale)
+        )
 
     def get_data(self, *, actor_id: str, user_id: str) -> SheetDataResult:
         actor, campaign, error = self._load(actor_id, user_id, require_edit=False)
@@ -88,6 +108,7 @@ class SheetDataService:
         data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
         for path, value in clean.items():
             _set_path(data, str(path), value)
+        self._sync_conditions(actor["system_id"], data)
 
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(

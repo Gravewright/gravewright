@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "PDF Character",
+  "description": "Um personagem cuja ficha é um PDF. Os valores dos campos vivem em 'fields', endereçados pelo mapeamento — nunca dentro do arquivo.",
+  "properties": {
+    "pdf": {
+      "type": "object",
+      "description": "Qual PDF esta ficha usa e como ela foi vista pela última vez.",
+      "properties": {
+        "template": {
+          "type": "string",
+          "description": "Caminho do template dentro do pacote, ou id de asset da campanha.",
+          "default": ""
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Página aberta por último."
+        },
+        "zoom": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 8,
+          "default": 1
+        },
+        "spread": {
+          "type": "boolean",
+          "default": false,
+          "description": "Visualização em página dupla."
+        },
+        "asset": {
+          "type": "string",
+          "default": "",
+          "description": "Id do PDF enviado para a biblioteca da campanha. Ganha de 'template' quando preenchido."
+        },
+        "textColor": {
+          "type": "string",
+          "default": "#111111",
+          "description": "Cor do texto dos campos sobre a página. O padrão é escuro porque o fundo é a página do PDF, que é clara."
+        }
+      },
+      "additionalProperties": false
+    },
+    "fields": {
+      "type": "object",
+      "description": "Valores dos campos do PDF, endereçados pelos caminhos do mapeamento. Aberto de propósito: cada ficha tem os seus.",
+      "additionalProperties": true,
+      "default": {}
+    },
+    "init": {
+      "type": "number",
+      "default": 0
+    },
+    "ac": {
+      "type": "number",
+      "default": 0
+    },
+    "bio": {
+      "type": [
+        "object",
+        "string"
+      ],
+      "description": "Biografia. Documento do editor de blocos (o mesmo dos diários)."
+    },
+    "history": {
+      "type": [
+        "object",
+        "string"
+      ],
+      "description": "História do personagem. Documento do editor de blocos."
+    },
+    "notes": {
+      "type": [
+        "object",
+        "string"
+      ],
+      "description": "Anotações de mesa. Documento do editor de blocos."
+    },
+    "token": {
+      "type": "object",
+      "description": "Escolhas de apresentação do token. bars.<slot> guarda o NOME do campo do PDF que alimenta aquele valor.",
+      "properties": {
+        "bars": {
+          "type": "object",
+          "properties": {
+            "bar1Value": {
+              "type": "string",
+              "default": ""
+            },
+            "bar1Max": {
+              "type": "string",
+              "default": ""
+            },
+            "bar2Value": {
+              "type": "string",
+              "default": ""
+            },
+            "bar2Max": {
+              "type": "string",
+              "default": ""
+            },
+            "initiative": {
+              "type": "string",
+              "default": ""
+            },
+            "defense": {
+              "type": "string",
+              "default": ""
+            }
+          },
+          "description": "Guarda o NOME do campo do PDF que alimenta cada valor do token."
+        }
+      }
+    },
+    "bars": {
+      "type": "object",
+      "description": "O que cada barra do token conta. bar_1 é desenhada sob o token e bar_2 acima dele; o significado é da mesa, não do sistema.",
+      "properties": {
+        "bar_1": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 0
+            },
+            "max": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "bar_2": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 0
+            },
+            "max": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

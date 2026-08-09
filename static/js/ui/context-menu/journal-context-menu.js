@@ -8,7 +8,7 @@
     const body = document.body;
 
     function openJournalPermissions(journalId) {
-        
+
         const trigger = document.createElement("button");
         trigger.type = "button";
         trigger.dataset.resourcePermissions = "journal";
@@ -26,7 +26,7 @@
             body: new URLSearchParams({ csrf_token: getCsrf(), journal_id: journalId }),
             credentials: "same-origin",
         });
-        
+
     }
 
     function openJournalMenu(e, cardEl) {

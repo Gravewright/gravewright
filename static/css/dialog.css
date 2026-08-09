@@ -1,0 +1,128 @@
+/* Project-wide alert / confirm dialog (see static/js/core/dialog.js).
+ *
+ * Loaded on every page, so it only uses tokens from tokens.css and never
+ * depends on game.css or inside.css being present.
+ */
+
+.gw-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-toast);
+    display: grid;
+    place-items: center;
+    padding: var(--space-4);
+    background: rgba(0, 0, 0, 0.62);
+}
+
+.gw-dialog-backdrop[hidden] {
+    display: none;
+}
+
+.gw-dialog {
+    width: min(420px, 100%);
+    display: grid;
+    gap: var(--space-3);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+        var(--surface-raised);
+    color: var(--text);
+    font-family: var(--font);
+    box-shadow: var(--shadow-xl);
+}
+
+.gw-dialog--danger {
+    border-color: rgba(210, 121, 107, 0.45);
+}
+
+.gw-dialog__title {
+    margin: 0;
+    color: var(--text-bright);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.gw-dialog__title[hidden] {
+    display: none;
+}
+
+.gw-dialog__message {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    overflow-wrap: anywhere;
+}
+
+.gw-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-1);
+}
+
+.gw-dialog__btn {
+    min-height: 36px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-4);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: var(--text-2xs);
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition:
+        border-color var(--motion-fast) ease,
+        background var(--motion-fast) ease,
+        color var(--motion-fast) ease;
+}
+
+.gw-dialog__btn[hidden] {
+    display: none;
+}
+
+.gw-dialog__btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.gw-dialog__btn--ghost {
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.gw-dialog__btn--ghost:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-field);
+    color: var(--text);
+}
+
+.gw-dialog__btn--primary {
+    border-color: var(--border-accent-strong);
+    background: var(--accent-dark);
+    color: var(--text-bright);
+}
+
+.gw-dialog__btn--primary:hover {
+    border-color: var(--accent-hover);
+    background: var(--accent);
+    color: #16110a;
+}
+
+/* On a destructive prompt the confirming button must not look like the safe
+   default it does elsewhere. */
+.gw-dialog--danger .gw-dialog__btn--primary {
+    border-color: rgba(210, 121, 107, 0.5);
+    background: rgba(210, 121, 107, 0.18);
+    color: var(--danger-text);
+}
+
+.gw-dialog--danger .gw-dialog__btn--primary:hover {
+    border-color: var(--danger);
+    background: var(--danger);
+    color: #1a0f0d;
+}

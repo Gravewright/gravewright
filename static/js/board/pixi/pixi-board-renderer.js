@@ -104,7 +104,7 @@
                     };
                 });
             } catch {
-                
+
             }
         }
 
@@ -147,7 +147,7 @@
         }
 
         resize() {
-            
+
         }
 
         setTheme(theme) {
@@ -197,6 +197,7 @@
             this._renderTokens(board, cssW, cssH);
             this._renderGhosts(board);
             this._renderOrigin(board);
+            this._renderLighting?.(board, cssW, cssH);
             this._renderFog(board, cssW, cssH);
 
             board.app.render();
@@ -220,12 +221,34 @@
                 originWorldLayer: null,
                 ghostsGfx: null,
                 originGfx: null,
+                lightingLayer: null,
+                lightingSprite: null,
+                lightingScene: null,
+                lightingParticleGfx: null,
+                lightingParticlePool: [],
+                lightingGlowGfx: null,
+                lightingGlowPool: [],
 
-                
+
+
+                lightingVeilPool: [],
+                lightingRT: null,
+                lightingRTW: 0,
+                lightingRTH: 0,
+                lightingRTDpr: 0,
+                lightingKey: "",
+                lightingDoorLayer: null,
+                lightingDoorPool: [],
+                lightingGfxPool: [],
+                lightingDarkGlowPool: [],
+                lightingPoolIndex: 0,
+                lightingWallsGfx: null,
+
+
                 fogLayer: null,
                 fogSprite: null,
                 fogUiGfx: null,
-                fogScene: null,   
+                fogScene: null,
                 fogRT: null,
                 fogRTW: 0,
                 fogRTH: 0,
@@ -250,8 +273,8 @@
                 resolution: window.devicePixelRatio || 1,
                 autoDensity: true,
 
-                
-                
+
+
                 antialias: false,
 
                 autoStart: false,
@@ -309,8 +332,8 @@
 
             this.textures.set(url, "loading");
 
-            
-            
+
+
             this._loadTextureSource(url)
                 .then((sourceUrl) => PIXI.Assets.load({
                     src: sourceUrl,
@@ -372,12 +395,12 @@
         }
     }
 
-    
-    
+
+
     window.GravewrightBoardInternals = window.GravewrightBoardInternals || {};
     window.GravewrightBoardInternals.PixiBoardRenderer = PixiBoardRenderer;
 
-    
-    
+
+
     window.GravewrightBoard.registerRenderer("pixi", (deps) => new PixiBoardRenderer(deps));
 })();

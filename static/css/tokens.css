@@ -1,0 +1,156 @@
+/* Gravewright design tokens — single source of truth.
+ *
+ * Loaded before every page stylesheet (game / inside / auth). The palette used
+ * to be copy-pasted into all three `:root` blocks, so a colour change had to be
+ * made three times and silently drifted when it wasn't. Page stylesheets now
+ * override only what is genuinely page-specific (auth's translucent surfaces
+ * over its background art, the game dock width, the inside nav width).
+ *
+ * The scales below were derived from what game.css already uses, so adopting a
+ * token is a no-op or a sub-pixel move — not a redesign. They exist because the
+ * raw values had drifted into neighbours the eye cannot tell apart: 51 distinct
+ * font sizes (0.68/0.7/0.72rem all reading as "small"), 25 border radii
+ * (5/6/7/8/9px), and 34 transition timings (0.1/0.12/0.14/0.15/0.18s).
+ *
+ * Prefer a token over a literal in new rules. When an existing literal is
+ * touched, move it to the nearest token.
+ */
+
+:root {
+    /* ---- Palette ------------------------------------------------------- */
+
+    --bg: #11151a;
+    --surface: #181d23;
+    --surface-raised: #20262d;
+    --surface-raised-2: #252c34;
+    --surface-field: #151a20;
+
+    --border: #303842;
+    --border-strong: #46505c;
+    --border-control: #637183;
+    --border-accent: rgba(192, 154, 90, 0.36);
+    --border-accent-strong: rgba(192, 154, 90, 0.6);
+
+    --text-bright: #f0ebdd;
+    --text: #d8d2c3;
+    --text-muted: #a9a193;
+    --text-faint: #7f8994;
+
+    --accent: #c09a5a;
+    --accent-hover: #d2ac6b;
+    --accent-dark: #8b6a3c;
+    --accent-glow: rgba(192, 154, 90, 0.1);
+
+    --danger: #d2796b;
+    --danger-hover: #e08b7e;
+    --danger-text: #f0b8ae;
+
+    --success: #6db386;
+    --warning: #e0b36a;
+    --offline: #d06f6f;
+
+    --focus-ring: #d2ac6b;
+
+    /* ---- Typography ---------------------------------------------------- */
+
+    --font:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+
+    /* Steps carry the weight they already had in game.css: `sm` (12px) and
+     * `xs` (11px) are the interface defaults, `2xs` is for dense metadata. */
+    --text-2xs: 10px;
+    --text-xs: 11px;
+    --text-sm: 12px;
+    --text-md: 13px;
+    --text-base: 14px;
+    --text-lg: 16px;
+    --text-xl: 18px;
+    --text-2xl: 22px;
+    --text-3xl: 30px;
+
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.7;
+
+    /* ---- Spacing (4px base) -------------------------------------------- */
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+
+    /* ---- Radius --------------------------------------------------------- */
+
+    --radius-xs: 3px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-pill: 999px;
+    --radius-circle: 50%;
+
+    /* Pre-existing alias, kept so the ~18 call sites using it stay valid. */
+    --radius: var(--radius-sm);
+
+    /* ---- Elevation ------------------------------------------------------ */
+    /* Drop shadows for surfaces that float above the board. */
+
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.22);
+    --shadow-xl:
+        0 26px 70px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.04);
+
+    /* ---- Rings ---------------------------------------------------------- */
+    /* State indication (focus, selection, combat turn). Distinct from
+     * elevation: a ring says "this one", a shadow says "this is on top". */
+
+    --ring-accent: 0 0 0 2px var(--accent-glow);
+    --ring-accent-hairline: inset 0 0 0 1px rgba(192, 154, 90, 0.22);
+    --ring-top-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+    /* ---- Motion --------------------------------------------------------- */
+
+    --motion-fast: 120ms;
+    --motion-base: 160ms;
+    --motion-slow: 240ms;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ---- Layering ------------------------------------------------------- */
+
+    --z-board-overlay: 100;
+    --z-chrome: 200;
+    --z-chrome-pop: 300;
+    --z-fog: 800;
+    --z-modal: 1000;
+    --z-modal-dock: 1100;
+    --z-editor-pop: 4000;
+    --z-popover: 10000;
+    --z-toast: 11000;
+}
+
+/* Respect the OS "reduce motion" setting everywhere at once. Individual rules
+ * keep their own transitions; this collapses them instead of each rule having
+ * to remember. */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-fast: 0ms;
+        --motion-base: 0ms;
+        --motion-slow: 0ms;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

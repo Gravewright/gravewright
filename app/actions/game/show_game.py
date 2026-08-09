@@ -29,12 +29,12 @@ def _game_client_context(
     active_room = next((room for room in rooms if room["id"] == active_room_id), None)
     active_scene = active_room.get("active_scene") if active_room else None
     return {
-        # Surfaces ``window.GravewrightSDKDebug`` in the browser SDK runtime.
-        # Gated on the server's debug flag so it is never exposed in production
-        # (``APP_DEBUG`` must be false there). See docs/sdk/runtime.md.
+
+
+
         "debug": bool(config.app_debug),
-        # Per-render {package_id: nonce}; the SDK validates a registering script's
-        # nonce against this map. See docs/sdk/security.md.
+
+
         "packageNonces": dict(package_nonces),
         "user": {
             "id": user["id"],
@@ -114,13 +114,14 @@ async def show_game(
 
     ctx = game_page_service.build_context(user_id=user["id"])
     game_layout_mode = user_preference_service.get_game_layout_mode(user["id"])
+    vision_mode = user_preference_service.get_vision_mode(user["id"])
 
     room_ids = [r["id"] for r in ctx.rooms]
     active_room_id = room if room in room_ids else (room_ids[0] if room_ids else "")
 
-    # Reflect live WebSocket presence in the initial render so other connected
-    # players show as online immediately (build_context renders everyone offline;
-    # the WS snapshot otherwise only corrects this after the socket connects).
+
+
+
     online_by_room = await websocket_manager.connected_user_ids_by_room(room_ids)
     for ctx_room in ctx.rooms:
         online_ids = online_by_room.get(ctx_room["id"], set())
@@ -160,6 +161,7 @@ async def show_game(
             system_styles=package_assets["styles"],
             system_scripts=package_assets["scripts"],
             game_layout_mode=game_layout_mode,
+            vision_mode=vision_mode,
             sdk_client_manifests_json=_safe_json_script(sdk_client_manifests),
             game_client_context_json=_safe_json_script(game_client_context),
             open_modal=open_modal or "",
@@ -172,5 +174,13 @@ async def show_game(
             system_message_key=system_message_key,
             scenes_error_key=scenes_error_key,
             scenes_message_key=scenes_message_key,
+            campaign_join_code_enabled=config.campaign_join_code_enabled,
+            campaign_email_invitation_creation_enabled=(
+                config.campaign_email_invitation_creation_enabled
+            ),
+            command_palette_enabled=config.command_palette_enabled,
+            targeted_handouts_enabled=config.targeted_handouts_enabled,
+            lobby_ready_check_enabled=config.lobby_ready_check_enabled,
+            dynamic_lighting_enabled=config.dynamic_lighting_enabled,
         ),
     )

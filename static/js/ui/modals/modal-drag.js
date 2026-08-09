@@ -72,7 +72,7 @@
             try {
                 handle.releasePointerCapture(stopEvent.pointerId);
             } catch {
-                
+
             }
 
             handle.removeEventListener("pointermove", move);

@@ -9,7 +9,7 @@ from app.persistence.database import engine_begin, engine_connect
 from app.persistence.engine import upsert_statement
 from app.persistence.tables import package_settings
 
-# NULL scopes are persisted as '' so the unique constraint is portable.
+
 _NULL = ""
 
 

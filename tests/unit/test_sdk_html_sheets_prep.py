@@ -265,6 +265,15 @@ ITEM_RENDERER = (
 ACTOR_CONTROLLER = (
     PROJECT_ROOT / "static" / "js" / "sheets" / "actors" / "actor-sheet-controller.js"
 ).read_text(encoding="utf-8")
+ACTOR_ACTIONS = (
+    PROJECT_ROOT / "static" / "js" / "sheets" / "actors" / "actor-sheet-actions.js"
+).read_text(encoding="utf-8")
+CONTENT_DRAG = (PROJECT_ROOT / "static" / "js" / "content" / "content-drag.js").read_text(
+    encoding="utf-8"
+)
+ITEMS_DRAG = (PROJECT_ROOT / "static" / "js" / "items" / "items-drag.js").read_text(
+    encoding="utf-8"
+)
 
 
 def _install_html_ruleset(monkeypatch, tmp_path, *, sheet=None, html=None):
@@ -316,6 +325,10 @@ def test_html_actor_sheet_bundle_exposes_html_mode(db, monkeypatch, tmp_path):
         "template": "sheets/character.html",
         "controller": "scripts/character-sheet.js",
         "style": "styles/character-sheet.css",
+        # Onde cai um item solto na ficha, por tipo. Uma ficha declarativa
+        # declara isso nos ``dropZone`` do layout; a HTML não tem layout, então
+        # diz aqui. Vazio significa "tudo na coleção genérica".
+        "dropZones": [],
     }
     # An HTML sheet suppresses the declarative Sheet IR path entirely.
     assert layouts.get_actor_sheet(system_id="html-ruleset", actor_type="character") is None
@@ -399,3 +412,34 @@ def test_html_sheet_unmount_wired_to_modal_close():
     ).read_text(encoding="utf-8")
     assert 'addEventListener("vtt:modal-closed"' in events
     assert "GravewrightHTMLSheets?.unmount?.(root)" in events
+
+
+def test_drop_refreshes_the_sheet_after_its_own_successful_write():
+    assert 'const result = await postJSON("/game/actor/drop"' in CONTENT_DRAG
+    assert "GravewrightActorSheetInternals?.refresh?.(sheet)" in CONTENT_DRAG
+    assert 'cache: "no-store"' in ACTOR_RENDERER
+    assert "render(root, bundle)" in ACTOR_RENDERER
+
+    events = (
+        PROJECT_ROOT / "static" / "js" / "sheets" / "actors" / "actor-sheet-events.js"
+    ).read_text(encoding="utf-8")
+    assert "souEu(envelope.payload) && root.contains(document.activeElement)" in events
+    assert "if (!actorId || souEu(envelope.payload)) return" not in events
+
+
+def test_every_visible_campaign_item_can_start_a_drag():
+    assert 'document.addEventListener("pointerdown"' in ITEMS_DRAG
+    assert "if (card) card.draggable = true" in ITEMS_DRAG
+
+
+def test_item_action_buttons_keep_the_roll_dialog_open_and_share_an_action_group():
+    assert "[data-item-action]" in ACTOR_ACTIONS
+    assert 'actions.className = "gw-item-list__actions"' in RUNTIME
+    assert 'meta.className = "gw-item-list__meta"' in RUNTIME
+
+
+def test_embedded_items_use_their_real_declarative_sheet_and_patch_the_copy():
+    assert "/sheet-bundle`" in RUNTIME
+    assert "GravewrightItemSheetInternals?.renderEmbedded" in RUNTIME
+    assert "FI.renderEmbedded = renderEmbedded" in ITEM_RENDERER
+    assert 'ctx.onItemChange?.(item.id, target, value)' in RUNTIME

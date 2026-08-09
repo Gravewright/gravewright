@@ -26,7 +26,7 @@
     return document.body.dataset.currentUserId || "";
   }
 
-  // Don't hijack Delete/Backspace while the user is typing in a field.
+
   function isEditableTarget(target) {
     const el = target instanceof Element ? target : null;
     if (!el) return false;
@@ -97,8 +97,8 @@
 
   const controllers = new Map();
 
-  // The GM's active draw layer (game | gm | composition), tracked from the layer
-  // controller. New placements inherit it; "composition" anchors to scene world coords.
+
+
   let activeLayer = "game";
 
   class SceneImageController {
@@ -123,7 +123,8 @@
     }
 
     canMove(placement) {
-      return this.isGm || (placement.owner_user_id && placement.owner_user_id === currentUserId());
+      const locked = window.GravewrightTools?.isLayerLocked?.(placement.layer, this.roomId);
+      return !locked && (this.isGm || (placement.owner_user_id && placement.owner_user_id === currentUserId()));
     }
 
     camera() {
@@ -135,8 +136,8 @@
       };
     }
 
-    // Display geometry in layer pixels. Composition placements store scene-world
-    // coordinates and are projected through the camera; game/gm are screen-fixed.
+
+
     displayGeom(placement) {
       const scale = Number(placement.scale || 1);
       const nw = Number(placement.natural_width || 0);
@@ -194,7 +195,7 @@
         });
         this.render();
       } catch {
-        /* keep last known state */
+
       }
     }
 
@@ -205,7 +206,8 @@
         this.layer.innerHTML = "";
         return;
       }
-      const placements = this.placements.filter((p) => p.scene_id === sceneId);
+      const placements = this.placements.filter((p) => p.scene_id === sceneId
+        && window.GravewrightTools?.isLayerVisible?.(p.layer, this.roomId) !== false);
       this._hasComposition = placements.some((p) => p.layer === "composition");
       this._lastCam = null;
       this.layer.innerHTML = placements.map((placement) => this.placementHtml(placement)).join("");
@@ -229,8 +231,8 @@
       if (gmOnly) classes.push("is-gm-layer");
       if (isComposition) classes.push("is-composition");
       const id = esc(placement.id);
-      // z-index / GM-layer / delete live in the right-click menu now; the resize
-      // handle stays on the image only when it's the single selected one.
+
+
       const handle = (movable && selected && this.selectedIds.size === 1)
         ? `<span class="scene-image__resize" data-scene-image-handle="resize" data-scene-image-id="${id}" title="${esc(label("sceneImageLabelResize", "Drag to resize"))}" aria-hidden="true"></span>`
         : "";
@@ -259,10 +261,10 @@
         const el = event.target.closest(".scene-image");
         if (!el) return;
         const placement = this.placementById(el.dataset.sceneImageId);
-        if (!placement || !this.canMove(placement)) return;
+        if (!placement || placement.layer !== activeLayer || !this.canMove(placement)) return;
         event.preventDefault();
         event.stopPropagation();
-        // Right-clicking outside the selection selects just that image.
+
         if (!this.selectedIds.has(placement.id)) this.setSelection(placement.id, false);
         this.openMenu(placement, event.clientX, event.clientY);
       });
@@ -271,15 +273,15 @@
         const el = event.target.closest(".scene-image");
         if (!el) return;
         const placement = this.placementById(el.dataset.sceneImageId);
-        if (!placement || !this.canMove(placement)) return;
-        // Stop the map from panning under the image; let right-click fall through
-        // to the contextmenu handler without starting a drag.
+        if (!placement || placement.layer !== activeLayer || !this.canMove(placement)) return;
+
+
         event.stopPropagation();
         if (event.button !== 0) return;
         event.preventDefault();
 
-        // Shift / Ctrl / Cmd + click toggles this image in the multi-selection
-        // (no drag). Rotation lives on Shift + mouse wheel.
+
+
         const additive = event.ctrlKey || event.metaKey || event.shiftKey;
         if (additive) {
           this.setSelection(placement.id, true);
@@ -290,8 +292,8 @@
         const single = this.selectedIds.size === 1;
         const center = this.centerScreen(placement);
 
-        // Resize acts on a single image; with several selected we move the whole
-        // group together.
+
+
         if (single && event.target.closest('[data-scene-image-handle="resize"]')) {
           const startDist = Math.hypot(event.clientX - center.x, event.clientY - center.y) || 1;
           this.drag = {
@@ -374,15 +376,17 @@
       document.addEventListener("pointercancel", this._onPointerUp);
     }
 
-    // The selected placements the viewer can manipulate, in the active scene.
+
     selectedMovable() {
       const sceneId = this.activeSceneId();
       return [...this.selectedIds]
         .map((id) => this.placementById(id))
-        .filter((p) => p && this.canMove(p) && p.scene_id === sceneId);
+        .filter((p) => p && p.layer === activeLayer && this.canMove(p) && p.scene_id === sceneId);
     }
 
     setSelection(id, additive) {
+      const placement = this.placementById(id);
+      if (!placement || placement.layer !== activeLayer) return;
       if (additive) {
         if (this.selectedIds.has(id)) this.selectedIds.delete(id);
         else this.selectedIds.add(id);
@@ -399,13 +403,13 @@
       this.render();
     }
 
-    // Marquee selection: pick every movable image whose on-screen box touches the
-    // screen-space rect (board right-to-left drag). Only active-scene placements
-    // have a rendered node, so nodeFor naturally scopes it to the visible scene.
+
+
+
     selectInRect(rect, { additive = false } = {}) {
       if (!additive) this.selectedIds.clear();
       this.placements.forEach((p) => {
-        if (!this.canMove(p)) return;
+        if (!this.canMove(p) || p.layer !== activeLayer) return;
         const node = this.nodeFor(p.id);
         if (!node) return;
         const r = node.getBoundingClientRect();
@@ -437,13 +441,17 @@
       const items = [
         { label: label("sceneImageLabelBringFront", "Bring to front") + suffix, icon: "ph-arrow-line-up", onClick: () => this.zOrder(targets, true) },
         { label: label("sceneImageLabelSendBack", "Send to back") + suffix, icon: "ph-arrow-line-down", onClick: () => this.zOrder(targets, false) },
+        { label: label("sceneImageLabelDuplicate", "Duplicate on active layer") + suffix, icon: "ph-copy", onClick: () => this.duplicateSelected() },
       ];
-      const gmTargets = targets.filter((p) => p.layer !== "composition");
-      if (this.isGm && gmTargets.length) {
-        items.push({
-          label: (placement.layer === "gm" ? label("sceneImageLabelSendEveryone", "Send to everyone") : label("sceneImageLabelSendGm", "Send to GM layer")) + (gmTargets.length > 1 ? ` (${gmTargets.length})` : ""),
-          icon: "ph-eye-slash",
-          onClick: () => this.toggleGmLayer(gmTargets, placement.layer === "gm" ? "game" : "gm"),
+      if (this.isGm) {
+        const layerLabels = {
+          game: label("sceneImageLabelMoveGame", "Move to game layer"),
+          gm: label("sceneImageLabelMoveGm", "Move to GM layer"),
+          composition: label("sceneImageLabelMoveComposition", "Move to composition"),
+        };
+        ["game", "gm", "composition"].filter((layer) => layer !== activeLayer).forEach((layer) => {
+          items.push({ label: layerLabels[layer] + suffix, icon: layer === "composition" ? "ph-images" : "ph-stack",
+            onClick: () => this.moveToLayer(targets, layer) });
         });
       }
       items.push({ separator: true });
@@ -460,6 +468,37 @@
       });
       this.render();
       list.forEach((p) => api.update(this.roomId, { placement_id: p.id, layer: next }).catch(() => this.refresh()));
+    }
+
+    moveToLayer(placements, next) {
+      if (!this.isGm || !["game", "gm", "composition"].includes(next)) return;
+      const list = (Array.isArray(placements) ? placements : [placements]).filter(Boolean);
+      const zoom = this.camera().zoom || 1;
+      list.forEach((placement) => {
+        const screen = this.displayGeom(placement);
+        const point = this.toStored(screen.left, screen.top, next);
+        let scale = Number(placement.scale || 1);
+        if (placement.layer === "composition" && next !== "composition") scale *= zoom;
+        if (placement.layer !== "composition" && next === "composition") scale /= zoom;
+        placement.x = point.x; placement.y = point.y; placement.scale = scale;
+        placement.layer = next; placement.gm_only = next === "gm";
+        api.update(this.roomId, { placement_id: placement.id, x: point.x, y: point.y, scale, layer: next })
+          .catch(() => this.refresh());
+      });
+      this.selectedIds.clear();
+      this.render();
+    }
+
+    duplicateSelected() {
+      const list = this.selectedMovable();
+      if (!list.length) return false;
+      const offset = activeLayer === "composition" ? 12 / (this.camera().zoom || 1) : 12;
+      Promise.all(list.map((placement) => api.placeAsset(this.roomId, {
+        scene_id: placement.scene_id, asset_id: placement.asset_id,
+        x: Number(placement.x || 0) + offset, y: Number(placement.y || 0) + offset,
+        rotation: Number(placement.rotation || 0), scale: Number(placement.scale || 1), layer: activeLayer,
+      }))).then(() => this.refresh()).catch(() => this.refresh());
+      return true;
     }
 
     zOrder(placements, toFront) {
@@ -484,8 +523,8 @@
       return true;
     }
 
-    // Convert a point in layer (screen) pixels into the coordinates stored for the
-    // target layer. Composition stores scene-world coordinates; game/gm stay screen.
+
+
     toStored(x, y, layer) {
       if (layer === "composition") {
         const cam = this.camera();
@@ -573,7 +612,7 @@
     }
   };
 
-  // Marquee select hook for the board's right-to-left drag (map-marquee.js).
+
   SceneImages.selectInRect = function selectInRect(canvas, rect, opts) {
     controllerForCanvas(canvas)?.selectInRect(rect, opts || {});
   };
@@ -590,8 +629,8 @@
     }, 250);
   }
 
-  // Keep composition (world-anchored) images glued to the map as the camera pans
-  // and zooms. syncComposition() is a no-op unless the camera actually moved.
+
+
   function startCompositionFollow() {
     if (startCompositionFollow.running) return;
     startCompositionFollow.running = true;
@@ -613,10 +652,29 @@
 
     document.addEventListener("tool:active-layer", (event) => {
       const layer = event.detail?.layer;
-      activeLayer = ["game", "gm", "composition"].includes(layer) ? layer : "game";
+      const known = window.GravewrightToolsRegistry?.LAYERS
+        || ["game", "gm", "composition", "effects", "walls", "lighting"];
+      activeLayer = known.includes(layer) ? layer : "game";
+      controllers.forEach((controller) => {
+        controller.selectedIds.forEach((id) => {
+          if (controller.placementById(id)?.layer !== activeLayer) controller.selectedIds.delete(id);
+        });
+        controller.render();
+      });
     });
 
-    // Collapse the layer controller to just its title when clicked.
+    document.addEventListener("tool:layer-state", (event) => {
+      const controller = controllers.get(event.detail?.roomId);
+      if (!controller) return;
+      controller.selectedIds.forEach((id) => {
+        const placement = controller.placementById(id);
+        if (!placement || event.detail.visibility?.[placement.layer] === false
+            || event.detail.locked?.[placement.layer]) controller.selectedIds.delete(id);
+      });
+      controller.render();
+    });
+
+
     document.addEventListener("click", (event) => {
       const toggle = event.target.closest("[data-layer-hud-toggle]");
       if (!toggle) return;
@@ -629,8 +687,8 @@
       controller?.refresh();
     });
 
-    // Deselect when clicking outside any scene image (selected images stop
-    // propagation on their own pointerdown, so this only fires for empty space).
+
+
     document.addEventListener("pointerdown", (event) => {
       if (event.target.closest(".scene-image")) return;
       controllers.forEach((controller) => controller.deselect());
@@ -651,8 +709,8 @@
       }
     });
 
-    // Shift + mouse wheel rotates the selected scene image (anywhere on screen).
-    // Runs in the capture phase so it wins over the map zoom wheel handler.
+
+
     document.addEventListener("wheel", (event) => {
       if (!event.shiftKey) return;
       const delta = event.deltaY || event.deltaX;

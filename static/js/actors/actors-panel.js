@@ -9,7 +9,7 @@
     const postJson = FI.postJson;
     const refreshPanel = FI.refreshPanel;
 
-    
+
     document.addEventListener("submit", async (event) => {
         const form = event.target.closest("[data-actor-create-form]");
         if (!form) return;
@@ -32,7 +32,7 @@
         }
     });
 
-    
+
     document.addEventListener("submit", async (event) => {
         const form = event.target.closest("[data-actor-folder-create-form]");
         if (!form) return;
@@ -50,7 +50,7 @@
         }
     });
 
-    
+
     document.addEventListener("input", (event) => {
         const pick = event.target.closest("[data-actor-folder-color-pick]");
         if (pick) {
@@ -65,7 +65,7 @@
         }
     });
 
-    
+
     document.addEventListener("vtt:transport-event", (event) => {
         const env = event.detail || {};
         if (!["actor.created", "actor.deleted", "actor.updated"].includes(env.event)) return;
@@ -75,9 +75,15 @@
 
     document.addEventListener("vtt:resource-permissions-saved", (event) => {
         if (event.detail?.resourceType !== "actor") return;
-        
+
         document.querySelectorAll("[data-actor-panel]").forEach((p) => {
             if (p.dataset.roomId) refreshPanel(p.dataset.roomId);
+        });
+    });
+
+    document.addEventListener("vtt:ws-open", () => {
+        document.querySelectorAll("[data-actor-panel][data-room-id]").forEach((panel) => {
+            if (panel.dataset.roomId) refreshPanel(panel.dataset.roomId);
         });
     });
 })();

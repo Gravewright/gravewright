@@ -4,176 +4,106 @@
 
 
 (function () {
-  const ROLE_META = {
-    current: {
-      role: "current",
-      label: "Turno atual",
-      color: 0x28d17c,
-      alpha: 0.96,
-    },
-    next: {
-      role: "next",
-      label: "Próximo",
-      color: 0xef4444,
-      alpha: 0.92,
-    },
-    acted: {
-      role: "acted",
-      label: "Já atuou",
-      color: 0x9ca3af,
-      alpha: 0.68,
-    },
-  };
+    const ROLES = {
+        current: { role: "current", color: 0x28d17c, alpha: 0.96 },
+        next: { role: "next", color: 0xef4444, alpha: 0.92 },
+        acted: { role: "acted", color: 0x9ca3af, alpha: 0.68 },
+    };
 
-  const states = new Map();
-  const markersByRoom = new Map();
-  let animationFrame = 0;
-  let lastAnimationAt = 0;
+    const states = new Map();
+    const markersByRoom = new Map();
+    let animationFrame = 0;
+    let lastFrameAt = 0;
 
-  function participantTokenId(participant) {
-    return participant?.token_id || participant?.tokenId || "";
-  }
-
-  function participantId(participant) {
-    return participant?.id || participant?.participant_id || "";
-  }
-
-  function currentIndexFor(state, participants) {
-    if (!participants.length) return -1;
-    const explicit = Number(state?.turn_index);
-    if (Number.isInteger(explicit) && explicit >= 0 && explicit < participants.length) return explicit;
-
-    const activeId = state?.current_participant_id || state?.active_participant_id || state?.current?.id || "";
-    if (activeId) {
-      const byId = participants.findIndex((participant) => participantId(participant) === activeId);
-      if (byId >= 0) return byId;
+    function roleFor(combatant) {
+        if (combatant.is_current) return "current";
+        if (combatant.is_next) return "next";
+        return combatant.has_acted ? "acted" : "";
     }
 
-    const byFlag = participants.findIndex((participant) => participant?.is_current || participant?.is_active_turn);
-    return byFlag >= 0 ? byFlag : 0;
-  }
-
-  function nextIndexFor(currentIndex, participants) {
-    if (!participants.length || currentIndex < 0) return -1;
-    if (participants.length === 1) return -1;
-    return (currentIndex + 1) % participants.length;
-  }
-
-  function setMarker(markers, tokenId, role, participant) {
-    if (!tokenId || !ROLE_META[role]) return;
-    const meta = ROLE_META[role];
-    markers.set(tokenId, {
-      ...meta,
-      participant_id: participantId(participant),
-      initiative_label: participant?.initiative_label || "",
-      name: participant?.name || "",
-    });
-  }
-
-  function buildMarkers(state) {
-    const markers = new Map();
-    if (!state?.is_active) return markers;
-
-    const participants = Array.isArray(state.participants) ? state.participants : [];
-    if (!participants.length) return markers;
-
-    
-    
-    
-    participants.forEach((participant) => {
-      if (participant?.has_acted || participant?.turn_status === "acted") {
-        setMarker(markers, participantTokenId(participant), "acted", participant);
-      }
-    });
-
-    const currentIndex = currentIndexFor(state, participants);
-    const nextIndex = nextIndexFor(currentIndex, participants);
-    if (nextIndex >= 0) {
-      setMarker(markers, participantTokenId(participants[nextIndex]), "next", participants[nextIndex]);
-    }
-    if (currentIndex >= 0) {
-      setMarker(markers, participantTokenId(participants[currentIndex]), "current", participants[currentIndex]);
+    function buildMarkers(state) {
+        const markers = new Map();
+        if (!state?.active) return markers;
+        (Array.isArray(state.combatants) ? state.combatants : []).forEach((combatant) => {
+            const tokenId = combatant?.token_id;
+            const role = tokenId ? roleFor(combatant) : "";
+            if (!role) return;
+            markers.set(tokenId, {
+                ...ROLES[role],
+                combatant_id: combatant.id,
+                name: combatant.name || "",
+                initiative: combatant.initiative,
+                defeated: !!combatant.defeated,
+            });
+        });
+        return markers;
     }
 
-    return markers;
-  }
-
-  function hasAnimatedMarkers() {
-    for (const markers of markersByRoom.values()) {
-      for (const marker of markers.values()) {
-        if (marker.role === "current" || marker.role === "next") return true;
-      }
-    }
-    return false;
-  }
-
-  function stopAnimationLoop() {
-    if (animationFrame) window.cancelAnimationFrame(animationFrame);
-    animationFrame = 0;
-    lastAnimationAt = 0;
-  }
-
-  function animationLoop(now) {
-    if (!hasAnimatedMarkers()) {
-      stopAnimationLoop();
-      return;
+    function hasPulsingMarkers() {
+        for (const markers of markersByRoom.values()) {
+            for (const marker of markers.values()) {
+                if (marker.role === "current" || marker.role === "next") return true;
+            }
+        }
+        return false;
     }
 
-    
-    
-    if (!lastAnimationAt || now - lastAnimationAt >= 55) {
-      lastAnimationAt = now;
-      window.GravewrightMap?.redraw?.();
+    function stopLoop() {
+        if (animationFrame) window.cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+        lastFrameAt = 0;
     }
-    animationFrame = window.requestAnimationFrame(animationLoop);
-  }
 
-  function ensureAnimationLoop() {
-    if (animationFrame || !hasAnimatedMarkers()) return;
-    animationFrame = window.requestAnimationFrame(animationLoop);
-  }
+    function loop(now) {
+        if (!hasPulsingMarkers()) {
+            stopLoop();
+            return;
+        }
 
-  function set(roomId, state) {
-    if (!roomId) return;
-    states.set(roomId, state || {});
-    markersByRoom.set(roomId, buildMarkers(state || {}));
+        if (!lastFrameAt || now - lastFrameAt >= 55) {
+            lastFrameAt = now;
+            window.GravewrightMap?.redraw?.();
+        }
+        animationFrame = window.requestAnimationFrame(loop);
+    }
 
-    document.dispatchEvent(new CustomEvent("vtt:combat-state-changed", {
-      detail: { roomId, state: state || {} },
-    }));
-    window.GravewrightMap?.redraw?.();
-    ensureAnimationLoop();
-  }
+    function ensureLoop() {
+        if (!animationFrame && hasPulsingMarkers()) animationFrame = window.requestAnimationFrame(loop);
+    }
 
-  function clear(roomId) {
-    if (!roomId) return;
-    states.delete(roomId);
-    markersByRoom.delete(roomId);
-    document.dispatchEvent(new CustomEvent("vtt:combat-state-changed", {
-      detail: { roomId, state: null },
-    }));
-    window.GravewrightMap?.redraw?.();
-    if (!hasAnimatedMarkers()) stopAnimationLoop();
-  }
+    function announce(roomId, state) {
+        document.dispatchEvent(new CustomEvent("vtt:combat-state-changed", { detail: { roomId, state } }));
+        window.GravewrightMap?.redraw?.();
+    }
 
-  function get(roomId) {
-    return states.get(roomId) || null;
-  }
+    function set(roomId, state) {
+        if (!roomId) return;
+        states.set(roomId, state || {});
+        markersByRoom.set(roomId, buildMarkers(state || {}));
+        announce(roomId, state || {});
+        ensureLoop();
+    }
 
-  function markerForToken(roomId, tokenId) {
-    if (!roomId || !tokenId) return null;
-    return markersByRoom.get(roomId)?.get(tokenId) || null;
-  }
+    function clear(roomId) {
+        if (!roomId) return;
+        states.delete(roomId);
+        markersByRoom.delete(roomId);
+        announce(roomId, null);
+        if (!hasPulsingMarkers()) stopLoop();
+    }
 
-  function roleForToken(roomId, tokenId) {
-    return markerForToken(roomId, tokenId)?.role || "";
-  }
+    function get(roomId) {
+        return states.get(roomId) || null;
+    }
 
-  window.GravewrightCombatState = {
-    clear,
-    get,
-    markerForToken,
-    roleForToken,
-    set,
-  };
+    function markerForToken(roomId, tokenId) {
+        if (!roomId || !tokenId) return null;
+        return markersByRoom.get(roomId)?.get(tokenId) || null;
+    }
+
+    function roleForToken(roomId, tokenId) {
+        return markerForToken(roomId, tokenId)?.role || "";
+    }
+
+    window.GravewrightCombatState = { clear, get, markerForToken, roleForToken, set };
 })();

@@ -1,0 +1,64 @@
+<article class="game-modal-window dialog-modal light-editor-modal" data-modal-window
+    data-modal-id="particle-editor-{{ room.id }}" data-window-key="particle-editor-{{ room.id }}" hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+        <span class="game-panel-title">{{ t("lighting.particles.editor") }}</span>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('lighting.editor.close') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+    <div class="game-modal-body light-editor-panel" data-particle-editor-panel data-room-id="{{ room.id }}">
+        <label class="game-field">
+            <span>{{ t("lighting.particles.kind") }}</span>
+            <select name="kind" data-particle-field="kind">
+                <option value="smoke">{{ t("lighting.particles.smoke") }}</option>
+                <option value="ember">{{ t("lighting.particles.ember") }}</option>
+                <option value="dust">{{ t("lighting.particles.dust") }}</option>
+                <option value="arcane">{{ t("lighting.particles.arcane") }}</option>
+                <option value="rain">{{ t("lighting.particles.rain") }}</option>
+                <option value="snow">{{ t("lighting.particles.snow") }}</option>
+                <option value="firefly">{{ t("lighting.particles.firefly") }}</option>
+                <option value="leaves">{{ t("lighting.particles.leaves") }}</option>
+                <option value="bubbles">{{ t("lighting.particles.bubbles") }}</option>
+                <option value="ash">{{ t("lighting.particles.ash") }}</option>
+                <option value="blood">{{ t("lighting.particles.blood") }}</option>
+                <option value="runes">{{ t("lighting.particles.runes") }}</option>
+            </select>
+        </label>
+        <label class="game-field">
+            <span>{{ t("lighting.particles.scale") }}</span>
+            <span class="slider-row">
+                <input type="range" name="scale" min="0.5" max="20" step="0.5" value="3"
+                       data-particle-field="scale" />
+                <output data-particle-output="scale">3</output>
+            </span>
+        </label>
+        <label class="game-field">
+            <span>{{ t("lighting.particles.density") }}</span>
+            <span class="slider-row">
+                <input type="range" name="density" min="0" max="1" step="0.05" value="0.6"
+                       data-particle-field="density" />
+                <output data-particle-output="density">0.60</output>
+            </span>
+        </label>
+        <label class="game-field">
+            <span>{{ t("lighting.particles.color") }}</span>
+            <input type="color" name="color" value="#9aa3ad" data-particle-field="color" />
+        </label>
+        <label class="scene-check">
+            <input type="checkbox" name="enabled" data-particle-field="enabled" checked />
+            <span>{{ t("lighting.particles.enabled") }}</span>
+        </label>
+        <small class="scene-field-hint">{{ t("lighting.particles.density_hint") }}</small>
+        <small class="scene-field-hint">{{ t("lighting.particles.hint") }}</small>
+        <div class="game-modal-actions">
+            <button class="secondary-action light-editor-remove" type="button" data-particle-delete>
+                <i class="ph ph-trash" aria-hidden="true"></i>
+                <span>{{ t("lighting.particles.remove") }}</span>
+            </button>
+        </div>
+    </div>
+</article>

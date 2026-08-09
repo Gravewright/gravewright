@@ -9,16 +9,15 @@ from app.domain.roles import PlayerRole
 from app.persistence.database import all_dicts
 from app.persistence.database import engine_connect
 from app.persistence.tables import campaign_members as members_table
-from app.persistence.tables import users as users_table
 
 
-# P2: every realtime broadcast used to issue one role-filtered SELECT per
-# audience (GM, players, streamers, ...). Room membership barely changes during
-# a session, so we cache the full (user_id, role) roster per room and derive any
-# audience subset in memory. A short TTL bounds staleness (a freshly added/
-# removed member or role change is reflected within the TTL) without having to
-# hook every membership mutation — broadcasts are eventually consistent anyway
-# (clients also receive a fresh roster snapshot when they (re)connect).
+
+
+
+
+
+
+
 _CACHE_TTL_SECONDS = 3.0
 _GM_ROLES = frozenset({PlayerRole.GM.value, PlayerRole.ASSISTANT_GM.value})
 
@@ -92,10 +91,3 @@ class RealtimeRecipientRepository:
         return [
             user_id for user_id, role in self._members(room_id) if role != PlayerRole.PLAYER.value
         ]
-
-    def list_all_user_ids(self) -> list[str]:
-        with engine_connect() as conn:
-            rows = all_dicts(
-                conn.execute(select(users_table.c.id).order_by(users_table.c.created_at.asc()))
-            )
-        return [row["id"] for row in rows]

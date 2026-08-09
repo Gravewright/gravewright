@@ -9,14 +9,28 @@ from pathlib import Path
 from app.helpers.env import PROJECT_ROOT
 
 SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
-SAFE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+
+
+
+
+SAFE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf"}
 
 
 class LocalAssetStorage:
     """Stores asset-library images under ``storage/library-assets/<campaign>/<asset>``."""
 
     def __init__(self, *, root: Path | None = None) -> None:
-        self.root = root or PROJECT_ROOT / "storage" / "library-assets"
+        self.root = root or self._default_root()
+
+    @staticmethod
+    def _default_root() -> Path:
+
+
+
+        configured = os.environ.get("GRAVEWRIGHT_TEST_TEMP_ROOT", "").strip()
+        if configured:
+            return Path(configured) / "library-assets"
+        return PROJECT_ROOT / "storage" / "library-assets"
 
     def write_image(
         self,

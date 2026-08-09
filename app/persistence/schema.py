@@ -234,7 +234,15 @@ def ensure_schema_ready(engine: Engine, *, auto_migrate: bool) -> None:
     if status["up_to_date"]:
         return
 
-    if auto_migrate:
+
+
+
+
+
+    table_names = set(inspect(engine).get_table_names())
+    is_uninitialized = not (table_names - {"alembic_version"})
+
+    if auto_migrate or is_uninitialized:
         upgrade_to_head()
         return
 

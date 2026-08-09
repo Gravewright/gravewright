@@ -2,7 +2,13 @@
     function createSelectionController(deps) {
         const selectedTokenIds = new WeakMap();
         const hoveredTokenIds = new WeakMap();
-        const { canControlToken, tokenStoreFor, markDirty } = deps;
+        const { activeLayer, canControlToken, tokenStoreFor, markDirty } = deps;
+
+        function tokenMatchesLayer(token) {
+            const layer = activeLayer?.() || "game";
+            if (layer === "composition") return false;
+            return Boolean(token?.hidden) === (layer === "gm");
+        }
 
         function selectedSet(canvas) {
             let set = selectedTokenIds.get(canvas);
@@ -45,7 +51,7 @@
         function select(canvas, tokenId, { additive = false } = {}) {
             const set = selectedSet(canvas);
             const token = tokenId ? tokenStoreFor(canvas).get(tokenId) : null;
-            const controllable = token && canControlToken(token, canvas);
+            const controllable = token && tokenMatchesLayer(token) && canControlToken(token, canvas);
             if (!tokenId) {
                 if (additive) return;
                 if (!set.size) return;
@@ -69,7 +75,7 @@
             const store = tokenStoreFor(canvas);
             ids.forEach((id) => {
                 const token = store.get(id);
-                if (token && canControlToken(token, canvas)) set.add(id);
+                if (token && tokenMatchesLayer(token) && canControlToken(token, canvas)) set.add(id);
             });
             emitChanged(canvas);
             markDirty(canvas);

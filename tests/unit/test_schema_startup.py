@@ -48,13 +48,29 @@ def test_bootstrap_from_metadata_creates_full_schema(tmp_path):
         engine.dispose()
 
 
-def test_ensure_schema_ready_raises_when_uninitialized(tmp_path):
-    engine = _sqlite_engine(tmp_path / "empty.sqlite3")
+def test_ensure_schema_ready_initializes_empty_database(tmp_path, monkeypatch):
+    db_path = tmp_path / "empty.sqlite3"
+    monkeypatch.setattr(db_module, "DATABASE_PATH", db_path)
+    monkeypatch.setattr(db_module, "_initialized", False)
+    engine_module.reset_engine()
+    engine = _sqlite_engine(db_path)
     try:
+        ensure_schema_ready(engine, auto_migrate=False)
+        assert schema_status(engine)["up_to_date"] is True
+        assert "alembic_version" in inspect(engine).get_table_names()
+    finally:
+        engine.dispose()
+        engine_module.reset_engine()
+
+
+def test_ensure_schema_ready_still_blocks_existing_unversioned_database(tmp_path):
+    engine = _sqlite_engine(tmp_path / "existing.sqlite3")
+    try:
+        with engine.begin() as connection:
+            connection.execute(text("CREATE TABLE user_data (id INTEGER PRIMARY KEY)"))
         with pytest.raises(SchemaOutdatedError) as excinfo:
             ensure_schema_ready(engine, auto_migrate=False)
         message = str(excinfo.value)
-        # Actionable: names the expected head and the remediation command.
         assert head_revision() in message
         assert "alembic upgrade head" in message
     finally:
@@ -100,19 +116,18 @@ def test_ensure_schema_ready_noop_when_at_head(tmp_path, monkeypatch):
         engine_module.reset_engine()
 
 
-def test_initialize_database_production_requires_head(tmp_path, monkeypatch):
-    """Production dispatch validates head instead of running create_all."""
+def test_initialize_database_production_initializes_empty_database(tmp_path, monkeypatch):
+    """Production dispatch uses Alembic for a genuinely empty database."""
     db_path = tmp_path / "prod.sqlite3"
     monkeypatch.setattr(db_module, "DATABASE_PATH", db_path)
     monkeypatch.setattr(db_module, "_initialized", False)
     monkeypatch.setattr(db_module, "_use_metadata_bootstrap", lambda: False)
-    # Real test config has auto_migrate=False (frozen), so the production
-    # dispatch must refuse to start against an empty database.
+    # AUTO_MIGRATE remains false: only the empty-database bootstrap is automatic.
     assert db_module.config.auto_migrate is False
     engine_module.reset_engine()
     try:
-        with pytest.raises(SchemaOutdatedError):
-            db_module.initialize_database()
+        db_module.initialize_database()
+        assert schema_module.schema_status(engine_module.get_engine())["up_to_date"] is True
     finally:
         engine_module.reset_engine()
 

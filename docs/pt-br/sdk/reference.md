@@ -112,6 +112,28 @@ sdk.commands.register("my-package.open-panel", async () => {
 
 Nomes de comando devem ser namespaced por pacote.
 
+## `sdk.assets`
+
+Requer `assets.library`.
+
+### `sdk.assets.list(options)`
+
+Lista a biblioteca de assets da campanha. O servidor já filtra pelo papel do
+membro, então um pacote nunca enxerga mais do que o usuário atual pode ver.
+
+Cada item traz `kind` — `"image"` ou `"pdf"` — para o pacote não precisar
+reinterpretar `content_type`. Filtre com `options.kind`; `options.campaignId` usa a
+campanha ativa por padrão.
+
+```js
+const fichas = await sdk.assets.list({ kind: "pdf" });
+// [{ id, filename, src, kind: "pdf", byte_size, ... }]
+```
+
+`src` é a URL para buscar os bytes. Imagem é servida inline; o resto vai como
+anexo, então renderize um PDF por um renderizador em canvas em vez de embutir a
+URL direto.
+
 ## `sdk.ui`
 
 Requer `assets.ui`.
@@ -280,36 +302,53 @@ Requer `combat.runtime`.
 
 Registra handlers e slots de combate leves em runtime.
 
+Os handlers são chamados durante a renderização: `beforeRender`, `afterRender` e
+`combatantMeta` (cujo retorno é anexado à linha de meta do combatente). O slot
+`combatantActions` retorna nós colocados ao lado do menu do combatente.
+
 ```js
 sdk.combat.register({
   handlers: {
-    participantMeta({ participant }) {
-      return participant?.actor_type || "";
+    combatantMeta({ combatant }) {
+      return combatant.defeated ? "caído" : "";
     },
   },
   slots: {
-    participantActions({ participant }) {
+    combatantActions({ combatant, isGm }) {
+      if (!isGm) return [];
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = participant?.actor_type || "Action";
+      button.textContent = "Concentração";
+      button.dataset.combatantId = combatant.id;
       return button;
     },
   },
 });
 ```
 
+Cada payload traz o combatente como o painel o vê: `id`, `actor_id`, `token_id`,
+`name`, `initiative` (`null` enquanto não rolado), `hidden`, `defeated`,
+`position`, `is_current`, `is_next`, `has_acted`, `can_move_up`, `can_move_down`
+e `bar` (a barra principal do token do combatente, ou `null`). `initiative` é
+texto, não número: leia `state.config.input` para saber
+que formato o sistema ativo coloca ali.
+
 ### `sdk.combat.registerPanel(panel)`
 
-Registra um objeto de substituição/extensão de painel de combate.
+Substitui o painel de combate padrão. O objeto precisa expor `renderPanel(panel,
+state)`, que passa a ser dono de tudo dentro do corpo do painel.
 
 ```js
 sdk.combat.registerPanel({
-  renderHud(context) {},
-  renderPanel(context) {},
+  renderPanel(panel, state) {
+    const target = panel.querySelector("[data-combat-state]");
+    target.textContent = `Rodada ${state.round}: ${state.current_name}`;
+  },
 });
 ```
 
-Substituir o painel é poderoso; prefira handlers e slots leves quando possível.
+Substituir o painel significa reimplementar a edição de iniciativa e os
+controles de turno, então prefira handlers e slots quando eles bastarem.
 
 ### `sdk.combat.dispatch(name, payload)`
 

@@ -46,7 +46,8 @@ class ItemSheetService:
         self.layouts = SystemLayoutService()
 
     def build_bundle(
-        self, *, item_id: str, user_id: str, locale: str | None = None
+        self, *, item_id: str, user_id: str, locale: str | None = None,
+        presentation: bool = False,
     ) -> ItemSheetBundle | None:
         item = self.items.get(item_id)
         if item is None or item["status"] != "active":
@@ -55,7 +56,9 @@ class ItemSheetService:
         if campaign is None:
             return None
         campaign_dict = dict(campaign)
-        if not can_view_item(item=item, campaign=campaign_dict, user_id=user_id):
+        if not presentation and not can_view_item(
+            item=item, campaign=campaign_dict, user_id=user_id
+        ):
             return None
 
         system_id = item["system_id"]
@@ -94,7 +97,10 @@ class ItemSheetService:
             name=item["name"],
             type=item["type"],
             version=int(envelope.get("version", 1)),
-            can_edit=can_edit_item(item=item, campaign=campaign_dict, user_id=user_id),
+            can_edit=(
+                not presentation
+                and can_edit_item(item=item, campaign=campaign_dict, user_id=user_id)
+            ),
             layout=layout,
             sheet=sheet,
             data=data,

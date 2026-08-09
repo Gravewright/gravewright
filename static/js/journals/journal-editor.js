@@ -8,7 +8,7 @@
   const csrfToken = FI.csrfToken;
 
   const editors = new WeakMap();
-  const blockControllers = new WeakMap(); 
+  const blockControllers = new WeakMap();
   const autosaveTimers = new WeakMap();
 
   function escapeHtml(value) {
@@ -19,7 +19,38 @@
       .replace(/"/g, "&quot;");
   }
 
-  
+
+
+
+
+
+
+  function toolbarButton(name, icon, title) {
+    return {
+      name,
+      action: window.EasyMDE[name] || name,
+      className: `ph ph-${icon}`,
+      title,
+    };
+  }
+
+  function markdownToolbar() {
+    return [
+      toolbarButton("toggleBold", "text-b", "Bold"),
+      toolbarButton("toggleItalic", "text-italic", "Italic"),
+      toolbarButton("toggleHeadingSmaller", "text-h", "Heading"),
+      "|",
+      toolbarButton("toggleBlockquote", "quotes", "Quote"),
+      toolbarButton("toggleUnorderedList", "list-bullets", "Bullet list"),
+      toolbarButton("toggleOrderedList", "list-numbers", "Numbered list"),
+      "|",
+      toolbarButton("drawLink", "link", "Insert link"),
+      toolbarButton("drawImage", "image", "Insert image"),
+      "|",
+      toolbarButton("togglePreview", "eye", "Preview"),
+      toolbarButton("toggleSideBySide", "columns", "Side by side"),
+    ];
+  }
 
   function initRichTextIn(root) {
     if (!window.EasyMDE) return;
@@ -30,15 +61,10 @@
         spellChecker: false,
         status: false,
         minHeight: "150px",
-        toolbar: [
-          "bold", "italic", "heading",
-          "|", "quote", "unordered-list", "ordered-list",
-          "|", "link", "image",
-          "|", "preview", "side-by-side", "guide",
-        ],
+        toolbar: markdownToolbar(),
       });
       editors.set(textarea, editor);
-      
+
       editor.codemirror.on("blur", () => {
         const form = textarea.closest("[data-journal-editor]");
         if (form) {
@@ -49,7 +75,7 @@
     });
   }
 
-  
+
 
   function readJsonScript(host, selector) {
     const tag = host.querySelector(selector);
@@ -133,7 +159,7 @@
       root.querySelectorAll("[data-journal-block-editor]").forEach((host) => {
         if (blockControllers.has(host)) return;
         const form = host.closest("[data-journal-editor]");
-        
+
         const field = host.closest("[data-journal-block-field]") || host.parentElement;
         const input = field?.querySelector("[data-journal-doc-input]");
         const doc = readJsonScript(host, "[data-journal-doc]");
@@ -142,8 +168,8 @@
           try { labels = JSON.parse(host.dataset.labels); } catch {  }
         }
 
-        
-        
+
+
         const mountEl = document.createElement("div");
         host.textContent = "";
         host.appendChild(mountEl);
@@ -191,7 +217,7 @@
     });
   }
 
-  
+
 
   function readJson(textarea) {
     try {
@@ -268,7 +294,7 @@
     rowsEl.addEventListener("input", sync);
     rowsEl.addEventListener("change", sync);
 
-    
+
     const form = editor.closest("form");
     form?.addEventListener("submit", sync);
   }
@@ -292,7 +318,7 @@
     });
   }
 
-  
+
 
   function flushEditors(scope) {
     scope.querySelectorAll("[data-journal-rich-text]").forEach((textarea) => {
@@ -325,7 +351,7 @@
         hint.classList.add("is-visible");
       }
     } catch {
-      
+
     }
   }
 

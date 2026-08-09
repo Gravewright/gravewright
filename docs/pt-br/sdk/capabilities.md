@@ -17,6 +17,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `assets.audio` | Fornece assets de áudio. |
 | `assets.icons` | Fornece assets de ícone. |
 | `assets.images` | Fornece assets de imagem. |
+| `assets.library` | Le a biblioteca de assets da campanha: lista os arquivos enviados (imagens e PDFs) que o membro pode ver. |
 | `assets.maps` | Fornece assets de mapa. |
 | `assets.pack` | Fornece asset packs. |
 | `assets.scripts` | Carrega JavaScript confiável do pacote. |
@@ -28,7 +29,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `bus.request` | Solicita um valor a um provider do bus de interop da SDK. |
 | `bus.subscribe` | Assina eventos do bus de interop da SDK. |
 | `chat.cards` | Envia cards/mensagens de chat via `sdk.chat`. |
-| `combat.config` | Fornece configuração de combate. |
+| `combat.config` | Declara como a iniciativa é rolada e quais recursos o combate lê. |
 | `combat.runtime` | Usa métodos de runtime `sdk.combat.*` e registro de painel. |
 | `commands.register` | Registra comandos de cliente. |
 | `content.packs` | Fornece e lê content packs. |
@@ -75,6 +76,7 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 <!-- BEGIN GENERATED: method-gates -->
 | Método do SDK | Capability exigida |
 |---|---|
+| `sdk.assets.list` | `assets.library` |
 | `sdk.bus.provide` | `bus.provide` |
 | `sdk.bus.publish` | `bus.publish` |
 | `sdk.bus.request` | `bus.request` |

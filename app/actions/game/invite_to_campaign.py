@@ -11,9 +11,11 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.response import Redirect
 from litestar.response import Response
+from litestar.exceptions import NotFoundException
 
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
 from app.helpers.http_responses import json_error, json_ok, wants_json
+from app.config import config
 
 
 @dataclass
@@ -31,6 +33,8 @@ def invite_to_campaign(
     campaign_invitation_service: CampaignInvitationService,
     data: Annotated[InviteToCampaignForm, Body(media_type=RequestEncodingType.URL_ENCODED)],
 ) -> Response[dict[str, str | bool]] | Redirect:
+    if not config.campaign_email_invitation_creation_enabled:
+        raise NotFoundException()
     user = current_user
     json_response = wants_json(request)
 

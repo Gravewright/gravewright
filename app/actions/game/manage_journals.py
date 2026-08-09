@@ -11,6 +11,7 @@ from litestar.exceptions import NotAuthorizedException, NotFoundException
 from litestar.params import FromPath
 from litestar.response import File, Redirect, Response, Template
 
+from app.config import config
 from app.engine.journals.journal_asset_service import JournalAssetService
 from app.engine.journals.journal_asset_read_service import JournalAssetReadService
 from app.engine.journals.journal_page_service import JournalPageService
@@ -19,6 +20,10 @@ from app.business.game_page_service import GamePageService
 from app.helpers.env import PROJECT_ROOT
 from app.helpers.view import view_context
 from app.realtime.events import TransportEvent
+from app.realtime.resource_events import (
+    announce_resource_access_change,
+    announce_resource_tree_change,
+)
 from app.realtime.transport import RealtimeTransport
 
 
@@ -35,9 +40,9 @@ def _bool(form: Any, key: str) -> bool:
 
 
 def _list(form: Any, key: str) -> list[str]:
-    # Litestar's FormMultiDict exposes repeated values via ``getall`` (not
-    # ``getlist``); ``form.get`` only returns the first value, which silently
-    # dropped extra entries (e.g. board reorder / multi-owner shares).
+
+
+
     getall = getattr(form, "getall", None)
     if callable(getall):
         values = getall(key, [])
@@ -472,6 +477,15 @@ async def create_journal_folder(
         color=_str(form, "color"),
     )
 
+    if result.success:
+
+
+        await announce_resource_tree_change(
+            resource_type="journal",
+            campaign_id=result.campaign_id,
+            transport=RealtimeTransport(),
+        )
+
     if _wants_json(request):
         if result.success:
             return Response({"folder_id": result.folder_id}, status_code=201)
@@ -530,6 +544,7 @@ async def show_journal_modal(
         journal_folders=page.journal_folders,
         room_members=page.room_members,
         board_quest_options=page.board_quest_options,
+        targeted_handouts_enabled=config.targeted_handouts_enabled,
     )
 
     return Template(
@@ -597,6 +612,17 @@ async def toggle_journal_owner(
         requester_user_id=user["id"],
     )
 
+    if result.success:
+
+
+        await announce_resource_access_change(
+            resource_type="journal",
+            resource_id=journal_id,
+            campaign_id=result.campaign_id,
+            updated_by=user["id"],
+            transport=RealtimeTransport(),
+        )
+
     if _wants_json(request):
         if not result.success:
             return Response({"error_key": result.error_key}, status_code=400)
@@ -634,6 +660,15 @@ async def move_journal(
         requester_user_id=user["id"],
     )
 
+    if result.success:
+
+
+        await announce_resource_tree_change(
+            resource_type="journal",
+            campaign_id=result.campaign_id,
+            transport=RealtimeTransport(),
+        )
+
     if _wants_json(request):
         if not result.success:
             return Response({"error_key": result.error_key}, status_code=400)
@@ -661,6 +696,15 @@ async def move_journal_folder(
         target_parent_id=_str(form, "parent_id"),
         requester_user_id=user["id"],
     )
+
+    if result.success:
+
+
+        await announce_resource_tree_change(
+            resource_type="journal",
+            campaign_id=result.campaign_id,
+            transport=RealtimeTransport(),
+        )
 
     if _wants_json(request):
         if not result.success:

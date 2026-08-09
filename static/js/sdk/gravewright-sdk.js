@@ -1,31 +1,31 @@
-// Gravewright SDK — browser runtime.
-//
-// The single public entry point for packages on the table:
-//
-//   window.GravewrightSDK.register({
-//     id: "my-package",
-//     setup(sdk, payload) { /* plugins, sheets, combat, local state */ },
-//     ready(sdk, payload) { /* after the game runtime is ready */ },
-//   });
-//
-// Each package receives a *scoped* ``sdk`` whose namespaces are gated by the
-// capabilities it declared in its manifest (see sdk-capabilities.js).
+
+
+
+
+
+
+
+
+
+
+
+
 (() => {
     const caps = window.GravewrightSDKCapabilities;
     const VERSION = "1";
 
-    // --- internal state --------------------------------------------------------
-    const manifestsById = new Map(); // package id -> client manifest
-    const runtimes = new Map(); // package id -> { setup, ready }
+
+    const manifestsById = new Map();
+    const runtimes = new Map();
     const setupDone = new Set();
     const readyDone = new Set();
     let context = {};
     let gameReady = false;
 
 
-    // --- interop bus -----------------------------------------------------------
-    // The formal package-to-package channel. One provider per RPC method.
-    const busListeners = new Map(); // event name -> Set<fn>
+
+
+    const busListeners = new Map();
 
     function busSubscribe(name, fn) {
         const key = String(name || "").trim();
@@ -38,7 +38,7 @@
     function busPublish(name, payload) {
         const set = busListeners.get(String(name || "").trim());
         if (!set) return;
-        // Deliver an immutable copy so a listener cannot mutate shared state.
+
         const frozen = freeze(clone(payload));
         for (const fn of [...set]) {
             try {
@@ -49,8 +49,8 @@
         }
     }
 
-    // RPC over the bus: one provider per method. Returns a structured BusResult.
-    const busProviders = new Map(); // method -> { handler, packageId }
+
+    const busProviders = new Map();
     const BUS_DEFAULT_TIMEOUT_MS = 5000;
 
     function busError(code, message) {
@@ -110,7 +110,7 @@
                 Promise.resolve().then(() => provider.handler(frozen, providerContext)),
                 timeout,
             ]);
-            // A timeout resolves to a BusResult; a handler value is wrapped.
+
             if (value && value.ok === true && Object.prototype.hasOwnProperty.call(value, "value")) {
                 return value;
             }
@@ -123,7 +123,7 @@
         }
     }
 
-    // --- helpers ---------------------------------------------------------------
+
     function parseJsonScript(id, fallback) {
         const el = document.getElementById(id);
         if (!el) return fallback;
@@ -160,12 +160,12 @@
         }
     }
 
-    // The package id a registering script may claim. The server tags each package
-    // <script> with data-gw-package + data-gw-nonce and ships the matching
-    // {id: nonce} map in the game context; the nonce must match for the declared
-    // id to be honored. This makes the script <-> package binding explicit and
-    // testable rather than inferred from the URL alone. Falls back to the URL when
-    // the data attributes are absent (e.g. non-asset scripts).
+
+
+
+
+
+
     function currentScriptPackageId() {
         const el = document.currentScript;
         const declared = el?.dataset?.gwPackage || "";
@@ -184,9 +184,9 @@
         return currentScriptPackageIdFromSrc();
     }
 
-    // --- HTML sheets -----------------------------------------------------------
-    const sheetControllers = new Map(); // `${packageId}:${sheetType}` -> controller
-    const mountedSheets = new WeakMap(); // root -> { controller, ctx, cleanups }
+
+    const sheetControllers = new Map();
+    const mountedSheets = new WeakMap();
 
     function sheetKey(packageId, sheetType) {
         return `${packageId}:${String(sheetType || "").trim()}`;
@@ -265,8 +265,8 @@
         caps.requireApiCapability(pkg, apiName);
     }
 
-    // The Notion-style block editor (TipTap) ships with journals and exposes a
-    // global once its ES module has loaded; sheets reuse it for rich fields.
+
+
     function whenBlockEditorReady(callback) {
         if (window.GWBlockEditor) return callback();
         document.addEventListener("gw:block-editor-ready", () => callback(), { once: true });
@@ -281,18 +281,18 @@
         }
     }
 
-    // data-rich-editor mounts a full block editor on the element and persists the
-    // edited document (the journal "gw-journal-doc-v1" shape) through the normal
-    // patch path. It saves on blur — not per keystroke — so a realtime refresh
-    // never tears the editor down mid-typing. Read-only unless canEdit.
+
+
+
+
     function mountRichEditor(node, ctx, cleanups) {
         const path = node.dataset.richEditor;
         const editable = ctx.data?.canEdit !== false;
         let handle = null;
         whenBlockEditorReady(() => {
             if (handle || !document.contains(node) || !window.GWBlockEditor) return;
-            // A failing editor must not abort the rest of the sheet binding
-            // (tabs, other fields), so isolate the mount.
+
+
             try {
                 handle = window.GWBlockEditor.mount(node, {
                     editable,
@@ -309,54 +309,103 @@
             try {
                 handle?.destroy();
             } catch (_err) {
-                /* editor already torn down */
+
             }
         });
     }
 
-    // data-item-list renders an array of item snapshots (each {id, name, type})
-    // with a Remove control. Items are dropped onto the sheet through the core
-    // drop flow; removal just rewrites the array through the normal patch path.
+
+
+
     async function mountEmbeddedItemEditor(host, item, ctx) {
         if (host.dataset.loaded === "1") return;
         host.dataset.loaded = "1";
         const type = String(item?.type || "item");
         try {
-            const templatePath = `sheets/${encodeURIComponent(type)}.html`;
-            const url = `/sdk/packages/${encodeURIComponent(ctx.packageId)}/asset/${templatePath}`;
+            const actorId = actorIdFromContext(ctx);
+            const url = `/game/actor/${encodeURIComponent(actorId)}/item/${encodeURIComponent(item.id)}/sheet-bundle`;
             const response = await fetch(url, {
                 credentials: "same-origin",
                 cache: "no-store",
-                headers: { Accept: "text/html" },
+                headers: { Accept: "application/json" },
             });
-            if (!response.ok) throw new Error(`template ${response.status}`);
-            host.innerHTML = await response.text();
-            const data = item?.data && typeof item.data === "object" ? item.data : {};
-            mountHtmlSheet(
-                ctx.packageId,
-                type,
-                host,
-                {
-                    item: { id: item.id, name: item.name, type, ...data },
-                    system: data,
-                    canEdit: ctx.data?.canEdit !== false,
+            if (!response.ok) throw new Error(`embedded item ${response.status}`);
+            const bundle = await response.json();
+            const renderer = window.GravewrightItemSheetInternals?.renderEmbedded;
+            if (typeof renderer !== "function") throw new Error("embedded item renderer unavailable");
+            renderer(host, bundle, {
+                onChange(path, value) {
+                    let target = String(path || "");
+                    if (target === "core.name") target = "name";
+                    else if (target.startsWith("sheet.")) target = `data.${target.slice(6)}`;
+                    ctx.onItemChange?.(item.id, target, value);
                 },
-                {
-                    onChange(path, value) {
-                        let target = String(path || "");
-                        if (target === "item.name" || target === "core.name") target = "name";
-                        else if (target.startsWith("system.")) target = `data.${target.slice(7)}`;
-                        else if (target.startsWith("item.")) target = `data.${target.slice(5)}`;
-                        ctx.onItemChange?.(item.id, target, value);
-                    },
-                    onAction(name) {
-                        ctx.onItemAction?.(item.id, name);
-                    },
-                },
-            );
-        } catch (_err) {
+            });
+        } catch (err) {
+            console.error("Failed to load embedded item sheet", {
+                actorId: actorIdFromContext(ctx),
+                itemId: item?.id || "",
+                itemType: item?.type || "",
+                error: err,
+            });
             host.textContent = "Failed to load item sheet.";
         }
+    }
+
+    function openEmbeddedItemModal(item, ctx) {
+        const dialog = document.createElement("dialog");
+        dialog.className = "gw-embedded-item-modal";
+        dialog.dataset.package = String(ctx.packageId || "");
+        const header = document.createElement("header");
+        header.className = "gw-embedded-item-modal__header";
+        const title = document.createElement("strong");
+        title.textContent = String(item?.name || item?.type || "Item");
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "gw-embedded-item-modal__close";
+        close.setAttribute("aria-label", "Close");
+        close.innerHTML = '<i class="ph ph-x" aria-hidden="true"></i>';
+        header.append(title, close);
+        const body = document.createElement("div");
+        body.className = "gw-embedded-item-modal__body";
+        dialog.append(header, body);
+        document.body.appendChild(dialog);
+
+        const dispose = () => {
+            unmountHtmlSheet(body);
+            dialog.remove();
+        };
+        close.addEventListener("click", () => dialog.close());
+        dialog.addEventListener("close", dispose, { once: true });
+        dialog.addEventListener("click", (event) => {
+            if (event.target === dialog) dialog.close();
+        });
+        dialog.showModal();
+        void mountEmbeddedItemEditor(body, item, ctx);
+    }
+
+
+
+    function itemActionsOf(node) {
+        const raw = node.dataset.itemActions;
+        if (!raw) return [];
+        let parsed;
+        try {
+            parsed = JSON.parse(raw);
+        } catch {
+            console.error("data-item-actions inválido", raw);
+            return [];
+        }
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter((spec) => spec && typeof spec === "object" && spec.action).slice(0, 6);
+    }
+
+
+
+    function localeText(packageId, key, fallback) {
+        const catalog = manifestsById.get(packageId)?.locale || {};
+        if (key && Object.prototype.hasOwnProperty.call(catalog, key)) return catalog[key];
+        return fallback || key || "";
     }
 
     function renderItemList(node, ctx, cleanups) {
@@ -375,47 +424,107 @@
         items.forEach((item) => {
             const row = document.createElement("div");
             row.className = "gw-item-list__row";
+            row.dataset.itemType = String(item?.type || "item");
+            const identity = document.createElement("div");
+            identity.className = "gw-item-list__identity";
             const label = document.createElement("button");
             label.type = "button";
             label.className = "gw-item-list__open";
             label.textContent = (item && (item.name || item.type)) || "Item";
-            label.setAttribute("aria-expanded", "false");
-            row.appendChild(label);
+            label.setAttribute("aria-haspopup", "dialog");
+            identity.appendChild(label);
+
+            const data = item?.data && typeof item.data === "object" ? item.data : {};
+            const facts = [
+                ["skill", data.skill],
+                ["damage", data.damage],
+                ["range", data.range],
+                ["rof", data.rof ? `CdT ${data.rof}` : ""],
+                ["ap", Number(data.ap) ? `PA ${data.ap}` : ""],
+            ].filter(([, value]) => value !== "" && value != null);
+            if (facts.length) {
+                const meta = document.createElement("div");
+                meta.className = "gw-item-list__meta";
+                facts.forEach(([kind, value]) => {
+                    const fact = document.createElement("span");
+                    fact.className = `gw-item-list__fact gw-item-list__fact--${kind}`;
+                    fact.textContent = String(value);
+                    meta.appendChild(fact);
+                });
+                identity.appendChild(meta);
+            }
+            row.appendChild(identity);
+
+            const actions = document.createElement("div");
+            actions.className = "gw-item-list__actions";
+
+
+
+
+            itemActionsOf(node).forEach((spec) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "gw-item-list__action";
+                button.textContent = localeText(ctx.packageId, spec.labelKey, spec.label);
+                button.dataset.itemAction = spec.action;
+                const onAction = () =>
+                    ctx.onItemAction?.(item.id, spec.action, {
+                        element: button,
+                        label: button.textContent,
+                    });
+                button.addEventListener("click", onAction);
+                cleanups.push(() => button.removeEventListener("click", onAction));
+                actions.appendChild(button);
+            });
+
             if (editable) {
+                const edit = document.createElement("button");
+                const editLabel = localeText(ctx.packageId, `${ctx.packageId}.ui.editar`, "Edit");
+                edit.type = "button";
+                edit.className = "gw-item-list__edit";
+                edit.title = editLabel;
+                edit.setAttribute("aria-label", editLabel);
+                edit.innerHTML = '<i class="ph ph-pencil-simple" aria-hidden="true"></i>';
+                const onEdit = () => openEmbeddedItemModal(item, ctx);
+                edit.addEventListener("click", onEdit);
+                cleanups.push(() => edit.removeEventListener("click", onEdit));
+                actions.appendChild(edit);
+
                 const remove = document.createElement("button");
+                const removeLabel = localeText(ctx.packageId, `${ctx.packageId}.ui.remover`, "Remove");
                 remove.type = "button";
                 remove.className = "gw-item-list__remove";
-                remove.textContent = "Remove";
-                const onRemove = () => {
+                remove.title = removeLabel;
+                remove.setAttribute("aria-label", removeLabel);
+                remove.innerHTML = '<i class="ph ph-trash" aria-hidden="true"></i>';
+                const onRemove = async () => {
+                    const message = localeText(
+                        ctx.packageId,
+                        `${ctx.packageId}.ui.confirmar.remocao`,
+                        `Remove ${item?.name || "item"}?`
+                    ).replace("{name}", String(item?.name || ""));
+                    const confirm = window.GravewrightCore?.dialog?.confirm;
+                    if (confirm && !(await confirm(message, { variant: "danger" }))) return;
                     const next = items.filter((it) => it !== item);
                     setPath(ctx.data, path, next);
                     ctx.onChange?.(path, next);
                 };
                 remove.addEventListener("click", onRemove);
                 cleanups.push(() => remove.removeEventListener("click", onRemove));
-                row.appendChild(remove);
+                actions.appendChild(remove);
             }
+            row.appendChild(actions);
             node.appendChild(row);
-            const editor = document.createElement("div");
-            editor.className = "gw-item-list__editor";
-            editor.hidden = true;
-            node.appendChild(editor);
-            const onOpen = () => {
-                const opening = editor.hidden;
-                editor.hidden = !opening;
-                label.setAttribute("aria-expanded", opening ? "true" : "false");
-                if (opening) void mountEmbeddedItemEditor(editor, item, ctx);
-            };
+            const onOpen = () => openEmbeddedItemModal(item, ctx);
             label.addEventListener("click", onOpen);
             cleanups.push(() => {
                 label.removeEventListener("click", onOpen);
-                unmountHtmlSheet(editor);
             });
         });
     }
 
-    // Root-scoped tabs: data-tab="name" buttons toggle data-tab-panel="name"
-    // panels. Scoping to ``root`` keeps multiple open sheets independent.
+
+
     function wireTabs(root, cleanups) {
         const tablists = [...root.querySelectorAll('[role="tablist"]')].filter(
             (list) => list.closest("[data-sheet-type]") === root.querySelector("[data-sheet-type]")
@@ -437,17 +546,33 @@
                 });
             };
             tabs.forEach((tab) => {
-                const onClick = () => activate(tab.dataset.tab);
+                const onClick = () => {
+                    activate(tab.dataset.tab);
+
+
+
+                    const modal = root.closest?.("[data-modal-window]");
+                    if (modal) {
+                        document.dispatchEvent(
+                            new CustomEvent("vtt:modal-content-updated", { detail: { modal } })
+                        );
+                    }
+                };
                 tab.addEventListener("click", onClick);
                 cleanups.push(() => tab.removeEventListener("click", onClick));
             });
-            activate(tabs[0].dataset.tab);
+
+
+
+
+            const current = tabs.find((tab) => tab.classList.contains("is-active"));
+            activate((current || tabs[0]).dataset.tab);
         });
     }
 
     function bindHtmlSheet(root, ctx, controller) {
         const cleanups = [];
-        // Wire tabs first so a later binding failure can never leave them dead.
+
         wireTabs(root, cleanups);
         root.querySelectorAll("[data-text]").forEach((node) => {
             node.textContent = getPath(ctx.data, node.dataset.text) ?? "";
@@ -464,29 +589,61 @@
         root.querySelectorAll("[data-bind]").forEach((node) => {
             const path = node.dataset.bind;
             const value = getPath(ctx.data, path);
+
+
+
+
+            const editando = node === document.activeElement;
             if (node.type === "checkbox") node.checked = !!value;
-            else if ("value" in node) node.value = value ?? "";
-            const onInput = () => {
-                const next = node.type === "checkbox"
+            else if ("value" in node && !editando) node.value = value ?? "";
+            const read = () =>
+                node.type === "checkbox"
                     ? node.checked
                     : node.type === "number" ? Number(node.value) : node.value;
-                setPath(ctx.data, path, next);
-                ctx.onChange?.(path, next);
+
+
+
+            const onLocal = () => {
+                setPath(ctx.data, path, read());
                 controller.update?.(ctx);
             };
-            const eventName = node.type === "checkbox" ? "change" : "input";
-            node.addEventListener(eventName, onInput);
-            cleanups.push(() => node.removeEventListener(eventName, onInput));
+
+
+
+
+
+
+            const onCommit = () => {
+                setPath(ctx.data, path, read());
+                ctx.onChange?.(path, read());
+                controller.update?.(ctx);
+            };
+
+            const live = node.type === "checkbox" ? null : "input";
+            if (live) {
+                node.addEventListener(live, onLocal);
+                cleanups.push(() => node.removeEventListener(live, onLocal));
+            }
+            node.addEventListener("change", onCommit);
+            cleanups.push(() => node.removeEventListener("change", onCommit));
         });
         root.querySelectorAll("[data-action]").forEach((node) => {
             const onClick = (event) => {
-                // A package controller may handle the action; with no controller
-                // the host runs it as a server-side *system* action (the ruleset's
-                // own rules/actions entry), e.g. a roll preset.
-                controller.onAction?.(
+
+
+
+
+
+
+
+
+
+
+                const handled = controller.onAction?.(
                     { name: node.dataset.action, event, element: node },
                     ctx
                 );
+                if (handled === true) return;
                 ctx.onAction?.(node.dataset.action, { event, element: node });
             };
             node.addEventListener("click", onClick);
@@ -520,8 +677,8 @@
 
     function mountHtmlSheet(packageId, sheetType, root, data = {}, options = {}) {
         if (!root) return false;
-        // A controller is optional: an HTML sheet may declare only a template and
-        // still bind data-text/data-bind. data-action is a no-op without one.
+
+
         const controller = sheetControllers.get(sheetKey(packageId, sheetType)) || {};
         const ctx = {
             packageId,
@@ -572,14 +729,43 @@
         return true;
     }
 
-    // --- scoped SDK ------------------------------------------------------------
+
+
+
+
+
+
+
+    async function unwrap(promise, what) {
+        const result = await promise;
+        if (!result?.ok) {
+            throw new Error(
+                `${what} failed (${result?.status || 0}): ${result?.errorKey || "unknown"}`
+            );
+        }
+        return result.data;
+    }
+
     function buildScopedSdk(pkg) {
         const requireCap = (apiName) => caps.requireApiCapability(pkg, apiName);
         const http = () => window.GravewrightCore && window.GravewrightCore.http;
 
         const namespaces = {
             version: VERSION,
-            package: freeze({ id: pkg.id, kind: pkg.kind, version: pkg.version || "0" }),
+            package: freeze({
+                id: pkg.id,
+                kind: pkg.kind,
+                version: pkg.version || "0",
+
+
+
+                assetUrl: (relativePath) =>
+                    `/sdk/packages/${encodeURIComponent(pkg.id)}/asset/${String(relativePath || "")
+                        .split("/")
+                        .filter(Boolean)
+                        .map(encodeURIComponent)
+                        .join("/")}`,
+            }),
             kind: pkg.kind,
             capabilities: Object.freeze({
                 has: (c) => caps.hasCapability(pkg, c),
@@ -598,8 +784,8 @@
                 ready: () => gameReady,
             }),
             bus: Object.freeze({
-                // Formal interop bus. A package may only publish in
-                // its own "{id}.*" namespace; it may subscribe to any event.
+
+
                 publish(name, payload) {
                     requireCap("bus.publish");
                     const event = String(name || "");
@@ -618,8 +804,8 @@
                 },
                 subscribe(name, fn) {
                     requireCap("bus.subscribe");
-                    // Strict policy: a package may subscribe only to events it
-                    // declared in interop.listens (any namespace, including core).
+
+
                     const event = String(name || "");
                     if (!interopDeclares(pkg, "listens", event)) {
                         throw busException(
@@ -647,8 +833,8 @@
                 },
                 request(method, payload, options) {
                     requireCap("bus.request");
-                    // Strict policy: a package may request only methods it
-                    // declared in interop.requires.
+
+
                     const name = String(method || "");
                     if (!interopDeclares(pkg, "requires", name)) {
                         throw busException(
@@ -667,6 +853,27 @@
                             detail: { name, handler, packageId: pkg.id },
                         })
                     );
+                },
+            }),
+            assets: Object.freeze({
+
+
+
+                async list(options = {}) {
+                    requireCap("assets.list");
+                    const client = http();
+                    const campaignId = options.campaignId || context.campaign?.id || "";
+                    if (!client?.getJson) throw new Error("GravewrightCore.http is not available");
+                    if (!campaignId) throw new Error("sdk.assets.list requires an active campaign");
+
+                    const state = await unwrap(
+                        client.getJson(`/game/assets/state/${encodeURIComponent(campaignId)}`),
+                        "sdk.assets.list"
+                    );
+                    const assets = Array.isArray(state?.assets) ? state.assets : [];
+                    return options.kind
+                        ? assets.filter((asset) => asset.kind === options.kind)
+                        : assets;
                 },
             }),
             ui: Object.freeze({
@@ -725,16 +932,22 @@
                     requireCap("settings.set");
                     const client = http();
                     if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
-                    const result = await client.postJson("/sdk/packages/settings", {
-                        package_id: pkg.id,
-                        key,
-                        value,
-                        campaign_id: options.campaignId || context.campaign?.id || "",
-                    });
-                    if (result && result.success) {
-                        pkg.settingValues = { ...(pkg.settingValues || {}), [key]: result.value };
+
+
+
+                    const body = await unwrap(
+                        client.postJson("/sdk/packages/settings", {
+                            package_id: pkg.id,
+                            key,
+                            value,
+                            campaign_id: options.campaignId || context.campaign?.id || "",
+                        }),
+                        "sdk.settings.set"
+                    );
+                    if (body?.success) {
+                        pkg.settingValues = { ...(pkg.settingValues || {}), [key]: body.value };
                     }
-                    return result;
+                    return body;
                 },
             }),
             sheets: Object.freeze({
@@ -797,46 +1010,66 @@
                 async packs() {
                     requireCap("content.packs");
                     const client = http();
-                    return client?.getJson?.(`/sdk/packages/${pkg.id}/content/packs`);
+                    if (!client?.getJson) return [];
+                    return unwrap(
+                        client.getJson(`/sdk/packages/${pkg.id}/content/packs`),
+                        "sdk.content.packs"
+                    );
                 },
                 async pack(packId) {
                     requireCap("content.pack");
                     const client = http();
-                    return client?.getJson?.(`/sdk/packages/${pkg.id}/content/pack/${packId}`);
+                    if (!client?.getJson) return null;
+                    return unwrap(
+                        client.getJson(`/sdk/packages/${pkg.id}/content/pack/${packId}`),
+                        "sdk.content.pack"
+                    );
                 },
             }),
             storage: Object.freeze({
-                // Managed SQLite storage. The package
-                // never sees a path or raw SQL — only a scope, a named query, and
-                // typed params. The backend validates capability/scope/permission.
+
+
+
                 sqlite: Object.freeze({
                     async query(scope, name, params = {}) {
                         requireCap("storage.sqlite.query");
                         const client = http();
-                        return client?.postJson?.(`/sdk/packages/${pkg.id}/storage/sqlite/query`, {
-                            scope,
-                            query: name,
-                            params,
-                            campaign_id: context.campaign?.id || "",
-                        });
+                        if (!client?.postJson) return null;
+                        return unwrap(
+                            client.postJson(`/sdk/packages/${pkg.id}/storage/sqlite/query`, {
+                                scope,
+                                query: name,
+                                params,
+                                campaign_id: context.campaign?.id || "",
+                            }),
+                            "sdk.storage.sqlite.query"
+                        );
                     },
                     async execute(scope, name, params = {}) {
                         requireCap("storage.sqlite.execute");
                         const client = http();
-                        return client?.postJson?.(`/sdk/packages/${pkg.id}/storage/sqlite/execute`, {
-                            scope,
-                            query: name,
-                            params,
-                            campaign_id: context.campaign?.id || "",
-                        });
+                        if (!client?.postJson) return null;
+                        return unwrap(
+                            client.postJson(`/sdk/packages/${pkg.id}/storage/sqlite/execute`, {
+                                scope,
+                                query: name,
+                                params,
+                                campaign_id: context.campaign?.id || "",
+                            }),
+                            "sdk.storage.sqlite.execute"
+                        );
                     },
                     async status(scope) {
                         requireCap("storage.sqlite.status");
                         const client = http();
-                        return client?.postJson?.(`/sdk/packages/${pkg.id}/storage/sqlite/status`, {
-                            scope,
-                            campaign_id: context.campaign?.id || "",
-                        });
+                        if (!client?.postJson) return null;
+                        return unwrap(
+                            client.postJson(`/sdk/packages/${pkg.id}/storage/sqlite/status`, {
+                                scope,
+                                campaign_id: context.campaign?.id || "",
+                            }),
+                            "sdk.storage.sqlite.status"
+                        );
                     },
                 }),
             }),
@@ -853,7 +1086,7 @@
             }),
         };
 
-        // Ergonomic shortcuts that delegate to the namespaces above.
+
         namespaces.toast = (message, options) => namespaces.ui.toast(message, options);
         namespaces.setting = (key, value) =>
             value === undefined ? namespaces.settings.get(key) : namespaces.settings.set(key, value);
@@ -861,7 +1094,7 @@
         return Object.freeze(namespaces);
     }
 
-    // --- lifecycle -------------------------------------------------------------
+
     function runSetup(id) {
         if (setupDone.has(id)) return;
         const runtime = runtimes.get(id);
@@ -920,8 +1153,8 @@
             setup: typeof definition.setup === "function" ? definition.setup : null,
             ready: typeof definition.ready === "function" ? definition.ready : null,
         });
-        // A package can register before or after manifests load; only run setup
-        // once we know the package is actually active in this campaign.
+
+
         runSetup(id);
         return true;
     }
@@ -943,7 +1176,7 @@
     }
 
     function init() {
-        // Run each active package's ready() once the DOM and core are up.
+
         gameReady = true;
         for (const id of manifestsById.keys()) {
             if (runtimes.has(id)) runReady(id);
@@ -965,10 +1198,10 @@
     context = Object.freeze({ ...(parseJsonScript("gravewright-game-context", {}) || {}) });
     loadManifests(parseJsonScript("gravewright-sdk-packages", []) || []);
 
-    // Dev-only introspection. Gated on the server-provided debug flag (wired
-    // from APP_DEBUG), so it is absent in production. Tests and package authors
-    // use it to confirm which packages are active and which actually registered
-    // a runtime via the SDK.
+
+
+
+
     if (context.debug === true) {
         window.GravewrightSDKDebug = Object.freeze({
             packages: () => Array.from(manifestsById.values()),
@@ -977,8 +1210,8 @@
         });
     }
 
-    // Defer init until DOMContentLoaded so every deferred package script has had
-    // a chance to register first. ``register`` still handles late registrations.
+
+
     if (document.readyState === "complete") {
         init();
     } else {

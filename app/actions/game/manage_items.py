@@ -15,6 +15,7 @@ from litestar import Request, get, post
 from litestar.params import FromPath
 from litestar.response import Redirect, Response, Template
 
+from app.config import config
 from app.engine.content.content_import_service import ContentImportService
 from app.engine.items.item_service import ItemResult, ItemService
 from app.engine.sheets.item_sheet_data_service import ItemSheetDataResult, ItemSheetDataService
@@ -126,6 +127,7 @@ async def show_item_sheet_modal(
         "bundle_json": json.dumps(item_sheet_service.to_dict(bundle), separators=(",", ":")),
         "room_id": bundle.campaign_id,
         "is_gm": member_role == "gm",
+        "targeted_handouts_enabled": config.targeted_handouts_enabled,
     }
     return Template(template_name="pages/game/_item_sheet_modal.html", context=context)
 

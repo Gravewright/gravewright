@@ -27,12 +27,12 @@ R = TypeVar("R")
 
 _SLOW_BLOCKING_MS = 250.0
 
-# Dedicated pool for blocking DB work. ``asyncio.to_thread`` uses the loop's
-# default executor (~min(32, cpu+4) threads), which throttles the realtime hot
-# path: a single command fans into several DB round-trips, so under load worker
-# threads queue and even trivial reads measure tens of ms of wait. Sizing this
-# pool explicitly (and wider than the default) keeps reads from queuing behind
-# the serialized writers.
+
+
+
+
+
+
 _executor: ThreadPoolExecutor | None = None
 _executor_lock = threading.Lock()
 
@@ -67,8 +67,8 @@ async def run_blocking(func: Callable[P, R], /, *args: P.args, **kwargs: P.kwarg
     started = time.perf_counter()
     try:
         loop = asyncio.get_running_loop()
-        # Run in a copy of the current context so contextvars (e.g. the request
-        # correlation id) propagate into the worker thread for diagnostics.
+
+
         context = contextvars.copy_context()
         call = partial(context.run, func, *args, **kwargs)
         return await loop.run_in_executor(_get_executor(), call)

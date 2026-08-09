@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "name": "Fixture — text initiative",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "1",
+    "verified": "1",
+    "maximum": "1.x"
+  },
+  "entrypoints": {},
+  "provides": {
+    "storage": {
+      "model": "fixture"
+    },
+    "actorTypes": [
+      {
+        "id": "character"
+      }
+    ],
+    "rules": {
+      "combat": "rules/combat.gw.json"
+    }
+  },
+  "capabilities": [
+    "actors.register",
+    "combat.config"
+  ],
+  "activation": {
+    "scope": "campaign",
+    "mode": "exclusive"
+  },
+  "id": "valid-text-initiative-ruleset",
+  "kind": "ruleset"
+}

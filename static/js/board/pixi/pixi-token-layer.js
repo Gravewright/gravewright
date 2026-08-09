@@ -11,13 +11,24 @@
         hostile: 0xe24a4a,
         unknown: 0x5c5c5c,
     };
-    const TOKEN_HP_BAR_H = 4;
+    const TOKEN_BAR_H = 4;
+
+
+    const TOKEN_BAR_FALLBACK_COLORS = { bar_1: 0x4caf50, bar_2: 0x3b82f6 };
     const TOKEN_HIDDEN_OPACITY = 0.42;
     const COMBAT_RING_COLORS = {
         current: 0x28d17c,
         next: 0xef4444,
         acted: 0x9ca3af,
     };
+
+
+    function hexToInt(value, fallback) {
+        const text = String(value || "").trim().replace(/^#/, "");
+        const full = text.length === 3 ? text.replace(/./g, (c) => c + c) : text;
+        if (!/^[0-9a-fA-F]{6}$/.test(full)) return fallback;
+        return parseInt(full, 16);
+    }
 
     const proto = window.GravewrightBoardInternals.PixiBoardRenderer.prototype;
 
@@ -196,20 +207,8 @@
 
             this._renderCombatTurnRing(g, token, { cx, cy, radius, tokenSize, px });
 
-            const hp = token.bars?.hp;
-            if (hp && hp.max > 0 && tokenSize * zoom > 20) {
-                const barH = TOKEN_HP_BAR_H * px;
-                const barPad = 3 * px;
-                const barW = tokenSize - barPad * 2;
-                const barX = tokenX + barPad;
-                const barY = tokenY + tokenSize - barH - barPad;
-                const ratio = Math.max(0, Math.min(1, hp.value / hp.max));
-
-                g.rect(barX, barY, barW, barH)
-                    .fill({ color: 0x000000, alpha: 0.55 });
-
-                g.rect(barX, barY, barW * ratio, barH)
-                    .fill({ color: 0x4caf50 });
+            if (tokenSize * zoom > 20) {
+                this._renderTokenBars(g, token, { tokenX, tokenY, tokenSize, px });
             }
 
             if (tokenSize * zoom > 20 && token.name) {
@@ -223,8 +222,8 @@
                     node.label.style.fontSize = 11;
                 }
 
-                
-                
+
+
                 const screenCx = cx * zoom + this.camera.offsetX;
                 const screenY = (wy + wh) * zoom + this.camera.offsetY + 3;
                 const tw = node.label.width;
@@ -242,6 +241,29 @@
                 node.labelBg.visible = false;
                 node.labelBg.clear();
             }
+        },
+
+        _renderTokenBars(g, token, { tokenX, tokenY, tokenSize, px }) {
+            const barH = TOKEN_BAR_H * px;
+            const barPad = 3 * px;
+            const barW = tokenSize - barPad * 2;
+            const barX = tokenX + barPad;
+            const rows = {
+                bar_1: tokenY + tokenSize - barH - barPad,
+                bar_2: tokenY + barPad,
+            };
+
+            Object.entries(rows).forEach(([slot, barY]) => {
+                const bar = token.bars?.[slot];
+                const max = Number(bar?.max);
+                if (!bar || !(max > 0)) return;
+                const ratio = Math.max(0, Math.min(1, Number(bar.value) / max));
+
+                g.rect(barX, barY, barW, barH).fill({ color: 0x000000, alpha: 0.55 });
+                g.rect(barX, barY, barW * ratio, barH).fill({
+                    color: hexToInt(bar.color, TOKEN_BAR_FALLBACK_COLORS[slot]),
+                });
+            });
         },
 
         _renderCombatTurnRing(g, token, ctx) {
@@ -267,8 +289,8 @@
                 return;
             }
 
-            
-            
+
+
             const pulseRadius = baseRadius + Math.max(2 * px, tokenSize * 0.035) * wave;
             const pulseAlpha = role === "current" ? 0.18 + 0.30 * wave : 0.14 + 0.22 * wave;
 

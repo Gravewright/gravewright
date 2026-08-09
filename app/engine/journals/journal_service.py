@@ -66,7 +66,9 @@ class JournalService:
             journal_id=journal["id"],
             user_id=user_id,
         )
-        return bool(permission and permission["can_view"])
+        if permission and permission["can_view"]:
+            return True
+        return False
 
     def can_view_journal(self, *, journal: dict, campaign: dict, user_id: str) -> bool:
         """Whether the user may open this journal (read-only at least).

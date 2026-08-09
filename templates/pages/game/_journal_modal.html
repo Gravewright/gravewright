@@ -14,6 +14,11 @@
         </div>
         <div class="game-modal-controls">
             {% if is_gm %}
+            {% if targeted_handouts_enabled %}
+            <button class="game-modal-control" type="button" data-handout-resource="journal"
+                    data-resource-id="{{ journal.id }}" data-campaign-id="{{ room_id }}"
+                    aria-label="{{ t('handout.open') }}"><i class="ph ph-hand-pointing" aria-hidden="true"></i></button>
+            {% endif %}
             <button class="game-modal-control" type="button"
                     data-resource-permissions="journal"
                     data-resource-id="{{ journal.id }}"

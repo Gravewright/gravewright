@@ -218,3 +218,50 @@ def test_sdk_runtime_is_served_as_static_asset(live_server):
         assert resp.status == 200
         body = resp.read().decode("utf-8", "replace")
     assert "window.GravewrightSDK" in body
+
+
+def test_join_code_feature_can_be_disabled_on_real_server(tmp_path):
+    """The rollout flag removes the public entry surface without touching schema."""
+    db_path = tmp_path / "e2e-join-code-disabled.sqlite3"
+    _seed_database(db_path)
+    port = _free_port()
+    base_url = f"http://127.0.0.1:{port}"
+    env = os.environ.copy()
+    env.update(
+        {
+            "APP_ENV": "test",
+            "DATABASE_URL": f"sqlite:///{db_path.resolve().as_posix()}",
+            "ALLOWED_HOSTS": "*",
+            "SESSION_COOKIE_SECURE": "false",
+            "ALLOW_METADATA_BOOTSTRAP": "true",
+            "GRAVEWRIGHT_TEST_TEMP_ROOT": str(tmp_path.resolve()),
+            "CAMPAIGN_JOIN_CODE_ENABLED": "false",
+        }
+    )
+    proc = subprocess.Popen(
+        [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(port),
+            "--log-level",
+            "warning",
+        ],
+        cwd=str(REPO_ROOT),
+        env=env,
+    )
+    try:
+        _wait_http_ready(f"{base_url}/login", proc=proc)
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(f"{base_url}/join/ABCD-EFGH-JK23", timeout=15)
+        assert exc_info.value.code == 404
+    finally:
+        proc.terminate()
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            proc.wait(timeout=10)
+        if proc.poll() is None:
+            proc.kill()

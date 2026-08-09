@@ -12,6 +12,7 @@ from app.actions.game.manage_actor_folders import rename_actor_folder
 from app.actions.game.manage_actor_folders import set_actor_folder_color
 from app.actions.game.manage_actor_folders import toggle_actor_owner
 from app.actions.game.invite_to_campaign import invite_to_campaign
+from app.actions.game.global_search import global_search
 from app.actions.game.leave import leave_game
 from app.actions.game.manage_scenes import activate_scene
 from app.actions.game.manage_scenes import create_scene_group
@@ -25,6 +26,7 @@ from app.actions.game.manage_actors import delete_actor as delete_actor_core
 from app.actions.game.manage_actors import drop_on_actor
 from app.actions.game.manage_actors import execute_action
 from app.actions.game.manage_actors import execute_item_action
+from app.actions.game.manage_actors import get_embedded_item_sheet_bundle
 from app.actions.game.manage_actors import get_content_pack
 from app.actions.game.manage_actors import import_content_entry
 from app.actions.game.manage_actors import list_content_packs
@@ -42,19 +44,17 @@ from app.actions.game.manage_actors import show_actor_sheet_modal
 from app.actions.game.manage_actors import show_token_sheet_modal
 from app.actions.game.manage_actors import update_actor_core
 from app.actions.game.manage_actors import upload_actor_image
-from app.actions.game.manage_combat import add_combat_participants
+from app.actions.game.manage_combat import add_combatants
+from app.actions.game.manage_combat import change_round
+from app.actions.game.manage_combat import change_turn
 from app.actions.game.manage_combat import end_combat
 from app.actions.game.manage_combat import get_combat_state
-from app.actions.game.manage_combat import next_combat_round
-from app.actions.game.manage_combat import next_combat_round_v1
-from app.actions.game.manage_combat import next_combat_turn
-from app.actions.game.manage_combat import previous_combat_turn
-from app.actions.game.manage_combat import remove_combat_participant
-from app.actions.game.manage_combat import roll_combat_initiative
-from app.actions.game.manage_combat import roll_combat_monster_initiative
-from app.actions.game.manage_combat import roll_combat_participant_initiative
-from app.actions.game.manage_combat import set_combat_turn
+from app.actions.game.manage_combat import move_combatant
+from app.actions.game.manage_combat import remove_combatant
+from app.actions.game.manage_combat import roll_initiative
+from app.actions.game.manage_combat import set_initiative
 from app.actions.game.manage_combat import start_combat
+from app.actions.game.manage_combat import update_combatant_flags
 from app.actions.game.manage_cards import create_card_deck
 from app.actions.game.manage_cards import delete_card_deck
 from app.actions.game.manage_cards import discard_cards
@@ -114,6 +114,16 @@ from app.actions.game.manage_journals import toggle_journal_owner
 from app.actions.game.manage_journals import toggle_quest_objective
 from app.actions.game.manage_journals import update_journal
 from app.actions.game.manage_journals import upload_journal_asset
+from app.actions.game.manage_handouts import get_handout_presentation
+from app.actions.game.manage_handouts import present_handout
+from app.actions.game.manage_lobby import get_lobby
+from app.actions.game.manage_lobby import update_lobby_state
+from app.actions.game.manage_particles import create_particle, delete_particle, delete_particles, get_particles, update_particle
+from app.actions.game.manage_shaders import create_shader, delete_shader, delete_shaders, get_shaders, update_shader
+from app.actions.game.manage_lights import create_light, delete_light, delete_lights, get_lights, update_light
+from app.actions.game.manage_walls import create_wall, delete_wall, delete_walls, get_walls, move_wall_node, set_door_state, split_wall
+from app.actions.game.manage_onboarding import get_gm_onboarding
+from app.actions.game.manage_onboarding import update_gm_onboarding_preference
 from app.actions.game.resource_permissions import show_resource_permissions
 from app.actions.game.resource_permissions import update_resource_permissions
 from app.actions.game.send_chat_message import clear_chat_messages
@@ -131,6 +141,7 @@ from app.actions.game.streamer_link import generate_streamer_link
 from app.actions.game.streamer_link import revoke_streamer_link
 from app.actions.game.update_permissions import update_campaign_permissions
 from app.actions.game.update_layout_preference import update_layout_preference
+from app.actions.game.update_vision_preference import update_vision_preference
 from app.actions.game.update_table_settings import update_table_settings
 from app.actions.game.websocket import game_websocket
 from app.helpers.auth import require_user
@@ -181,20 +192,19 @@ _protected_handlers = [
     update_scene_image,
     delete_scene_image,
     start_combat,
-    add_combat_participants,
-    remove_combat_participant,
-    roll_combat_initiative,
-    roll_combat_monster_initiative,
-    roll_combat_participant_initiative,
-    next_combat_turn,
-    previous_combat_turn,
-    set_combat_turn,
-    next_combat_round_v1,
-    next_combat_round,
+    add_combatants,
+    remove_combatant,
+    update_combatant_flags,
+    roll_initiative,
+    set_initiative,
+    move_combatant,
+    change_turn,
+    change_round,
     end_combat,
     delete_actor_core,
     get_sheet_data,
     get_sheet_bundle,
+    get_embedded_item_sheet_bundle,
     get_token_sheet_bundle,
     patch_sheet_data,
     patch_token_sheet_data,
@@ -228,9 +238,39 @@ _protected_handlers = [
     serve_journal_asset,
     move_journal,
     move_journal_folder,
+    present_handout,
+    get_handout_presentation,
+    get_lobby,
+    update_lobby_state,
+    get_walls,
+    create_wall,
+    move_wall_node,
+    set_door_state,
+    delete_wall,
+    delete_walls,
+    split_wall,
+    get_lights,
+    create_light,
+    get_particles,
+    create_particle,
+    update_particle,
+    delete_particle,
+    delete_particles,
+    get_shaders,
+    create_shader,
+    update_shader,
+    delete_shader,
+    delete_shaders,
+    update_light,
+    delete_light,
+    delete_lights,
+    get_gm_onboarding,
+    update_gm_onboarding_preference,
     invite_to_campaign,
+    global_search,
     update_campaign_permissions,
     update_layout_preference,
+    update_vision_preference,
     update_table_settings,
     send_chat_message,
     delete_chat_message,

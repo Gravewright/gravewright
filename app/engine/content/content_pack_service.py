@@ -11,6 +11,7 @@ import json
 
 from app.engine.sdk import package_registry
 from app.engine.sdk.package_paths import safe_join
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.sdk.package_manifest import PackageManifest
 from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
@@ -18,14 +19,18 @@ from app.persistence.repositories.installed_package_repository import InstalledP
 class ContentPackService:
     def __init__(self) -> None:
         self.installed = InstalledPackageRepository()
+        self.install = PackageInstallService()
 
     def _record_and_manifest(self, system_id: str) -> tuple[dict, PackageManifest] | None:
         record = self.installed.get(system_id)
         if record is None:
             return None
-        try:
-            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
-        except (TypeError, ValueError):
+
+
+
+
+        manifest = self.install.get_manifest(system_id)
+        if manifest is None:
             return None
         return record, manifest
 

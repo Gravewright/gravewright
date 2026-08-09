@@ -1,9 +1,9 @@
-// Gravewright SDK — capability enforcement.
-//
-// Every package declares a set of capabilities in its manifest. SDK methods are
-// gated: calling a method a package did not declare a capability for throws a
-// clear, actionable error. This module owns the capability set and the
-// method -> capability map shared by every scoped SDK instance.
+
+
+
+
+
+
 (() => {
     const CAPABILITIES = Object.freeze({
         ACTORS_REGISTER: "actors.register",
@@ -25,6 +25,7 @@
         CONTENT_PACKS: "content.packs",
         SETTINGS: "settings",
         LOCALES: "locales",
+        ASSETS_LIBRARY: "assets.library",
         ASSETS_UI: "assets.ui",
         ASSETS_STYLES: "assets.styles",
         ASSETS_SCRIPTS: "assets.scripts",
@@ -38,12 +39,13 @@
         SHEETS_CONTROLLER: "sheets.controller",
     });
 
-    // SDK method name -> required capability.
+
     const CAPABILITY_REQUIREMENTS = Object.freeze({
         "commands.register": CAPABILITIES.COMMANDS_REGISTER,
         "chat.send": CAPABILITIES.CHAT_CARDS,
         "dice.roll": CAPABILITIES.DICE_ROLL,
         "rolls.intent": CAPABILITIES.ROLLS_INTENT,
+        "assets.list": CAPABILITIES.ASSETS_LIBRARY,
         "ui.toast": CAPABILITIES.ASSETS_UI,
         "ui.openModal": CAPABILITIES.ASSETS_UI,
         "ui.closeModal": CAPABILITIES.ASSETS_UI,

@@ -98,7 +98,7 @@
             `[data-map-canvas][data-room-id="${CSS.escape(campaignId)}"]`,
         );
         const sceneId = canvas?.dataset.sceneId || "";
-        
+
         const folderActorIds = Array.from(folderEl.querySelectorAll("[data-actor-card]"))
             .map((c) => c.dataset.actorCard).filter(Boolean);
 

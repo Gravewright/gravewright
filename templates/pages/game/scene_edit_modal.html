@@ -66,6 +66,15 @@
                         <output data-grid-opacity-output>{{ (scene.grid_opacity | default(0.4)) | round(2) }}</output>
                     </label>
                 </div>
+                <div class="scene-boxed-field scene-grid-row--boxed">
+                    <label class="scene-opacity-field">
+                        <span>{{ t("game.scenes.darkness") }}</span>
+                        <input type="range" name="darkness" min="0" max="1" step="0.05"
+                               value="{{ (scene.darkness | default(0.0)) | round(2) }}" data-grid-opacity-input />
+                        <output data-grid-opacity-output>{{ (scene.darkness | default(0.0)) | round(2) }}</output>
+                    </label>
+                    <small class="scene-field-hint">{{ t("game.scenes.darkness_hint") }}</small>
+                </div>
             </div>
             <button type="submit" class="primary-action">
                 <i class="ph ph-floppy-disk" aria-hidden="true"></i>

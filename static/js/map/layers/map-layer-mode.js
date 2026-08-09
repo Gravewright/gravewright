@@ -79,8 +79,22 @@
         }
 
         function setActiveLayer(layer) {
-            activeDrawLayer = (layer === "gm" || layer === "composition") ? layer : "game";
+            const drawable = (window.GravewrightToolsRegistry?.LAYERS || [])
+                .filter((name) => name !== "game");
+            activeDrawLayer = drawable.includes(layer) ? layer : "game";
+            const canvas = activeCanvas();
+            if (canvas) {
+                const store = window.GravewrightMap?.tokenStoreFor?.(canvas);
+                const selection = selectedSet(canvas);
+                selection.forEach((id) => {
+                    const token = store?.get(id);
+                    const matches = activeDrawLayer !== "composition"
+                        && Boolean(token?.hidden) === (activeDrawLayer === "gm");
+                    if (!matches) selection.delete(id);
+                });
+            }
             updateGmLayerIndicator();
+            requestDrawAll();
         }
 
         function moveSelectionToLayer(layer, canvas = activeCanvas()) {
@@ -160,6 +174,11 @@
 
             document.addEventListener("tool:move-layer", (event) => {
                 moveSelectionToLayer(event.detail?.layer);
+            });
+
+            document.addEventListener("tool:layer-state", () => {
+                requestDrawAll();
+                renderMeasureOverlay(activeCanvas());
             });
         }
 

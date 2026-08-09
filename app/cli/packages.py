@@ -20,7 +20,7 @@ from app.cli.exit_codes import (
     EXIT_UNSAFE,
 )
 
-# error_key -> actionable hint for the operator.
+
 _ERROR_FIX = {
     "sdk.errors.not_found": "No such package on disk (data/packages/<id>).",
     "sdk.errors.not_installed": "Install it first: grave package install <id>",
@@ -70,7 +70,7 @@ def _campaign_exists(campaign_id: str) -> bool:
     return CampaignRepository().get(campaign_id) is not None
 
 
-# --- list -------------------------------------------------------------------
+
 
 
 def cmd_list(args: argparse.Namespace) -> int:
@@ -101,7 +101,7 @@ def cmd_list(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-# --- install ----------------------------------------------------------------
+
 
 
 def _print_capabilities(loaded) -> None:
@@ -174,7 +174,7 @@ def cmd_install(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-# --- enable / disable / remove ---------------------------------------------
+
 
 
 def _require_kind(svc, package_id: str, expected_kind: str | None) -> int | None:
@@ -234,7 +234,7 @@ def cmd_remove(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
-# --- update -----------------------------------------------------------------
+
 
 
 def _update_one(svc, package_id: str) -> tuple[bool, str | None]:
@@ -242,7 +242,7 @@ def _update_one(svc, package_id: str) -> tuple[bool, str | None]:
     prior = svc.get(package_id)
     if prior is None:
         return False, "sdk.errors.not_installed"
-    result = svc.install(package_id=package_id, user_id=None)  # re-reads + re-validates disk
+    result = svc.install(package_id=package_id, user_id=None)
     if not result.success:
         return False, result.error_key
     if prior["status"] == "enabled":
@@ -275,7 +275,7 @@ def cmd_update(args: argparse.Namespace) -> int:
     return EXIT_OK if not failed else EXIT_DOCTOR_ERROR
 
 
-# --- per-package doctor -----------------------------------------------------
+
 
 
 def cmd_doctor(args: argparse.Namespace) -> int:
@@ -327,7 +327,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     return EXIT_OK if summarize(checks)["ok"] else EXIT_DOCTOR_ERROR
 
 
-# --- campaign activation ----------------------------------------------------
+
 
 
 def _campaign_guard(campaign_id: str) -> int | None:

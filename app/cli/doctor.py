@@ -42,7 +42,7 @@ def _schema_path() -> Path:
     return PROJECT_ROOT / "schemas" / "gravewright-package-v1.schema.json"
 
 
-# --- environment ------------------------------------------------------------
+
 
 
 def _environment_checks() -> list[Check]:
@@ -147,7 +147,7 @@ def _database_checks() -> list[Check]:
     return [Check("database", OK, "database reachable")]
 
 
-# --- packages (on disk) -----------------------------------------------------
+
 
 
 def _package_checks(packages_dir: Path) -> list[Check]:
@@ -175,7 +175,7 @@ def _package_checks(packages_dir: Path) -> list[Check]:
     return checks
 
 
-# --- database audit (drift) -------------------------------------------------
+
 
 _AUDIT_FIX = {
     "package_missing_on_disk": "Reinstall the package or run: grave package remove {package_id}",
@@ -243,7 +243,7 @@ def _activation_hints() -> list[Check]:
     return checks
 
 
-# --- orchestration ----------------------------------------------------------
+
 
 
 def run_doctor(*, packages_dir: Path, skip_db: bool) -> list[Check]:

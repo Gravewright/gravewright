@@ -9,7 +9,6 @@ files and composes the per-campaign client manifest list.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from app.engine.sdk import package_registry
@@ -30,11 +29,14 @@ _CONTENT_TYPES = {
     ".js": "application/javascript",
     ".mjs": "application/javascript",
     ".json": "application/json",
-    # HTML sheet templates are *declared* package assets — trusted package code.
-    # They are served like any other whitelisted asset (only when referenced by
-    # the manifest); the campaign/user data rendered into them at runtime is
-    # escaped/sanitized client-side, never the template itself.
+
+
+
+
     ".html": "text/html; charset=utf-8",
+
+
+    ".pdf": "application/pdf",
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -55,15 +57,19 @@ class PackageAssetService:
         self.settings = PackageSettingsService()
         self.locales = PackageLocaleService()
 
-    # --- single-asset serving --------------------------------------------------
+
 
     def _enabled_record_manifest(self, package_id: str) -> tuple[dict, PackageManifest] | None:
         record = self.install.get(package_id)
         if record is None or record["status"] != _STATUS_ENABLED:
             return None
-        try:
-            manifest = PackageManifest.from_dict(json.loads(record["manifest_json"]))
-        except (TypeError, ValueError):
+
+
+
+
+
+        manifest = self.install.get_manifest(package_id)
+        if manifest is None:
             return None
         return record, manifest
 
@@ -85,7 +91,7 @@ class PackageAssetService:
             return None
         return path, content_type
 
-    # --- per-campaign composition ---------------------------------------------
+
 
     def _ordered_active_package_ids(self, campaign_id: str) -> list[str]:
         """Active package ids in load order: ruleset, libraries, then the rest."""
@@ -94,7 +100,7 @@ class PackageAssetService:
         ruleset_id = campaign.get("active_system_id") if campaign else None
         if ruleset_id and self.install.get(ruleset_id):
             ids.append(ruleset_id)
-        # Globally-enabled libraries are passive dependencies, loaded early.
+
         for record in self.install.installed.list_by_kind("library"):
             if record["status"] == _STATUS_ENABLED and record["id"] not in ids:
                 ids.append(record["id"])
@@ -109,19 +115,20 @@ class PackageAssetService:
             pair = self._enabled_record_manifest(package_id)
             if pair is None:
                 continue
-            _, manifest = pair
+            record, manifest = pair
             styles = manifest.entrypoint_styles(entrypoint)
             scripts = manifest.entrypoint_scripts(entrypoint)
             if not styles and not scripts:
                 continue
             version = manifest.version or "0"
+            base = package_registry.PACKAGES_DIR / record["package_dir"]
             out.append(
                 {
                     "package_id": manifest.id,
                     "kind": manifest.kind,
                     "version": version,
-                    "styles": [self._asset_url(manifest.id, p, version) for p in styles],
-                    "scripts": [self._asset_url(manifest.id, p, version) for p in scripts],
+                    "styles": [self._asset_url(manifest.id, p, version, base) for p in styles],
+                    "scripts": [self._asset_url(manifest.id, p, version, base) for p in scripts],
                 }
             )
         return out
@@ -139,10 +146,10 @@ class PackageAssetService:
             if pair is None:
                 continue
             _, manifest = pair
-            # Client manifests describe a package to the browser SDK runtime
-            # (kind, capabilities, settings). Scripts/styles are loaded by the
-            # page as <script>/<link> tags via ``list_assets_for_campaign``, so
-            # they are intentionally not duplicated here.
+
+
+
+
             out.append(
                 {
                     "id": manifest.id,
@@ -160,5 +167,16 @@ class PackageAssetService:
         return out
 
     @staticmethod
-    def _asset_url(package_id: str, relative: str, version: str) -> str:
-        return f"/sdk/packages/{package_id}/asset/{relative}?v={version}"
+    def _asset_url(
+        package_id: str, relative: str, version: str, base: Path | None = None
+    ) -> str:
+
+
+
+
+
+        stamp = version
+        path = safe_join(base, relative) if base is not None else None
+        if path is not None and path.is_file():
+            stamp = f"{version}-{int(path.stat().st_mtime)}"
+        return f"/sdk/packages/{package_id}/asset/{relative}?v={stamp}"

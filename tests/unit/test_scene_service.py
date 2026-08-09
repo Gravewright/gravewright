@@ -5,6 +5,7 @@ import pytest
 from app.domain.roles import PlayerRole
 from app.domain.scenes import SceneAssetKind
 from app.domain.scenes import SceneChunkEncoding
+from app.domain.scenes import SceneVisibility
 from app.domain.scenes import SceneLayerKind
 from app.domain.scenes import SceneLayerVisibility
 from app.engine.scenes.scene_service import SceneService
@@ -129,6 +130,7 @@ async def test_activate_scene_emits_realtime_event(db):
                     "grid_visible": True,
                     "grid_color": "#6fddb4",
                     "grid_opacity": 0.4,
+                    "darkness": 0.0,
                     "image_scale": 1.0,
                     "start_world_x": 700.0,
                     "start_world_y": 700.0,
@@ -275,3 +277,65 @@ def test_outsider_cannot_get_scene_manifest(db):
 
     assert not result.success
     assert result.error_key == "permissions.errors.denied"
+
+
+async def test_metadata_update_reaches_the_room(db):
+    """Sem este evento, escuridão e grade só chegavam a quem editou: o modal
+    atualiza o próprio canvas pela resposta e o resto da sala ficava com a cena
+    antiga até recarregar a página."""
+    gm_id = seed_user(name="GM", email="gm-scene-update@test.com")
+    campaign_id = seed_campaign(gm_id)
+    scene = SceneRepository().create(
+        campaign_id=campaign_id, name="Cellar", width=700, height=700,
+        tile_size=70, chunk_size=16,
+    )
+    service = SceneService()
+    await service.activate_scene(scene_id=scene["id"], user_id=gm_id)
+
+    service.update_scene_metadata(
+        scene_id=scene["id"],
+        name="Cellar",
+        group_id=None,
+        visibility=SceneVisibility.PLAYERS,
+        grid_visible=True,
+        grid_color="#6fddb4",
+        grid_opacity=0.4,
+        darkness=0.85,
+        tile_size=70,
+        image_scale=1.0,
+        tile_table_version=1,
+    )
+
+    transport = FakeTransport()
+    assert await service.broadcast_scene_update(scene_id=scene["id"], transport=transport)
+
+    assert len(transport.room_events) == 1
+    event = transport.room_events[0]
+    assert event["room_id"] == campaign_id
+    assert event["event"] == TransportEvent.SCENE_UPDATED
+    assert event["payload"]["scene_id"] == scene["id"]
+    assert event["payload"]["scene"]["darkness"] == 0.85
+
+
+async def test_only_the_active_scene_is_announced(db):
+    """Editar uma cena guardada não interessa a ninguém na mesa, e espalhar o
+    nome e as dimensões dela para a sala seria vazamento à toa."""
+    gm_id = seed_user(name="GM", email="gm-scene-inactive@test.com")
+    campaign_id = seed_campaign(gm_id)
+    live = SceneRepository().create(
+        campaign_id=campaign_id, name="Live", width=700, height=700,
+        tile_size=70, chunk_size=16,
+    )
+    stored = SceneRepository().create(
+        campaign_id=campaign_id, name="Segredo do GM", width=700, height=700,
+        tile_size=70, chunk_size=16,
+    )
+    service = SceneService()
+    await service.activate_scene(scene_id=live["id"], user_id=gm_id)
+
+    transport = FakeTransport()
+    assert not await service.broadcast_scene_update(scene_id=stored["id"], transport=transport)
+    assert transport.room_events == []
+
+    assert await service.broadcast_scene_update(scene_id=live["id"], transport=transport)
+    assert len(transport.room_events) == 1

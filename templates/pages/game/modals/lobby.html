@@ -1,0 +1,24 @@
+<article class="game-modal-window game-panel" data-modal-window data-modal-id="lobby-{{ room.id }}"
+    data-window-key="lobby-{{ room.id }}" data-panel-room="{{ room.id }}" hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <span class="game-panel-title">{{ t("lobby.title") }}</span>
+        <div class="game-modal-controls"><button class="game-modal-control" type="button" data-modal-close
+            aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x" aria-hidden="true"></i></button></div>
+    </header>
+    <div class="game-panel-body" data-lobby-panel data-campaign-id="{{ room.id }}"
+        data-error="{{ t('lobby.errors.generic') }}">
+        <p>{{ t("lobby.help") }}</p>
+        <form data-lobby-form>
+            <label class="game-field"><span>{{ t("lobby.actor") }}</span>
+                <select name="selected_actor_id"><option value="">{{ t("lobby.no_actor") }}</option></select>
+            </label>
+            <label class="permission-toggle"><input type="checkbox" name="is_ready" />
+                <span>{{ t("lobby.ready") }}</span></label>
+            <button class="invite-submit" type="submit"><i class="ph ph-check-circle" aria-hidden="true"></i>
+                <span>{{ t("lobby.save") }}</span></button>
+        </form>
+        <div class="game-notice game-notice--danger" data-lobby-notice role="alert" hidden></div>
+        <p><strong data-lobby-summary>0 / 0</strong> {{ t("lobby.summary") }}</p>
+        <div class="player-list" data-lobby-members></div>
+    </div>
+</article>

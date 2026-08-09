@@ -11,6 +11,7 @@
             selectedSet,
             stopAddToScene,
             tokenDelete,
+            tokenSteps,
         } = deps;
 
         function isTextInput(target) {
@@ -52,6 +53,15 @@
                     history.redo();
                 }
                 return;
+            }
+
+
+
+            if (tokenSteps?.handles?.(event.key)) {
+                if (tokenSteps.step(canvas, event.key)) {
+                    event.preventDefault();
+                    return;
+                }
             }
 
             if (event.key === "Delete" || event.key === "Backspace") {

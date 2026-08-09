@@ -26,7 +26,7 @@
             el.style.top = `${Math.min(marquee.startY, marquee.y)}px`;
             el.style.width = `${Math.abs(marquee.x - marquee.startX)}px`;
             el.style.height = `${Math.abs(marquee.y - marquee.startY)}px`;
-            // Right-to-left selects cards/assets; show a distinct frame for it.
+
             el.classList.toggle("board-marquee--overlay", marquee.x < marquee.startX);
             el.style.display = "block";
         }
@@ -40,8 +40,8 @@
             const scene = sceneDataFor(canvas);
             if (!scene) return;
 
-            // Drag direction picks what the marquee grabs: left-to-right selects
-            // tokens (below); right-to-left selects table cards / scene images.
+
+
             if (marquee.x < marquee.startX) {
                 const rect = {
                     left: Math.min(marquee.startX, marquee.x),
@@ -127,7 +127,7 @@
             try {
                 marquee.canvas.releasePointerCapture(event.pointerId);
             } catch {
-                
+
             }
 
             if (marquee.moved) finish(marquee);

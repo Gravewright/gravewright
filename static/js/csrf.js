@@ -54,6 +54,6 @@
     return original(input, init);
   };
 
-  
+
   window.csrfToken = csrfToken;
 })();

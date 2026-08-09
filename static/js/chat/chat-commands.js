@@ -35,7 +35,7 @@
                 menu.appendChild(header);
             }
 
-            
+
             menu.addEventListener("mousedown", (e) => {
                 const item = e.target.closest("[data-insert]");
                 if (!item) return;
@@ -73,7 +73,7 @@
 
     function renderCommandMenu(input) {
         const value = input.value;
-        
+
         if (!/^\/\S*$/.test(value)) {
             hideCommandMenu();
             return;
@@ -125,7 +125,7 @@
         renderCommandMenu(input);
     });
 
-    
+
     document.addEventListener(
         "keydown",
         (e) => {
@@ -157,7 +157,7 @@
     document.addEventListener("focusout", (e) => {
         const input = e.target.closest("[data-chat-form] textarea[name='message']");
         if (input && input === menuInput) {
-            
+
             window.setTimeout(hideCommandMenu, 120);
         }
     });

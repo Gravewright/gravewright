@@ -13,6 +13,7 @@ from app.business.auth.auth_service import AuthService
 from app.business.inside_settings_service import InsideSettingsService
 from app.config import config
 from app.helpers.request import get_client_ip
+from app.helpers.pending_join_code import get_pending_join_code
 from app.helpers.view import view_context
 
 
@@ -53,5 +54,8 @@ def submit_login(
             ),
         )
 
-    request.set_session({"user_id": result.user["id"]})
-    return Redirect(path="/inside")
+    session = dict(request.session)
+    session["user_id"] = result.user["id"]
+    request.set_session(session)
+    destination = "/inside?join_code_pending=1" if get_pending_join_code(session) else "/inside"
+    return Redirect(path=destination)

@@ -4,11 +4,31 @@
 
 
 (function () {
+
+
+
+
+
   document.addEventListener("submit", (event) => {
     const form = event.target.closest("form[data-confirm]");
-    if (form && !window.confirm(form.dataset.confirm)) {
-      event.preventDefault();
+    if (!form) return;
+    if (form.dataset.confirmed === "1") {
+      delete form.dataset.confirmed;
+      return;
     }
+
+    event.preventDefault();
+    window.GravewrightCore.dialog
+      .confirm(form.dataset.confirm, { variant: "danger" })
+      .then((ok) => {
+        if (!ok) return;
+        form.dataset.confirmed = "1";
+        if (typeof form.requestSubmit === "function") {
+          form.requestSubmit();
+        } else {
+          form.submit();
+        }
+      });
   });
 
   document.addEventListener("click", (event) => {

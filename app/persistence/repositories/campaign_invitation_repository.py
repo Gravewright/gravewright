@@ -31,7 +31,7 @@ class AcceptInvitationOutcome:
     for a real creation.
     """
 
-    # "accepted" | "not_found" | "not_pending" | "membership_removed"
+
     status: str
     membership_created: bool = False
 
@@ -165,8 +165,8 @@ class CampaignInvitationRepository:
             campaign_id = invitation["campaign_id"]
 
             if status == "accepted":
-                # A concurrent accept may have flipped the row moments ago; the
-                # membership it created is what makes this call a success.
+
+
                 if self._membership_exists(conn, campaign_id=campaign_id, user_id=user_id):
                     return AcceptInvitationOutcome("accepted", membership_created=False)
                 return AcceptInvitationOutcome("membership_removed")
@@ -259,7 +259,7 @@ class CampaignInvitationRepository:
                 .on_conflict_do_nothing(index_elements=["campaign_id", "user_id"])
             )
         else:
-            # Fallback for backends without ON CONFLICT support.
+
             if CampaignInvitationRepository._membership_exists(
                 conn, campaign_id=campaign_id, user_id=user_id
             ):

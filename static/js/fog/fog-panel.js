@@ -86,7 +86,7 @@
     function bindPanel(panel) {
         const roomId = panel.dataset.roomId;
         if (!roomId) return;
-        panelStateFor(roomId); 
+        panelStateFor(roomId);
 
         panel.addEventListener("click", (e) => {
             const enableBtn = e.target.closest("[data-fog-enable]");
@@ -149,7 +149,7 @@
         });
     }
 
-    
+
     function observePanelVisibility(panel) {
         const observer = new MutationObserver(() => {
             const state = panelStateFor(panel.dataset.roomId);

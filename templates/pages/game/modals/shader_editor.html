@@ -1,0 +1,192 @@
+{# O auto-fit da janela manda na largura final; sem estes dois numeros ele mede o
+   conteudo e devolve a coluna estreita de sempre, e as duas colunas nao cabem. #}
+<article class="game-modal-window dialog-modal shader-editor-modal" data-modal-window
+    data-modal-id="shader-editor-{{ room.id }}" data-window-key="shader-editor-{{ room.id }}"
+    data-auto-fit-width="760" data-auto-fit-min-width="700" hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+        <span class="game-panel-title">{{ t("lighting.shaders.editor") }}</span>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('lighting.editor.close') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+    <div class="game-modal-body light-editor-panel shader-editor-panel" data-shader-editor-panel
+        data-room-id="{{ room.id }}">
+        <details class="shader-preset-library" data-shader-preset-library
+            data-empty="{{ t('lighting.shaders.presets.empty') }}"
+            data-applied="{{ t('lighting.shaders.presets.applied') }}">
+            <summary>
+                <i class="ph ph-books" aria-hidden="true"></i>
+                <span>{{ t("lighting.shaders.presets.title") }}</span>
+            </summary>
+            <p class="scene-field-hint">{{ t("lighting.shaders.presets.hint") }}</p>
+            <div class="shader-preset-tools">
+                <input type="search" data-shader-preset-search
+                    placeholder="{{ t('lighting.shaders.presets.search') }}"
+                    aria-label="{{ t('lighting.shaders.presets.search') }}" />
+                <select data-shader-preset-category aria-label="{{ t('lighting.shaders.presets.category') }}">
+                    <option value="">{{ t("lighting.shaders.presets.all") }}</option>
+                </select>
+            </div>
+            <div class="shader-preset-list" data-shader-preset-list role="listbox"></div>
+            <div class="shader-preset-choice" data-shader-preset-choice hidden>
+                <strong data-shader-preset-name></strong>
+                <span data-shader-preset-description></span>
+                <button class="secondary-action" type="button" data-shader-preset-apply>
+                    <i class="ph ph-magic-wand" aria-hidden="true"></i>
+                    <span>{{ t("lighting.shaders.presets.apply") }}</span>
+                </button>
+            </div>
+        </details>
+
+        {# Codigo de um lado, reguas do outro: sao as duas coisas que se olham
+           juntas — muda o numero, confere o efeito, volta ao texto. Empilhados,
+           um sempre estava fora da tela quando se mexia no outro. #}
+        <div class="shader-editor-columns">
+        <div class="shader-editor-col shader-editor-col--code">
+        {# O interruptor fica colado no codigo: "ativo" e a pergunta que se faz
+           olhando o efeito, nao um checkbox perdido no fim da rolagem. #}
+        <section class="shader-section shader-section--code">
+            <div class="shader-section-head">
+                <label class="shader-section-title" for="shader-source-{{ room.id }}">
+                    {{ t("lighting.shaders.source") }}
+                </label>
+                <label class="scene-check shader-switch">
+                    <input type="checkbox" checked data-shader-field="enabled" />
+                    <span>{{ t("lighting.shaders.enabled") }}</span>
+                </label>
+            </div>
+            <textarea id="shader-source-{{ room.id }}" rows="10" spellcheck="false"
+                class="shader-editor-source" data-shader-field="source"></textarea>
+        </section>
+        </div>
+
+        <div class="shader-editor-col">
+        <section class="shader-section">
+            <h3 class="shader-section-title">{{ t("lighting.shaders.group.appearance") }}</h3>
+            <div class="shader-field-grid">
+                <label class="game-field">
+                    <span>{{ t("lighting.shaders.opacity") }}</span>
+                    <span class="slider-row">
+                        <input type="range" min="0" max="1" step="0.05" value="1" data-shader-field="opacity" />
+                        <output data-shader-output="opacity">1.00</output>
+                    </span>
+                </label>
+                <label class="game-field shader-color-field">
+                    <span>{{ t("lighting.shaders.color") }}</span>
+                    <input type="color" value="#8fb6ff" data-shader-field="color" />
+                </label>
+            </div>
+            <label class="game-field shader-blend-field">
+                <span>{{ t("lighting.shaders.blend_mode") }}</span>
+                <select data-shader-field="blend_mode">
+                    <option value="normal">{{ t("lighting.shaders.blend.normal") }}</option>
+                    <option value="multiply">{{ t("lighting.shaders.blend.multiply") }}</option>
+                    <option value="screen">{{ t("lighting.shaders.blend.screen") }}</option>
+                    <option value="add">{{ t("lighting.shaders.blend.add") }}</option>
+                </select>
+                <small class="scene-field-hint">{{ t("lighting.shaders.blend_hint") }}</small>
+            </label>
+        </section>
+
+        {# As quatro reguas que moldam o desenho ficam lado a lado: empilhadas,
+           custavam meia tela de rolagem para dizer quatro numeros. #}
+        <section class="shader-section">
+            <h3 class="shader-section-title">{{ t("lighting.shaders.group.pattern") }}</h3>
+            <div class="shader-field-grid">
+                <label class="game-field">
+                    <span>{{ t("lighting.shaders.intensity") }}</span>
+                    <span class="slider-row">
+                        <input type="range" min="0" max="1" step="0.05" value="0.6" data-shader-field="intensity" />
+                        <output data-shader-output="intensity">0.60</output>
+                    </span>
+                </label>
+                <label class="game-field">
+                    <span>{{ t("lighting.shaders.scale") }}</span>
+                    <span class="slider-row">
+                        <input type="range" min="0.1" max="20" step="0.1" value="1" data-shader-field="scale" />
+                        <output data-shader-output="scale">1.0</output>
+                    </span>
+                </label>
+                <label class="game-field">
+                    <span>{{ t("lighting.shaders.speed") }}</span>
+                    <span class="slider-row">
+                        <input type="range" min="0" max="8" step="0.1" value="1" data-shader-field="speed" />
+                        <output data-shader-output="speed">1.0</output>
+                    </span>
+                </label>
+                <label class="game-field">
+                    <span>{{ t("lighting.shaders.rotation") }}</span>
+                    <span class="slider-row">
+                        <input type="range" min="0" max="359" step="1" value="0"
+                               data-shader-field="rotation" data-shader-suffix="°" />
+                        <output data-shader-output="rotation">0°</output>
+                    </span>
+                </label>
+            </div>
+        </section>
+
+        <section class="shader-section">
+            <h3 class="shader-section-title">{{ t("lighting.shaders.group.area") }}</h3>
+            <div class="shader-field-grid">
+                <label class="game-field">
+                    <span>{{ t("lighting.shaders.radius") }}</span>
+                    <span class="slider-row">
+                        <input type="range" min="0" max="120" step="1" value="0" data-shader-field="radius"
+                               data-limit-target="radius" data-limit-default="8"
+                               title="{{ t('lighting.shaders.radius_hint') }}" />
+                        <output data-shader-output="radius">0</output>
+                    </span>
+                </label>
+                <label class="scene-check limit-check">
+                    <input type="checkbox" data-limit-for="radius" />
+                    <span>{{ t("lighting.shaders.whole_scene") }}</span>
+                </label>
+            </div>
+        </section>
+        </div>
+        </div>
+
+        <details class="shader-editor-reference">
+            <summary>
+                <i class="ph ph-sparkle" aria-hidden="true"></i>
+                <span>{{ t("lighting.shaders.prompt_title") }}</span>
+            </summary>
+            <p class="scene-field-hint">{{ t("lighting.shaders.prompt_hint") }}</p>
+            <p class="scene-field-hint shader-editor-prompt-label">{{ t("lighting.shaders.prompt_structured_title") }}</p>
+            <textarea class="shader-editor-prompt" rows="6" readonly spellcheck="false"
+                data-shader-prompt>{{ t("lighting.shaders.prompt") }}</textarea>
+            <button class="secondary-action" type="button" data-shader-prompt-copy
+                data-copied="{{ t('lighting.shaders.prompt_copied') }}">
+                <i class="ph ph-copy" aria-hidden="true"></i>
+                <span>{{ t("lighting.shaders.prompt_copy") }}</span>
+            </button>
+            <p class="scene-field-hint shader-editor-prompt-label">{{ t("lighting.shaders.prompt_prose_title") }}</p>
+            <textarea class="shader-editor-prompt" rows="6" readonly spellcheck="false"
+                data-shader-prompt>{{ t("lighting.shaders.prompt_prose") }}</textarea>
+            <button class="secondary-action" type="button" data-shader-prompt-copy
+                data-copied="{{ t('lighting.shaders.prompt_copied') }}">
+                <i class="ph ph-copy" aria-hidden="true"></i>
+                <span>{{ t("lighting.shaders.prompt_copy") }}</span>
+            </button>
+            <p class="scene-field-hint">{{ t("lighting.shaders.mode_hint") }}</p>
+        </details>
+
+        {# Barra de compromisso grudada no fim do painel: salvar e o que se aperta
+           depois de rolar ate embaixo, e a resposta aparece do lado do botao. #}
+        <div class="game-modal-actions shader-editor-commit">
+            <button class="secondary-action light-editor-remove" type="button" data-shader-delete
+                aria-label="{{ t('lighting.shaders.remove') }}" data-tooltip="{{ t('lighting.shaders.remove') }}">
+                <i class="ph ph-trash" aria-hidden="true"></i>
+            </button>
+            <p class="scene-field-hint" data-shader-status role="status" aria-live="polite"></p>
+            <button class="primary-action" type="button" data-shader-save>
+                <i class="ph ph-check" aria-hidden="true"></i>
+                <span>{{ t("lighting.shaders.save") }}</span>
+            </button>
+        </div>
+    </div>
+</article>

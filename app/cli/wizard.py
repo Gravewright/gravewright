@@ -64,11 +64,11 @@ def _split_ids(raw: str) -> list[str]:
     return [token.strip() for token in raw.split(",") if token.strip()]
 
 
-# --- selection widgets ------------------------------------------------------
-#
-# ``questionary`` handles arrow-key navigation, scrolling for long lists, and
-# terminal resize, so the prompt never miscounts lines and "breaks the screen".
-# A numbered text fallback keeps the wizard usable without the dev extra.
+
+
+
+
+
 
 
 def _interactive() -> bool:
@@ -281,11 +281,11 @@ def _ask_text(label: str, default: str | None = None) -> str | None:
     return entered or default
 
 
-# --- the wizard ------------------------------------------------------------
 
 
-# Common sheet types offered in the wizard. Ids are the generated, normalized
-# English type ids; "custom" lets the author enter their own.
+
+
+
 ACTOR_SHEET_OPTIONS = (
     "character",
     "monster",
@@ -312,7 +312,7 @@ ACTOR_SHEET_OPTIONS = (
     "location",
     "hazard",
     "trap",
-    # extended
+
     "deity",
     "swarm",
     "construct",
@@ -364,7 +364,7 @@ ITEM_SHEET_OPTIONS = (
     "mecha-module",
     "treasure",
     "loot",
-    # extended
+
     "potion",
     "scroll",
     "wand",
@@ -419,7 +419,7 @@ def _select_types(title: str, options: tuple[str, ...], preselected: list[str]) 
         raw = _ask_text("Custom type ids (comma-separated)")
         if raw:
             ids.extend(_split_ids(raw))
-    # Normalize + de-duplicate, preserving order.
+
     out: list[str] = []
     for tid in ids:
         slug = _slugify(tid)
@@ -827,7 +827,7 @@ def _run_simple(kind: str, default_name: str | None) -> WizardResult | None:
             "wants_settings": "settings" in feats,
             "wants_locales": "locales" in feats,
         }
-    else:  # theme, library, content
+    else:
         feats = _checkbox(
             "Include:",
             [

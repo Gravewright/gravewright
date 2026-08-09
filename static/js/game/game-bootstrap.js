@@ -21,8 +21,8 @@
             }
         }
 
-        // The Gravewright SDK runtime self-initialises on DOMContentLoaded; here
-        // we only surface the active package manifests to game-ready consumers.
+
+
         const detail = {
             root,
             modalLayer,

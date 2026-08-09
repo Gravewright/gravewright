@@ -38,9 +38,9 @@ class Capability:
 @dataclass(frozen=True)
 class CapabilityRegistry:
     capabilities: dict[str, Capability]
-    forbidden: dict[str, str]  # name -> reason
+    forbidden: dict[str, str]
 
-    # --- allow/deny lists ------------------------------------------------------
+
 
     def known_names(self) -> frozenset[str]:
         return frozenset(self.capabilities)
@@ -48,7 +48,7 @@ class CapabilityRegistry:
     def forbidden_names(self) -> frozenset[str]:
         return frozenset(self.forbidden)
 
-    # --- lookups ---------------------------------------------------------------
+
 
     def status_of(self, name: str) -> str | None:
         cap = self.capabilities.get(name)
@@ -57,7 +57,7 @@ class CapabilityRegistry:
     def names_with_status(self, status: str) -> frozenset[str]:
         return frozenset(n for n, c in self.capabilities.items() if c.status == status)
 
-    # --- method gates ----------------------------------------------------------
+
 
     def method_to_capability(self) -> dict[str, str]:
         """Flatten ``capability -> methods`` into ``method -> capability``."""

@@ -28,8 +28,8 @@
     item.appendChild(el("span", "content-entry-name", entry.name || entry.id));
     if (entry.type) item.appendChild(el("span", "content-entry-type", entry.type));
 
-    
-    
+
+
     const importKind =
       pack.type === "actor_pack" ? "actor"
       : pack.type === "item_pack" || pack.type === "spell_pack" ? "item"
@@ -114,7 +114,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", initAll);
-  
+
   document.addEventListener("click", (e) => {
     const toggle = e.target.closest("[data-panel-toggle]");
     if (toggle && toggle.dataset.panelToggle.startsWith("panel-content-")) {

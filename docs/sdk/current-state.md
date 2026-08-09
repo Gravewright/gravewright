@@ -179,7 +179,7 @@ Columns (`app/persistence/tables.py`):
 
 ## 8. Migrations infrastructure
 
-Alembic (`migrations/versions/`). Latest revision: `0007_sdk_packages.py`.
+Alembic (`migrations/versions/`). Latest revision: `0042_particle_kinds.py`.
 `alembic.ini` present. The schema is also expressed in SQLAlchemy
 `metadata`/`Table` definitions (`app/persistence/tables.py`). New columns require
 both a migration and a `tables.py` update.

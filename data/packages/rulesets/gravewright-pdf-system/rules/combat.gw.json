@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "initiative": {
+    "label": "gravewright-pdf-system.combat.initiative",
+    "input": "text"
+  },
+  "resources": {
+    "hp": {
+      "label": "gravewright-pdf-system.ui.bar1Value",
+      "path": "sheet.bars.bar_1.value",
+      "maxPath": "sheet.bars.bar_1.max",
+      "min": 0
+    }
+  }
+}

@@ -28,7 +28,7 @@ def _token(**kwargs) -> dict:
 
 def _projection(**kwargs) -> dict:
     """A manifest-mapped TokenView (as produced by ActorTokenProjector)."""
-    base = {"name": "Monstro Modelo", "bars": {"hp": {"value": 10, "max": 10}}}
+    base = {"name": "Monstro Modelo", "bars": {"bar_1": {"value": 10, "max": 10}}}
     base.update(kwargs)
     return base
 
@@ -111,30 +111,77 @@ def test_asset_url_none_by_default():
     assert view["asset_url"] is None
 
 
-def test_hp_bar_from_projection():
+def test_lower_bar_from_projection():
     view = TokenViewService().build_view(
-        token=_token(), projection=_projection(bars={"hp": {"value": 7, "max": 10}})
+        token=_token(), projection=_projection(bars={"bar_1": {"value": 7, "max": 10}})
     )
-    assert view["bars"]["hp"]["value"] == 7
-    assert view["bars"]["hp"]["max"] == 10
-    assert view["bars"]["hp"]["visibility"] == "everyone"
+    assert view["bars"]["bar_1"]["value"] == 7
+    assert view["bars"]["bar_1"]["max"] == 10
+    assert view["bars"]["bar_1"]["visibility"] == "everyone"
 
 
-def test_hp_bar_max_defaults_to_value():
+def test_both_slots_render_independently():
+    """The two bars are separate readings; one may be set and the other not."""
     view = TokenViewService().build_view(
-        token=_token(), projection=_projection(bars={"hp": {"value": 7}})
+        token=_token(),
+        projection=_projection(
+            bars={"bar_1": {"value": 7, "max": 10}, "bar_2": {"value": 2, "max": 4}}
+        ),
     )
-    assert view["bars"]["hp"]["value"] == 7
-    assert view["bars"]["hp"]["max"] == 7
+    assert view["bars"]["bar_1"]["value"] == 7
+    assert view["bars"]["bar_2"]["value"] == 2
 
 
-def test_hp_bar_from_override_wins():
+def test_only_the_upper_bar_is_fine():
     view = TokenViewService().build_view(
-        token=_token(overrides={"hp": {"value": 3, "max": 7}}),
-        projection=_projection(bars={"hp": {"value": 10, "max": 10}}),
+        token=_token(), projection=_projection(bars={"bar_2": {"value": 5, "max": 5}})
     )
-    assert view["bars"]["hp"]["value"] == 3
-    assert view["bars"]["hp"]["max"] == 7
+    assert set(view["bars"]) == {"bar_2"}
+
+
+def test_bar_colors_default_to_green_below_and_blue_above():
+    view = TokenViewService().build_view(
+        token=_token(),
+        projection=_projection(
+            bars={"bar_1": {"value": 1, "max": 1}, "bar_2": {"value": 1, "max": 1}}
+        ),
+    )
+    assert view["bars"]["bar_1"]["color"] == "#4caf50"
+    assert view["bars"]["bar_2"]["color"] == "#3b82f6"
+
+
+def test_a_system_color_survives_into_the_view():
+    view = TokenViewService().build_view(
+        token=_token(),
+        projection=_projection(bars={"bar_1": {"value": 1, "max": 1, "color": "#a020f0"}}),
+    )
+    assert view["bars"]["bar_1"]["color"] == "#a020f0"
+
+
+def test_bar_max_defaults_to_value():
+    view = TokenViewService().build_view(
+        token=_token(), projection=_projection(bars={"bar_1": {"value": 7}})
+    )
+    assert view["bars"]["bar_1"]["value"] == 7
+    assert view["bars"]["bar_1"]["max"] == 7
+
+
+def test_bar_from_override_wins():
+    view = TokenViewService().build_view(
+        token=_token(overrides={"bar_1": {"value": 3, "max": 7}}),
+        projection=_projection(bars={"bar_1": {"value": 10, "max": 10}}),
+    )
+    assert view["bars"]["bar_1"]["value"] == 3
+    assert view["bars"]["bar_1"]["max"] == 7
+
+
+def test_an_override_does_not_repaint_the_bar():
+    """The copy carries its own numbers; what the bar *is* stays the system's."""
+    view = TokenViewService().build_view(
+        token=_token(overrides={"bar_1": {"value": 3, "max": 7}}),
+        projection=_projection(bars={"bar_1": {"value": 10, "max": 10, "color": "#a020f0"}}),
+    )
+    assert view["bars"]["bar_1"]["color"] == "#a020f0"
 
 
 def test_no_bars_when_projection_has_none():
@@ -144,7 +191,7 @@ def test_no_bars_when_projection_has_none():
 
 def test_bar_with_null_value_is_skipped():
     view = TokenViewService().build_view(
-        token=_token(), projection=_projection(bars={"hp": {"value": None, "max": None}})
+        token=_token(), projection=_projection(bars={"bar_1": {"value": None, "max": None}})
     )
     assert view["bars"] == {}
 
@@ -195,7 +242,7 @@ def test_player_does_not_see_hidden_tokens():
 
 def test_build_views_resolves_projection_and_conditions():
     token = _token(id="tok_1", actor_id="actor_1", hidden=0)
-    projection = _projection(name="Hero", bars={"hp": {"value": 20, "max": 20}})
+    projection = _projection(name="Hero", bars={"bar_1": {"value": 20, "max": 20}})
     conditions = [{"kind": "negative", "condition_id": "prone"}]
 
     views = TokenViewService().build_views_for_scene(
@@ -208,7 +255,7 @@ def test_build_views_resolves_projection_and_conditions():
 
     assert len(views) == 1
     assert views[0]["name"] == "Hero"
-    assert views[0]["bars"]["hp"]["value"] == 20
+    assert views[0]["bars"]["bar_1"]["value"] == 20
     assert views[0]["status_summary"]["count"] == 1
 
 

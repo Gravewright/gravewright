@@ -11,8 +11,8 @@
         else { folder.removeAttribute("data-open"); if (bodyEl) bodyEl.hidden = true; }
     }
 
-    
-    
+
+
     function applyFolderColors(scope) {
         (scope || document).querySelectorAll(".actor-folder[data-folder-color]").forEach((f) => {
             const c = f.dataset.folderColor;
@@ -21,7 +21,7 @@
         });
     }
 
-    
+
     function applySearch(panel) {
         if (!panel) return;
         const query = (panel.querySelector("[data-actor-search]")?.value || "").trim().toLowerCase();
@@ -31,7 +31,7 @@
             const name = (card.querySelector("strong")?.textContent || "").toLowerCase();
             card.style.display = !query || name.includes(query) ? "" : "none";
         });
-        
+
         host.querySelectorAll(".actor-folder").forEach((folder) => {
             const anyVisible = Array.from(folder.querySelectorAll("[data-actor-card]"))
                 .some((c) => c.style.display !== "none");
@@ -45,7 +45,7 @@
         if (search) applySearch(search.closest("[data-actor-panel]"));
     });
 
-    
+
     document.addEventListener("click", (event) => {
         const btn = event.target.closest("[data-actor-collapse-all]");
         if (!btn) return;
@@ -56,7 +56,7 @@
         folders.forEach((f) => setFolderOpen(f, !anyOpen));
     });
 
-    
+
     document.addEventListener("click", (event) => {
         const toggle = event.target.closest("[data-actor-folder-collapse]");
         if (!toggle) return;
@@ -64,7 +64,7 @@
         if (folder) setFolderOpen(folder, !folder.hasAttribute("data-open"));
     });
 
-    
+
     document.addEventListener("DOMContentLoaded", () => applyFolderColors(document));
 
     FI.setFolderOpen = setFolderOpen;

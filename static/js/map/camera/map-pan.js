@@ -42,7 +42,7 @@
             try {
                 activePan.canvas.releasePointerCapture(event.pointerId);
             } catch {
-                
+
             }
 
             activePan.canvas.classList.remove("is-panning");

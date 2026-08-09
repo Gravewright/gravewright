@@ -13,14 +13,14 @@ from app.config import config
 from app.helpers.env import PROJECT_ROOT
 
 
-# P1: SQLite allows a single writer at a time. Without app-side serialization,
-# every worker thread that opens a write transaction races for that lock and
-# falls into SQLite's busy-timeout backoff (up to 5s) — turning contention into
-# multi-second latency and writer starvation under load. This re-entrant mutex
-# makes write transactions queue politely (FIFO) on one in-process lock instead
-# of fighting at the SQLite layer. Reentrant so a thread that legitimately nests
-# write transactions does not self-deadlock. Networked backends (PostgreSQL)
-# have real write concurrency and skip this entirely.
+
+
+
+
+
+
+
+
 _SQLITE_WRITE_LOCK = threading.RLock()
 
 

@@ -22,7 +22,7 @@ from dataclasses import dataclass
 
 from app.cli.scaffold import Intent
 
-# The classic six-ability spread shared by the d20-family templates.
+
 _ABILITIES = (
     "strength",
     "dexterity",
@@ -50,9 +50,9 @@ class Template:
     intent: Intent
 
 
-# Order here is the presentation order in the wizard and ``--list-templates``.
-# "blank" is first so the minimal path is always one keystroke away; the rest are
-# roughly ordered most-popular-first.
+
+
+
 RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="blank",

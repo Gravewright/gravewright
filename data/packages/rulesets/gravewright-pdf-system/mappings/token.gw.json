@@ -1,0 +1,18 @@
+{
+  "$comment": "É por causa deste arquivo que os campos do PDF valem a pena estar em dado: as barras do token leem os mesmos sheet.bars.* que a ficha grava. Qual campo do PDF alimenta cada barra é escolhido na própria ficha.",
+  "character": {
+    "name": "core.name",
+    "bars": {
+      "bar_1": {
+        "value": "sheet.bars.bar_1.value",
+        "max": "sheet.bars.bar_1.max"
+      },
+      "bar_2": {
+        "value": "sheet.bars.bar_2.value",
+        "max": "sheet.bars.bar_2.max"
+      }
+    },
+    "initiative": "sheet.init",
+    "defense": "sheet.ac"
+  }
+}

@@ -12,6 +12,8 @@ from litestar.response import Response
 from app.business.campaigns.campaign_service import CampaignService
 from app.business.permissions import PermissionService
 from app.domain.permissions.permissions import TablePermission
+from app.realtime.events import TransportEvent
+from app.realtime.transport import RealtimeTransport
 
 
 @dataclass
@@ -49,5 +51,13 @@ async def update_table_settings(
         return Response(
             {"ok": False, "error_key": "inside.campaigns.errors.not_found"}, status_code=404
         )
+
+
+
+    await RealtimeTransport().to_room(
+        room_id=campaign_id,
+        event=TransportEvent.CAMPAIGN_TABLE_SETTINGS_CHANGED,
+        payload={"room_id": campaign_id, "measure_flash_seconds": seconds},
+    )
 
     return Response({"ok": True, "measure_flash_seconds": seconds}, status_code=200)

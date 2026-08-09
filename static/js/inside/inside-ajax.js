@@ -18,6 +18,10 @@
         restoreSection(sectionId);
         if (openModalId) openModal(openModalId);
         window.history.replaceState({}, "", "/inside");
+
+
+
+        document.dispatchEvent(new CustomEvent("inside:rendered", { detail: { root: next } }));
         return true;
     }
 
@@ -48,9 +52,9 @@
 
     function shouldHandleForm(form) {
         if (!form || form.method.toLowerCase() !== "post") return false;
-        if (form.matches(".invitation-accept-form, .invitation-decline-form")) return false;
-        // Package uploads keep the chosen file in memory to support the
-        // "replace?" prompt; package-upload.js owns their submit.
+        if (form.matches(".invitation-accept-form, .invitation-decline-form, .join-code-entry-form")) return false;
+
+
         if (form.matches(".package-upload-form")) return false;
         if (form.action.endsWith("/logout")) return false;
         return true;
@@ -75,6 +79,11 @@
         if (!modal) return;
         modal.hidden = false;
         modal.querySelector("[data-inside-modal-close]")?.focus();
+
+
+        document.dispatchEvent(
+            new CustomEvent("inside:modal-open", { detail: { id, modal } }),
+        );
     }
 
     function closeModal(target) {
@@ -121,7 +130,7 @@
         });
     });
 
-    // Let other inside scripts refresh content in place, preserving the active
-    // section (so an action does not bounce the user back to Campaigns).
+
+
     window.GravewrightInside = Object.freeze({ refresh: fetchInside });
 })();

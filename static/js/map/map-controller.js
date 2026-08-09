@@ -7,17 +7,17 @@
     const DEFAULT_CHUNK_SIZE = 16;
     const VIEWPORT_UPDATE_MS = 60;
     const CHUNK_STREAM_RETRY_MS = 450;
-    
-    
-    
+
+
+
     const CHUNK_STREAM_MAX_RETRIES = 5;
-    
-    
+
+
     const CHUNK_STREAM_PULL_MS = 15;
-    
-    
-    
-    
+
+
+
+
     const VIEW_CHUNK_MARGIN = 0;
     const BOARD_PING_HOLD_MS = 700;
     const BOARD_PING_MOVE_TOLERANCE = 10;
@@ -33,10 +33,10 @@
         gargantuan: 4,
     };
 
-    
 
-    
-    
+
+
+
     const BOARD_THEME = {
         background: "#11151a",
         gridColor: "rgba(192,154,90,0.18)",
@@ -44,8 +44,8 @@
         sceneBorderColor: "rgba(255,255,255,0.12)",
     };
 
-    
-    
+
+
     const boardRenderer = window.GravewrightBoard.create("pixi", {
         requestRender: () => requestDrawAll(),
     });
@@ -99,6 +99,7 @@
         tokenStoreFor,
     });
     const mapSelection = window.GravewrightMapSelection.createSelectionController({
+        activeLayer: () => mapLayerMode?.activeLayer?.() || "game",
         canControlToken,
         tokenStoreFor,
         markDirty,
@@ -114,6 +115,7 @@
     const mapTokenDrag = window.GravewrightMapTokenDrag.createTokenDragController({
         canControlToken,
         clampGridPosition,
+        effectiveIsGm,
         history: boardHistory,
         isSelected,
         markDirty,
@@ -246,7 +248,7 @@
         return mapScene.viewportSizeFor(canvas);
     }
 
-    
+
 
     function runtimeFor(canvas) {
         return mapStreaming.runtimeFor(canvas);
@@ -260,9 +262,9 @@
         return mapStreaming.visibleChunkRange(canvas, scene, state);
     }
 
-    
-    
-    
+
+
+
     function viewportFocusChunk(canvas, scene, state) {
         return mapStreaming.viewportFocusChunk(canvas, scene, state);
     }
@@ -351,12 +353,16 @@
         mapStreaming.handleSceneActivated(payload);
     }
 
-    
+    function handleSceneUpdated(payload) {
+        mapStreaming.handleSceneUpdated(payload);
+    }
+
+
 
     function isGmForCanvas(canvas) {
-        
-        
-        
+
+
+
         return canvas.closest(".room-workspace")?.dataset.isGm === "true";
     }
 
@@ -368,10 +374,13 @@
         return document.body.dataset.currentUserId || "";
     }
 
-    
-    
+
+
     function canControlToken(token, canvas) {
-        return mapTokens.canControl(token, canvas);
+        const layer = token?.hidden ? "gm" : "game";
+        const roomId = canvas?.dataset.roomId || "";
+        return !window.GravewrightTools?.isLayerLocked?.(layer, roomId)
+            && mapTokens.canControl(token, canvas);
     }
 
     function tokenStoreFor(canvas) {
@@ -402,8 +411,8 @@
         return mapSelection.isSelected(canvas, tokenId);
     }
 
-    
-    
+
+
     function selectToken(canvas, tokenId, { additive = false } = {}) {
         mapSelection.select(canvas, tokenId, { additive });
     }
@@ -436,9 +445,9 @@
         const store = tokenStoreFor(canvas);
         const current = store.get(token.token_id) || token;
         const bars = { ...(current.bars || {}) };
-        const hp = { ...(bars.hp || {}) };
-        const before = Number.isFinite(Number(hp.value)) ? Number(hp.value) : 0;
-        const max = Number.isFinite(Number(hp.max)) ? Number(hp.max) : null;
+        const bar = { ...(bars.bar_1 || {}) };
+        const before = Number.isFinite(Number(bar.value)) ? Number(bar.value) : 0;
+        const max = Number.isFinite(Number(bar.max)) ? Number(bar.max) : null;
         let next = operation === "set"
             ? amount
             : operation === "heal"
@@ -446,8 +455,8 @@
                 : before - amount;
         if (max != null) next = Math.min(max, next);
         next = Math.max(0, next);
-        hp.value = next;
-        bars.hp = hp;
+        bar.value = next;
+        bars.bar_1 = bar;
         store.set(current.token_id, { ...current, bars });
         markDirty(canvas);
         showHpToast(`${current.name || "Token"}: HP ${max == null ? next : `${next}/${max}`}`);
@@ -492,7 +501,7 @@
         }
     }
 
-    
+
 
     function selectedMeasureIdFor(canvas) {
         return mapMeasureController.selectedMeasureIdFor(canvas);
@@ -602,7 +611,7 @@
         mapTokenEvents.loadForScene(canvas, scene, force);
     }
 
-    
+
 
     function forCanvasesWithScene(sceneId, fn) {
         mapTokenEvents.forCanvasesWithScene(sceneId, fn);
@@ -640,7 +649,7 @@
         mapTokenEvents.handleConditionsUpdated(payload);
     }
 
-    
+
 
     function screenToGridXY(screenX, screenY, state, scene) {
         return window.GravewrightMapDrag.screenToGridXY(screenX, screenY, state, scene);
@@ -662,7 +671,7 @@
         mapAddToScene.confirm();
     }
 
-    
+
 
     function cameraStorageKey(sceneId) {
         const userId = document.body.dataset.currentUserId || "anon";
@@ -769,11 +778,11 @@
         mapBoardPing.update(event);
     }
 
-    
 
-    
-    
-    
+
+
+
+
     function drawGrid(canvas) {
         mapRenderLoop.drawGrid(canvas);
     }
@@ -790,29 +799,30 @@
         mapRenderLoop.markDirty(canvas);
     }
 
-    
+
 
     document.addEventListener("pointerdown", (event) => {
-        const canvas = event.target.closest("[data-map-canvas]");
+        const canvas = event.target.closest("[data-map-canvas]")
+            || event.target.closest("[data-map-viewport]")?.querySelector("[data-map-canvas]");
         if (!canvas) return;
 
-        
+
         if (mapAddToScene.isActive() && event.button === 0) {
             updateAddToScenePreview(event.clientX, event.clientY);
             confirmAddToScene();
             return;
         }
 
-        
+
         if (event.button === 2) {
             const hit = tokenAtPoint(canvas, event.clientX, event.clientY);
-            if (hit) return; 
+            if (hit) return;
             if (isGmForCanvas(canvas) && measureAtPointForContext(canvas, event)) return;
             mapPan.start(canvas, event);
             return;
         }
 
-        
+
         if (event.button === 0) {
             if (window.GravewrightFog?.isActive?.()) return;
             const activeTool = window.GravewrightTools?.activeTool ?? "select";
@@ -840,7 +850,7 @@
             if (hit) {
                 mapTokenDrag.start(canvas, event, hit, { additive });
             } else {
-                
+
                 mapMarquee.start(canvas, event, { additive });
             }
         }
@@ -861,16 +871,16 @@
     });
 
     document.addEventListener("contextmenu", (event) => {
-        const canvas = event.target.closest("[data-map-canvas]");
+        const canvas = event.target.closest("[data-map-canvas]")
+            || event.target.closest("[data-map-viewport]")?.querySelector("[data-map-canvas]");
         if (!canvas) return;
         if (tokenAtPoint(canvas, event.clientX, event.clientY)) return;
         if (!isGmForCanvas(canvas)) return;
 
         const measure = measureAtPointForContext(canvas, event);
-        if (!measure) return;
-
         const scene = sceneDataFor(canvas);
         event.preventDefault();
+        if (!measure) return;
         document.dispatchEvent(new CustomEvent("vtt:measure-contextmenu", {
             detail: {
                 measure,
@@ -899,6 +909,16 @@
         return Array.from(dataTransfer?.files || []).filter((file) => (file.type || "").startsWith("image/"));
     }
 
+
+
+    function isImageAssetDrop(raw) {
+        try {
+            return (JSON.parse(raw)?.kind || "image") === "image";
+        } catch {
+            return false;
+        }
+    }
+
     function handleCardDrop(canvas, raw, clientX, clientY) {
         let parsed = null;
         try {
@@ -909,8 +929,8 @@
         const cardId = parsed?.card_id;
         const sceneId = canvas.dataset.sceneId || "";
         if (!cardId || !sceneId) return;
-        // Cards are owned entirely by the cards domain — a card dropped on the table
-        // is placed through its own scene-placement layer, not scene images.
+
+
         window.GravewrightCards?.placeCardAtScene?.(canvas, parsed, clientX, clientY);
     }
 
@@ -989,6 +1009,9 @@
         const assetRaw = dt?.getData?.(ASSET_DROP_MIME);
         if (assetRaw) {
             event.preventDefault();
+
+
+            if (!isImageAssetDrop(assetRaw)) return;
             window.GravewrightSceneImages?.placeLibraryAssetAt?.(canvas, assetRaw, event.clientX, event.clientY);
             return;
         }
@@ -1064,9 +1087,21 @@
         mapMarquee.stop(e);
     });
 
+    const mapTokenSteps = window.GravewrightMapTokenSteps.createTokenSteps({
+        canControlToken,
+        clampGridPosition,
+        effectiveIsGm,
+        history: boardHistory,
+        markDirty,
+        sceneDataFor,
+        selectedSet,
+        tokenStoreFor,
+    });
+
     window.GravewrightMapKeyboardEvents.bindKeyboardEvents({
         activeCanvas,
         boardPing: mapBoardPing,
+        tokenSteps: mapTokenSteps,
         clearMeasures,
         deleteSelectedMeasure,
         getMeasureController: () => mapMeasureController,
@@ -1125,6 +1160,7 @@
         handleBoardPing,
         handleChunkUpdated,
         handleSceneActivated,
+        handleSceneUpdated,
         handleSessionResumed,
         handleViewportReady,
         handleTokensConditionsUpdated,
@@ -1230,6 +1266,10 @@
         redraw: drawAll,
         activeCanvas,
         stateFor,
+        sceneDataFor,
+
+
+        activeTokenDrag: () => mapTokenDrag.active(),
         activeCameraForScene,
         worldFromScreen,
         startAddToScene,
@@ -1241,7 +1281,7 @@
         historyUndo: () => boardHistory.undo(),
         historyRedo: () => boardHistory.redo(),
         debugSnapshot,
-        
+
         viewerIsGm: (canvas) => effectiveIsGm(canvas),
         isPlayerView: () => mapLayerMode.isPlayerView(),
         setPlayerVision: (active) => mapLayerMode.setPlayerVision(active),

@@ -21,7 +21,23 @@ htmlcov/
 /uploads/
 /tmp/
 /temp/
-/data/
+
+# ``data/`` mistura duas coisas: dados de execução (campanhas, imports) e os
+# pacotes que acompanham o projeto, que são código-fonte. Por isso o diretório em
+# si não pode ser ignorado — o Git não reexamina o conteúdo de um diretório
+# excluído, e nenhuma negação lá dentro funcionaria. Ignoramos o conteúdo e
+# reincluímos o caminho até o que é fonte, nível por nível.
+/data/*
+!/data/packages/
+/data/packages/*
+!/data/packages/rulesets/
+/data/packages/rulesets/*
+!/data/packages/rulesets/gravewright-pdf-system/
+
+# Ficha em PDF enviada pelo GM vive na biblioteca de assets da campanha, não aqui.
+# Dentro do pacote fica só o template que ele traz de fábrica.
+/data/packages/rulesets/gravewright-pdf-system/assets/sheets/*
+!/data/packages/rulesets/gravewright-pdf-system/assets/sheets/blank-a4.pdf
 
 # Databases and SQLite sidecars
 *.sqlite

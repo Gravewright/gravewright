@@ -7,7 +7,7 @@
 (function () {
   const FI = (window.GravewrightItemSheetInternals = window.GravewrightItemSheetInternals || {});
 
-  const contexts = new WeakMap(); 
+  const contexts = new WeakMap();
 
   function csrfOf(root) {
     return root.dataset.csrf || window.csrfToken();
@@ -46,8 +46,23 @@
     });
   }
 
-  function labelled(labelText, control) {
-    const wrap = el("label", "actor-field");
+  function cssIdent(value) {
+    return String(value || "")
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+
+
+
+  function variantClass(base, variant, extra = "") {
+    const suffix = cssIdent(variant);
+    return `${base}${suffix ? ` ${base}--${suffix}` : ""}${extra ? ` ${extra}` : ""}`;
+  }
+
+  function labelled(labelText, control, variant) {
+    const wrap = el("label", variantClass("actor-field", variant));
     wrap.appendChild(el("span", "actor-field-label", labelText || ""));
     wrap.appendChild(control);
     return wrap;
@@ -187,20 +202,26 @@
         return container;
       }
       case "section": {
-        const section = el("section", "actor-section");
+        const section = el("section", variantClass("actor-section", node.variant));
         if (node.label) section.appendChild(el("h3", "actor-section-title", node.label));
         buildChildren(section, node.children, rc);
         return section;
       }
       case "row": {
-        const row = el("div", "actor-row");
+        const row = el("div", variantClass("actor-row", node.variant));
         buildChildren(row, node.children, rc);
         return row;
       }
       case "column": {
-        const col = el("div", "actor-column");
+        const col = el("div", variantClass("actor-column", node.variant));
         buildChildren(col, node.children, rc);
         return col;
+      }
+      case "grid": {
+        const grid = el("div", variantClass("actor-grid", node.variant));
+        if (node.columns) grid.style.setProperty("--gw-grid-columns", String(node.columns));
+        buildChildren(grid, node.children, rc);
+        return grid;
       }
       case "divider":
         return el("hr", "actor-divider");
@@ -214,14 +235,14 @@
         input.value = getPath(ctx, node.path) ?? "";
         input.disabled = !editable;
         bindInput(input, node.path, node.type === "numberField" ? "number" : "text");
-        return labelled(node.label, input);
+        return labelled(node.label, input, node.variant);
       }
       case "textArea": {
         const input = el("textarea", "actor-input actor-textarea");
         input.value = getPath(ctx, node.path) ?? "";
         input.disabled = !editable;
         bindInput(input, node.path, "text");
-        return labelled(node.label, input);
+        return labelled(node.label, input, node.variant);
       }
       case "checkboxField": {
         const input = el("input", "actor-checkbox");
@@ -229,7 +250,7 @@
         input.checked = !!getPath(ctx, node.path);
         input.disabled = !editable;
         bindInput(input, node.path, "bool");
-        const wrap = el("label", "actor-field actor-field--check");
+        const wrap = el("label", variantClass("actor-field", node.variant, "actor-field--check"));
         wrap.appendChild(input);
         wrap.appendChild(el("span", "actor-field-label", node.label || ""));
         return wrap;
@@ -246,7 +267,7 @@
         select.value = getPath(ctx, node.path) ?? "";
         select.disabled = !editable;
         bindInput(select, node.path, "text");
-        return labelled(node.label, select);
+        return labelled(node.label, select, node.variant);
       }
       case "resourceField": {
         const wrap = el("div", "actor-field actor-resource");
@@ -283,7 +304,7 @@
         return wrap;
       }
       case "readonlyField": {
-        const wrap = el("div", "actor-field actor-field--readonly");
+        const wrap = el("div", variantClass("actor-field", node.variant, "actor-field--readonly"));
         wrap.appendChild(el("span", "actor-field-label", node.label || ""));
         wrap.appendChild(el("span", "actor-readonly-value", getPath(ctx, node.path) ?? "—"));
         return wrap;
@@ -390,8 +411,8 @@
     let html;
     try {
       const url = `/sdk/packages/${encodeURIComponent(packageId)}/asset/${sheet.template}`;
-      // The template asset URL has no version query, so never serve a stale
-      // cached copy after the package's sheet is regenerated.
+
+
       const res = await fetch(url, { credentials: "same-origin", cache: "no-store", headers: { Accept: "text/html" } });
       if (!res.ok) throw new Error(`template ${res.status}`);
       html = await res.text();
@@ -423,6 +444,24 @@
     if (body) root.appendChild(body);
   }
 
+  function renderEmbedded(root, bundle, options = {}) {
+    root.classList.add("item-sheet--embedded", `item-sheet--${cssIdent(bundle.item?.system_id)}`);
+    render(root, bundle);
+    if (root.dataset.embeddedItemWired) return;
+    root.dataset.embeddedItemWired = "1";
+    root.addEventListener("change", (event) => {
+      const input = event.target.closest("[data-bind-path]");
+      if (!input || !root.contains(input)) return;
+      const kind = input.dataset.bindKind;
+      let value = kind === "bool" ? !!input.checked : input.value;
+      if (kind === "number") {
+        const number = Number(value);
+        value = Number.isFinite(number) ? number : 0;
+      }
+      options.onChange?.(input.dataset.bindPath, value);
+    });
+  }
+
   async function refresh(root) {
     const meta = contexts.get(root);
     if (!meta) return;
@@ -439,6 +478,7 @@
   FI.getPath = getPath;
   FI.postJSON = postJSON;
   FI.render = render;
+  FI.renderEmbedded = renderEmbedded;
   FI.refresh = refresh;
   FI.modifierTargetById = modifierTargetById;
   FI.modifierOperationById = modifierOperationById;

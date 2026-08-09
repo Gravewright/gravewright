@@ -159,6 +159,7 @@ class SceneRepository:
         grid_visible: bool,
         grid_color: str,
         grid_opacity: float,
+        darkness: float,
         tile_size: int,
         image_scale: float,
         tile_table_version: int,
@@ -172,6 +173,7 @@ class SceneRepository:
                         scenes_table.c.grid_visible,
                         scenes_table.c.grid_color,
                         scenes_table.c.grid_opacity,
+                        scenes_table.c.darkness,
                         scenes_table.c.tile_size,
                         scenes_table.c.image_scale,
                         scenes_table.c.tile_table_version,
@@ -188,6 +190,7 @@ class SceneRepository:
                     or bool(existing["grid_visible"]) != grid_visible
                     or existing["grid_color"] != grid_color
                     or float(existing["grid_opacity"]) != float(grid_opacity)
+                    or float(existing["darkness"]) != float(darkness)
                     or existing["tile_size"] != tile_size
                     or float(existing["image_scale"]) != float(image_scale)
                     or existing["tile_table_version"] != tile_table_version
@@ -203,6 +206,7 @@ class SceneRepository:
                     grid_visible=1 if grid_visible else 0,
                     grid_color=grid_color,
                     grid_opacity=grid_opacity,
+                    darkness=darkness,
                     tile_size=tile_size,
                     image_scale=image_scale,
                     tile_table_version=tile_table_version,

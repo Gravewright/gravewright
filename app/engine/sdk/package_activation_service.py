@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.business.audit import AuditService
 from app.engine.sdk.package_dependency_service import PackageDependencyService
 from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.campaign_package_repository import (
@@ -35,6 +36,7 @@ class PackageActivationService:
         self.dependencies = PackageDependencyService()
         self.campaign_packages = CampaignPackageRepository()
         self.campaigns = CampaignRepository()
+        self.audit = AuditService()
 
     def _enabled(self, package_id: str) -> dict | None:
         record = self.install.get(package_id)
@@ -45,6 +47,8 @@ class PackageActivationService:
     def set_campaign_ruleset(
         self, campaign_id: str, package_id: str | None, user_id: str
     ) -> ActivationResult:
+        current = self.campaigns.get(campaign_id)
+        previous_package_id = current.get("active_system_id") if current else None
         if package_id is not None:
             record = self._enabled(package_id)
             if record is None:
@@ -57,7 +61,7 @@ class PackageActivationService:
                     success=False,
                     error_key=self.dependencies.first_error_key(dependency_report),
                 )
-        # The ruleset is exclusive: it is the campaign's authoritative active id.
+
         self.campaigns.update_system(
             campaign_id=campaign_id,
             changed_by_user_id=user_id,
@@ -73,6 +77,19 @@ class PackageActivationService:
                 activation_role=ROLE_RULESET,
                 enabled_by_user_id=user_id,
             )
+        self.audit.record(
+            campaign_id=campaign_id,
+            actor_user_id=user_id,
+            event_type="ruleset.changed",
+            subject_type="package",
+            subject_id=package_id,
+            action="change_ruleset",
+            result="success",
+            metadata={
+                "previous_package_id": previous_package_id,
+                "next_package_id": package_id,
+            },
+        )
         return ActivationResult(success=True)
 
     def activate_package(self, campaign_id: str, package_id: str, user_id: str) -> ActivationResult:
@@ -96,6 +113,16 @@ class PackageActivationService:
             enabled_by_user_id=user_id,
             load_order=load_order,
         )
+        self.audit.record(
+            campaign_id=campaign_id,
+            actor_user_id=user_id,
+            event_type="package.activated",
+            subject_type="package",
+            subject_id=package_id,
+            action="activate",
+            result="success",
+            metadata={"activation_role": record["kind"]},
+        )
         return ActivationResult(success=True)
 
     def deactivate_package(
@@ -110,6 +137,20 @@ class PackageActivationService:
                     active_dependents=tuple(dependents),
                 )
         self.campaign_packages.deactivate(campaign_id=campaign_id, package_id=package_id)
+        record = self.install.get(package_id)
+        self.audit.record(
+            campaign_id=campaign_id,
+            actor_user_id=user_id,
+            event_type="package.deactivated",
+            subject_type="package",
+            subject_id=package_id,
+            action="deactivate",
+            result="success",
+            metadata={
+                "activation_role": record["kind"] if record else "unknown",
+                "forced": force,
+            },
+        )
         return ActivationResult(success=True)
 
     def list_campaign_packages(self, campaign_id: str) -> list[dict]:

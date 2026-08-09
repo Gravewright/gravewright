@@ -37,8 +37,8 @@
 
             if (sceneW <= 0 || sceneH <= 0) return;
 
-            
-            
+
+
             const clipX = Math.max(0, sceneX);
             const clipY = Math.max(0, sceneY);
             const clipRight = Math.min(cssW, sceneX + sceneW);
@@ -61,8 +61,8 @@
             startY = Math.max(0, startY);
             endY = Math.min(maxGridY, endY);
 
-            
-            
+
+
             if (scaledGrid >= 4) {
                 for (let gx = startX; gx <= endX; gx += 1) {
                     const x = Math.round(screenFromWorld(gx * gridSize, cam.offsetX, cam.zoom));
@@ -89,7 +89,7 @@
 
             const borderColor = this._color(this.theme.sceneBorderColor);
 
-            
+
             border.rect(sceneX, sceneY, sceneW, 2).fill({
                 color: borderColor,
                 alpha: 1,

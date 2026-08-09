@@ -106,10 +106,10 @@
     };
   }
 
-  
-  
-  
-  
+
+
+
+
   function buildSegmented(field) {
     const wrap = el("div", "gw-segmented");
     const hidden = document.createElement("input");
@@ -168,7 +168,7 @@
       control.value = field.default ?? "";
       if (field.placeholder) control.placeholder = field.placeholder;
     }
-    
+
     if (type !== "segmented" && type !== "radio") {
       control.dataset.rollFieldId = id;
       control.dataset.rollFieldType = type;
@@ -189,8 +189,8 @@
     return rollOptions;
   }
 
-  
-  
+
+
   function resolveDialogAction(dialog, schema, fallback) {
     if (!schema?.actionField) return fallback;
     const field = dialog.querySelector(`[data-roll-field-id="${CSS.escape(String(schema.actionField))}"]`);
@@ -203,9 +203,9 @@
     }
   }
 
-  
-  
-  
+
+
+
   function damageTargets(root) {
     const out = [];
     const seenActors = new Set();
@@ -220,6 +220,15 @@
       out.push({ tokenId: token.token_id, actorId: token.actor_id, name: token.name || token.actor_id });
       seenActors.add(token.actor_id);
     });
+
+
+
+
+
+
+
+    if (out.length) return out;
+
     document.querySelectorAll('[data-actor-card][data-can-edit="true"]').forEach((card) => {
       const id = card.getAttribute("data-actor-card");
       if (!id || seenActors.has(id)) return;
@@ -229,7 +238,7 @@
     return out;
   }
 
-  
+
   function buildTargetField(root, schema) {
     if (!schema || schema.intent !== "damage") return null;
     const targets = damageTargets(root);
@@ -327,8 +336,15 @@
     if (event.key === "Escape") closeFloatingSheetMenus();
   });
 
+
+
+
+
+
   document.addEventListener("click", (event) => {
-    if (event.target.closest(".gw-action-menu, .gw-roll-dialog, [data-interaction]")) return;
+    if (event.target.closest(
+      ".gw-action-menu, .gw-roll-dialog, [data-interaction], [data-item-action], [data-action]"
+    )) return;
     closeFloatingSheetMenus();
   });
 

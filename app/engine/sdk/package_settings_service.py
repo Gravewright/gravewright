@@ -31,8 +31,8 @@ from app.persistence.repositories.package_setting_repository import (
 
 SETTING_INVALID_VALUE = "sdk.settings.invalid_value"
 
-# Explicit boolean vocabulary. Anything outside these sets is invalid — we never
-# coerce an unrecognised value (the classic ``bool("false") is True`` bug).
+
+
 _BOOLEAN_TRUE = frozenset({"true", "1", "yes", "on"})
 _BOOLEAN_FALSE = frozenset({"false", "0", "no", "off", ""})
 
@@ -52,7 +52,7 @@ class SettingValueError(ValueError):
 def _coerce_boolean(value: object) -> bool:
     if isinstance(value, bool):
         return value
-    if isinstance(value, int):  # 0/1 (bool already handled above)
+    if isinstance(value, int):
         if value in (0, 1):
             return bool(value)
         raise ValueError(value)
@@ -66,7 +66,7 @@ def _coerce_boolean(value: object) -> bool:
 
 
 def _coerce_integer(value: object) -> int:
-    if isinstance(value, bool):  # bool is an int subclass; reject it explicitly
+    if isinstance(value, bool):
         raise ValueError(value)
     if isinstance(value, int):
         return value
@@ -75,7 +75,7 @@ def _coerce_integer(value: object) -> int:
             return int(value)
         raise ValueError(value)
     if isinstance(value, str):
-        return int(value.strip())  # raises ValueError on non-integer text
+        return int(value.strip())
     raise ValueError(value)
 
 
@@ -102,7 +102,7 @@ def coerce_setting_value(definition: PackageSetting, value: object) -> object:
             if value in definition.options:
                 return value
             raise ValueError(value)
-        # string
+
         if value is None:
             raise ValueError(value)
         return str(value)
@@ -144,7 +144,7 @@ class PackageSettingsService:
             )
             if stored is not None:
                 value = _parse_stored(stored["value_json"], definition.default)
-            # Campaign scope overrides default; user scope overrides campaign.
+
             if definition.scope in {"campaign", "user"} and campaign_id:
                 stored = self.repo.get(
                     package_id=package_id,

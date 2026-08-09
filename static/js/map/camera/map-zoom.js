@@ -9,7 +9,8 @@
         } = deps;
 
         document.addEventListener("wheel", (event) => {
-            const canvas = event.target.closest("[data-map-canvas]");
+            const canvas = event.target.closest("[data-map-canvas]")
+                || event.target.closest("[data-map-viewport]")?.querySelector("[data-map-canvas]");
             if (!canvas) return;
 
             if (event.altKey && window.GravewrightFog?.handleAltWheel?.(event)) {

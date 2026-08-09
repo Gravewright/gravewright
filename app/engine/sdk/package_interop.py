@@ -18,9 +18,9 @@ from app.engine.sdk.package_paths import path_is_safe
 
 RESERVED_NAMESPACES = ("gravewright", "core", "system", "sdk")
 
-# A dotted event/method name with at least two segments, e.g.
-# ``my-addon.inventory.changed`` or the RPC ``my-addon.getWeight``. Segments allow
-# camelCase for method names; the leading (namespace) segment is the package id.
+
+
+
 _NAME = re.compile(r"^[A-Za-z0-9]+(-[A-Za-z0-9]+)*(\.[A-Za-z0-9]+(-[A-Za-z0-9]+)*)+$")
 
 
@@ -53,7 +53,7 @@ def validate_interop_manifest(raw: dict) -> list[str]:
             if not isinstance(name, str) or not _NAME.match(name):
                 codes.append("sdk.interop.event_name_invalid")
                 continue
-            # Owned sections (emits/provides) must use the package namespace.
+
             if _root_namespace(name) in RESERVED_NAMESPACES or (
                 package_id and _root_namespace(name) != package_id
             ):
@@ -73,14 +73,14 @@ def validate_interop_manifest(raw: dict) -> list[str]:
                 continue
             _check_schema_paths(entry, schema_keys, codes)
 
-    # Owned: the package emits these events / provides these methods.
+
     check_owned("emits", ("schema",))
     check_owned("provides", ("params", "returns", "request", "response"))
-    # External: the package listens to / requires others' events/methods.
+
     check_external("listens", ("schema",))
     check_external("requires", ())
 
-    # De-duplicate, keep order.
+
     seen: set[str] = set()
     return [c for c in codes if not (c in seen or seen.add(c))]
 

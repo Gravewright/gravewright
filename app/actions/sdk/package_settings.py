@@ -63,7 +63,7 @@ async def update_package_setting(
                 {"success": False, "error_key": "sdk.errors.owner_required"}, status_code=403
             )
 
-    # Campaign-scoped writes are GM-only; user-scoped writes belong to the user.
+
     if definition["scope"] == "campaign":
         if not campaign_id:
             return Response(

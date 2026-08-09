@@ -19,7 +19,7 @@
         });
     }
 
-    
+
     function applySearch(panel) {
         if (!panel) return;
         const query = (panel.querySelector("[data-item-search]")?.value || "").trim().toLowerCase();
@@ -42,7 +42,7 @@
         if (search) applySearch(search.closest("[data-item-panel]"));
     });
 
-    
+
     document.addEventListener("click", (event) => {
         const btn = event.target.closest("[data-item-collapse-all]");
         if (!btn) return;
@@ -53,7 +53,7 @@
         folders.forEach((f) => setFolderOpen(f, !anyOpen));
     });
 
-    
+
     document.addEventListener("click", (event) => {
         const toggle = event.target.closest("[data-item-folder-collapse]");
         if (!toggle) return;

@@ -5,7 +5,7 @@ from app.domain.roles import PlayerRole
 
 GM_ROLES = {PlayerRole.GM.value, PlayerRole.ASSISTANT_GM.value}
 UPLOAD_ROLES = {PlayerRole.GM.value, PlayerRole.ASSISTANT_GM.value, PlayerRole.PLAYER.value}
-# Streamers are read-only omniscient viewers: they SEE the GM layer but never edit it.
+
 GM_LAYER_VIEW_ROLES = {
     PlayerRole.GM.value,
     PlayerRole.ASSISTANT_GM.value,

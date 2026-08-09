@@ -4,9 +4,9 @@
 
 
 (function () {
-  
-  
-  
+
+
+
   const SOURCE_MIME = "application/x-gravewright-drop-source+json";
 
   function csrf() {

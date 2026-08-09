@@ -95,6 +95,12 @@ class SceneImageService:
                 success=False, error_key="game.scene_images.errors.scene_not_found"
             )
 
+
+
+
+        if not content_type.startswith("image/"):
+            return SceneImageResult(success=False, error_key="game.assets.errors.unsupported_type")
+
         created = self.library.create_asset(
             campaign_id=campaign_id,
             user_id=user_id,

@@ -7,7 +7,8 @@ from app.engine.sheets.sheet_drop_service import (
     HTML_DROP_LIST,
     HTML_EFFECT_LIST,
     SheetDropService,
-    _html_list_path,
+    html_drop_list,
+    html_list_path,
 )
 from app.engine.sheets.sheet_ir_validator import accepts_entry
 
@@ -58,17 +59,34 @@ def _manifest(sheet):
 def test_html_list_path_routes_to_named_zone():
     # A sheet template names per-category lists (skills, edges, gear). Each
     # resolves to its own data key so dropped items land where the sheet reads.
-    assert _html_list_path("skillItems") == "skillItems"
-    assert _html_list_path("equipmentItems") == "equipmentItems"
-    assert _html_list_path("effects") == "effects"
+    assert html_list_path("skillItems") == "skillItems"
+    assert html_list_path("equipmentItems") == "equipmentItems"
+    assert html_list_path("effects") == "effects"
 
 
 def test_html_list_path_sanitizes_unsafe_zone_names():
     # The zone name is used as a single data key, never a path, so dots and other
     # traversal characters are stripped rather than trusted.
-    assert _html_list_path("system.skills.../../x") == "systemskillsx"
-    assert _html_list_path("") == HTML_DROP_LIST
-    assert _html_list_path("   ") == HTML_DROP_LIST
+    assert html_list_path("system.skills.../../x") == "systemskillsx"
+    assert html_list_path("") == HTML_DROP_LIST
+    assert html_list_path("   ") == HTML_DROP_LIST
+
+
+def test_html_drop_list_routes_by_entry_type():
+    sheet = {
+        "dropZones": [
+            {"list": "skills", "accepts": ["item.skill"]},
+            {"list": "gear", "accepts": ["item.gear"]},
+        ]
+    }
+    assert html_drop_list(sheet, "item.skill") == "skills"
+    assert html_drop_list(sheet, "item.gear") == "gear"
+
+
+def test_html_drop_list_keeps_legacy_named_zone_as_fallback():
+    sheet = {"dropZones": [{"list": "skills", "accepts": ["item.skill"]}]}
+    assert html_drop_list(sheet, "item.unknown", "customItems") == "customItems"
+    assert html_drop_list(sheet, "item.unknown") == HTML_DROP_LIST
 
 
 def test_append_to_html_list_creates_items_array():
@@ -81,7 +99,9 @@ def test_append_to_html_list_creates_items_array():
     assert result.success
     assert result.version == 4
     assert result.changed_paths == [HTML_DROP_LIST]
-    assert svc.storage.written["data"]["items"] == [{"id": "i1", "name": "Sword", "type": "weapon"}]
+    saved = svc.storage.written["data"]["items"][0]
+    assert saved["id"] != "i1"
+    assert saved["name"] == "Sword" and saved["type"] == "weapon"
 
 
 def test_append_to_html_list_appends_to_existing():
@@ -90,7 +110,7 @@ def test_append_to_html_list_appends_to_existing():
     result = svc._append_to_html_list(_ACTOR, _Entry({"id": "new"}))
     assert result.success
     ids = [it["id"] for it in svc.storage.written["data"]["items"]]
-    assert ids == ["old", "new"]
+    assert ids[0] == "old" and ids[1] not in {"old", "new"}
 
 
 def test_append_to_html_effect_list_is_separate_from_items():
@@ -104,7 +124,7 @@ def test_append_to_html_effect_list_is_separate_from_items():
     assert result.success
     assert result.changed_paths == ["effects"]
     assert svc.storage.written["data"]["items"] == [{"id": "i1"}]
-    assert svc.storage.written["data"]["effects"][0]["id"] == "e1"
+    assert svc.storage.written["data"]["effects"][0]["id"] != "e1"
 
 
 def test_is_html_sheet_detects_mode(monkeypatch):

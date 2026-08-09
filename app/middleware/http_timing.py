@@ -24,8 +24,8 @@ ASGIApp = Callable[
     Awaitable[Any],
 ]
 
-# Collapse high-cardinality path segments (uuids, long hex, numeric ids) so the
-# per-route metric name stays bounded.
+
+
 _ID_SEGMENT = re.compile(r"^(?:[0-9a-fA-F]{12,}|\d+)$")
 
 

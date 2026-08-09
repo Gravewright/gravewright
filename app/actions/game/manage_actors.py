@@ -21,7 +21,7 @@ from app.engine.actors.actor_asset_read_service import ActorAssetReadService
 from app.engine.actors.actor_asset_service import ActorAssetService
 from app.engine.actors.actor_service import ActorResult, ActorService
 from app.engine.chat.chat_service import ChatService
-from app.engine.combat.turn_order_service import TurnOrderService
+from app.engine.combat.combat_service import CombatService
 from app.engine.content.content_import_service import ContentImportService
 from app.engine.content.content_pack_service import ContentPackService
 from app.engine.sheets.actor_sheet_service import ActorSheetService
@@ -29,6 +29,7 @@ from app.engine.sheets.sheet_action_service import ActionResult, SheetActionServ
 from app.engine.sheets.sheet_data_service import SheetDataResult, SheetDataService
 from app.engine.sheets.sheet_drop_service import SheetDropService
 from app.engine.sheets.sheet_item_service import SheetItemResult, SheetItemService
+from app.engine.tokens.token_instance_sheet_service import TokenSheetDataResult
 from app.engine.tokens.token_service import TokenService
 from app.engine.tokens.token_instance_sheet_service import TokenInstanceSheetService
 from app.helpers.env import PROJECT_ROOT
@@ -359,6 +360,35 @@ async def patch_token_sheet_data(
     )
 
 
+async def _emit_token_sheet_data(
+    result: "TokenSheetDataResult", *, user_id: str, token_service: TokenService
+) -> None:
+    """Tell the room a token's own sheet changed (same shape the patch uses)."""
+    token = token_service.tokens.get_by_id(result.token_id or "")
+    if not (result.campaign_id and result.scene_id and token is not None):
+        return
+    payload = {
+        "room_id": result.campaign_id,
+        "scene_id": result.scene_id,
+        "tokens": [
+            {
+                "token_id": result.token_id,
+                "version": result.version or token.get("version"),
+                "changed": {"overrides": result.overrides or {}},
+            }
+        ],
+        "updated_by": user_id,
+    }
+    transport = RealtimeTransport()
+    await transport.to_gm(
+        room_id=result.campaign_id, event=TransportEvent.TOKENS_UPDATED, payload=payload
+    )
+    if not token.get("hidden"):
+        await transport.to_players_in_room(
+            room_id=result.campaign_id, event=TransportEvent.TOKENS_UPDATED, payload=payload
+        )
+
+
 async def _refresh_actor_tokens(
     *, campaign_id: str | None, actor_id: str | None, token_service: TokenService
 ) -> None:
@@ -605,7 +635,7 @@ async def execute_action(
     cookies: dict[str, str],
     current_user: Row,
     sheet_action_service: SheetActionService,
-    turn_order_service: TurnOrderService,
+    combat_service: CombatService,
     token_service: TokenService,
     chat_service: ChatService,
     roll_presentation_service: RollPresentationService,
@@ -628,15 +658,9 @@ async def execute_action(
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
 
-    if result.campaign_id and result.actor_id:
-        turn_order_service.record_actor_activity(
-            campaign_id=result.campaign_id,
-            actor_id=result.actor_id,
-            activity_type="sheet.action",
-            payload={"action_id": str(body.get("action_id", ""))},
-        )
 
-    if result.action_type == "roll":
+
+    if result.action_type in {"roll", "chat"}:
         await _broadcast_roll(
             result,
             user=user,
@@ -648,21 +672,20 @@ async def execute_action(
             and result.campaign_id
             and result.actor_id
         ):
-            turn_order_service.record_initiative_roll(
+            combat_service.record_initiative_roll(
                 campaign_id=result.campaign_id,
                 actor_id=result.actor_id,
                 token_id=str(body.get("token_id") or "") or None,
                 user_id=user["id"],
                 total=result.total,
-                metadata={"actionId": str(body.get("action_id", ""))},
             )
-            combat_state = turn_order_service.get_state(
+            combat_state = combat_service.get_state(
                 campaign_id=result.campaign_id, user_id=user["id"]
             )
             if combat_state.success and combat_state.combat is not None:
                 await RealtimeTransport().to_room(
                     room_id=result.campaign_id,
-                    event=TransportEvent.COMBAT_STATE_UPDATED,
+                    event=TransportEvent.COMBAT_UPDATED,
                     payload=combat_state.state_payload() | {"updated_by": user["id"]},
                 )
         if result.applied:
@@ -716,7 +739,6 @@ async def execute_item_action(
     cookies: dict[str, str],
     current_user: Row,
     sheet_item_service: SheetItemService,
-    turn_order_service: TurnOrderService,
     token_service: TokenService,
     chat_service: ChatService,
     roll_presentation_service: RollPresentationService,
@@ -737,17 +759,9 @@ async def execute_item_action(
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
-    if result.campaign_id and result.actor_id:
-        turn_order_service.record_actor_activity(
-            campaign_id=result.campaign_id,
-            actor_id=result.actor_id,
-            activity_type="sheet.item.action",
-            payload={
-                "action_id": str(body.get("action_id", "")),
-                "item_instance_id": str(body.get("item_instance_id", "")),
-            },
-        )
-    if result.action_type == "roll":
+
+
+    if result.action_type in {"roll", "chat"}:
         await _broadcast_roll(
             result,
             user=user,
@@ -798,6 +812,25 @@ async def patch_item_instance(
         },
         status_code=200,
     )
+
+
+@get("/game/actor/{actor_id:str}/item/{item_instance_id:str}/sheet-bundle")
+async def get_embedded_item_sheet_bundle(
+    actor_id: FromPath[str],
+    item_instance_id: FromPath[str],
+    cookies: dict[str, str],
+    current_user: Row,
+    sheet_item_service: SheetItemService,
+) -> Response[dict[str, Any]]:
+    bundle = sheet_item_service.build_embedded_bundle(
+        actor_id=actor_id,
+        user_id=current_user["id"],
+        item_instance_id=item_instance_id,
+        locale=view_context(cookies)["locale"],
+    )
+    if bundle is None:
+        return Response({"error_key": "game.sheet_items.errors.item_not_found"}, status_code=404)
+    return Response(bundle, status_code=200)
 
 
 @post("/game/actor/item/remove")
@@ -858,17 +891,35 @@ async def drop_on_actor(
     cookies: dict[str, str],
     current_user: Row,
     sheet_drop_service: SheetDropService,
+    token_instance_sheet_service: TokenInstanceSheetService,
     token_service: TokenService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
     source = body.get("source") if isinstance(body.get("source"), dict) else {}
     target = body.get("target") if isinstance(body.get("target"), dict) else {}
+    drop_zone = str(target.get("drop_zone", ""))
+
+
+
+
+    token_id = str(body.get("token_id") or "")
+    if token_id and str(body.get("token_link_mode") or "") != "linked":
+        token_result = token_instance_sheet_service.drop(
+            token_id=token_id, user_id=user["id"], source=source, drop_zone=drop_zone
+        )
+        if not token_result.success:
+            return Response({"error_key": token_result.error_key}, status_code=400)
+        await _emit_token_sheet_data(
+            token_result, user_id=user["id"], token_service=token_service
+        )
+        return Response({"token_id": token_id, "version": token_result.version}, status_code=200)
+
     result = sheet_drop_service.drop(
         actor_id=str(body.get("actor_id", "")),
         user_id=user["id"],
         source=source,
-        drop_zone=str(target.get("drop_zone", "")),
+        drop_zone=drop_zone,
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)

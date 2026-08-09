@@ -1,37 +1,6 @@
+/* Palette and scales come from tokens.css. */
 :root {
-    
-    --bg: #11151a;
-    --surface: #181d23;
-    --surface-raised: #20262d;
-    --surface-field: #151a20;
-
-    --border: #303842;
-    --border-strong: #46505c;
-    --border-control: #637183;
-
-    --text: #d8d2c3;
-    --text-muted: #a9a193;
-    --text-faint: #7f8994;
-
-    --accent: #c09a5a;
-    --accent-hover: #d2ac6b;
-
-    --danger: #d2796b;
-    --danger-hover: #e08b7e;
-
-    --focus-ring: #d2ac6b;
-
-    --radius: 4px;
     --nav-width: 300px;
-
-    --font:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
 }
 
 * {
@@ -142,7 +111,7 @@ textarea {
 
 .notice {
     border: 1px solid rgba(192, 154, 90, 0.38);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     margin-bottom: 12px;
     padding: 12px;
     background: rgba(192, 154, 90, 0.10);
@@ -174,7 +143,7 @@ textarea {
 .campaign-create {
     align-self: start;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 14px;
     background: rgba(16, 19, 21, 0.88);
 }
@@ -196,7 +165,7 @@ textarea {
 .field textarea {
     width: 100%;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     background: var(--surface-field);
     color: var(--text);
     outline: none;
@@ -228,7 +197,7 @@ textarea {
     align-items: center;
     justify-content: center;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 0 12px;
     cursor: pointer;
     text-decoration: none;
@@ -281,7 +250,7 @@ textarea {
 .invitation-card,
 .system-card {
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     background: rgba(16, 19, 21, 0.88);
 }
 
@@ -324,7 +293,7 @@ textarea {
 
 .campaign-meta span {
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 5px 8px;
     background: rgba(0, 0, 0, 0.12);
     color: var(--text-faint);
@@ -391,7 +360,7 @@ textarea {
 
 .campaign-details summary small {
     border: 1px solid rgba(194, 154, 90, 0.34);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 2px 6px;
     color: var(--text-faint);
     font-size: 10px;
@@ -422,7 +391,7 @@ textarea {
 
 .campaign-package-trigger small {
     border: 1px solid rgba(194, 154, 90, 0.34);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 2px 6px;
     color: var(--text-faint);
     font-size: 10px;
@@ -447,7 +416,7 @@ textarea {
     gap: 10px;
     align-items: center;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 10px;
     background: rgba(255, 255, 255, 0.03);
 }
@@ -485,7 +454,7 @@ textarea {
 .campaign-package-status {
     width: max-content;
     border: 1px solid rgba(120, 200, 140, 0.45);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 2px 6px;
     color: #9ad97f;
     font-size: 9px !important;
@@ -506,7 +475,7 @@ textarea {
 
 .system-zone {
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     margin-top: 12px;
     padding: 12px;
     display: flex;
@@ -524,7 +493,7 @@ textarea {
 
 .delete-zone {
     border: 1px solid rgba(182, 97, 80, 0.36);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     margin-top: 12px;
     padding: 12px;
     background: rgba(182, 97, 80, 0.07);
@@ -572,7 +541,7 @@ textarea {
     text-transform: uppercase;
     color: var(--text-faint);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 2px 7px;
     margin-top: 4px;
 }
@@ -598,7 +567,7 @@ textarea {
 
 .invitation-block {
     border: 1px solid rgba(192, 154, 90, 0.34);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     margin-bottom: 12px;
     padding: 14px;
     background: rgba(192, 154, 90, 0.07);
@@ -629,7 +598,7 @@ textarea {
     place-content: center;
     justify-items: center;
     border: 1px dashed var(--border-strong);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 24px;
     background: rgba(255, 255, 255, 0.012);
     text-align: center;
@@ -715,7 +684,7 @@ textarea {
     align-items: center;
     gap: 11px;
     border: 1px solid transparent;
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 0 12px;
     color: var(--text-muted);
     cursor: pointer;
@@ -760,7 +729,7 @@ textarea {
     display: grid;
     gap: 3px;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 10px;
     background: rgba(255, 255, 255, 0.014);
 }
@@ -804,7 +773,7 @@ textarea {
 .delete-modal {
     width: min(520px, 100%);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     background: var(--surface);
     padding: 18px;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.52);
@@ -825,15 +794,39 @@ textarea {
     font-size: 22px;
 }
 
+/* This only ever set a colour and a font-size, so the button kept the browser's
+   default chrome — a grey, bevelled OS button sitting on a dark modal. It is an
+   icon button now, matching `.game-modal-control` on the board side. */
 .modal-close {
-    color: var(--text-muted);
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 0;
+    background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
     text-decoration: none;
-    font-size: 26px;
+    font-size: 20px;
     line-height: 1;
+    transition:
+        border-color var(--motion-fast) ease,
+        background var(--motion-fast) ease,
+        color var(--motion-fast) ease;
 }
 
 .modal-close:hover {
+    border-color: var(--border-accent);
+    background: var(--surface-raised);
     color: var(--accent-hover);
+}
+
+.modal-close:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
 }
 
 .delete-modal-copy {
@@ -855,12 +848,12 @@ textarea {
     align-items: center;
     gap: 8px;
     border: 1px dashed var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 22px 16px;
     background: rgba(255, 255, 255, 0.02);
     cursor: pointer;
     text-align: center;
-    transition: border-color 0.14s ease, background 0.14s ease;
+    transition: border-color var(--motion-fast) ease, background var(--motion-fast) ease;
 }
 
 .package-upload-drop:hover {
@@ -889,13 +882,13 @@ textarea {
     margin-right: 10px;
     padding: 7px 14px;
     border: 1px solid var(--border-strong);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     background: var(--surface-raised);
     color: var(--text);
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+    transition: border-color var(--motion-fast) ease, color var(--motion-fast) ease, background var(--motion-fast) ease;
 }
 
 .package-upload-drop input[type="file"]::file-selector-button:hover {
@@ -922,7 +915,7 @@ textarea {
 
 .removal-code-box {
     border: 1px solid rgba(192, 154, 90, 0.38);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     margin-bottom: 14px;
     padding: 12px;
     background: rgba(192, 154, 90, 0.08);
@@ -1008,7 +1001,7 @@ textarea {
 
 .system-banner {
     padding: 10px 14px;
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     font-size: 13px;
     margin-bottom: 12px;
     border: 1px solid var(--border);
@@ -1050,7 +1043,7 @@ textarea {
     text-transform: uppercase;
     letter-spacing: 0.07em;
     padding: 3px 9px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--border-strong);
     color: var(--text-muted);
     white-space: nowrap;
@@ -1062,7 +1055,7 @@ textarea {
     text-transform: uppercase;
     letter-spacing: 0.07em;
     padding: 2px 8px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-strong);
     color: var(--text-muted);
     background: rgba(255, 255, 255, 0.03);
@@ -1093,7 +1086,7 @@ textarea {
 
 .system-card-meta > span {
     padding: 2px 8px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: var(--surface-field);
 }
 
@@ -1118,7 +1111,7 @@ textarea {
 .system-chip {
     font-size: 10px;
     padding: 2px 7px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid var(--border);
     color: var(--text-muted);
 }
@@ -1147,7 +1140,7 @@ textarea {
     margin: 12px 0 0;
     padding: 10px 12px 10px 28px;
     border: 1px solid rgba(220, 110, 100, 0.4);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     background: rgba(70, 35, 32, 0.25);
     color: #e7a59f;
     font-size: 12px;
@@ -1162,7 +1155,7 @@ textarea {
 
 .system-action {
     padding: 7px 14px;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--border-strong);
     background: var(--surface-raised);
     color: var(--text);
@@ -1233,7 +1226,7 @@ textarea {
     gap: 10px;
     padding: 14px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     background: var(--surface-raised);
     color: var(--text);
     text-align: left;
@@ -1288,7 +1281,7 @@ textarea {
 .module-card-meta span,
 .system-card-button .system-card-meta > span {
     padding: 2px 7px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: var(--surface-field);
 }
 
@@ -1330,7 +1323,7 @@ textarea {
 .module-detail-meta span,
 .system-detail-meta span {
     padding: 3px 8px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background: var(--surface-field);
 }
 
@@ -1368,7 +1361,7 @@ textarea {
 .settings-card {
     padding: 16px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     background: var(--surface-raised);
 }
 
@@ -1408,7 +1401,7 @@ textarea {
     width: 100%;
     min-width: 0;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     background: var(--surface-field);
     color: var(--text);
     color-scheme: dark;
@@ -1479,7 +1472,7 @@ textarea {
     gap: 10px;
     padding: 10px 12px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: var(--radius-xl);
     background: var(--surface-raised);
 }
 .admin-row-main {
@@ -1506,7 +1499,7 @@ textarea {
 .role-badge {
     display: inline-block;
     padding: 1px 7px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     border: 1px solid rgba(192, 154, 90, 0.4);
     color: var(--accent);
     font-size: 10px;
@@ -1527,7 +1520,7 @@ textarea {
     min-width: 0;
     background: var(--surface-field);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     padding: 8px 10px;
     color: var(--text);
 }
@@ -1576,7 +1569,7 @@ html {
 .module-card-button,
 .system-card-button {
     border-color: rgba(70, 80, 92, 0.88);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     background:
         linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0)),
         var(--surface-raised);
@@ -1711,7 +1704,7 @@ html {
 }
 
 .nav-item {
-    border-radius: 6px;
+    border-radius: var(--radius-md);
 }
 
 .modal-backdrop {
@@ -1719,7 +1712,7 @@ html {
 }
 
 .delete-modal {
-    border-radius: 10px;
+    border-radius: var(--radius-xl);
 }
 
 @media (max-width: 1180px) {
@@ -1762,4 +1755,657 @@ html {
     .danger-button {
         width: 100%;
     }
+}
+.join-campaign-block {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    background: var(--surface, rgba(0, 0, 0, 0.12));
+}
+
+.join-code-entry-form,
+.join-code-pending {
+    display: flex;
+    align-items: end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.join-code-entry-form .field {
+    flex: 1 1 230px;
+}
+
+.join-code-entry-form input {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.join-code-pending {
+    justify-content: space-between;
+    padding: 12px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+}
+
+.join-code-pending p {
+    margin: 0;
+}
+.campaign-clone-form,
+.campaign-clone-options {
+    display: grid;
+    gap: 10px;
+}
+.campaign-clone-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border: 1px solid var(--border);
+    padding: 10px;
+}
+.campaign-clone-options label { display: flex; align-items: center; gap: 7px; }
+.campaign-clone-warning,
+.campaign-clone-preview { margin: 0; color: var(--text-muted); font-size: 12px; }
+.campaign-clone-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.campaign-snapshot-create,
+.campaign-snapshot-list,
+.campaign-snapshot-item { display: grid; gap: 10px; }
+.campaign-snapshot-list { margin-top: 12px; }
+.campaign-snapshot-item { padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-xl); }
+.campaign-snapshot-item form { display: grid; gap: 8px; }
+.audit-log-controls { display: flex; gap: 8px; align-items: end; flex-wrap: wrap; }
+.audit-log-list { display: grid; gap: 8px; margin: 12px 0; }
+.audit-log-item { display: grid; gap: 4px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-lg); }
+.audit-log-item code { overflow-wrap: anywhere; white-space: pre-wrap; }
+
+/* ---------------------------------------------------------------------------
+   Campaign listing refinement.
+
+   The listing was the only card collection on this page still stacking in a
+   single full-width column, while `.system-card-grid` and `.module-card-grid`
+   right beside it already flow into a responsive grid. It also had a hover rule
+   (`border-color`) with no transition to animate it, so the only feedback on
+   the primary object of the whole screen was an instant border flick.
+
+   This aligns it with the grid pattern already in use and gives the card the
+   states it was missing. Markup is unchanged.
+   --------------------------------------------------------------------------- */
+
+.campaign-list {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: var(--space-3);
+    align-items: start;
+}
+
+/* Cards in the same row end up the same height, and the footer settles at the
+   bottom instead of floating under a short description. */
+.campaign-card {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    transition:
+        border-color var(--motion-base) ease,
+        box-shadow var(--motion-base) ease,
+        transform var(--motion-base) ease;
+}
+
+.campaign-card-main {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+}
+
+/* Accent edge: absent at rest, so the grid stays calm; it resolves on hover to
+   confirm which card is under the cursor. */
+.campaign-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent 70%);
+    opacity: 0;
+    transition: opacity var(--motion-base) ease;
+}
+
+.campaign-card:hover,
+.campaign-card:focus-within {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.campaign-card:hover::before,
+.campaign-card:focus-within::before {
+    opacity: 1;
+}
+
+.campaign-card:focus-within {
+    border-color: var(--border-accent-strong);
+}
+
+/* Push the meta row to the bottom of the text block so titles line up across
+   the row regardless of description length. */
+.campaign-card .campaign-meta {
+    margin-top: auto;
+    padding-top: var(--space-3);
+}
+
+/* The ruleset is the one piece of metadata people scan for, so it carries the
+   accent; the role stays quiet next to it. */
+.campaign-meta span:first-child {
+    border-color: var(--border-accent);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+.campaign-title-row h2 {
+    text-wrap: balance;
+}
+
+.campaign-title-row p {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+}
+
+/* Keyboard parity with the hover state. */
+.campaign-title-row .secondary-action:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* An open management panel needs the full width back — a form squeezed into a
+   grid cell is worse than a wide row. */
+.campaign-card:has(.campaign-manage[open]) {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+    .campaign-list {
+        grid-template-columns: 1fr;
+    }
+
+    .campaign-card:hover,
+    .campaign-card:focus-within {
+        transform: none;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Management tools, folded into one disclosure.
+
+   Every card carried its own admin console: edit, clone, export, snapshots,
+   audit log, packages and delete, each an always-visible control stacked in the
+   footer. Seven entry points per card, repeated for every table, buried the one
+   thing the screen is actually for — finding a table and opening it.
+
+   The tools are unchanged and in the same order; they just sit behind a single
+   quiet row now. Reading the list costs nothing until you want to manage.
+   --------------------------------------------------------------------------- */
+
+.campaign-manage {
+    width: 100%;
+    min-width: 0;
+}
+
+.campaign-manage > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) 0;
+    cursor: pointer;
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    list-style: none;
+    transition: color var(--motion-fast) ease;
+}
+
+.campaign-manage > summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Chevron drawn from the token palette so it tracks the accent on hover. */
+.campaign-manage > summary::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform var(--motion-fast) ease;
+}
+
+.campaign-manage[open] > summary::before {
+    transform: rotate(45deg);
+}
+
+.campaign-manage > summary:hover,
+.campaign-manage[open] > summary {
+    color: var(--accent);
+}
+
+.campaign-manage > summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* The tools are modal triggers now, so the panel is a short menu instead of a
+   stack of inline forms. */
+.campaign-manage-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-3);
+}
+
+.campaign-manage-menu form {
+    margin: 0;
+}
+
+.manage-tool {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-3);
+    background: var(--surface-field);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: var(--text-2xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition:
+        border-color var(--motion-fast) ease,
+        background var(--motion-fast) ease,
+        color var(--motion-fast) ease;
+}
+
+.manage-tool:hover {
+    border-color: var(--border-accent);
+    background: var(--surface-raised);
+    color: var(--accent-hover);
+}
+
+.manage-tool:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.manage-tool small {
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+/* Destructive action sits in the same row but never reads as a peer. */
+.manage-tool--danger {
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-faint);
+}
+
+.manage-tool--danger:hover {
+    border-color: rgba(210, 121, 107, 0.4);
+    background: rgba(210, 121, 107, 0.1);
+    color: var(--danger-text);
+}
+
+/* ---------------------------------------------------------------------------
+   Tool modals.
+
+   Snapshots and the audit history are whole screens; squeezing them into a card
+   was the reason the listing felt buried. Each tool now opens in the same modal
+   shell the package picker already used.
+   --------------------------------------------------------------------------- */
+
+.campaign-tool-modal {
+    width: min(720px, calc(100vw - var(--space-8)));
+    max-height: calc(100vh - var(--space-8));
+    display: flex;
+    flex-direction: column;
+}
+
+.campaign-tool-body {
+    display: grid;
+    gap: var(--space-3);
+    overflow-y: auto;
+    margin-top: var(--space-3);
+    padding-right: var(--space-1);
+}
+
+.campaign-tool-body > .campaign-edit-form,
+.campaign-tool-body > form {
+    margin-top: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Administrative history, read as history.
+
+   Each entry now leads with what happened, in the reader's language, followed
+   by when and how it ended. Allowlisted metadata becomes labelled pairs; the
+   stored record — event id, subject type/id, raw metadata — stays one click
+   away for support, instead of being the first thing on screen.
+   --------------------------------------------------------------------------- */
+
+.audit-log-item {
+    gap: var(--space-2);
+    padding: var(--space-3);
+}
+
+.audit-log-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.audit-log-head strong {
+    color: var(--text);
+    font-size: var(--text-md);
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.audit-log-when {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+}
+
+.audit-log-result {
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 2px var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.audit-log-result--denied,
+.audit-log-result--failed {
+    border-color: rgba(210, 121, 107, 0.4);
+    background: rgba(210, 121, 107, 0.1);
+    color: var(--danger-text);
+}
+
+/* Two columns: label, value. Keeps pairs aligned down the entry. */
+.audit-log-fields {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px var(--space-3);
+    margin: 0;
+}
+
+.audit-log-fields dt {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+}
+
+.audit-log-fields dd {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    overflow-wrap: anywhere;
+}
+
+.audit-log-raw > summary {
+    cursor: pointer;
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color var(--motion-fast) ease;
+}
+
+.audit-log-raw > summary:hover {
+    color: var(--accent);
+}
+
+.audit-log-raw code {
+    display: block;
+    margin-top: var(--space-2);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2);
+    background: rgba(0, 0, 0, 0.24);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+}
+
+/* ---------------------------------------------------------------------------
+   Snapshot list.
+
+   Was: two always-expanded destructive forms per snapshot, each demanding a
+   typed token. A list of five versions put ten text inputs on screen with no
+   visible action, so it read as a form to fill rather than versions to act on.
+
+   Now: name, origin and date, then two plain buttons. Choosing one reveals only
+   that flow with a sentence saying what it does. Same POST, same confirmation
+   value the server requires — it just travels in a hidden field.
+   --------------------------------------------------------------------------- */
+
+.snapshot-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.snapshot-head strong {
+    color: var(--text);
+    font-size: var(--text-md);
+}
+
+.snapshot-kind {
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 2px var(--space-2);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* An automatic point is the undo rope after a restore — worth telling apart
+   from one the GM deliberately made. */
+.snapshot-kind--safety {
+    border-color: var(--border-accent);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+.snapshot-when {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+}
+
+.snapshot-note {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+}
+
+.snapshot-actions,
+.snapshot-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.snapshot-confirm {
+    display: grid;
+    gap: var(--space-2);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    background: rgba(0, 0, 0, 0.18);
+}
+
+.snapshot-confirm[hidden] {
+    display: none;
+}
+
+.snapshot-explain {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+}
+
+/* ---------------------------------------------------------------------------
+   Rulesets and add-ons cards.
+
+   The <article> carried no chrome at all (`border: 0; background: transparent`)
+   — the thing that looked like a card was the inner <button>. The install /
+   enable / disable forms are siblings of that button, so they rendered *below*
+   the visible box, reading as loose buttons floating under a card rather than
+   part of it.
+
+   The article is the card now: it owns the border, background and hover. The
+   button becomes the transparent info region that fills the top, and the
+   actions sit in a footer inside the same box, separated by a hairline.
+
+   On overlap: nothing here is positioned, so cards can only push each other.
+   The one stacking mechanism on this page is the tab panels
+   (`.editor-panel { position: absolute; inset: 0 }`), which is safe because the
+   panels default to `display: none` and the five radios share one name, so only
+   one can be visible.
+   --------------------------------------------------------------------------- */
+
+.system-card-grid,
+.module-card-grid {
+    /* `minmax(280px, 320px)` capped the column, leaving dead space on a wide
+       row instead of letting the cards share it. */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    align-items: stretch;
+    gap: var(--space-3);
+}
+
+.system-card,
+.module-card {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.018), rgba(255, 255, 255, 0)),
+        var(--surface-raised);
+    overflow: hidden;
+    transition:
+        border-color var(--motion-base) ease,
+        box-shadow var(--motion-base) ease;
+}
+
+.system-card:hover,
+.module-card:hover,
+.system-card:focus-within,
+.module-card:focus-within {
+    border-color: var(--border-accent-strong);
+    box-shadow: var(--shadow-md);
+}
+
+/* The info region: no chrome of its own, fills the space above the footer. */
+/* The existing `min-height` floor stays: with `overflow: hidden` on the card,
+   letting this shrink below its content would clip the text. */
+.system-card-button,
+.module-card-button {
+    flex: 1 1 auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: var(--space-3);
+}
+
+.system-card-button:hover,
+.module-card-button:hover,
+.system-card-button:focus-visible,
+.module-card-button:focus-visible {
+    border: 0;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.system-card-button:focus-visible,
+.module-card-button:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+}
+
+/* Only the description varies in height; cap it so cards in a row line up. */
+.system-card-desc,
+.module-card-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.system-card-meta,
+.module-card-meta {
+    margin-top: auto;
+}
+
+/* Actions: a footer inside the card, not loose buttons under it. */
+.card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    border-top: 1px solid var(--border);
+    padding: var(--space-2) var(--space-3);
+    background: rgba(0, 0, 0, 0.16);
+}
+
+.card-actions .compact-card-action {
+    flex: 1 1 auto;
+    margin: 0;
+}
+
+.card-actions .system-action {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-2xs);
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* A version string or capability id with no spaces cannot push past the card. */
+.system-card-meta,
+.module-card-meta,
+.system-chip {
+    overflow-wrap: anywhere;
+}
+
+/* The name is what truncates; the badges hold their size. */
+.system-status-badge,
+.package-kind-badge {
+    flex: 0 0 auto;
+}
+
+.module-card-button > .package-kind-badge {
+    align-self: flex-start;
 }

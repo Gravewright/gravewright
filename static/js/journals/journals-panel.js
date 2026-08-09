@@ -12,7 +12,7 @@
   const postJournal = FI.postJournal;
   const flushEditors = FI.flushEditors;
 
-  
+
   async function promptCreateFolder(button) {
     const campaignId = button.dataset.campaignId;
     const parentId = button.dataset.parentId || "";
@@ -72,7 +72,7 @@
     });
   }
 
-  
+
 
   let folderDragFromHandle = false;
   let activeDragZone = null;
@@ -189,7 +189,7 @@
     }
   });
 
-  
+
   document.addEventListener("click", (event) => {
     const card = event.target.closest(".quest-card[data-journal-select]");
     if (!card) return;
@@ -198,7 +198,7 @@
     }));
   });
 
-  
+
   document.addEventListener("submit", async (event) => {
     const form = event.target.closest("[data-journal-folder-create-form]");
     if (!form) return;
@@ -215,7 +215,7 @@
     }
   });
 
-  
+
   document.addEventListener("submit", async (event) => {
     const form = event.target.closest("[data-journal-create-form]");
     if (!form) return;
@@ -237,7 +237,7 @@
     }
   });
 
-  
+
   document.addEventListener("input", (event) => {
     const pick = event.target.closest("[data-journal-folder-color-pick]");
     if (pick) {
@@ -252,17 +252,27 @@
     }
   });
 
-  
+
   const PANEL_REFRESH_EVENTS = new Set([
     "journal.created",
     "journal.deleted",
-    "journal.access_changed", 
+
+
+    "journal.updated",
+    "journal.access_changed",
+    "handout.access_changed",
   ]);
   document.addEventListener("vtt:transport-event", (event) => {
     const env = event.detail || {};
     if (!PANEL_REFRESH_EVENTS.has(env.event)) return;
     const roomId = env.payload?.room_id;
     if (roomId && journalPanelFor(roomId)) refreshJournalPanel(roomId);
+  });
+
+  document.addEventListener("vtt:ws-open", () => {
+    document.querySelectorAll("[data-journal-panel][data-room-id]").forEach((panel) => {
+      if (panel.dataset.roomId) refreshJournalPanel(panel.dataset.roomId);
+    });
   });
 
   FI.initPanel = initPanel;

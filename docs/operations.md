@@ -143,6 +143,22 @@ secret. Current actions include `schema.mismatch`, `membership.created`,
 
 Deleting a campaign removes campaign-owned database rows through cascades and explicit cleanup. It also deletes uploaded campaign storage for scenes, actor images, journal images, and package-scoped sheet JSON.
 
+## Campaign-entry transition and rollback
+
+Join codes are the primary campaign-entry flow. During the compatibility
+release, `CAMPAIGN_EMAIL_INVITATION_CREATION_ENABLED=true` keeps the legacy
+email CTA available and marked as legacy. Existing pending invitations may be
+accepted or declined until their normal expiry; disabling new creation does not
+cancel or delete them.
+
+For rapid rollback, set `CAMPAIGN_JOIN_CODE_ENABLED=false` and restart the app.
+This hides both join-code interfaces and returns 404 from join-code routes. It
+does not delete codes, redemptions, memberships, email invitations, or schema.
+Optionally revoke active codes before rollback. Do not drop
+`campaign_invitations` in this release. A later release may disable legacy
+creation by default, wait through the invitation expiry window, and only then
+remove its UI/actions/schema in a dedicated migration after backup verification.
+
 ## Package Operations
 
 Package replacement is blocked while the package is globally enabled or active in any campaign. Deactivate the package in every campaign, globally disable it, then replace or remove it.

@@ -10,6 +10,15 @@
     let dragKind = null;
     let dragId = null;
 
+
+
+
+
+    document.addEventListener("pointerdown", (event) => {
+        const card = event.target.closest("[data-item-card]");
+        if (card) card.draggable = true;
+    }, true);
+
     document.addEventListener("dragstart", (event) => {
         const card = event.target.closest("[data-item-card]");
         const folder = event.target.closest(".item-folder[draggable='true']");
@@ -21,8 +30,8 @@
             try {
                 event.dataTransfer.setData(
                     "application/x-gravewright-drop-source+json",
-                    // item_type lets a sheet dropzone accept/reject by type client-side
-                    // before the drop ever hits the server (see content-drag.js).
+
+
                     JSON.stringify({ kind: "item", item_id: dragId, item_type: card.dataset.itemType || "" }),
                 );
             } catch {  }

@@ -1,13 +1,13 @@
 (() => {
-    
+
     const roomZones = new Map();
     const selectedTokensByRoom = new Map();
     let activeEffectTooltip = null;
 
     function zoneFor(roomId) {
         if (!roomZones.has(roomId)) {
-            
-            
+
+
             roomZones.set(roomId, { players: new Map(), monsters: new Map(), all: new Map() });
         }
         return roomZones.get(roomId);
@@ -53,7 +53,7 @@
     }
 
     function applyMoved(sceneId, moves) {
-        
+
         const roomId = roomIdForScene(sceneId);
         if (!roomId) return;
         const zone = zoneFor(roomId);
@@ -70,7 +70,7 @@
                 }
             }
         }
-        
+
     }
 
     function applyDeleted(sceneId, tokenIds) {
@@ -115,7 +115,7 @@
         if (changed) renderZones(roomId);
     }
 
-    
+
 
     function renderZones(roomId) {
         const zone = zoneFor(roomId);
@@ -224,8 +224,8 @@
         activeEffectTooltip = null;
     }
 
-    
-    
+
+
     function renderEffectsHud(roomId) {
         let hud = document.querySelector("[data-active-effects-hud]");
         if (!hud) {
@@ -341,7 +341,7 @@
         div.setAttribute("aria-pressed", selected ? "true" : "false");
         div.setAttribute("aria-label", token.name || "Token");
 
-        
+
         const nameRow = document.createElement("div");
         nameRow.className = "sz-unit-name-row";
 
@@ -355,19 +355,20 @@
         nameEl.textContent = token.name || "???";
         nameRow.appendChild(nameEl);
 
-        const hp = token.bars?.hp;
-        if (hp && hp.max > 0) {
-            const hpText = document.createElement("span");
-            hpText.className = "sz-unit-hp-text";
-            hpText.textContent = `${hp.value}/${hp.max}`;
-            nameRow.appendChild(hpText);
+
+        const bar = token.bars?.bar_1;
+        if (bar && bar.max > 0) {
+            const barText = document.createElement("span");
+            barText.className = "sz-unit-hp-text";
+            barText.textContent = `${bar.value}/${bar.max}`;
+            nameRow.appendChild(barText);
         }
 
         div.appendChild(nameRow);
 
-        
-        if (hp && hp.max > 0) {
-            const ratio = Math.max(0, Math.min(1, hp.value / hp.max));
+
+        if (bar && bar.max > 0) {
+            const ratio = Math.max(0, Math.min(1, bar.value / bar.max));
             const barWrap = document.createElement("div");
             barWrap.className = "sz-unit-hp-bar-wrap";
             const fill = document.createElement("div");
@@ -380,7 +381,7 @@
             div.appendChild(barWrap);
         }
 
-        
+
         const conditions = token.conditions || [];
         if (conditions.length > 0) {
             const condRow = document.createElement("div");
@@ -400,7 +401,7 @@
         return div;
     }
 
-    
+
 
     document.addEventListener("click", (event) => {
         const unit = event.target.closest("[data-status-unit]");
@@ -474,7 +475,7 @@
         },
     };
 
-    
+
 
     document.addEventListener("vtt:tokens-loaded", (event) => {
         const { sceneId, roomId, tokens } = event.detail ?? {};
@@ -510,7 +511,7 @@
                 applyConditionsUpdated(payload.scene_id, payload.token_id, payload.conditions || []);
             }
         }
-        
-        
+
+
     });
 })();

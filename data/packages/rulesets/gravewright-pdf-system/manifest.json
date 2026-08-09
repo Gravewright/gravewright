@@ -1,0 +1,117 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "ruleset",
+  "id": "gravewright-pdf-system",
+  "name": "Gravewright PDF System",
+  "version": "0.1.0",
+  "description": "Use a fillable PDF as the character sheet. Field values are mapped to sheet data paths and stored in Gravewright, so rolls, token bars and combat can read them.",
+  "authors": [
+    "Gravewright"
+  ],
+  "license": "MIT",
+  "compatibility": {
+    "minimum": "1",
+    "verified": "1"
+  },
+  "capabilities": [
+    "actors.register",
+    "sheets.html",
+    "sheets.controller",
+    "sheets.richText",
+    "tokens.mappings",
+    "combat.config",
+    "assets.scripts",
+    "assets.styles",
+    "assets.library",
+    "assets.ui",
+    "settings",
+    "locales"
+  ],
+  "activation": {
+    "scope": "campaign",
+    "mode": "exclusive"
+  },
+  "entrypoints": {
+    "game": {
+      "scripts": [
+        "scripts/pdf-viewer.js",
+        "scripts/pdf-sheet.js"
+      ],
+      "styles": [
+        "styles/pdf-sheet.css"
+      ]
+    }
+  },
+  "provides": {
+    "storage": {
+      "model": "scoped-json-v1"
+    },
+    "actorTypes": [
+      {
+        "id": "character",
+        "labelKey": "gravewright-pdf-system.actor.character",
+        "schema": "schemas/actors/character.schema.json",
+        "sheet": {
+          "mode": "html",
+          "template": "sheets/character.html",
+          "controller": "scripts/pdf-sheet.js",
+          "style": "styles/pdf-sheet.css"
+        }
+      }
+    ],
+    "rules": {
+      "combat": "rules/combat.gw.json"
+    },
+    "mappings": {
+      "pdfFields": "mappings/pdf-fields.gw.json",
+      "tokens": "mappings/token.gw.json"
+    },
+    "locales": {
+      "en": "locales/en.json",
+      "pt-BR": "locales/pt-BR.json"
+    },
+    "assets": {
+      "sheets": [
+        {
+          "id": "blank-a4",
+          "label": "Blank A4 sheet",
+          "path": "assets/sheets/blank-a4.pdf"
+        }
+      ],
+      "vendor": [
+        {
+          "id": "pdfjs",
+          "label": "pdf.js runtime",
+          "path": "vendor/pdf.mjs"
+        },
+        {
+          "id": "pdfjs-worker",
+          "label": "pdf.js worker",
+          "path": "vendor/pdf.worker.mjs"
+        }
+      ]
+    }
+  },
+  "settings": [
+    {
+      "key": "defaultTemplate",
+      "type": "string",
+      "scope": "campaign",
+      "default": "generic",
+      "labelKey": "gravewright-pdf-system.settings.defaultTemplate.label",
+      "hintKey": "gravewright-pdf-system.settings.defaultTemplate.hint"
+    },
+    {
+      "key": "showFieldOverlay",
+      "type": "boolean",
+      "scope": "campaign",
+      "default": true,
+      "labelKey": "gravewright-pdf-system.settings.showFieldOverlay.label",
+      "hintKey": "gravewright-pdf-system.settings.showFieldOverlay.hint"
+    }
+  ],
+  "dependencies": [],
+  "conflicts": []
+}

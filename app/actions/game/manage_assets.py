@@ -10,6 +10,7 @@ from litestar.params import FromPath
 from litestar.response import File
 from litestar.response import Response
 
+from app.engine.assets.asset_library_service import MAX_PDF_BYTES
 from app.engine.assets.asset_library_service import AssetLibraryService
 from app.engine.assets.asset_read_service import AssetReadService
 from app.realtime.events import TransportEvent
@@ -125,7 +126,14 @@ async def delete_library_asset(
     return _response(result)
 
 
-@post("/game/assets/upload")
+@post(
+    "/game/assets/upload",
+
+
+
+
+    request_max_body_size=MAX_PDF_BYTES + 1024 * 1024,
+)
 async def upload_asset_library_image(
     request: Request,
     current_user: dict,
@@ -158,4 +166,15 @@ async def serve_asset(
     if not result.success or result.path is None:
         code = 403 if result.error_key == "not_authorized" else 404
         return Response({"error_key": result.error_key}, status_code=code)
-    return File(path=result.path, media_type=result.media_type or "image/png")
+
+    media_type = result.media_type or "image/png"
+
+
+
+
+    inline = media_type.startswith("image/")
+    return File(
+        path=result.path,
+        media_type=media_type,
+        content_disposition_type="inline" if inline else "attachment",
+    )

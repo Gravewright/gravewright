@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ t("permissions.title") }} — {{ room.title }}</title>
     <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
+    <link rel="stylesheet" href="/static/css/tokens.css" />
+    <link rel="stylesheet" href="/static/css/dialog.css" />
     <link rel="stylesheet" href="/static/css/game.css" />
 </head>
 
@@ -17,7 +19,9 @@
 
     <main class="sheet-popup-content">
         {% if room.permission_settings.can_update_permissions %}
-        <form method="post" action="/campaigns/permissions">
+        {# A classe é o que o permissions.js intercepta; sem ela o popup fazia POST
+           tradicional e recarregava a janela inteira a cada salvamento. #}
+        <form method="post" action="/campaigns/permissions" class="game-modal-form">
             {{ csrf_input | safe }}
             <input type="hidden" name="campaign_id" value="{{ room.id }}" />
 

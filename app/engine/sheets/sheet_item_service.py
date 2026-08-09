@@ -17,6 +17,7 @@ from app.engine.effects.active_effects import apply_stat_modifiers
 from app.engine.rules.rules_registry import SystemRulesService
 from app.engine.rules.token_mapping_resolver import resolve_token_view
 from app.engine.sheets.sheet_action_service import ActionResult, SheetActionService
+from app.engine.sheets.system_layout_service import SystemLayoutService
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
 from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.actor_repository import ActorRepository
@@ -50,6 +51,36 @@ class SheetItemService:
         self.systems = PackageInstallService()
         self.rules = SystemRulesService()
         self.actions = SheetActionService()
+        self.layouts = SystemLayoutService()
+
+    def build_embedded_bundle(
+        self, *, actor_id: str, user_id: str, item_instance_id: str, locale: str | None = None
+    ) -> dict | None:
+        loaded = self._load_editable(actor_id=actor_id, user_id=user_id)
+        if isinstance(loaded, SheetItemResult):
+            return None
+        actor, _, data = loaded
+        ref = _find_item_instance(data, item_instance_id)
+        if ref is None:
+            return None
+        item = deepcopy(ref.item)
+        item_type = str(item.get("type") or "")
+        return {
+            "item": {
+                "id": str(item.get("id") or item_instance_id),
+                "name": str(item.get("name") or ""),
+                "type": item_type,
+                "system_id": actor["system_id"],
+            },
+            "can_edit": True,
+            "layout": self.layouts.get_item_sheet(
+                system_id=actor["system_id"], item_type=item_type, locale=locale
+            ),
+            "sheet": self.layouts.get_item_html_sheet(
+                system_id=actor["system_id"], item_type=item_type
+            ),
+            "data": deepcopy(item.get("data") if isinstance(item.get("data"), dict) else {}),
+        }
 
     def execute_action(
         self,
@@ -70,12 +101,33 @@ class SheetItemService:
         ref = _find_item_instance(data, item_instance_id)
         if ref is None:
             return ActionResult(success=False, error_key="game.sheet_items.errors.item_not_found")
+        action_item = deepcopy(ref.item)
+        linked_skill = _find_linked_skill(data, action_item)
+        if linked_skill is not None:
+            linked_data = (
+                linked_skill.get("data") if isinstance(linked_skill.get("data"), dict) else {}
+            )
+            linked_die = linked_data.get("die")
+            item_data = (
+                action_item.get("data") if isinstance(action_item.get("data"), dict) else {}
+            )
+            action_item["data"] = item_data
+            if isinstance(linked_die, dict):
+                item_data["die"] = deepcopy(linked_die)
+        elif action_id.startswith("roll.attack"):
+
+
+            item_data = (
+                action_item.get("data") if isinstance(action_item.get("data"), dict) else {}
+            )
+            action_item["data"] = item_data
+            item_data.setdefault("die", {"sides": 4, "modifier": -2})
         return self.actions.execute(
             actor_id=actor_id,
             action_id=action_id,
             user_id=user_id,
             inputs=inputs if isinstance(inputs, dict) else {},
-            item=deepcopy(ref.item),
+            item=action_item,
             roll_options=roll_options if isinstance(roll_options, dict) else None,
             target_actor_id=target_actor_id,
             target_token_id=target_token_id,
@@ -199,6 +251,21 @@ def _find_item_instance(data: dict, item_id: str) -> _ItemRef | None:
         return None
 
     return visit(data, [])
+
+
+def _find_linked_skill(data: dict, item: dict) -> dict | None:
+    """Resolve the skill named by an embedded item for item-scoped actions."""
+    item_data = item.get("data") if isinstance(item.get("data"), dict) else {}
+    wanted = str(item_data.get("skill") or "").strip().casefold()
+    if not wanted:
+        return None
+    skills = data.get("skills") if isinstance(data.get("skills"), list) else []
+    for skill in skills:
+        if not isinstance(skill, dict) or str(skill.get("type") or "") != "skill":
+            continue
+        if str(skill.get("name") or "").strip().casefold() == wanted:
+            return skill
+    return None
 
 
 def _changed_path(ref: _ItemRef) -> str:

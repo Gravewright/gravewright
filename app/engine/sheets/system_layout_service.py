@@ -8,14 +8,16 @@ from app.config import config
 from app.engine.sheets.sheet_localizer import localize_layout
 from app.engine.sdk import package_registry
 from app.engine.sdk.package_paths import safe_join
-from app.engine.sdk.package_manifest import PackageManifest
+from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.sdk.package_locale_service import PackageLocaleService
+from app.engine.sdk.package_manifest import PackageManifest
 from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
 
 class SystemLayoutService:
     def __init__(self) -> None:
         self.installed = InstalledPackageRepository()
+        self.install = PackageInstallService()
         self.locales = PackageLocaleService()
 
     def get_actor_sheet(
@@ -38,10 +40,11 @@ class SystemLayoutService:
         record = self.installed.get(system_id)
         if record is None:
             return None
-        try:
-            return PackageManifest.from_dict(json.loads(record["manifest_json"]))
-        except (TypeError, ValueError):
-            return None
+
+
+
+
+        return self.install.get_manifest(system_id)
 
     def _type_def(self, *, system_id: str, type_id: str, kind: str):
         manifest = self._manifest_for(system_id)
@@ -63,8 +66,8 @@ class SystemLayoutService:
         type_def = self._type_def(system_id=system_id, type_id=type_id, kind=kind)
         if type_def is None:
             return None
-        # HTML-mode sheets are not declarative Sheet IR; they are served as
-        # templates and mounted client-side (see ``get_*_html_sheet``).
+
+
         if type_def.html_sheet is not None:
             return None
         sheet_path = type_def.sheet_path

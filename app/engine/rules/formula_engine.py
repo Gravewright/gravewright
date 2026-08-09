@@ -135,6 +135,15 @@ def _as_number(value: object) -> float:
         return 1.0 if value else 0.0
     if isinstance(value, (int, float)):
         return float(value)
+
+
+
+    if isinstance(value, str):
+        try:
+            parsed = float(value.strip())
+        except ValueError:
+            return 0.0
+        return parsed if math.isfinite(parsed) else 0.0
     return 0.0
 
 

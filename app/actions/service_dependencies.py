@@ -12,12 +12,21 @@ from __future__ import annotations
 from litestar.di import Provide
 
 from app.business.auth.auth_service import AuthService
+from app.business.audit import AuditService
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
+from app.business.campaigns.campaign_clone_service import CampaignCloneService
+from app.business.campaigns.campaign_export_service import CampaignExportService
+from app.business.campaigns.campaign_snapshot_service import CampaignSnapshotService
+from app.business.campaigns.campaign_join_code_service import CampaignJoinCodeService
 from app.business.campaigns.campaign_service import CampaignService
 from app.business.campaigns.campaign_system_service import CampaignSystemService
 from app.business.campaigns.streamer_link_service import StreamerLinkService
 from app.business.game_page_service import GamePageService
+from app.business.handouts import HandoutService
+from app.business.lobby import LobbyService
+from app.business.onboarding import GmOnboardingService
 from app.business.permissions import PermissionService
+from app.business.search import GlobalSearchService
 from app.business.users import UserPreferenceService
 from app.engine.actors.actor_asset_read_service import ActorAssetReadService
 from app.engine.actors.actor_asset_service import ActorAssetService
@@ -25,7 +34,7 @@ from app.engine.actors.actor_service import ActorService
 from app.engine.assets.asset_library_service import AssetLibraryService
 from app.engine.assets.asset_read_service import AssetReadService
 from app.engine.chat.chat_service import ChatService
-from app.engine.combat.turn_order_service import TurnOrderService
+from app.engine.combat.combat_service import CombatService
 from app.engine.content.content_import_service import ContentImportService
 from app.engine.content.content_pack_service import ContentPackService
 from app.engine.decks.card_asset_service import CardAssetService
@@ -46,6 +55,10 @@ from app.engine.rolls.roll_presentation_service import RollPresentationService
 from app.engine.scenes.map_upload_service import MapUploadService
 from app.engine.scenes.scene_asset_read_service import SceneAssetReadService
 from app.engine.scenes.scene_image_service import SceneImageService
+from app.engine.scenes.scene_light_service import SceneLightService
+from app.engine.scenes.scene_particle_service import SceneParticleService
+from app.engine.scenes.scene_shader_service import SceneShaderService
+from app.engine.scenes.scene_wall_service import SceneWallService
 from app.engine.scenes.scene_service import SceneService
 from app.engine.scenes.scene_tile_read_service import SceneTileReadService
 from app.engine.sheets.actor_sheet_service import ActorSheetService
@@ -80,15 +93,25 @@ SERVICE_DEPENDENCIES = {
     "asset_library_service": _singleton(AssetLibraryService),
     "asset_read_service": _singleton(AssetReadService),
     "auth_service": _singleton(_provide_auth_service),
+    "audit_service": _singleton(AuditService),
     "campaign_service": _singleton(CampaignService),
     "campaign_invitation_service": _singleton(CampaignInvitationService),
+    "campaign_clone_service": _singleton(CampaignCloneService),
+    "campaign_export_service": _singleton(CampaignExportService),
+    "campaign_snapshot_service": _singleton(CampaignSnapshotService),
+    "campaign_join_code_service": _singleton(CampaignJoinCodeService),
     "campaign_system_service": _singleton(CampaignSystemService),
     "card_asset_service": _singleton(CardAssetService),
     "card_service": _singleton(CardService),
     "chat_service": _singleton(ChatService),
+    "combat_service": _singleton(CombatService),
     "content_import_service": _singleton(ContentImportService),
     "content_pack_service": _singleton(ContentPackService),
     "game_page_service": _singleton(GamePageService),
+    "global_search_service": _singleton(GlobalSearchService),
+    "handout_service": _singleton(HandoutService),
+    "lobby_service": _singleton(LobbyService),
+    "gm_onboarding_service": _singleton(GmOnboardingService),
     "item_service": _singleton(ItemService),
     "item_sheet_service": _singleton(ItemSheetService),
     "item_sheet_data_service": _singleton(ItemSheetDataService),
@@ -109,6 +132,10 @@ SERVICE_DEPENDENCIES = {
     "roll_presentation_service": _singleton(RollPresentationService),
     "scene_asset_read_service": _singleton(SceneAssetReadService),
     "scene_image_service": _singleton(SceneImageService),
+    "scene_wall_service": _singleton(SceneWallService),
+    "scene_light_service": _singleton(SceneLightService),
+    "scene_particle_service": _singleton(SceneParticleService),
+    "scene_shader_service": _singleton(SceneShaderService),
     "scene_service": _singleton(SceneService),
     "scene_tile_read_service": _singleton(SceneTileReadService),
     "sheet_action_service": _singleton(SheetActionService),
@@ -119,6 +146,5 @@ SERVICE_DEPENDENCIES = {
     "token_hp_service": _singleton(TokenHpService),
     "token_service": _singleton(TokenService),
     "token_instance_sheet_service": _singleton(TokenInstanceSheetService),
-    "turn_order_service": _singleton(TurnOrderService),
     "user_preference_service": _singleton(UserPreferenceService),
 }

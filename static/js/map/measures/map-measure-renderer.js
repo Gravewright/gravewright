@@ -242,8 +242,12 @@
             const state = stateFor(canvas);
             onRenderStart?.(canvas);
             const showGmLayer = effectiveIsGm(canvas);
+            const roomId = canvas.dataset.roomId || "";
             const measures = measureStoreFor(canvas)
-                .filter((measure) => showGmLayer || measure.layer !== "gm");
+                .filter((measure) => showGmLayer || measure.layer !== "gm")
+                .filter((measure) => window.GravewrightTools?.isLayerVisible?.(
+                    measure.layer === "gm" ? "gm" : "game", roomId
+                ) !== false);
             const flashes = flashStoreFor(canvas);
             measures.forEach((measure) => renderSingleMeasure(overlay, measure, scene, state));
             flashes.forEach((measure) => renderSingleMeasure(overlay, measure, scene, state, false));

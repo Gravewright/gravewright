@@ -9,6 +9,7 @@ covered by the opt-in backend matrix.
 """
 
 from concurrent.futures import ThreadPoolExecutor
+import uuid
 
 import pytest
 
@@ -29,13 +30,15 @@ def _pending_invitation_id(user_id: str, campaign_id: str) -> str:
 
 
 def _setup_pending_invitation(*, campaign_title: str) -> tuple[str, str, str]:
-    gm_id = seed_user(name="GM", email="gm-conc@test.com")
-    player_id = seed_user(name="Player", email="player-conc@test.com")
+    suffix = uuid.uuid4().hex[:12]
+    gm_id = seed_user(name="GM", email=f"gm-conc-{suffix}@test.com")
+    player_email = f"player-conc-{suffix}@test.com"
+    player_id = seed_user(name="Player", email=player_email)
     campaign_id = seed_campaign(gm_id, title=campaign_title)
     CampaignInvitationService().create_invitation(
         campaign_id=campaign_id,
         invited_by_user_id=gm_id,
-        invited_email="player-conc@test.com",
+        invited_email=player_email,
         role=PlayerRole.PLAYER.value,
     )
     return campaign_id, player_id, _pending_invitation_id(player_id, campaign_id)

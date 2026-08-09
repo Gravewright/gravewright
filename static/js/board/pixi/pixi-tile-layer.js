@@ -6,16 +6,16 @@
 
 (() => {
     const DEFAULT_CHUNK_SIZE = 16;
-    
-    
+
+
     const VIEW_CHUNK_MARGIN = 1;
-    
-    
-    
+
+
+
     const TILE_VIEW_MARGIN = 3;
-    
-    
-    
+
+
+
     const EVICT_MARGIN_TILES = 64;
 
     const proto = window.GravewrightBoardInternals.PixiBoardRenderer.prototype;
@@ -29,8 +29,8 @@
             board.tileRenderPass += 1;
             const pass = board.tileRenderPass;
 
-            
-            
+
+
             board.worldLayer.position.set(cam.offsetX, cam.offsetY);
             board.worldLayer.scale.set(cam.zoom, cam.zoom);
 
@@ -45,12 +45,12 @@
                 const worldX1 = (cssW - cam.offsetX) / cam.zoom;
                 const worldY1 = (cssH - cam.offsetY) / cam.zoom;
 
-                
-                
-                
-                
-                
-                
+
+
+
+
+
+
                 const cwx = (worldX0 + worldX1) / 2;
                 const cwy = (worldY0 + worldY1) / 2;
                 const now = (typeof performance !== "undefined" ? performance.now() : Date.now());
@@ -84,8 +84,8 @@
                 const leadTx = Math.abs(board.lead.x) < 1 ? 0 : board.lead.x;
                 const leadTy = Math.abs(board.lead.y) < 1 ? 0 : board.lead.y;
 
-                
-                
+
+
                 evictRing = {
                     x0: Math.floor(worldX0 / s) - EVICT_MARGIN_TILES,
                     x1: Math.floor(worldX1 / s) + EVICT_MARGIN_TILES,
@@ -104,8 +104,8 @@
                     Math.floor(worldY1 / s) + base + Math.ceil(Math.max(0, leadTy)));
 
                 if (tx0 <= tx1 && ty0 <= ty1) {
-                    
-                    
+
+
                     const centerTx = cwx / s + leadTx * 0.5;
                     const centerTy = cwy / s + leadTy * 0.5;
 
@@ -223,8 +223,8 @@
                 }
             });
 
-            
-            
+
+
             cells.sort((a, b) => a.dist - b.dist);
             board.tilePlanKey = key;
             board.tilePlan = cells;
@@ -248,7 +248,7 @@
             } else if (sprite.texture !== texture) {
                 sprite.texture = texture;
             }
-            
+
             sprite.__tileUrl = tile.url;
             sprite.__tileTx = tx;
             sprite.__tileTy = ty;

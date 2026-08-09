@@ -24,7 +24,7 @@
         FI.initPanels();
     }
 
-    
+
 
     window.GravewrightFog = {
         isActive: FI.isActive,

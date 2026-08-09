@@ -64,7 +64,7 @@ class PackageInstallService:
         self.campaign_packages = CampaignPackageRepository()
         self.campaigns = CampaignRepository()
 
-    # --- reads -----------------------------------------------------------------
+
 
     def list_for_tab(self) -> list[dict]:
         records = {row["id"]: row for row in self.installed.list_all()}
@@ -98,9 +98,9 @@ class PackageInstallService:
         record = self.installed.get(package_id)
         if record is None:
             return None
-        # Disk is the runtime authority: prefer the current validated manifest on
-        # disk over the stored snapshot. Fall back to the snapshot only when the
-        # package is gone from disk (the doctor flags that drift separately).
+
+
+
         loaded = package_registry.load_by_package_id(package_id)
         if loaded is not None and loaded.raw:
             return loaded.manifest
@@ -117,7 +117,7 @@ class PackageInstallService:
             return None
         return self.get_manifest(package_id)
 
-    # --- writes ----------------------------------------------------------------
+
 
     def install(self, *, package_id: str, user_id: str | None) -> PackageActionResult:
         loaded = package_registry.load_by_package_id(package_id)
@@ -230,7 +230,7 @@ class PackageInstallService:
         record = self.installed.get(package_id)
         if record is None:
             return PackageActionResult(success=False, error_key="sdk.errors.not_installed")
-        # Re-read and re-validate the current manifest from disk before enabling.
+
         loaded = package_registry.load_by_package_id(package_id)
         if loaded is None or not _installable(loaded):
             return PackageActionResult(success=False, error_key="sdk.errors.invalid_manifest")
@@ -264,15 +264,15 @@ class PackageInstallService:
             if blocked is not None:
                 return blocked
         self.installed.delete(package_id=package_id)
-        # ``delete_files`` also deletes the package directory under
-        # ``data/packages/{kind}/{id}`` so the package fully disappears (instead
-        # of reappearing as "available"). Managed storage
-        # (``data/storage/packages/...``) is still preserved.
+
+
+
+
         if delete_files:
             self._delete_package_files(package_id, kind=str(record["kind"]))
         return PackageActionResult(success=True, package_id=package_id)
 
-    # --- helpers ---------------------------------------------------------------
+
 
     @staticmethod
     def _delete_package_files(package_id: str, *, kind: str) -> None:
@@ -284,7 +284,7 @@ class PackageInstallService:
             root = package_registry.PACKAGES_DIR.resolve()
         except OSError:
             return
-        # Defensive: only ever delete a directory inside the packages root.
+
         if root not in resolved.parents or not resolved.is_dir():
             return
         shutil.rmtree(resolved, ignore_errors=True)

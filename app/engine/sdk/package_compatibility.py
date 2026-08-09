@@ -19,8 +19,8 @@ COMPAT_INCOMPATIBLE = "incompatible"
 
 _BIG = 1_000_000
 
-# Pre-release channel ranking. A final release ranks above every channel; an
-# unknown channel ranks above the named ones but still below a final release.
+
+
 _FINAL_RANK = 100
 _CHANNEL_RANK = {"alpha": 0, "beta": 1, "rc": 2}
 _UNKNOWN_CHANNEL_RANK = 50

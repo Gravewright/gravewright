@@ -31,7 +31,7 @@
 
     function openTokenMenu(e) {
         const { token, x, y, sceneId, roomId, isGm } = e.detail;
-        
+
         const tokenIds = Array.isArray(e.detail.tokenIds) && e.detail.tokenIds.length
             ? e.detail.tokenIds
             : [token.token_id];
@@ -43,7 +43,7 @@
 
         const items = [];
 
-        
+
         if (count === 1 && token.token_id && token.actor_id && (isGm || hasActorAccess(token.actor_id))) {
             items.push({
                 text: label("ctxTokenOpenSheet"),
@@ -62,7 +62,7 @@
                 items.push({
                     text: label("ctxTokenAddCombat") + suffix,
                     action() {
-                        fetch("/game/combat/participants/add", {
+                        fetch("/game/combat/combatants/add", {
                             method: "POST",
                             headers: { "Content-Type": "application/json", Accept: "application/json" },
                             credentials: "same-origin",
@@ -91,6 +91,17 @@
                 },
             });
 
+
+            items.push({
+                text: label("ctxTokenVision") + suffix,
+                small: true,
+                action() {
+                    document.dispatchEvent(new CustomEvent("token:edit-vision", {
+                        detail: { roomId, sceneId, tokenIds, token },
+                    }));
+                },
+            });
+
             items.push({ type: "sep" });
 
             items.push({
@@ -101,7 +112,7 @@
                         text: label("ctxTokenRemoveConfirm"),
                         danger: true,
                         action() {
-                            
+
                             if (window.GravewrightMap?.deleteTokens) {
                                 window.GravewrightMap.deleteTokens(tokenIds);
                             } else {

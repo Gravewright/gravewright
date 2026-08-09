@@ -1,0 +1,45 @@
+<dialog class="gm-onboarding-dialog" data-onboarding-dialog data-campaign-id="{{ room.id }}"
+    data-dismissed="{{ 'true' if room.gm_onboarding.dismissed else 'false' }}"
+    data-finished="{{ 'true' if room.gm_onboarding.finished else 'false' }}"
+    data-progress-template="{{ t('onboarding.progress', completed='{completed}', total='{total}') }}"
+    aria-labelledby="gm-onboarding-title-{{ room.id }}">
+    <div class="gm-onboarding-dialog__shell">
+        <header class="gm-onboarding-dialog__header">
+            <div>
+                <small>{{ t("onboarding.eyebrow") }}</small>
+                <h2 id="gm-onboarding-title-{{ room.id }}">{{ t("onboarding.title") }}</h2>
+            </div>
+            <button type="button" class="gm-onboarding-dialog__close" data-onboarding-close
+                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x" aria-hidden="true"></i></button>
+        </header>
+        <div class="gm-onboarding-dialog__body">
+            <p>{{ t("onboarding.description") }}</p>
+            <div class="gm-onboarding-progress">
+                <progress max="{{ room.gm_onboarding.total }}" value="{{ room.gm_onboarding.completed }}"></progress>
+                <strong data-onboarding-progress>{{ t("onboarding.progress", completed=room.gm_onboarding.completed, total=room.gm_onboarding.total) }}</strong>
+            </div>
+            <ol class="gm-onboarding-steps">
+                {% for key, icon, action in [
+                    ('campaign', 'flag', ''), ('system', 'plugs-connected', 'system'),
+                    ('character', 'user-circle-plus', 'character'), ('scene', 'map-trifold', 'scene'),
+                    ('code', 'key', 'code')
+                ] %}
+                {% set done = room.gm_onboarding.steps[key] %}
+                <li data-onboarding-step="{{ key }}" data-complete="{{ 'true' if done else 'false' }}"
+                    class="{% if done %}is-complete{% endif %}">
+                    <i class="ph {% if done %}ph-check-circle{% else %}ph-{{ icon }}{% endif %}" aria-hidden="true"></i>
+                    <span><strong>{{ t("onboarding.steps." ~ key ~ ".title") }}</strong>
+                        <small>{{ t("onboarding.steps." ~ key ~ ".description") }}</small></span>
+                    {% if not done and action %}<button type="button" class="secondary-action"
+                        data-onboarding-action="{{ action }}">{{ t("onboarding.steps." ~ key ~ ".action") }}</button>{% endif %}
+                </li>
+                {% endfor %}
+            </ol>
+            <div class="game-notice game-notice--danger" data-onboarding-notice role="alert" hidden></div>
+        </div>
+        <footer class="gm-onboarding-dialog__footer">
+            <button class="secondary-action" type="button" data-onboarding-dismiss>{{ t("onboarding.dismiss") }}</button>
+            <button class="primary-action" type="button" data-onboarding-close>{{ t("onboarding.continue") }}</button>
+        </footer>
+    </div>
+</dialog>

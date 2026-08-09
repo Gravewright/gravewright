@@ -3,7 +3,7 @@
     const DEFAULT_X = 22;
     const DEFAULT_Y = 22;
     const PANEL_DEFAULT_WIDTH = 340;
-    const DOCK_CLEARANCE = 64; 
+    const DOCK_CLEARANCE = 64;
     const LAYOUT_STORAGE_KEY = "gravewright.game.layout";
     const DEFAULT_LAYOUT = "gravewright";
     const CLASSIC_LAYOUT = "classic";
@@ -110,8 +110,8 @@
             return;
         }
 
-        
-        
+
+
         if (layer.lastElementChild === modal) {
             return;
         }
@@ -427,25 +427,27 @@
         modalForms.syncWarnOnChange(input);
     });
 
-    document.addEventListener("submit", (event) => {
+    document.addEventListener("submit", async (event) => {
         const form = event.target.closest("[data-scene-ajax-form]");
 
         if (!form) {
             return;
         }
 
-        if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
-            event.preventDefault();
-            return;
-        }
 
-        if (!modalForms.confirmWarnOnChange(form)) {
-            event.preventDefault();
-            return;
-        }
 
         event.preventDefault();
-        modalForms.submitSceneAjaxForm(form, event.submitter);
+        const submitter = event.submitter;
+
+        if (form.dataset.confirm && !(await window.GravewrightCore.dialog.confirm(form.dataset.confirm))) {
+            return;
+        }
+
+        if (!(await modalForms.confirmWarnOnChange(form))) {
+            return;
+        }
+
+        modalForms.submitSceneAjaxForm(form, submitter);
     });
 
     document.addEventListener("submit", (event) => {
@@ -467,7 +469,7 @@
         modalForms.submitTableSettingsForm(form, event.submitter);
     });
 
-    
+
     document.addEventListener("submit", async (event) => {
         const form = event.target.closest(".resource-permissions-form");
         if (!form) return;
@@ -490,11 +492,11 @@
         closeModal(modal);
     });
 
-    
-    
-    
-    
-    
+
+
+
+
+
     document.addEventListener("pointerdown", (event) => {
         if (event.target.closest(
             "button, a, input, select, textarea, summary, [role=\"button\"], "

@@ -36,7 +36,7 @@ SCHEMA_URL = (
 
 KINDS = {"ruleset", "addon", "library", "theme", "assets", "content"}
 
-# activation.mode required per kind by the manifest validator/runtime.
+
 _KIND_MODE = {
     "ruleset": "exclusive",
     "addon": "multiple",
@@ -61,46 +61,46 @@ class Intent:
     for other package kinds.
     """
 
-    # Game model.
+
     has_characters: bool = True
     has_monsters: bool = False
     has_items: bool = False
     has_sheets: bool = False
-    # Explicit actor/item sheet type ids (e.g. ("character", "npc")). When set,
-    # these drive generation and supersede the legacy has_characters/has_monsters
-    # /has_items booleans. Ids are normalized to lowercase kebab-case.
+
+
+
     actor_types: tuple[str, ...] | None = None
     item_types: tuple[str, ...] | None = None
     actor_fields: tuple[tuple[str, tuple[str, ...]], ...] = ()
-    # Wizard-selected fields per item type; empty preserves family defaults.
+
     item_fields: tuple[tuple[str, tuple[str, ...]], ...] = ()
-    # Per-type answers from the conditional item decision tree.
+
     item_config: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = ()
-    # The system's core dice mechanic; seeds the character schema and sheet with
-    # one minimal example. See MECHANICS for the supported ids.
+
+
     mechanic: str = "none"
     mechanic_attributes: tuple[str, ...] = ()
     mechanic_skills: tuple[str, ...] = ()
     mechanic_config: tuple[tuple[str, str], ...] = ()
-    # Optional text-only sheet sections added to every actor sheet.
+
     wants_biography: bool = False
     wants_notes: bool = False
     wants_effects: bool = False
-    # Which declared types get a sheet. ``None`` means "all declared types";
-    # a tuple restricts generation to the named types (the rest stay sheet-less).
+
+
     sheet_types: tuple[str, ...] | None = None
-    # False selects declarative Sheet IR (the simpler mode); True selects HTML
-    # templates and the HTML sheet runtime (full-control mode).
+
+
     html_sheets: bool = False
     has_rolls: bool = False
     has_combat: bool = False
 
-    # Package provides.
+
     wants_content: bool = False
     wants_settings: bool = False
     wants_locales: bool = False
 
-    # Runtime/client behavior.
+
     uses_js: bool = False
     uses_sheet_runtime: bool = False
     uses_combat_runtime: bool = False
@@ -108,7 +108,7 @@ class Intent:
     uses_scene_overlays: bool = False
     uses_token_extensions: bool = False
 
-    # Asset package categories.
+
     has_images: bool = False
     has_maps: bool = False
     has_audio: bool = False
@@ -127,7 +127,7 @@ class PackageScaffold:
     files: dict[str, str]
 
 
-# --- helpers ----------------------------------------------------------------
+
 
 
 def _json(data: object) -> str:
@@ -178,7 +178,7 @@ def _activation(kind: str) -> dict:
     return activation
 
 
-# --- capability derivation --------------------------------------------------
+
 
 
 def derive_capabilities(kind: str, intent: Intent) -> list[str]:
@@ -239,8 +239,8 @@ def derive_capabilities(kind: str, intent: Intent) -> list[str]:
         if intent.wants_locales:
             _add(caps, "locales")
         if intent.wants_settings or not caps:
-            # Bare addons should still be configurable rather than gaining
-            # broader runtime powers.
+
+
             _add(caps, "settings")
 
     elif kind == "library":
@@ -251,8 +251,8 @@ def derive_capabilities(kind: str, intent: Intent) -> list[str]:
             _add(caps, "locales")
         if intent.wants_settings:
             _add(caps, "settings")
-        # A passive library may intentionally have no capabilities. The manifest
-        # still contains an empty capabilities list.
+
+
 
     elif kind == "theme":
         _add(caps, "assets.styles")
@@ -286,7 +286,7 @@ def derive_capabilities(kind: str, intent: Intent) -> list[str]:
     return caps
 
 
-# --- manifest derivation ----------------------------------------------------
+
 
 
 SHARED_SHEET_STYLE = "styles/sheet.css"
@@ -417,7 +417,7 @@ def _derive_ruleset_provides(intent: Intent) -> dict:
         or _ruleset_inventory_type_ids(intent)
         or intent.wants_effects
     ):
-        # The mechanic's roll preset is a real, server-executed system action.
+
         rules["actions"] = "rules/actions.gw.json"
     if rules:
         provides["rules"] = rules
@@ -531,8 +531,8 @@ def _derive_entrypoints(kind: str, intent: Intent) -> dict:
         styles.append(MAIN_STYLE)
 
     if intent.uses_js:
-        # Scripted packages get a starter script and style. The package manager
-        # will warn that scripted packages are trusted JavaScript.
+
+
         if MAIN_STYLE not in styles:
             styles.append(MAIN_STYLE)
         scripts.append(MAIN_SCRIPT)
@@ -582,10 +582,10 @@ def build_manifest(
         raise ValueError(f"unknown package kind: {kind}")
 
     capabilities = derive_capabilities(kind, intent)
-    # The compatibility window targets the SDK API line (SDK_VERSION), which is
-    # what the manifest validator compares against — not the core marketing
-    # version. Using config.gravewright_version here (e.g. "2.0.0-alpha.0") made
-    # every freshly scaffolded package validate as `sdk.validation.incompatible`.
+
+
+
+
     compat = SDK_VERSION
 
     return {
@@ -613,7 +613,7 @@ def build_manifest(
     }
 
 
-# --- starter file generation ------------------------------------------------
+
 
 
 def _readme(package_id: str, kind: str, name: str) -> str:
@@ -713,19 +713,19 @@ def _sample_svg(label: str = "Sample") -> str:
 
 
 def _sample_audio_placeholder() -> str:
-    # Text placeholder keeps the scaffold pure-text. Users should replace it with
-    # a real .ogg file; doctor/package validation will surface wrong content
-    # later if stricter binary/audio validation is added.
+
+
+
     return "Replace this placeholder with a real .ogg audio file.\n"
 
 
-# --- core mechanics ---------------------------------------------------------
-#
-# A field spec is ``{path, label, type, default[, options]}`` where ``type`` is
-# ``number``, ``text`` or ``select``. ``path`` is relative to ``system`` and may
-# be dotted (e.g. ``attributes.strength``). Each mechanic seeds one minimal
-# example — fields plus a single sample roll button (``data-action`` placeholder
-# wired to no controller) — into the character (or first) actor sheet.
+
+
+
+
+
+
+
 
 _DND_ABILITIES = (
     "strength",
@@ -1057,10 +1057,10 @@ def _actions_rules(intent: Intent) -> dict:
     return {"actions": actions}
 
 
-# --- schema / template generation -------------------------------------------
 
 
-# Text-only sections (no numbers, no rich text) for the optional tabs.
+
+
 def _field_schema(field: dict) -> dict:
     kind = field["type"]
     if kind == "number":
@@ -1095,12 +1095,12 @@ def _actor_schema(type_id: str, intent: Intent, *, is_mechanic: bool) -> dict:
     properties: dict = _schema_from_fields(_actor_fields(type_id, intent))
     if is_mechanic:
         properties.update(_schema_from_fields(_configured_mechanic(intent)["fields"]))
-    # Biography/Notes are stored as rich-text documents (the block-editor shape).
+
     if intent.wants_biography:
         properties["biography"] = _rich_doc_schema()
     if intent.wants_notes:
         properties["notes"] = _rich_doc_schema()
-    # Items dropped onto the sheet collect here (see the Items tab).
+
     if _ruleset_inventory_type_ids(intent):
         properties["items"] = {"type": "array", "default": []}
     if intent.wants_effects:
@@ -1358,7 +1358,7 @@ def _actor_html(package_id: str, type_id: str, intent: Intent, *, is_mechanic: b
         "  </header>",
     ]
 
-    # Each panel is (label, [content lines]); two or more panels render as tabs.
+
     panels: list[tuple[str, list[str]]] = []
     if is_mechanic:
         mechanic = _configured_mechanic(intent)
@@ -1391,7 +1391,7 @@ def _actor_html(package_id: str, type_id: str, intent: Intent, *, is_mechanic: b
     if intent.wants_notes:
         panels.append(("Notes", _rich_editor_html(root, "notes")))
     if _ruleset_inventory_type_ids(intent):
-        # Items are dropped onto the sheet (core drop flow) and listed here.
+
         panels.append(
             (
                 "Items",
@@ -1819,8 +1819,8 @@ def build_files(*, manifest: dict, intent: Intent) -> dict[str, str]:
     provides = manifest.get("provides", {})
 
     entrypoint = manifest.get("entrypoints", {}).get("game", {})
-    # The shared sheet stylesheet appears in the game entrypoint but gets its own
-    # content below, so skip the generic placeholder for it.
+
+
     sheet_styles = set(_html_sheet_style_paths(kind, intent))
     for style in entrypoint.get("styles", []) or []:
         if style not in sheet_styles:

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from app.business.campaigns.campaign_service import CampaignService
 from app.business.permissions import PermissionService
+from app.business.onboarding import GmOnboardingService
 from app.engine.actors.actor_permissions import can_edit_actor
 from app.engine.actors.actor_service import ActorService
 from app.engine.actors.folder_tree import build_actor_folder_tree
@@ -43,6 +44,7 @@ class GamePageService:
     def __init__(self) -> None:
         self.campaigns = CampaignService()
         self.permissions = PermissionService()
+        self.gm_onboarding = GmOnboardingService()
         self.chat = ChatMessageRepository()
         self.scene_groups = SceneGroupRepository()
         self.scenes = SceneRepository()
@@ -109,6 +111,13 @@ class GamePageService:
                 member_role=campaign["member_role"],
             )
             room["can_invite"] = room["permission_settings"]["can_invite"]
+            if room["member_role"] == "gm":
+                onboarding = self.gm_onboarding.get(
+                    campaign_id=campaign["id"], user_id=user_id
+                )
+                room["gm_onboarding"] = onboarding.state if onboarding.success else None
+            else:
+                room["gm_onboarding"] = None
             room["can_delete_chat_own"] = self.permissions.can(
                 campaign_id=campaign["id"],
                 user_id=user_id,
@@ -122,7 +131,7 @@ class GamePageService:
             recent_messages = self.chat.list_for_campaign(campaign_id=campaign["id"])
             if room["is_streamer"]:
                 recent_messages = [m for m in recent_messages if m.get("visibility") == "public"]
-            room["recent_messages"] = recent_messages
+            room["recent_messages"] = [_with_roll_payload(m) for m in recent_messages]
             room["scene_groups"] = self.scene_groups.list_by_campaign(campaign["id"])
             room["scenes"] = self.scenes.list_by_campaign(campaign["id"])
             room["active_scene"] = self.scenes.get_active_scene(campaign["id"])
@@ -347,6 +356,35 @@ class GamePageService:
             rooms.append(room)
 
         return GamePageContext(rooms=rooms, available_systems=available_systems)
+
+
+def _with_roll_payload(message: dict) -> dict:
+    """Attach the payload a stored roll needs to be redrawn by the live renderer.
+
+    A roll message is drawn by ``chat-roll-cards.js``, which reads the system's
+    chat card out of ``metadata.rendered``. The page used to re-implement that
+    message in the template instead, so a reload quietly replaced every mapped
+    card with the raw dice — same message, two looks, depending on whether you
+    had reloaded. The template now ships this payload and lets the one renderer
+    draw it.
+    """
+    if message.get("kind") != "roll":
+        return message
+    payload = {
+        "message_id": message.get("id"),
+        "author": message.get("author_name"),
+        "author_id": message.get("author_user_id"),
+        "kind": "roll",
+        "content": message.get("content"),
+        "expression": message.get("expression"),
+        "groups": message.get("groups") or [],
+        "modifier": message.get("modifier") or 0,
+        "total": message.get("total"),
+        "metadata": message.get("metadata") or {},
+    }
+
+
+    return {**message, "roll_payload_json": json.dumps(payload, ensure_ascii=False).replace("'", "&#39;")}
 
 
 def _measure_flash_seconds(raw_state: str | None) -> int:

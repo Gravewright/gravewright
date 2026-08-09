@@ -1,0 +1,82 @@
+<article class="game-modal-window dialog-modal light-editor-modal" data-modal-window
+    data-modal-id="light-editor-{{ room.id }}" data-window-key="light-editor-{{ room.id }}" hidden>
+    <header class="game-modal-titlebar" data-modal-drag-handle>
+        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+        <span class="game-panel-title">{{ t("lighting.editor.title") }}</span>
+        <div class="game-modal-controls">
+            <button class="game-modal-control" type="button" data-modal-close
+                aria-label="{{ t('lighting.editor.close') }}">
+                <i class="ph ph-x" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+    <div class="game-modal-body light-editor-panel" data-light-editor-panel data-room-id="{{ room.id }}">
+        <label class="game-field">
+            <span>{{ t("lighting.editor.bright") }}</span>
+            <span class="slider-row">
+                <input type="range" name="bright_radius" min="0" max="30" step="0.5" value="2"
+                       data-light-field="bright_radius" />
+                <output data-light-output="bright_radius">2</output>
+            </span>
+        </label>
+        <label class="game-field">
+            <span>{{ t("lighting.editor.dim") }}</span>
+            <span class="slider-row">
+                <input type="range" name="dim_radius" min="0" max="60" step="0.5" value="4"
+                       data-light-field="dim_radius" data-limit-target="dim_radius"
+                       data-limit-default="6" />
+                <output data-light-output="dim_radius">4</output>
+            </span>
+        </label>
+        <label class="scene-check limit-check">
+            <input type="checkbox" data-limit-for="dim_radius" />
+            <span>{{ t("lighting.editor.unlimited") }}</span>
+        </label>
+        <label class="game-field">
+            <span>{{ t("lighting.editor.intensity") }}</span>
+            <span class="slider-row">
+                <input type="range" name="intensity" min="0" max="1" step="0.05" value="1"
+                       data-light-field="intensity" />
+                <output data-light-output="intensity">1.00</output>
+            </span>
+        </label>
+        <label class="game-field">
+            <span>{{ t("lighting.editor.angle") }}</span>
+            <span class="slider-row">
+                <input type="range" name="angle" min="5" max="360" step="5" value="360"
+                       data-light-field="angle" data-light-suffix="°" />
+                <output data-light-output="angle">360°</output>
+            </span>
+        </label>
+        <label class="game-field" data-light-row="rotation">
+            <span>{{ t("lighting.editor.rotation") }}</span>
+            <span class="slider-row">
+                <input type="range" name="rotation" min="0" max="355" step="5" value="0"
+                       data-light-field="rotation" data-light-suffix="°" />
+                <output data-light-output="rotation">0°</output>
+            </span>
+        </label>
+        <div class="light-editor-pair">
+            <label class="game-field">
+                <span>{{ t("lighting.editor.animation") }}</span>
+                <select name="animation" data-light-field="animation">
+                    <option value="none">{{ t("lighting.editor.anim_none") }}</option>
+                    <option value="torch">{{ t("lighting.editor.anim_torch") }}</option>
+                    <option value="pulse">{{ t("lighting.editor.anim_pulse") }}</option>
+                </select>
+            </label>
+            <label class="game-field">
+                <span>{{ t("lighting.editor.color") }}</span>
+                <input type="color" name="color" value="#ffd8a8" data-light-field="color" />
+            </label>
+        </div>
+        <small class="scene-field-hint">{{ t("lighting.editor.animation_hint") }}</small>
+        <small class="scene-field-hint">{{ t("lighting.editor.hint") }}</small>
+        <div class="game-modal-actions">
+            <button class="secondary-action light-editor-remove" type="button" data-light-delete>
+                <i class="ph ph-trash" aria-hidden="true"></i>
+                <span>{{ t("lighting.editor.remove") }}</span>
+            </button>
+        </div>
+    </div>
+</article>

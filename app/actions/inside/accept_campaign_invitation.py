@@ -47,16 +47,16 @@ async def accept_campaign_invitation(
 
         return Redirect(path="/login")
 
-    # Offload the synchronous accept transaction to a worker thread; the
-    # realtime broadcast below runs on the event loop after it returns.
+
+
     result = await run_blocking(
         campaign_invitation_service.accept_invitation,
         invitation_id=data.invitation_id,
         user_id=user["id"],
     )
 
-    # Publish MEMBER_JOINED only after commit and only when this request created
-    # the membership — never on an idempotent re-accept (Etapa 5).
+
+
     if (
         result.success
         and result.payload.get("membership_created")

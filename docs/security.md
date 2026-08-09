@@ -82,3 +82,12 @@ levels and retention.
 - Secure, HTTP-only cookies.
 - Backups for database and file storage.
 - Owner-only diagnostics protected by normal authentication and ownership checks.
+
+## Campaign entry codes
+
+Campaign entry codes are generated with `secrets`, stored only as a keyed
+HMAC-SHA256 digest, limited to the player role, and protected by expiration,
+revocation, optional use limits, transactional redemption, and per-user/IP rate
+limits. The public `/join/<code>` route does not validate or reveal a campaign;
+it holds the code in the server-side session for at most 15 minutes. Plaintext
+codes must not be placed in logs, metrics, browser storage, or status payloads.

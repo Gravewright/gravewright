@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from app.engine.rules.token_mapping_resolver import BAR_SLOTS, DEFAULT_BAR_COLORS
+
 
 class TokenViewService:
     def build_view(
@@ -9,11 +11,12 @@ class TokenViewService:
         projection: dict | None = None,
         actor: dict | None = None,
         conditions: list[dict] | None = None,
+        owner_user_ids: list[str] | None = None,
     ) -> dict:
         """Resolve a scene token + its Actor Core projection into a compact TokenView.
 
         ``projection`` is the manifest-mapped TokenView for the linked actor
-        (``{name, bars: {hp: {value, max}}, ...}``) produced by
+        (``{name, bars: {bar_1: {value, max, color}, ...}, ...}``) produced by
         :class:`ActorTokenProjector`. Per-token overrides win over the projection.
         """
         overrides = token.get("overrides") or {}
@@ -70,7 +73,17 @@ class TokenViewService:
             else projection.get("effects") or [],
             "status_summary": status_summary,
             "controlled_by_role": token["controlled_by_role"],
-            "controlled_by_user_ids": token.get("controlled_by_user_ids") or [],
+
+
+
+            "controlled_by_user_ids": (
+                owner_user_ids
+                if owner_user_ids is not None
+                else (token.get("controlled_by_user_ids") or [])
+            ),
+
+            "vision_enabled": bool(token.get("vision_enabled", 1)),
+            "vision_range": float(token.get("vision_range") or 0.0),
             "version": token["version"],
         }
 
@@ -82,6 +95,7 @@ class TokenViewService:
         actors_by_id: dict[str, dict],
         conditions_by_token_id: dict[str, list[dict]],
         is_gm: bool,
+        owners_by_actor_id: dict[str, list[str]] | None = None,
     ) -> list[dict]:
         """Build views for a scene, filtering hidden tokens from non-GM users."""
         views = []
@@ -95,35 +109,42 @@ class TokenViewService:
                     projection=projections_by_actor_id.get(actor_id),
                     actor=actors_by_id.get(actor_id),
                     conditions=conditions_by_token_id.get(token["id"], []),
+                    owner_user_ids=None if owners_by_actor_id is None else owners_by_actor_id.get(actor_id, []),
                 )
             )
         return views
 
     def _resolve_bars(self, *, projection: dict, overrides: dict) -> dict:
-        """Resolve mapped bars from the projection, letting token overrides win."""
+        """Resolve the token's two bars, letting token overrides win on the numbers.
+
+        An unlinked token carries its own value/max in ``overrides``; the colour
+        still comes from the system's mapping, because that describes what the
+        bar *is*, not what this copy currently reads.
+        """
         proj_bars = projection.get("bars")
         if not isinstance(proj_bars, dict):
-            return {}
+            proj_bars = {}
 
         bars: dict[str, dict] = {}
-        for key, bar in proj_bars.items():
-            override_bar = overrides.get(key)
-            if isinstance(override_bar, dict) and "value" in override_bar:
-                value = override_bar["value"]
-                bars[key] = {
-                    "value": value,
-                    "max": override_bar.get("max", value),
-                    "visibility": override_bar.get("visibility", "everyone"),
-                }
-                continue
-            if not isinstance(bar, dict):
-                continue
-            value = bar.get("value")
-            if value is None:
-                continue
-            bars[key] = {
+        for slot in BAR_SLOTS:
+            mapped = proj_bars.get(slot) if isinstance(proj_bars.get(slot), dict) else {}
+            override = overrides.get(slot) if isinstance(overrides.get(slot), dict) else None
+            if override is not None and "value" in override:
+                value = override["value"]
+                maximum = override.get("max", value)
+                visibility = override.get("visibility", "everyone")
+            else:
+                value = mapped.get("value")
+                if value is None:
+                    continue
+                maximum = mapped.get("max", value)
+                visibility = mapped.get("visibility", "everyone")
+            bars[slot] = {
                 "value": value,
-                "max": bar.get("max", value),
-                "visibility": "everyone",
+                "max": maximum,
+                "color": mapped.get("color")
+                or (override or {}).get("color")
+                or DEFAULT_BAR_COLORS[slot],
+                "visibility": visibility,
             }
         return bars

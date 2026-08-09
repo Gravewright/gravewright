@@ -3,6 +3,7 @@
         const {
             canControlToken,
             clampGridPosition,
+            effectiveIsGm,
             history,
             isSelected,
             markDirty,
@@ -16,6 +17,35 @@
         } = deps;
 
         let activeDrag = null;
+
+
+
+
+
+
+        function wallsBlockFor(canvas) {
+            return !effectiveIsGm?.(canvas);
+        }
+
+        function centreOf(token, cell, scene) {
+            const size = scene.scaledTileSize;
+            return {
+                x: (cell.x + (token?.width_cells || 1) / 2) * size,
+                y: (cell.y + (token?.height_cells || 1) / 2) * size,
+            };
+        }
+
+
+
+
+        function crossesWall(canvas, scene, token, fromCell, toCell) {
+            if (fromCell.x === toCell.x && fromCell.y === toCell.y) return false;
+            return Boolean(window.GravewrightLighting?.blocksMovement?.(
+                canvas,
+                centreOf(token, fromCell, scene),
+                centreOf(token, toCell, scene),
+            ));
+        }
 
         function streamerLocalMode() {
             return document.body?.dataset?.streamerMode === "true";
@@ -105,16 +135,18 @@
                 scene,
                 token,
             );
-            activeDrag.currentGridX = grid_x;
-            activeDrag.currentGridY = grid_y;
-            activeDrag.hasMoved = true;
 
-            if (activeDrag.group && activeDrag.group.length > 1) {
+            const canvas = activeDrag.canvas;
+            const tile = scene.scaledTileSize;
+            const checkWalls = wallsBlockFor(canvas);
+            const store = tokenStoreFor(canvas);
+            const isGroup = Boolean(activeDrag.group && activeDrag.group.length > 1);
+
+            let positions = null;
+            if (isGroup) {
                 const dx = grid_x - activeDrag.startGridX;
                 const dy = grid_y - activeDrag.startGridY;
-                const tile = scene.scaledTileSize;
-                const store = tokenStoreFor(activeDrag.canvas);
-                const positions = {};
+                positions = {};
 
                 activeDrag.group.forEach((groupToken) => {
                     const tokenInGroup = store.get(groupToken.tokenId);
@@ -131,10 +163,49 @@
                         gridY: clamped.grid_y,
                     };
                 });
-                activeDrag.positions = positions;
             }
 
-            markDirty(activeDrag.canvas);
+
+
+            const blocked = checkWalls && (isGroup
+                ? activeDrag.group.some((groupToken) => {
+                    const candidate = positions[groupToken.tokenId];
+                    const previous = activeDrag.positions?.[groupToken.tokenId];
+                    return crossesWall(
+                        canvas,
+                        scene,
+                        store.get(groupToken.tokenId),
+                        previous
+                            ? { x: previous.gridX, y: previous.gridY }
+                            : { x: groupToken.startGridX, y: groupToken.startGridY },
+                        { x: candidate.gridX, y: candidate.gridY },
+                    );
+                })
+                : crossesWall(
+                    canvas,
+                    scene,
+                    token,
+                    { x: activeDrag.currentGridX, y: activeDrag.currentGridY },
+                    { x: grid_x, y: grid_y },
+                ));
+
+
+
+
+
+            if (blocked) {
+                activeDrag.currentWorldX = activeDrag.currentGridX * tile;
+                activeDrag.currentWorldY = activeDrag.currentGridY * tile;
+                markDirty(canvas);
+                return true;
+            }
+
+            activeDrag.currentGridX = grid_x;
+            activeDrag.currentGridY = grid_y;
+            activeDrag.hasMoved = true;
+            if (positions) activeDrag.positions = positions;
+
+            markDirty(canvas);
             return true;
         }
 
@@ -148,7 +219,7 @@
             try {
                 canvas.releasePointerCapture(event.pointerId);
             } catch {
-                
+
             }
 
             if (hasMoved) {

@@ -22,8 +22,8 @@
     return response.text().catch(() => null);
   }
 
-  // Canonical error key per HTTP status so every caller maps failures the same
-  // way. Status 0 means the request never reached the server (offline/DNS/etc).
+
+
   function errorKeyForStatus(status) {
     switch (status) {
       case 0:
@@ -48,7 +48,7 @@
       (typeof body === "string" && body) ||
       response.statusText ||
       "Request failed";
-    // Prefer a specific error_key from the JSON envelope, else the status map.
+
     const errorKey =
       (details && details.error_key) || errorKeyForStatus(response.status);
     return { ok: false, status: response.status, message, details, errorKey };
@@ -134,7 +134,7 @@
   function postForm(url, formData, options) {
     const opts = options ? { ...options } : {};
     opts.method = "POST";
-    opts.headers = jsonHeaders(opts.headers); 
+    opts.headers = jsonHeaders(opts.headers);
     opts.body =
       formData instanceof FormData ? formData : new URLSearchParams(formData);
     return request(url, opts);

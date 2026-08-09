@@ -10,7 +10,7 @@
     return window.csrfToken();
   }
 
-  
+
   function journalPanelFor(roomId) {
     return document.querySelector(`[data-journal-panel][data-room-id="${CSS.escape(roomId)}"]`);
   }

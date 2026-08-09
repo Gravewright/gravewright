@@ -42,6 +42,7 @@
                 gridVisible: canvas.dataset.sceneGridVisible !== "false",
                 gridColor: canvas.dataset.sceneGridColor || null,
                 gridOpacity: clampOpacity(canvas.dataset.sceneGridOpacity, 0.4),
+                darkness: clampOpacity(canvas.dataset.sceneDarkness, 0),
                 startWorldX: finiteNumber(canvas.dataset.sceneStartWorldX, baseWidth / 2),
                 startWorldY: finiteNumber(canvas.dataset.sceneStartWorldY, baseHeight / 2),
                 startZoom: clampZoom(canvas.dataset.sceneStartZoom, 1),

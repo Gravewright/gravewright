@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from app.business.permissions import PermissionService
 from app.contracts.transport import RealtimeGatewayContract
+from app.engine.chat.chat_speaker import ChatSpeakerService
 from app.engine.dice.roll_service import RollService
 from app.helpers.async_blocking import run_blocking
 from app.domain.chat import ChatMessageKind
@@ -37,6 +38,7 @@ class ChatService:
         self.campaigns = CampaignRepository()
         self.permissions = PermissionService()
         self.roller = RollService()
+        self.speakers = ChatSpeakerService()
         self.messages = ChatMessageRepository()
 
     async def send_system_message(
@@ -194,8 +196,8 @@ class ChatService:
         content: str,
         transport: RealtimeGatewayContract,
     ) -> ChatResult:
-        # P0: every DB touch here is offloaded off the event loop via run_blocking
-        # so a slow/contended write never stalls the realtime gateway.
+
+
         role = await run_blocking(
             self.campaigns.get_member_role,
             campaign_id=campaign_id,
@@ -213,10 +215,28 @@ class ChatService:
             return ChatResult(success=False, error_key="game.chat.errors.message_too_long")
 
         message_id = self.messages.generate_id()
+
+
+
+
+        e_rolagem = (
+            _strip_command(content, "/gmroll") is not None
+            or _strip_command(content, "/roll", "/r") is not None
+        )
+        author = sender_name
+        if e_rolagem:
+            author = await run_blocking(
+                self.speakers.speaker_name,
+                campaign_id=campaign_id,
+                user_id=sender_user_id,
+                role=role,
+                fallback=sender_name,
+            )
+
         base: dict = {
             "message_id": message_id,
             "room_id": campaign_id,
-            "author": sender_name,
+            "author": author,
             "author_id": sender_user_id,
             "role": role,
         }
@@ -242,7 +262,7 @@ class ChatService:
                 message_id=message_id,
                 campaign_id=campaign_id,
                 author_user_id=sender_user_id,
-                author_name=sender_name,
+                author_name=author,
                 author_role=role,
                 kind=ChatMessageKind.ROLL,
                 content=None,

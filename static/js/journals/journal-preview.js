@@ -10,13 +10,27 @@
 
   function renderMarkdownIn(root) {
     if (!window.marked) return;
-    const sanitize = window.DOMPurify
-      ? (html) => window.DOMPurify.sanitize(html, { ADD_ATTR: ["target", "rel"] })
-      : (html) => html;
+
+
+
+
+
+
+
+    const purify = window.DOMPurify;
+    const canSanitize = !!purify && typeof purify.sanitize === "function";
+
     root.querySelectorAll("[data-journal-markdown]").forEach((el) => {
       if (el.dataset.rendered) return;
       const raw = el.textContent || "";
-      el.innerHTML = sanitize(window.marked.parse(raw.trim()));
+      if (!canSanitize) {
+        el.textContent = raw;
+        el.dataset.rendered = "1";
+        return;
+      }
+      el.innerHTML = purify.sanitize(window.marked.parse(raw.trim()), {
+        ADD_ATTR: ["target", "rel"],
+      });
       el.querySelectorAll("a[href]").forEach((a) => {
         a.target = "_blank";
         a.rel = "noopener noreferrer";

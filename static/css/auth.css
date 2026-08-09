@@ -1,40 +1,11 @@
+/* Palette and scales come from tokens.css. Auth overrides only the surfaces,
+ * which are deliberately translucent so the background art shows through. */
 :root {
-    
-    --bg: #11151a;
-
     --surface: rgba(24, 29, 35, 0.92);
     --surface-raised: rgba(32, 38, 45, 0.96);
-    --surface-field: #151a20;
 
-    --border: #303842;
-    --border-strong: #46505c;
-    --border-control: #637183;
     --border-field: #303842;
     --border-field-hover: #46505c;
-
-    --text: #d8d2c3;
-    --text-muted: #a9a193;
-    --text-faint: #7f8994;
-
-    --accent: #c09a5a;
-    --accent-hover: #d2ac6b;
-    --accent-dark: #8b6a3c;
-
-    --danger: #d2796b;
-    --danger-text: #f0b8ae;
-
-    --focus-ring: #d2ac6b;
-
-    --radius: 4px;
-
-    --font:
-        Inter,
-        ui-sans-serif,
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
 }
 
 * {
@@ -83,7 +54,7 @@ body {
     display: grid;
     grid-template-rows: 64px 1fr;
     border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     background: var(--surface);
     box-shadow:
         0 24px 80px rgba(0, 0, 0, 0.46),
@@ -241,7 +212,7 @@ body {
     width: 100%;
     height: 46px;
     border: 1px solid var(--border-field);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 0 13px;
     background: var(--surface-field);
     color: var(--text);
@@ -287,7 +258,7 @@ body {
     height: 46px;
     margin-top: 8px;
     border: 1px solid var(--accent-dark);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     background: var(--accent);
     color: #111416;
     cursor: pointer;
@@ -333,7 +304,7 @@ body {
 .auth-error {
     margin-bottom: 20px;
     border: 1px solid rgba(182, 97, 80, 0.46);
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     padding: 12px 13px;
     background: rgba(182, 97, 80, 0.10);
     color: var(--danger-text);

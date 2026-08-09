@@ -22,6 +22,7 @@ _TOKEN_COMMANDS = frozenset(
         ClientCommand.TOKEN_UPDATE_OVERRIDE.value,
         ClientCommand.TOKEN_HIDE.value,
         ClientCommand.TOKEN_REVEAL.value,
+        ClientCommand.TOKEN_SET_VISION.value,
         ClientCommand.TOKEN_REMOVE_FROM_SCENE.value,
         ClientCommand.TOKEN_CONDITION_ADD.value,
         ClientCommand.TOKEN_CONDITION_REMOVE.value,
@@ -113,6 +114,8 @@ class TokenCommandHandler:
                 return await self._set_hidden(
                     command_id, room_id, payload, context, transport, hidden=False
                 )
+            case ClientCommand.TOKEN_SET_VISION.value:
+                return await self._set_vision(command_id, room_id, payload, context, transport)
             case ClientCommand.TOKEN_REMOVE_FROM_SCENE.value:
                 return await self._remove_from_scene(
                     command_id, room_id, payload, context, transport
@@ -317,6 +320,59 @@ class TokenCommandHandler:
             response=_ack(
                 command_id=command_id,
                 command=ClientCommand.TOKEN_UPDATE_OVERRIDE.value,
+                campaign_id=campaign_id,
+                extra={"token_id": token_id, "version": result.token["version"]},
+            ),
+        )
+
+    async def _set_vision(
+        self,
+        command_id: str | None,
+        campaign_id: str,
+        payload: dict,
+        context: ClientCommandContext,
+        transport: RealtimeGatewayContract | None,
+    ) -> TokenCommandResult:
+        scene_id = payload.get("scene_id")
+        token_id = payload.get("token_id")
+        expected_version = payload.get("expected_version")
+        vision_enabled = payload.get("vision_enabled", True)
+        vision_range = payload.get("vision_range", 0)
+
+        if not isinstance(scene_id, str) or not scene_id:
+            return _invalid(command_id, "scene_id is required.")
+        if not isinstance(token_id, str) or not token_id:
+            return _invalid(command_id, "token_id is required.")
+        if not isinstance(vision_enabled, bool):
+            return _invalid(command_id, "vision_enabled must be a boolean.")
+        if isinstance(vision_range, bool) or not isinstance(vision_range, (int, float)):
+            return _invalid(command_id, "vision_range must be a number.")
+        if vision_range < 0:
+            return _invalid(command_id, "vision_range must not be negative.")
+        if not _valid_optional_version(expected_version):
+            return _invalid(
+                command_id, "expected_version must be a non-negative integer when provided."
+            )
+
+        result = await self.service.set_vision(
+            campaign_id=campaign_id,
+            scene_id=scene_id,
+            token_id=token_id,
+            vision_enabled=vision_enabled,
+            vision_range=float(vision_range),
+            user_id=context.user_id,
+            expected_version=expected_version,
+            transport=transport,
+        )
+
+        if not result.success:
+            return _service_error(command_id, result.error_key)
+
+        return TokenCommandResult(
+            handled=True,
+            response=_ack(
+                command_id=command_id,
+                command=ClientCommand.TOKEN_SET_VISION.value,
                 campaign_id=campaign_id,
                 extra={"token_id": token_id, "version": result.token["version"]},
             ),

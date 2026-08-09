@@ -13,14 +13,14 @@
 (function () {
   const FI = (window.GravewrightActorSheetInternals = window.GravewrightActorSheetInternals || {});
 
-  const contexts = new WeakMap(); 
+  const contexts = new WeakMap();
 
-  
-  
-  
-  
-  
-  
+
+
+
+
+
+
   const systemPlugins = {};
 
   const DEFAULT_SHEET_LABELS = {
@@ -101,7 +101,7 @@
     return res.ok ? res.json().catch(() => ({})) : null;
   }
 
-  
+
 
   function el(tag, className, text) {
     const node = document.createElement(tag);
@@ -149,9 +149,9 @@
     return n > 0 ? `+${n}` : String(n);
   }
 
-  
-  
-  
+
+
+
 
   function bindInput(input, path, kind) {
     input.dataset.bindPath = path || "";
@@ -207,10 +207,10 @@
       btn.dataset.itemRemove = "1";
     } else if (action.type === "openEmbeddedItemAction") {
       btn.dataset.itemEdit = "1";
-      
-      
-      
-      
+
+
+
+
       btn.disabled = true;
     }
     return btn;
@@ -403,10 +403,10 @@
       }
 
       case "rollableStat": {
-        
-        
-        
-        
+
+
+
+
         const variant = cssIdent(node.variant);
         const row = el("div", `actor-rollable-row${variant ? ` actor-rollable-row--${variant}` : ""}`);
 
@@ -662,9 +662,9 @@
         } else {
           wrap.appendChild(el("p", "actor-itemlist-empty", node.emptyText || ""));
         }
-        
-        
-        
+
+
+
         return wrap;
       }
       case "dropZone":
@@ -703,20 +703,20 @@
     return bar;
   }
 
-  
+
 
   function buildContext(bundle) {
     return { core: { name: bundle.actor?.name }, sheet: bundle.data || {} };
   }
 
-  
+
 
   async function uploadActorImage(root, kind, file) {
     const meta = contexts.get(root);
     if (!meta || !file) return;
     const form = new FormData();
     form.append("image", file);
-    
+
     const res = await fetch(`/game/actor/${encodeURIComponent(meta.actorId)}/image/${kind}`, {
       method: "POST",
       body: form,
@@ -784,8 +784,8 @@
     return bundle.actor && bundle.actor.type ? bundle.actor.type : "";
   }
 
-  
-  
+
+
   function headerInput(path, kind, value, editable, placeholder) {
     const input = el("input", "ash-meta-input");
     input.type = kind === "number" ? "number" : "text";
@@ -826,9 +826,9 @@
     return cell;
   }
 
-  
-  
-  
+
+
+
   function renderHeaderIdentity(main, bundle) {
     const systemId = cssIdent(bundle.actor?.system_id);
     const plugin = systemPlugins[systemId];
@@ -836,8 +836,8 @@
       plugin.renderHeaderIdentity(main, bundle, sheetHelpers);
       return;
     }
-    // headerSubtitle returns a plain string; a system without a header plugin
-    // (e.g. a declarative ruleset) still needs it wrapped in a real Node.
+
+
     const subtitle = headerSubtitle(bundle);
     if (subtitle) main.appendChild(el("p", "ash-subtitle", subtitle));
   }
@@ -889,6 +889,15 @@
       const fit = widthPlugin && typeof widthPlugin.autoFitWidth === "function" ? widthPlugin.autoFitWidth(actorType) : null;
       if (fit) modal.dataset.autoFitWidth = String(fit);
       else delete modal.dataset.autoFitWidth;
+      const minWidth = widthPlugin && typeof widthPlugin.autoFitMinWidth === "function" ? widthPlugin.autoFitMinWidth(actorType) : null;
+      if (minWidth) modal.dataset.autoFitMinWidth = String(minWidth);
+      else delete modal.dataset.autoFitMinWidth;
+      const height = widthPlugin && typeof widthPlugin.autoFitHeight === "function" ? widthPlugin.autoFitHeight(actorType) : null;
+      if (height) modal.dataset.autoFitHeight = String(height);
+      else delete modal.dataset.autoFitHeight;
+      const minHeight = widthPlugin && typeof widthPlugin.autoFitMinHeight === "function" ? widthPlugin.autoFitMinHeight(actorType) : null;
+      if (minHeight) modal.dataset.autoFitMinHeight = String(minHeight);
+      else delete modal.dataset.autoFitMinHeight;
     }
 
 
@@ -922,14 +931,18 @@
 
 
 
-  function writeHtmlSheetPath(root, path, value) {
+
+
+
+
+  async function writeHtmlSheetPath(root, path, value) {
     const writePath = FI.writePath;
     if (typeof writePath !== "function") return;
     let target = String(path || "");
     if (target === "actor.name" || target === "core.name") target = "core.name";
     else if (target.startsWith("system.")) target = "sheet." + target.slice("system.".length);
     else if (target.startsWith("actor.")) target = "sheet." + target.slice("actor.".length);
-    writePath(root, target, value);
+    if (await writePath(root, target, value)) await refresh(root);
   }
 
 
@@ -950,8 +963,8 @@
     let html;
     try {
       const url = `/sdk/packages/${encodeURIComponent(packageId)}/asset/${sheet.template}`;
-      // The template asset URL has no version query, so never serve a stale
-      // cached copy after the package's sheet is regenerated.
+
+
       const res = await fetch(url, { credentials: "same-origin", cache: "no-store", headers: { Accept: "text/html" } });
       if (!res.ok) throw new Error(`template ${res.status}`);
       html = await res.text();
@@ -962,12 +975,30 @@
     }
 
 
+
+
+
+    const abaAtiva = root.querySelector("[data-tab].is-active")?.dataset.tab || "";
+
     root.innerHTML = html;
     HTML.mount(packageId, sheetType, root, htmlSheetData(bundle), {
       onChange: (path, value) => writeHtmlSheetPath(root, path, value),
-      // data-action buttons execute the ruleset's own rules/actions entry
-      // server-side (e.g. a roll preset), exactly like a declarative sheet.
-      onAction: (name) => FI.executeSheetAction?.(root, name),
+
+
+
+
+
+      onAction: (name, detail) => {
+        const dialog = bundle.dialogs?.[name];
+        if (!dialog || !FI.openRollDialog) return FI.executeSheetAction?.(root, name);
+        FI.openRollDialog(
+          root,
+          detail?.element || root,
+          { action: name, label: detail?.element?.textContent || name, dialog },
+          {}
+        );
+        return undefined;
+      },
       onItemChange: async (itemId, path, value) => {
         const meta = contexts.get(root);
         if (!meta || !itemId || !path) return;
@@ -978,7 +1009,55 @@
           patch: { [path]: value },
         });
       },
-      onItemAction: (itemId, name) => FI.executeItemAction?.(root, itemId, name),
+      onItemAction: (itemId, name, detail) => {
+        const dialog = bundle.dialogs?.[name];
+        if (!dialog || !FI.openRollDialog) return FI.executeItemAction?.(root, itemId, name);
+        FI.openRollDialog(
+          root,
+          detail?.element || root,
+          { action: name, label: detail?.label || name, dialog },
+          { itemId }
+        );
+        return undefined;
+      },
+    });
+
+    mountImageSlots(root, bundle);
+
+    if (abaAtiva) {
+
+
+      root.querySelector(`[data-tab="${CSS.escape(abaAtiva)}"]`)?.click();
+    }
+
+
+
+
+
+    notifyModalContentChanged(root);
+  }
+
+  function notifyModalContentChanged(root) {
+    const modal = root.closest("[data-modal-window]");
+    if (!modal) return;
+    document.dispatchEvent(
+      new CustomEvent("vtt:modal-content-updated", { detail: { modal } })
+    );
+  }
+
+
+
+
+
+  function mountImageSlots(root, bundle) {
+    const canEdit = !!bundle.can_edit;
+    const systemId = bundle.actor?.system_id || "";
+    root.querySelectorAll("[data-actor-image]").forEach((slot) => {
+      const kind = slot.dataset.actorImage === "portrait" ? "portrait" : "token";
+      const url = kind === "portrait"
+        ? bundle.portrait_url
+        : bundle.token_url || bundle.portrait_url;
+      slot.replaceChildren(imageFrame(root, kind, url, canEdit, systemId));
     });
   }
 
@@ -990,10 +1069,29 @@
       : `/game/actor/${encodeURIComponent(meta.actorId)}/sheet-bundle`;
     const res = await fetch(bundleUrl, {
       credentials: "same-origin",
+      cache: "no-store",
       headers: { Accept: "application/json" },
     });
-    if (!res.ok) return;
-    render(root, await res.json());
+    if (!res.ok) return false;
+    const bundle = await res.json();
+
+
+
+
+
+    const HTML = window.GravewrightHTMLSheets;
+    if (bundle.sheet && bundle.sheet.mode === "html" && HTML) {
+      try {
+        if (HTML.update(root, htmlSheetData(bundle))) {
+          mountImageSlots(root, bundle);
+          return true;
+        }
+      } catch (error) {
+        console.error("Failed to update mounted actor sheet; rendering it again", error);
+      }
+    }
+    render(root, bundle);
+    return true;
   }
 
   FI.contexts = contexts;

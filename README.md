@@ -5,7 +5,7 @@ Gravewright is an open-source virtual tabletop platform for tabletop RPGs.
 It is built for self-hosted tables that want server-authoritative gameplay, a documented SDK with declarative ruleset/addon/library/theme/content/asset packages, a first-class operator CLI, and predictable performance under large maps and realtime collaboration.
 
 > [!WARNING]
-> **v2.1.0-alpha — SDK 1 FROZEN. BACK UP REGULARLY.**
+> **v3.0.0-alpha — SDK 1 FROZEN. BACK UP REGULARLY.**
 >
 > Gravewright is still Alpha software, but the planned **SDK 1 extension surface is now frozen**. Real campaigns are no longer discouraged, provided you keep regular backups and accept that bugs, migrations, and compatibility fixes may still happen before LTS 1.
 >
@@ -169,7 +169,7 @@ Restore is destructive. Gravewright keeps a `*.pre-restore` safety copy of the p
 
 ## Current Status
 
-Gravewright is currently **v2.1.0-alpha — SDK Freeze**.
+Gravewright is currently **v3.0.0-alpha — Visual Effects and Campaign Operations**.
 
 The planned SDK 1 extension surface is frozen: package manifests, package kinds, canonical capabilities, settings, assets, content packs, frontend lifecycle, managed `storage.sqlite`, the `sdk.bus` package-to-package channel, and HTML sheets. SDK 1 receives no new extension surfaces.
 
@@ -182,10 +182,13 @@ Core gameplay, campaigns, realtime transport, maps, actors, items, journals, per
 * Cascading campaign deletion for database rows and uploaded campaign storage.
 * Realtime table state through `/game/ws`.
 * Scene upload, tiling, chunk streaming, fog, tokens, measurements, pings, and board markers.
+* Dynamic lighting with walls, doors, token vision, cinematic rendering, scene shaders, compositing modes, opacity, and a localized library of 50 shader presets.
+* Configurable particle effects with multiple emitter shapes, motion styles, appearance controls, and live scene updates.
 * Actors, items, sheets, folders, ownership, and per-resource permissions.
 * Journals, quests, quest boards, image assets, and editor blocks.
 * Chat, dice rolls, roll presentation, and combat turn order.
 * Streamer links for read-only campaign viewing.
+* Campaign join codes, ready checks, cloning, snapshots, administrative audit history, and global search.
 * Gravewright SDK packages for rulesets, addons, libraries, themes, content, and assets.
 * SDK package manifest validation, loading, dependency checks, activation, settings, assets, content imports, browser runtime integration, and CLI scaffolding.
 * Local operator CLI with `doctor`, `run`, `backup`, `restore`, package management, lockfile generation, and package scaffolding.

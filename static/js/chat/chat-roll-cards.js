@@ -6,6 +6,13 @@
     const FI = (window.GravewrightChatInternals = window.GravewrightChatInternals || {});
     const escapeHtml = FI.escapeHtml;
 
+
+
+
+    function breakdownLabel() {
+        return document.body.dataset.chatRollBreakdown || "Detalhes";
+    }
+
     function renderedRollCard(payload) {
         const metadata = payload && typeof payload.metadata === "object" ? payload.metadata : {};
         const rendered = metadata && typeof metadata.rendered === "object" ? metadata.rendered : {};
@@ -33,50 +40,143 @@
                 const label = line && line.label != null ? String(line.label) : "";
                 const value = line && line.value != null ? String(line.value) : "";
                 if (!value) return "";
-                return `<div class="roll-card-line"><span class="roll-card-line__label">${escapeHtml(label)}</span><span class="roll-card-line__value">${escapeHtml(value)}</span></div>`;
+                const key = line && line.labelKey ? ` data-package-i18n="${escapeHtml(String(line.labelKey))}"` : "";
+                return `<div class="roll-card-line"><span class="roll-card-line__label"${key}>${escapeHtml(label)}</span><span class="roll-card-line__value">${escapeHtml(value)}</span></div>`;
             }).join("");
             const title = card.title || payload.content || payload.author || "Roll";
             const subtitle = card.subtitle || "";
             const total = card.total ?? payload.total ?? "";
+
+
+
+
+            const groups = Array.isArray(card.groups) ? card.groups : [];
+            const modifier = Number(card.modifier) || 0;
+            const toneClass = card.tone ? ` roll-card--${escapeHtml(String(card.tone))}` : "";
+            const status = card.status || "";
+
+
+            const systemAttr = card.system
+                ? ` data-system="${escapeHtml(String(card.system))}"`
+                : "";
+            const titleI18n = card.titleTemplateKey
+                ? ` data-package-i18n-template="${escapeHtml(String(card.titleTemplateKey))}" data-package-i18n-args="${escapeHtml(JSON.stringify(card.titleTemplateArgs || {}))}"`
+                : card.titleKey
+                    ? ` data-package-i18n="${escapeHtml(String(card.titleKey))}"`
+                    : "";
             el.innerHTML = `
-                <div class="chat-message-content roll-card">
+                <div class="chat-message-content roll-card${toneClass}"${systemAttr}>
                     <span class="chat-author">${escapeHtml(payload.author)}</span>
                     ${secretHtml}
                     <div class="roll-card__header">
                         <div>
-                            <span class="roll-card__title">${escapeHtml(title)}</span>
-                            ${subtitle ? `<span class="roll-card__subtitle">${escapeHtml(subtitle)}</span>` : ""}
+                            <span class="roll-card__title"${titleI18n}>${escapeHtml(title)}</span>
+                            ${subtitle && subtitle !== payload.author ? `<span class="roll-card__subtitle">${escapeHtml(subtitle)}</span>` : ""}
                         </div>
                         <span class="roll-total roll-card__total">${escapeHtml(total)}</span>
                     </div>
+                    ${status ? `<div class="roll-card__status"${card.statusKey ? ` data-package-i18n="${escapeHtml(String(card.statusKey))}"` : ""}>${escapeHtml(status)}</div>` : ""}
                     ${lineHtml ? `<div class="roll-card__lines">${lineHtml}</div>` : ""}
+                    ${groups.length ? `
+                        <details class="roll-box roll-card__dice">
+                            <summary class="roll-summary roll-summary--quiet">
+                                <span class="roll-card__detail-label">${escapeHtml(breakdownLabel())}</span>
+                            </summary>
+                            <div class="roll-parts">${partsHtml(groups, modifier)}</div>
+                            ${payload.expression ? `<div class="roll-card__formula">${escapeHtml(payload.expression)}</div>` : ""}
+                        </details>` : ""}
                 </div>
             `;
             return el;
         }
 
-        const groups = Array.isArray(payload.groups) ? payload.groups : [];
-        const groupParts = groups.map((g) => {
-            const dice = Array.isArray(g.results) ? g.results.join(", ") : "";
-            return `<span class="roll-group">${escapeHtml(g.notation)}: [${escapeHtml(dice)}]</span>`;
-        });
-
-        const modifierHtml =
-            payload.modifier && payload.modifier !== 0
-                ? `<span class="roll-modifier">${payload.modifier > 0 ? "+" : ""}${payload.modifier}</span>`
-                : "";
-
-        el.innerHTML = `
-            <div class="chat-message-content">
-                <span class="chat-author">${escapeHtml(payload.author)}</span>
-                ${secretHtml}
-                <span class="roll-expression">${escapeHtml(payload.expression)}</span>
-                <div class="roll-breakdown">${groupParts.join("")}${modifierHtml}</div>
-                <span class="roll-total">${payload.total}</span>
-            </div>
-        `;
+        el.innerHTML = rollBreakdown(payload, secretHtml);
         return el;
     }
 
+
+
+
+    function diceHtml(group) {
+        const sides = Number(group.sides) || 0;
+        const kept = Array.isArray(group.results) ? group.results : [];
+        const dropped = Array.isArray(group.dropped) ? group.dropped : [];
+
+        const pill = (value, descartado) => {
+            const classes = ["roll-die"];
+            if (descartado) classes.push("is-dropped");
+            else if (sides && value === sides) classes.push("is-max");
+            else if (sides && value === 1) classes.push("is-min");
+            return `<li class="${classes.join(" ")}">${escapeHtml(String(value))}</li>`;
+        };
+
+        return (
+            kept.map((v) => pill(v, false)).join("")
+            + dropped.map((v) => pill(v, true)).join("")
+        );
+    }
+
+    function partsHtml(groups, modificador) {
+        const partes = groups.map((group) => `
+            <div class="roll-part">
+                <span class="roll-part__formula">${escapeHtml(group.notation || "")}</span>
+                <ol class="roll-dice">${diceHtml(group)}</ol>
+                <span class="roll-part__subtotal">${escapeHtml(String(group.subtotal ?? ""))}</span>
+            </div>`).join("");
+
+        const modHtml = modificador
+            ? `<div class="roll-part roll-part--modifier">
+                 <span class="roll-part__formula">${modificador > 0 ? "+" : "−"}</span>
+                 <span class="roll-part__subtotal">${Math.abs(modificador)}</span>
+               </div>`
+            : "";
+
+        return partes + modHtml;
+    }
+
+    function rollBreakdown(payload, secretHtml) {
+        const groups = Array.isArray(payload.groups) ? payload.groups : [];
+        const modificador = Number(payload.modifier) || 0;
+
+
+
+        return `
+            <div class="chat-message-content roll">
+                <span class="chat-author">${escapeHtml(payload.author)}</span>
+                ${secretHtml}
+                <details class="roll-box">
+                    <summary class="roll-summary">
+                        <span class="roll-formula">${escapeHtml(payload.expression || "")}</span>
+                        <span class="roll-total">${escapeHtml(String(payload.total ?? ""))}</span>
+                    </summary>
+                    <div class="roll-parts">${partsHtml(groups, modificador)}</div>
+                </details>
+            </div>
+        `;
+    }
+
+
+
+
+
+    function hydrateHistory(root = document) {
+        root.querySelectorAll("[data-roll-payload]").forEach((placeholder) => {
+            let payload;
+            try {
+                payload = JSON.parse(placeholder.dataset.rollPayload);
+            } catch {
+                return;
+            }
+            const rebuilt = buildRollMessage(payload);
+
+
+            placeholder.querySelectorAll("[data-chat-delete]").forEach((btn) => rebuilt.appendChild(btn));
+            placeholder.replaceWith(rebuilt);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => hydrateHistory());
+
     FI.buildRollMessage = buildRollMessage;
+    FI.hydrateRollHistory = hydrateHistory;
 })();

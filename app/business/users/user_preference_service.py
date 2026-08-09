@@ -9,10 +9,22 @@ DEFAULT_GAME_LAYOUT_MODE = "gravewright"
 GAME_LAYOUT_MODES = {DEFAULT_GAME_LAYOUT_MODE, "classic"}
 
 
+
+DEFAULT_VISION_MODE = "cinematic"
+VISION_MODES = {DEFAULT_VISION_MODE, "classic"}
+
+
 @dataclass(frozen=True)
 class UserPreferenceResult:
     success: bool
     layout_mode: str = DEFAULT_GAME_LAYOUT_MODE
+    error_key: str | None = None
+
+
+@dataclass(frozen=True)
+class VisionModeResult:
+    success: bool
+    vision_mode: str = DEFAULT_VISION_MODE
     error_key: str | None = None
 
 
@@ -43,3 +55,24 @@ class UserPreferenceService:
         )
 
         return UserPreferenceResult(success=True, layout_mode=normalized_mode)
+
+    def get_vision_mode(self, user_id: str) -> str:
+        vision_mode = self.preferences.get_vision_mode(user_id)
+
+        if vision_mode in VISION_MODES:
+            return vision_mode
+
+        return DEFAULT_VISION_MODE
+
+    def set_vision_mode(self, *, user_id: str, vision_mode: str) -> VisionModeResult:
+        normalized_mode = vision_mode.strip().lower()
+
+        if normalized_mode not in VISION_MODES:
+            return VisionModeResult(
+                success=False,
+                error_key="game.settings.errors.invalid_vision_mode",
+            )
+
+        self.preferences.set_vision_mode(user_id=user_id, vision_mode=normalized_mode)
+
+        return VisionModeResult(success=True, vision_mode=normalized_mode)

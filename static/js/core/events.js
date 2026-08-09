@@ -7,7 +7,7 @@
 (function () {
   const Core = (window.GravewrightCore = window.GravewrightCore || {});
 
-  
+
   const wrappers = new WeakMap();
 
   function wrap(handler) {

@@ -54,7 +54,7 @@ class PackageContentService:
         self.journals = JournalService()
         self.sheet_data = SheetDataService()
 
-    # --- reads -----------------------------------------------------------------
+
 
     def list_packs(self, package_id: str) -> list[dict]:
         if not self._content_enabled(package_id):
@@ -69,7 +69,7 @@ class PackageContentService:
     def list_imports(self, campaign_id: str) -> list[dict]:
         return self.imports.list_for_campaign(campaign_id)
 
-    # --- import ----------------------------------------------------------------
+
 
     def import_entry(
         self,

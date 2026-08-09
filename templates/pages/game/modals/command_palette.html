@@ -1,0 +1,31 @@
+<div class="command-palette-backdrop" data-command-palette hidden>
+    <section class="command-palette" role="dialog" aria-modal="true"
+        aria-labelledby="command-palette-title" data-command-palette-dialog>
+        <h2 id="command-palette-title" class="sr-only">{{ t("search.title") }}</h2>
+        <label class="command-palette-input-wrap">
+            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+            <span class="sr-only">{{ t("search.input_label") }}</span>
+            <input type="search" data-command-palette-input autocomplete="off" spellcheck="false"
+                placeholder="{{ t('search.placeholder') }}" aria-controls="command-palette-results"
+                aria-autocomplete="list" />
+            <kbd>Esc</kbd>
+        </label>
+        <p class="command-palette-status" data-command-palette-status role="status" aria-live="polite">
+            {{ t("search.hint") }}
+        </p>
+        <div id="command-palette-results" class="command-palette-results" role="listbox"
+            data-command-palette-results></div>
+        <footer class="command-palette-footer">
+            <span>↑↓ {{ t("search.navigate") }}</span>
+            <span>Enter {{ t("search.open") }}</span>
+        </footer>
+    </section>
+</div>
+<script type="application/json" id="command-palette-labels">{{ {
+    "empty": t("search.empty"), "error": t("search.error"), "hint": t("search.hint"),
+    "loading": t("search.loading"), "types": {
+        "actor": t("search.types.actor"), "item": t("search.types.item"),
+        "journal": t("search.types.journal"), "scene": t("search.types.scene"),
+        "compendium": t("search.types.compendium")
+    }
+} | tojson }}</script>

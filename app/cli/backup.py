@@ -81,7 +81,7 @@ def _integrity_ok(db_path: Path) -> bool:
         conn.close()
 
 
-# --- backup -----------------------------------------------------------------
+
 
 
 def create_backup(
@@ -177,7 +177,7 @@ def _verify_backup(path: Path) -> bool:
         return False
 
 
-# --- restore ----------------------------------------------------------------
+
 
 
 def _read_manifest(path: Path) -> dict | None:
@@ -218,8 +218,8 @@ def restore_backup(*, path: Path, dry_run: bool, yes: bool) -> int:
         print("FIX    re-run with --yes (a *.pre-restore safety copy is kept), or --dry-run.")
         return EXIT_UNSAFE
 
-    # Close any open DB connections before overwriting the file on disk (a
-    # no-op in a fresh CLI process; matters if the engine was already used).
+
+
     try:
         from app.persistence import engine as _engine
 
@@ -234,8 +234,8 @@ def restore_backup(*, path: Path, dry_run: bool, yes: bool) -> int:
             print(f"       previous database saved to {safety}")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(zf.read(DB_NAME))
-        # Drop stale WAL/SHM sidecars so SQLite doesn't replay pre-restore changes
-        # over the restored file on next open.
+
+
         for sidecar in (f"{target}-wal", f"{target}-shm"):
             Path(sidecar).unlink(missing_ok=True)
 

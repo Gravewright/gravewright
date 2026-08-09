@@ -23,7 +23,9 @@ def can_view_item(*, item: dict, campaign: dict, user_id: str) -> bool:
     if ItemRepository().has_owner(item_id=item["id"], user_id=user_id):
         return True
     perm = ItemPermissionRepository().get_for_user(item_id=item["id"], user_id=user_id)
-    return bool(perm and perm["can_view"])
+    if perm and perm["can_view"]:
+        return True
+    return False
 
 
 def can_edit_item(*, item: dict, campaign: dict, user_id: str) -> bool:

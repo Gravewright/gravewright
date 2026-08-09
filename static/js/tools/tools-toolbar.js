@@ -1,23 +1,77 @@
 (() => {
     const STORAGE_KEY = "gravewright.tools";
-    
-    
-    
+
+
+
     const Registry = window.GravewrightToolsRegistry;
     const DEFAULT_TOOL = Registry.DEFAULT_TOOL;
     const SUB_TOOLS = Registry.SUB_TOOLS;
     const SHORTCUTS = Registry.SHORTCUTS;
+    const TOOL_LAYERS = Registry.TOOL_LAYERS || {};
+
+
+    const LAYERS = Registry.LAYERS || ["game", "gm", "composition", "effects", "walls", "lighting"];
 
     let activeTool = DEFAULT_TOOL;
     const activeSubTool = {};
     let activeMarkerPresetId = "";
     let activeDrawColor = "#f8fafc";
+    let activeLayer = "game";
+    let layerState = { visibility: { game: true, gm: true, composition: true }, locked: {} };
+
+    function layerStorageKey(roomId = activeCanvas()?.dataset.roomId || "") {
+        const userId = document.body?.dataset?.currentUserId || "anonymous";
+        return `${STORAGE_KEY}.layers.v1.${userId}.${roomId}`;
+    }
+
+    function loadLayerState(roomId = activeCanvas()?.dataset.roomId || "") {
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem(layerStorageKey(roomId)) || "{}"); } catch { saved = {}; }
+        layerState = {
+            visibility: { game: true, gm: true, composition: true, lighting: true, ...(saved.visibility || {}) },
+            locked: { ...(saved.locked || {}) },
+        };
+        activeLayer = LAYERS.includes(saved.active) ? saved.active : "game";
+    }
+
+    function persistLayerState() {
+        try { localStorage.setItem(layerStorageKey(), JSON.stringify({ ...layerState, active: activeLayer })); } catch { }
+    }
+
+    function emitLayerState() {
+        document.dispatchEvent(new CustomEvent("tool:layer-state", { detail: {
+            roomId: activeCanvas()?.dataset.roomId || "", activeLayer,
+            visibility: { ...layerState.visibility }, locked: { ...layerState.locked },
+        } }));
+    }
+
+    function syncLayerControls() {
+        document.querySelectorAll("[data-layer-visibility]").forEach((button) => {
+            const visible = layerState.visibility[button.dataset.layerVisibility] !== false;
+            button.setAttribute("aria-pressed", visible ? "true" : "false");
+            button.querySelector("i").className = visible ? "ph ph-eye" : "ph ph-eye-slash";
+        });
+        document.querySelectorAll("[data-layer-lock]").forEach((button) => {
+            const locked = Boolean(layerState.locked[button.dataset.layerLock]);
+            button.setAttribute("aria-pressed", locked ? "true" : "false");
+            button.querySelector("i").className = locked ? "ph ph-lock" : "ph ph-lock-open";
+        });
+        document.querySelectorAll("[data-tool-dock]").forEach((dock) => {
+            dock.dataset.activeLayer = activeLayer;
+            dock.dataset.layerLocked = layerState.locked[activeLayer] ? "true" : "false";
+            const label = dock.querySelector("[data-tool-active-layer-label]");
+            if (label) {
+                const name = dock.dataset[`layerLabel${activeLayer[0].toUpperCase()}${activeLayer.slice(1)}`] || activeLayer;
+                label.textContent = `${name}${layerState.locked[activeLayer] ? "  ·  🔒" : ""}`;
+            }
+        });
+    }
 
     for (const [tool, def] of Object.entries(SUB_TOOLS)) {
         activeSubTool[tool] = def.default;
     }
 
-    
+
 
     function toolsEnabled() {
         return Boolean(document.querySelector("[data-tool-dock]"));
@@ -53,8 +107,8 @@
         return document.querySelector(".room-workspace.is-active")?.dataset.isGm === "true";
     }
 
-    
-    
+
+
     function syncGmOnly(panel) {
         const gm = isActiveRoomGm();
         panel.querySelectorAll("[data-gm-only]").forEach((el) => { el.hidden = !gm; });
@@ -172,7 +226,7 @@
         });
     }
 
-    
+
 
     function toggleLayersPanel(triggerBtn) {
         const panel = document.querySelector('[data-tool-sub-panel="layers"]');
@@ -186,11 +240,53 @@
     }
 
     function setActiveLayer(layer) {
-        const value = ["game", "gm", "composition"].includes(layer) ? layer : "game";
+        const value = LAYERS.includes(layer) ? layer : "game";
+        activeLayer = value;
         document.querySelectorAll("[data-active-layer]").forEach((btn) => {
             btn.setAttribute("aria-pressed", btn.dataset.activeLayer === value ? "true" : "false");
         });
         document.dispatchEvent(new CustomEvent("tool:active-layer", { detail: { layer: value } }));
+        persistLayerState();
+        syncLayerControls();
+        emitLayerState();
+        syncToolsForLayer();
+    }
+
+    function toggleLayerVisibility(layer) {
+        if (!LAYERS.includes(layer)) return;
+        layerState.visibility[layer] = layerState.visibility[layer] === false;
+        persistLayerState();
+        syncLayerControls();
+        emitLayerState();
+    }
+
+    function toggleLayerLock(layer) {
+        if (!LAYERS.includes(layer)) return;
+        layerState.locked[layer] = !layerState.locked[layer];
+        persistLayerState();
+        syncLayerControls();
+        syncToolsForLayer();
+        emitLayerState();
+    }
+
+    function toolSupportsLayer(tool, layer = activeLayer) {
+        const layers = TOOL_LAYERS[tool];
+        const supports = !Array.isArray(layers) || layers.includes(layer);
+        return supports && (tool === "select" || !layerState.locked[layer]);
+    }
+
+    function syncToolsForLayer() {
+        document.querySelectorAll("[data-tool-dock] [data-tool]").forEach((button) => {
+            const compatible = toolSupportsLayer(button.dataset.tool);
+            button.hidden = !compatible;
+            button.disabled = !compatible;
+            button.setAttribute("aria-hidden", compatible ? "false" : "true");
+        });
+        document.querySelectorAll("[data-tool-layer-scope]").forEach((node) => {
+            const allowed = (node.dataset.toolLayerScope || "").split(/\s+/).filter(Boolean);
+            node.hidden = allowed.length > 0 && !allowed.includes(activeLayer);
+        });
+        if (!toolSupportsLayer(activeTool)) setActiveTool(DEFAULT_TOOL);
     }
 
     function setDrawColor(color) {
@@ -200,18 +296,22 @@
         document.querySelectorAll("[data-map-canvas]").forEach((canvas) => {
             canvas.dataset.activeDrawColor = activeDrawColor;
         });
+
         document.querySelectorAll("[data-draw-color]").forEach((button) => {
             button.setAttribute("aria-pressed", button.dataset.drawColor.toLowerCase() === activeDrawColor ? "true" : "false");
         });
     }
 
-    
+
 
     function setActiveTool(tool) {
         if (streamerMode() && tool === "hp") {
             tool = DEFAULT_TOOL;
         }
         if (!toolsEnabled()) {
+            tool = DEFAULT_TOOL;
+        }
+        if (!toolSupportsLayer(tool)) {
             tool = DEFAULT_TOOL;
         }
         if (!document.querySelector(`[data-tool="${CSS.escape(tool)}"]`)) {
@@ -230,6 +330,10 @@
             canvas.dataset.activeMarkerPreset = activeMarkerPresetId;
             canvas.dataset.activeDrawColor = activeDrawColor;
         });
+
+        document.dispatchEvent(new CustomEvent("tool:active-tool", {
+            detail: { tool },
+        }));
 
         if (SUB_TOOLS[tool]) {
             openSubPanel(tool);
@@ -280,7 +384,7 @@
         try { localStorage.setItem(`${STORAGE_KEY}.collapsed`, collapsed ? "1" : "0"); } catch {  }
     }
 
-    
+
 
     document.addEventListener("click", (event) => {
         const toggle = event.target.closest("[data-tool-dock-toggle]");
@@ -353,6 +457,12 @@
             return;
         }
 
+        const visibilityBtn = event.target.closest("[data-layer-visibility]");
+        if (visibilityBtn) { toggleLayerVisibility(visibilityBtn.dataset.layerVisibility); return; }
+
+        const lockBtn = event.target.closest("[data-layer-lock]");
+        if (lockBtn) { toggleLayerLock(lockBtn.dataset.layerLock); return; }
+
         const clearBtn = event.target.closest("[data-tool-clear]");
         if (clearBtn) {
             const panel = clearBtn.closest("[data-tool-sub-panel]");
@@ -360,15 +470,15 @@
             return;
         }
 
-        
-        
+
+
         if (!event.target.closest("[data-tool-sub-panel]")
             && !event.target.closest("[data-map-canvas]")) {
             closeAllSubPanels();
         }
     });
 
-    
+
 
     const tooltip = document.createElement("div");
     tooltip.className = "tool-dock-tooltip";
@@ -410,7 +520,7 @@
         if (event.target.closest("[data-tool-dock] [data-tooltip]")) hideTooltip();
     });
 
-    
+
 
     document.addEventListener("keydown", (event) => {
         if (!toolsEnabled()) return;
@@ -423,6 +533,8 @@
 
     document.addEventListener("change", (event) => {
         if (event.target.matches('input[name="selected-room"]')) {
+            loadLayerState(event.target.value);
+            setActiveLayer(activeLayer);
             renderAreaMarkerPresets();
         }
     });
@@ -448,7 +560,9 @@
         renderAreaMarkerPresets();
     });
 
-    
+    document.addEventListener("vtt:game-ready", () => setActiveLayer(activeLayer), { once: true });
+
+
     document.addEventListener("vision:changed", (event) => {
         const playerView = Boolean(event.detail?.playerView);
         document.querySelectorAll("[data-vision-toggle]").forEach((btn) => {
@@ -458,7 +572,7 @@
         });
     });
 
-    
+
 
     try {
         const saved = toolsEnabled() ? localStorage.getItem(`${STORAGE_KEY}.active`) : null;
@@ -480,8 +594,11 @@
         }
     } catch {  }
 
+    loadLayerState();
+    setActiveLayer(activeLayer);
     setActiveTool(activeTool);
     setDrawColor(activeDrawColor);
+    syncToolsForLayer();
 
     for (const [tool, sub] of Object.entries(activeSubTool)) {
         setSubTool(tool, sub);
@@ -495,7 +612,7 @@
         }
     } catch {  }
 
-    
+
 
     window.GravewrightTools = {
         get activeTool() { return activeTool; },
@@ -503,6 +620,15 @@
         get activeMarkerPresetId() { return activeMarkerPresetId; },
         get activeMarkerPreset() { return markerPresetById(activeMarkerPresetId); },
         get activeDrawColor() { return activeDrawColor; },
+        get activeLayer() { return activeLayer; },
+        isLayerVisible(layer, roomId = activeCanvas()?.dataset.roomId || "") {
+            if (roomId !== (activeCanvas()?.dataset.roomId || "")) return true;
+            return layerState.visibility[layer] !== false;
+        },
+        isLayerLocked(layer, roomId = activeCanvas()?.dataset.roomId || "") {
+            if (roomId !== (activeCanvas()?.dataset.roomId || "")) return false;
+            return Boolean(layerState.locked[layer]);
+        },
         setActiveTool,
         clearTool,
     };

@@ -24,7 +24,7 @@
             return false;
         }
 
-        
+
         if (payload.visibility === "whisper") {
             return false;
         }
@@ -173,10 +173,18 @@
         }
 
         appendDeleteButton(el, payload, list);
+
+
+
+
+
+
+
+        const wasAtBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+
         list.appendChild(el);
 
-        const isNearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
-        if (isNearBottom) {
+        if (wasAtBottom) {
             list.scrollTop = list.scrollHeight;
         }
     }

@@ -241,6 +241,32 @@ class TokenRepository:
 
         return self._hydrate(row) if row else None
 
+    def set_vision(
+        self,
+        *,
+        token_id: str,
+        vision_enabled: bool,
+        vision_range: float,
+        expected_version: int | None = None,
+    ) -> dict | None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            stmt = update(tokens_table).where(tokens_table.c.id == token_id)
+            if expected_version is not None:
+                stmt = stmt.where(tokens_table.c.version == expected_version)
+            result = conn.execute(
+                stmt.values(
+                    vision_enabled=1 if vision_enabled else 0,
+                    vision_range=vision_range,
+                    version=tokens_table.c.version + 1,
+                    updated_at=now,
+                )
+            )
+            if result.rowcount != 1:
+                return None
+            row = self._get_by_id(conn, token_id)
+            return self._hydrate(row) if row else None
+
     def set_hidden(
         self,
         *,

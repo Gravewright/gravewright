@@ -40,8 +40,8 @@
         });
     }
 
-    
-    
+
+
     async function postJson(url, fields) {
         return fetch(url, {
             method: "POST",
@@ -54,7 +54,7 @@
         });
     }
 
-    
+
     async function refreshPanel(roomId) {
         const host = treeHostFor(roomId);
         if (!host) return;

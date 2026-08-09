@@ -20,7 +20,7 @@
         return body.dataset.presenceCsrfToken || "";
     }
 
-    
+
 
     function closeMenu() {
         menu.hidden = true;
@@ -64,7 +64,7 @@
 
         menu.hidden = false;
 
-        
+
         const mw = menu.offsetWidth || 180;
         const mh = menu.offsetHeight || 100;
         const vw = window.innerWidth;
@@ -74,8 +74,8 @@
         menu.style.top = Math.min(y, vh - mh - 4) + "px";
     }
 
-    
-    
+
+
     FI.label = label;
     FI.getCsrf = getCsrf;
     FI.closeMenu = closeMenu;
@@ -83,7 +83,7 @@
 
     if (!menu || !inner) return;
 
-    
+
 
     document.addEventListener("contextmenu", (e) => {
         const itemFolderHeader = e.target.closest("[data-item-panel] .sheet-folder-header");
@@ -143,8 +143,8 @@
     window.addEventListener("scroll", closeMenu, { passive: true });
     window.addEventListener("resize", closeMenu, { passive: true });
 
-    
-    
+
+
     document.addEventListener("vtt:token-contextmenu", (e) => FI.openTokenMenu(e));
     document.addEventListener("vtt:measure-contextmenu", (e) => FI.openMeasureMenu?.(e));
 })();

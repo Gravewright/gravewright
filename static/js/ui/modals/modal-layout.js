@@ -131,7 +131,7 @@
                     })
                 );
             } catch {
-                
+
             }
         }
 
@@ -185,22 +185,26 @@
             modal.style.height = "max-content";
 
             const preferredWidth = Number(modal.dataset.autoFitWidth);
+            const preferredHeight = Number(modal.dataset.autoFitHeight);
             const minFitWidth = dataNumber(modal, "autoFitMinWidth") || minWindowWidth;
             const minFitHeight = dataNumber(modal, "autoFitMinHeight") || defaultFitHeight;
+            const widthFloor = Math.min(Math.max(minWindowWidth, minFitWidth), availableWidth);
             const width = options.preserveWidth
-                ? clamp(modal.offsetWidth, Math.max(minWindowWidth, minFitWidth), availableWidth)
+                ? clamp(modal.offsetWidth, widthFloor, availableWidth)
                 : clamp(
                     Number.isFinite(preferredWidth)
                         ? Math.min(Math.ceil(modal.scrollWidth + autoFitPadding), preferredWidth)
                         : Math.ceil(modal.scrollWidth + autoFitPadding),
-                    Math.max(minWindowWidth, minFitWidth),
+                    widthFloor,
                     availableWidth
                 );
             modal.style.width = `${width}px`;
 
             const heightFloor = Math.min(Math.max(minWindowHeight, minFitHeight), availableHeight);
             const height = clamp(
-                Math.ceil(modal.scrollHeight + autoFitPadding),
+                Number.isFinite(preferredHeight)
+                    ? preferredHeight
+                    : Math.ceil(modal.scrollHeight + autoFitPadding),
                 heightFloor,
                 availableHeight
             );

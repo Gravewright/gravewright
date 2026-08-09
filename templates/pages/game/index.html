@@ -9,12 +9,13 @@
     <title>{{ app_name }} - Game</title>
 
     <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
+    <link rel="stylesheet" href="/static/vendor/phosphor/regular.css?v={{ asset_version }}" />
+    <link rel="stylesheet" href="/static/vendor/phosphor/bold.css?v={{ asset_version }}" />
+    <link rel="stylesheet" href="/static/vendor/easymde/easymde.min.css?v={{ asset_version }}" />
     
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" />
-    <link rel="stylesheet" href="/static/css/game.css?v=20260624-cards-multiselect" />
+    <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version }}" />
+    <link rel="stylesheet" href="/static/css/dialog.css" />
+    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-gm-onboarding-clickable-ui-pass" />
     
     {% for href in system_styles %}<link rel="stylesheet" href="{{ href }}" />
     {% endfor %}
@@ -28,10 +29,12 @@
     <script defer src="/static/js/core/storage.js"></script>
     <script defer src="/static/js/core/geometry.js"></script>
     <script defer src="/static/js/core/sanitization.js"></script>
+    <script defer src="/static/js/core/dialog.js"></script>
     <script defer src="/static/js/core/bootstrap.js"></script>
     
-    <script defer src="/static/js/tools/tools-registry.js?v=20260605-token-hp"></script>
-    <script defer src="/static/js/tools/tools-toolbar.js?v=20260605-token-hp"></script>
+    <script defer src="/static/js/ui/slider-nudge.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/tools/tools-registry.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/tools/tools-toolbar.js?v=20260809-preview2"></script>
     
     <script defer src="/static/js/realtime/realtime-client.js?v=20260604-realtime-split"></script>
     <script defer src="/static/js/realtime/realtime-events.js?v=20260604-realtime-split"></script>
@@ -39,23 +42,27 @@
     <script defer src="/static/js/realtime/command-client.js?v=20260604-realtime-split"></script>
     <script defer src="/static/js/combat/combat-state.js?v=20260605-token-rings"></script>
     <script defer src="/static/vendor/pixi.min.js"></script>
+    <script defer src="/static/vendor/pixi-filters.min.js?v=6.1.5"></script>
     <script defer src="/static/js/board/board-renderer.js"></script>
     
-    <script defer src="/static/js/board/pixi/pixi-board-renderer.js?v=20260605-scene-runtime-cache"></script>
-    <script defer src="/static/js/board/pixi/pixi-board-layers.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/board/pixi/pixi-board-renderer.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/board/pixi/pixi-board-layers.js?v=20260809-preview2"></script>
     <script defer src="/static/js/board/pixi/pixi-tile-layer.js?v=20260605-scene-runtime-cache"></script>
     <script defer src="/static/js/board/pixi/pixi-grid-layer.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/board/pixi/pixi-token-layer.js?v=20260605-crisp-labels"></script>
     <script defer src="/static/js/board/pixi/pixi-ghost-layer.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/board/pixi/pixi-origin-layer.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/board/pixi/pixi-fog-layer.js?v=20260604-pixi-layers"></script>
+    <script defer src="/static/js/board/pixi/pixi-light-buffer.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/board/pixi/pixi-shader-effects.js?v=20260809-refresh13"></script>
+    <script defer src="/static/js/board/pixi/pixi-lighting-layer.js?v=20260809-particles2"></script>
     <script defer src="/static/js/board/pixi/pixi-debug.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/map/api/map-api.js?v=20260605-token-hp"></script>
-    <script defer src="/static/js/map/scene/map-scene.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/scene/map-scene.js?v=20260805-lights-vision"></script>
     <script defer src="/static/js/map/camera/map-camera.js"></script>
     <script defer src="/static/js/map/camera/map-pan.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/camera/map-zoom.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/streaming/map-streaming.js?v=20260605-scene-runtime-cache"></script>
+    <script defer src="/static/js/map/camera/map-zoom.js?v=20260805-lighting-input"></script>
+    <script defer src="/static/js/map/streaming/map-streaming.js?v=20260806-scene-updated"></script>
     <script defer src="/static/js/map/board-history.js?v=20260605-board-history"></script>
     <script defer src="/static/js/map/selection/map-selection.js"></script>
     <script defer src="/static/js/map/selection/map-marquee.js?v=20260624-marquee-overlay-select"></script>
@@ -67,9 +74,10 @@
     <script defer src="/static/js/map/tokens/map-token-dom-events.js?v=20260604-map-controller"></script>
     <script defer src="/static/js/map/board-ping/map-board-ping.js"></script>
     <script defer src="/static/js/map/add-to-scene/map-add-to-scene.js"></script>
-    <script defer src="/static/js/map/layers/map-layer-mode.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/input/map-keyboard-events.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/events/map-realtime-events.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/layers/map-layer-mode.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/map/input/map-token-steps.js?v=20260806-token-steps"></script>
+    <script defer src="/static/js/map/input/map-keyboard-events.js?v=20260806-token-steps"></script>
+    <script defer src="/static/js/map/events/map-realtime-events.js?v=20260806-broadcast-gaps"></script>
     <script defer src="/static/js/map/render-loop/map-render-loop.js"></script>
     <script defer src="/static/js/map/measures/map-measure-store.js"></script>
     <script defer src="/static/js/map/measures/map-measure-geometry.js"></script>
@@ -78,13 +86,24 @@
     <script defer src="/static/js/map/measures/map-measures.js"></script>
     <script defer src="/static/js/map/measures/map-measure-controller.js"></script>
     <script defer src="/static/js/map/map-debug.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/map-controller.js?v=20260623-card-to-image-layer"></script>
+    <script defer src="/static/js/map/map-controller.js?v=20260806-token-steps"></script>
     <script defer src="/static/js/ui/status-zones.js?v=20260603-effects-board3"></script>
     <script defer src="/static/js/ui/invitations.js"></script>
+    {% if command_palette_enabled %}<script defer src="/static/js/ui/command-palette.js?v={{ asset_version }}"></script>{% endif %}
+    {% if campaign_join_code_enabled %}<script defer src="/static/js/ui/join-code.js?v={{ asset_version }}-urlencoded"></script>{% endif %}
+    {% if targeted_handouts_enabled %}<script defer src="/static/js/game/targeted-handouts.js?v={{ asset_version }}"></script>{% endif %}
+    {% if lobby_ready_check_enabled %}<script defer src="/static/js/game/lobby-ready-check.js?v={{ asset_version }}"></script>{% endif %}
+    {% if dynamic_lighting_enabled %}<script defer src="/static/js/lighting/vision-mode.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/lighting/limit-toggle.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/lighting/shader-preference.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/lighting/shader-presets.js?v=20260809-library3"></script>
+    <script defer src="/static/js/lighting/shader-editor.js?v=20260809-library2"></script>
+    <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260809-particles2"></script>
+    <script defer src="/static/js/lighting/light-editor.js?v=20260809-preview2"></script>{% endif %}
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-remote.js?v=20260604-modals-split"></script>
-    <script defer src="/static/js/ui/modals/modal-forms.js?v=20260604-modals-split"></script>
+    <script defer src="/static/js/ui/modals/modal-forms.js?v=20260805-lights-vision"></script>
     <script defer src="/static/js/ui/modals/modal-window-actions.js?v=20260605-detached-remote"></script>
     <script defer src="/static/js/ui/modals/modal-manager.js?v=20260605-detached-remote"></script>
     <script defer src="/static/js/ui/modals/modal-drag.js?v=20260604-modals-split"></script>
@@ -105,10 +124,11 @@
     <script defer src="/static/js/cards/card-panel.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/ui/context-menu.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/assets/asset-library.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/dice/dice-tray.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/scene-images/scene-image-layer.js?v={{ asset_version }}"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script defer src="/static/vendor/easymde/easymde.min.js?v={{ asset_version }}"></script>
+    <script defer src="/static/vendor/marked.min.js?v={{ asset_version }}"></script>
+    <script defer src="/static/vendor/purify.min.js?v={{ asset_version }}"></script>
     
     <script type="module" src="/static/js/journals/block-editor.js"></script>
     {{ blockfield.labels() }}
@@ -117,7 +137,7 @@
     <script defer src="/static/js/journals/journals-tree.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journal-editor.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journal-preview.js?v=20260604-journals-split"></script>
-    <script defer src="/static/js/journals/journals-panel.js?v=20260604-journals-split"></script>
+    <script defer src="/static/js/journals/journals-panel.js?v=20260806-broadcast-gaps"></script>
     <script defer src="/static/js/journals/journal-modal.js?v=20260604-journal-board-broadcast1"></script>
     
     <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v={{ asset_version }}"></script>
@@ -135,9 +155,9 @@
     <script defer src="/static/js/actors/actors-drag.js?v=20260604-actors-split"></script>
     <script defer src="/static/js/actors/actors-panel.js?v=20260604-actors-split"></script>
     
-    <script defer src="/static/js/sheets/items/item-sheet-renderer.js?v={{ asset_version }}"></script>
-    <script defer src="/static/js/sheets/items/item-sheet-controller.js?v={{ asset_version }}"></script>
-    <script defer src="/static/js/sheets/items/item-sheet-events.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-renderer.js?v={{ asset_version }}-embedded-items-v2"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-controller.js?v={{ asset_version }}-embedded-items-v2"></script>
+    <script defer src="/static/js/sheets/items/item-sheet-events.js?v={{ asset_version }}-embedded-items-v2"></script>
     
     <script defer src="/static/js/items/items-api.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-tree.js?v=20260604-items-split"></script>
@@ -150,7 +170,7 @@
     <script defer src="/static/js/content/content-drag.js"></script>
     
     <script defer src="/static/js/ui/context-menu/context-menu.js?v=20260604-ctxmenu-split"></script>
-    <script defer src="/static/js/ui/context-menu/token-context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/token-context-menu.js?v=20260806-lighting-editors"></script>
     <script defer src="/static/js/ui/context-menu/measure-context-menu.js?v=20260605-measure-layer-menu"></script>
     <script defer src="/static/js/ui/context-menu/journal-context-menu.js?v=20260604-ctxmenu-split"></script>
     <script defer src="/static/js/ui/context-menu/actor-context-menu.js?v=20260604-ctxmenu-split"></script>
@@ -168,16 +188,27 @@
     <script defer src="/static/js/combat/combat-panel.js"></script>
     <script defer src="/static/js/combat/combat-actions.js"></script>
     <script defer src="/static/js/combat/combat-events.js"></script>
-    <script defer src="/static/js/game/system-onboarding.js?v=20260605-system-onboarding"></script>
+    <script defer src="/static/js/game/system-onboarding.js?v={{ asset_version }}-gm-checklist"></script>
+    <script defer src="/static/js/game/system-ruleset-form.js?v=20260806-ruleset-ajax"></script>
     <script defer src="/static/js/game/streamer-link.js?v=20260607-streamer-mode"></script>
     <script defer src="/static/js/game/game-bootstrap.js?v=20260604-game-entrypoint"></script>
     <script defer src="/static/js/game/game-entrypoint.js?v=20260604-game-entrypoint"></script>
+    <script defer src="/static/js/game/settings-navigation.js?v=20260809-foundry-layout"></script>
 </head>
 
 {% set active_room = rooms|selectattr("id", "equalto", active_room_id)|first if rooms else none %}
 <body data-current-user-id="{{ user.id }}" data-current-member-role="{{ active_room.member_role if active_room else '' }}"
+    data-onboarding-error="{{ t('onboarding.errors.generic') }}"
+    data-scene-image-label-duplicate="{{ t('game.scene_images.duplicate') }}"
+    data-scene-image-label-move-game="{{ t('game.scene_images.move_game') }}"
+    data-scene-image-label-move-gm="{{ t('game.scene_images.move_gm') }}"
+    data-scene-image-label-move-composition="{{ t('game.scene_images.move_composition') }}"
+    data-handout-granted="{{ t('handout.granted') }}"
+    data-handout-empty="{{ t('handout.empty') }}"
+    data-lobby-ready="{{ t('lobby.ready_short') }}" data-lobby-waiting="{{ t('lobby.waiting') }}"
+    data-lobby-no-actor="{{ t('lobby.no_actor') }}"
     data-streamer-mode="{{ 'true' if active_room and active_room.is_streamer else 'false' }}"
-    data-game-layout="{{ game_layout_mode }}" {% if open_modal
+    data-game-layout="{{ game_layout_mode }}" data-vision-mode="{{ vision_mode }}" {% if open_modal
     %}data-open-modal="{{ open_modal }}" {% endif %} {% if detached_modal %}data-detached-modal="{{ detached_modal }}"
     {% endif %} data-presence-csrf-token="{{ csrf_token() }}"
     data-presence-online-label="{{ t('game.players.online') }}"
@@ -211,6 +242,7 @@
     data-chat-error-denied="{{ t('permissions.errors.denied') }}"
     data-chat-error-invalid-whisper-target="{{ t('game.chat.errors.invalid_whisper_target') }}"
     data-chat-whisper-to="{{ t('game.chat.whisper_to') }}" data-chat-secret-roll="{{ t('game.chat.secret_roll') }}"
+    data-chat-roll-breakdown="{{ t('game.chat.roll_breakdown') }}"
     data-chat-commands-title="{{ t('game.chat.commands_title') }}"
     data-chat-cmd-roll="{{ t('game.chat.commands.roll') }}" data-chat-cmd-gmroll="{{ t('game.chat.commands.gmroll') }}"
     data-chat-cmd-whisper="{{ t('game.chat.commands.whisper') }}" data-chat-cmd-me="{{ t('game.chat.commands.me') }}"
@@ -242,6 +274,9 @@
     data-ctx-token-open-sheet="{{ t('game.token.ctx.open_sheet') }}"
     data-ctx-token-add-combat="{{ t('game.token.ctx.add_combat') }}"
     data-ctx-token-hide="{{ t('game.token.ctx.hide') }}" data-ctx-token-reveal="{{ t('game.token.ctx.reveal') }}"
+    data-token-vision-unlimited="{{ t('game.token.vision.unlimited') }}"
+    data-system-ruleset-error="{{ t('inside.rulesets.errors.request') }}"
+    data-ctx-token-vision="{{ t('game.token.ctx.vision') }}"
     data-ctx-token-remove="{{ t('game.token.ctx.remove') }}"
     data-ctx-token-remove-confirm="{{ t('game.token.ctx.remove_confirm') }}"
     data-toast-add-to-scene="{{ t('game.map.add_to_scene.toast') }}"
@@ -253,6 +288,20 @@
     data-asset-label-drag-title="{{ t('game.assets.drag_title') }}"
     data-asset-label-delete-image="{{ t('game.assets.delete_image') }}"
     data-asset-label-empty-folder="{{ t('game.assets.empty_folder') }}"
+    data-asset-label-show="{{ t('game.assets.show_to_players') }}"
+    data-asset-label-no-match="{{ t('game.assets.no_match') }}"
+    data-asset-label-no-kind="{{ t('game.assets.no_kind') }}"
+    data-dice-label-empty-pool="{{ t('game.dice.empty_pool') }}"
+    data-dice-label-count="{{ t('game.dice.count') }}"
+    data-dice-label-drop-low="{{ t('game.dice.drop_low') }}"
+    data-dice-label-drop-high="{{ t('game.dice.drop_high') }}"
+    data-dice-label-explode="{{ t('game.dice.explode') }}"
+    data-dice-label-remove="{{ t('game.dice.remove') }}"
+    data-dice-label-invalid="{{ t('game.dice.invalid') }}"
+    data-dice-label-failed="{{ t('game.dice.failed') }}"
+    data-asset-label-upload-failed="{{ t('game.assets.errors.upload_failed') }}"
+    data-asset-label-too-large="{{ t('game.assets.errors.too_large') }}"
+    data-asset-label-unsupported="{{ t('game.assets.errors.unsupported_type') }}"
     data-scene-image-label-resize="{{ t('game.scene_images.resize') }}"
     data-scene-image-label-upload-failed="{{ t('game.scene_images.errors.upload_failed') }}"
     data-scene-image-label-bring-front="{{ t('game.scene_images.bring_front') }}"
@@ -299,11 +348,15 @@
     data-card-label-error-invalid-draw="{{ t('game.cards.errors.invalid_draw') }}"
     data-card-label-error-deck-not-found="{{ t('game.cards.errors.deck_not_found') }}"
     data-card-label-error-pile-not-found="{{ t('game.cards.errors.pile_not_found') }}"
-    data-card-label-error-denied="{{ t('permissions.errors.denied') }}">
+    data-card-label-error-denied="{{ t('permissions.errors.denied') }}" data-dialog-confirm-label="{{ t('dialog.confirm') }}" data-dialog-cancel-label="{{ t('dialog.cancel') }}">
 
     <div id="ctx-menu" class="ctx-menu" hidden>
         <div class="ctx-menu-inner"></div>
     </div>
+
+    {% if command_palette_enabled and rooms %}
+    {% include "pages/game/modals/command_palette.html" %}
+    {% endif %}
 
     <main class="game-page">
         {% if rooms %}
@@ -315,7 +368,6 @@
 
             <section class="game-board">
                 {% set show_journal_panel = true %}
-                {% set show_library_panel = true %}
                 {% set show_combat_panel = true %}
                 {% for room in rooms %}
                 <article class="room-workspace {% if room.id == active_room_id %}is-active{% endif %}"
@@ -331,7 +383,8 @@
                         data-room-id="{{ room.id }}"
                         data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"
                         aria-label="Monster status zone" aria-live="polite"></div>
-                    <div class="table-surface" data-map-viewport>
+                    <div class="table-surface" data-map-viewport
+                        data-lighting-gm="{{ 'true' if room.member_role == 'gm' else 'false' }}">
                         <canvas class="map-canvas" data-map-canvas data-room-id="{{ room.id }}"
                             data-area-marker-presets="{{ room.area_marker_presets_json | default('[]') | e }}" {% if room.active_scene
                             %} data-scene-id="{{ room.active_scene['id'] }}"
@@ -341,6 +394,7 @@
                             data-scene-grid-visible="{{ 'true' if room.active_scene['grid_visible'] else 'false' }}"
                             data-scene-grid-color="{{ room.active_scene['grid_color'] }}"
                             data-scene-grid-opacity="{{ room.active_scene['grid_opacity'] | default(0.4) }}"
+                            data-scene-darkness="{{ room.active_scene['darkness'] | default(0.0) }}"
                             data-scene-image-scale="{{ room.active_scene['image_scale'] | default(1.0) }}"
                             data-scene-start-world-x="{{ room.active_scene['start_world_x'] | default(room.active_scene['width'] / 2) }}"
                             data-scene-start-world-y="{{ room.active_scene['start_world_y'] | default(room.active_scene['height'] / 2) }}"
@@ -352,27 +406,6 @@
                         <div class="scene-image-layer" data-scene-image-layer data-room-id="{{ room.id }}"
                             data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"></div>
                         <div class="card-scene-layer" data-card-scene-layer data-room-id="{{ room.id }}" aria-hidden="true"></div>
-                        {% if room.member_role in ('gm', 'assistant_gm') %}
-                        <div class="layer-hud" data-layer-hud role="group"
-                            aria-label="{{ t('game.tool_dock.layers') }}">
-                            <button type="button" class="layer-hud__title" data-layer-hud-toggle
-                                title="{{ t('game.tool_dock.layers.toggle') }}"><i class="ph ph-stack" aria-hidden="true"></i>{{
-                                t('game.tool_dock.layers') }}</button>
-                            <button type="button" class="layer-hud__btn" data-active-layer="game" aria-pressed="true">
-                                <i class="ph ph-game-controller" aria-hidden="true"></i>
-                                <span>{{ t('game.tool_dock.layers.game') }}</span>
-                            </button>
-                            <button type="button" class="layer-hud__btn" data-active-layer="gm" aria-pressed="false">
-                                <i class="ph ph-eye-slash" aria-hidden="true"></i>
-                                <span>{{ t('game.tool_dock.layers.gm') }}</span>
-                            </button>
-                            <button type="button" class="layer-hud__btn" data-active-layer="composition"
-                                aria-pressed="false" title="{{ t('game.tool_dock.layers.composition_hint') }}">
-                                <i class="ph ph-images" aria-hidden="true"></i>
-                                <span>{{ t("game.tool_dock.layers.composition") }}</span>
-                            </button>
-                        </div>
-                        {% endif %}
                         {% if not room.active_scene %}
                         <div class="table-empty" data-map-overlay>
                             <span class="table-marker"></span>
@@ -401,6 +434,19 @@
                         </div>
                         {% endif %}
                     </div>
+                    {% if room.member_role in ('gm', 'assistant_gm') %}
+                    <div class="layer-hud" data-layer-hud role="group"
+                        aria-label="{{ t('game.tool_dock.layers') }}">
+                        <button type="button" class="layer-hud__title" data-layer-hud-toggle
+                            title="{{ t('game.tool_dock.layers.toggle') }}"><i class="ph ph-stack" aria-hidden="true"></i>{{ t('game.tool_dock.layers') }}</button>
+                        <button type="button" class="layer-hud__btn" data-active-layer="game" aria-pressed="true"><i class="ph ph-game-controller" aria-hidden="true"></i><span>{{ t('game.tool_dock.layers.game') }}</span></button>
+                        <button type="button" class="layer-hud__btn" data-active-layer="gm" aria-pressed="false"><i class="ph ph-eye-slash" aria-hidden="true"></i><span>{{ t('game.tool_dock.layers.gm') }}</span></button>
+                        <button type="button" class="layer-hud__btn" data-active-layer="composition" aria-pressed="false" title="{{ t('game.tool_dock.layers.composition_hint') }}"><i class="ph ph-images" aria-hidden="true"></i><span>{{ t('game.tool_dock.layers.composition') }}</span></button>
+                        {% if dynamic_lighting_enabled and room.member_role == 'gm' %}<button type="button" class="layer-hud__btn" data-active-layer="effects" aria-pressed="false" title="{{ t('game.tool_dock.layers.effects_hint') }}"><i class="ph ph-sparkle" aria-hidden="true"></i><span>{{ t('game.tool_dock.layers.effects') }}</span></button>
+                        <button type="button" class="layer-hud__btn" data-active-layer="walls" aria-pressed="false" title="{{ t('game.tool_dock.layers.walls_hint') }}"><i class="ph ph-line-segment" aria-hidden="true"></i><span>{{ t('game.tool_dock.layers.walls') }}</span></button>
+                        <button type="button" class="layer-hud__btn" data-active-layer="lighting" aria-pressed="false"><i class="ph ph-lightbulb" aria-hidden="true"></i><span>{{ t('game.tool_dock.layers.lighting') }}</span></button>{% endif %}
+                    </div>
+                    {% endif %}
                 </article>
                 {% endfor %}
             </section>
@@ -502,6 +548,90 @@
                 {% for room in rooms %}
 
                 
+                <article class="game-modal-window dice-tray-modal" data-modal-window
+                    data-modal-id="dice-tray-{{ room.id }}" data-window-key="dice-tray-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" data-auto-fit-width="330" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <span class="game-panel-title">{{ t("game.dice.title") }}</span>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
+                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
+                                <i class="ph ph-minus" aria-hidden="true"></i>
+                            </button>
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}">
+                                <i class="ph ph-x" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </header>
+                    <div class="game-panel-body dice-tray" data-dice-tray data-room-id="{{ room.id }}">
+
+                        <!-- Um botão por dado. Clicar de novo soma ao mesmo termo, que é
+                             como se pensa na mesa: "mais um d6", não "novo termo". -->
+                        <div class="dice-faces">
+                            <button type="button" class="dice-face" data-dice-add="F" title="dF">dF</button>
+                            <button type="button" class="dice-face" data-dice-add="4">d4</button>
+                            <button type="button" class="dice-face" data-dice-add="6">d6</button>
+                            <button type="button" class="dice-face" data-dice-add="8">d8</button>
+                            <button type="button" class="dice-face" data-dice-add="10">d10</button>
+                            <button type="button" class="dice-face" data-dice-add="12">d12</button>
+                            <button type="button" class="dice-face dice-face--wide" data-dice-add="20">d20</button>
+                            <button type="button" class="dice-face" data-dice-add="%">d%</button>
+                        </div>
+
+                        <div class="dice-pool" data-dice-pool></div>
+
+                        <!-- Opções do termo selecionado. Ln/Hn DESCARTAM, que é a notação
+                             do xdice: vantagem em d20 é 2d20L1. -->
+                        <div class="dice-term-options" data-dice-term-options hidden></div>
+
+                        <div class="dice-modifier">
+                            <span>{{ t("game.dice.modifier") }}</span>
+                            <button type="button" data-dice-modifier="-1">−</button>
+                            <output data-dice-modifier-value>0</output>
+                            <button type="button" data-dice-modifier="1">+</button>
+                            <button type="button" class="dice-clear" data-dice-clear
+                                    title="{{ t('game.dice.clear') }}">
+                                <i class="ph ph-eraser" aria-hidden="true"></i>
+                            </button>
+                        </div>
+
+                        <!-- Rola um d6 junto e fica com o melhor dos dois, ambos
+                             explodindo. Vira max(conjunto!, 1d6!). -->
+                        <label class="dice-bonus" hidden>
+                            <input type="checkbox" data-dice-bonus>
+                            <span>{{ t("game.dice.bonus") }}</span>
+                            <small>{{ t("game.dice.bonus_hint") }}</small>
+                        </label>
+
+                        <!-- Campo editável: é a saída para tudo que os botões não montam,
+                             e mostra a notação que o servidor entende. -->
+                        <label class="dice-formula">
+                            <span class="sr-only">{{ t("game.dice.formula") }}</span>
+                            <input type="text" data-dice-formula spellcheck="false"
+                                   placeholder="{{ t('game.dice.formula_placeholder') }}">
+                        </label>
+
+                        <div class="dice-actions">
+                            <button type="button" class="dice-roll" data-dice-roll="public">
+                                <i class="ph ph-dice-five" aria-hidden="true"></i>
+                                <span>{{ t("game.dice.roll") }}</span>
+                            </button>
+                            <button type="button" class="dice-roll dice-roll--gm" data-dice-roll="gm"
+                                    title="{{ t('game.dice.roll_gm_hint') }}">
+                                <i class="ph ph-eye-closed" aria-hidden="true"></i>
+                                <span>{{ t("game.dice.roll_gm") }}</span>
+                            </button>
+                        </div>
+
+                        <p class="dice-status" data-dice-status role="status" aria-live="polite"></p>
+                        <div class="dice-history" data-dice-history></div>
+                    </div>
+                </article>
+
                 <article class="game-modal-window game-panel" data-modal-window data-modal-id="panel-chat-{{ room.id }}"
                     data-window-key="panel-chat-{{ room.id }}" data-panel-room="{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
@@ -533,19 +663,17 @@
                             msg.author_user_id == user.id) %}
                             {% if msg.kind == "roll" %}
                             <div class="chat-message chat-message--roll" data-message-id="{{ msg.id }}"
-                                data-author-id="{{ msg.author_user_id }}">
-                                <div class="chat-message-content">
+                                data-author-id="{{ msg.author_user_id }}"
+                                data-roll-payload='{{ msg.roll_payload_json }}'>
+                                <!-- Só o payload: quem desenha é o mesmo chat-roll-cards.js
+                                     que monta a mensagem ao vivo. Reimplementar a rolagem
+                                     aqui em Jinja fez o histórico perder o cartão do
+                                     sistema — a mensagem nova vinha com Aumentos e
+                                     Margem, e ao recarregar a página virava a rolagem
+                                     crua. Duas implementações da mesma coisa divergem;
+                                     esta some. -->
+                                <div class="chat-message-content roll">
                                     <span class="chat-author">{{ msg.author_name }}</span>
-                                    <span class="roll-expression">{{ msg.expression }}</span>
-                                    <div class="roll-breakdown">
-                                        {% for g in msg.groups %}
-                                        <span class="roll-group">{{ g.notation }}: [{{ g.results | join(", ") }}]</span>
-                                        {% endfor %}
-                                        {% if msg.modifier and msg.modifier != 0 %}
-                                        <span class="roll-modifier">{% if msg.modifier > 0 %}+{% endif %}{{ msg.modifier
-                                            }}</span>
-                                        {% endif %}
-                                    </div>
                                     <span class="roll-total">{{ msg.total }}</span>
                                 </div>
                                 {% if can_delete_message %}
@@ -621,19 +749,31 @@
                         {% if not room.is_readonly %}
                         <form class="chat-form" data-chat-form data-room-id="{{ room.id }}" novalidate>
                             {{ csrf_input | safe }}
-                            <div class="chat-input-row">
-                                <textarea name="message" class="chat-input"
-                                    placeholder="{{ t('game.chat.placeholder') }}" rows="2" maxlength="2000"></textarea>
-                                <button type="submit" class="chat-send" aria-label="{{ t('game.chat.send') }}">
+                            <!-- Três faixas empilhadas: a bandeja ocupa a linha inteira
+                                 (é ação de composição, não de envio), depois enviar e
+                                 apagar lado a lado, e por fim o campo em largura total. -->
+                            <div class="chat-composer{% if not room.can_delete_chat_any %} chat-composer--single{% endif %}">
+                                <button type="button" class="chat-dice"
+                                    data-modal-open="dice-tray-{{ room.id }}"
+                                    title="{{ t('game.dice.title') }}">
+                                    <i class="ph ph-dice-five" aria-hidden="true"></i>
+                                    <span>{{ t("game.dice.title") }}</span>
+                                </button>
+
+                                <button type="submit" class="chat-send" title="{{ t('game.chat.send') }}">
                                     <i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>
+                                    <span>{{ t("game.chat.send") }}</span>
                                 </button>
                                 {% if room.can_delete_chat_any %}
                                 <button type="button" class="chat-clear" data-chat-clear
-                                    aria-label="{{ t('game.chat.delete_all') }}"
                                     title="{{ t('game.chat.delete_all') }}">
                                     <i class="ph ph-trash" aria-hidden="true"></i>
+                                    <span>{{ t("game.chat.delete_all") }}</span>
                                 </button>
                                 {% endif %}
+
+                                <textarea name="message" class="chat-input"
+                                    placeholder="{{ t('game.chat.placeholder') }}" rows="2" maxlength="2000"></textarea>
                             </div>
                         </form>
                         {% else %}
@@ -865,7 +1005,7 @@
                         <label class="dialog-field">
                             <span>{{ t("game.items.name_label") }}</span>
                             <input type="text" data-item-create-name maxlength="120"
-                                placeholder="{{ t('game.items.name_placeholder') }}" autofocus />
+                                placeholder="{{ t('game.items.name_placeholder') }}" data-modal-autofocus />
                         </label>
                         <label class="dialog-field">
                             <span>{{ t("game.items.type") }}</span>
@@ -901,7 +1041,7 @@
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_name_label") }}</span>
                             <input type="text" name="name" maxlength="60"
-                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" autofocus />
+                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" data-modal-autofocus />
                         </label>
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_color_label") }}</span>
@@ -938,7 +1078,7 @@
                         <label class="dialog-field">
                             <span>{{ t("game.actors.name_label") }}</span>
                             <input type="text" data-actor-create-name maxlength="120"
-                                placeholder="{{ t('game.actors.name_placeholder') }}" autofocus />
+                                placeholder="{{ t('game.actors.name_placeholder') }}" data-modal-autofocus />
                         </label>
                         <label class="dialog-field">
                             <span>{{ t("game.actors.type") }}</span>
@@ -978,7 +1118,7 @@
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_name_label") }}</span>
                             <input type="text" name="name" maxlength="60"
-                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" autofocus />
+                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" data-modal-autofocus />
                         </label>
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_color_label") }}</span>
@@ -996,45 +1136,8 @@
                 </article>
                 {% endif %}
 
-                {% if room.member_role == "gm" and not room.active_system %}
-                
-                <article class="game-modal-window dialog-modal system-onboarding-modal" data-modal-window
-                    data-modal-id="system-onboarding-{{ room.id }}"
-                    data-window-key="system-onboarding-{{ room.id }}"
-                    data-system-onboarding-modal data-room-id="{{ room.id }}" hidden>
-                    <header class="game-modal-titlebar" data-modal-drag-handle>
-                        <div class="game-modal-sheet-title">
-                            <span class="sheet-modal-name">{{ t("game.system_onboarding.title") }}</span>
-                        </div>
-                        <div class="game-modal-controls">
-                            <button class="game-modal-control" type="button" data-modal-close
-                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
-                                    aria-hidden="true"></i></button>
-                        </div>
-                    </header>
-                    <form class="dialog-form" method="post" action="/sdk/campaigns/ruleset"
-                        data-system-onboarding-form>
-                        {{ csrf_input | safe }}
-                        <input type="hidden" name="campaign_id" value="{{ room.id }}" />
-                        <p class="dialog-help">{{ t("game.system_onboarding.description") }}</p>
-                        {% if available_systems %}
-                        <label class="dialog-field">
-                            <span>{{ t("game.system_onboarding.system_label") }}</span>
-                            <select name="package_id">
-                                {% for system in available_systems %}
-                                <option value="{{ system.id }}">{{ system.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </label>
-                        <button type="submit" class="dialog-submit">
-                            <i class="ph ph-plug" aria-hidden="true"></i>
-                            <span>{{ t("game.system_onboarding.submit") }}</span>
-                        </button>
-                        {% else %}
-                        <p class="dialog-help dialog-help--muted">{{ t("game.system_onboarding.no_systems") }}</p>
-                        {% endif %}
-                    </form>
-                </article>
+                {% if room.member_role == "gm" and room.gm_onboarding %}
+                {% include "pages/game/modals/gm_onboarding.html" %}
                 {% endif %}
 
                 {% if room.member_role == "gm" %}
@@ -1145,7 +1248,7 @@
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_name_label") }}</span>
                             <input type="text" name="name" maxlength="60"
-                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" autofocus />
+                                placeholder="{{ t('game.actors.folder_name_placeholder') }}" data-modal-autofocus />
                         </label>
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_color_label") }}</span>
@@ -1164,43 +1267,13 @@
                 {% endif %}
                 {% endif %}
 
-                {% if show_library_panel and room.member_role in ('gm', 'assistant_gm') %}
-
-                <article class="game-modal-window game-panel" data-modal-window
-                    data-modal-id="panel-library-{{ room.id }}" data-window-key="panel-library-{{ room.id }}"
-                    data-panel-room="{{ room.id }}" hidden>
-                    <header class="game-modal-titlebar" data-modal-drag-handle>
-                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">{{ t("game.tools.library") }}</span>
-                        <div class="game-modal-controls">
-                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
-                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
-                            </button>
-                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
-                                <i class="ph ph-minus" aria-hidden="true"></i>
-                            </button>
-                            <button class="game-modal-control" type="button" data-modal-close
-                                aria-label="{{ t('inside.campaigns.cancel') }}">
-                                <i class="ph ph-x" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </header>
-                    <div class="game-panel-body">
-                        <div class="library-actions">
-                            <button type="button" data-modal-open="library-images-{{ room.id }}">
-                                <i class="ph ph-image-square" aria-hidden="true"></i>
-                                <span>{{ t("game.library.images") }}</span>
-                            </button>
-                        </div>
-                    </div>
-                </article>
-
+                {% if room.member_role in ('gm', 'assistant_gm') %}
                 <article class="game-modal-window library-images-modal" data-modal-window
                     data-modal-id="library-images-{{ room.id }}" data-window-key="library-images-{{ room.id }}"
                     data-panel-room="{{ room.id }}" data-auto-fit-width="520" data-auto-fit-min-width="420" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">{{ t("game.library.images") }}</span>
+                        <span class="game-panel-title">{{ t("game.assets.title") }}</span>
                         <div class="game-modal-controls">
                             <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
                                 <i class="ph ph-arrows-out" aria-hidden="true"></i>
@@ -1214,32 +1287,74 @@
                             </button>
                         </div>
                     </header>
-                    <div class="game-panel-body asset-panel-body" data-scene-assets-workspace data-room-id="{{ room.id }}">
-                        <header class="asset-panel-head">
-                            <i class="ph ph-images" aria-hidden="true"></i>
-                            <span>{{ t("game.assets.image_library") }}</span>
+                    <div class="game-panel-body asset-panel-body" data-scene-assets-workspace data-room-id="{{ room.id }}"
+                        data-is-campaign-gm="{{ 'true' if room.member_role == 'gm' else 'false' }}">
+
+                        <!-- Barra de comando: primeiro o que se faz (enviar), depois o
+                             que se procura. Imagem e ficha têm botões separados de
+                             propósito: um diálogo só faria caçar PDF no meio de imagens. -->
+                        <header class="asset-bar">
+                            <div class="asset-bar__uploads">
+                                <button type="button" class="asset-upload asset-upload--primary"
+                                        data-scene-asset-upload="image">
+                                    <i class="ph ph-image" aria-hidden="true"></i>
+                                    <span>{{ t("game.assets.upload_image") }}</span>
+                                </button>
+                                <input type="file" accept="image/png,image/jpeg,image/webp" multiple hidden
+                                    data-scene-asset-upload-input="image">
+                                <button type="button" class="asset-upload" data-scene-asset-upload="pdf">
+                                    <i class="ph ph-file-pdf" aria-hidden="true"></i>
+                                    <span>{{ t("game.assets.upload_pdf") }}</span>
+                                </button>
+                                <input type="file" accept="application/pdf" multiple hidden
+                                    data-scene-asset-upload-input="pdf">
+                            </div>
+
+                            <label class="asset-search">
+                                <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                                <input type="search" data-asset-search
+                                       placeholder="{{ t('game.assets.search') }}"
+                                       aria-label="{{ t('game.assets.search') }}">
+                            </label>
+
+                            <!-- Filtro por tipo: com imagem e ficha na mesma pasta, achar
+                                 uma no meio da outra é o que mais custa. -->
+                            <div class="asset-kinds" role="group" aria-label="{{ t('game.assets.filter_kind') }}">
+                                <button type="button" class="asset-kind is-active" data-asset-kind=""
+                                        aria-pressed="true">{{ t("game.assets.kind_all") }}</button>
+                                <button type="button" class="asset-kind" data-asset-kind="image"
+                                        aria-pressed="false">{{ t("game.assets.kind_image") }}</button>
+                                <button type="button" class="asset-kind" data-asset-kind="pdf"
+                                        aria-pressed="false">{{ t("game.assets.kind_pdf") }}</button>
+                            </div>
                         </header>
-                        <div class="asset-upload-strip">
-                            <button type="button" class="primary-action" data-scene-asset-upload>
-                                <i class="ph ph-upload-simple" aria-hidden="true"></i>
-                                <span>{{ t("game.assets.upload_image") }}</span>
-                            </button>
-                            <input type="file" accept="image/png,image/jpeg,image/webp" multiple hidden
-                                data-scene-asset-upload-input>
+
+                        <div class="asset-body">
+                            <!-- Pastas em coluna: em barra horizontal elas somem da vista
+                                 assim que passam de meia dúzia. -->
+                            <aside class="asset-folders" data-asset-folder-rail>
+                                <div class="asset-folders__list" data-scene-asset-folder-list></div>
+                                <div class="asset-folder-create">
+                                    <input type="text" maxlength="120"
+                                           placeholder="{{ t('game.assets.new_folder') }}" data-scene-asset-folder-name>
+                                    <button type="button" data-scene-asset-create-folder
+                                            title="{{ t('game.assets.create_folder') }}"
+                                            aria-label="{{ t('game.assets.create_folder') }}">
+                                        <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                                    </button>
+                                </div>
+                            </aside>
+
+                            <div class="asset-grid" data-scene-assets-panel data-room-id="{{ room.id }}"></div>
                         </div>
-                        <div class="asset-folder-create">
-                            <input type="text" maxlength="120" placeholder="{{ t('game.assets.new_folder') }}" data-scene-asset-folder-name>
-                            <button type="button" data-scene-asset-create-folder title="{{ t('game.assets.create_folder') }}" aria-label="{{ t('game.assets.create_folder') }}">
-                                <i class="ph ph-folder-plus" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                        <div class="asset-list" data-scene-assets-panel data-room-id="{{ room.id }}"></div>
+
+                        <footer class="asset-foot" data-asset-summary></footer>
                     </div>
                 </article>
                 {% endif %}
 
                 
-                {% if room.member_role == "gm" or room.is_streamer %}
+                {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
                 <article class="game-modal-window game-panel" data-modal-window data-modal-id="panel-gm-{{ room.id }}"
                     data-window-key="panel-gm-{{ room.id }}" data-panel-room="{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
@@ -1272,11 +1387,18 @@
                             <button type="button" data-modal-open="panel-cards-{{ room.id }}"><i
                                     class="ph ph-cards" aria-hidden="true"></i><span>{{ t("game.cards.decks_title") }}</span></button>
                             {% endif %}
+                            {% if room.member_role in ('gm', 'assistant_gm') %}
+                            <button type="button" data-modal-open="library-images-{{ room.id }}"><i
+                                    class="ph ph-folders" aria-hidden="true"></i><span>{{ t("game.assets.title")
+                                    }}</span></button>
+                            {% endif %}
+                            {% if room.member_role == "gm" or room.is_streamer %}
                             <button type="button" data-modal-open="fog-panel-{{ room.id }}"><i class="ph ph-cloud"
                                     aria-hidden="true"></i><span>{{ t("game.fog.title") }}</span></button>
                             <button type="button" data-panel-toggle="panel-settings-{{ room.id }}"
                                 aria-pressed="false"><i class="ph ph-users-three" aria-hidden="true"></i><span>{{
                                     t("game.gm.players") }}</span></button>
+                            {% endif %}
                         </div>
                     </div>
                 </article>
@@ -1601,7 +1723,7 @@
                     data-panel-room="{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">Combate</span>
+                        <span class="game-panel-title">{{ t("game.combat.title") }}</span>
                         <div class="game-modal-controls">
                             <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
                                 <i class="ph ph-arrows-out" aria-hidden="true"></i>
@@ -1617,11 +1739,42 @@
                     </header>
                     <div class="game-panel-body gw-combat-panel" data-combat-panel data-room-id="{{ room.id }}"
                         data-csrf="{{ csrf_token() }}"
-                        data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') and not room.is_streamer else 'false' }}">
+                        data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') and not room.is_streamer else 'false' }}"
+                        data-label-start="{{ t('game.combat.start') }}"
+                        data-label-end="{{ t('game.combat.end') }}"
+                        data-label-empty="{{ t('game.combat.empty') }}"
+                        data-label-no-combatants="{{ t('game.combat.no_combatants') }}"
+                        data-label-inactive="{{ t('game.combat.inactive') }}"
+                        data-label-waiting-gm="{{ t('game.combat.waiting_gm') }}"
+                        data-label-round="{{ t('game.combat.round') }}"
+                        data-label-turn="{{ t('game.combat.turn') }}"
+                        data-label-initiative="{{ t('game.combat.initiative') }}"
+                        data-label-roll-all="{{ t('game.combat.roll_all') }}"
+                        data-label-roll-npcs="{{ t('game.combat.roll_npcs') }}"
+                        data-label-roll-missing="{{ t('game.combat.roll_missing') }}"
+                        data-label-roll-one="{{ t('game.combat.roll_one') }}"
+                        data-label-set-initiative="{{ t('game.combat.set_initiative') }}"
+                        data-label-previous-turn="{{ t('game.combat.previous_turn') }}"
+                        data-label-next-turn="{{ t('game.combat.next_turn') }}"
+                        data-label-previous-round="{{ t('game.combat.previous_round') }}"
+                        data-label-next-round="{{ t('game.combat.next_round') }}"
+                        data-label-add-selected="{{ t('game.combat.add_selected') }}"
+                        data-label-actions="{{ t('game.combat.actions') }}"
+                        data-label-center-token="{{ t('game.combat.center_token') }}"
+                        data-label-open-sheet="{{ t('game.combat.open_sheet') }}"
+                        data-label-set-turn="{{ t('game.combat.set_turn') }}"
+                        data-label-remove="{{ t('game.combat.remove') }}"
+                        data-label-hide="{{ t('game.combat.hide') }}"
+                        data-label-reveal="{{ t('game.combat.reveal') }}"
+                        data-label-mark-defeated="{{ t('game.combat.mark_defeated') }}"
+                        data-label-clear-defeated="{{ t('game.combat.clear_defeated') }}"
+                        data-label-next-up="{{ t('game.combat.next_up') }}"
+                        data-label-move-up="{{ t('game.combat.move_up') }}"
+                        data-label-move-down="{{ t('game.combat.move_down') }}">
                         <section class="gw-combat-panel__state" data-combat-state>
                             <div class="tool-empty">
                                 <i class="ph ph-sword" aria-hidden="true"></i>
-                                <p>Carregando combate...</p>
+                                <p>{{ t("game.combat.empty") }}</p>
                             </div>
                         </section>
                     </div>
@@ -1629,7 +1782,7 @@
                 {% endif %}
 
                 
-                {% if room.can_invite %}
+                {% if room.can_invite and campaign_email_invitation_creation_enabled %}
                 <article class="game-modal-window dialog-modal invite-modal" data-modal-window
                     data-modal-id="invite-{{ room.id }}" data-window-key="invite-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
@@ -1643,6 +1796,7 @@
                         </div>
                     </header>
                     <div class="game-modal-body">
+                        <p class="join-code-help">{{ t("game.invite.deprecated_help") }}</p>
                         <div id="game-invite-notice" class="game-notice" hidden></div>
                         <form class="invite-form" method="post" action="/campaigns/invitations">
                             {{ csrf_input | safe }}
@@ -1670,13 +1824,26 @@
                 </article>
                 {% endif %}
 
+                {% if room.can_invite and campaign_join_code_enabled %}
+                {% include "pages/game/modals/join_code.html" %}
+                {% if dynamic_lighting_enabled %}
+                {% if room.member_role == 'gm' %}{% include "pages/game/modals/light_editor.html" %}
+                {% include "pages/game/modals/particle_editor.html" %}
+                {% include "pages/game/modals/shader_editor.html" %}{% endif %}
+                {% include "pages/game/modals/token_vision.html" %}
+                {% endif %}
+                {% endif %}
+
                 
                 <article class="game-modal-window game-panel" data-modal-window
                     data-modal-id="panel-settings-{{ room.id }}" data-window-key="panel-settings-{{ room.id }}"
                     data-panel-room="{{ room.id }}" hidden>
-                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                    <header class="game-modal-titlebar settings-tab-titlebar" data-modal-drag-handle>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">{{ t("game.tools.settings") }}</span>
+                        <div class="settings-tab-heading">
+                            <h2>{{ room.title }}</h2>
+                            <p>{% if room.description %}{{ room.description }}{% else %}{{ t("game.settings.no_description") }}{% endif %}</p>
+                        </div>
                         <div class="game-modal-controls">
                             <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
 
@@ -1713,10 +1880,40 @@
                         {% if invite_message_key %}
                         <div class="game-notice" role="status">{{ t(invite_message_key) }}</div>
                         {% endif %}
-
-
-                        <section class="settings-layout-section">
-                            <p class="sidebar-section-title">{{ t("game.settings.layout_mode") }}</p>
+                        <div class="settings-dashboard" data-settings-dashboard>
+                        <nav class="settings-category-nav" aria-label="{{ t('game.settings.categories') }}">
+                            <button type="button" class="settings-category-btn" data-settings-section-tab="interface" aria-selected="true"
+                                data-tooltip="{{ t('game.settings.interface_category') }}" aria-label="{{ t('game.settings.interface_category') }}">
+                                <i class="ph ph-monitor" aria-hidden="true"></i><span>{{ t("game.settings.interface_category") }}</span>
+                            </button>
+                            {% if dynamic_lighting_enabled %}
+                            <button type="button" class="settings-category-btn" data-settings-section-tab="vision" aria-selected="false"
+                                data-tooltip="{{ t('game.settings.vision_category') }}" aria-label="{{ t('game.settings.vision_category') }}">
+                                <i class="ph ph-eye" aria-hidden="true"></i><span>{{ t("game.settings.vision_category") }}</span>
+                            </button>
+                            {% endif %}
+                            <button type="button" class="settings-category-btn" data-settings-section-tab="system" aria-selected="false"
+                                data-tooltip="{{ t('game.settings.system_category') }}" aria-label="{{ t('game.settings.system_category') }}">
+                                <i class="ph ph-book-open-text" aria-hidden="true"></i><span>{{ t("game.settings.system_category") }}</span>
+                            </button>
+                            <button type="button" class="settings-category-btn" data-settings-section-tab="players" aria-selected="false"
+                                data-tooltip="{{ t('game.settings.players_category') }}" aria-label="{{ t('game.settings.players_category') }}">
+                                <i class="ph ph-users" aria-hidden="true"></i><span>{{ t("game.settings.players_category") }}</span>
+                            </button>
+                            <button type="button" class="settings-category-btn" data-settings-section-tab="management" aria-selected="false"
+                                data-tooltip="{{ t('game.settings.management_category') }}" aria-label="{{ t('game.settings.management_category') }}">
+                                <i class="ph ph-sliders-horizontal" aria-hidden="true"></i><span>{{ t("game.settings.management_category") }}</span>
+                            </button>
+                        </nav>
+                        <div class="settings-category-content">
+                        <section class="settings-layout-section settings-card" data-settings-section="interface">
+                            <header class="settings-card-header">
+                                <span class="settings-card-icon"><i class="ph ph-layout" aria-hidden="true"></i></span>
+                                <div>
+                                    <p class="sidebar-section-title">{{ t("game.settings.layout_mode") }}</p>
+                                    <p class="settings-card-description">{{ t("game.settings.layout_mode_description") }}</p>
+                                </div>
+                            </header>
                             <div class="settings-layout-mode" role="group"
                                 aria-label="{{ t('game.settings.layout_mode') }}">
                                 <button class="layout-mode-btn" type="button" data-layout-mode="gravewright">
@@ -1731,8 +1928,50 @@
                         </section>
 
 
-                        <section class="settings-section">
-                            <p class="sidebar-section-title">{{ t("game.about.fields.system") }}</p>
+                        {% if dynamic_lighting_enabled %}
+                        <section class="settings-layout-section settings-card" data-settings-section="vision" hidden>
+                            <header class="settings-card-header">
+                                <span class="settings-card-icon"><i class="ph ph-eye" aria-hidden="true"></i></span>
+                                <div>
+                                    <p class="sidebar-section-title">{{ t("game.settings.vision_mode") }}</p>
+                                    <p class="settings-card-description">{{ t("game.settings.vision_mode_description") }}</p>
+                                </div>
+                            </header>
+                            <div class="settings-layout-mode" role="group"
+                                aria-label="{{ t('game.settings.vision_mode') }}">
+                                <button class="layout-mode-btn" type="button" data-vision-mode-choice="classic"
+                                    data-tooltip="{{ t('game.settings.vision_classic_hint') }}">
+                                    <i class="ph ph-eye" aria-hidden="true"></i>
+                                    <span>{{ t("game.settings.vision_classic") }}</span>
+                                </button>
+                                <button class="layout-mode-btn" type="button" data-vision-mode-choice="cinematic"
+                                    data-tooltip="{{ t('game.settings.vision_cinematic_hint') }}">
+                                    <i class="ph ph-film-reel" aria-hidden="true"></i>
+                                    <span>{{ t("game.settings.vision_cinematic") }}</span>
+                                </button>
+                            </div>
+                            <p class="settings-hint">{{ t("game.settings.vision_mode_hint") }}</p>
+                            <div class="settings-layout-mode" role="group"
+                                aria-label="{{ t('game.settings.shaders') }}">
+                                <button class="layout-mode-btn" type="button" data-shader-toggle
+                                    data-tooltip="{{ t('game.settings.shaders_hint') }}">
+                                    <i class="ph ph-code" aria-hidden="true"></i>
+                                    <span>{{ t("game.settings.shaders") }}</span>
+                                </button>
+                            </div>
+                            <p class="settings-hint">{{ t("game.settings.shaders_hint") }}</p>
+                        </section>
+                        {% endif %}
+
+
+                        <section class="settings-section settings-card" data-settings-section="system" hidden>
+                            <header class="settings-card-header">
+                                <span class="settings-card-icon"><i class="ph ph-book-open-text" aria-hidden="true"></i></span>
+                                <div>
+                                    <p class="sidebar-section-title">{{ t("game.about.fields.system") }}</p>
+                                    <p class="settings-card-description">{{ t("game.settings.system_description") }}</p>
+                                </div>
+                            </header>
                             <p class="settings-system-name">{% if room.active_system %}{{ room.active_system.name }}{% else %}{{
                                 t("inside.campaigns.systemless") }}{% endif %}</p>
                             {% if room.member_role == "gm" %}
@@ -1755,8 +1994,14 @@
                         </section>
 
 
-                        <section class="players-section">
-                            <p class="sidebar-section-title">{{ t("game.settings.connected_players") }}</p>
+                        <section class="players-section settings-card settings-card--wide" data-settings-section="players" hidden>
+                            <header class="settings-card-header">
+                                <span class="settings-card-icon"><i class="ph ph-users" aria-hidden="true"></i></span>
+                                <div>
+                                    <p class="sidebar-section-title">{{ t("game.settings.connected_players") }}</p>
+                                    <p class="settings-card-description">{{ t("game.settings.connected_players_description") }}</p>
+                                </div>
+                            </header>
                             <div class="player-list" data-player-list data-room-id="{{ room.id }}"
                                 data-can-ban="{{ 'true' if room.member_role == 'gm' else 'false' }}">
                                 {% for member in room.members %}
@@ -1794,13 +2039,43 @@
                             </div>
                         </section>
 
-
+                        <section class="settings-card settings-card--wide settings-management" data-settings-section="management" hidden>
+                            <header class="settings-card-header">
+                                <span class="settings-card-icon"><i class="ph ph-sliders-horizontal" aria-hidden="true"></i></span>
+                                <div>
+                                    <p class="sidebar-section-title">{{ t("game.settings.management") }}</p>
+                                    <p class="settings-card-description">{{ t("game.settings.management_description") }}</p>
+                                </div>
+                            </header>
                         <div class="settings-room-list">
+                            {% if room.member_role == "gm" and room.gm_onboarding %}
+                            <button class="settings-open-modal settings-open-modal--primary" type="button"
+                                data-onboarding-open data-campaign-id="{{ room.id }}">
+                                <i class="ph ph-list-checks" aria-hidden="true"></i>
+                                <span>{{ t("onboarding.open") }} ({{ room.gm_onboarding.completed }}/{{ room.gm_onboarding.total }})</span>
+                            </button>
+                            {% endif %}
+                            {% if lobby_ready_check_enabled and not room.is_streamer %}
+                            <button class="settings-open-modal settings-open-modal--primary" type="button"
+                                data-modal-open="lobby-{{ room.id }}">
+                                <i class="ph ph-users-three" aria-hidden="true"></i>
+                                <span>{{ t("lobby.title") }}</span>
+                            </button>
+                            {% endif %}
                             {% if room.can_invite %}
+                            {% if campaign_join_code_enabled %}
+                            <button class="settings-open-modal settings-open-modal--primary" type="button"
+                                data-modal-open="join-code-{{ room.id }}">
+                                <i class="ph ph-key" aria-hidden="true"></i>
+                                <span>{{ t("game.join_code.title") }}</span>
+                            </button>
+                            {% endif %}
+                            {% if campaign_email_invitation_creation_enabled %}
                             <button class="settings-open-modal" type="button" data-modal-open="invite-{{ room.id }}">
                                 <i class="ph ph-user-plus" aria-hidden="true"></i>
-                                <span>{{ t("game.invite.title") }}</span>
+                                <span>{{ t("game.invite.title") }} <small>{{ t("game.invite.deprecated") }}</small></span>
                             </button>
+                            {% endif %}
                             {% endif %}
                             {% if room.permission_settings.can_view %}
                             <button class="settings-open-modal" type="button"
@@ -1816,6 +2091,9 @@
                                 <span>{{ t("game.streamer.title") }}</span>
                             </button>
                             {% endif %}
+                        </div>
+                        </section>
+                        </div>
                         </div>
 
 
@@ -1883,6 +2161,13 @@
                 </article>
                 {% endif %}
 
+                {% if targeted_handouts_enabled and room.member_role == "gm" %}
+                {% include "pages/game/modals/targeted_handouts.html" %}
+                {% endif %}
+                {% if lobby_ready_check_enabled and not room.is_streamer %}
+                {% include "pages/game/modals/lobby.html" %}
+                {% endif %}
+
                 {% endfor %}
 
                 <nav class="game-modal-dock" aria-label="Minimized windows">
@@ -1899,43 +2184,65 @@
             {% if show_rc2_tool_dock %}
             {% for room in rooms %}
             <aside class="tool-dock" data-tool-dock data-dock-room="{{ room.id }}" {% if room.id !=active_room_id
-                %}hidden{% endif %} aria-label="{{ t('game.tool_dock.title') }}">
+                %}hidden{% endif %} aria-label="{{ t('game.tool_dock.title') }}"
+                data-layer-label-game="{{ t('game.tool_dock.layers.game') }}"
+                data-layer-label-gm="{{ t('game.tool_dock.layers.gm') }}"
+                data-layer-label-composition="{{ t('game.tool_dock.layers.composition') }}"
+                data-layer-label-lighting="{{ t('game.tool_dock.layers.lighting') }}">
                 <button class="tool-dock-toggle" data-tool-dock-toggle aria-label="{{ t('game.tool_dock.collapse') }}">
                     <i class="ph ph-caret-left" aria-hidden="true"></i>
                 </button>
                 <div class="tool-dock-body">
+                    <div class="tool-layer-active-label" data-tool-active-layer-label></div>
                     <div class="tool-dock-group">
                         <button class="tool-dock-btn" data-tool="select" aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.select') }}">
+                            data-tooltip="{{ t('game.tool_dock.select') }}" aria-label="{{ t('game.tool_dock.select') }}">
                             <i class="ph ph-cursor" aria-hidden="true"></i>
                         </button>
                         <button class="tool-dock-btn" data-tool="ruler" aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.ruler') }}">
+                            data-tooltip="{{ t('game.tool_dock.ruler') }}" aria-label="{{ t('game.tool_dock.ruler') }}">
                             <i class="ph ph-ruler" aria-hidden="true"></i>
                         </button>
                         {% if not room.is_streamer %}
                         <button class="tool-dock-btn" data-tool="hp" aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.hp') }}">
+                            data-tooltip="{{ t('game.tool_dock.hp') }}" aria-label="{{ t('game.tool_dock.hp') }}">
                             <i class="ph ph-heartbeat" aria-hidden="true"></i>
                         </button>
                         {% endif %}
                     </div>
-                    <div class="tool-dock-sep"></div>
-                    <div class="tool-dock-group">
+                    <div class="tool-dock-sep" data-tool-layer-scope="game gm"></div>
+                    <div class="tool-dock-group" data-tool-layer-scope="game gm">
                         <button class="tool-dock-btn" data-tool="draw" aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.draw') }}">
+                            data-tooltip="{{ t('game.tool_dock.draw') }}" aria-label="{{ t('game.tool_dock.draw') }}">
                             <i class="ph ph-pencil-simple" aria-hidden="true"></i>
                         </button>
                         <button class="tool-dock-btn" data-tool="shape" aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.shape') }}">
+                            data-tooltip="{{ t('game.tool_dock.shape') }}" aria-label="{{ t('game.tool_dock.shape') }}">
                             <i class="ph ph-shapes" aria-hidden="true"></i>
                         </button>
                     </div>
+                    {% if dynamic_lighting_enabled and room.member_role == 'gm' %}
+                    <div class="tool-dock-sep" data-tool-layer-scope="lighting"></div>
+                    <div class="tool-dock-group" data-tool-layer-scope="walls">
+                        <button class="tool-dock-btn" data-tool="wall" aria-pressed="false" data-tooltip="{{ t('lighting.wall') }}" aria-label="{{ t('lighting.wall') }}"><i class="ph ph-line-segment"></i></button>
+                        <button class="tool-dock-btn" data-tool="door" aria-pressed="false" data-tooltip="{{ t('lighting.door') }}" aria-label="{{ t('lighting.door') }}"><i class="ph ph-door"></i></button>
+                        </div>
+                    <div class="tool-dock-group" data-tool-layer-scope="lighting">
+                        <button class="tool-dock-btn" data-tool="light" aria-pressed="false" data-tooltip="{{ t('lighting.light') }}" aria-label="{{ t('lighting.light') }}"><i class="ph ph-lightbulb-filament"></i></button>
+                    </div>
+                    <div class="tool-dock-group" data-tool-layer-scope="effects">
+                        <button class="tool-dock-btn" data-tool="particles" aria-pressed="false"
+                            data-tooltip="{{ t('lighting.particles.tool') }}"
+                            aria-label="{{ t('lighting.particles.tool') }}"><i class="ph ph-sparkle"></i></button>
+                        <button class="tool-dock-btn" data-tool="shader" aria-pressed="false"
+                            data-tooltip="{{ t('lighting.shaders.tool') }}"
+                            aria-label="{{ t('lighting.shaders.tool') }}"><i class="ph ph-code"></i></button>
+                    </div>{% endif %}
                     {% if not room.is_streamer %}
                     <div class="tool-dock-sep"></div>
                     <div class="tool-dock-group">
                         <button class="tool-dock-btn tool-dock-btn--hand" type="button"
-                            data-modal-open="panel-hand-{{ room.id }}" data-tooltip="{{ t('game.cards.your_hand') }}">
+                            data-modal-open="panel-hand-{{ room.id }}" data-tooltip="{{ t('game.cards.your_hand') }}" aria-label="{{ t('game.cards.your_hand') }}">
                             <i class="ph ph-cards" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -1944,12 +2251,12 @@
                     <div class="tool-dock-sep"></div>
                     <div class="tool-dock-group">
                         <button class="tool-dock-btn" data-vision-toggle aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.vision') }}"
+                            data-tooltip="{{ t('game.tool_dock.vision') }}" aria-label="{{ t('game.tool_dock.vision') }}"
                             data-player-view-banner="{{ t('game.tool_dock.vision.player_view_indicator') }}">
                             <i class="ph ph-eye" aria-hidden="true"></i>
                         </button>
                         <button class="tool-dock-btn" data-layers-toggle aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.layers') }}">
+                            data-tooltip="{{ t('game.tool_dock.layers') }}" aria-label="{{ t('game.tool_dock.layers') }}">
                             <i class="ph ph-stack" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -2068,6 +2375,75 @@
                 </button>
             </div>
 
+            {# Painéis de sub-ferramenta são compartilhados entre as salas: aqui fora
+               do laço não existe `room`. O botão da luz já é restrito ao GM. #}
+            {% if dynamic_lighting_enabled %}
+            <div class="tool-sub-panel" data-tool-sub-panel="particles" hidden>
+                <button class="tool-sub-btn" data-subtool="smoke" aria-pressed="true">
+                    <i class="ph ph-cloud" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.smoke') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="ember" aria-pressed="false">
+                    <i class="ph ph-fire-simple" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.ember') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="dust" aria-pressed="false">
+                    <i class="ph ph-dots-three-outline" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.dust') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="arcane" aria-pressed="false">
+                    <i class="ph ph-sparkle" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.arcane') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="rain" aria-pressed="false">
+                    <i class="ph ph-cloud-rain" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.rain') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="snow" aria-pressed="false">
+                    <i class="ph ph-snowflake" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.snow') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="firefly" aria-pressed="false">
+                    <i class="ph ph-lightbulb" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.firefly') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="leaves" aria-pressed="false">
+                    <i class="ph ph-leaf" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.leaves') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="bubbles" aria-pressed="false">
+                    <i class="ph ph-circles-three-plus" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.bubbles') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="ash" aria-pressed="false">
+                    <i class="ph ph-wind" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.ash') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="blood" aria-pressed="false">
+                    <i class="ph ph-drop" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.blood') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="runes" aria-pressed="false">
+                    <i class="ph ph-pentagram" aria-hidden="true"></i>
+                    <span>{{ t('lighting.particles.runes') }}</span>
+                </button>
+            </div>
+            <div class="tool-sub-panel" data-tool-sub-panel="light" hidden>
+                <button class="tool-sub-btn" data-subtool="torch" aria-pressed="false">
+                    <i class="ph ph-flame" aria-hidden="true"></i>
+                    <span>{{ t('lighting.editor.anim_torch') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="pulse" aria-pressed="false">
+                    <i class="ph ph-waveform" aria-hidden="true"></i>
+                    <span>{{ t('lighting.editor.anim_pulse') }}</span>
+                </button>
+                <button class="tool-sub-btn" data-subtool="none" aria-pressed="false">
+                    <i class="ph ph-lightbulb" aria-hidden="true"></i>
+                    <span>{{ t('lighting.editor.anim_none') }}</span>
+                </button>
+            </div>
+            {% endif %}
+
             <div class="tool-sub-panel" data-tool-sub-panel="shape"
                 data-text-placeholder="{{ t('game.tool_dock.shape.text_placeholder') }}" hidden>
                 <div class="tool-sub-head">
@@ -2115,6 +2491,31 @@
                     <i class="ph ph-eye-slash" aria-hidden="true"></i>
                     <span>{{ t('game.tool_dock.layers.gm') }}</span>
                 </button>
+                <button class="tool-sub-btn" data-active-layer="composition" aria-pressed="false"
+                    title="{{ t('game.tool_dock.layers.composition_hint') }}">
+                    <i class="ph ph-images" aria-hidden="true"></i>
+                    <span>{{ t('game.tool_dock.layers.composition') }}</span>
+                </button>
+                {% if dynamic_lighting_enabled %}<button class="tool-sub-btn" data-active-layer="lighting" aria-pressed="false">
+                    <i class="ph ph-lightbulb"></i><span>{{ t('game.tool_dock.layers.lighting') }}</span></button>{% endif %}
+                <div class="tool-sub-sep"></div>
+                <div class="tool-sub-heading">{{ t('game.tool_dock.layers.manage') }}</div>
+                {% for layer, icon in [('game', 'game-controller'), ('gm', 'eye-slash'), ('composition', 'images')] %}
+                <div class="tool-layer-row">
+                    <span><i class="ph ph-{{ icon }}" aria-hidden="true"></i>{{ t('game.tool_dock.layers.' ~ layer) }}</span>
+                    <button type="button" data-layer-visibility="{{ layer }}" aria-pressed="true"
+                        title="{{ t('game.tool_dock.layers.visibility') }}"><i class="ph ph-eye"></i></button>
+                    <button type="button" data-layer-lock="{{ layer }}" aria-pressed="false"
+                        title="{{ t('game.tool_dock.layers.lock') }}"><i class="ph ph-lock-open"></i></button>
+                </div>
+                {% endfor %}
+                {% if dynamic_lighting_enabled %}<div class="tool-layer-row">
+                    <span><i class="ph ph-lightbulb"></i>{{ t('game.tool_dock.layers.lighting') }}</span>
+                    <button type="button" data-layer-visibility="lighting" aria-pressed="true"
+                        title="{{ t('game.tool_dock.layers.visibility') }}"><i class="ph ph-eye"></i></button>
+                    <button type="button" data-layer-lock="lighting" aria-pressed="false"
+                        title="{{ t('game.tool_dock.layers.lock') }}"><i class="ph ph-lock-open"></i></button>
+                </div>{% endif %}
                 <div class="tool-sub-sep"></div>
                 <div class="tool-sub-heading">{{ t('game.tool_dock.layers.move') }}</div>
                 <button class="tool-sub-btn" data-move-layer="game">
@@ -2132,6 +2533,14 @@
                 {% for room in rooms %}
                 <div class="game-dock-group" data-dock-room="{{ room.id }}" {% if room.id !=active_room_id %}hidden{%
                     endif %}>
+                    {% if command_palette_enabled %}
+                    <button class="game-dock-btn" type="button" data-command-palette-open
+                        aria-keyshortcuts="Control+K Meta+K" data-tooltip="{{ t('search.title') }} (Ctrl+K)"
+                        title="{{ t('search.title') }} (Ctrl+K)">
+                        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("search.title") }}</span>
+                    </button>
+                    {% endif %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-chat-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.tools.chat') }}"
                         title="{{ t('game.tools.chat') }}">
@@ -2156,14 +2565,6 @@
                         title="{{ t('game.tools.journal') }}">
                         <i class="ph ph-book-open-text" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.journal") }}</span>
-                    </button>
-                    {% endif %}
-                    {% if show_library_panel and room.member_role in ('gm', 'assistant_gm') %}
-                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-library-{{ room.id }}"
-                        aria-pressed="false" data-tooltip="{{ t('game.tools.library') }}"
-                        title="{{ t('game.tools.library') }}">
-                        <i class="ph ph-images" aria-hidden="true"></i>
-                        <span class="sr-only">{{ t("game.tools.library") }}</span>
                     </button>
                     {% endif %}
                     {% if room.member_role == "gm" or room.is_streamer %}

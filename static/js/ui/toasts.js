@@ -40,7 +40,7 @@
 
         c.appendChild(toast);
         enforceMax();
-        toast.getBoundingClientRect(); 
+        toast.getBoundingClientRect();
         toast.classList.add("vtt-toast--visible");
 
         let timer = null;
@@ -97,8 +97,8 @@
         const { event: evtName, payload } = e.detail ?? {};
         if (evtName !== "chat.message.created") return;
 
-        
-        
+
+
         if (payload?.kind === "system") {
             const content = payload.content || "";
             if (content) {

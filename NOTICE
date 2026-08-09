@@ -6,3 +6,20 @@ Gravewright core is licensed under the Apache License, Version 2.0.
 Gravewright public API materials are licensed under the MIT License. API materials include public extension specifications, public schemas, manifest formats, public browser API contracts, and examples intended for use by systems, modules, integrations, or content packages.
 
 Bundled systems, modules, content packs, generated assets, and third-party dependencies may carry their own licenses. Their notices should remain with those packages.
+
+Vendored browser dependencies
+-----------------------------
+
+The following third-party assets are served from `static/vendor/` so that an
+installation works offline and does not depend on a third-party CDN at runtime.
+Each remains under its own license:
+
+  PixiJS 8.17.0              MIT             static/vendor/pixi.min.js
+  marked 12.0.2              MIT             static/vendor/marked.min.js
+  DOMPurify 3.1.6            Apache-2.0 OR MPL-2.0
+                                             static/vendor/purify.min.js
+  EasyMDE                    MIT             static/vendor/easymde/
+  Phosphor Icons 2.1.2       MIT             static/vendor/phosphor/
+
+The Phosphor stylesheets were reduced to their woff2 `@font-face` source; no
+glyph or selector was altered.

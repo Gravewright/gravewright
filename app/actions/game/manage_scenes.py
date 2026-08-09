@@ -50,6 +50,7 @@ class UpdateSceneForm:
     grid_visible: str = ""
     grid_color: str = "#6fddb4"
     grid_opacity: str = "0.4"
+    darkness: str = "0.0"
     tile_size: str = ""
     image_scale: str = ""
 
@@ -266,9 +267,17 @@ async def update_scene(
         grid_visible=data.grid_visible == "on",
         grid_color=_valid_color(data.grid_color, "#6fddb4"),
         grid_opacity=_clamp_opacity(data.grid_opacity, 0.4),
+        darkness=_clamp_opacity(data.darkness, 0.0),
         tile_size=new_tile_size,
         image_scale=new_image_scale,
         tile_table_version=tile_table_version,
+    )
+
+
+
+    await scene_service.broadcast_scene_update(
+        scene_id=data.scene_id,
+        transport=RealtimeTransport(),
     )
 
     return _redirect_message("game.scenes.updated", campaign_id=scene["campaign_id"])

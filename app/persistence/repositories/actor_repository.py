@@ -13,6 +13,7 @@ from app.persistence.database import engine_connect
 from app.persistence.database import one_or_none
 from app.persistence.engine import upsert_statement
 from app.persistence.tables import actor_owners
+from app.persistence.tables import actor_permissions
 from app.persistence.tables import actors_core
 from app.persistence.tables import users
 
@@ -154,6 +155,32 @@ class ActorRepository:
                 )
             )
         return row is not None
+
+    def list_visible_to_user(self, *, campaign_id: str, user_id: str) -> list[dict]:
+        """Active actors this user may read without table-wide authority.
+
+        Ownership or an explicit ``can_view`` grant — the two things that let a
+        player see a sheet that is not the GM's to show. Roles that read the
+        whole table are decided elsewhere and never need this.
+        """
+        owned = (
+            select(actor_owners.c.actor_id)
+            .where(actor_owners.c.user_id == user_id)
+        )
+        permitted = (
+            select(actor_permissions.c.actor_id)
+            .where(actor_permissions.c.user_id == user_id)
+            .where(actor_permissions.c.can_view == 1)
+        )
+        with engine_connect() as conn:
+            return all_dicts(
+                conn.execute(
+                    select(actors_core)
+                    .where(actors_core.c.campaign_id == campaign_id)
+                    .where(actors_core.c.status == "active")
+                    .where(actors_core.c.id.in_(owned.union(permitted)))
+                )
+            )
 
     def add_owner(self, *, actor_id: str, user_id: str) -> None:
         with engine_begin() as conn:

@@ -274,8 +274,8 @@ class RealtimeTransport(RealtimeGatewayContract):
         *,
         include_players: bool,
     ) -> None:
-        # Coalesced token fan-out: one recipient resolution, one event-log row,
-        # one send — instead of separate GM / streamer / player broadcasts.
+
+
         user_ids = await run_blocking(
             self.recipients.list_token_audience_user_ids,
             room_id=room_id,

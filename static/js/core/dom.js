@@ -6,7 +6,7 @@
 (function () {
   const Core = (window.GravewrightCore = window.GravewrightCore || {});
 
-  
+
   function el(tag, className, attrs) {
     const node = document.createElement(tag);
     if (className) {
@@ -51,8 +51,8 @@
     return Array.from((root || document).querySelectorAll(selector));
   }
 
-  
-  
+
+
   function delegate(root, selector, eventName, handler) {
     const host = root || document;
     const listener = (event) => {

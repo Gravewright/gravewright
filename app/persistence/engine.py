@@ -114,9 +114,3 @@ def upsert_statement(
     insert_fn = postgresql_insert if dialect_name == "postgresql" else sqlite_insert
     statement = insert_fn(table).values(**values)
     return statement.on_conflict_do_update(index_elements=index_elements, set_=set_)
-
-
-# Schema creation and evolution now live in ``app.persistence.schema``. Alembic
-# is the authority for production; the dev/test fast path builds from metadata
-# there. The former startup schema bootstrap and ad-hoc column bridge were
-# removed from this module (maintenance plan, Etapa 2).

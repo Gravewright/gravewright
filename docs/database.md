@@ -174,3 +174,27 @@ opted-in file below the test suite's temporary root. File-backed tests set
 `GRAVEWRIGHT_TEST_TEMP_ROOT=<pytest temp directory>`. Project, home, storage,
 development, production, and PostgreSQL databases are never eligible; initialize
 those with `grave db upgrade`.
+
+## Campaign join-code schema
+
+Revision `0018_campaign_join_codes` adds `campaign_join_codes` and
+`campaign_join_code_redemptions`. Only the 64-character HMAC digest is stored;
+plaintext codes are never persisted. Constraints fix the MVP role to `player`,
+require nonnegative usage, require positive `max_uses` when present, and prevent
+duplicate digests/redemptions. SQLite and PostgreSQL also enforce one unrevoked
+code per campaign with a partial unique index. Campaign deletion cascades to
+codes and redemption receipts. Downgrading below `0018` deletes all join-code
+data, so create a backup first.
+
+## Alpha 3 migration range
+
+The current Alembic head is `0042_particle_kinds`. Revisions after join codes
+add campaign snapshots and audit events; targeted handouts, lobby state, and GM
+onboarding; scene walls, doors, lighting sources, vision preferences, emission
+shapes, and opacity; simplified combat and token-bar slots; and the scene
+particle/shader model, including stable origins, rotation, blend mode, shader
+opacity, and expanded particle kinds.
+
+Before moving an existing Alpha installation to `0042`, create a verified
+backup, run `grave db status`, execute `grave db upgrade`, and finish with
+`grave doctor`.

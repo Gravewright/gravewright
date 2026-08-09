@@ -13,7 +13,7 @@ from app.engine.items.item_service import ItemService
 from app.engine.journals.journal_service import JournalService
 from app.engine.resources.resource_permission_page_service import ResourcePermissionPageService
 from app.helpers.view import view_context
-from app.realtime.events import TransportEvent
+from app.realtime.resource_events import announce_resource_access_change
 from app.realtime.transport import RealtimeTransport
 
 
@@ -142,36 +142,15 @@ async def update_resource_permissions(
                 return Response({"error_key": result.error_key}, status_code=400)
             return Redirect(path="/game")
 
-    if resource_type == "actor":
-        await RealtimeTransport().to_room(
-            room_id=resource["campaign_id"],
-            event=TransportEvent.ACTOR_UPDATED,
-            payload={
-                "room_id": resource["campaign_id"],
-                "actor_id": resource_id,
-                "updated_by": user["id"],
-            },
-        )
-    elif resource_type == "item":
-        await RealtimeTransport().to_room(
-            room_id=resource["campaign_id"],
-            event=TransportEvent.ITEM_UPDATED,
-            payload={
-                "room_id": resource["campaign_id"],
-                "item_id": resource_id,
-                "updated_by": user["id"],
-            },
-        )
-    else:
-        await RealtimeTransport().to_room(
-            room_id=resource["campaign_id"],
-            event=TransportEvent.JOURNAL_ACCESS_CHANGED,
-            payload={
-                "room_id": resource["campaign_id"],
-                "journal_id": resource_id,
-                "updated_by": user["id"],
-            },
-        )
+
+
+    await announce_resource_access_change(
+        resource_type=resource_type,
+        resource_id=resource_id,
+        campaign_id=resource["campaign_id"],
+        updated_by=user["id"],
+        transport=RealtimeTransport(),
+    )
 
     if wants_json:
         return Response({"ok": True}, status_code=200)

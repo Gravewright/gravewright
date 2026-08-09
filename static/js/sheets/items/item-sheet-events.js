@@ -10,12 +10,17 @@
 
   document.addEventListener("vtt:transport-event", (event) => {
     const envelope = event.detail || {};
-    if (envelope.event !== "sheet.data.updated") return;
+    if (!["sheet.data.updated", "item.updated", "handout.access_changed"].includes(envelope.event)) return;
     const itemId = envelope.payload?.item_id;
     if (!itemId) return;
     const modal = document.querySelector(`[data-modal-id="item-${CSS.escape(itemId)}"]`);
     const root = modal?.querySelector("[data-item-sheet-root]");
-    if (root) refresh(root);
+    if (!root) return;
+    void refresh(root).then((ok) => {
+      if (ok === false && envelope.event !== "sheet.data.updated") {
+        modal.querySelector("[data-modal-close]")?.click();
+      }
+    });
   });
 
   document.addEventListener("vtt:item-sheet-modal-mounted", (event) => {
@@ -28,7 +33,7 @@
     if (root) window.GravewrightHTMLSheets?.unmount?.(root);
   });
 
-  
+
   document.addEventListener("click", (event) => {
     const opener = event.target.closest("[data-item-open]");
     if (!opener) return;

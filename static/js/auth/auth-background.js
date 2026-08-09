@@ -47,11 +47,11 @@
         { x: 1180, y: 470, color: "tokenPlayer"  },
     ];
 
-    
+
     const darkCanvas = document.createElement("canvas");
     const darkCtx = darkCanvas.getContext("2d");
 
-    
+
 
     function buildWalls() {
         const w = state.width;
@@ -81,7 +81,7 @@
         return segs;
     }
 
-    
+
 
     function intersectRay(px, py, dx, dy, ax, ay, bx, by) {
         const sx = bx - ax;
@@ -122,7 +122,7 @@
         return pts;
     }
 
-    
+
 
     function drawBoard() {
         const w = state.width;
@@ -215,7 +215,7 @@
         const w = state.width;
         const h = state.height;
 
-        
+
         if (darkCanvas.width !== w) darkCanvas.width = w;
         if (darkCanvas.height !== h) darkCanvas.height = h;
 
@@ -236,7 +236,7 @@
 
         ctx.drawImage(darkCanvas, 0, 0);
 
-        
+
         if (poly.length > 1) {
             ctx.save();
             ctx.beginPath();
@@ -265,7 +265,7 @@
         }
     }
 
-    
+
 
     function frame() {
         state.smoothX += (state.mouseX - state.smoothX) * 0.22;

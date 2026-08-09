@@ -13,6 +13,7 @@ Litestar; the HTTP layer broadcasts chat/roll-toast and realtime events.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass, field, replace
 import re
 from typing import Any
@@ -52,7 +53,9 @@ class ActionResult:
     expression: str | None = None
     groups: list[dict] = field(default_factory=list)
     modifier: int = 0
-    total: int = 0
+
+
+    total: int | None = 0
     visibility: str = "public"
     chat_card: str | None = None
     roll_toast: str | None = None
@@ -176,13 +179,28 @@ def _literal_value(raw: str) -> Any:
         return text
 
 
-def _condition_matches(condition: object, inputs: dict) -> bool:
+_CONDITION_ROOTS = ("input.", "item.")
+
+
+def _condition_operand(path: str, scope: dict) -> Any:
+    root, _, rest = path.partition(".")
+    return _input_value(scope.get(root) or {}, rest)
+
+
+def _condition_matches(condition: object, scope: dict) -> bool:
     """Very small no-eval predicate language for roll transforms.
 
-    Supported forms:
+    Reads the roll dialog's answers and the item the action was fired from:
+
       input.mode == 'advantage'
       input.extraModifier != 0
       input.extraDice
+      item.data.addStrength
+
+    The item matters because some options belong to the equipment, not to the
+    moment: whether a weapon adds the wielder's Strength to its damage is a
+    property of the weapon, and asking the player every swing would be asking
+    them to remember the weapon's own stat block.
     """
     if condition in (None, "", True):
         return True
@@ -192,13 +210,13 @@ def _condition_matches(condition: object, inputs: dict) -> bool:
     for op in ("==", "!="):
         if op in text:
             left, right = [part.strip() for part in text.split(op, 1)]
-            if not left.startswith("input."):
+            if not left.startswith(_CONDITION_ROOTS):
                 return False
-            value = _input_value(inputs, left[len("input.") :])
+            value = _condition_operand(left, scope)
             expected = _literal_value(right)
             return (value == expected) if op == "==" else (value != expected)
-    if text.startswith("input."):
-        return bool(_input_value(inputs, text[len("input.") :]))
+    if text.startswith(_CONDITION_ROOTS):
+        return bool(_condition_operand(text, scope))
     return False
 
 
@@ -227,20 +245,22 @@ def _append_formula_part(formula: str, value: Any, *, user_supplied: bool = Fals
     return f"{formula} + {text}"
 
 
-def _apply_roll_transforms(formula: str, action: dict, roll_options: dict | None) -> str:
-    if not isinstance(roll_options, dict):
-        return formula
-
+def _apply_roll_transforms(
+    formula: str, action: dict, roll_options: dict | None, item: dict | None = None
+) -> str:
     transforms = action.get("transforms")
     if not isinstance(transforms, list):
-        # An action that declares no transforms applies no roll-option changes.
+
         return formula
+
+    roll_options = roll_options if isinstance(roll_options, dict) else {}
+    scope = {"input": roll_options, "item": item if isinstance(item, dict) else {}}
 
     next_formula = formula
     for transform in transforms[:16]:
         if not isinstance(transform, dict):
             continue
-        if not _condition_matches(transform.get("when"), roll_options):
+        if not _condition_matches(transform.get("when"), scope):
             continue
 
         replace = transform.get("replaceFirstDie")
@@ -403,6 +423,15 @@ class SheetActionService:
                     lookup=lookup,
                 )
             return result
+        if action_type == "chat":
+            return self._do_chat(
+                actor,
+                action,
+                context,
+                scope,
+                action_id=action_id,
+                item=item if isinstance(item, dict) else None,
+            )
         if action_type == "patch":
             return self._do_patch(
                 actor, action, data, context, scope, helpers, envelope, core, derived
@@ -472,7 +501,7 @@ class SheetActionService:
         resolved_formula = _resolve_template(formula, lookup)
         if isinstance(resolved_formula, str) and resolved_formula:
             formula = resolved_formula
-        final_formula = _apply_roll_transforms(formula, action, roll_options)
+        final_formula = _apply_roll_transforms(formula, action, roll_options, item)
         active_modifiers, applied_effects = effect_modifiers(
             context.get("sheet", {}),
             _roll_targets(action_id, action),
@@ -508,6 +537,7 @@ class SheetActionService:
             "label": str(label or "Roll"),
             "intent": str(dialog.get("intent") or action.get("intent") or ""),
             "source": source,
+            "item": deepcopy(item) if isinstance(item, dict) else {},
             "formula": {
                 "base": base_formula,
                 "final": final_formula,
@@ -543,6 +573,77 @@ class SheetActionService:
             display_formula=display_formula,
             roll_input=roll_input,
             intent=metadata["intent"] or None,
+            source=source,
+            metadata=metadata,
+        )
+
+    def _do_chat(
+        self,
+        actor: dict,
+        action: dict,
+        context: dict,
+        scope: dict,
+        *,
+        action_id: str | None,
+        item: dict | None,
+    ) -> ActionResult:
+        """Post an item or feature to chat without rolling anything.
+
+        Most of what a character carries is not a die: an Edge, a Hindrance, a
+        piece of armour. They still need a way onto the table, and repeating
+        their text out loud is the way a table actually uses them. This produces
+        the same chat card a roll does, minus the dice — so a system describes it
+        once, in the same mapping, and it renders and localises identically.
+        """
+        lookup = {**context, "input": scope.get("input", {}), "drop": scope.get("drop", {})}
+        label = action.get("label") or "Chat"
+        if isinstance(label, str) and label.startswith("@"):
+            resolved = _resolve_template(label, lookup)
+            label = str(resolved) if resolved not in (None, "") else "Chat"
+
+        source = (
+            {"kind": "actor_item_instance", "itemInstanceId": str(item.get("id"))}
+            if isinstance(item, dict) and item.get("id")
+            else {}
+        )
+        visibility = str(action.get("visibility") or "public")
+        metadata = {
+            "actionId": action_id or "",
+            "actorId": actor["id"],
+            "actorName": actor["name"],
+            "systemId": actor["system_id"],
+            "label": str(label),
+            "intent": str(action.get("intent") or "describe"),
+            "source": source,
+
+
+            "formula": {},
+            "rollInput": {},
+            "effects": [],
+            "presentation": {
+                "chatCard": action.get("chatCard"),
+                "rollToast": action.get("rollToast"),
+            },
+            "visibility": visibility,
+            "item": item if isinstance(item, dict) else {},
+        }
+        return ActionResult(
+            success=True,
+            actor_id=actor["id"],
+            campaign_id=actor["campaign_id"],
+            system_id=actor["system_id"],
+            actor_name=actor["name"],
+            action_type="chat",
+            label=str(label),
+            expression="",
+            groups=[],
+            modifier=0,
+
+            total=None,
+            visibility=visibility,
+            chat_card=action.get("chatCard"),
+            roll_toast=action.get("rollToast"),
+            intent=metadata["intent"],
             source=source,
             metadata=metadata,
         )

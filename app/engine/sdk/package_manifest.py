@@ -30,10 +30,10 @@ class PackageKind(str, Enum):
         return {member.value for member in cls}
 
 
-# The universal data layout groups packages by kind:
-# ``data/packages/{kind_plural}/{id}``. This maps a manifest ``kind`` to its
-# directory segment (and back) so discovery, install, asset serving and storage
-# all agree on where a package lives.
+
+
+
+
 KIND_TO_DIRECTORY: dict[str, str] = {
     PackageKind.ADDON.value: "addons",
     PackageKind.RULESET.value: "rulesets",
@@ -44,10 +44,10 @@ KIND_TO_DIRECTORY: dict[str, str] = {
 }
 DIRECTORY_TO_KIND: dict[str, str] = {v: k for k, v in KIND_TO_DIRECTORY.items()}
 
-# The SDK API version line. A manifest's ``sdkVersion`` must equal this, and a
-# package's compatibility window is evaluated against it — never against the core
-# Gravewright release version, so a core release bump never retroactively breaks
-# SDK 1 packages. Frozen at ``"1"`` by Alpha 2.0.0 — SDK Freeze.
+
+
+
+
 SDK_VERSION = "1"
 
 
@@ -203,8 +203,36 @@ class TypeDef:
                 "template": _str(self.sheet.get("template")),
                 "controller": _str(self.sheet.get("controller")),
                 "style": _str(self.sheet.get("style")),
+                "dropZones": self.drop_zones,
             }
         return None
+
+    @property
+    def drop_zones(self) -> list[dict]:
+        """Where a dropped item lands, by type — the HTML sheet's ``dropZone``s.
+
+        A declarative sheet declares this inside its layout, and the server picks
+        the zone whose ``accepts`` matches the dropped item; nobody has to hit a
+        target. An HTML sheet has no layout to read, so it says the same thing
+        here: ``{"list": "weapons", "accepts": ["item.weapon"]}``. Without it the
+        drop can only fall back to a generic collection that no sheet draws — the
+        item is saved and never seen again.
+        """
+        raw = self.sheet.get("dropZones") if isinstance(self.sheet, dict) else None
+        if not isinstance(raw, list):
+            return []
+        zones: list[dict] = []
+        for entry in raw[:32]:
+            if not isinstance(entry, dict):
+                continue
+            list_key = _str(entry.get("list"))
+            accepts = entry.get("accepts")
+            if not list_key or not isinstance(accepts, list):
+                continue
+            zones.append(
+                {"list": list_key, "accepts": [_str(token) for token in accepts if _str(token)]}
+            )
+        return zones
 
 
 @dataclass(frozen=True)
@@ -361,9 +389,9 @@ class PackageManifest:
             conflicts=[PackageConflict.from_dict(c) for c in _list(raw.get("conflicts"))],
         )
 
-    # --- domain accessors ------------------------------------------------------
-    # Rulesets expose their game model through ``provides``; these read-only
-    # properties give the engine a flat view without reaching into ``provides``.
+
+
+
 
     @property
     def actor_types(self) -> list[TypeDef]:
@@ -401,7 +429,7 @@ class PackageManifest:
     def area_markers(self) -> list[dict]:
         return [m for m in _list(self.provides.raw.get("areaMarkers")) if isinstance(m, dict)]
 
-    # --- convenience accessors -------------------------------------------------
+
 
     def entrypoint_styles(self, entrypoint: str = "game") -> list[str]:
         ep = self.entrypoints.get(entrypoint)

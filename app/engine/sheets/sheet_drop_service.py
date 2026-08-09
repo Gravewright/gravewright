@@ -12,7 +12,9 @@ The heavy lifting (the append action + template resolution) lives in
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from dataclasses import dataclass, field
+from uuid import uuid4
 
 from app.engine.actors.actor_permissions import can_edit_actor
 from app.engine.rules.rules_registry import SystemRulesService
@@ -29,20 +31,34 @@ from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 
-# Conventional list path where HTML-mode sheets collect dropped items, since
-# they have no declarative dropZone/onDrop action to target.
+
+
 HTML_DROP_LIST = "items"
 HTML_EFFECT_LIST = "effects"
 
-# An HTML sheet template names its target list through ``data-drop-zone``. We
-# only ever use it as a single key under the actor's data envelope, so strip it
-# to a safe identifier rather than trusting an arbitrary client-supplied path.
+
+
+
 _LIST_KEY_RE = re.compile(r"[^A-Za-z0-9_]")
 
 
-def _html_list_path(drop_zone: str) -> str:
+def html_list_path(drop_zone: str) -> str:
     key = _LIST_KEY_RE.sub("", str(drop_zone or ""))
     return key or HTML_DROP_LIST
+
+
+def html_drop_list(sheet: dict | None, entry_type: str, drop_zone: str = "") -> str:
+    """Resolve an HTML-sheet drop to the collection declared by the manifest."""
+    for zone in (sheet or {}).get("dropZones") or []:
+        if accepts_entry(zone.get("accepts") or [], entry_type):
+            return html_list_path(zone.get("list", ""))
+    return html_list_path(drop_zone)
+
+
+def embedded_item_copy(entry) -> dict:
+    snapshot = deepcopy(entry.as_dict())
+    snapshot["id"] = uuid4().hex
+    return snapshot
 
 
 @dataclass(frozen=True)
@@ -100,29 +116,24 @@ class SheetDropService:
         if entry is None:
             return DropResult(success=False, error_key=entry_error)
 
+
+
+
+
+        html_list = self._html_list_for(system_id, actor["type"], entry.drop_type, drop_zone)
+        if html_list is not None:
+            return self._append_to_html_list(actor, entry, list_path=html_list)
+
         layout = self.layouts.get_actor_sheet(system_id=system_id, actor_type=actor["type"])
         if drop_zone:
             zone = find_drop_zone(layout, drop_zone) if layout else None
             if zone is None:
-                if self._is_html_sheet(system_id, actor["type"]):
-                    # HTML-mode sheets have no declarative dropZone; the template
-                    # names its target list via ``data-drop-zone`` and we collect
-                    # the resolved entry into that (sanitized) data key. Per-type
-                    # routing (skills vs. edges vs. gear) is the sheet's concern,
-                    # enforced client-side through ``data-drop-accepts``.
-                    return self._append_to_html_list(
-                        actor, entry, list_path=_html_list_path(drop_zone)
-                    )
                 return DropResult(success=False, error_key="game.drop.errors.zone_not_found")
             if not accepts_entry(zone["accepts"], entry.drop_type):
                 return DropResult(success=False, error_key="game.drop.errors.not_accepted")
         else:
             zone = find_matching_drop_zone(layout, entry.drop_type) if layout else None
             if zone is None:
-                # HTML-mode sheets have no declarative dropZone; collect the
-                # resolved entry into a conventional ``items`` list instead.
-                if self._is_html_sheet(system_id, actor["type"]):
-                    return self._append_to_html_list(actor, entry)
                 return DropResult(success=False, error_key="game.drop.errors.not_accepted")
 
         action_id = zone.get("onDrop")
@@ -145,6 +156,30 @@ class SheetDropService:
             token_view=result.token_view,
         )
 
+    def _html_list_for(
+        self, system_id: str, actor_type: str, entry_type: str, drop_zone: str
+    ) -> str | None:
+        """The sheet-data list a dropped entry belongs to, for an HTML sheet.
+
+        ``None`` when this actor's sheet is not HTML-mode, so the declarative
+        path stays exactly as it was.
+        """
+        sheet = self._html_sheet(system_id, actor_type)
+        if sheet is None:
+            return None
+
+
+        return html_drop_list(sheet, entry_type, drop_zone)
+
+    def _html_sheet(self, system_id: str, actor_type: str) -> dict | None:
+        manifest = self.systems.get_active_manifest(system_id)
+        if manifest is None:
+            return None
+        for type_def in manifest.actor_types:
+            if type_def.id == actor_type:
+                return type_def.html_sheet
+        return None
+
     def _is_html_sheet(self, system_id: str, actor_type: str) -> bool:
         manifest = self.systems.get_active_manifest(system_id)
         if manifest is None:
@@ -165,7 +200,7 @@ class SheetDropService:
         if not isinstance(items, list):
             items = []
             data[list_path] = items
-        items.append(entry.as_dict())
+        items.append(embedded_item_copy(entry))
         version = int(envelope.get("version", 1)) + 1
         self.storage.write_actor(
             system_id=actor["system_id"],

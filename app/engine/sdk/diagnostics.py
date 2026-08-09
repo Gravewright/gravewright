@@ -22,14 +22,14 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-# --- code convention -----------------------------------------------------------
 
-# A code is one or more lowercase/digit segments separated by dots, e.g.
-# ``sdk.storage.sqlite.query_missing``. The leading segment is always ``sdk``.
+
+
+
 CODE_PATTERN = re.compile(r"^sdk(\.[a-z0-9]+(_[a-z0-9]+)*)+$")
 
-#: Public namespaces a code may live under. Kept explicit so a typo'd namespace
-#: is caught by :func:`is_known_namespace` rather than silently accepted.
+
+
 CODE_NAMESPACES: frozenset[str] = frozenset(
     {
         "sdk.manifest",
@@ -49,8 +49,8 @@ CODE_NAMESPACES: frozenset[str] = frozenset(
     }
 )
 
-#: The initial code catalogue from the stability plan (Phase 1). Services may
-#: emit codes beyond this set, but every code here is guaranteed stable.
+
+
 SDK_ERROR_CODES: frozenset[str] = frozenset(
     {
         "sdk.manifest.missing",
@@ -99,7 +99,7 @@ def is_known_namespace(code: str) -> bool:
     )
 
 
-# --- structured types ----------------------------------------------------------
+
 
 Severity = Literal["error", "warning", "info"]
 

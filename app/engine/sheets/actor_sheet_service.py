@@ -16,6 +16,8 @@ from app.engine.actors.actor_permissions import can_edit_actor, can_view_actor
 from app.engine.rules.derived_field_service import apply_derived
 from app.engine.effects.active_effects import apply_stat_modifiers
 from app.engine.rules.rules_registry import SystemRulesService
+from app.engine.sdk.package_locale_service import PackageLocaleService
+from app.engine.sheets.sheet_localizer import localize_layout
 from app.engine.sheets.sheet_ir_validator import validate_sheet_ir
 from app.engine.sheets.system_layout_service import SystemLayoutService
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
@@ -23,6 +25,57 @@ from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.tokens.actor_token_projector import ActorTokenProjector
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
+
+
+def action_dialogs(actions: dict, catalog: dict[str, str]) -> dict:
+    """Localized roll dialogs, keyed by action id, for the actions that ask.
+
+    Only the dialog travels — the formula stays on the server, where the roll is
+    resolved. Sending it would invite a client to argue about the result.
+    """
+    if not isinstance(actions, dict):
+        return {}
+    out: dict = {}
+    for action_id, action in actions.items():
+        if not isinstance(action, dict):
+            continue
+        dialog = action.get("dialog")
+        if not isinstance(dialog, dict) or dialog.get("enabled") is False:
+            continue
+        out[str(action_id)] = dialog
+    return localize_layout(out, catalog) if out else {}
+
+
+def bundle_to_dict(bundle: "ActorSheetBundle") -> dict:
+    """The JSON an open sheet renders itself from.
+
+    One implementation on purpose. There are two services that build a bundle —
+    the actor's and the token instance's — and while each also serialised its
+    own, the two drifted: the token copy silently lacked ``dialogs`` (so a roll
+    opened no options when the sheet came from a token) and ``token_link_mode``
+    (so edits to a *linked* token were written to a token-local override instead
+    of the actor, and the sheet then stopped seeing anything added to the actor).
+    """
+    return {
+        "actor": {
+            "id": bundle.actor_id,
+            "name": bundle.name,
+            "type": bundle.type,
+            "system_id": bundle.system_id,
+            "token_id": bundle.token_id,
+            "source_actor_id": bundle.source_actor_id,
+            "token_link_mode": bundle.token_link_mode,
+        },
+        "version": bundle.version,
+        "can_edit": bundle.can_edit,
+        "layout": bundle.layout,
+        "sheet": bundle.sheet,
+        "dialogs": bundle.dialogs,
+        "data": bundle.data,
+        "portrait_url": bundle.portrait_url,
+        "token_url": bundle.token_url,
+        "summary": bundle.summary,
+    }
 
 
 @dataclass(frozen=True)
@@ -36,6 +89,12 @@ class ActorSheetBundle:
     can_edit: bool
     layout: dict | None
     sheet: dict | None
+
+
+
+
+
+    dialogs: dict
     data: dict
     portrait_url: str | None
     token_url: str | None
@@ -50,6 +109,7 @@ class ActorSheetService:
         self.actors = ActorRepository()
         self.campaigns = CampaignRepository()
         self.storage = ScopedJsonStorage()
+        self.locales = PackageLocaleService()
         self.systems = PackageInstallService()
         self.rules = SystemRulesService()
         self.layouts = SystemLayoutService()
@@ -76,10 +136,11 @@ class ActorSheetService:
 
         layout: dict | None = None
         sheet: dict | None = None
+        dialogs: dict = {}
         data = raw_data
         if self.systems.get_active_manifest(system_id) is not None:
             sheet = self.layouts.get_actor_html_sheet(system_id=system_id, actor_type=actor["type"])
-            # An HTML-mode sheet replaces the declarative Sheet IR layout.
+
             if sheet is None:
                 candidate = self.layouts.get_actor_sheet(
                     system_id=system_id,
@@ -88,6 +149,12 @@ class ActorSheetService:
                 )
                 if candidate is not None and not validate_sheet_ir(candidate):
                     layout = candidate
+            from app.config import config
+
+            dialogs = action_dialogs(
+                self.rules.get_actions(system_id),
+                self.locales.get_locale(system_id, locale or config.default_locale),
+            )
             helpers = self.rules.get_helpers(system_id)
             derived = self.rules.get_derived(system_id)
             data = apply_derived(
@@ -109,6 +176,7 @@ class ActorSheetService:
             can_edit=can_edit_actor(actor=actor, campaign=campaign_dict, user_id=user_id),
             layout=layout,
             sheet=sheet,
+            dialogs=dialogs,
             data=data,
             portrait_url=actor_image_url(actor, "portrait"),
             token_url=actor_image_url(actor, "token"),
@@ -117,25 +185,7 @@ class ActorSheetService:
         )
 
     def to_dict(self, bundle: ActorSheetBundle) -> dict:
-        return {
-            "actor": {
-                "id": bundle.actor_id,
-                "name": bundle.name,
-                "type": bundle.type,
-                "system_id": bundle.system_id,
-                "token_id": bundle.token_id,
-                "source_actor_id": bundle.source_actor_id,
-                "token_link_mode": bundle.token_link_mode,
-            },
-            "version": bundle.version,
-            "can_edit": bundle.can_edit,
-            "layout": bundle.layout,
-            "sheet": bundle.sheet,
-            "data": bundle.data,
-            "portrait_url": bundle.portrait_url,
-            "token_url": bundle.token_url,
-            "summary": bundle.summary,
-        }
+        return bundle_to_dict(bundle)
 
     def get_member_role(self, *, campaign_id: str, user_id: str) -> str | None:
         return self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id)

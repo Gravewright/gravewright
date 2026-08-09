@@ -166,7 +166,7 @@
                     runtime.known.set(key, cached.version);
                     hydrated += 1;
                 } catch {
-                    
+
                 }
             });
             if (hydrated) runtime.chunkRevision += 1;
@@ -199,7 +199,7 @@
                     }),
                 );
             } catch {
-                
+
             }
         }
 
@@ -221,7 +221,7 @@
                 }
                 localStorage.setItem(chunkCacheKey(manifest.scene_id, manifest.tile_table_version, key), JSON.stringify(chunk));
             } catch {
-                
+
             }
         }
 
@@ -781,6 +781,7 @@
             canvas.dataset.sceneGridVisible = scenePayload.grid_visible === false ? "false" : "true";
             canvas.dataset.sceneGridColor = scenePayload.grid_color || "";
             canvas.dataset.sceneGridOpacity = String(scenePayload.grid_opacity ?? 0.4);
+            canvas.dataset.sceneDarkness = String(scenePayload.darkness ?? 0);
             canvas.dataset.sceneImageScale = String(scenePayload.image_scale || 1);
             canvas.dataset.sceneStartWorldX = String(scenePayload.start_world_x ?? (scenePayload.width || 0) / 2);
             canvas.dataset.sceneStartWorldY = String(scenePayload.start_world_y ?? (scenePayload.height || 0) / 2);
@@ -822,6 +823,18 @@
             });
         }
 
+
+
+
+        function handleSceneUpdated(payload) {
+            if (!payload?.room_id || !payload?.scene?.id) return;
+            document.querySelectorAll("[data-map-canvas]").forEach((canvas) => {
+                if (canvas.dataset.roomId !== payload.room_id) return;
+                if (canvas.dataset.sceneId !== payload.scene.id) return;
+                syncCanvasScene(canvas, payload.scene);
+            });
+        }
+
         function debugSnapshot(canvas) {
             const scene = canvas ? sceneDataFor(canvas) : null;
             const runtime = canvas ? runtimeFor(canvas) : null;
@@ -850,6 +863,7 @@
             ensureManifest,
             handleChunkUpdated,
             handleSceneActivated,
+            handleSceneUpdated,
             handleSessionResumed,
             handleViewportReady,
             knownChunksObject,

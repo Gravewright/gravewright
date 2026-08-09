@@ -10,7 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 
-# Validation status persisted alongside the hash.
+
 VALIDATION_VALID = "valid"
 VALIDATION_INVALID = "invalid"
 VALIDATION_MISSING = "missing"

@@ -1,8 +1,8 @@
 (function () {
-  // Small shared right-click menu. Usage:
-  //   GravewrightContextMenu.show(clientX, clientY, [
-  //     { label, icon, danger, onClick }, { separator: true }, ...
-  //   ]);
+
+
+
+
   const CM = (window.GravewrightContextMenu = window.GravewrightContextMenu || {});
 
   let el = null;

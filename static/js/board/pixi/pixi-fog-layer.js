@@ -9,13 +9,13 @@
     const proto = window.GravewrightBoardInternals.PixiBoardRenderer.prototype;
 
     Object.assign(proto, {
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
         _renderFog(board, cssW, cssH) {
             const fog = this.fog;
             const scene = this.scene;
@@ -32,8 +32,8 @@
             const dpr = window.devicePixelRatio || 1;
             const rt = this._ensureFogRT(board, cssW, cssH, dpr);
 
-            
-            
+
+
             const key = [
                 cam.offsetX, cam.offsetY, cam.zoom,
                 fog.baseline, fog.opsVersion ?? (fog.ops?.length || 0),
@@ -68,7 +68,7 @@
             board.fogRTW = cssW;
             board.fogRTH = cssH;
             board.fogRTDpr = dpr;
-            board.fogKey = ""; 
+            board.fogKey = "";
             return board.fogRT;
         },
 
@@ -83,8 +83,8 @@
 
             this._resetFogPool(board);
 
-            
-            
+
+
             let run = null;
             let runMode = null;
             const ensureRun = (mode) => {
@@ -185,7 +185,7 @@
             });
         },
 
-        
+
         _dashedPolyline(g, pts, dash, gap) {
             for (let i = 0; i < pts.length - 1; i += 1) {
                 const a = pts[i];

@@ -29,9 +29,9 @@
             };
         },
 
-        
-        
-        
+
+
+
         _sampleSprites(board) {
             const entries = [...board.tileSprites.entries()]
                 .map(([key, sprite]) => ({ key, sprite, ty: parseInt(key.split(":").pop(), 10) }))

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 
+from app.realtime.commands import ClientCommand
 from app.realtime.ingress_guard import MAX_MESSAGE_BYTES
 from app.realtime.ingress_guard import WebSocketIngressGuard
 from app.realtime.ingress_guard import is_origin_allowed
@@ -113,3 +114,32 @@ def test_origin_allowlist_accepts_tunnel_wildcards() -> None:
     assert is_origin_allowed("https://demo.ngrok-free.app/", allowed) is True
     assert is_origin_allowed("https://trycloudflare.com", allowed) is False
     assert is_origin_allowed("http://random-name.trycloudflare.com", allowed) is False
+
+
+def test_unknown_command_names_share_one_bucket() -> None:
+    """The guard runs before the dispatcher rejects unknown commands.
+
+    Keying per-command buckets on the raw client string would let a single
+    connection allocate one bucket per unique name it invents.
+    """
+    clock = _Clock()
+    guard = WebSocketIngressGuard(clock=clock)
+
+    for index in range(500):
+        guard.inspect(_command(f"totally.made.up.{index}"))
+
+    assert len(guard._by_command) == 1
+    assert set(guard._by_command) == {"unknown"}
+
+
+def test_known_commands_still_get_their_own_bucket() -> None:
+    clock = _Clock()
+    guard = WebSocketIngressGuard(clock=clock)
+
+    guard.inspect(_command(ClientCommand.TOKEN_MOVE.value))
+    guard.inspect(_command(ClientCommand.FOG_PAINT.value))
+
+    assert set(guard._by_command) == {
+        ClientCommand.TOKEN_MOVE.value,
+        ClientCommand.FOG_PAINT.value,
+    }

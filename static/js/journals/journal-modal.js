@@ -24,7 +24,7 @@
 
   const initialized = new WeakSet();
 
-  
+
 
   function initBoardAdmin(modal) {
     const admin = modal.querySelector("[data-board-admin]");
@@ -77,14 +77,14 @@
     });
   }
 
-  
+
 
   function setJournalView(modal, view) {
     modal.querySelectorAll("[data-journal-view]").forEach((el) => {
       el.hidden = el.dataset.journalView !== view;
     });
     if (view === "editor") {
-      
+
       modal.querySelectorAll("[data-journal-editor] [data-journal-rich-text]").forEach((t) => {
         editors.get(t)?.codemirror.refresh();
       });
@@ -105,11 +105,11 @@
 
     const editForm = modal.querySelector("[data-journal-editor]");
     if (editForm) {
-      
+
       editForm.addEventListener("change", () => scheduleAutosave(editForm));
     }
 
-    
+
     modal.addEventListener("click", (event) => {
       if (event.target.closest("[data-journal-edit-toggle]")) {
         setJournalView(modal, "editor");
@@ -122,7 +122,7 @@
     modal.addEventListener("submit", (event) => {
       const form = event.target.closest("form");
       if (form) flushEditors(form);
-      
+
       if (form && form.matches("[data-journal-editor]")) {
         event.preventDefault();
         scheduleAutosave(editForm, true);
@@ -148,12 +148,12 @@
       destroyBlockEditorsIn(modal);
       modal.replaceWith(next);
       initJournalModal(next);
-      
+
       if (keepView === "editor" && next.querySelector("[data-journal-editor]")) {
         setJournalView(next, "editor");
       }
     } catch {
-      
+
     }
   }
 
@@ -181,7 +181,7 @@
         const visible = block.dataset.journalTypeFields === typeSelect.value;
         block.hidden = !visible;
         if (visible) {
-          
+
           block.querySelectorAll("[data-journal-rich-text]").forEach((textarea) => {
             const editor = editors.get(textarea);
             if (editor) editor.codemirror.refresh();
@@ -195,7 +195,7 @@
     update();
   }
 
-  
+
 
   const JOURNAL_EVENTS = new Set([
     "journal.updated",
@@ -229,9 +229,9 @@
         if (payload.type === "quest") reloadOpenQuestBoardsForCampaign(payload.room_id);
         return;
       }
-      
-      
-      
+
+
+
       const editorForm = modal.querySelector("[data-journal-editor]");
       if (editorForm && !editorForm.hidden) {
         if (payload.type === "quest") reloadOpenQuestBoardsForCampaign(payload.room_id);
@@ -242,7 +242,7 @@
     }
   });
 
-  
+
 
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll("[data-journal-panel]").forEach(initPanel);

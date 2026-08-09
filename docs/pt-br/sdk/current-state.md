@@ -180,7 +180,7 @@ ser adicionados via migration Alembic.
 
 ## 8. Infraestrutura de migrations
 
-Alembic (`migrations/versions/`). Revisão mais recente: `0007_sdk_packages.py`.
+Alembic (`migrations/versions/`). Revisão mais recente: `0042_particle_kinds.py`.
 `alembic.ini` presente. O schema também é expresso em definições
 `metadata`/`Table` do SQLAlchemy (`app/persistence/tables.py`). Colunas novas
 exigem tanto migration quanto atualização de `tables.py`.

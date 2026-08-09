@@ -23,7 +23,7 @@
             }
 
             modal.hidden = true;
-            // Let sheet runtimes tear down (e.g. unmount HTML sheets, drop listeners).
+
             document.dispatchEvent(new CustomEvent("vtt:modal-closed", { detail: { modal } }));
 
             if (modalId) {
