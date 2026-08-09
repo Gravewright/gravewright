@@ -21,6 +21,7 @@ htmlcov/
 /uploads/
 /tmp/
 /temp/
+/.test-tmp/
 
 # ``data/`` mistura duas coisas: dados de execução (campanhas, imports) e os
 # pacotes que acompanham o projeto, que são código-fonte. Por isso o diretório em
