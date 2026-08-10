@@ -101,6 +101,7 @@ user_preferences = Table(
 
 
     Column("vision_mode", _STR, nullable=False, server_default=text("'cinematic'")),
+    Column("ping_color", _STR, nullable=False, server_default=text("'#f2c679'")),
     Column("updated_at", Integer, nullable=False),
 )
 

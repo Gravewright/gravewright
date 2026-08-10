@@ -235,9 +235,15 @@ class PackageInstallService:
         if loaded is None or not _installable(loaded):
             return PackageActionResult(success=False, error_key="sdk.errors.invalid_manifest")
         self.installed.set_status(package_id=package_id, status=STATUS_ENABLED)
+
+
+        # Enabling validates the manifest that is on disk *now*, so that is the
+        # manifest being enabled: the snapshot moves with the hash. Refreshing
+        # only the hash left the row describing a manifest it no longer stored.
         self.installed.record_validation(
             package_id=package_id,
             manifest_hash=compute_manifest_hash(loaded.raw),
+            manifest_json=json.dumps(loaded.raw),
             last_validation_status=VALIDATION_VALID,
         )
         return PackageActionResult(success=True, package_id=package_id)

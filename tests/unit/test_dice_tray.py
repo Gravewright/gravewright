@@ -140,6 +140,58 @@ def test_the_panel_is_reachable_and_labelled():
     assert "game.dice.formula_placeholder" in corpo
 
 
+def test_the_optional_name_travels_as_a_label_never_inside_the_notation():
+    """O nome é opcional e vai como rótulo depois de ``#`` — separador que não
+    existe na notação do avaliador. Se ele entrasse na fórmula, a rolagem voltaria
+    como inválida. E o histórico deixou de ser volátil: sem localStorage a estante
+    de rolagens some a cada F5."""
+    html = TEMPLATE.read_text(encoding="utf-8")
+    source = SCRIPT.read_text(encoding="utf-8")
+
+    corpo = html.split("data-dice-tray", 1)[1].split("</article>", 1)[0]
+    assert "data-dice-name" in corpo, "falta o campo de nome no painel"
+    assert "game.dice.name_placeholder" in corpo, "o campo precisa se anunciar como opcional"
+
+    for chave in ("game.dice.name", "game.dice.name_placeholder", "game.dice.history_remove"):
+        for locale in ("pt_br", "en"):
+            texto = (ROOT / f"app/i18n/{locale}.py").read_text(encoding="utf-8")
+            assert f'"{chave}"' in texto, f"{chave} ausente em {locale}"
+
+    # A expressão sai inteira de expressao(); o nome só é concatenado depois de `#`.
+    envio = source.split("async rolar(paraGm)", 1)[1].split("\n    }", 1)[0]
+    assert "${comando} ${expressao}${nome ? ` # ${nome}` : \"\"}" in envio, (
+        "o rótulo entra depois da expressão, atrás de `#`"
+    )
+    assert 'replace(/#/g, "")' in envio, "um `#` digitado no nome não pode virar separador"
+
+    montagem = source.split("montarExpressao(termos, modificador)", 1)[1].split("\n  }", 1)[0]
+    assert "nome" not in montagem, "o nome não entra na notação"
+
+    assert "localStorage" in source, "o histórico precisa sobreviver ao reload"
+    assert "JSON.parse" in source and "catch" in source, (
+        "histórico corrompido no storage não pode derrubar a bandeja"
+    )
+
+
+def test_the_name_shows_up_where_the_table_looks():
+    """Pedido explícito: se a pessoa nomeou a rolagem, o nome aparece no toast e
+    no chat. O rótulo viaja em ``content``, que é o mesmo campo que o histórico
+    da página reidrata — então vale ao vivo e depois do reload."""
+    cards = (ROOT / "static/js/chat/chat-roll-cards.js").read_text(encoding="utf-8")
+    toasts = (ROOT / "static/js/ui/toasts.js").read_text(encoding="utf-8")
+    page_service = (ROOT / "app/business/game_page_service.py").read_text(encoding="utf-8")
+    html = TEMPLATE.read_text(encoding="utf-8")
+
+    assert "roll-label" in cards, "o cartão do chat precisa desenhar o rótulo"
+    assert 'payload.content' in cards
+
+    assert "toastRollNamed" in toasts, "o toast precisa de um formato com rótulo"
+    assert "data-toast-roll-named" in html
+    assert '"content": message.get("content")' in page_service, (
+        "o rótulo tem de viajar no payload que reidrata o histórico"
+    )
+
+
 def test_the_roll_payload_carries_what_the_card_needs_to_show():
     """Um card que só recebe os dados que contaram não consegue mostrar o que a
     rolagem descartou — e é justamente isso que se quer ver numa rolagem com

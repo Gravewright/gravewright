@@ -39,6 +39,8 @@ from app.realtime.envelopes import event_envelope
 from app.realtime.events import TransportEvent
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.scene_repository import SceneRepository
+from app.persistence.repositories.user_preference_repository import UserPreferenceRepository
+from app.business.users.user_preference_service import DEFAULT_PING_COLOR
 
 
 _GM_ROLES = {"gm", "assistant_gm"}
@@ -76,10 +78,12 @@ class BoardCommandHandler:
         scenes: SceneRepository | None = None,
         campaigns: CampaignRepository | None = None,
         permissions: PermissionService | None = None,
+        preferences: UserPreferenceRepository | None = None,
     ) -> None:
         self.scenes = scenes or SceneRepository()
         self.campaigns = campaigns or CampaignRepository()
         self.permissions = permissions or PermissionService()
+        self.preferences = preferences or UserPreferenceRepository()
 
     async def _is_gm(self, user_id: str, room_id: str) -> bool:
         role = await run_blocking(
@@ -254,6 +258,9 @@ class BoardCommandHandler:
             "world_y": float(world_y),
             "variant": variant,
             "user_id": context.user_id,
+            "color": await run_blocking(
+                self.preferences.get_ping_color, context.user_id
+            ) or DEFAULT_PING_COLOR,
         }
 
         if transport is not None:

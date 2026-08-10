@@ -116,19 +116,30 @@ class InstalledPackageRepository:
         package_id: str,
         manifest_hash: str | None,
         last_validation_status: str,
+        manifest_json: str | None = None,
     ) -> None:
-        """Persist the result of re-validating a package against disk."""
+        """Persist the result of re-validating a package against disk.
+
+        ``manifest_hash`` describes ``manifest_json``: the doctor reads the pair
+        as one fact (``sdk.persistence.manifest_hash_mismatch``). Writing the
+        hash of the manifest just validated while leaving the old snapshot in
+        place produced rows whose hash described a manifest nobody had anymore,
+        so the snapshot travels with the hash whenever the caller has it.
+        """
         now = int(time.time())
+        values: dict = {
+            "manifest_hash": manifest_hash,
+            "last_validated_at": now,
+            "last_validation_status": last_validation_status,
+            "updated_at": now,
+        }
+        if manifest_json is not None:
+            values["manifest_json"] = manifest_json
         with engine_begin() as connection:
             connection.execute(
                 update(installed_packages)
                 .where(installed_packages.c.id == package_id)
-                .values(
-                    manifest_hash=manifest_hash,
-                    last_validated_at=now,
-                    last_validation_status=last_validation_status,
-                    updated_at=now,
-                )
+                .values(**values)
             )
 
     def set_status(self, *, package_id: str, status: str) -> None:

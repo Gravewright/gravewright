@@ -8,6 +8,61 @@ The project is currently in Alpha. Breaking changes may occur between Alpha rele
 
 No changes documented yet.
 
+## v3.0.1-alpha — 2026-08-10
+
+Hotfix release on the Alpha 3 line. No schema-breaking changes; one additive
+migration (`0043`) and one behavioural default change in table permissions.
+
+### Fixed
+
+- Exploding dice stopped after a single extra die. The evaluator's `!` rolled one
+  extra die per maximum in the opening throw and never re-examined what it had
+  just added, so a d12 that rolled 12, exploded and rolled 12 again simply
+  stopped — and every open-ended total came out low. Explosion now chains while a
+  die keeps landing on its maximum, bounded per roll so a die that cannot fail to
+  explode still terminates. Dropping (`L`/`H`) is unchanged: it still resolves on
+  the opening throw, before any explosion. Measured over 30,000 rolls, `1d4!`
+  now averages 3.35 against the open-ended 3.33; the single-extra behaviour
+  averaged about 3.12. The SDK formula function `explode(sides, threshold)` is a
+  different engine and already chained; the two now agree.
+- Enabling a package left its stored manifest hash describing a manifest the row
+  no longer held. Enabling re-validates against disk and wrote only the refreshed
+  hash, keeping the snapshot taken at install time, so `grave doctor` reported
+  `sdk.persistence.manifest_hash_mismatch` for the rest of that install's life.
+  The snapshot now travels with the hash: enabling adopts the manifest it just
+  validated. Existing inconsistent rows are repaired with
+  `grave package update all`.
+
+### Changed
+
+- Players no longer delete chat messages by default. The chat is the table's
+  record, and a roll or a line could disappear without the GM seeing it, so
+  `chat.delete_own` left the player role's defaults. The permission still exists
+  and a table that wants it can grant it back per role; GMs keep
+  `chat.delete_any`.
+- Board pings are drawn by the renderer instead of DOM overlays, and each player
+  has a ping colour of their own (`0043_ping_color_preference`), broadcast with
+  the ping so the table can tell who pinged.
+- Layer visibility now separates effects, walls, and lighting: hiding lighting no
+  longer takes particles and shaders with it, and doors are only pickable where
+  they are actually visible.
+
+### Added
+
+- The dice tray accepts an optional name for a roll. The name never enters the
+  notation — it travels after `#` as the message label — and shows up in the roll
+  toast and in the chat message, live and after a reload.
+- The dice tray's history is persisted per table in the browser (`localStorage`),
+  holds up to 30 entries instead of 8, keeps the name given to each one, and each
+  entry can be removed. History saved by older versions is read as unnamed
+  entries.
+- GMs and streamer views can browse a scene locally with `?view_scene=`, without
+  activating it for the table. The scene manager marks which scene is loaded and
+  which is only being browsed.
+- The streamer view can compose lighting, walls, particles, and shaders in a local
+  sandbox: edits are applied to that view only and never reach the table or the
+  database.
+
 ## v3.0.0-alpha — 2026-08-09
 
 ### Added

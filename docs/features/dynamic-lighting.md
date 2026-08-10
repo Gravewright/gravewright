@@ -36,3 +36,23 @@ Scene particles support multiple emitter and motion styles. The editor exposes
 particle type, count/rate, lifetime, speed, direction, spread, gravity, scale,
 rotation, colour, opacity, and related appearance controls. Saved changes are
 applied to the live scene without requiring a page reload.
+
+## Layer visibility
+
+Effects, walls, and lighting are three separate visibility toggles in the layer
+HUD, persisted per table in the browser. Hiding lighting darkens nothing and
+leaves particles and shaders on screen; hiding effects removes particles and
+shaders without touching vision. Doors can only be picked where they are
+actually visible, so a door hidden behind a wall the current view cannot see is
+not a click target.
+
+## Streamer composition sandbox
+
+A streamer view can compose lighting, walls, particles, and shaders as if it were
+a GM, but every edit stays in that browser: the mutations are applied to the
+local scene state and never reach the server, the table, or the database. It is
+a staging surface for framing a shot, not a second GM seat — reloading the
+streamer view discards everything it composed.
+
+The streamer view also sees the scene lit as the table's audience view, not
+through a single token's vision.

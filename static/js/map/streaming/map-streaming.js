@@ -819,7 +819,13 @@
         function handleSceneActivated(payload) {
             if (!payload?.room_id || !payload?.scene) return;
             document.querySelectorAll("[data-map-canvas]").forEach((canvas) => {
-                if (canvas.dataset.roomId === payload.room_id) syncCanvasScene(canvas, payload.scene);
+                if (canvas.dataset.roomId !== payload.room_id) return;
+                canvas.dataset.loadedSceneId = payload.scene.id;
+                const navigatingLocally = canvas.dataset.localSceneNavigation === "true"
+                    && canvas.dataset.sceneId !== payload.scene.id;
+                if (navigatingLocally) return;
+                canvas.dataset.localSceneNavigation = "false";
+                syncCanvasScene(canvas, payload.scene);
             });
         }
 

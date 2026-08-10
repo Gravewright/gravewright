@@ -360,98 +360,6 @@ select {
     user-select: none;
 }
 
-.board-ping {
-    position: fixed;
-    z-index: var(--z-chrome-pop);
-    left: 0;
-    top: 0;
-    width: 22px;
-    height: 22px;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-}
-
-.board-ping__wave,
-.board-ping__core {
-    position: absolute;
-    inset: 0;
-    border: 2px solid rgba(242, 198, 121, 0.96);
-    background: rgba(192, 154, 90, 0.16);
-    box-shadow:
-        0 0 0 1px rgba(255, 238, 194, 0.28),
-        0 0 22px rgba(210, 172, 107, 0.48);
-}
-
-.board-ping__wave {
-    animation: board-ping-ring 1.5s cubic-bezier(0.15, 0.7, 0.18, 1) forwards;
-}
-
-.board-ping__core {
-    inset: 6px;
-    border: 0;
-    background: #f2c679;
-    box-shadow:
-        0 0 0 3px rgba(242, 198, 121, 0.18),
-        0 0 20px rgba(242, 198, 121, 0.8);
-    animation: board-ping-core 1.45s ease-out forwards;
-}
-
-.board-ping--ping .board-ping__wave,
-.board-ping--ping .board-ping__core {
-    border-radius: var(--radius-circle);
-}
-
-.board-ping--focus {
-    transform: translate(-50%, -50%) rotate(45deg);
-}
-
-.board-ping--focus .board-ping__wave {
-    border-color: rgba(125, 211, 252, 0.98);
-    background: rgba(125, 211, 252, 0.16);
-    box-shadow:
-        0 0 0 1px rgba(219, 244, 255, 0.28),
-        0 0 24px rgba(125, 211, 252, 0.58);
-}
-
-.board-ping--focus .board-ping__core {
-    background: #7dd3fc;
-    box-shadow:
-        0 0 0 3px rgba(125, 211, 252, 0.2),
-        0 0 22px rgba(125, 211, 252, 0.86);
-}
-
-@keyframes board-ping-ring {
-    0% {
-        opacity: 1;
-        transform: scale(0.35);
-    }
-
-    58% {
-        opacity: 0.9;
-    }
-
-    100% {
-        opacity: 0;
-        transform: scale(5.8);
-    }
-}
-
-@keyframes board-ping-core {
-    0% {
-        opacity: 1;
-        transform: scale(0.8);
-    }
-
-    26% {
-        transform: scale(1.55);
-    }
-
-    100% {
-        opacity: 0;
-        transform: scale(0.55);
-    }
-}
-
 .table-empty {
     position: absolute;
     inset: 0;
@@ -11213,13 +11121,36 @@ body.command-palette-open {
 
 .dice-status { margin: 0; min-height: 14px; font-size: 11px; color: #fca5a5; }
 
+.dice-name input {
+    width: 100%; padding: 6px 9px; font: inherit; font-size: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.10); border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.18); color: rgba(255, 255, 255, 0.82);
+}
+.dice-name input::placeholder { color: rgba(255, 255, 255, 0.32); }
+.dice-name input:focus { border-color: var(--accent, #c09a5a); outline: none; }
+
 .dice-history { display: flex; flex-wrap: wrap; gap: 4px; }
 .dice-recent {
-    padding: 3px 7px; font-size: 10px; cursor: pointer;
+    display: inline-flex; align-items: stretch; overflow: hidden;
     border: 1px solid rgba(255, 255, 255, 0.10); border-radius: var(--radius-md);
-    background: none; color: rgba(255, 255, 255, 0.48); font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.48); font-variant-numeric: tabular-nums;
 }
 .dice-recent:hover { color: #f8fafc; border-color: rgba(255, 255, 255, 0.25); }
+.dice-recent--named {
+    border-color: color-mix(in srgb, var(--accent, #c09a5a) 40%, transparent);
+    color: rgba(255, 255, 255, 0.72); font-variant-numeric: normal;
+}
+.dice-recent__use {
+    padding: 3px 7px; font-size: 10px; cursor: pointer;
+    border: none; background: none; color: inherit; font: inherit; font-size: 10px;
+    max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dice-recent__remove {
+    padding: 0 5px; font-size: 11px; line-height: 1; cursor: pointer;
+    border: none; border-left: 1px solid rgba(255, 255, 255, 0.10);
+    background: none; color: rgba(255, 255, 255, 0.30);
+}
+.dice-recent__remove:hover { color: #fca5a5; background: rgba(255, 255, 255, 0.06); }
 
 /* Botão da bandeja na coluna do chat, acima de enviar e apagar. */
 .chat-dice {
@@ -11265,6 +11196,12 @@ body.command-palette-open {
 .roll-formula {
     font-size: 11px; color: rgba(255, 255, 255, 0.50);
     font-variant-numeric: tabular-nums;
+}
+
+/* Nome que a pessoa deu à rolagem na bandeja: lê antes da notação. */
+.roll-label {
+    display: block; padding: 0 8px 2px; font-size: 12px; font-weight: 600;
+    color: rgba(255, 255, 255, 0.86);
 }
 .roll-total {
     font-size: 17px; font-weight: 700; line-height: 1;

@@ -1,7 +1,7 @@
 # Alpha Status
 
 > [!WARNING]
-> **Gravewright v3.0.0-alpha — Visual Effects and Campaign Operations.**
+> **Gravewright v3.0.1-alpha — Visual Effects and Campaign Operations.**
 >
 > The planned **SDK 1 extension surface is now frozen**. Real campaigns are no longer discouraged, provided you keep regular backups and accept that bugs, migrations, and compatibility fixes may still happen before LTS 1.
 >
@@ -11,7 +11,7 @@
 
 ## What the SDK Freeze Means
 
-Gravewright v3.0.0-alpha keeps the **SDK 1 extension surface frozen**. Alpha 3 expands core tabletop capabilities—especially visual effects, lighting, campaign operations, and configuration UX—without introducing a new SDK major line.
+Gravewright v3.0.1-alpha keeps the **SDK 1 extension surface frozen**. Alpha 3 expands core tabletop capabilities—especially visual effects, lighting, campaign operations, and configuration UX—without introducing a new SDK major line.
 
 The frozen SDK 1 surface includes:
 
@@ -33,7 +33,7 @@ Changes may still occur between Alpha releases in:
 
 ## Recommended Use
 
-Gravewright v3.0.0-alpha is suitable for real campaigns if you keep regular backups. It is well suited to:
+Gravewright v3.0.1-alpha is suitable for real campaigns if you keep regular backups. It is well suited to:
 
 - campaigns and one-shots with a backup routine;
 - ruleset, addon, and HTML-sheet authoring against the frozen SDK 1 surface;

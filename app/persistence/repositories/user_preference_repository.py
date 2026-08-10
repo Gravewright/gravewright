@@ -43,3 +43,9 @@ class UserPreferenceRepository:
 
     def set_vision_mode(self, *, user_id: str, vision_mode: str) -> None:
         self._write("vision_mode", user_id=user_id, value=vision_mode)
+
+    def get_ping_color(self, user_id: str) -> str | None:
+        return self._read(user_preferences.c.ping_color, user_id)
+
+    def set_ping_color(self, *, user_id: str, ping_color: str) -> None:
+        self._write("ping_color", user_id=user_id, value=ping_color)

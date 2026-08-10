@@ -37,11 +37,11 @@ do `_internal/` ao lado. Mantenha essa pasta como raiz do ZIP, para o usuário
 extrair um único diretório autocontido:
 
 ```powershell
-Compress-Archive -Path dist/Gravewright -DestinationPath Gravewright-3.0.0-alpha-win64.zip
+Compress-Archive -Path dist/Gravewright -DestinationPath Gravewright-3.0.1-alpha-win64.zip
 ```
 
 Nomeie o arquivo com a versão e a arquitetura, ex.:
-`Gravewright-3.0.0-alpha-win64.zip`.
+`Gravewright-3.0.1-alpha-win64.zip`.
 
 ## 3. Publicar
 

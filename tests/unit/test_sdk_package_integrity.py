@@ -66,6 +66,48 @@ def test_enable_revalidates_manifest_from_disk(db):
     assert record["last_validation_status"] == "valid"
 
 
+def test_enable_leaves_the_stored_hash_describing_the_stored_snapshot(db):
+    """A manifest editado em disco e depois habilitado não pode deixar a linha
+    incoerente.
+
+    ``enable`` revalida contra o disco e gravava só o hash novo, mantendo o
+    snapshot antigo — o hash passava a descrever um manifest que ninguém mais
+    tinha, e o doctor acusava ``sdk.persistence.manifest_hash_mismatch`` para
+    sempre (foi assim que o dnd5e quebrou). O par tem de andar junto.
+    """
+    gm = seed_user(email="integrity-pair@test.com")
+    svc = PackageInstallService()
+    svc.install(package_id="valid-ruleset", user_id=gm)
+
+    # Snapshot antigo, coerente com o próprio hash: o estado de quem instalou
+    # antes de editar o manifest em disco.
+    antigo = {"id": "valid-ruleset", "kind": "ruleset", "name": "older"}
+    InstalledPackageRepository().upsert(
+        package_id="valid-ruleset",
+        kind="ruleset",
+        name="older",
+        version="1.0.0",
+        status="installed",
+        package_dir="rulesets/valid-ruleset",
+        manifest_json=json.dumps(antigo),
+        compatibility_status="compatible",
+        validation_errors_json="[]",
+        installed_by_user_id=gm,
+        manifest_hash=compute_manifest_hash(antigo),
+    )
+
+    assert svc.enable(package_id="valid-ruleset").success
+
+    record = InstalledPackageRepository().get("valid-ruleset")
+    snapshot_hash = compute_manifest_hash(json.loads(record["manifest_json"]))
+    assert record["manifest_hash"] == snapshot_hash, "o hash tem de descrever o snapshot"
+    assert record["manifest_hash"] == _disk_hash("valid-ruleset")
+
+    codes = {f.code for f in PackageDoctorService().audit()}
+    assert "sdk.persistence.manifest_hash_mismatch" not in codes
+    assert "sdk.manifest.snapshot_stale" not in codes
+
+
 def test_runtime_uses_current_validated_manifest_not_stale_snapshot(db):
     gm = seed_user(email="integrity-runtime@test.com")
     install_system(gm, package_id="valid-ruleset")

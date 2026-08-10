@@ -142,6 +142,7 @@ from app.actions.game.streamer_link import revoke_streamer_link
 from app.actions.game.update_permissions import update_campaign_permissions
 from app.actions.game.update_layout_preference import update_layout_preference
 from app.actions.game.update_vision_preference import update_vision_preference
+from app.actions.game.update_ping_preference import update_ping_preference
 from app.actions.game.update_table_settings import update_table_settings
 from app.actions.game.websocket import game_websocket
 from app.helpers.auth import require_user
@@ -271,6 +272,7 @@ _protected_handlers = [
     update_campaign_permissions,
     update_layout_preference,
     update_vision_preference,
+    update_ping_preference,
     update_table_settings,
     send_chat_message,
     delete_chat_message,

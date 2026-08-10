@@ -22,6 +22,9 @@ class ChatResult:
     error_key: str | None = None
 
 
+MAX_ROLL_LABEL_LEN = 48
+
+
 def _strip_command(content: str, *names: str) -> str | None:
     """Return the argument after a `/name ` command prefix, or None if no match."""
     for name in names:
@@ -29,6 +32,18 @@ def _strip_command(content: str, *names: str) -> str | None:
         if content.startswith(prefix):
             return content[len(prefix) :].strip()
     return None
+
+
+def _split_label(argument: str) -> tuple[str, str | None]:
+    """Separa ``2d6+1 # Dano da espada`` em expressão e rótulo.
+
+    ``#`` não existe na notação do avaliador, então serve de separador sem
+    ambiguidade. O rótulo é opcional em toda parte: sem ele a rolagem é a mesma
+    de antes, e um ``#`` sem texto depois não vira rótulo vazio.
+    """
+    expression, _, label = argument.partition("#")
+    label = label.strip()[:MAX_ROLL_LABEL_LEN]
+    return expression.strip(), label or None
 
 
 class ChatService:
@@ -253,7 +268,8 @@ class ChatService:
 
         roll_expr = _strip_command(content, "/roll", "/r")
         if roll_expr is not None:
-            result = self.roller.evaluate(roll_expr)
+            expression, label = _split_label(roll_expr)
+            result = self.roller.evaluate(expression)
             if result is None:
                 return ChatResult(success=False, error_key="game.chat.errors.invalid_roll")
 
@@ -265,7 +281,7 @@ class ChatService:
                 author_name=author,
                 author_role=role,
                 kind=ChatMessageKind.ROLL,
-                content=None,
+                content=label,
                 expression=result.expression,
                 groups=result.groups,
                 modifier=result.modifier,
@@ -277,6 +293,7 @@ class ChatService:
                 message={
                     **base,
                     "kind": ChatMessageKind.ROLL,
+                    "content": label,
                     "expression": result.expression,
                     "groups": result.groups,
                     "modifier": result.modifier,
@@ -378,6 +395,7 @@ class ChatService:
         ):
             return ChatResult(success=False, error_key="permissions.errors.denied")
 
+        expression, label = _split_label(expression)
         result = self.roller.evaluate(expression)
         if result is None:
             return ChatResult(success=False, error_key="game.chat.errors.invalid_roll")
@@ -392,6 +410,7 @@ class ChatService:
                 **base,
                 "kind": ChatMessageKind.ROLL,
                 "secret": True,
+                "content": label,
                 "expression": result.expression,
                 "groups": result.groups,
                 "modifier": result.modifier,

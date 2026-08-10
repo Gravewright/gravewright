@@ -139,11 +139,15 @@
         const modificador = Number(payload.modifier) || 0;
 
 
+        // Nome que a pessoa deu à rolagem na bandeja: vira o rótulo da mensagem
+        // e a fórmula desce para subtítulo, que é o que se lê na mesa.
+        const rotulo = String(payload.content || "").trim();
 
         return `
             <div class="chat-message-content roll">
                 <span class="chat-author">${escapeHtml(payload.author)}</span>
                 ${secretHtml}
+                ${rotulo ? `<span class="roll-label">${escapeHtml(rotulo)}</span>` : ""}
                 <details class="roll-box">
                     <summary class="roll-summary">
                         <span class="roll-formula">${escapeHtml(payload.expression || "")}</span>

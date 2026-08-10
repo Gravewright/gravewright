@@ -5,7 +5,12 @@ from dataclasses import dataclass
 
 import xdice
 
+from app.engine.dice import exploding_dice
 
+
+# `!` na biblioteca rola um dado extra e para; na mesa, dado aberto continua
+# explodindo enquanto cair no máximo. Ver o módulo para o porquê do patch.
+exploding_dice.install()
 
 
 

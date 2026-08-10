@@ -60,10 +60,12 @@ function makeElement(tag = "div") {
 const root = makeElement("div");
 root.dataset.roomId = "sala-1";
 for (const slot of [
-  "data-dice-pool", "data-dice-term-options", "data-dice-formula",
+  "data-dice-pool", "data-dice-term-options", "data-dice-formula", "data-dice-name",
   "data-dice-modifier-value", "data-dice-history", "data-dice-status", "data-dice-bonus",
 ]) {
-  root.__slots[slot] = makeElement(slot === "data-dice-formula" ? "input" : "div");
+  root.__slots[slot] = makeElement(
+    slot === "data-dice-formula" || slot === "data-dice-name" ? "input" : "div",
+  );
 }
 
 global.document = {
@@ -73,7 +75,16 @@ global.document = {
   addEventListener() {},
   querySelectorAll: (sel) => (String(sel).includes("dice-tray") ? [root] : []),
 };
-global.window = {};
+// localStorage de mentira: o histórico da bandeja é persistido nele, e é aqui
+// que se prova que ele sobrevive a um reload.
+const storage = new Map();
+global.window = {
+  localStorage: {
+    getItem: (k) => (storage.has(k) ? storage.get(k) : null),
+    setItem: (k, v) => storage.set(k, String(v)),
+    removeItem: (k) => storage.delete(k),
+  },
+};
 
 const enviados = [];
 global.fetch = async (url, init) => {
@@ -222,14 +233,74 @@ async function main() {
   
   // --- histórico ----------------------------------------------------------------
   
-  check("a expressão rolada entra no histórico", tray.historico[0] === "1d20+5", tray.historico.join(","));
+  check(
+    "a expressão rolada entra no histórico",
+    tray.historico[0]?.expressao === "1d20+5",
+    JSON.stringify(tray.historico),
+  );
   await tray.rolar(false);
-  check("rolar a mesma coisa não duplica o histórico", tray.historico.length === 1, tray.historico.join(","));
-  
+  check(
+    "rolar a mesma coisa não duplica o histórico",
+    tray.historico.length === 1,
+    JSON.stringify(tray.historico),
+  );
+
+  // O nome é só rótulo: não pode vazar para a expressão que vai ao servidor.
+  tray.nome = "Ataque com espada";
+  enviados.length = 0;
+  await tray.rolar(false);
+  const mensagemNomeada = decodeURIComponent((enviados[0]?.body || "").replace(/\+/g, "%20"));
+  check(
+    "nomear não muda a expressão enviada",
+    mensagemNomeada.includes("message=/roll 1d20+5 #"),
+    enviados[0]?.body,
+  );
+  check(
+    "o nome vai como rótulo depois do #, para o chat e o toast",
+    mensagemNomeada.includes("# Ataque com espada"),
+    enviados[0]?.body,
+  );
+  check(
+    "o nome fica na entrada do histórico",
+    tray.historico[0]?.nome === "Ataque com espada" && tray.historico[0]?.expressao === "1d20+5",
+    JSON.stringify(tray.historico),
+  );
+  check(
+    "a mesma fórmula com e sem nome são atalhos diferentes",
+    tray.historico.length === 2,
+    JSON.stringify(tray.historico),
+  );
+
+  // Rolar sem nome nenhum continua valendo: o campo nunca trava a rolagem.
+  tray.nome = "";
   tray.limpar();
-  tray.usar("2d20L1");
-  check("reusar do histórico preenche a fórmula", expressao() === "2d20L1", expressao());
-  
+  tray.adicionar("6");
+  enviados.length = 0;
+  await tray.rolar(false);
+  check("sem nome a rolagem sai igual", enviados.length === 1, enviados[0]?.body);
+  check("e entra no histórico sem rótulo", tray.historico[0]?.nome === "", JSON.stringify(tray.historico));
+
+  tray.limpar();
+  tray.usar(tray.historico.findIndex((e) => e.nome === "Ataque com espada"));
+  check("reusar do histórico preenche a fórmula", expressao() === "1d20+5", expressao());
+  check("e devolve o nome junto", tray.nome === "Ataque com espada", tray.nome);
+
+  const antes = tray.historico.length;
+  tray.esquecer(0);
+  check("dá para tirar uma entrada do histórico", tray.historico.length === antes - 1);
+
+  // Reload: o histórico é da pessoa, não da sessão.
+  const salvo = JSON.stringify(tray.historico);
+  api.trays.delete("sala-1");
+  api.montar();
+  const recarregada = api.trays.get("sala-1");
+  check(
+    "o histórico volta depois de recarregar a página",
+    JSON.stringify(recarregada.historico) === salvo,
+    JSON.stringify(recarregada.historico),
+  );
+  check("a bandeja recarregada é outra instância", recarregada !== tray);
+
   // Bandeja vazia não manda nada: um POST com expressão vazia só viraria erro.
   tray.limpar();
   enviados.length = 0;

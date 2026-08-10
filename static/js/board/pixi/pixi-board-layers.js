@@ -28,6 +28,10 @@
             board.fogScene = new PIXI.Container();
             board.fogLayer.addChild(board.fogSprite, board.fogUiGfx);
 
+            board.pingLayer = new PIXI.Container();
+            board.pingGfx = new PIXI.Graphics();
+            board.pingLayer.addChild(board.pingGfx);
+
             board.lightingLayer = new PIXI.Container();
 
 
@@ -82,6 +86,7 @@
                 board.effectsLayer,
                 board.lightingLayer,
                 board.fogLayer,
+                board.pingLayer,
             );
         },
     });

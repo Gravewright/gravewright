@@ -45,7 +45,11 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, set[str]] = {
         TablePermission.CHAT_SEND.value,
         TablePermission.CHAT_WHISPER.value,
         TablePermission.CHAT_SEND_TO_GM.value,
-        TablePermission.CHAT_DELETE_OWN.value,
+
+
+        # Apagar mensagem não é do jogador: o chat é o registro da mesa, e uma
+        # rolagem ou uma fala some sem o GM ver. Continua configurável por mesa
+        # (chat.delete_own), mas o padrão é não.
         TablePermission.COMBAT_VIEW.value,
         TablePermission.SCENE_VIEW.value,
         TablePermission.GRID_VIEW.value,

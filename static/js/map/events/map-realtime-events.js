@@ -12,7 +12,6 @@
             applyRemoteMeasureClear,
             applyRemoteMeasureDelete,
             applyRemoteMeasureFlash,
-            handleBoardPing,
             handleChunkUpdated,
             handleSceneActivated,
             handleSceneUpdated,
@@ -77,7 +76,6 @@
             if (evtName === "tokens.deleted") handleTokensDeleted(payload);
             if (evtName === "tokens.visibility_changed") handleTokensVisibilityChanged(payload);
             if (evtName === "tokens.conditions.updated") handleTokensConditionsUpdated(payload);
-            if (evtName === "board.ping") handleBoardPing(payload);
             if (evtName === "board.area_marker.upserted") applyRemoteAreaMarkerUpsert(payload);
             if (evtName === "board.area_marker.deleted") applyRemoteAreaMarkerDelete(payload);
             if (evtName === "board.area_marker.cleared") applyRemoteAreaMarkerClear(payload);

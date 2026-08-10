@@ -178,6 +178,14 @@
             this.fog = fog || null;
         }
 
+        showPing(canvas, ping) {
+            this.attach(canvas);
+            const board = this.boards.get(canvas);
+            if (!board) return;
+            board.pings.push({ ...ping, startedAt: performance.now() });
+            this.deps.requestRender?.();
+        }
+
         render() {
             const board = this.active && this.boards.get(this.active);
             if (!board || !board.ready) return;
@@ -199,6 +207,7 @@
             this._renderOrigin(board);
             this._renderLighting?.(board, cssW, cssH);
             this._renderFog(board, cssW, cssH);
+            this._renderPings(board);
 
             board.app.render();
         }
@@ -257,6 +266,10 @@
                 fogGfxPool: [],
                 fogPoolIndex: 0,
 
+                pingLayer: null,
+                pingGfx: null,
+                pings: [],
+
                 tileSprites: new Map(),
                 tokenNodes: new Map(),
                 tilePlanKey: "",
@@ -304,6 +317,40 @@
             } catch {
                 return 0x11151a;
             }
+        }
+
+        _renderPings(board) {
+            const gfx = board.pingGfx;
+            if (!gfx) return;
+            gfx.clear();
+            const now = performance.now();
+            const duration = 2400;
+            board.pings = board.pings.filter((ping) => now - ping.startedAt < duration);
+            board.pings.forEach((ping) => {
+                const age = Math.max(0, Math.min(1, (now - ping.startedAt) / duration));
+                const x = ping.worldX * this.camera.zoom + this.camera.offsetX;
+                const y = ping.worldY * this.camera.zoom + this.camera.offsetY;
+                const color = this._color(ping.color || "#f2c679");
+                for (let index = 0; index < 3; index += 1) {
+                    const progress = Math.max(0, Math.min(1, age * 1.45 - index * 0.18));
+                    if (progress <= 0 || progress >= 1) continue;
+                    const radius = 18 + 92 * progress;
+                    const alpha = Math.pow(1 - progress, 1.35);
+                    if (ping.variant === "focus") {
+                        gfx.poly([x, y - radius, x + radius, y, x, y + radius, x - radius, y])
+                            .stroke({ color, width: 4, alpha });
+                    } else {
+                        gfx.circle(x, y, radius).stroke({ color, width: 4, alpha });
+                    }
+                }
+                const pulse = 1 + 0.24 * Math.sin(age * Math.PI * 8);
+                gfx.circle(x, y, 9 * pulse)
+                    .fill({ color, alpha: Math.max(0.35, 1 - age) })
+                    .stroke({ color: 0xffffff, width: 2, alpha: Math.max(0.2, 0.75 - age) });
+                gfx.circle(x, y, 18 * pulse)
+                    .stroke({ color, width: 3, alpha: Math.max(0.18, 0.8 - age) });
+            });
+            if (board.pings.length) this.deps.requestRender?.();
         }
 
         _colorAlpha(css) {

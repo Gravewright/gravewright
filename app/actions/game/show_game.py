@@ -109,12 +109,16 @@ async def show_game(
     open_modal: FromQuery[str | None] = None,
     detached_modal: FromQuery[str | None] = None,
     room: FromQuery[str | None] = None,
+    view_scene: FromQuery[str | None] = None,
 ) -> Redirect | Template:
     user = current_user
 
-    ctx = game_page_service.build_context(user_id=user["id"])
+    ctx = game_page_service.build_context(
+        user_id=user["id"], navigated_scene_id=(view_scene or "").strip() or None
+    )
     game_layout_mode = user_preference_service.get_game_layout_mode(user["id"])
     vision_mode = user_preference_service.get_vision_mode(user["id"])
+    ping_color = user_preference_service.get_ping_color(user["id"])
 
     room_ids = [r["id"] for r in ctx.rooms]
     active_room_id = room if room in room_ids else (room_ids[0] if room_ids else "")
@@ -162,6 +166,7 @@ async def show_game(
             system_scripts=package_assets["scripts"],
             game_layout_mode=game_layout_mode,
             vision_mode=vision_mode,
+            ping_color=ping_color,
             sdk_client_manifests_json=_safe_json_script(sdk_client_manifests),
             game_client_context_json=_safe_json_script(game_client_context),
             open_modal=open_modal or "",

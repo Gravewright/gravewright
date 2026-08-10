@@ -20,7 +20,14 @@
   const DADOS = ["F", "4", "6", "8", "10", "12", "20", "%"];
   const MAX_TERMOS = 8;
   const MAX_QUANTIDADE = 99;
-  const HISTORICO = 8;
+
+
+  // O histórico agora sobrevive ao reload (localStorage), então ele deixou de ser
+  // "as últimas rolagens" e virou a estante de rolagens da pessoa naquela mesa.
+  // Por isso o teto é maior e cada entrada pode ter um nome.
+  const HISTORICO = 30;
+  const HISTORICO_CHAVE = "gravewright.dice.history.v1.";
+  const MAX_NOME = 48;
 
   const trays = new Map();
   const expressionModifiers = new Map();
@@ -69,9 +76,45 @@
       this.modificador = 0;
       this.selecionado = -1;
       this.formulaManual = "";
-      this.historico = [];
+      this.nome = "";
+      this.historico = this.carregarHistorico();
       trays.set(this.roomId, this);
       this.render();
+    }
+
+    chaveHistorico() {
+      return `${HISTORICO_CHAVE}${this.roomId}`;
+    }
+
+
+    // Tolera o formato antigo (lista de strings) e qualquer lixo no storage: um
+    // histórico corrompido não pode derrubar a bandeja inteira.
+    carregarHistorico() {
+      let bruto = null;
+      try {
+        bruto = JSON.parse(window.localStorage.getItem(this.chaveHistorico()) || "[]");
+      } catch {
+        return [];
+      }
+      if (!Array.isArray(bruto)) return [];
+
+      const entradas = [];
+      bruto.forEach((item) => {
+        const expressao = typeof item === "string" ? item : String(item?.expressao || "");
+        if (!expressao) return;
+        const nome = typeof item === "string" ? "" : String(item?.nome || "").slice(0, MAX_NOME);
+        entradas.push({ expressao, nome });
+      });
+      return entradas.slice(0, HISTORICO);
+    }
+
+    salvarHistorico() {
+      try {
+        window.localStorage.setItem(this.chaveHistorico(), JSON.stringify(this.historico));
+      } catch {
+
+        // Modo privado / cota cheia: o histórico segue valendo nesta sessão.
+      }
     }
 
 
@@ -119,6 +162,7 @@
       this.modificador = 0;
       this.selecionado = -1;
       this.formulaManual = "";
+      this.nome = "";
       expressionModifiers.forEach((modifier) => modifier.reset?.(this));
       this.render();
     }
@@ -148,10 +192,15 @@
       if (!expressao || !this.roomId) return;
 
       const comando = paraGm ? "/gmroll" : "/roll";
+
+
+      // `#` não existe na notação do avaliador, então é o separador do rótulo.
+      // Sem nome a mensagem sai exatamente como antes.
+      const nome = this.nome.trim().slice(0, MAX_NOME).replace(/#/g, "");
       const body = new URLSearchParams({
         csrf_token: window.csrfToken ? window.csrfToken() : "",
         campaign_id: this.roomId,
-        message: `${comando} ${expressao}`,
+        message: `${comando} ${expressao}${nome ? ` # ${nome}` : ""}`,
       });
 
       const status = this.root.querySelector("[data-dice-status]");
@@ -179,12 +228,32 @@
     }
 
     lembrar(expressao) {
-      this.historico = [expressao, ...this.historico.filter((e) => e !== expressao)].slice(0, HISTORICO);
+      const nome = this.nome.trim().slice(0, MAX_NOME);
+      const entrada = { expressao, nome };
+
+
+      // Mesma fórmula com nomes diferentes são duas entradas: "2d6" e "2d6 (Dano)"
+      // são atalhos distintos para quem montou.
+      this.historico = [
+        entrada,
+        ...this.historico.filter((e) => e.expressao !== expressao || e.nome !== nome),
+      ].slice(0, HISTORICO);
+      this.salvarHistorico();
       this.renderHistorico();
     }
 
-    usar(expressao) {
-      this.formulaManual = expressao;
+    esquecer(indice) {
+      if (!this.historico[indice]) return;
+      this.historico.splice(indice, 1);
+      this.salvarHistorico();
+      this.renderHistorico();
+    }
+
+    usar(indice) {
+      const entrada = this.historico[indice];
+      if (!entrada) return;
+      this.formulaManual = entrada.expressao;
+      this.nome = entrada.nome;
       this.render();
     }
 
@@ -242,6 +311,9 @@
       const campo = this.root.querySelector("[data-dice-formula]");
       if (campo && document.activeElement !== campo) campo.value = this.expressao();
 
+      const nome = this.root.querySelector("[data-dice-name]");
+      if (nome && document.activeElement !== nome) nome.value = this.nome;
+
       const mod = this.root.querySelector("[data-dice-modifier-value]");
       if (mod) mod.textContent = this.modificador > 0 ? `+${this.modificador}` : String(this.modificador);
     }
@@ -249,8 +321,17 @@
     renderHistorico() {
       const host = this.root.querySelector("[data-dice-history]");
       if (!host) return;
+      const remover = label("diceLabelHistoryRemove", "Remove from history");
       host.innerHTML = this.historico
-        .map((e) => `<button type="button" class="dice-recent" data-dice-reuse="${esc(e)}">${esc(e)}</button>`)
+        .map((entrada, i) => `
+          <span class="dice-recent ${entrada.nome ? "dice-recent--named" : ""}">
+            <button type="button" class="dice-recent__use" data-dice-reuse="${i}"
+                    title="${esc(entrada.nome ? `${entrada.nome} — ${entrada.expressao}` : entrada.expressao)}">
+              ${esc(entrada.nome || entrada.expressao)}
+            </button>
+            <button type="button" class="dice-recent__remove" data-dice-forget="${i}"
+                    aria-label="${esc(remover)}" title="${esc(remover)}">×</button>
+          </span>`)
         .join("");
     }
   }
@@ -298,8 +379,15 @@
 
     if (event.target.closest("[data-dice-clear]")) return tray.limpar();
 
+    const esquecer = event.target.closest("[data-dice-forget]");
+    if (esquecer) {
+      event.stopPropagation();
+      tray.esquecer(Number(esquecer.dataset.diceForget));
+      return;
+    }
+
     const reuso = event.target.closest("[data-dice-reuse]");
-    if (reuso) return tray.usar(reuso.dataset.diceReuse);
+    if (reuso) return tray.usar(Number(reuso.dataset.diceReuse));
 
     const rolar = event.target.closest("[data-dice-roll]");
     if (rolar) return void tray.rolar(rolar.dataset.diceRoll === "gm");
@@ -315,13 +403,20 @@
 
   document.addEventListener("input", (event) => {
     const campo = event.target.closest("[data-dice-formula]");
-    if (!campo) return;
-    const tray = trayFromElement(campo);
-    if (tray) tray.formulaManual = campo.value;
+    if (campo) {
+      const tray = trayFromElement(campo);
+      if (tray) tray.formulaManual = campo.value;
+      return;
+    }
+
+    const nome = event.target.closest("[data-dice-name]");
+    if (!nome) return;
+    const tray = trayFromElement(nome);
+    if (tray) tray.nome = nome.value.slice(0, MAX_NOME);
   });
 
   document.addEventListener("keydown", (event) => {
-    const campo = event.target.closest("[data-dice-formula]");
+    const campo = event.target.closest("[data-dice-formula], [data-dice-name]");
     if (!campo || event.key !== "Enter") return;
     event.preventDefault();
     const tray = trayFromElement(campo);

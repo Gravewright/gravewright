@@ -60,7 +60,7 @@ class GamePageService:
         self.item_folders = ItemFolderRepository()
         self.system_install = PackageInstallService()
 
-    def build_context(self, *, user_id: str) -> GamePageContext:
+    def build_context(self, *, user_id: str, navigated_scene_id: str | None = None) -> GamePageContext:
         campaigns = self.campaigns.list_for_user(user_id)
         room_ids = [c["id"] for c in campaigns]
 
@@ -135,6 +135,16 @@ class GamePageService:
             room["scene_groups"] = self.scene_groups.list_by_campaign(campaign["id"])
             room["scenes"] = self.scenes.list_by_campaign(campaign["id"])
             room["active_scene"] = self.scenes.get_active_scene(campaign["id"])
+            room["loaded_scene"] = room["active_scene"]
+            room["navigated_scene"] = room["active_scene"]
+            if navigated_scene_id and has_full_view(room["member_role"]):
+                navigated = next(
+                    (scene for scene in room["scenes"] if scene["id"] == navigated_scene_id),
+                    None,
+                )
+                if navigated is not None:
+                    room["active_scene"] = navigated
+                    room["navigated_scene"] = navigated
             if room["active_scene"]:
                 scene_layers = self.layers.list_by_scene(room["active_scene"]["id"])
                 ground = next(

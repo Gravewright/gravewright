@@ -2,8 +2,8 @@
 
 Este diretório espelha a documentação pública da SDK em português brasileiro.
 
-Versão atual: **Gravewright v3.0.0-alpha**. Consulte
-`../../RELEASE_v3.0.0-alpha.md` e `../../CHANGELOG.md`.
+Versão atual: **Gravewright v3.0.1-alpha**. Consulte
+`../../RELEASE_v3.0.1-alpha.md` e `../../CHANGELOG.md`.
 
 - [`sdk/README.md`](sdk/README.md) — ponto de entrada para autores de pacotes.
 - [`sdk/declarative-model.md`](sdk/declarative-model.md) — modelo declarativo da SDK.
@@ -14,3 +14,8 @@ Versão atual: **Gravewright v3.0.0-alpha**. Consulte
 - [`efeitos-visuais.md`](efeitos-visuais.md) — shaders de cena, modos de mistura, presets e partículas.
 
 Os nomes de campos, capabilities, comandos e objetos JavaScript permanecem em inglês porque fazem parte do contrato técnico da SDK.
+
+Documentos de recurso em inglês que complementam esta seção:
+[`../features/dice-tray.md`](../features/dice-tray.md) (bandeja de dados, notação,
+explosão aberta, nome da rolagem e histórico local) e
+[`../features/dynamic-lighting.md`](../features/dynamic-lighting.md).

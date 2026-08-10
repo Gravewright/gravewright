@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.domain.chat import ChatVisibility
+from app.domain.permissions.permissions import TablePermission
 from app.domain.roles import PlayerRole
 from app.engine.chat.chat_service import ChatService
 from app.persistence.repositories.chat_message_repository import ChatMessageRepository
@@ -368,12 +369,7 @@ async def test_chat_visibility_consistent(db, transport):
     assert messages[0]["visibility"] == ChatVisibility.PUBLIC
 
 
-async def test_author_can_delete_own_message(db, transport):
-    gm_id = seed_user(name="GM", email="gm-delete-own@test.com")
-    player_id = seed_user(name="Player", email="player-delete-own@test.com")
-    campaign_id = seed_campaign(gm_id)
-    seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
-
+async def _player_message(campaign_id: str, player_id: str, transport) -> str:
     await ChatService().send_message(
         campaign_id=campaign_id,
         sender_user_id=player_id,
@@ -381,7 +377,49 @@ async def test_author_can_delete_own_message(db, transport):
         content="remove me",
         transport=transport,
     )
-    message_id = ChatMessageRepository().list_for_campaign(campaign_id=campaign_id)[0]["id"]
+    return ChatMessageRepository().list_for_campaign(campaign_id=campaign_id)[0]["id"]
+
+
+async def test_a_player_cannot_delete_even_their_own_message(db, transport):
+    """O chat é o registro da mesa: uma rolagem ou uma fala não pode sumir sem o
+    GM ver. Por padrão o jogador não apaga nada — nem o que ele mesmo mandou."""
+    gm_id = seed_user(name="GM", email="gm-delete-own@test.com")
+    player_id = seed_user(name="Player", email="player-delete-own@test.com")
+    campaign_id = seed_campaign(gm_id)
+    seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
+    message_id = await _player_message(campaign_id, player_id, transport)
+
+    result = await ChatService().delete_message(
+        campaign_id=campaign_id,
+        user_id=player_id,
+        message_id=message_id,
+        transport=transport,
+    )
+
+    assert result.success is False
+    assert result.error_key == "permissions.errors.denied"
+    assert len(ChatMessageRepository().list_for_campaign(campaign_id=campaign_id)) == 1
+
+
+async def test_a_table_can_hand_delete_own_back_to_its_players(db, transport):
+    """O padrão mudou, a permissão não sumiu: a mesa que quiser continua podendo
+    liberar ``chat.delete_own`` para o papel."""
+    from app.domain.permissions.permissions import PermissionEffect, PermissionSubjectType
+    from app.persistence.repositories.campaign_permission_repository import (
+        CampaignPermissionRepository,
+    )
+
+    gm_id = seed_user(name="GM", email="gm-delete-own-granted@test.com")
+    player_id = seed_user(name="Player", email="player-delete-own-granted@test.com")
+    campaign_id = seed_campaign(gm_id)
+    seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
+    CampaignPermissionRepository().replace_subject_effects(
+        campaign_id=campaign_id,
+        subject_type=PermissionSubjectType.ROLE,
+        subject_id=PlayerRole.PLAYER.value,
+        effects={TablePermission.CHAT_DELETE_OWN.value: PermissionEffect.ALLOW},
+    )
+    message_id = await _player_message(campaign_id, player_id, transport)
 
     result = await ChatService().delete_message(
         campaign_id=campaign_id,
@@ -455,3 +493,76 @@ async def test_gm_can_clear_all_messages(db, transport):
     assert ChatMessageRepository().list_for_campaign(campaign_id=campaign_id) == []
     assert transport.room_events[-1]["event"] == TransportEvent.CHAT_MESSAGES_CLEARED
     assert transport.room_events[-1]["payload"]["room_id"] == campaign_id
+
+
+async def test_a_named_roll_carries_its_label_to_the_table(db, transport):
+    """O nome que a pessoa dá na bandeja de dados viaja como rótulo da mensagem
+    (``content``), que é de onde o cartão do chat e o toast leem. A notação vai
+    inteira para o avaliador — se o nome vazasse para dentro dela, a rolagem
+    voltaria como inválida."""
+    gm_id = seed_user(name="GM", email="gm-roll-label@test.com")
+    campaign_id = seed_campaign(gm_id)
+
+    result = await ChatService().send_message(
+        campaign_id=campaign_id,
+        sender_user_id=gm_id,
+        sender_name="GM",
+        content="/roll 2d6+1 # Dano da espada",
+        transport=transport,
+    )
+
+    assert result.success
+    enviada = transport.room_messages[-1]
+    assert enviada["content"] == "Dano da espada"
+    assert enviada["expression"] == "2d6+1"
+    assert enviada["kind"] == "roll"
+
+    guardada = ChatMessageRepository().list_for_campaign(campaign_id=campaign_id)[0]
+    assert guardada["content"] == "Dano da espada", "o rótulo sobrevive ao reload"
+    assert guardada["expression"] == "2d6+1"
+
+
+async def test_a_roll_without_a_name_is_unchanged(db, transport):
+    gm_id = seed_user(name="GM", email="gm-roll-nolabel@test.com")
+    campaign_id = seed_campaign(gm_id)
+
+    await ChatService().send_message(
+        campaign_id=campaign_id,
+        sender_user_id=gm_id,
+        sender_name="GM",
+        content="/roll 2d6+1",
+        transport=transport,
+    )
+    assert transport.room_messages[-1]["content"] is None
+
+    # Um `#` sem texto depois não inventa um rótulo vazio.
+    await ChatService().send_message(
+        campaign_id=campaign_id,
+        sender_user_id=gm_id,
+        sender_name="GM",
+        content="/roll 1d20 #  ",
+        transport=transport,
+    )
+    assert transport.room_messages[-1]["content"] is None
+    assert transport.room_messages[-1]["expression"] == "1d20"
+
+
+async def test_a_secret_roll_keeps_its_name_too(db, transport):
+    gm_id = seed_user(name="GM", email="gm-gmroll-label@test.com")
+    player_id = seed_user(name="Player", email="player-gmroll-label@test.com")
+    campaign_id = seed_campaign(gm_id)
+    seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
+
+    result = await ChatService().send_message(
+        campaign_id=campaign_id,
+        sender_user_id=player_id,
+        sender_name="Player",
+        content="/gmroll 1d20 # Furtividade",
+        transport=transport,
+    )
+
+    assert result.success
+    sussurro = transport.whispers[-1]
+    assert sussurro["content"] == "Furtividade"
+    assert sussurro["expression"] == "1d20"
+    assert sussurro["secret"] is True

@@ -33,3 +33,18 @@ ativa sem exigir F5.
 - Código GLSL inválido deve ser corrigido no editor; erros do shader não devem
   alterar a posição do efeito nem o zoom do mapa.
 - Faça backup antes de atualizar uma instalação Alpha com campanhas importantes.
+
+## Visibilidade de camadas
+
+Efeitos, paredes e iluminação são três interruptores separados no HUD de
+camadas, guardados por mesa no navegador. Esconder a iluminação não leva junto
+partículas e shaders, e esconder os efeitos não mexe na visão. Portas só são
+clicáveis onde estão de fato visíveis.
+
+## Sandbox de composição do streamer
+
+A visão de streamer compõe iluminação, paredes, partículas e shaders como se
+fosse GM, mas nada disso sai do navegador: as alterações são aplicadas ao estado
+local da cena e nunca chegam ao servidor, à mesa nem ao banco. É superfície de
+enquadramento, não uma segunda cadeira de GM — recarregar a página descarta a
+composição.

@@ -78,8 +78,8 @@ def test_wall_layer_has_wall_and_door_tools():
     # Esconder a camada de Paredes apaga linha e no, nunca a escuridao nem o veu:
     # o jogador nao pode ganhar visao porque o GM arrumou o desenho da parede.
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
-    assert "const visible = shown(EDIT_LAYERS.light)" in script
-    assert "activeLayer === EDIT_LAYERS.wall && shown(EDIT_LAYERS.wall)" in script
+    assert "const lightingVisible = shown(EDIT_LAYERS.light)" in script
+    assert "activeLayer === EDIT_LAYERS.wall && wallsVisible" in script
 
     # E o marcador de foco vive na camada de Iluminacao: enquanto dividia o `return`
     # antecipado com a parede, editar luz obrigava a ver o emaranhado de linhas.
@@ -219,11 +219,14 @@ def test_doors_are_operable_in_play_on_any_layer():
     assert "pointSegmentDistance(point, wall)" in door_at
     assert "Math.min(" in door_at, "marcador e corpo da porta, o que estiver mais perto"
 
-    # o marcador e o unico indicador de estado e o alvo do clique: some-lo trava a porta
+    # O marcador e o alvo do clique; os dois devem usar a mesma lista filtrada para
+    # uma porta fora da visao nao vazar pelo desenho nem pela interacao.
     assert "if (!lighting.editing) {" in pixi and "lighting.doors.forEach" in pixi
     doors=script.split("const doors = walls.filter",1)[1].split("\n",1)[0]
-    assert "pointInPolygon" not in doors, "porta nao pode ser filtrada por visao"
-    assert "pointInPolygon" not in script, "helper ficou orfao ao remover o filtro"
+    assert "editing || doorVisionPolygons.some" in script
+    assert "pointInPolygon(midpoint(wall), polygon)" in script
+    door_at=script.split("doorAt(point) {",1)[1].split("lightAt(point)",1)[0]
+    assert "this.visibleDoorIds.has(wall.id)" in door_at
 
 def test_light_sources_are_placed_animated_and_cached():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
@@ -335,6 +338,44 @@ def test_token_control_comes_from_actor_ownership():
     assert service.count("owners_by_actor") >= 3
     assert "owners_by_actor_id=self._owner_ids_by_actor(campaign_id)" in service
 
+def test_streamer_composition_tracks_alpha3_vision_and_effect_layers():
+    script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
+    template=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
+
+    assert 'this.isStreamer = document.body?.dataset?.streamerMode === "true"' in script
+    sources=script.split("visionSources({ all: everyone = false } = {}) {",1)[1].split("pixiState()",1)[0]
+    assert "if (this.isStreamer)" in sources and "chosen = all" in sources
+    assert "shaders: (effectsVisible && !classic" in script
+
+    for layer in ("effects", "walls", "lighting"):
+        assert f'data-active-layer="{layer}"' in template
+        assert f'data-layer-visibility="{{{{ layer }}}}"' in template or f'data-layer-visibility="{layer}"' in template
+
+def test_alpha3_visual_layers_toggle_independently_for_streamer():
+    script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
+    toolbar=(ROOT/"static/js/tools/tools-toolbar.js").read_text(encoding="utf-8")
+
+    for state in ("lightingVisible", "effectsVisible", "wallsVisible"):
+        assert f"const {state}" in script
+    assert "const visible = lightingVisible || effectsVisible || wallsVisible" in script
+    assert "const darkness = lightingVisible" in script
+    assert "particleClouds: (effectsVisible" in script
+    assert "shaders: (effectsVisible && !classic" in script
+    assert "wallsVisible && wall.kind === \"door\"" in script
+    for layer in ("effects", "walls", "lighting"):
+        assert f"{layer}: true" in toolbar
+
+def test_streamer_gets_the_gm_layer_hud_and_local_alpha3_editors():
+    template=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
+    script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
+
+    assert "room.member_role in ('gm', 'assistant_gm') or room.is_streamer" in template
+    assert "dynamic_lighting_enabled and (room.member_role == 'gm' or room.is_streamer)" in template
+    assert "room.member_role == 'gm' or room.is_streamer" in template
+    assert 'data-lighting-gm="{{ \'true\' if room.member_role == \'gm\' or room.is_streamer else \'false\' }}"' in template
+    assert 'dataset?.streamerMode === "true"' in script
+    assert "return localPost(url, body)" in script
+
 def test_light_and_vision_editors_use_the_project_modal_pattern():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
     editor=(ROOT/"static/js/lighting/light-editor.js").read_text(encoding="utf-8")
@@ -370,8 +411,8 @@ def test_light_and_vision_editors_use_the_project_modal_pattern():
 
     assert "light-editor.js" in template
     assert "modals/light_editor.html" in template and "modals/token_vision.html" in template
-    # o editor de foco so existe para o GM
-    assert "{% if room.member_role == 'gm' %}{% include \"pages/game/modals/light_editor.html\" %}" in template
+    # O editor existe para GM e para o sandbox local do streamer.
+    assert "{% if room.member_role == 'gm' or room.is_streamer %}{% include \"pages/game/modals/light_editor.html\" %}" in template
 
 def test_players_only_see_through_tokens_they_own():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")

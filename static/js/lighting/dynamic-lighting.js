@@ -47,6 +47,9 @@
     const currentUserId = () => document.body?.dataset?.currentUserId || "";
 
     async function post(url, body) {
+        if (document.body?.dataset?.streamerMode === "true") {
+            return localPost(url, body);
+        }
         const response = await fetch(url, {
             method: "POST",
             credentials: "same-origin",
@@ -62,6 +65,52 @@
             throw new Error(data.error_key || `lighting.errors.http_${response.status}`);
         }
         return data;
+    }
+
+    function localPost(url, body) {
+        const controller = [...controllers.values()].find((item) => item.roomId === body.campaign_id);
+        if (!controller) throw new Error("lighting.errors.not_found");
+        const id = (prefix) => `streamer-${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        const withoutMeta = (value) => Object.fromEntries(
+            Object.entries(value).filter(([key]) => !["campaign_id", "scene_id"].includes(key)),
+        );
+        const update = (items, itemId, patch) => {
+            const item = items.find((candidate) => candidate.id === itemId);
+            if (item) Object.assign(item, withoutMeta(patch));
+            return item || null;
+        };
+        const remove = (items, ids) => items.filter((item) => !ids.includes(item.id));
+
+        if (url === "/game/walls") return { wall: { id: id("wall"), ...withoutMeta(body), door_state: "closed" } };
+        if (url === "/game/walls/door-state") return { wall: update(controller.walls, body.wall_id, { door_state: body.door_state }) };
+        if (url === "/game/walls/move-node") return {};
+        if (url === "/game/walls/split") {
+            const wall = controller.walls.find((item) => item.id === body.wall_id);
+            if (!wall) throw new Error("lighting.errors.not_found");
+            const halves = [
+                { ...wall, id: id("wall"), x2: body.x, y2: body.y },
+                { ...wall, id: id("wall"), x1: body.x, y1: body.y },
+            ];
+            controller.walls = controller.walls.filter((item) => item.id !== wall.id).concat(halves);
+            return { walls: controller.walls };
+        }
+        if (url === "/game/walls/delete-many") { controller.walls = remove(controller.walls, body.wall_ids || []); return {}; }
+
+        if (url === "/game/lights") return { light: { id: id("light"), enabled: 1, ...withoutMeta(body) } };
+        if (url === "/game/lights/update") return { light: update(controller.lights, body.light_id, body) };
+        if (url === "/game/lights/delete") { controller.lights = remove(controller.lights, [body.light_id]); return {}; }
+        if (url === "/game/lights/delete-many") { controller.lights = remove(controller.lights, body.light_ids || []); return {}; }
+
+        if (url === "/game/particles") return { emitter: { id: id("emitter"), enabled: 1, ...withoutMeta(body) } };
+        if (url === "/game/particles/update") return { emitter: update(controller.emitters, body.emitter_id, body) };
+        if (url === "/game/particles/delete") { controller.emitters = remove(controller.emitters, [body.emitter_id]); return {}; }
+        if (url === "/game/particles/delete-many") { controller.emitters = remove(controller.emitters, body.emitter_ids || []); return {}; }
+
+        if (url === "/game/shaders") return { shader: { id: id("shader"), enabled: 1, name: "Shader", source: "", radius: 0, ...withoutMeta(body) } };
+        if (url === "/game/shaders/update") return { shader: update(controller.shaders, body.shader_id, body) };
+        if (url === "/game/shaders/delete") { controller.shaders = remove(controller.shaders, [body.shader_id]); return {}; }
+        if (url === "/game/shaders/delete-many") { controller.shaders = remove(controller.shaders, body.shader_ids || []); return {}; }
+        throw new Error("lighting.errors.invalid");
     }
 
     function rayHit(origin, angle, segment, max = 100000) {
@@ -154,6 +203,21 @@
 
 
         return apex ? [apex, ...points] : points;
+    }
+
+    function pointInPolygon(point, polygon) {
+        if (!polygon || polygon.length < 3) return false;
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+            const a = polygon[j], b = polygon[i];
+            if (pointSegmentDistance(point, { x1: a.x, y1: a.y, x2: b.x, y2: b.y }) < 0.01) {
+                return true;
+            }
+            const crosses = ((a.y > point.y) !== (b.y > point.y))
+                && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x;
+            if (crosses) inside = !inside;
+        }
+        return inside;
     }
 
     function snapToGrid(point, scene) {
@@ -555,6 +619,7 @@
             this.canvas = canvas;
             this.roomId = canvas.dataset.roomId;
             this.isGm = canvas.closest("[data-map-viewport]")?.dataset.lightingGm === "true";
+            this.isStreamer = document.body?.dataset?.streamerMode === "true";
             this.walls = [];
             this.lights = [];
 
@@ -592,6 +657,7 @@
             this.polygonCache = new Map();
             this.probeReach = new Map();
             this.wallIndex = null;
+            this.visibleDoorIds = new Set();
             this.bind();
             this.syncScene();
         }
@@ -651,6 +717,7 @@
             let best = null, bestDistance = tolerance;
             this.walls.forEach((wall) => {
                 if (wall.kind !== "door") return;
+                if (activeLayer !== EDIT_LAYERS.door && !this.visibleDoorIds.has(wall.id)) return;
                 const centre = midpoint(wall);
                 const distance = Math.min(
                     Math.hypot(point.x - centre.x, point.y - centre.y),
@@ -807,6 +874,8 @@
             let chosen;
             if (everyone) {
                 chosen = all;
+            } else if (this.isStreamer) {
+                chosen = all;
             } else if (this.isGm) {
 
                 const selected = selectedTokenId ? all.find((token) => token.token_id === selectedTokenId) : null;
@@ -852,12 +921,15 @@
 
 
 
-            const visible = shown(EDIT_LAYERS.light);
+            const lightingVisible = shown(EDIT_LAYERS.light);
+            const effectsVisible = shown(EDIT_LAYERS.particles);
+            const wallsVisible = shown(EDIT_LAYERS.wall);
+            const visible = lightingVisible || effectsVisible || wallsVisible;
             const walls = this.renderWalls();
             const lights = this.renderLights();
 
-            const editing = this.isGm && activeLayer === EDIT_LAYERS.wall && shown(EDIT_LAYERS.wall);
-            const editingLights = this.isGm && activeLayer === EDIT_LAYERS.light && visible;
+            const editing = this.isGm && activeLayer === EDIT_LAYERS.wall && wallsVisible;
+            const editingLights = this.isGm && activeLayer === EDIT_LAYERS.light && lightingVisible;
             if (!scene) {
                 return { mode, visible, editing, editingLights, editingParticles: false, editingShaders: false, shaders: [], shaderMarkers: [], darkness: 0, sceneDarkness: 0, geometryStamp: this.geometryStamp, particleClouds: [], walls, lights: [], visionPolygons: [], visionRims: [], visionPreview: null, doors: [], selected: this.selected, selectedLight: this.selectedLight, picked: this.picks, marquee: null, start: this.start, preview: this.preview, nodesGrabbable: false, draggingNode: null };
             }
@@ -870,7 +942,9 @@
                 && sources.length === 1 && sources[0].id === selectedTokenId;
             const visionLimited = !this.isGm || playerView || previewingToken;
 
-            const darkness = (scene.darkness || 0) * (visionLimited ? 1 : GM_DARKNESS_PREVIEW);
+            const darkness = lightingVisible
+                ? (scene.darkness || 0) * (visionLimited ? 1 : GM_DARKNESS_PREVIEW)
+                : 0;
 
 
 
@@ -882,7 +956,8 @@
             const size = scene.scaledTileSize || 50;
             const now = performance.now();
 
-            const litPolygons = lights.filter((light) => light.enabled !== false && light.enabled !== 0).map((light) => {
+            const litPolygons = (lightingVisible ? lights : [])
+                .filter((light) => light.enabled !== false && light.enabled !== 0).map((light) => {
                 const dim = Math.max(0, (light.dim_radius || 0) * size);
 
                 const bright = Math.max(0, Math.min(dim, (light.bright_radius || 0) * size));
@@ -938,6 +1013,11 @@
             const visionPolygons = visionLimited
                 ? sources.map((source) => this.cachedPolygon(`vision-${source.id}`, source, blockers, scene, source.radius))
                 : [];
+            const renderedVisionPolygons = lightingVisible ? visionPolygons : [];
+
+            const doorVisionPolygons = visionLimited
+                ? visionPolygons
+                : sources.map((source) => this.cachedPolygon(`vision-${source.id}`, source, blockers, scene, source.radius));
 
 
 
@@ -946,7 +1026,7 @@
 
 
 
-            const visionRims = visionLimited
+            const visionRims = lightingVisible && visionLimited
                 ? sources.map((source) => ({ x: source.x, y: source.y, radius: source.radius }))
                 : [];
 
@@ -961,14 +1041,17 @@
 
 
 
-            const doors = walls.filter((wall) => wall.kind === "door");
+            const doors = walls.filter((wall) => wallsVisible && wall.kind === "door" && (
+                editing || doorVisionPolygons.some((polygon) => pointInPolygon(midpoint(wall), polygon))
+            ));
+            this.visibleDoorIds = new Set(doors.map((door) => door.id));
 
             return {
                 mode,
                 visible,
                 editing,
                 darkness,
-                sceneDarkness,
+                sceneDarkness: lightingVisible ? sceneDarkness : 0,
 
 
 
@@ -982,7 +1065,7 @@
 
 
                 editingParticles: this.isGm && activeLayer === EDIT_LAYERS.particles
-                    && shown(EDIT_LAYERS.particles),
+                    && effectsVisible,
                 editingLights,
 
 
@@ -991,7 +1074,8 @@
 
 
 
-                shaders: (!classic && window.GravewrightShaderPreference?.enabled?.() !== false
+                shaders: (effectsVisible && !classic
+                    && window.GravewrightShaderPreference?.enabled?.() !== false
                     ? (this.shaders || []) : [])
                     .filter((shader) => shader.enabled && shader.source)
                     .map((shader) => {
@@ -1041,7 +1125,7 @@
                             selected: this.picked("shader", shader.id),
                         };
                     }),
-                particleClouds: (shown(EDIT_LAYERS.particles) ? (this.emitters || []) : []).map((emitter) => {
+                particleClouds: (effectsVisible ? (this.emitters || []) : []).map((emitter) => {
 
 
 
@@ -1063,7 +1147,7 @@
                 }),
                 walls,
                 lights: litPolygons,
-                visionPolygons,
+                visionPolygons: renderedVisionPolygons,
                 visionRims,
                 visionPreview,
                 doors,
@@ -1581,7 +1665,7 @@
             } catch (error) {
                 console.error("Dynamic lighting source delete failed", error);
             }
-            await this.refresh();
+            if (!this.isStreamer) await this.refresh();
         }
 
         async commitEmitter(drag) {
@@ -2042,7 +2126,7 @@
                 console.error("Bulk delete failed", error);
                 toast("Não foi possível apagar a seleção.");
             }
-            await this.refresh();
+            if (!this.isStreamer) await this.refresh();
         }
 
     }

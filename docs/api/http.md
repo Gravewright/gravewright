@@ -50,13 +50,24 @@ Campaign mutating routes require membership and usually GM access.
 
 ```text
 GET  /game
+GET  /game?view_scene={scene_id}
 POST /game/chat
 POST /game/chat/delete
 POST /game/chat/clear
 POST /game/presence/leave
 POST /game/preferences/layout
+POST /game/preferences/vision
+POST /game/preferences/ping
 POST /game/settings/table
 ```
+
+`view_scene` opens a scene locally for the requesting user without activating it
+for the table, and is honoured only for roles with full scene view (GM and
+streamer). The `preferences` routes store per-user settings — layout mode, vision
+mode, and ping colour — and affect only the requesting user.
+
+Deleting a chat message requires `chat.delete_any`, or `chat.delete_own` on a
+message the requester wrote. `chat.delete_own` is not a player default.
 
 ## Scene and Map Routes
 

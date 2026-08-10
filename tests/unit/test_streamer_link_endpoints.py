@@ -32,6 +32,19 @@ def test_generate_and_consume_streamer_link(db):
 
         page = viewer.get("/game")
         assert page.status_code == 200
+        body = page.text
+        assert 'data-lighting-gm="true"' in body
+        assert 'class="layer-hud"' in body
+        assert 'data-active-layer="effects"' in body
+        assert 'data-active-layer="walls"' in body
+        assert f'data-modal-id="light-editor-{campaign_id}"' in body
+        assert f'data-modal-id="particle-editor-{campaign_id}"' in body
+        assert f'data-modal-id="shader-editor-{campaign_id}"' in body
+        assert f'data-modal-open="scene-manager-{campaign_id}"' in body
+        assert f'data-modal-open="panel-cards-{campaign_id}"' in body
+        assert f'data-modal-open="library-images-{campaign_id}"' in body
+        assert f'data-modal-id="scene-manager-{campaign_id}"' in body
+        assert f'data-modal-id="library-images-{campaign_id}"' in body
 
     members = CampaignRepository().list_members(campaign_id=campaign_id)
     roles = {m["role"] for m in members}

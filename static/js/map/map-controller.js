@@ -153,11 +153,17 @@
     const mapBoardPing = window.GravewrightMapBoardPing.createBoardPingController({
         holdMs: BOARD_PING_HOLD_MS,
         moveTolerance: BOARD_PING_MOVE_TOLERANCE,
+        activeCanvas,
         sceneDataFor,
         stateFor,
         screenFromWorld,
         screenToWorldXY,
         focusWorldPoint,
+        boardRenderer,
+    });
+    document.addEventListener("vtt:transport-event", (event) => {
+        const detail = event.detail ?? {};
+        if (detail.event === "board.ping") mapBoardPing.handle(detail.payload);
     });
     const mapAddToScene = window.GravewrightMapAddToScene.createAddToSceneController({
         activeCanvas,
@@ -1157,7 +1163,6 @@
         applyRemoteMeasureClear,
         applyRemoteMeasureDelete,
         applyRemoteMeasureFlash,
-        handleBoardPing,
         handleChunkUpdated,
         handleSceneActivated,
         handleSceneUpdated,

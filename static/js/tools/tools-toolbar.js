@@ -28,7 +28,15 @@
         let saved = {};
         try { saved = JSON.parse(localStorage.getItem(layerStorageKey(roomId)) || "{}"); } catch { saved = {}; }
         layerState = {
-            visibility: { game: true, gm: true, composition: true, lighting: true, ...(saved.visibility || {}) },
+            visibility: {
+                game: true,
+                gm: true,
+                composition: true,
+                effects: true,
+                walls: true,
+                lighting: true,
+                ...(saved.visibility || {}),
+            },
             locked: { ...(saved.locked || {}) },
         };
         activeLayer = LAYERS.includes(saved.active) ? saved.active : "game";
