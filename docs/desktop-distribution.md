@@ -2,18 +2,19 @@
 
 How to ship the Gravewright desktop app to end users. The desktop build is a
 self-contained PyInstaller one-dir bundle: it wraps Python, every dependency, and
-the project itself, runs the server in-process, and shows it in a native window
-via WebView2. Users **unzip and run** — no Python, no `uv`, no terminal.
+the project itself, and provides a native PySide6 launcher for the `grave` CLI.
+The launcher starts the local server and opens the table in the user's default
+browser. Users **unzip and run** — no Python, no `uv`, no terminal.
 
 The Portuguese version of this page is `pt-br/distribuicao-desktop.md`.
 
 ## 1. Build the bundle
 
-The build is defined by `Gravewright.spec` at the repo root. From a checkout with
+The build is defined by `grave.spec` at the repo root. From a checkout with
 dev dependencies installed (`uv sync`):
 
 ```bash
-uv run pyinstaller --noconfirm Gravewright.spec
+uv run pyinstaller --noconfirm grave.spec
 ```
 
 Output: `dist/Gravewright/`, containing:
@@ -56,18 +57,16 @@ release asset and paste the instructions from the next section into the notes.
 1. Download `Gravewright-<version>-win64.zip`.
 2. Right-click the ZIP → **Extract All**.
 3. Open the extracted `Gravewright` folder and run **Gravewright.exe**.
-4. If Windows shows "Windows protected your PC": click **More info** →
+4. Press **Start Gravewright**. The table opens in your default browser.
+5. If Windows shows "Windows protected your PC": click **More info** →
    **Run anyway**. (The app is not code-signed yet, so this warning is expected.)
 
 Your data (campaigns, uploads, installed packages) lives in the `GravewrightData`
 folder created next to the app. Back it up to keep your games; delete it to start
 fresh.
 
-### Requirement: Microsoft WebView2 Runtime
-The app uses Microsoft WebView2 to draw its window. It ships with up-to-date
-Windows 10/11, so most users need nothing. If the window does not open, the app
-will point you to the free download:
-https://developer.microsoft.com/microsoft-edge/webview2/
+The launcher also provides Doctor, Backup, Restore, package management, the data
+folder, and live logs without requiring a terminal.
 ```
 
 ## Configuration (`.env`)
@@ -94,10 +93,8 @@ Notes:
 
 ## Notes and caveats
 
-- **WebView2 Runtime** — bundled with current Windows 10/11. The launcher
-  (`desktop.py`) detects when it is missing, shows a native dialog, and opens the
-  Microsoft download page, so users are never left with a window that silently
-  fails to appear.
+- **Browser** — the table runs in the user's default browser. The PySide6
+  launcher remains open to stop the server and run maintenance commands.
 - **SmartScreen** — unsigned executables trigger "Windows protected your PC".
   Users dismiss it with **More info → Run anyway**. To remove the warning,
   sign the exe with an Authenticode certificate (an EV certificate clears it
@@ -114,6 +111,5 @@ Run **`Gravewright-debug.exe`** — it opens a console with the live server logs
 any Python traceback, which is the fastest way to see why the normal exe failed.
 
 Build-time gotcha: if a rebuild fails with `PermissionError [WinError 32] ... is
-being used by another process` on `dist/Gravewright`, leftover `msedgewebview2.exe`
-(WebView2) child processes from a previous run are holding the folder. Close the
-app fully (or `taskkill /IM msedgewebview2.exe /F`) and rebuild.
+being used by another process` on `dist/Gravewright`, close the launcher and its
+debug console completely, then rebuild.

@@ -2,19 +2,20 @@
 
 Como entregar o aplicativo desktop do Gravewright para os usuários finais. O build
 desktop é um pacote autocontido gerado pelo PyInstaller no modo *one-dir*: ele
-embute o Python, todas as dependências e o próprio projeto, sobe o servidor no
-mesmo processo e o exibe em uma janela nativa via WebView2. O usuário só
+embute o Python, todas as dependências e o próprio projeto e oferece um launcher
+nativo em PySide6 para a CLI `grave`. O launcher sobe o servidor local e abre a
+mesa no navegador padrão do usuário. O usuário só
 **descompacta e executa** — sem Python, sem `uv`, sem terminal.
 
 A versão em inglês desta página é `../desktop-distribution.md`.
 
 ## 1. Gerar o pacote
 
-O build é definido pelo `Gravewright.spec` na raiz do repositório. A partir de um
+O build é definido pelo `grave.spec` na raiz do repositório. A partir de um
 checkout com as dependências de dev instaladas (`uv sync`):
 
 ```bash
-uv run pyinstaller --noconfirm Gravewright.spec
+uv run pyinstaller --noconfirm grave.spec
 ```
 
 Saída: `dist/Gravewright/`, contendo:
@@ -57,18 +58,16 @@ ZIP como asset da release e cole as instruções da próxima seção nas notas.
 1. Baixe o `Gravewright-<versão>-win64.zip`.
 2. Clique com o botão direito no ZIP → **Extrair Tudo**.
 3. Abra a pasta `Gravewright` extraída e execute o **Gravewright.exe**.
-4. Se o Windows mostrar "O Windows protegeu o seu PC": clique em **Mais informações**
+4. Pressione **Start Gravewright**. A mesa abrirá no navegador padrão.
+5. Se o Windows mostrar "O Windows protegeu o seu PC": clique em **Mais informações**
    → **Executar assim mesmo**. (O app ainda não é assinado, então esse aviso é esperado.)
 
 Seus dados (campanhas, uploads, pacotes instalados) ficam na pasta `GravewrightData`,
 criada ao lado do app. Faça backup dela para preservar seus jogos; apague-a para
 começar do zero.
 
-### Requisito: Microsoft WebView2 Runtime
-O app usa o Microsoft WebView2 para desenhar a janela. Ele já vem no Windows 10/11
-atualizado, então a maioria dos usuários não precisa fazer nada. Se a janela não
-abrir, o próprio app indicará o download gratuito:
-https://developer.microsoft.com/microsoft-edge/webview2/
+O launcher também oferece Doctor, Backup, Restore, gerenciamento de pacotes,
+acesso à pasta de dados e logs ao vivo sem exigir um terminal.
 ```
 
 ## Configuração (`.env`)
@@ -96,10 +95,8 @@ Observações:
 
 ## Observações e ressalvas
 
-- **WebView2 Runtime** — já incluso no Windows 10/11 atual. O lançador
-  (`desktop.py`) detecta quando ele está ausente, mostra um diálogo nativo e abre a
-  página de download da Microsoft, para o usuário nunca ficar com uma janela que
-  simplesmente não aparece.
+- **Navegador** — a mesa roda no navegador padrão do usuário. O launcher PySide6
+  permanece aberto para parar o servidor e executar comandos de manutenção.
 - **SmartScreen** — executáveis não assinados disparam o "O Windows protegeu o seu
   PC". O usuário contorna com **Mais informações → Executar assim mesmo**. Para
   eliminar o aviso, assine o exe com um certificado Authenticode (um certificado EV
@@ -117,6 +114,5 @@ vivo e qualquer traceback do Python, que é a forma mais rápida de ver por que 
 normal falhou.
 
 Pegadinha de build: se um rebuild falhar com `PermissionError [WinError 32] ... is
-being used by another process` em `dist/Gravewright`, há processos filhos
-`msedgewebview2.exe` (WebView2) de uma execução anterior segurando a pasta. Feche o
-app por completo (ou `taskkill /IM msedgewebview2.exe /F`) e rebuilde.
+being used by another process` em `dist/Gravewright`, feche completamente o
+launcher e seu console de debug antes de gerar o build novamente.

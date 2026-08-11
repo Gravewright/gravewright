@@ -1,34 +1,30 @@
-"""Gravewright desktop launcher.
+"""Native PySide6 launcher for Gravewright.
 
-Runs the Litestar/uvicorn server *in-process* (a background thread) and shows it
-inside a native window via pywebview. This is the entry point used for the
-PyInstaller one-dir build, so a non-technical user just double-clicks the exe and
-gets a real app window — no terminal, no Python, no `uv` required.
-
-Why in-process instead of `grave run`: the CLI launches the server with
-``subprocess.run([sys.executable, "-m", "uvicorn", "main:app"])`` which is broken
-in a frozen build (``sys.executable`` is the exe itself, not a Python interpreter,
-and ``main.py`` is not shipped as a loose source file).
+The launcher is intentionally small: it operates the existing ``grave`` CLI,
+owns the local Uvicorn process, and opens the table in the user's browser.  It
+does not embed a browser engine.
 """
 
 from __future__ import annotations
 
+import contextlib
+import io
+import logging
 import os
 import shutil
 import socket
 import sys
 import threading
 import time
+import traceback
 from pathlib import Path
+from typing import Callable
 
 
-def _writable_base_dir() -> Path:
-    """Folder where the SQLite DB, packages and uploads live.
+APP_TITLE = "Gravewright Launcher"
 
-    Frozen: a ``GravewrightData`` folder next to the executable so the install
-    stays self-contained and portable. From source: the project root (unchanged
-    dev behaviour).
-    """
+
+def writable_base_dir() -> Path:
     if getattr(sys, "frozen", False):
         base = Path(sys.executable).resolve().parent / "GravewrightData"
     else:
@@ -37,210 +33,415 @@ def _writable_base_dir() -> Path:
     return base
 
 
-def _load_user_env() -> Path | None:
-    """Let end users configure the frozen app with a ``.env`` next to the exe.
-
-    When frozen, the app's ``PROJECT_ROOT`` resolves inside ``_internal/`` — not a
-    place a user should edit, and wiped on every update. So we load a ``.env``
-    sitting beside the executable first. Under the app's "first write wins"
-    semantics, values loaded here take precedence over the bundled defaults and
-    over our own ``setdefault`` calls below.
-    """
+def load_user_env() -> None:
     if not getattr(sys, "frozen", False):
-        return None
+        return
     env_path = Path(sys.executable).resolve().parent / ".env"
-    if not env_path.exists():
-        return None
-    from app.helpers.env import _apply_file
+    if env_path.is_file():
+        from app.helpers.env import _apply_file
 
-    _apply_file(env_path)
-    return env_path
+        _apply_file(env_path)
 
 
-def _configure_environment(host: str, port: int) -> None:
-    """Point the app at writable locations. Must run before importing config."""
-    _load_user_env()
+def free_port() -> int:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.bind(("127.0.0.1", 0))
+        return int(sock.getsockname()[1])
 
-    base = _writable_base_dir()
+
+def configure_environment(port: int) -> None:
+    load_user_env()
+    base = writable_base_dir()
     storage = base / "storage"
     storage.mkdir(parents=True, exist_ok=True)
-
-    # config reads these at import time, so set paths before importing main.
     os.environ.setdefault("GRAVEWRIGHT_DATA_DIR", str(base / "data"))
-    os.environ.setdefault(
-        "DATABASE_URL", f"sqlite:///{(storage / 'gravewright.sqlite3').resolve()}"
-    )
-    # The allowed-hosts middleware full-matches the Host header (incl. port); with
-    # an ephemeral loopback port a fixed host never matches. The window only ever
-    # talks to 127.0.0.1, so trust any host.
-    os.environ["APP_ENV"] = "development"
-    os.environ["ALLOWED_HOSTS"] = "*"
-    os.environ["SESSION_COOKIE_SECURE"] = "false"
-    # The realtime WebSocket guard checks the handshake Origin. It would otherwise
-    # be derived from ALLOWED_HOSTS=* as "http://*", which never matches an origin
-    # that carries a port -> the chat/board socket is rejected with 403. Pin the
-    # exact origins this window uses so authenticated sockets connect.
-    local_origins = (f"http://{host}:{port}", f"http://localhost:{port}")
-    configured_origins = tuple(
-        origin.strip()
-        for origin in os.environ.get("WS_ALLOWED_ORIGINS", "").split(",")
-        if origin.strip()
-    )
-    os.environ["WS_ALLOWED_ORIGINS"] = ",".join(
-        dict.fromkeys((*local_origins, *configured_origins))
-    )
+    os.environ.setdefault("DATABASE_URL", f"sqlite:///{(storage / 'gravewright.sqlite3').resolve()}")
+    os.environ.setdefault("APP_ENV", "development")
+    os.environ.setdefault("ALLOWED_HOSTS", "*")
+    os.environ.setdefault("SESSION_COOKIE_SECURE", "false")
+    origins = [f"http://127.0.0.1:{port}", f"http://localhost:{port}"]
+    origins.extend(x.strip() for x in os.environ.get("WS_ALLOWED_ORIGINS", "").split(",") if x.strip())
+    os.environ["WS_ALLOWED_ORIGINS"] = ",".join(dict.fromkeys(origins))
 
 
-def _install_bundled_packages() -> None:
+def install_bundled_packages() -> None:
     if not getattr(sys, "frozen", False):
         return
     bundle_root = Path(getattr(sys, "_MEIPASS", "")) / "bundled-packages"
-    data_root = Path(os.environ["GRAVEWRIGHT_DATA_DIR"])
+    target_root = Path(os.environ["GRAVEWRIGHT_DATA_DIR"]) / "packages"
     for kind in ("rulesets", "addons", "libraries", "themes", "content", "assets"):
         source_kind = bundle_root / kind
         if not source_kind.is_dir():
             continue
-        target_kind = data_root / "packages" / kind
-        target_kind.mkdir(parents=True, exist_ok=True)
         for source in source_kind.iterdir():
-            if not source.is_dir():
-                continue
-            target = target_kind / source.name
-            if not target.exists():
-                shutil.copytree(source, target)
+            if source.is_dir():
+                target = target_root / kind / source.name
+                if not target.exists():
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(source, target)
 
 
-def _free_port() -> int:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
+class SignalWriter(io.TextIOBase):
+    def __init__(self, emit: Callable[[str], None]) -> None:
+        self._emit = emit
+
+    def write(self, text: str) -> int:
+        if text:
+            self._emit(text)
+        return len(text)
+
+    def flush(self) -> None:
+        return None
 
 
-# Evergreen WebView2 Runtime registration (same GUID on every machine).
-_WEBVIEW2_CLIENT = "{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
-_WEBVIEW2_DOWNLOAD_URL = "https://developer.microsoft.com/microsoft-edge/webview2/"
-
-
-def _webview2_installed() -> bool:
-    """True if the WebView2 runtime is registered for this machine or user.
-
-    The native window backend on Windows is WebView2; without the runtime the
-    window simply fails to appear. We probe the EdgeUpdate registry keys it
-    writes (per-machine 64/32-bit, then per-user).
-    """
-    import winreg
-
-    candidates = (
-        (
-            winreg.HKEY_LOCAL_MACHINE,
-            rf"SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{_WEBVIEW2_CLIENT}",
-        ),
-        (winreg.HKEY_LOCAL_MACHINE, rf"SOFTWARE\Microsoft\EdgeUpdate\Clients\{_WEBVIEW2_CLIENT}"),
-        (winreg.HKEY_CURRENT_USER, rf"SOFTWARE\Microsoft\EdgeUpdate\Clients\{_WEBVIEW2_CLIENT}"),
+def build_ui(port: int):
+    from PySide6.QtCore import QObject, QThread, QTimer, QUrl, Signal, Slot
+    from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont
+    from PySide6.QtWidgets import (
+        QApplication,
+        QComboBox,
+        QDialog,
+        QFileDialog,
+        QFormLayout,
+        QHBoxLayout,
+        QLabel,
+        QLineEdit,
+        QMainWindow,
+        QMessageBox,
+        QPushButton,
+        QSizePolicy,
+        QSpacerItem,
+        QTextEdit,
+        QVBoxLayout,
+        QWidget,
     )
-    for root, subkey in candidates:
-        try:
-            with winreg.OpenKey(root, subkey) as key:
-                version, _ = winreg.QueryValueEx(key, "pv")
-        except OSError:
-            continue
-        if version and version != "0.0.0.0":
-            return True
-    return False
 
+    class Bridge(QObject):
+        output = Signal(str)
+        command_done = Signal(str, int)
+        server_ready = Signal(str)
+        server_stopped = Signal(int)
+        server_failed = Signal(str)
 
-def _require_webview2() -> bool:
-    """On frozen Windows builds, ensure WebView2 is present before showing a window.
+    class CommandWorker(QThread):
+        def __init__(self, bridge: Bridge, label: str, arguments: list[str]) -> None:
+            super().__init__()
+            self.bridge = bridge
+            self.label = label
+            self.arguments = arguments
 
-    If it is missing, tell the user in a native dialog, open the download page,
-    and return False so the launcher exits cleanly instead of dying silently.
-    """
-    if sys.platform != "win32" or not getattr(sys, "frozen", False):
-        return True
-    if _webview2_installed():
-        return True
+        def run(self) -> None:
+            writer = SignalWriter(self.bridge.output.emit)
+            code = 1
+            try:
+                from app.cli import main as grave_main
 
-    import ctypes
-    import webbrowser
+                with contextlib.redirect_stdout(writer), contextlib.redirect_stderr(writer):
+                    code = int(grave_main(self.arguments))
+            except BaseException:  # CLI failures must be visible in the launcher log.
+                writer.write(traceback.format_exc())
+            self.bridge.command_done.emit(self.label, code)
 
-    message = (
-        "Gravewright needs the Microsoft WebView2 Runtime to open its window.\n\n"
-        "It is missing on this computer. We'll open the download page now — "
-        "install it (it's free, from Microsoft), then start Gravewright again.\n\n"
-        f"Link: {_WEBVIEW2_DOWNLOAD_URL}"
-    )
-    # MB_OK | MB_ICONWARNING
-    ctypes.windll.user32.MessageBoxW(0, message, "Gravewright", 0x30)
-    try:
-        webbrowser.open(_WEBVIEW2_DOWNLOAD_URL)
-    except Exception:  # noqa: BLE001 - best effort, dialog already informed the user
-        pass
-    return False
+    class ServerWorker(QThread):
+        def __init__(self, bridge: Bridge) -> None:
+            super().__init__()
+            self.bridge = bridge
+            self.server = None
+
+        def stop(self) -> None:
+            if self.server is not None:
+                self.server.should_exit = True
+
+        def run(self) -> None:
+            writer = SignalWriter(self.bridge.output.emit)
+            class EmitHandler(logging.Handler):
+                def emit(handler_self, record: logging.LogRecord) -> None:
+                    try:
+                        writer.write(handler_self.format(record) + "\n")
+                    except Exception:
+                        pass
+
+            handler = EmitHandler()
+            handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+            captured_loggers = [logging.getLogger(name) for name in ("uvicorn", "uvicorn.error", "uvicorn.access", "alembic")]
+            for logger in captured_loggers:
+                logger.addHandler(handler)
+            try:
+                from app.cli.doctor import render_check_lines
+                from app.cli.run import prepare
+
+                checks, abort = prepare(no_install=True, no_migrate=False, strict_doctor=False)
+                for line in render_check_lines(checks, verbose=True):
+                    writer.write(f"{line}\n")
+                if abort is not None:
+                    self.bridge.server_failed.emit(f"Pre-flight checks failed (exit {abort}).")
+                    return
+
+                import uvicorn
+                from main import app
+
+                self.server = uvicorn.Server(
+                    uvicorn.Config(
+                        app,
+                        host="127.0.0.1",
+                        port=port,
+                        log_level="info",
+                        log_config=None,
+                        ws="websockets-sansio",
+                    )
+                )
+                self.server.install_signal_handlers = lambda: None
+
+                def announce_ready() -> None:
+                    deadline = time.time() + 30
+                    while time.time() < deadline and not self.server.started:
+                        time.sleep(0.1)
+                    if self.server.started:
+                        self.bridge.server_ready.emit(f"http://127.0.0.1:{port}/")
+
+                threading.Thread(target=announce_ready, daemon=True).start()
+                self.server.run()
+                code = 0
+                self.bridge.server_stopped.emit(code)
+            except BaseException:
+                detail = traceback.format_exc()
+                writer.write(detail)
+                self.bridge.server_failed.emit(detail.splitlines()[-1] if detail else "Server failed.")
+            finally:
+                for logger in captured_loggers:
+                    logger.removeHandler(handler)
+
+    class PackagesDialog(QDialog):
+        def __init__(self, launcher: "Launcher") -> None:
+            super().__init__(launcher)
+            self.launcher = launcher
+            self.setWindowTitle("Packages")
+            self.resize(720, 460)
+            layout = QVBoxLayout(self)
+            form = QFormLayout()
+            self.operation = QComboBox()
+            self.operation.addItems(["list", "install", "enable", "disable", "update", "doctor", "remove"])
+            self.package_id = QLineEdit()
+            self.package_id.setPlaceholderText("Package ID (not required for list)")
+            form.addRow("Operation", self.operation)
+            form.addRow("Package", self.package_id)
+            layout.addLayout(form)
+            run = QPushButton("Run package command")
+            run.clicked.connect(self.run_command)
+            layout.addWidget(run)
+            self.output = QTextEdit()
+            self.output.setReadOnly(True)
+            self.output.setFont(QFont("Cascadia Mono", 9))
+            layout.addWidget(self.output, 1)
+            close = QPushButton("Close")
+            close.clicked.connect(self.accept)
+            layout.addWidget(close)
+            self.refresh()
+
+        def refresh(self) -> None:
+            self.output.setPlainText("See the main launcher log for command output.\n")
+            self.launcher.run_cli("Packages", ["package", "list"])
+
+        @Slot()
+        def run_command(self) -> None:
+            operation = self.operation.currentText()
+            package_id = self.package_id.text().strip()
+            if operation != "list" and not package_id:
+                QMessageBox.warning(self, APP_TITLE, "Enter a package ID.")
+                return
+            args = ["package", operation]
+            if package_id:
+                args.append(package_id)
+            if operation == "install":
+                args.extend(["--yes", "--enable"])
+            if operation == "remove":
+                args.append("--yes")
+            self.launcher.run_cli("Packages", args)
+
+    class Launcher(QMainWindow):
+        def __init__(self) -> None:
+            super().__init__()
+            self.bridge = Bridge()
+            self.server_worker: ServerWorker | None = None
+            self.command_worker: CommandWorker | None = None
+            self.server_url = f"http://127.0.0.1:{port}/"
+            self.setWindowTitle(APP_TITLE)
+            self.resize(820, 580)
+            self.setMinimumSize(680, 480)
+            self._build()
+            self.bridge.output.connect(self.append_log)
+            self.bridge.command_done.connect(self.command_finished)
+            self.bridge.server_ready.connect(self.server_started)
+            self.bridge.server_stopped.connect(self.server_finished)
+            self.bridge.server_failed.connect(self.server_error)
+            self.append_log(f"Data folder: {writable_base_dir()}\n")
+
+        def _build(self) -> None:
+            root = QWidget()
+            self.setCentralWidget(root)
+            layout = QVBoxLayout(root)
+            title = QLabel("Gravewright Launcher")
+            title.setObjectName("title")
+            subtitle = QLabel("Run and maintain your local Gravewright table.")
+            subtitle.setObjectName("subtitle")
+            layout.addWidget(title)
+            layout.addWidget(subtitle)
+            row = QHBoxLayout()
+            actions = [
+                ("Start Gravewright", self.toggle_server),
+                ("Doctor", lambda: self.run_cli("Doctor", ["doctor", "--verbose"])),
+                ("Backup", self.backup),
+                ("Restore", self.restore),
+                ("Packages", self.packages),
+                ("Open data folder", self.open_data),
+                ("Logs", self.toggle_logs),
+            ]
+            self.buttons: list[QPushButton] = []
+            for label, callback in actions:
+                button = QPushButton(label)
+                button.clicked.connect(callback)
+                row.addWidget(button)
+                self.buttons.append(button)
+            layout.addLayout(row)
+            status_row = QHBoxLayout()
+            self.status = QLabel("Server stopped")
+            self.status.setObjectName("status")
+            self.open_browser_button = QPushButton("Open in browser")
+            self.open_browser_button.setEnabled(False)
+            self.open_browser_button.clicked.connect(self.open_browser)
+            status_row.addWidget(self.status)
+            status_row.addItem(QSpacerItem(20, 10, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+            status_row.addWidget(self.open_browser_button)
+            layout.addLayout(status_row)
+            self.logs = QTextEdit()
+            self.logs.setReadOnly(True)
+            self.logs.setFont(QFont("Cascadia Mono", 9))
+            layout.addWidget(self.logs, 1)
+            self.setStyleSheet("""
+                QMainWindow, QWidget { background: #111417; color: #e8e9ea; }
+                QLabel#title { font-size: 26px; font-weight: 700; color: #e2b85b; }
+                QLabel#subtitle { color: #9da5ad; margin-bottom: 12px; }
+                QLabel#status { font-weight: 600; padding: 10px 0; }
+                QPushButton { background: #252a30; border: 1px solid #454c54; border-radius: 5px; padding: 9px 12px; }
+                QPushButton:hover { border-color: #e2b85b; color: #e2b85b; }
+                QPushButton:disabled { color: #666; border-color: #333; }
+                QTextEdit, QLineEdit, QComboBox { background: #0b0d0f; border: 1px solid #363c43; border-radius: 4px; padding: 6px; }
+            """)
+
+        @Slot(str)
+        def append_log(self, text: str) -> None:
+            cursor = self.logs.textCursor()
+            cursor.movePosition(cursor.MoveOperation.End)
+            cursor.insertText(text)
+            self.logs.setTextCursor(cursor)
+            self.logs.ensureCursorVisible()
+
+        def run_cli(self, label: str, args: list[str]) -> None:
+            if self.command_worker and self.command_worker.isRunning():
+                QMessageBox.information(self, APP_TITLE, "Another maintenance command is still running.")
+                return
+            self.append_log(f"\n$ grave {' '.join(args)}\n")
+            self.command_worker = CommandWorker(self.bridge, label, args)
+            self.command_worker.start()
+
+        @Slot(str, int)
+        def command_finished(self, label: str, code: int) -> None:
+            self.append_log(f"[{label} finished with exit code {code}]\n")
+            if code != 0:
+                QMessageBox.warning(self, APP_TITLE, f"{label} finished with exit code {code}. See Logs.")
+
+        @Slot()
+        def toggle_server(self) -> None:
+            if self.server_worker and self.server_worker.isRunning():
+                self.status.setText("Stopping server…")
+                self.server_worker.stop()
+                return
+            self.status.setText("Preparing server…")
+            self.buttons[0].setText("Stop Gravewright")
+            self.server_worker = ServerWorker(self.bridge)
+            self.server_worker.start()
+
+        @Slot(str)
+        def server_started(self, url: str) -> None:
+            self.server_url = url
+            self.status.setText(f"Running at {url}")
+            self.open_browser_button.setEnabled(True)
+            self.append_log(f"Server ready: {url}\n")
+            if os.environ.get("GRAVEWRIGHT_NO_BROWSER", "").strip().lower() not in {"1", "true", "yes"}:
+                self.open_browser()
+
+        @Slot(int)
+        def server_finished(self, code: int) -> None:
+            self.status.setText("Server stopped")
+            self.buttons[0].setText("Start Gravewright")
+            self.open_browser_button.setEnabled(False)
+            self.append_log(f"Server stopped (exit {code}).\n")
+
+        @Slot(str)
+        def server_error(self, detail: str) -> None:
+            self.server_finished(1)
+            QMessageBox.critical(self, APP_TITLE, f"Could not start Gravewright.\n\n{detail}")
+
+        @Slot()
+        def open_browser(self) -> None:
+            QDesktopServices.openUrl(QUrl(self.server_url))
+
+        @Slot()
+        def backup(self) -> None:
+            default = str(writable_base_dir() / f"gravewright-backup-{time.strftime('%Y%m%d-%H%M%S')}.zip")
+            path, _ = QFileDialog.getSaveFileName(self, "Create Gravewright backup", default, "ZIP archives (*.zip)")
+            if path:
+                self.run_cli("Backup", ["backup", "-o", path, "--include-assets", "--include-packages", "--verify"])
+
+        @Slot()
+        def restore(self) -> None:
+            if self.server_worker and self.server_worker.isRunning():
+                QMessageBox.warning(self, APP_TITLE, "Stop Gravewright before restoring a backup.")
+                return
+            path, _ = QFileDialog.getOpenFileName(self, "Restore Gravewright backup", str(writable_base_dir()), "ZIP archives (*.zip)")
+            if not path:
+                return
+            answer = QMessageBox.question(self, APP_TITLE, "Restore this backup and replace matching assets and packages?")
+            if answer == QMessageBox.StandardButton.Yes:
+                self.run_cli("Restore", ["restore", path, "--yes", "--replace-assets", "--replace-packages"])
+
+        @Slot()
+        def packages(self) -> None:
+            PackagesDialog(self).exec()
+
+        @Slot()
+        def open_data(self) -> None:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(writable_base_dir())))
+
+        @Slot()
+        def toggle_logs(self) -> None:
+            self.logs.setVisible(not self.logs.isVisible())
+
+        def closeEvent(self, event: QCloseEvent) -> None:
+            if self.server_worker and self.server_worker.isRunning():
+                self.server_worker.stop()
+                self.server_worker.wait(5000)
+            event.accept()
+
+    return QApplication, Launcher
 
 
 def main() -> int:
-    if not _require_webview2():
-        return 1
+    configured_port = os.environ.get("GRAVEWRIGHT_PORT", "").strip()
+    port = int(configured_port) if configured_port else free_port()
+    configure_environment(port)
+    install_bundled_packages()
+    QApplication, Launcher = build_ui(port)
+    app = QApplication(sys.argv)
+    app.setApplicationName(APP_TITLE)
+    app.setOrganizationName("Gravewright")
+    window = Launcher()
+    window.show()
+    if os.environ.get("GRAVEWRIGHT_AUTOSTART", "").strip().lower() in {"1", "true", "yes"}:
+        from PySide6.QtCore import QTimer
 
-    # Pick the port before importing config: WS_ALLOWED_ORIGINS must contain the
-    # exact origin (incl. this port), and config reads it once at import time.
-    host = "127.0.0.1"
-    port = _free_port()
-    _configure_environment(host, port)
-    _install_bundled_packages()
-
-    # Imported after the environment is configured so config picks up our paths.
-    import uvicorn
-    import webview
-
-    from app.persistence.schema import upgrade_to_head
-    from main import app
-
-    # Create/upgrade the schema through the official Alembic path on launch.
-    upgrade_to_head()
-
-    server = uvicorn.Server(
-        uvicorn.Config(
-            app,
-            host=host,
-            port=port,
-            log_level="info",
-            # Avoid Uvicorn's dynamic protocol selection in a frozen build.
-            # This implementation is bundled with the pinned websockets package.
-            ws="websockets-sansio",
-        )
-    )
-    # Signal handlers can only be installed on the main thread; the server runs on
-    # a worker thread here, so make this a no-op to avoid a ValueError on startup.
-    server.install_signal_handlers = lambda: None
-
-    thread = threading.Thread(target=server.run, daemon=True)
-    thread.start()
-
-    # Wait for uvicorn to finish startup before pointing the window at it.
-    deadline = time.time() + 30
-    while not server.started and time.time() < deadline:
-        if not thread.is_alive():
-            print("Server thread exited during startup.", file=sys.stderr)
-            return 1
-        time.sleep(0.1)
-    if not server.started:
-        print("Server did not start within 30s.", file=sys.stderr)
-        return 1
-
-    webview.create_window(
-        "Gravewright",
-        f"http://{host}:{port}/",
-        width=1280,
-        height=800,
-        min_size=(900, 600),
-    )
-    webview.start()  # blocks until the window is closed
-
-    # Window closed -> stop the server cleanly.
-    server.should_exit = True
-    thread.join(timeout=10)
-    return 0
+        QTimer.singleShot(0, window.toggle_server)
+    return int(app.exec())
 
 
 if __name__ == "__main__":
