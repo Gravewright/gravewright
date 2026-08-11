@@ -1194,6 +1194,7 @@
 
         async refresh(sceneId = this.scene()?.id || "") {
             if (!sceneId) {
+                (this.shaders || []).forEach((shader) => window.GravewrightShaderEffects?.invalidate?.(shader.id));
                 this.walls = [];
                 this.lights = [];
                 this.emitters = [];
@@ -1225,7 +1226,17 @@
             if (wallData) this.walls = wallData.walls || [];
             if (lightData) this.lights = lightData.lights || [];
             if (particleData) this.emitters = particleData.emitters || [];
-            if (shaderData) this.shaders = shaderData.shaders || [];
+            if (shaderData) {
+                const nextShaders = shaderData.shaders || [];
+                const nextById = new Map(nextShaders.map((shader) => [shader.id, shader]));
+                (this.shaders || []).forEach((shader) => {
+                    const next = nextById.get(shader.id);
+                    if (!next || String(next.source || "") !== String(shader.source || "")) {
+                        window.GravewrightShaderEffects?.invalidate?.(shader.id);
+                    }
+                });
+                this.shaders = nextShaders;
+            }
             this.invalidateGeometry();
             redraw();
         }
@@ -1528,19 +1539,32 @@
             const shader = (this.shaders || []).find((candidate) => candidate.id === shaderId);
             if (!shader) return null;
             const previous = { ...shader };
+            const sourceChanged = Object.hasOwn(patch, "source")
+                && String(patch.source || "") !== String(shader.source || "");
             Object.assign(shader, patch);
+            if (sourceChanged) window.GravewrightShaderEffects?.invalidate?.(shaderId);
             redraw();
             try {
                 const result = await post("/game/shaders/update", { campaign_id: this.roomId, shader_id: shaderId, ...patch });
                 const index = this.shaders.findIndex((candidate) => candidate.id === shaderId);
-                if (index >= 0 && result.shader) this.shaders[index] = result.shader;
+                if (index >= 0 && result.shader) {
+                    if (String(result.shader.source || "") !== String(this.shaders[index].source || "")) {
+                        window.GravewrightShaderEffects?.invalidate?.(shaderId);
+                    }
+                    this.shaders[index] = result.shader;
+                }
                 redraw();
                 return result.shader || null;
             } catch (error) {
 
 
                 const index = this.shaders.findIndex((candidate) => candidate.id === shaderId);
-                if (index >= 0) this.shaders[index] = previous;
+                if (index >= 0) {
+                    if (String(this.shaders[index].source || "") !== String(previous.source || "")) {
+                        window.GravewrightShaderEffects?.invalidate?.(shaderId);
+                    }
+                    this.shaders[index] = previous;
+                }
                 redraw();
                 throw error;
             }
@@ -1549,6 +1573,7 @@
         async deleteShader(shaderId) {
             const before = (this.shaders || []).slice();
             this.shaders = before.filter((shader) => shader.id !== shaderId);
+            window.GravewrightShaderEffects?.invalidate?.(shaderId);
             redraw();
             try {
                 await post("/game/shaders/delete", { campaign_id: this.roomId, shader_id: shaderId });

@@ -8,6 +8,20 @@ The project is currently in Alpha. Breaking changes may occur between Alpha rele
 
 No changes documented yet.
 
+## v3.0.2-alpha — 2026-08-11
+
+Shader lifecycle hotfix. No database migration or public SDK change is included.
+
+### Fixed
+
+- Animated scene shaders now keep requesting frames through the board's existing
+  on-demand render scheduler while their speed is non-zero. Static shaders still
+  allow the renderer to sleep when the board is idle.
+- Editing GLSL source now invalidates and disposes the previous compiled runtime,
+  recompiles the latest source, and redraws immediately. The same lifecycle is
+  applied to realtime refreshes, deletion, rollback after a failed save, and
+  recovery after invalid GLSL, so a page reload is no longer required.
+
 ## v3.0.1-alpha — 2026-08-10
 
 Hotfix release on the Alpha 3 line. No schema-breaking changes; one additive

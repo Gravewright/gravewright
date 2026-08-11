@@ -406,7 +406,8 @@
 
 
             const light = window.GravewrightLightBuffer?.build?.(board, lighting, cssW, cssH, this.camera) || null;
-            effects.render(board, shaders, performance.now(), cssW, cssH, this.camera, light);
+            const drawn = effects.render(board, shaders, performance.now(), cssW, cssH, this.camera, light);
+            effects.requestNextFrame?.(shaders, drawn, this.deps.requestRender);
         },
 
         _renderLighting(board, cssW, cssH) {

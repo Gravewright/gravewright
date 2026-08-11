@@ -472,6 +472,15 @@ void main() {
         return drawn;
     }
 
+    function requiresContinuousFrames(shaders) {
+        return (shaders || []).slice(0, MAX_ACTIVE)
+            .some((shader) => Number(shader.speed ?? 1) !== 0);
+    }
+
+    function requestNextFrame(shaders, drawn, requestRender) {
+        if (drawn > 0 && requiresContinuousFrames(shaders)) requestRender?.();
+    }
+
     function clear() {
         [...stage.keys()].forEach(drop);
     }
@@ -491,6 +500,8 @@ void main() {
 
     window.GravewrightShaderEffects = {
         render,
+        requiresContinuousFrames,
+        requestNextFrame,
         clear,
         invalidate,
         errorFor: (shaderId) => broken.get(shaderId) || null,

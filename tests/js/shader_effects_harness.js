@@ -69,6 +69,7 @@ function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, la
     let visionMode = mode;
     const listeners = [];
     const posts = [];
+    const invalidated = [];
     const live = shaders.map((s) => ({ ...s }));
 
     const root = new El("body");
@@ -94,6 +95,7 @@ function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, la
             },
             GravewrightVisionMode: { current: () => visionMode, isClassic: () => visionMode === "classic" },
             GravewrightShaderPreference: { enabled: () => shadersEnabled },
+            GravewrightShaderEffects: { invalidate: (shaderId) => invalidated.push(shaderId) },
             GravewrightToasts: { showToast() {} },
             requestAnimationFrame() {},
             csrfToken: () => "csrf",
@@ -157,8 +159,10 @@ function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, la
     sandbox.document.dispatchEvent = (event) => { emitted.push(event); return original(event); };
 
     return {
-        dispatch, posts, tools, emitted,
+        dispatch, posts, tools, emitted, invalidated,
         state: () => sandbox.window.GravewrightLighting.stateForCanvas(canvas),
+        patchShader: (shaderId, values) => sandbox.window.GravewrightLighting.patchShader(canvas, shaderId, values),
+        deleteShader: (shaderId) => sandbox.window.GravewrightLighting.deleteShader(canvas, shaderId),
         setMode: (next) => { visionMode = next; },
         setLayer: (next) => {
             tools.activeLayer = next;
@@ -175,6 +179,18 @@ async function stateChecks() {
     check("o cinematografico recebe o shader da cena", cinematic.shaders.length === 1,
         `${cinematic.shaders.length} de ${SHADERS.length}`);
     check("shader desligado nao viaja", !cinematic.shaders.some((s) => s.id === "s2"));
+
+    await world.patchShader("s1", { source: "void main(){ finalColor = vec4(0.0, 0.0, 1.0, 1.0); }" });
+    check("editar GLSL invalida o runtime do mesmo id", world.invalidated.length === 1);
+    await world.patchShader("s1", { source: "void main(){ finalColor = vec4(0.0, 1.0, 0.0, 1.0); }" });
+    check("edicoes sucessivas invalidam a versao anterior", world.invalidated.length === 2);
+    await world.patchShader("s1", { opacity: 0.25, speed: 2 });
+    check("uniformes nao recompilam GLSL", world.invalidated.length === 2);
+
+    const removed = buildWorld();
+    await removed.settle();
+    await removed.deleteShader("s1");
+    check("apagar shader descarta seu runtime", removed.invalidated.includes("s1"));
 
     // Modo leve nao tem passe de filtro; o efeito dele sao as particulas, e e por
     // isso que elas continuam sendo desenhadas la.
@@ -461,6 +477,18 @@ function effectChecks() {
     const CAM = { offsetX: 0, offsetY: 0, zoom: 1 };
     const draw = (world, shaders, camera = CAM, now = 5000, light = null) =>
         world.api.render(world.board, shaders, now, 800, 600, camera, light);
+
+    {
+        const { api } = loadEffects();
+        let requests = 0;
+        const requestRender = () => { requests += 1; };
+        api.requestNextFrame([{ ...SHADERS[0], speed: 1 }], 1, requestRender);
+        check("shader animado pede o quadro seguinte", requests === 1);
+        api.requestNextFrame([{ ...SHADERS[0], speed: 0 }], 1, requestRender);
+        check("shader estatico preserva desenho sob demanda", requests === 1);
+        api.requestNextFrame([], 0, requestRender);
+        check("remover shader encerra quadros continuos", requests === 1);
+    }
 
     {
         const world = loadEffects();
