@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
-from app.actions.game import manage_handouts
+from app.business.handouts import presentation_dispatcher
 from tests.conftest import seed_campaign, seed_member, seed_user
 
 
@@ -22,8 +22,8 @@ def test_present_targets_only_selected_user_without_room_log(db, monkeypatch):
     seed_member(campaign_id, selected_id, "player")
     seed_member(campaign_id, other_id, "player")
     deliveries = []
-    monkeypatch.setattr(manage_handouts, "RealtimeTransport", lambda: _Transport(deliveries))
-    asyncio.run(manage_handouts._present({
+    monkeypatch.setattr(presentation_dispatcher, "RealtimeTransport", lambda: _Transport(deliveries))
+    asyncio.run(presentation_dispatcher.dispatch_handout_presentation({
         "campaign_id": campaign_id, "resource_type": "journal", "resource_id": "journal-1",
         "subject_type": "user", "subject_id": selected_id, "created_by_user_id": gm_id,
     }))
@@ -43,8 +43,8 @@ def test_present_role_targets_only_that_campaign_role(db, monkeypatch):
     seed_member(campaign_id, player_id, "player")
     seed_member(campaign_id, assistant_id, "assistant_gm")
     deliveries = []
-    monkeypatch.setattr(manage_handouts, "RealtimeTransport", lambda: _Transport(deliveries))
-    asyncio.run(manage_handouts._present({
+    monkeypatch.setattr(presentation_dispatcher, "RealtimeTransport", lambda: _Transport(deliveries))
+    asyncio.run(presentation_dispatcher.dispatch_handout_presentation({
         "campaign_id": campaign_id, "resource_type": "item", "resource_id": "item-1",
         "subject_type": "role", "subject_id": "player", "created_by_user_id": gm_id,
     }))

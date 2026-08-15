@@ -26,14 +26,15 @@ grave db upgrade
 uv run alembic history
 ```
 
-Antes de migrar, faca backup do banco e dos arquivos de storage.
+Antes de migrar, faça backup do banco e dos arquivos de storage.
 
-O head atual e `0042_particle_kinds`. As migrations da Alpha 3 cobrem snapshots
+O head atual é `0046_pdf_annotations`. As migrations cobrem snapshots
 e auditoria, handouts, lobby e onboarding do mestre, paredes/portas, fontes de
 luz e visao, combate simplificado, barras de token, particulas e shaders de cena
-com origem estavel, rotacao, modo de mistura, opacidade e tipos de particula.
+com origem estável, rotação, modo de mistura, opacidade e tipos de partícula,
+além de cores de ping, raster virtual, granularidade adaptativa e anotações PDF.
 
-Para uma instalacao Alpha existente, crie um backup verificado, rode
+Para uma instalação existente, crie um backup verificado, rode
 `grave db status`, aplique `grave db upgrade` e finalize com `grave doctor`.
 
 ## Schema Runtime

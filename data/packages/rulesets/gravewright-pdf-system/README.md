@@ -53,6 +53,12 @@ atributos que conhece: `data-bind` (valor ↔ caminho), `data-action` (botão) e
 `data-text` (caminho de dado — *não* chave de tradução; rótulo se traduz no
 controlador, via `sdk.i18n.t`).
 
+PDFs enviados para a biblioteca são resolvidos por `sdk.pdf.get` e abertos por
+`sdk.pdf.viewer.open`. Assim, o ruleset não contorna os gates de capability e de
+visibilidade do SDK 1. Apenas o template PDF empacotado usa diretamente o
+adaptador local, pois ele é um asset imutável do próprio pacote e não um
+documento da campanha.
+
 O controlador não grava. Ele cria os campos a partir do mapeamento já com
 `data-bind`, e o host persiste pelo mesmo caminho de qualquer outra ficha. Um
 segundo caminho de escrita só produziria divergência.

@@ -9,7 +9,7 @@
             <span>{{ t("game.scenes.navigating_badge") }}</span>
             {% endif %}
         </div>
-        <small>{{ scene.width }}x{{ scene.height }} · {{ t("game.scenes.grid_size") }} {{ scene.tile_size }}</small>
+        <small>{{ scene.width }}x{{ scene.height }} · {{ t("game.scenes.grid_size") }} {{ scene.get('grid_size') or scene.tile_size }}</small>
     </div>
     <div class="scene-card-actions">
         {% if room.member_role == "gm" %}<form method="post" action="/game/scenes/activate" class="scene-activate-form" data-scene-ajax-form>

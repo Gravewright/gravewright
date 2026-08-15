@@ -16,6 +16,7 @@ from app.business.audit import AuditService
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
 from app.business.campaigns.campaign_clone_service import CampaignCloneService
 from app.business.campaigns.campaign_export_service import CampaignExportService
+from app.business.campaigns.campaign_import_service import CampaignImportService
 from app.business.campaigns.campaign_snapshot_service import CampaignSnapshotService
 from app.business.campaigns.campaign_join_code_service import CampaignJoinCodeService
 from app.business.campaigns.campaign_service import CampaignService
@@ -24,7 +25,7 @@ from app.business.campaigns.streamer_link_service import StreamerLinkService
 from app.business.game_page_service import GamePageService
 from app.business.handouts import HandoutService
 from app.business.lobby import LobbyService
-from app.business.onboarding import GmOnboardingService
+from app.business.onboarding import GmOnboardingService, PlayerOnboardingService
 from app.business.permissions import PermissionService
 from app.business.search import GlobalSearchService
 from app.business.users import UserPreferenceService
@@ -41,6 +42,7 @@ from app.engine.decks.card_asset_service import CardAssetService
 from app.engine.decks.card_service import CardService
 from app.engine.items.item_service import ItemService
 from app.engine.sdk.package_activation_service import PackageActivationService
+from app.engine.sdk.package_asset_import_service import PackageAssetImportService
 from app.engine.sdk.package_asset_service import PackageAssetService
 from app.engine.sdk.package_content_service import PackageContentService
 from app.engine.sdk.package_dependency_service import PackageDependencyService
@@ -98,6 +100,7 @@ SERVICE_DEPENDENCIES = {
     "campaign_invitation_service": _singleton(CampaignInvitationService),
     "campaign_clone_service": _singleton(CampaignCloneService),
     "campaign_export_service": _singleton(CampaignExportService),
+    "campaign_import_service": _singleton(CampaignImportService),
     "campaign_snapshot_service": _singleton(CampaignSnapshotService),
     "campaign_join_code_service": _singleton(CampaignJoinCodeService),
     "campaign_system_service": _singleton(CampaignSystemService),
@@ -112,6 +115,7 @@ SERVICE_DEPENDENCIES = {
     "handout_service": _singleton(HandoutService),
     "lobby_service": _singleton(LobbyService),
     "gm_onboarding_service": _singleton(GmOnboardingService),
+    "player_onboarding_service": _singleton(PlayerOnboardingService),
     "item_service": _singleton(ItemService),
     "item_sheet_service": _singleton(ItemSheetService),
     "item_sheet_data_service": _singleton(ItemSheetDataService),
@@ -121,6 +125,7 @@ SERVICE_DEPENDENCIES = {
     "journal_page_service": _singleton(JournalPageService),
     "map_upload_service": _singleton(MapUploadService),
     "package_activation_service": _singleton(PackageActivationService),
+    "package_asset_import_service": _singleton(PackageAssetImportService),
     "package_asset_service": _singleton(PackageAssetService),
     "package_content_service": _singleton(PackageContentService),
     "package_dependency_service": _singleton(PackageDependencyService),

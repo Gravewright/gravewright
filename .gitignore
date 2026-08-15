@@ -22,6 +22,7 @@ htmlcov/
 /tmp/
 /temp/
 /.test-tmp/
+/diagnostics/
 
 # ``data/`` mistura duas coisas: dados de execução (campanhas, imports) e os
 # pacotes que acompanham o projeto, que são código-fonte. Por isso o diretório em
@@ -78,6 +79,7 @@ venv/
 /logs/
 /reports/
 /.tmp/
+/data/diagnostics/
 
 # PyInstaller / desktop distribution artifacts
 /build/

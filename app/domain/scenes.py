@@ -3,13 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum
 from enum import StrEnum
-from math import ceil
+from math import ceil, floor, log2
 
 
 EMPTY_TILE_REF = 0
 UINT32_MAX = (2**32) - 1
-SCENE_MANIFEST_VERSION = 1
+SCENE_MANIFEST_VERSION = 2
+SCENE_LEGACY_MANIFEST_VERSION = 1
 SCENE_NATIVE_CHUNK_SIZE = 16
+DEFAULT_RASTER_TILE_SIZE = 512
 
 
 class SceneStatus(StrEnum):
@@ -90,6 +92,7 @@ class SceneDimensions:
     height: int
     tile_size: int
     chunk_size: int
+    gameplay_grid_size: int | None = None
 
     def __post_init__(self) -> None:
         if self.width <= 0:
@@ -100,9 +103,16 @@ class SceneDimensions:
             raise ValueError("tile_size must be positive")
         if self.chunk_size <= 0:
             raise ValueError("chunk_size must be positive")
+        if self.gameplay_grid_size is not None and self.gameplay_grid_size <= 0:
+            raise ValueError("gameplay_grid_size must be positive")
 
     @property
     def grid_size(self) -> int:
+        return self.gameplay_grid_size or self.tile_size
+
+    @property
+    def raster_tile_size(self) -> int:
+        """Physical raster page size; ``tile_size`` remains its v1 alias."""
         return self.tile_size
 
     @property
@@ -124,6 +134,83 @@ class SceneDimensions:
     @property
     def chunk_pixel_size(self) -> int:
         return self.tile_size * self.chunk_size
+
+    def for_lod(self, lod: int) -> SceneDimensions:
+        if lod < 0:
+            raise ValueError("lod must be zero or positive")
+        divisor = 1 << lod
+        return SceneDimensions(
+            width=max(1, ceil(self.width / divisor)),
+            height=max(1, ceil(self.height / divisor)),
+            tile_size=self.raster_tile_size,
+            chunk_size=self.chunk_size,
+            gameplay_grid_size=self.grid_size,
+        )
+
+
+@dataclass(frozen=True, order=True)
+class TileKey:
+    scene_id: str
+    layer_id: str
+    lod: int
+    x: int
+    y: int
+
+    def __post_init__(self) -> None:
+        if not self.scene_id or not self.layer_id:
+            raise ValueError("scene_id and layer_id are required")
+        if self.lod < 0 or self.x < 0 or self.y < 0:
+            raise ValueError("lod and tile coordinates must be zero or positive")
+
+    def cache_key(self) -> str:
+        return f"{self.scene_id}:{self.layer_id}:{self.lod}:{self.x}:{self.y}"
+
+
+@dataclass(frozen=True)
+class RasterLayerConfig:
+    raster_tile_size: int
+    max_lod: int = 0
+    tile_index_version: int = 1
+
+    def __post_init__(self) -> None:
+        if self.raster_tile_size <= 0:
+            raise ValueError("raster_tile_size must be positive")
+        if self.max_lod < 0:
+            raise ValueError("max_lod must be zero or positive")
+        if self.tile_index_version < 1:
+            raise ValueError("tile_index_version must be positive")
+
+
+@dataclass(frozen=True)
+class LodSelectionPolicy:
+    """Selects a mip level with a dead-band to avoid zoom threshold churn."""
+
+    hysteresis: float = 0.15
+
+    def __post_init__(self) -> None:
+        if not 0 <= self.hysteresis < 0.5:
+            raise ValueError("hysteresis must be between 0 and 0.5")
+
+    def select(self, *, zoom: float, max_lod: int, current_lod: int | None = None) -> int:
+        if zoom <= 0:
+            raise ValueError("zoom must be positive")
+        if max_lod < 0:
+            raise ValueError("max_lod must be zero or positive")
+        ideal = min(max_lod, max(0, floor(log2(1 / zoom))))
+        if current_lod is None or current_lod < 0 or current_lod > max_lod:
+            return ideal
+        if ideal == current_lod:
+            return current_lod
+        boundary = 2 ** (-max(ideal, current_lod))
+        if ideal > current_lod and zoom > boundary * (1 - self.hysteresis):
+            return current_lod
+        if ideal < current_lod and zoom < boundary * (1 + self.hysteresis):
+            return current_lod
+        return ideal
+
+
+def camera_relative(*, world_x: float, world_y: float, origin_x: float, origin_y: float) -> tuple[float, float]:
+    return world_x - origin_x, world_y - origin_y
 
 
 @dataclass(frozen=True)
@@ -204,6 +291,7 @@ class SceneTile:
     height: int
     hash: str
     byte_size: int
+    lod: int = 0
 
     def __post_init__(self) -> None:
         if self.tile_ref <= EMPTY_TILE_REF:
@@ -216,6 +304,8 @@ class SceneTile:
             raise ValueError("height must be positive")
         if self.byte_size < 0:
             raise ValueError("byte_size must be zero or positive")
+        if self.lod < 0:
+            raise ValueError("lod must be zero or positive")
 
 
 @dataclass(frozen=True)
@@ -230,12 +320,15 @@ class SceneChunk:
     encoding: SceneChunkEncoding
     created_at: int
     updated_at: int
+    lod: int = 0
 
     def __post_init__(self) -> None:
         if self.version < 1:
             raise ValueError("version must be positive")
         if self.byte_size < 0:
             raise ValueError("byte_size must be zero or positive")
+        if self.lod < 0:
+            raise ValueError("lod must be zero or positive")
 
 
 @dataclass(frozen=True)
@@ -251,7 +344,7 @@ class SceneManifest:
     assets: tuple[SceneAsset, ...] = ()
 
     def __post_init__(self) -> None:
-        if self.version != SCENE_MANIFEST_VERSION:
+        if self.version not in (SCENE_LEGACY_MANIFEST_VERSION, SCENE_MANIFEST_VERSION):
             raise ValueError("unsupported scene manifest version")
         if self.tile_table_version < 1:
             raise ValueError("tile_table_version must be positive")

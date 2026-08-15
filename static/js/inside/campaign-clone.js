@@ -26,4 +26,21 @@
     preview.classList.remove("notice--danger");
     preview.textContent = `${labels.clonePreview}: ${summaryText(result.data.summary)}`;
   });
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target.closest("[data-campaign-clone-form]");
+    if (!form || event.defaultPrevented) return;
+    event.preventDefault();
+    form.setAttribute("aria-busy", "true");
+    const result = await window.GravewrightCore.http.postForm(
+      form.action, new FormData(form),
+      { headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" } }
+    );
+    form.removeAttribute("aria-busy");
+    const payload = result.data || {};
+    const success = result.ok && payload.ok !== false;
+    const key = success ? payload.message_key : payload.error_key;
+    const query = success ? "campaign_message_key" : "campaign_error_key";
+    await window.GravewrightInside.refresh(`/inside?${query}=${encodeURIComponent(key || "campaign.clone.errors.failed")}`);
+  });
 })();

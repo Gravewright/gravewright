@@ -15,7 +15,9 @@
     
     <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version }}" />
     <link rel="stylesheet" href="/static/css/dialog.css" />
-    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-gm-onboarding-clickable-ui-pass" />
+    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-journal-editorial-workspace-3" />
+    <link rel="stylesheet" href="/static/css/journal-workspace.css?v={{ asset_version }}-2" />
+    <link rel="stylesheet" href="/static/css/journal-quest.css?v={{ asset_version }}-1" />
     
     {% for href in system_styles %}<link rel="stylesheet" href="{{ href }}" />
     {% endfor %}
@@ -71,6 +73,7 @@
     <script defer src="/static/js/map/tokens/map-tokens.js"></script>
     <script defer src="/static/js/map/tokens/map-token-events.js"></script>
     <script defer src="/static/js/map/tokens/map-token-delete.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/tokens/map-token-clipboard.js?v=20260811-component-actions"></script>
     <script defer src="/static/js/map/tokens/map-token-dom-events.js?v=20260604-map-controller"></script>
     <script defer src="/static/js/map/board-ping/map-board-ping.js?v=20260810-pixi-ping-realtime"></script>
     <script defer src="/static/js/map/add-to-scene/map-add-to-scene.js"></script>
@@ -105,13 +108,14 @@
     <script defer src="/static/js/ui/modals/modal-remote.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/modals/modal-forms.js?v=20260805-lights-vision"></script>
     <script defer src="/static/js/ui/modals/modal-window-actions.js?v=20260605-detached-remote"></script>
-    <script defer src="/static/js/ui/modals/modal-manager.js?v=20260605-detached-remote"></script>
+    <script defer src="/static/js/ui/modals/modal-manager.js?v=20260814-journal-workspace"></script>
     <script defer src="/static/js/ui/modals/modal-drag.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/modals/modal-api.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/permissions.js"></script>
     <script type="application/json" id="gravewright-game-context">{{ game_client_context_json | safe }}</script>
     <script type="application/json" id="gravewright-sdk-packages">{{ sdk_client_manifests_json | safe }}</script>
     <script defer src="/static/js/sdk/sdk-capabilities.js?v=20260614-sdk"></script>
+    <script defer src="/static/js/ui/partial-applications.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sdk/gravewright-sdk.js?v={{ asset_version }}"></script>
 
     <script defer src="/static/js/chat/chat-renderer.js?v=20260604-chat-split"></script>
@@ -130,15 +134,17 @@
     <script defer src="/static/vendor/marked.min.js?v={{ asset_version }}"></script>
     <script defer src="/static/vendor/purify.min.js?v={{ asset_version }}"></script>
     
-    <script type="module" src="/static/js/journals/block-editor.js"></script>
+    <script type="module" src="/static/js/journals/block-editor.js?v=20260814-journal-inline-headings"></script>
     {{ blockfield.labels() }}
     
+    <script defer src="/static/js/ui/directory-tree.js?v=20260814-directory-tree"></script>
+    <script defer src="/static/js/ui/directory-drag.js?v=20260814-directory-drag"></script>
     <script defer src="/static/js/journals/journal-api.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journals-tree.js?v=20260604-journals-split"></script>
-    <script defer src="/static/js/journals/journal-editor.js?v=20260604-journals-split"></script>
+    <script defer src="/static/js/journals/journal-editor.js?v=20260814-journal-page-types"></script>
     <script defer src="/static/js/journals/journal-preview.js?v=20260604-journals-split"></script>
-    <script defer src="/static/js/journals/journals-panel.js?v=20260806-broadcast-gaps"></script>
-    <script defer src="/static/js/journals/journal-modal.js?v=20260604-journal-board-broadcast1"></script>
+    <script defer src="/static/js/journals/journals-panel.js?v=20260814-journal-autosave"></script>
+    <script defer src="/static/js/journals/journal-modal.js?v=20260814-journal-workspace-2"></script>
     
     <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sheets/actors/actor-sheet-actions.js?v={{ asset_version }}"></script>
@@ -169,10 +175,11 @@
     <script defer src="/static/js/content/content-browser.js"></script>
     <script defer src="/static/js/content/content-drag.js"></script>
     
-    <script defer src="/static/js/ui/context-menu/context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/context-menu.js?v=20260814-journal-folders"></script>
+    <script defer src="/static/js/ui/context-menu/folder-editor.js?v=20260814-journal-folders"></script>
     <script defer src="/static/js/ui/context-menu/token-context-menu.js?v=20260806-lighting-editors"></script>
     <script defer src="/static/js/ui/context-menu/measure-context-menu.js?v=20260605-measure-layer-menu"></script>
-    <script defer src="/static/js/ui/context-menu/journal-context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/journal-context-menu.js?v=20260814-journal-folders"></script>
     <script defer src="/static/js/ui/context-menu/actor-context-menu.js?v=20260604-ctxmenu-split"></script>
     <script defer src="/static/js/ui/context-menu/item-context-menu.js?v=20260604-ctxmenu-split"></script>
     <script defer src="/static/js/ui/toasts.js"></script>
@@ -193,11 +200,16 @@
     <script defer src="/static/js/game/streamer-link.js?v=20260607-streamer-mode"></script>
     <script defer src="/static/js/game/game-bootstrap.js?v=20260604-game-entrypoint"></script>
     <script defer src="/static/js/game/game-entrypoint.js?v=20260604-game-entrypoint"></script>
-    <script defer src="/static/js/game/settings-navigation.js?v=20260809-foundry-layout"></script>
+    <script defer src="/static/js/game/settings-navigation.js?v={{ asset_version }}-player-first-visit"></script>
 </head>
 
 {% set active_room = rooms|selectattr("id", "equalto", active_room_id)|first if rooms else none %}
 <body data-current-user-id="{{ user.id }}" data-current-member-role="{{ active_room.member_role if active_room else '' }}"
+    data-gm-guided-prefetch="{{ 'true' if gm_guided_prefetch_enabled else 'false' }}"
+    data-gm-hint-max-queued-bytes="{{ gm_hint_max_queued_bytes }}"
+    data-gm-hint-idle-only="{{ 'true' if gm_hint_idle_only else 'false' }}"
+    data-gm-hint-cancel-visible="{{ 'true' if gm_hint_cancel_on_visible_backlog else 'false' }}"
+    data-gm-hint-policy="{{ gm_hint_policy }}"
     data-ping-color="{{ ping_color }}"
     data-onboarding-error="{{ t('onboarding.errors.generic') }}"
     data-scene-image-label-duplicate="{{ t('game.scene_images.duplicate') }}"
@@ -255,10 +267,13 @@
     data-ctx-journal-open="{{ t('game.journal.ctx.open') }}" data-ctx-journal-owner="{{ t('game.journal.ctx.owner') }}"
     data-ctx-journal-delete="{{ t('game.journal.ctx.delete') }}"
     data-ctx-journal-delete-confirm="{{ t('game.journal.ctx.delete_confirm') }}"
+    data-ctx-journal-create="{{ t('game.journal.create_entry') }}"
+    data-ctx-journal-folder-delete="{{ t('game.journal.folder.ctx.delete') }}"
     data-ctx-item-open="{{ t('game.items.ctx.open') }}"
     data-ctx-item-delete="{{ t('game.items.ctx.delete') }}"
     data-ctx-item-delete-confirm="{{ t('game.items.ctx.delete_confirm') }}"
     data-ctx-actor-delete="{{ t('game.actors.ctx.delete') }}"
+    data-ctx-actor-create="{{ t('game.actors.create_actor_title') }}"
     data-ctx-actor-delete-confirm="{{ t('game.actors.ctx.delete_confirm') }}"
     data-ctx-actor-permissions="{{ t('game.actors.ctx.permissions') }}"
     data-ctx-actor-owner="{{ t('game.actors.ctx.set_owner') }}"
@@ -267,10 +282,17 @@
     data-ctx-actor-folder-add-to-scene="{{ t('game.actors.folder.add_to_scene') }}"
     data-ctx-actor-folder-rename="{{ t('game.actors.folder.rename') }}"
     data-ctx-actor-folder-color="{{ t('game.actors.folder.color') }}"
+    data-ctx-folder-edit="{{ t('game.actors.folder.edit') }}"
+    data-ctx-folder-name="{{ t('game.actors.folder_name_label') }}"
+    data-ctx-folder-color="{{ t('game.actors.folder_color_label') }}"
+    data-ctx-folder-save="{{ t('game.actors.folder.save') }}"
     data-ctx-actor-folder-add-subfolder="{{ t('game.actors.folder.add_subfolder') }}"
     data-ctx-actor-folder-move-root="{{ t('game.actors.folder.move_to_root') }}"
     data-ctx-actor-folder-delete="{{ t('game.actors.folder.delete') }}"
     data-ctx-actor-folder-delete-confirm="{{ t('game.actors.folder.delete_confirm') }}"
+    data-ctx-item-folder-delete-question="{{ t('game.items.folder.delete_question') }}"
+    data-ctx-item-folder-delete-only="{{ t('game.items.folder.delete_only') }}"
+    data-ctx-item-folder-delete-with-contents="{{ t('game.items.folder.delete_with_contents') }}"
     data-ctx-sheet-add-to-scene="{{ t('game.actors.add_to_scene') }}"
     data-ctx-token-open-sheet="{{ t('game.token.ctx.open_sheet') }}"
     data-ctx-token-add-combat="{{ t('game.token.ctx.add_combat') }}"
@@ -305,6 +327,12 @@
     data-asset-label-upload-failed="{{ t('game.assets.errors.upload_failed') }}"
     data-asset-label-too-large="{{ t('game.assets.errors.too_large') }}"
     data-asset-label-unsupported="{{ t('game.assets.errors.unsupported_type') }}"
+    data-asset-label-import-package="{{ t('game.assets.package_import_title') }}"
+    data-asset-label-no-packages="{{ t('game.assets.no_active_packages') }}"
+    data-asset-label-import-one="{{ t('game.assets.import_one') }}"
+    data-asset-label-imported="{{ t('game.assets.imported') }}"
+    data-asset-label-import-all="{{ t('game.assets.import_all') }}"
+    data-asset-label-imported-count="{{ t('game.assets.imported_count') }}"
     data-scene-image-label-resize="{{ t('game.scene_images.resize') }}"
     data-scene-image-label-upload-failed="{{ t('game.scene_images.errors.upload_failed') }}"
     data-scene-image-label-bring-front="{{ t('game.scene_images.bring_front') }}"
@@ -386,6 +414,7 @@
                         data-room-id="{{ room.id }}"
                         data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') else 'false' }}"
                         aria-label="Monster status zone" aria-live="polite"></div>
+                    <div data-sdk-slot="board.overlay" data-room-id="{{ room.id }}"></div>
                     <div class="table-surface" data-map-viewport
                         data-lighting-gm="{{ 'true' if room.member_role == 'gm' or room.is_streamer else 'false' }}">
                         <canvas class="map-canvas" data-map-canvas data-room-id="{{ room.id }}"
@@ -396,6 +425,8 @@
                             data-scene-width="{{ room.active_scene['width'] }}"
                             data-scene-height="{{ room.active_scene['height'] }}"
                             data-scene-tile-size="{{ room.active_scene['tile_size'] }}"
+                            data-scene-raster-tile-size="{{ room.active_scene['tile_size'] }}"
+                            data-scene-grid-size="{{ room.active_scene.get('grid_size') or room.active_scene['tile_size'] }}"
                             data-scene-grid-visible="{{ 'true' if room.active_scene['grid_visible'] else 'false' }}"
                             data-scene-grid-color="{{ room.active_scene['grid_color'] }}"
                             data-scene-grid-opacity="{{ room.active_scene['grid_opacity'] | default(0.4) }}"
@@ -461,8 +492,8 @@
                 <article class="game-modal-window" data-modal-window data-modal-id="permissions-{{ room.id }}"
                     data-window-key="permissions-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
-                        <h2 class="sr-only">{{ t("permissions.title") }}</h2>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <h2 class="sr-only">{{ t("permissions.title") }}</h2>
 
                         <div class="game-modal-controls">
                             <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
@@ -1005,6 +1036,7 @@
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="item-create-{{ room.id }}" data-window-key="item-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
                         <div class="game-modal-sheet-title">
                             <span class="sheet-modal-name">{{ t("game.items.create_item_title") }}</span>
                         </div>
@@ -1041,6 +1073,7 @@
                     data-modal-id="item-folder-create-{{ room.id }}" data-window-key="item-folder-create-{{ room.id }}"
                     hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
                         <div class="game-modal-sheet-title">
                             <span class="sheet-modal-name">{{ t("game.items.create_folder_title") }}</span>
                         </div>
@@ -1051,6 +1084,7 @@
                         </div>
                     </header>
                     <form class="dialog-form" data-item-folder-create-form data-room-id="{{ room.id }}">
+                        <input type="hidden" name="parent_id" value="" />
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_name_label") }}</span>
                             <input type="text" name="name" maxlength="60"
@@ -1078,6 +1112,7 @@
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="actor-create-{{ room.id }}" data-window-key="actor-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
                         <div class="game-modal-sheet-title">
                             <span class="sheet-modal-name">{{ t("game.actors.create_actor_title") }}</span>
                         </div>
@@ -1088,6 +1123,7 @@
                         </div>
                     </header>
                     <form class="dialog-form" data-actor-create-form data-room-id="{{ room.id }}">
+                        <input type="hidden" name="folder_id" value="" />
                         <label class="dialog-field">
                             <span>{{ t("game.actors.name_label") }}</span>
                             <input type="text" data-actor-create-name maxlength="120"
@@ -1118,6 +1154,7 @@
                     data-modal-id="actor-folder-create-{{ room.id }}"
                     data-window-key="actor-folder-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
                         <div class="game-modal-sheet-title">
                             <span class="sheet-modal-name">{{ t("game.actors.create_folder_title") }}</span>
                         </div>
@@ -1128,6 +1165,7 @@
                         </div>
                     </header>
                     <form class="dialog-form" data-actor-folder-create-form data-room-id="{{ room.id }}">
+                        <input type="hidden" name="parent_id" value="" />
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_name_label") }}</span>
                             <input type="text" name="name" maxlength="60"
@@ -1176,8 +1214,15 @@
                     </header>
                     <div class="game-panel-body content-panel-body">
                         <div data-content-browser data-room-id="{{ room.id }}"
-                            data-content-systems="{{ room.enabled_systems | tojson | e }}"
-                            data-empty-text="{{ t('game.actors.no_enabled_system') }}"></div>
+                            data-content-systems="{{ room.content_packages | tojson | e }}"
+                            data-empty-text="{{ t('game.content.no_active_packages') }}"
+                            data-import-one-text="{{ t('game.content.import_one') }}"
+                            data-import-all-text="{{ t('game.content.import_all') }}"
+                            data-importing-text="{{ t('game.content.importing') }}"
+                            data-imported-text="{{ t('game.content.imported_count') }}"
+                            data-import-failed-text="{{ t('game.content.import_failed') }}"
+                            data-pack-empty-text="{{ t('game.content.pack_empty') }}"
+                            data-close-text="{{ t('inside.campaigns.cancel') }}"></div>
                     </div>
                 </article>
                 {% endif %}
@@ -1248,6 +1293,7 @@
                     data-modal-id="journal-folder-create-{{ room.id }}"
                     data-window-key="journal-folder-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
                         <div class="game-modal-sheet-title">
                             <span class="sheet-modal-name">{{ t("game.journal.create_folder") }}</span>
                         </div>
@@ -1258,6 +1304,7 @@
                         </div>
                     </header>
                     <form class="dialog-form" data-journal-folder-create-form data-room-id="{{ room.id }}">
+                        <input type="hidden" name="parent_id" value="" />
                         <label class="dialog-field">
                             <span>{{ t("game.actors.folder_name_label") }}</span>
                             <input type="text" name="name" maxlength="60"
@@ -1321,6 +1368,10 @@
                                 </button>
                                 <input type="file" accept="application/pdf" multiple hidden
                                     data-scene-asset-upload-input="pdf">
+                                <button type="button" class="asset-upload" data-asset-package-open>
+                                    <i class="ph ph-package" aria-hidden="true"></i>
+                                    <span>{{ t("game.assets.import_package") }}</span>
+                                </button>
                             </div>
 
                             <label class="asset-search">
@@ -1395,6 +1446,11 @@
                             <button type="button" data-modal-open="scene-manager-{{ room.id }}"><i
                                     class="ph ph-map-trifold" aria-hidden="true"></i><span>{{ t("game.gm.scenes")
                                     }}</span></button>
+                            {% endif %}
+                            {% if room.member_role == "gm" %}
+                            <button type="button" data-panel-toggle="panel-content-{{ room.id }}"
+                                aria-pressed="false"><i class="ph ph-package" aria-hidden="true"></i><span>{{
+                                    t("game.gm.content_packs") }}</span></button>
                             {% endif %}
                             {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
                             <button type="button" data-modal-open="panel-cards-{{ room.id }}"><i
@@ -1850,7 +1906,7 @@
                 
                 <article class="game-modal-window game-panel" data-modal-window
                     data-modal-id="panel-settings-{{ room.id }}" data-window-key="panel-settings-{{ room.id }}"
-                    data-panel-room="{{ room.id }}" hidden>
+                    data-panel-room="{{ room.id }}" data-member-role="{{ room.member_role }}" hidden>
                     <header class="game-modal-titlebar settings-tab-titlebar" data-modal-drag-handle>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
                         <div class="settings-tab-heading">
@@ -2564,6 +2620,7 @@
                 {% for room in rooms %}
                 <div class="game-dock-group" data-dock-room="{{ room.id }}" {% if room.id !=active_room_id %}hidden{%
                     endif %}>
+                    <span data-sdk-slot="dock.actions" data-room-id="{{ room.id }}"></span>
                     {% if command_palette_enabled %}
                     <button class="game-dock-btn" type="button" data-command-palette-open
                         aria-keyshortcuts="Control+K Meta+K" data-tooltip="{{ t('search.title') }} (Ctrl+K)"

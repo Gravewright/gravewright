@@ -11,20 +11,28 @@ from typing import Any
 from sqlalchemy import select, update
 
 from app.business.audit import AuditService
+from app.business.campaigns.campaign_state_snapshot import CampaignStateSnapshot
 from app.persistence.database import engine_begin
 from app.config import config
 from app.persistence.repositories.campaign_snapshot_repository import CampaignSnapshotRepository
 from app.persistence.tables import campaign_members, campaigns, scene_layers, scenes
 
-FORMAT_VERSION = 1
-CAMPAIGN_FIELDS = ("description", "active_system_id", "initial_state_json", "persistent_state_json", "state_version")
-SCENE_FIELDS = (
-    "name", "status", "visibility", "active", "width", "height", "tile_size", "chunk_size",
-    "grid_visible", "grid_color", "grid_opacity", "image_scale", "start_world_x", "start_world_y",
-    "start_zoom", "tile_table_version", "scene_epoch", "fog_enabled", "fog_mask", "fog_baseline",
-    "fog_ops_json", "fog_version", "board_area_markers_json", "board_version",
+FORMAT_VERSION = 2
+CAMPAIGN_FIELDS = (
+    "title", "description", "active_system_id", "initial_state_json",
+    "persistent_state_json", "state_version",
 )
-LAYER_FIELDS = ("name", "kind", "visibility", "display_order", "encoding", "tile_table_version")
+SCENE_FIELDS = (
+    "group_id", "name", "status", "visibility", "active", "width", "height", "tile_size",
+    "grid_size", "scene_format_version", "chunk_size", "grid_visible", "grid_color",
+    "grid_opacity", "darkness", "image_scale", "start_world_x", "start_world_y", "start_zoom",
+    "tile_table_version", "scene_epoch", "fog_enabled", "fog_mask", "fog_baseline", "fog_ops_json",
+    "fog_version", "board_area_markers_json", "board_version",
+)
+LAYER_FIELDS = (
+    "name", "kind", "visibility", "display_order", "encoding", "tile_table_version",
+    "max_lod", "tile_index_version",
+)
 
 
 @dataclass(frozen=True)
@@ -39,6 +47,7 @@ class CampaignSnapshotService:
     def __init__(self) -> None:
         self.repository = CampaignSnapshotRepository()
         self.audit = AuditService()
+        self.state = CampaignStateSnapshot()
 
     def create(self, *, campaign_id: str, user_id: str, name: str, description: str = "", kind: str = "manual", connection=None) -> SnapshotResult:
         normalized = " ".join(name.strip().split())
@@ -55,12 +64,13 @@ class CampaignSnapshotService:
             return SnapshotResult(False, error_key="campaign.snapshot.errors.denied")
         payload = self._capture(connection, campaign)
         payload_json = self._canonical(payload)
+        tables = payload.get("state", {}).get("tables", {})
         manifest = {
             "format": "gravewright.campaign-snapshot",
             "version": FORMAT_VERSION,
-            "scope": ["campaign_state", "scene_state", "scene_layers"],
-            "excluded": ["members", "chat", "join_codes", "invitations", "assets", "tiles", "tokens", "journals", "actors", "items"],
-            "counts": {"scenes": len(payload["scenes"]), "layers": len(payload["layers"])},
+            "scope": ["complete_campaign_state", "physical_files"],
+            "excluded": ["accounts", "sessions", "snapshot_history", "audit_log", "live_presence", "transport_queue"],
+            "counts": {name: len(rows) for name, rows in tables.items()},
         }
         now = int(time.time())
         row = self.repository.create({
@@ -130,13 +140,21 @@ class CampaignSnapshotService:
             if isinstance(checked, str):
                 return SnapshotResult(False, error_key=checked)
             current_ids = set(connection.execute(select(scenes.c.id).where(scenes.c.campaign_id == campaign_id)).scalars())
-            saved_ids = {item["id"] for item in checked["scenes"]}
-            return SnapshotResult(True, snapshot=self._public(row), preview={
+            saved_scenes = (
+                checked.get("state", {}).get("tables", {}).get("scenes", [])
+                if int(row["format_version"]) >= 2
+                else checked.get("scenes", [])
+            )
+            saved_ids = {item["id"] for item in saved_scenes}
+            preview = {
                 "scenes_restored": len(current_ids & saved_ids),
                 "missing_scenes": len(saved_ids - current_ids),
-                "new_scenes_untouched": len(current_ids - saved_ids),
                 "safety_snapshot": True,
-            })
+            }
+            preview[
+                "new_scenes_removed" if int(row["format_version"]) >= 2 else "new_scenes_untouched"
+            ] = len(current_ids - saved_ids)
+            return SnapshotResult(True, snapshot=self._public(row), preview=preview)
 
     def restore(self, *, snapshot_id: str, campaign_id: str, user_id: str) -> SnapshotResult:
         with engine_begin() as connection:
@@ -149,22 +167,27 @@ class CampaignSnapshotService:
                 return SnapshotResult(False, error_key=payload)
             safety = self._create(connection, campaign_id, user_id, f"Before restore: {row['name']}", "Automatic recovery point", "safety")
             now = int(time.time())
-            connection.execute(update(campaigns).where(campaigns.c.id == campaign_id).values(**payload["campaign"], updated_at=now))
-            restored = 0
-            for item in payload["scenes"]:
-                values = {key: self._decode(item[key]) for key in SCENE_FIELDS if key in item}
-                result = connection.execute(update(scenes).where(scenes.c.id == item["id"]).where(scenes.c.campaign_id == campaign_id).values(**values, updated_at=now))
-                restored += int(result.rowcount or 0)
-            restored_layers = 0
-            for item in payload["layers"]:
-                values = {key: self._decode(item[key]) for key in LAYER_FIELDS if key in item}
-                result = connection.execute(
-                    update(scene_layers)
-                    .where(scene_layers.c.id == item["id"])
-                    .where(scene_layers.c.scene_id.in_(select(scenes.c.id).where(scenes.c.campaign_id == campaign_id)))
-                    .values(**values, updated_at=now)
-                )
-                restored_layers += int(result.rowcount or 0)
+            if int(row["format_version"]) >= 2:
+                counts = self.state.restore(connection, campaign_id, payload["state"])
+                restored = counts.get("scenes", 0)
+                restored_layers = counts.get("scene_layers", 0)
+            else:
+                connection.execute(update(campaigns).where(campaigns.c.id == campaign_id).values(**payload["campaign"], updated_at=now))
+                restored = 0
+                for item in payload["scenes"]:
+                    values = {key: self._decode(item[key]) for key in SCENE_FIELDS if key in item}
+                    result = connection.execute(update(scenes).where(scenes.c.id == item["id"]).where(scenes.c.campaign_id == campaign_id).values(**values, updated_at=now))
+                    restored += int(result.rowcount or 0)
+                restored_layers = 0
+                for item in payload["layers"]:
+                    values = {key: self._decode(item[key]) for key in LAYER_FIELDS if key in item}
+                    result = connection.execute(
+                        update(scene_layers)
+                        .where(scene_layers.c.id == item["id"])
+                        .where(scene_layers.c.scene_id.in_(select(scenes.c.id).where(scenes.c.campaign_id == campaign_id)))
+                        .values(**values, updated_at=now)
+                    )
+                    restored_layers += int(result.rowcount or 0)
             self.audit.record(
                 campaign_id=campaign_id,
                 actor_user_id=user_id,
@@ -187,21 +210,15 @@ class CampaignSnapshotService:
             })
 
     def _capture(self, connection, campaign: dict) -> dict:
-        campaign_id = campaign["id"]
-        scene_rows = [dict(row) for row in connection.execute(select(scenes).where(scenes.c.campaign_id == campaign_id)).mappings()]
-        scene_ids = [row["id"] for row in scene_rows]
-        layers = [] if not scene_ids else [dict(row) for row in connection.execute(select(scene_layers).where(scene_layers.c.scene_id.in_(scene_ids))).mappings()]
         return {
             "format_version": FORMAT_VERSION,
-            "campaign": {key: campaign[key] for key in CAMPAIGN_FIELDS},
-            "scenes": [{"id": row["id"], **{key: self._encode(row[key]) for key in SCENE_FIELDS}} for row in scene_rows],
-            "layers": [{key: self._encode(value) for key, value in row.items()} for row in layers],
+            "state": self.state.capture(connection, str(campaign["id"])),
         }
 
     def _validate(self, row: dict | None, campaign_id: str):
         if row is None or row["campaign_id"] != campaign_id:
             return "campaign.snapshot.errors.not_found"
-        if row["format_version"] != FORMAT_VERSION:
+        if int(row["format_version"]) not in {1, FORMAT_VERSION}:
             return "campaign.snapshot.errors.incompatible"
         if hashlib.sha256(row["payload_json"].encode()).hexdigest() != row["checksum"]:
             return "campaign.snapshot.errors.checksum"

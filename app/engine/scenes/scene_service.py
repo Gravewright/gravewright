@@ -242,7 +242,7 @@ class SceneService:
             None,
         )
 
-        return {
+        payload = {
             "id": scene["id"],
             "name": scene["name"],
             "width": scene["width"],
@@ -260,6 +260,13 @@ class SceneService:
             "tile_table_version": scene["tile_table_version"],
             "scene_epoch": scene["scene_epoch"],
         }
+        if int(scene.get("scene_format_version") or 1) >= 2:
+            payload.update(
+                raster_tile_size=scene["tile_size"],
+                grid_size=scene.get("grid_size") or scene["tile_size"],
+                scene_format_version=2,
+            )
+        return payload
 
     async def activate_scene(
         self,
@@ -323,6 +330,15 @@ class SceneService:
     ) -> SceneServiceResult:
         result = self.manifests.get_manifest(scene_id=scene_id, user_id=user_id)
 
+        return SceneServiceResult(
+            success=result.success,
+            scene=result.scene,
+            manifest=result.manifest,
+            error_key=result.error_key,
+        )
+
+    def get_scene_tile_index(self, **kwargs) -> SceneServiceResult:
+        result = self.manifests.get_tile_index(**kwargs)
         return SceneServiceResult(
             success=result.success,
             scene=result.scene,

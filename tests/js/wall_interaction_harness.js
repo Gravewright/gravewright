@@ -134,6 +134,8 @@ function buildWorld({
                 worldFromScreen: (_c, x, y) => ({ worldX: x, worldY: y, zoom: 1 }),
                 tokenStoreFor: () => tokenStore,
                 activeTokenDrag: () => currentDrag,
+                activeCanvas: () => canvas,
+                history: { push: () => {} },
                 isPlayerView: () => playerView,
             },
         },
@@ -201,6 +203,15 @@ function buildWorld({
                 const gone = new Set(body.wall_ids || []);
                 serverWalls.forEach((list, key) => serverWalls.set(key, list.filter((w) => !gone.has(w.id))));
                 return { ok: true, json: async () => ({ wall_ids: [...gone], scene_id: "scene-1" }) };
+            }
+            if (url.endsWith("/game/walls/move-many")) {
+                const ids = new Set(body.wall_ids || []);
+                wallsOf(body.scene_id).forEach((wall) => {
+                    if (!ids.has(wall.id)) return;
+                    wall.x1 += body.dx; wall.y1 += body.dy;
+                    wall.x2 += body.dx; wall.y2 += body.dy;
+                });
+                return { ok: true, json: async () => ({ walls: snapshot(body.scene_id) }) };
             }
             if (url.endsWith("/door-state")) {
                 const wall = [...serverWalls.values()].flat().find((w) => w.id === body.wall_id);
@@ -495,6 +506,37 @@ async function clickAt(world, x, y, props = {}) {
         check("select no corpo da parede seleciona o segmento",
             world.state().selected === "w1" && world.posts.length === 1,
             JSON.stringify({ selected: world.state().selected, posts: world.posts.length }));
+    }
+
+    {
+        const world = buildWorld({ activeTool: "select", walls: [
+            { x1: 100, y1: 100, x2: 300, y2: 100 },
+            { x1: 100, y1: 200, x2: 300, y2: 200 },
+        ] });
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 50, clientY: 50 });
+        world.dispatch("pointermove", { clientX: 350, clientY: 250 });
+        world.dispatch("pointerup", { clientX: 350, clientY: 250 });
+        world.dispatch("pointerdown", { clientX: 200, clientY: 100 });
+        world.dispatch("pointermove", { clientX: 225, clientY: 130 });
+        world.dispatch("pointerup", { clientX: 225, clientY: 130 });
+        await world.settle();
+        const walls = world.state().walls;
+        check("arrasto pelo mouse move toda a selecao de paredes",
+            walls[0].x1 === 125 && walls[0].y1 === 130
+            && walls[1].x1 === 125 && walls[1].y1 === 230,
+            JSON.stringify(walls));
+        const move = world.posts[world.posts.length - 1];
+        check("arrasto em lote persiste em uma operacao",
+            move?.url.endsWith("/game/walls/move-many")
+            && move.body.wall_ids.length === 2 && move.body.dx === 25 && move.body.dy === 30,
+            JSON.stringify(move));
+        world.dispatch("keydown", { key: "ArrowRight" });
+        await world.settle();
+        const afterKey = world.state().walls;
+        check("seta move toda a selecao de paredes",
+            afterKey[0].x1 === 160 && afterKey[1].x1 === 160,
+            JSON.stringify(afterKey));
     }
 
     {
@@ -1179,17 +1221,14 @@ async function clickAt(world, x, y, props = {}) {
     {
         const world = buildWorld({ activeTool: "select", activeLayer: "walls", walls: paredes });
         await world.settle();
-        // Clique simples troca a selecao; com Shift, acrescenta.
+        // Clique simples escolhe um; a caixa e o segundo modo, para selecionar varios.
         world.dispatch("pointerdown", { clientX: 150, clientY: 100 });
         world.dispatch("pointerup", { clientX: 150, clientY: 100 });
         check("clique simples escolhe uma", world.state().picked.wall.size === 1);
-        world.dispatch("pointerdown", { clientX: 150, clientY: 200, shiftKey: true });
-        world.dispatch("pointerup", { clientX: 150, clientY: 200, shiftKey: true });
-        check("Shift acrescenta em vez de trocar", world.state().picked.wall.size === 2);
-        // E tira de novo: alternar e o que torna a correcao possivel sem recomecar.
-        world.dispatch("pointerdown", { clientX: 150, clientY: 200, shiftKey: true });
-        world.dispatch("pointerup", { clientX: 150, clientY: 200, shiftKey: true });
-        check("e Shift de novo tira", world.state().picked.wall.size === 1);
+        world.dispatch("pointerdown", { clientX: 150, clientY: 200 });
+        world.dispatch("pointerup", { clientX: 150, clientY: 200 });
+        check("outro clique comum troca a selecao", world.state().picked.wall.size === 1
+            && world.state().picked.wall.has("W2"));
     }
 
     {
@@ -1244,6 +1283,20 @@ async function clickAt(world, x, y, props = {}) {
         await world.settle();
         check("duplo clique no no nao divide",
             !world.posts.some((p) => p.url.endsWith("/game/walls/split")));
+    }
+
+    {
+        const porta = {
+            id: "D1", kind: "door", x1: 100, y1: 100, x2: 200, y2: 100,
+            door_state: "closed",
+        };
+        const world = buildWorld({ activeTool: "select", activeLayer: "walls", walls: [porta] });
+        await world.settle();
+        world.dispatch("dblclick", { clientX: 150, clientY: 100 });
+        await world.settle();
+        check("duplo clique na porta nao insere no",
+            !world.posts.some((p) => p.url.endsWith("/game/walls/split")));
+        check("e a porta permanece um unico segmento", world.state().walls.length === 1);
     }
 
 console.log("\ntodas as verificacoes de interacao passaram");

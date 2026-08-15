@@ -11,6 +11,7 @@
             selectedSet,
             stopAddToScene,
             tokenDelete,
+            tokenClipboard,
             tokenSteps,
         } = deps;
 
@@ -32,6 +33,8 @@
 
             const canvas = activeCanvas();
             if (!canvas) return;
+            const componentLayer = ["walls", "lighting", "effects"].includes(window.GravewrightTools?.activeLayer);
+            const sceneImageSelection = Boolean(document.querySelector?.(".scene-image.is-selected"));
 
             if (event.key === "Shift") {
                 boardPing.setShiftKey(true);
@@ -55,9 +58,29 @@
                 return;
             }
 
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c") {
+                const measureTool = ["shape", "draw"].includes(window.GravewrightTools?.activeTool);
+                if (measureTool && getMeasureController()?.copySelectedMeasure?.(canvas)) {
+                    event.preventDefault();
+                    return;
+                }
+                if (!componentLayer && tokenClipboard?.copy?.(canvas)) event.preventDefault();
+                return;
+            }
+
+            if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v") {
+                const measureTool = ["shape", "draw"].includes(window.GravewrightTools?.activeTool);
+                if (measureTool && getMeasureController()?.pasteMeasure?.(canvas)) {
+                    event.preventDefault();
+                    return;
+                }
+                if (!componentLayer && tokenClipboard?.paste?.(canvas)) event.preventDefault();
+                return;
+            }
 
 
-            if (tokenSteps?.handles?.(event.key)) {
+
+            if (!componentLayer && !sceneImageSelection && tokenSteps?.handles?.(event.key)) {
                 if (tokenSteps.step(canvas, event.key)) {
                     event.preventDefault();
                     return;
@@ -65,6 +88,7 @@
             }
 
             if (event.key === "Delete" || event.key === "Backspace") {
+                if (componentLayer || sceneImageSelection) return;
                 const tool = window.GravewrightTools?.activeTool ?? "select";
                 const sub = window.GravewrightTools?.activeSubTool ?? "";
                 if (

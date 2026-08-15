@@ -102,3 +102,19 @@ def test_stale_version_does_not_overwrite_vision(db):
     ))
     assert conflict.error_key == "tokens.errors.version_conflict"
     assert float(TokenRepository().get_by_id(token["id"])["vision_range"]) == 4.0
+
+def test_duplicate_many_preserves_token_configuration_and_assigns_new_ids(db):
+    gm=seed_user(name="GM"); campaign=seed_campaign(gm); scene=seed_scene(campaign)
+    original=TokenRepository().create(scene_id=scene["id"],actor_id=None,grid_x=2,grid_y=3,
+        width_cells=2,height_cells=3,rotation=45,hidden=True,locked=True,
+        vision_enabled=False,vision_range=7.5,name="Copy me",overrides={"hp":{"value":4}})
+    result=asyncio.run(TokenService().duplicate_many(campaign_id=campaign,scene_id=scene["id"],
+        token_ids=[original["id"]],offset_x=1,offset_y=2,user_id=gm))
+    assert result.success and len(result.tokens) == 1
+    copied=result.tokens[0]
+    assert copied["token_id"] != original["id"]
+    assert (copied["grid_x"],copied["grid_y"]) == (3,5)
+    persisted=TokenRepository().get_by_id(copied["token_id"])
+    assert (persisted["width_cells"],persisted["height_cells"],persisted["rotation"]) == (2,3,45)
+    assert persisted["hidden"] and persisted["locked"] and not persisted["vision_enabled"]
+    assert persisted["overrides"] == original["overrides"]

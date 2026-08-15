@@ -36,6 +36,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 GM_EMAIL = "gm-e2e@test.com"
 GM_PASSWORD = "Password1!"  # matches tests.conftest.seed_user
+PLAYER_EMAIL = "player-e2e@test.com"
+PLAYER_PASSWORD = GM_PASSWORD
 CAMPAIGN_TITLE = "E2E Neutral Campaign"
 
 # Litestar CSRFConfig defaults (see main.py): cookie name + request header name.
@@ -65,7 +67,7 @@ def _wait_http_ready(url: str, *, proc: subprocess.Popen, timeout: float = 30.0)
     raise RuntimeError(f"server at {url} not ready in {timeout}s: {last_err}")
 
 
-def _seed_database(db_path: Path) -> str:
+def _seed_database(db_path: Path) -> dict[str, str]:
     """Seed a GM + campaign (no packages) into ``db_path``; return campaign id.
 
     Writes go to the same SQLite file the subprocess server reads.
@@ -78,14 +80,47 @@ def _seed_database(db_path: Path) -> str:
     db_module._initialized = False
     engine_module.reset_engine()
 
-    from tests.conftest import seed_campaign, seed_user
+    from app.persistence.repositories.actor_repository import ActorRepository
+    from app.persistence.repositories.item_repository import ItemRepository
+    from app.persistence.repositories.journal_repository import JournalRepository
+    from tests.conftest import seed_campaign, seed_member, seed_user
 
     gm_id = seed_user(name="GM", email=GM_EMAIL)
+    player_id = seed_user(name="Player", email=PLAYER_EMAIL)
     campaign_id = seed_campaign(gm_id, title=CAMPAIGN_TITLE)
+    seed_member(campaign_id, player_id, "player")
+    second_campaign_id = seed_campaign(gm_id, title="E2E Second Campaign")
+    seed_member(second_campaign_id, player_id, "player")
+    actor_id = ActorRepository().create(
+        campaign_id=campaign_id, system_id="test", actor_type="npc",
+        name="E2E Actor", created_by_user_id=gm_id,
+    )
+    item_id = ItemRepository().create(
+        campaign_id=campaign_id, system_id="test", item_type="gear",
+        name="E2E Item", created_by_user_id=gm_id,
+    )
+    journal_id = JournalRepository().create(
+        campaign_id=campaign_id, created_by_user_id=gm_id,
+        journal_type="diary", title="E2E Journal",
+    )
+    quest_id = JournalRepository().create(
+        campaign_id=campaign_id, created_by_user_id=gm_id,
+        journal_type="quest", title="E2E Quest", visibility="shared",
+        data_json='{"status":"available","objectives":[],"rewards":[]}',
+    )
 
     # Release the SQLite file so the subprocess server can open it cleanly.
     engine_module.reset_engine()
-    return campaign_id
+    return {
+        "campaign_id": campaign_id,
+        "second_campaign_id": second_campaign_id,
+        "gm_id": gm_id,
+        "player_id": player_id,
+        "actor_id": actor_id,
+        "item_id": item_id,
+        "journal_id": journal_id,
+        "quest_id": quest_id,
+    }
 
 
 @pytest.fixture(scope="module")
@@ -93,7 +128,7 @@ def live_server(tmp_path_factory):
     """Boot a real server with a seeded GM + campaign and yield its base URL."""
     tmp_dir = tmp_path_factory.mktemp("e2e")
     db_path = tmp_dir / "e2e.sqlite3"
-    campaign_id = _seed_database(db_path)
+    seeded = _seed_database(db_path)
 
     port = _free_port()
     base_url = f"http://127.0.0.1:{port}"
@@ -107,6 +142,7 @@ def live_server(tmp_path_factory):
             # the port; with an ephemeral port a fixed host never matches, so the
             # local test server trusts any host (safe: APP_ENV=test, loopback only).
             "ALLOWED_HOSTS": "*",
+            "WS_ALLOWED_ORIGINS": base_url,
             "SESSION_COOKIE_SECURE": "false",
             "ALLOW_METADATA_BOOTSTRAP": "true",
             "GRAVEWRIGHT_TEST_TEMP_ROOT": str(tmp_dir.resolve()),
@@ -131,7 +167,7 @@ def live_server(tmp_path_factory):
     )
     try:
         _wait_http_ready(f"{base_url}/login", proc=proc)
-        yield {"base_url": base_url, "campaign_id": campaign_id}
+        yield {"base_url": base_url, **seeded}
     finally:
         proc.terminate()
         with contextlib.suppress(subprocess.TimeoutExpired):

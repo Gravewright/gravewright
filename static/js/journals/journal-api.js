@@ -29,17 +29,13 @@
         headers: { Accept: "text/html" },
       });
       if (!res.ok) return;
-      const collapsed = new Set(
-        Array.from(host.querySelectorAll(".journal-folder:not([data-open])")).map((f) => f.dataset.folderId),
+      const expanded = new Set(
+        Array.from(host.querySelectorAll(".journal-folder[data-open]")).map((f) => f.dataset.folderId),
       );
       host.innerHTML = await res.text();
-      collapsed.forEach((id) => {
+      expanded.forEach((id) => {
         const f = host.querySelector(`.journal-folder[data-folder-id="${CSS.escape(id)}"]`);
-        if (f) {
-          f.removeAttribute("data-open");
-          const b = f.querySelector(":scope > .sheet-folder-body");
-          if (b) b.hidden = true;
-        }
+        if (f) FI.setJournalFolderOpen(f, true);
       });
       FI.applyJournalFolderColors(host);
     } catch {  }

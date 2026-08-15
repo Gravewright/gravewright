@@ -27,7 +27,7 @@
             el.style.width = `${Math.abs(marquee.x - marquee.startX)}px`;
             el.style.height = `${Math.abs(marquee.y - marquee.startY)}px`;
 
-            el.classList.toggle("board-marquee--overlay", marquee.x < marquee.startX);
+            el.classList.toggle("board-marquee--all", marquee.x >= marquee.startX);
             el.style.display = "block";
         }
 
@@ -35,25 +35,31 @@
             if (marqueeEl) marqueeEl.style.display = "none";
         }
 
+        function selectTokensInWorldRect(canvas, rect, { additive = false } = {}) {
+            const scene = sceneDataFor(canvas);
+            if (!scene) return 0;
+            const gridSize = scene.scaledTileSize;
+            const ids = [];
+
+            tokenStoreFor(canvas).forEach((token) => {
+                const cx = (token.grid_x + (token.width_cells || 1) / 2) * gridSize;
+                const cy = (token.grid_y + (token.height_cells || 1) / 2) * gridSize;
+                if (
+                    cx >= rect.x0 && cx <= rect.x1
+                    && cy >= rect.y0 && cy <= rect.y1
+                ) {
+                    ids.push(token.token_id);
+                }
+            });
+
+            setSelection(canvas, ids, { additive });
+            return ids.length;
+        }
+
         function finish(marquee) {
             const canvas = marquee.canvas;
             const scene = sceneDataFor(canvas);
             if (!scene) return;
-
-
-
-            if (marquee.x < marquee.startX) {
-                const rect = {
-                    left: Math.min(marquee.startX, marquee.x),
-                    top: Math.min(marquee.startY, marquee.y),
-                    right: Math.max(marquee.startX, marquee.x),
-                    bottom: Math.max(marquee.startY, marquee.y),
-                };
-                window.GravewrightCards?.selectInRect?.(canvas, rect, { additive: marquee.additive });
-                window.GravewrightSceneImages?.selectInRect?.(canvas, rect, { additive: marquee.additive });
-                return;
-            }
-
             const state = stateFor(canvas);
             const minWorld = screenToWorldXY(
                 Math.min(marquee.startX, marquee.x),
@@ -65,23 +71,22 @@
                 Math.max(marquee.startY, marquee.y),
                 state,
             );
-            const gridSize = scene.scaledTileSize;
-            const ids = [];
+            selectTokensInWorldRect(canvas, {
+                x0: minWorld.worldX, y0: minWorld.worldY,
+                x1: maxWorld.worldX, y1: maxWorld.worldY,
+            }, { additive: marquee.additive });
 
-            tokenStoreFor(canvas).forEach((token) => {
-                const cx = (token.grid_x + (token.width_cells || 1) / 2) * gridSize;
-                const cy = (token.grid_y + (token.height_cells || 1) / 2) * gridSize;
-                if (
-                    cx >= minWorld.worldX
-                    && cx <= maxWorld.worldX
-                    && cy >= minWorld.worldY
-                    && cy <= maxWorld.worldY
-                ) {
-                    ids.push(token.token_id);
-                }
-            });
-
-            setSelection(canvas, ids, { additive: marquee.additive });
+            // Left-to-right is the broad selection: tokens plus every overlay.
+            if (marquee.x >= marquee.startX) {
+                const rect = {
+                    left: Math.min(marquee.startX, marquee.x),
+                    top: Math.min(marquee.startY, marquee.y),
+                    right: Math.max(marquee.startX, marquee.x),
+                    bottom: Math.max(marquee.startY, marquee.y),
+                };
+                window.GravewrightCards?.selectInRect?.(canvas, rect, { additive: marquee.additive });
+                window.GravewrightSceneImages?.selectInRect?.(canvas, rect, { additive: marquee.additive });
+            }
         }
 
         function start(canvas, event, { additive = false } = {}) {
@@ -137,6 +142,7 @@
         }
 
         return {
+            selectTokensInWorldRect,
             start,
             stop,
             update,

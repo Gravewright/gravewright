@@ -13,6 +13,8 @@ from app.cli import build_parser
         ["doctor", "--ai"],
         ["doctor", "--strict", "--verbose"],
         ["run", "--open"],
+        ["run", "--diagnostics"],
+        ["run", "--diagnostics-file", "diagnostics/custom.jsonl"],
         ["run", "--host", "127.0.0.1", "--port", "8001", "--no-install"],
         ["backup", "-o", "backup.zip", "--verify"],
         ["backup", "--include-assets"],

@@ -1,0 +1,69 @@
+{
+  "control": "no_gm_prefetch",
+  "clients": {
+    "gm": 1,
+    "players": 5
+  },
+  "policies": [
+    {
+      "policy": "simple",
+      "reveal_p50_ms": 184.04289999307366,
+      "reveal_p95_ms": 198.7788999977056,
+      "critical_requests": 1,
+      "prefetched_bytes": 11026282,
+      "promoted_bytes": 0,
+      "wasted_bytes": 11026282,
+      "useful_byte_ratio": 0.0,
+      "scheduler_debt_ms": 0,
+      "pareto": false
+    },
+    {
+      "policy": "exponential",
+      "reveal_p50_ms": 183.4612999955425,
+      "reveal_p95_ms": 191.95739999850048,
+      "critical_requests": 3,
+      "prefetched_bytes": 9434268,
+      "promoted_bytes": 0,
+      "wasted_bytes": 9434268,
+      "useful_byte_ratio": 0.0,
+      "scheduler_debt_ms": 0,
+      "pareto": true
+    },
+    {
+      "policy": "sigmoid",
+      "reveal_p50_ms": 485.7895999957691,
+      "reveal_p95_ms": 630.429799995909,
+      "critical_requests": 79,
+      "prefetched_bytes": 0,
+      "promoted_bytes": 0,
+      "wasted_bytes": 0,
+      "useful_byte_ratio": 0,
+      "scheduler_debt_ms": 0,
+      "pareto": false
+    },
+    {
+      "policy": "sigmoid_derivative",
+      "reveal_p50_ms": 498.42050000006566,
+      "reveal_p95_ms": 513.8931999972556,
+      "critical_requests": 84,
+      "prefetched_bytes": 0,
+      "promoted_bytes": 0,
+      "wasted_bytes": 0,
+      "useful_byte_ratio": 0,
+      "scheduler_debt_ms": 0,
+      "pareto": false
+    },
+    {
+      "policy": "utility_per_byte",
+      "reveal_p50_ms": 392.5656000064919,
+      "reveal_p95_ms": 506.39710000541527,
+      "critical_requests": 69,
+      "prefetched_bytes": 0,
+      "promoted_bytes": 0,
+      "wasted_bytes": 0,
+      "useful_byte_ratio": 0,
+      "scheduler_debt_ms": 0,
+      "pareto": true
+    }
+  ]
+}

@@ -11,7 +11,6 @@
             autoFitMargin,
             autoFitPadding,
             cssEscape,
-            defaultFitHeight,
             defaultX,
             defaultY,
             isClassicPanel,
@@ -141,18 +140,37 @@
             const state = readWindowState(modal);
             if (!state) return false;
 
+            const layer = modal.closest(".game-modal-layer");
+            const layerRect = layer?.getBoundingClientRect();
+            const availableWidth = layerRect
+                ? Math.max(minWindowWidth, Math.floor(layerRect.width - autoFitMargin * 2))
+                : Math.max(minWindowWidth, window.innerWidth - autoFitMargin * 2);
+            const availableHeight = layerRect
+                ? Math.max(minWindowHeight, Math.floor(layerRect.height - autoFitMargin * 2))
+                : Math.max(minWindowHeight, window.innerHeight - autoFitMargin * 2);
+            const restoredWidth = state.userSized && Number.isFinite(state.width)
+                ? clamp(state.width, minWindowWidth, availableWidth)
+                : Math.min(modal.offsetWidth || minWindowWidth, availableWidth);
+            const restoredHeight = state.userSized && Number.isFinite(state.height)
+                ? clamp(state.height, minWindowHeight, availableHeight)
+                : Math.min(modal.offsetHeight || minWindowHeight, availableHeight);
+
             let restored = false;
 
             if (Number.isFinite(state.x) && Number.isFinite(state.y)) {
-                setPosition(modal, state.x, state.y);
+                setPosition(
+                    modal,
+                    clamp(state.x, autoFitMargin, Math.max(autoFitMargin, availableWidth - restoredWidth + autoFitMargin)),
+                    clamp(state.y, autoFitMargin, Math.max(autoFitMargin, availableHeight - restoredHeight + autoFitMargin)),
+                );
                 restored = true;
             }
 
 
             if (state.userSized && Number.isFinite(state.width) && Number.isFinite(state.height)) {
                 modal.dataset.userSized = "true";
-                modal.style.width = `${state.width}px`;
-                modal.style.height = `${state.height}px`;
+                modal.style.width = `${restoredWidth}px`;
+                modal.style.height = `${restoredHeight}px`;
                 restored = true;
             }
 
@@ -187,7 +205,11 @@
             const preferredWidth = Number(modal.dataset.autoFitWidth);
             const preferredHeight = Number(modal.dataset.autoFitHeight);
             const minFitWidth = dataNumber(modal, "autoFitMinWidth") || minWindowWidth;
-            const minFitHeight = dataNumber(modal, "autoFitMinHeight") || defaultFitHeight;
+            // Content-sized windows must not inherit an arbitrary tall floor.
+            // Editors that genuinely need room declare data-auto-fit-min-height.
+            const explicitMinFitHeight = dataNumber(modal, "autoFitMinHeight");
+            const contentHeightFloor = modal.classList.contains("dialog-modal") ? 0 : minWindowHeight;
+            const minFitHeight = explicitMinFitHeight ?? contentHeightFloor;
             const widthFloor = Math.min(Math.max(minWindowWidth, minFitWidth), availableWidth);
             const width = options.preserveWidth
                 ? clamp(modal.offsetWidth, widthFloor, availableWidth)
@@ -200,7 +222,7 @@
                 );
             modal.style.width = `${width}px`;
 
-            const heightFloor = Math.min(Math.max(minWindowHeight, minFitHeight), availableHeight);
+            const heightFloor = Math.min(Math.max(contentHeightFloor, minFitHeight), availableHeight);
             const height = clamp(
                 Number.isFinite(preferredHeight)
                     ? preferredHeight

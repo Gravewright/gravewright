@@ -109,6 +109,10 @@ class PackageAssetService:
                 ids.append(row["package_id"])
         return ids
 
+    def active_package_ids(self, campaign_id: str) -> tuple[str, ...]:
+        """Public, immutable view used by SDK runtime authority checks."""
+        return tuple(self._ordered_active_package_ids(campaign_id))
+
     def list_assets_for_campaign(self, campaign_id: str, entrypoint: str = "game") -> list[dict]:
         out: list[dict] = []
         for package_id in self._ordered_active_package_ids(campaign_id):

@@ -213,6 +213,41 @@ class TokenService:
 
         return TokenResult(success=True, tokens=token_views)
 
+    async def duplicate_many(
+        self, *, campaign_id: str, scene_id: str, token_ids: list[str], offset_x: int,
+        offset_y: int, user_id: str, transport: RealtimeGatewayContract | None = None,
+    ) -> TokenResult:
+        if not self.permissions.can(user_id=user_id, campaign_id=campaign_id, permission=TablePermission.TOKEN_CREATE):
+            return TokenResult(success=False, error_key="tokens.errors.permission_denied")
+        scene = self.scenes.get_by_id(scene_id)
+        if scene is None or scene["campaign_id"] != campaign_id:
+            return TokenResult(success=False, error_key="tokens.errors.scene_not_found")
+        originals = [self.tokens.get_by_scene_and_id(scene_id=scene_id, token_id=value) for value in token_ids]
+        if any(token is None for token in originals):
+            return TokenResult(success=False, error_key="tokens.errors.not_found")
+        if any(
+            not self._can_control_token(token=token, user_id=user_id, campaign_id=campaign_id)
+            for token in originals
+        ):
+            return TokenResult(success=False, error_key="tokens.errors.permission_denied")
+        specs = []
+        for token in originals:
+            specs.append({key: token.get(key) for key in (
+                "actor_id", "width_cells", "height_cells", "rotation", "name", "token_asset_url",
+                "visible", "hidden", "locked", "disposition", "actor_link_mode", "controlled_by_user_ids",
+                "controlled_by_role", "vision_enabled", "vision_range", "overrides",
+            )} | {"scene_id": scene_id, "grid_x": token["grid_x"] + offset_x, "grid_y": token["grid_y"] + offset_y})
+        created = self.tokens.create_many(specs)
+        actor_ids = {token.get("actor_id") for token in created if token.get("actor_id")}
+        actors = {actor_id: self.actors.get(actor_id) for actor_id in actor_ids}
+        projections = {actor_id: self.projector.project(actor) for actor_id, actor in actors.items() if actor}
+        owners = self._owner_ids_by_actor(campaign_id)
+        views = [self.views.build_view(token=token, projection=projections.get(token.get("actor_id")),
+                 actor=actors.get(token.get("actor_id")), owner_user_ids=owners.get(token.get("actor_id"), [])) for token in created]
+        if transport is not None:
+            await self._emit_tokens_created(campaign_id=campaign_id, scene_id=scene_id, token_views=views, transport=transport)
+        return TokenResult(success=True, tokens=views)
+
     def _snapshot_overrides(self, *, actor: dict, projection: dict) -> dict:
         overrides = {
             INSTANCE_KEY: self.token_instances.make_instance_snapshot(actor=actor),
@@ -825,6 +860,10 @@ class TokenService:
         if actor is None or actor["status"] != "active":
             return False
         return can_edit_actor(actor=actor, campaign={"member_role": member_role}, user_id=user_id)
+
+    def can_control_token(self, *, token: dict, user_id: str, campaign_id: str) -> bool:
+        """Public semantic permission check used by the SDK inspector."""
+        return self._can_control_token(token=token, user_id=user_id, campaign_id=campaign_id)
 
     def _get_scene_in_campaign(self, *, campaign_id: str, scene_id: str) -> dict | None:
         scene = self.scenes.get_by_id(scene_id)

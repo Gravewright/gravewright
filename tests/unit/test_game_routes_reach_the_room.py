@@ -24,6 +24,7 @@ _TRANSPORT = re.compile(r"transport|to_room|to_user|broadcast|announce|emit|noti
 DELIBERATELY_SILENT = {
     "/campaigns/invitations": "o convidado ainda não está na sala",
     "/game/onboarding/preference": "preferência por usuário",
+    "/game/player-onboarding/claim": "marcador de primeira visita exclusivo do usuário",
     "/game/preferences/layout": "preferência por usuário",
     "/game/preferences/vision": "preferência por usuário; só muda como a tela é pintada",
     "/game/preferences/ping": "preferência por usuário; segue no próximo evento de ping",

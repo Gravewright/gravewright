@@ -67,6 +67,33 @@
     if (item) closeAll(item);
   });
 
+  document.addEventListener("submit", async (event) => {
+    const form = event.target.closest(".campaign-snapshot-create, .snapshot-confirm");
+    if (!form || event.defaultPrevented) return;
+    event.preventDefault();
+    form.setAttribute("aria-busy", "true");
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: new URLSearchParams(new FormData(form)),
+      });
+      const payload = await response.json().catch(() => ({}));
+      const key = response.ok && payload.ok !== false ? payload.message_key : payload.error_key;
+      const query = response.ok && payload.ok !== false ? "campaign_message_key" : "campaign_error_key";
+      await window.GravewrightInside?.refresh(`/inside?${query}=${encodeURIComponent(key || "campaign.snapshot.errors.failed")}`);
+    } catch (_) {
+      await window.GravewrightInside?.refresh("/inside?campaign_error_key=campaign.snapshot.errors.failed");
+    } finally {
+      form.removeAttribute("aria-busy");
+    }
+  });
+
 
 
   function stampTimes(root) {

@@ -1,0 +1,1209 @@
+/* Gravewright — Journal Workspace
+ *
+ * The diary journal's surface: a page browser and the page itself, sharing one
+ * geometry between the editor and the reader.
+ *
+ * This file is the last word on the journal window (it loads after game.css),
+ * so it is written as a design layer, not as a patch list. Three rules hold it
+ * together:
+ *
+ *   1. Squared. The window frame keeps its --radius-lg; everything inside is
+ *      either flush (0) or --radius-sm. No pills, no 8/12/14px corners.
+ *   2. Tokens. Colour, type, spacing, motion and z-index come from tokens.css.
+ *      A literal here means the token scale is missing a step.
+ *   3. Structure over override. `!important` appears only where a base rule is
+ *      itself `!important`; layout is expressed once, in the grid below.
+ *
+ * Geometry, left to right:
+ *
+ *   ┌──────────────┬────────────────────────────────┐
+ *   │ ⌂ search ▽⚿⇤ │ toolbar (sticky)               │
+ *   │ chapters +   │ reading column (92ch)          │
+ *   │ pages        │                                │
+ *   │ create row   │                                │
+ *   └──────────────┴────────────────────────────────┘
+ *
+ * Colour comes from the panels this window sits among: the column is the same
+ * near-black surface, hover and selection are the accent wash the actor and
+ * journal lists use (`rgba(192,154,90,.08)` over a `--border` hairline), and
+ * chapter headers carry the 4% accent tint of the sheet folders.
+ *
+ * There is no icon rail and no title band — the window titlebar already names
+ * the journal. The column's one row holds home (the opening page, which has no
+ * row in the list), search, the filter, the GM area and collapse.
+ */
+
+.journal-modal[data-journal-type="diary"] {
+    --journal-browser: 288px;
+    --journal-gutter: 20px;
+    /* Wide enough to use the window, capped so lines stay readable when the
+     * journal is opened full-screen. */
+    --journal-measure: 92ch;
+
+    width: min(1380px, calc(100vw - 36px));
+    height: min(900px, calc(100vh - 36px));
+    min-width: 720px;
+    min-height: 540px;
+    overflow: hidden;
+    background: var(--surface);
+}
+
+/* The titlebar's editor chrome was a three-column grid because it led with a
+ * back-to-reading arrow; without it the title input would sit in the 34px
+ * column that arrow used to hold. */
+.journal-modal .journal-window-editor-title {
+    grid-template-columns: minmax(120px, 360px) auto;
+}
+
+/* Hidden is a state contract, not a layout suggestion. */
+.journal-modal[data-journal-type="diary"] [hidden] { display: none !important; }
+
+/* The window manager auto-sizes bodies with `!important`; the diary manages its
+ * own scrolling regions and has to opt out at equal specificity. */
+.journal-modal[data-journal-type="diary"] .journal-modal-body {
+    height: auto !important;
+    min-height: 0;
+    overflow: hidden !important;
+}
+
+/* The shared editor sheet pads the form (0 22px 36px) because its other journal
+ * types are a single scrolling column. Here the workspace is the form's only
+ * child and owns its own gutters, so that padding is dead space around the
+ * columns — a strip down the left and a band under the sidebar. */
+.journal-modal[data-journal-type="diary"] .journal-editor-form {
+    height: auto;
+    min-height: 0;
+    flex: 1 1 auto;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* ── Workspace grid ─────────────────────────────────────────────────────── */
+
+.journal-modal .journal-diary-workspace--editorial {
+    display: grid;
+    grid-template-columns: minmax(0, var(--journal-browser)) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border: 0;
+    background: var(--surface);
+    transition: grid-template-columns var(--motion-base) var(--ease);
+}
+
+/* Opening is immediate; hiding waits for the slide to finish (see the collapsed
+ * rule further down, which delays only the visibility step). */
+.journal-modal .journal-editorial-browser {
+    transition:
+        opacity var(--motion-fast) var(--ease),
+        visibility 0s linear 0s;
+}
+
+/* The block editor is a guest: it must fit the column it is given, whatever
+ * intrinsic width its own stylesheet wants. */
+.journal-modal .journal-diary-workspace--editorial .journal-block-field,
+.journal-modal .journal-diary-workspace--editorial .journal-block-editor-host,
+.journal-modal .journal-diary-workspace--editorial .gw-block-editor,
+.journal-modal .journal-diary-workspace--editorial .ProseMirror {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* ── Scrollbars ────────────────────────────────────────────────────────── */
+
+/* Same recipe the tool panels and modal bodies use — accent thumb over a
+ * barely-there track — squared off like everything else in this window. */
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-main,
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar,
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer [data-journal-index-list],
+.journal-modal .journal-reader--editorial .journal-notebook-rail,
+.journal-modal .journal-reader--editorial .journal-notebook-pages {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(192, 154, 90, 0.55) rgba(255, 255, 255, 0.04);
+}
+
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-main::-webkit-scrollbar,
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar::-webkit-scrollbar,
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer [data-journal-index-list]::-webkit-scrollbar,
+.journal-modal .journal-reader--editorial .journal-notebook-rail::-webkit-scrollbar,
+.journal-modal .journal-reader--editorial .journal-notebook-pages::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-main::-webkit-scrollbar-track,
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar::-webkit-scrollbar-track,
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer [data-journal-index-list]::-webkit-scrollbar-track,
+.journal-modal .journal-reader--editorial .journal-notebook-rail::-webkit-scrollbar-track,
+.journal-modal .journal-reader--editorial .journal-notebook-pages::-webkit-scrollbar-track {
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-main::-webkit-scrollbar-thumb,
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar::-webkit-scrollbar-thumb,
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer [data-journal-index-list]::-webkit-scrollbar-thumb,
+.journal-modal .journal-reader--editorial .journal-notebook-rail::-webkit-scrollbar-thumb,
+.journal-modal .journal-reader--editorial .journal-notebook-pages::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    background:
+        linear-gradient(180deg, rgba(210, 175, 105, 0.88), rgba(127, 102, 57, 0.88)) padding-box;
+}
+
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-main::-webkit-scrollbar-thumb:hover,
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar::-webkit-scrollbar-thumb:hover,
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer [data-journal-index-list]::-webkit-scrollbar-thumb:hover,
+.journal-modal .journal-reader--editorial .journal-notebook-rail::-webkit-scrollbar-thumb:hover,
+.journal-modal .journal-reader--editorial .journal-notebook-pages::-webkit-scrollbar-thumb:hover {
+    background:
+        linear-gradient(180deg, rgba(210, 175, 105, 1), rgba(127, 102, 57, 1)) padding-box;
+}
+
+/* ── Browser column ─────────────────────────────────────────────────────── */
+
+/* The column sits on the window's own surface, like the dock panels: a hairline
+ * separates it, and the only tint in the whole sidebar is the accent wash the
+ * actor/journal lists already use for hover and selection. */
+.journal-modal .journal-editorial-browser {
+    display: flex;
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.012);
+}
+
+/* One icon-button recipe for the column's chrome. */
+.journal-modal .journal-editorial-browser > header > button {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    place-items: center;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-editorial-browser > header > button:hover {
+    border-color: var(--border);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+/* The home control is a page, so it selects like the rows below it. */
+.journal-modal .journal-editorial-browser > header > button.is-active,
+.journal-modal .journal-editorial-browser > header > [data-journal-filter-toggle][aria-expanded="true"] {
+    border-color: var(--border);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--accent);
+}
+
+/* The column's only chrome: home, search, filter, GM, collapse — in one row,
+ * where the journal's name used to be repeated from the titlebar. */
+
+.journal-modal .journal-editorial-browser > header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    border: 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.journal-modal .journal-editorial-browser > header label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    flex: 1 1 auto;
+    height: 26px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text-muted);
+}
+
+.journal-modal .journal-editorial-browser > header label:focus-within {
+    border-color: var(--border-accent-strong);
+    box-shadow: var(--ring-accent);
+}
+
+.journal-modal .journal-editorial-browser > header input {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: var(--text-sm);
+}
+
+.journal-modal .journal-editorial-browser > header input::placeholder { color: var(--text-faint); }
+.journal-modal .journal-editorial-browser > header input:focus { outline: none; }
+
+.journal-modal .journal-page-filters {
+    display: flex;
+    gap: var(--space-1);
+    padding: 0 var(--space-3) var(--space-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.journal-modal .journal-page-filters button {
+    padding: 3px var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-page-filters button:hover {
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+.journal-modal .journal-page-filters button.is-active {
+    border-color: var(--border);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--accent);
+}
+
+/* ── Index ─────────────────────────────────────────────────────────────── */
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer {
+    position: static;
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer > header { display: none; }
+
+/* Reading order is the visual order: list, then its empty state, then the
+ * create controls pinned to the bottom. (The base sheet reorders these.) */
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer > * { order: 0; }
+/* Above the (empty) list, not pushed to the footer by it. */
+.journal-modal .journal-diary-workspace--editorial .journal-index-empty { order: -1; }
+.journal-modal .journal-diary-workspace--editorial .journal-chapter-composer { order: 2; }
+.journal-modal .journal-diary-workspace--editorial .journal-index-create { order: 3; }
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-drawer [data-journal-index-list] {
+    display: block;
+    min-height: 0;
+    flex: 1;
+    padding: var(--space-1) var(--space-2) var(--space-3);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.journal-modal .journal-index-empty {
+    margin: 0;
+    padding: var(--space-6) var(--space-4);
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    text-align: center;
+}
+
+/* Chapters */
+
+/* A chapter reads like the folders in the actor and item panels: a faint accent
+ * header over the rows it holds. */
+.journal-modal .journal-chapter-group { margin: 0 0 var(--space-1); }
+
+.journal-modal .journal-chapter-group > header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--accent) 4%, var(--surface));
+}
+
+.journal-modal .journal-chapter-group > header:hover {
+    background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+
+.journal-modal .journal-chapter-group > header button {
+    display: flex;
+    width: 100%;
+    min-height: 30px;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-2);
+    border: 0;
+    background: transparent;
+    color: var(--text-muted);
+    text-align: left;
+    cursor: pointer;
+}
+
+.journal-modal .journal-chapter-group > header strong {
+    flex: 1;
+    overflow: hidden;
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.journal-modal .journal-chapter-group > header span {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    font-variant-numeric: tabular-nums;
+}
+
+.journal-modal .journal-chapter-group > header i {
+    font-size: var(--text-sm);
+    transition: transform var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-chapter-group.is-collapsed [data-chapter-pages] { display: none; }
+.journal-modal .journal-chapter-group.is-collapsed > header i { transform: rotate(-90deg); }
+
+/* Entries: a row like the actor/journal cards — transparent until hovered. */
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry {
+    position: relative;
+    display: grid;
+    grid-template-columns: 16px minmax(0, 1fr);
+    align-items: center;
+    gap: 0;
+    min-height: 32px;
+    margin: 0;
+    padding: 0 var(--space-1);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    transition:
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry:hover,
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-active {
+    border-color: var(--border);
+    background: rgba(192, 154, 90, 0.08);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-active {
+    border-color: var(--border-accent);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-dragging { opacity: 0.5; }
+
+/* Both cells are placed by hand: the opening page has no grip, and without an
+ * explicit column its title would slide into the 16px gutter. */
+.journal-modal .journal-diary-workspace--editorial .journal-index-grip {
+    display: grid;
+    grid-column: 1;
+    place-items: center;
+    color: transparent;
+    font-size: var(--text-sm);
+    cursor: grab;
+    transition: color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry:hover .journal-index-grip {
+    color: var(--text-faint);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-open {
+    display: flex;
+    grid-column: 2;
+    max-width: none;
+    min-width: 0;
+    min-height: 30px;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-1);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-kind {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    font-size: var(--text-base);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-open strong {
+    max-width: none;
+    overflow: hidden;
+    flex: 1;
+    color: inherit;
+    font-size: var(--text-md);
+    font-weight: 500;
+    line-height: var(--leading-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-active .journal-index-open {
+    border: 0;
+    background: transparent;
+    color: var(--text-bright);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-active .journal-index-kind {
+    color: var(--accent);
+}
+
+.journal-modal .journal-index-lock {
+    flex: 0 0 auto;
+    margin-left: auto;
+    color: var(--accent);
+    font-size: var(--text-xs);
+}
+
+/* Renaming and filing happen on the row itself: the field takes the title's
+ * place instead of opening a panel below it. */
+.journal-modal .journal-index-entry.is-renaming .journal-index-open { display: none; }
+
+.journal-modal .journal-index-entry .journal-index-rename {
+    grid-column: 2;
+    width: 100%;
+    min-width: 0;
+    height: 26px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-accent-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text);
+    font-size: var(--text-md);
+}
+
+.journal-modal .journal-index-entry .journal-index-rename:focus {
+    box-shadow: var(--ring-accent);
+    outline: none;
+}
+
+/* The opening page has nothing to drag. */
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry[data-index-page-id="cover"] .journal-index-grip {
+    display: none;
+}
+
+/* ── Browser footer: new page / new chapter ─────────────────────────────── */
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-create {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 28px 28px 28px;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-top: 1px solid var(--border);
+    background: transparent;
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-create > button {
+    display: grid;
+    width: 100%;
+    min-width: 0;
+    min-height: 28px;
+    height: 28px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-create > button:hover {
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-create > .journal-new-chapter {
+    display: flex;
+    width: auto;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-2);
+    overflow: hidden;
+    padding: 0 var(--space-2);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-new-chapter span {
+    display: inline;
+    overflow: hidden;
+    font-size: var(--text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Naming a chapter happens in place — window.prompt() breaks out of the game. */
+.journal-modal .journal-chapter-composer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 28px;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3) 0;
+}
+
+.journal-modal .journal-chapter-composer input {
+    width: 100%;
+    min-width: 0;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-accent-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text);
+    font-size: var(--text-sm);
+}
+
+.journal-modal .journal-chapter-composer input:focus {
+    box-shadow: var(--ring-accent);
+    outline: none;
+}
+
+.journal-modal .journal-chapter-composer button {
+    display: grid;
+    height: 28px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--accent);
+    cursor: pointer;
+}
+
+/* ── Page column ───────────────────────────────────────────────────────── */
+
+/* No right padding: the scrollbar belongs to the window's edge, not floating in
+ * from it. The breathing room the text needs is given to the content instead. */
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-main {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    margin: 0;
+    padding: 0 0 var(--space-10) var(--journal-gutter);
+    overflow-y: auto;
+    background: var(--surface);
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-page-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    min-height: 64px;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-8) calc(var(--journal-gutter) * -1);
+    padding: 0 var(--space-3) 0 var(--journal-gutter);
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    backdrop-filter: blur(12px);
+}
+
+/* Only reachable when the browser column is off-screen (see the 760px block). */
+.journal-modal .journal-page-back {
+    display: none;
+    width: 28px;
+    height: 28px;
+    flex: 0 0 auto;
+    place-items: center;
+    margin-left: calc(var(--space-2) * -1);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.journal-modal .journal-page-back:hover {
+    background: var(--surface-field);
+    color: var(--text);
+}
+
+.journal-modal .journal-page-identity {
+    min-width: 0;
+    margin-right: auto;
+}
+
+.journal-modal .journal-page-identity > span {
+    display: block;
+    overflow: hidden;
+    margin-bottom: 1px;
+    color: var(--accent);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-current-page-title {
+    display: block;
+    margin-right: 0;
+    overflow: hidden;
+    color: var(--text-bright);
+    font-size: var(--text-xl);
+    font-weight: 700;
+    line-height: var(--leading-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.journal-modal .journal-page-position {
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.journal-modal .journal-toolbar-upload button {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text-faint);
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-toolbar-upload button:hover {
+    border-color: var(--border-accent-strong);
+    color: var(--text);
+}
+
+/* One reading measure for both the opening page and the section pages, and the
+ * page fills the column: the writing surface runs to the bottom, so the space
+ * under the last paragraph is still the page and not a dead margin. */
+/* Left-aligned rather than centred: the page title in the toolbar starts at the
+ * gutter, and a centred body would sit on a different left edge than its own
+ * heading. */
+.journal-modal .journal-diary-main > .journal-content-field--blocks,
+.journal-modal .journal-diary-main > .journal-sections-editor {
+    width: min(var(--journal-measure), 100%);
+    min-height: 0;
+    flex: 1 1 auto;
+    margin-inline: 0;
+}
+
+/* `1 0 auto`: the chain grows to fill the column, but never shrinks below its
+ * own text — the page column is the scroller, not the editor. */
+.journal-modal .journal-diary-workspace--editorial .journal-sections-list,
+.journal-modal .journal-diary-workspace--editorial .journal-section-card:not([hidden]),
+.journal-modal .journal-diary-workspace--editorial .journal-block-field,
+.journal-modal .journal-diary-workspace--editorial .journal-block-editor-host,
+.journal-modal .journal-diary-workspace--editorial .gw-block-editor {
+    display: flex;
+    min-height: 0;
+    flex: 1 0 auto;
+    flex-direction: column;
+}
+
+/* The shared editor caps itself at 420px and frames itself as a field, because
+ * elsewhere it sits inside a scrolling sheet among other inputs. Here it *is*
+ * the page: it runs the height of the column, so clicking anywhere under the
+ * last line goes on writing, and its text lines up with the page title above. */
+.journal-modal .journal-diary-workspace--editorial .gw-block-editor .ProseMirror {
+    min-height: 260px;
+    max-height: none;
+    flex: 1 0 auto;
+    /* Scrolling belongs to the page column, whose scrollbar sits on the window
+     * edge; an inner scroller would float its own bar inside the text. */
+    overflow: visible;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+}
+
+/* Focus shows in the caret, not in the page: tinting a full-height writing
+ * surface turns the whole column into a coloured slab. */
+.journal-modal .journal-diary-workspace--editorial .gw-block-editor .ProseMirror:focus {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    caret-color: var(--accent);
+}
+
+/* With every page but the open one hidden, the sections container is an empty
+ * box that still takes (and paints) the rest of the column. */
+.journal-modal .journal-diary-workspace--editorial .journal-sections-editor:not(:has(.journal-section-card:not([hidden]))) {
+    display: none;
+}
+
+/* A page is a document, not a stack of cards: the sheet styles frame each
+ * section and then frame its editor again, which reads as a box in a box. */
+.journal-modal .journal-diary-workspace--editorial .journal-content-field--blocks,
+.journal-modal .journal-diary-workspace--editorial .journal-sections-editor,
+.journal-modal .journal-diary-workspace--editorial .journal-sections-list,
+.journal-modal .journal-diary-workspace--editorial .journal-section-card,
+.journal-modal .journal-diary-workspace--editorial .journal-section-card > .journal-block-field,
+.journal-modal .journal-diary-workspace--editorial .journal-block-field,
+.journal-modal .journal-diary-workspace--editorial .gw-block-editor {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Margins are set apart from the frames above: the two page containers keep
+ * their `margin-inline: auto`, which centres the reading column. */
+.journal-modal .journal-diary-workspace--editorial .journal-sections-list,
+.journal-modal .journal-diary-workspace--editorial .journal-section-card,
+.journal-modal .journal-diary-workspace--editorial .journal-section-card > .journal-block-field,
+.journal-modal .journal-diary-workspace--editorial .journal-block-field {
+    margin: 0;
+}
+
+/* Applied after the flattening above, which zeroes padding wholesale: keeps the
+ * text off the scrollbar now that the column itself ends at it. */
+.journal-modal .journal-diary-main > .journal-content-field--blocks,
+.journal-modal .journal-diary-main > .journal-sections-editor,
+.journal-modal .journal-diary-sidebar .journal-section--gm {
+    padding-right: var(--space-3);
+}
+
+.journal-modal .journal-content-field--blocks > .journal-content-label,
+.journal-modal .journal-sections-head,
+.journal-modal .journal-section-card:not([hidden]) > header { display: none; }
+
+/* ── Empty diary ───────────────────────────────────────────────────────── */
+
+.journal-modal .journal-page-empty {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: var(--space-10) var(--space-6);
+    text-align: center;
+}
+
+.journal-modal .journal-page-empty > i {
+    color: var(--accent);
+    font-size: var(--text-3xl);
+    opacity: 0.7;
+}
+
+.journal-modal .journal-page-empty strong {
+    color: var(--text-bright);
+    font-size: var(--text-xl);
+    font-weight: 700;
+}
+
+.journal-modal .journal-page-empty p {
+    max-width: 46ch;
+    margin: 0;
+    color: var(--text-faint);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+}
+
+.journal-modal .journal-page-empty-actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.journal-modal .journal-page-empty-actions button {
+    display: flex;
+    min-height: 30px;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-page-empty-actions button:hover {
+    border-color: var(--border-accent-strong);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+/* ── Media pages ───────────────────────────────────────────────────────── */
+
+.journal-modal .journal-section-card[data-section-kind="image"] .journal-page-asset,
+.journal-modal .journal-section-card[data-section-kind="pdf"] .journal-page-asset {
+    min-height: 420px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--surface-raised) 45%, transparent);
+}
+
+.journal-modal .journal-page-asset > button {
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+}
+
+.journal-modal .journal-page-asset img {
+    max-height: 68vh;
+    border-radius: var(--radius-sm);
+}
+
+.journal-modal .journal-page-asset iframe {
+    min-height: 68vh;
+    border-radius: var(--radius-sm);
+    background: #fff;
+}
+
+/* A media page whose file was never uploaded says so, in the reader as well as
+ * in the editor. */
+.journal-modal .journal-page-missing {
+    display: grid;
+    min-height: 160px;
+    place-items: center;
+    margin: 0;
+    padding: var(--space-6);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--surface-raised) 45%, transparent);
+    color: var(--text-faint);
+    font-size: var(--text-sm);
+    text-align: center;
+}
+
+/* ── GM pane ───────────────────────────────────────────────────────────── */
+
+/* The GM area replaces the page, not the whole workspace: the base sheet hides
+ * the browser along with it, which strands the pane — the lock that opened it
+ * lives in that column. */
+.journal-modal .journal-diary-workspace--editorial.is-gm-active .journal-editorial-browser {
+    display: flex;
+}
+
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar {
+    display: flex;
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    padding: 0 0 var(--space-10) var(--journal-gutter);
+    overflow-y: auto;
+    background: var(--surface);
+}
+
+/* Its way back is always offered, unlike the page column's, which only shows
+ * one when the browser is out of reach. */
+.journal-modal .journal-diary-sidebar .journal-page-back { display: grid; }
+
+.journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar .journal-section--gm {
+    display: flex;
+    width: min(var(--journal-measure), 100%);
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--space-6);
+    margin-inline: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+/* Notes and secrets share the height instead of stacking two short boxes at
+ * the top of an empty column. */
+.journal-modal .journal-diary-sidebar .journal-content-field {
+    display: flex;
+    min-height: 0;
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.journal-modal .journal-diary-sidebar .journal-content-label {
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* ── Collapsing the browser ────────────────────────────────────────────── */
+
+/* The column slides shut instead of blinking out, and the page takes the space
+ * it leaves. Width is animated on the grid track, so the page grows in the same
+ * motion — a `display: none` would make both happen in one frame. */
+/* Shrinking the track's own variable keeps both sides of the transition the
+ * same track type (`minmax`), which is what makes the width interpolate at all
+ * — going to a bare `0` would snap shut in one frame. */
+.journal-modal .journal-diary-workspace--editorial.is-browser-collapsed {
+    --journal-browser: 0px;
+}
+
+.journal-modal .journal-diary-workspace--editorial.is-browser-collapsed .journal-editorial-browser {
+    border-right-width: 0;
+    opacity: 0;
+    /* Nothing inside a shut column should be tabbable. */
+    visibility: hidden;
+    transition:
+        opacity var(--motion-fast) var(--ease),
+        visibility 0s linear var(--motion-base);
+}
+
+.journal-modal .journal-diary-workspace--editorial.is-browser-collapsed .journal-page-back { display: grid; }
+
+/* ── Corners ───────────────────────────────────────────────────────────── */
+
+/* Gravewright is a squared interface. Earlier generations of the journal sheet
+ * still ship 6–10px radii on the surfaces this workspace reuses; they are
+ * brought back to the 4px ceiling here rather than at each call site. */
+.journal-modal .journal-diary-workspace--editorial .journal-section,
+.journal-modal .journal-diary-workspace--editorial .journal-section--gm,
+.journal-modal .journal-diary-workspace--editorial .journal-content-field,
+.journal-modal .journal-diary-workspace--editorial .journal-block-field,
+.journal-modal .journal-diary-workspace--editorial .gw-block-editor,
+.journal-modal .journal-diary-workspace--editorial .ProseMirror,
+.journal-modal .journal-reader--editorial .journal-block-field,
+.journal-modal .journal-reader--editorial .journal-notebook-section {
+    border-radius: var(--radius-sm);
+}
+
+/* ── Focus ─────────────────────────────────────────────────────────────── */
+
+.journal-modal .journal-diary-workspace--editorial :focus-visible {
+    outline: 1px solid var(--focus-ring);
+    outline-offset: -1px;
+}
+
+/* Except the writing surface: a ring around a full-height editor draws a box
+ * around the whole page. The caret already says where you are. */
+.journal-modal .journal-diary-workspace--editorial .ProseMirror:focus-visible {
+    outline: none;
+}
+
+/* ── Reader ────────────────────────────────────────────────────────────── */
+
+.journal-modal .journal-reader--editorial {
+    display: grid;
+    grid-template-columns: minmax(0, var(--journal-browser, 288px)) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+}
+
+.journal-modal .journal-reader--editorial[hidden],
+.journal-modal .journal-editor-form[hidden] { display: none !important; }
+
+.journal-modal .journal-reader--editorial > .journal-reader-head {
+    display: flex;
+    grid-column: 1 / -1;
+    min-height: 52px;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 0 var(--space-5);
+    border-bottom: 1px solid var(--border);
+}
+
+.journal-modal .journal-reader--editorial > .journal-reader-image { display: none; }
+
+/* The notebook is the full lower half of the window here, not a centred
+ * article: it has to shed the width/margin the shared reader sheet gives it. */
+.journal-modal .journal-reader--editorial > .journal-notebook {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, var(--journal-browser, 288px)) minmax(0, 1fr);
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    align-items: stretch;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-rail {
+    position: static;
+    top: auto;
+    display: flex;
+    grid-column: 1;
+    max-height: none;
+    min-height: 0;
+    flex-direction: column;
+    gap: 1px;
+    padding: var(--space-3) var(--space-2);
+    overflow-y: auto;
+    border: 0;
+    border-right: 1px solid var(--border);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--surface-raised) 62%, var(--surface));
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-rail strong {
+    margin: 0 var(--space-2) var(--space-2);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-rail button {
+    display: flex;
+    min-height: 30px;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2);
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: inset 2px 0 0 transparent;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-align: left;
+    transition:
+        background-color var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-rail button:hover {
+    background: color-mix(in srgb, var(--text-bright) 5%, transparent);
+    color: var(--text);
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-rail button.is-active {
+    background: var(--accent-glow);
+    box-shadow: inset 2px 0 0 var(--accent);
+    color: var(--text-bright);
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-rail button.is-active::before { content: none; }
+.journal-modal .journal-reader--editorial .journal-notebook-rail button.level-2 { padding-left: var(--space-4); }
+.journal-modal .journal-reader--editorial .journal-notebook-rail button.level-3 { padding-left: var(--space-6); }
+
+.journal-modal .journal-reader--editorial .journal-notebook-pages {
+    width: min(var(--journal-measure), 100%);
+    grid-column: 2;
+    max-width: none;
+    margin: 0 auto;
+    padding: var(--space-8) var(--journal-gutter) var(--space-10);
+    overflow-y: auto;
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-section {
+    padding: 0;
+    border: 0;
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-section + .journal-notebook-section {
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border);
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-section.is-gm {
+    padding-left: var(--space-3);
+    border-left: 2px solid var(--accent);
+}
+
+.journal-modal .journal-reader--editorial .journal-notebook-section[hidden] { display: none !important; }
+
+/* ── Narrow windows ────────────────────────────────────────────────────── */
+
+@media (max-width: 980px) {
+    .journal-modal[data-journal-type="diary"] {
+        --journal-browser: 240px;
+        --journal-gutter: var(--space-6);
+    }
+}
+
+@media (max-width: 760px) {
+    .journal-modal[data-journal-type="diary"] {
+        --journal-gutter: var(--space-4);
+        min-width: 0;
+    }
+
+    /* One column at a time: the browser until a page is opened, then the page. */
+    .journal-modal .journal-diary-workspace--editorial,
+    .journal-modal .journal-diary-workspace--editorial.is-browser-collapsed {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .journal-modal .journal-diary-workspace--editorial .journal-editorial-browser { grid-column: 1; display: flex; }
+    .journal-modal .journal-diary-workspace--editorial > .journal-diary-main { grid-column: 1; display: none; }
+    .journal-modal .journal-diary-workspace--editorial.is-page-open .journal-editorial-browser { display: none; }
+    .journal-modal .journal-diary-workspace--editorial.is-page-open > .journal-diary-main { display: flex; }
+    .journal-modal .journal-page-back { display: grid; }
+
+    .journal-modal .journal-reader--editorial,
+    .journal-modal .journal-reader--editorial > .journal-notebook {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .journal-modal .journal-reader--editorial .journal-notebook-rail {
+        grid-column: 1;
+        max-height: 160px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .journal-modal .journal-reader--editorial .journal-notebook-pages { grid-column: 1; }
+}

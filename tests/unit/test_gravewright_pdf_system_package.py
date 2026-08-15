@@ -37,7 +37,8 @@ def test_manifest_is_valid_sdk_1(manifest_raw):
     assert manifest_raw["sdkVersion"] == "1"
     assert manifest_raw["kind"] == "ruleset"
     assert manifest_raw["id"] == "gravewright-pdf-system"
-    assert manifest_raw["version"] == "0.1.0"
+    assert manifest_raw["version"] == "0.2.0"
+    assert {"pdf.read", "pdf.viewer"} <= set(manifest_raw["capabilities"])
 
 
 def test_every_declared_file_exists(manifest_raw):

@@ -35,13 +35,13 @@ A validação garante que o pacote segue o contrato SDK v1 antes de ser instalad
 | `provides.rules` como array | use objeto, por exemplo `{ "formulas": "rules/formulas.gw.json" }`. |
 | `compatibility.verified` com valor pre-release | use `"1"` para pacotes mirados na SDK 1 final. |
 
-## CÃ³digos recentes
+## Códigos recentes
 
-| CÃ³digo | Significado | CorreÃ§Ã£o |
+| Código | Significado | Correção |
 |---|---|---|
-| `sdk.validation.rules_shape_invalid` | `provides.rules` nÃ£o Ã© objeto. | Use entradas nome-para-path, por exemplo `{ "formulas": "rules/formulas.gw.json" }`. |
-| `sdk.validation.provides_key_unknown` | `provides` contÃ©m chave que a engine nÃ£o consome. | Use campos suportados ou aguarde a superfÃ­cie ficar ativa. |
-| `sdk.validation.compatibility_prerelease` | `verified` aponta para prÃ©-release anterior Ã  SDK 1 final. | Use `compatibility.verified: "1"`. |
+| `sdk.validation.rules_shape_invalid` | `provides.rules` não é objeto. | Use entradas nome-para-path, por exemplo `{ "formulas": "rules/formulas.gw.json" }`. |
+| `sdk.validation.provides_key_unknown` | `provides` contém chave que a engine não consome. | Use campos suportados ou aguarde a superfície ficar ativa. |
+| `sdk.validation.compatibility_prerelease` | `verified` aponta para pré-release anterior à SDK 1 final. | Use `compatibility.verified: "1"`. |
 
 ## Comandos
 

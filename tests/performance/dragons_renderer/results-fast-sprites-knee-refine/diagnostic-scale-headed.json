@@ -1,0 +1,217 @@
+{
+  "headless": false,
+  "warmup_seconds": 10,
+  "measurement_seconds": 30,
+  "results": [
+    {
+      "total_entities": 5250,
+      "requested_visible": 5250,
+      "unique_assets": 1,
+      "frames": 1801,
+      "frame_ms_average": 16.666074403109384,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 16.900000000001455,
+      "frame_ms_p99": 17,
+      "js_heap_mb": 25.92947292327881,
+      "animation_callback_ms_p95": 7.600000001490116,
+      "unattributed_frame_gap_ms_p95": 9.299999998511339,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 521.58984375,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.0315935591123026,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "streaming_update": {
+          "average": 0.030927262588019904,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "render_prepare": {
+          "average": 2.098389783434607,
+          "p95": 2.7999999970197678,
+          "p99": 3.2999999970197678
+        },
+        "app_render": {
+          "average": 0.6741254858585743,
+          "p95": 0.8000000044703484,
+          "p99": 1
+        },
+        "dom_layout_style": {
+          "average": 0.009383675714190439,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 5.6458634091525655,
+          "p95": 7.5,
+          "p99": 9
+        },
+        "animation_callback": {
+          "average": 5.680344253104141,
+          "p95": 7.600000001490116,
+          "p99": 9
+        }
+      },
+      "resources": {
+        "instances": 5250,
+        "visible": 4818,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 5249,
+        "tokenNodes": 4818,
+        "fastSprites": 4818
+      },
+      "spatial": {
+        "total": 5250,
+        "candidates": 4818,
+        "visible": 4818,
+        "culled": 432,
+        "queryMs": 3.3000000044703484
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 5500,
+      "requested_visible": 5500,
+      "unique_assets": 1,
+      "frames": 1801,
+      "frame_ms_average": 16.666185452526374,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 16.900000000001455,
+      "frame_ms_p99": 17,
+      "js_heap_mb": 34.788737297058105,
+      "animation_callback_ms_p95": 9.800000004470348,
+      "unattributed_frame_gap_ms_p95": 7.099999995531107,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 564.41796875,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.03331482515094811,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "streaming_update": {
+          "average": 0.027207107170961222,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 2.485674625176777,
+          "p95": 3.8000000044703484,
+          "p99": 4.9000000059604645
+        },
+        "app_render": {
+          "average": 0.8384230983614723,
+          "p95": 1.1000000014901161,
+          "p99": 1.6999999955296516
+        },
+        "dom_layout_style": {
+          "average": 0.010771793418298623,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 6.8079400333570215,
+          "p95": 9.800000004470348,
+          "p99": 11.600000001490116
+        },
+        "animation_callback": {
+          "average": 6.843697945664387,
+          "p95": 9.800000004470348,
+          "p99": 11.699999995529652
+        }
+      },
+      "resources": {
+        "instances": 5500,
+        "visible": 4950,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 5499,
+        "tokenNodes": 5420,
+        "fastSprites": 5420
+      },
+      "spatial": {
+        "total": 5500,
+        "candidates": 4950,
+        "visible": 4950,
+        "culled": 550,
+        "queryMs": 2.100000001490116
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 5750,
+      "requested_visible": 5750,
+      "unique_assets": 1,
+      "frames": 1801,
+      "frame_ms_average": 16.666074403109388,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 16.89999999999418,
+      "frame_ms_p99": 16.90000000000873,
+      "js_heap_mb": 25.50165843963623,
+      "animation_callback_ms_p95": 9.799999997019768,
+      "unattributed_frame_gap_ms_p95": 7.1000000029744115,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 531.484375,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.04408661848237156,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "streaming_update": {
+          "average": 0.0323709050469568,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "render_prepare": {
+          "average": 2.4952803997613535,
+          "p95": 3.5,
+          "p99": 4.600000001490116
+        },
+        "app_render": {
+          "average": 0.8886729594338675,
+          "p95": 1.2999999970197678,
+          "p99": 1.9000000059604645
+        },
+        "dom_layout_style": {
+          "average": 0.01193781231821146,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 7.399777901174293,
+          "p95": 9.700000002980232,
+          "p99": 11.5
+        },
+        "animation_callback": {
+          "average": 7.446252082116169,
+          "p95": 9.799999997019768,
+          "p99": 11.599999994039536
+        }
+      },
+      "resources": {
+        "instances": 5750,
+        "visible": 5022,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 5749,
+        "tokenNodes": 5705,
+        "fastSprites": 5705
+      },
+      "spatial": {
+        "total": 5750,
+        "candidates": 5022,
+        "visible": 5022,
+        "culled": 728,
+        "queryMs": 2
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ]
+}

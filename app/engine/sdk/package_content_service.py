@@ -61,6 +61,112 @@ class PackageContentService:
             return []
         return self.packs.list_packs(package_id)
 
+    def list_active_packages(self, *, campaign_id: str, user_id: str) -> list[dict]:
+        """Content-capable packages currently available to a campaign GM."""
+        campaign = self.campaigns.get_for_user(campaign_id=campaign_id, user_id=user_id)
+        if campaign is None or campaign.get("member_role") != PlayerRole.GM.value:
+            return []
+        active_ids = {
+            str(row["package_id"])
+            for row in self.campaign_packages.list_for_campaign(campaign_id)
+            if row.get("status") == "active"
+        }
+        if campaign.get("active_system_id"):
+            active_ids.add(str(campaign["active_system_id"]))
+        return [
+            {"id": item["id"], "name": item["name"]}
+            for item in self.install.list_for_tab()
+            if item["id"] in active_ids
+            and item["status"] == "enabled"
+            and "content.packs" in item.get("capabilities", [])
+        ]
+
+    def ensure_import_folder(
+        self,
+        *,
+        campaign_id: str,
+        user_id: str,
+        package_name: str,
+        pack: dict,
+    ) -> str:
+        """Return the package/pack destination folder for a bulk import."""
+        pack_type = str(pack.get("type") or "")
+        if pack_type == "actor_pack":
+            service = self.actors
+        elif pack_type in _ITEM_PACK_TYPES:
+            service = self.items
+        elif pack_type == "journal_pack":
+            service = self.journals
+        else:
+            return ""
+
+        root_name = package_name.strip()[:60] or "Content"
+        pack_name = str(pack.get("label") or pack.get("name") or pack.get("id") or "Content").strip()[:60]
+        folders = service.folders.list_for_campaign(campaign_id=campaign_id)
+        root = next(
+            (folder for folder in folders if folder.get("parent_id") is None and folder.get("name") == root_name),
+            None,
+        )
+        if root is None:
+            created_root = service.create_folder(
+                campaign_id=campaign_id,
+                user_id=user_id,
+                name=root_name,
+            )
+            if not created_root.success or not created_root.folder_id:
+                return ""
+            root_id = created_root.folder_id
+        else:
+            root_id = str(root["id"])
+
+        folders = service.folders.list_for_campaign(campaign_id=campaign_id)
+        child = next(
+            (
+                folder
+                for folder in folders
+                if str(folder.get("parent_id") or "") == root_id and folder.get("name") == pack_name
+            ),
+            None,
+        )
+        if child is not None:
+            return str(child["id"])
+        created_child = service.create_folder(
+            campaign_id=campaign_id,
+            user_id=user_id,
+            name=pack_name,
+            parent_id=root_id,
+        )
+        return str(created_child.folder_id or "") if created_child.success else ""
+
+    def ensure_entry_import_folder(
+        self, *, campaign_id: str, user_id: str, pack: dict, entry: dict, parent_id: str
+    ) -> str:
+        """Optionally nest an entry under a package-declared folder label."""
+        data = entry.get("data") if isinstance(entry.get("data"), dict) else {}
+        name = str(data.get("importFolder") or "").strip()[:60]
+        if not name or not parent_id:
+            return parent_id
+        pack_type = str(pack.get("type") or "")
+        service = (
+            self.actors if pack_type == "actor_pack"
+            else self.items if pack_type in _ITEM_PACK_TYPES
+            else self.journals if pack_type == "journal_pack"
+            else None
+        )
+        if service is None:
+            return parent_id
+        folders = service.folders.list_for_campaign(campaign_id=campaign_id)
+        existing = next(
+            (f for f in folders if str(f.get("parent_id") or "") == parent_id and f.get("name") == name),
+            None,
+        )
+        if existing:
+            return str(existing["id"])
+        created = service.create_folder(
+            campaign_id=campaign_id, user_id=user_id, name=name, parent_id=parent_id
+        )
+        return str(created.folder_id or parent_id) if created.success else parent_id
+
     def get_pack(self, package_id: str, pack_id: str) -> dict | None:
         if not self._content_enabled(package_id):
             return None
@@ -79,6 +185,7 @@ class PackageContentService:
         package_id: str,
         pack_id: str,
         entry_id: str,
+        folder_id: str = "",
     ) -> ContentImportResult:
         campaign = self.campaigns.get_for_user(campaign_id=campaign_id, user_id=user_id)
         if campaign is None:
@@ -100,13 +207,32 @@ class PackageContentService:
             return ContentImportResult(success=False, error_key="game.drop.errors.entry_not_found")
 
         pack_type = str(pack.get("type") or "")
+        if not folder_id:
+            record = self.install.get(package_id)
+            summary = next(
+                (candidate for candidate in self.list_packs(package_id) if candidate.get("id") == pack_id),
+                {},
+            )
+            folder_id = self.ensure_import_folder(
+                campaign_id=campaign_id,
+                user_id=user_id,
+                package_name=str(record.get("name") if record else package_id),
+                pack={**pack, "label": summary.get("label") or pack.get("label")},
+            )
+        folder_id = self.ensure_entry_import_folder(
+            campaign_id=campaign_id,
+            user_id=user_id,
+            pack=pack,
+            entry=entry,
+            parent_id=folder_id,
+        )
         campaign = dict(campaign)
         if pack_type == "actor_pack":
-            result = self._import_actor(campaign, user_id, package_id, pack_type, entry)
+            result = self._import_actor(campaign, user_id, package_id, pack_type, entry, folder_id)
         elif pack_type in _ITEM_PACK_TYPES:
-            result = self._import_item(campaign, user_id, package_id, pack_type, entry)
+            result = self._import_item(campaign, user_id, package_id, pack_type, entry, folder_id)
         elif pack_type == "journal_pack":
-            result = self._import_journal(campaign, user_id, package_id, pack_type, entry)
+            result = self._import_journal(campaign, user_id, package_id, pack_type, entry, folder_id)
         else:
             return ContentImportResult(
                 success=False, error_key="game.content.errors.not_importable"
@@ -148,7 +274,7 @@ class PackageContentService:
             or ""
         )
 
-    def _import_actor(self, campaign, user_id, package_id, pack_type, entry) -> ContentImportResult:
+    def _import_actor(self, campaign, user_id, package_id, pack_type, entry, folder_id) -> ContentImportResult:
         system_id = self._entry_system_id(campaign, entry)
         if not system_id:
             return ContentImportResult(
@@ -160,6 +286,7 @@ class PackageContentService:
             system_id=system_id,
             actor_type=str(entry.get("type") or ""),
             name=str(entry.get("name") or entry.get("title") or "Imported"),
+            folder_id=folder_id,
         )
         if not created.success or not created.actor_id:
             return ContentImportResult(success=False, error_key=created.error_key)
@@ -175,7 +302,7 @@ class PackageContentService:
             system_id=system_id,
         )
 
-    def _import_item(self, campaign, user_id, package_id, pack_type, entry) -> ContentImportResult:
+    def _import_item(self, campaign, user_id, package_id, pack_type, entry, folder_id) -> ContentImportResult:
         system_id = self._entry_system_id(campaign, entry)
         if not system_id:
             return ContentImportResult(
@@ -188,6 +315,7 @@ class PackageContentService:
             system_id=system_id,
             item_type=str(entry.get("type") or ""),
             name=str(entry.get("name") or entry.get("title") or "Imported"),
+            folder_id=folder_id,
             data=seed,
         )
         if not created.success or not created.item_id:
@@ -202,7 +330,7 @@ class PackageContentService:
         )
 
     def _import_journal(
-        self, campaign, user_id, package_id, pack_type, entry
+        self, campaign, user_id, package_id, pack_type, entry, folder_id
     ) -> ContentImportResult:
         journal_type = str(entry.get("type") or "handout")
         if journal_type not in _JOURNAL_TYPES:
@@ -214,6 +342,7 @@ class PackageContentService:
             user_id=user_id,
             journal_type=journal_type,
             title=str(entry.get("title") or entry.get("name") or "Imported"),
+            folder_id=folder_id,
             visibility=str(entry.get("visibility") or "private"),
             content_markdown=str(content or ""),
             data=data,

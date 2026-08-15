@@ -12,6 +12,7 @@ from app.engine.scenes.scene_visibility_service import SceneVisibilityService
 from app.helpers.env import PROJECT_ROOT
 from app.persistence.repositories.scene_layer_repository import SceneLayerRepository
 from app.persistence.repositories.scene_repository import SceneRepository
+from app.persistence.repositories.scene_tile_repository import SceneTileRepository
 
 
 @dataclass(frozen=True)
@@ -33,11 +34,13 @@ class SceneTileReadService:
         layers: SceneLayerRepository | None = None,
         permissions: PermissionService | None = None,
         visibility: SceneVisibilityService | None = None,
+        tiles: SceneTileRepository | None = None,
     ) -> None:
         self.scenes = scenes or SceneRepository()
         self.layers = layers or SceneLayerRepository()
         self.permissions = permissions or PermissionService()
         self.visibility = visibility or SceneVisibilityService(permissions=self.permissions)
+        self.tiles = tiles or SceneTileRepository()
         self._auth_cache: OrderedDict[tuple[str, str, str], tuple[bool, float]] = OrderedDict()
 
     def get_tile(
@@ -47,6 +50,7 @@ class SceneTileReadService:
         layer_id: str,
         tx: int,
         ty: int,
+        lod: int = 0,
         user_id: str,
         cookies: dict[str, str],
     ) -> SceneTileReadResult:
@@ -58,10 +62,25 @@ class SceneTileReadService:
         ):
             return SceneTileReadResult(success=False, error_key="not_authorized")
 
-        if tx < 0 or ty < 0:
+        if tx < 0 or ty < 0 or lod < 0:
             return SceneTileReadResult(success=False, error_key="not_found")
 
-        path = (
+        tile = self.tiles.get_by_coord(
+            scene_id=scene_id, layer_id=layer_id, lod=lod, tx=tx, ty=ty
+        )
+        if tile is not None:
+            stored = Path(tile["storage_path"])
+            path = stored if stored.is_absolute() else PROJECT_ROOT / stored
+            if path.is_file():
+                return SceneTileReadResult(
+                    success=True,
+                    path=path,
+                    media_type=tile.get("content_type") or "application/octet-stream",
+                )
+
+        # Compatibility fallback for legacy scenes whose metadata predates the
+        # storage-path lookup.
+        tile_root = (
             PROJECT_ROOT
             / "storage"
             / "scenes"
@@ -69,8 +88,8 @@ class SceneTileReadService:
             / "assets"
             / "tiles"
             / layer_id
-            / f"{tx}_{ty}.png"
         )
+        path = tile_root / (f"lod-{lod}/{tx}_{ty}.png" if lod else f"{tx}_{ty}.png")
         if not path.is_file():
             return SceneTileReadResult(success=False, error_key="not_found")
 

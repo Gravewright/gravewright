@@ -119,6 +119,7 @@ class ItemService:
         name: str,
         folder_id: str = "",
         portrait_asset_id: str = "",
+        expected_version: int | None = None,
     ) -> ItemResult:
         item, campaign, error = self._load_editable(item_id, user_id)
         if error is not None:
@@ -133,7 +134,10 @@ class ItemService:
             name=name,
             folder_id=folder_id or None,
             portrait_asset_id=portrait_asset_id or None,
+            expected_version=expected_version,
         )
+        if version is None:
+            return ItemResult(success=False, item_id=item_id, error_key="sdk.errors.stale_version")
         return ItemResult(
             success=True,
             item_id=item_id,
@@ -312,12 +316,44 @@ class ItemService:
         self.folders.set_color(folder_id=folder_id, color=color.strip()[:32] or None)
         return ItemResult(success=True, folder_id=folder_id, campaign_id=folder["campaign_id"])
 
-    def delete_folder(self, *, folder_id: str, user_id: str) -> ItemResult:
+    def delete_folder(
+        self, *, folder_id: str, user_id: str, delete_contents: bool = False
+    ) -> ItemResult:
         folder, error = self._load_gm_folder(folder_id, user_id)
         if error is not None:
             return error
-        self.items.clear_folder(folder_id=folder_id)
-        self.folders.delete(folder_id=folder_id)
+        campaign_id = str(folder["campaign_id"])
+        if not delete_contents:
+            self.items.move_from_folder(
+                folder_id=folder_id,
+                target_folder_id=folder.get("parent_id"),
+            )
+            self.folders.delete(folder_id=folder_id)
+            return ItemResult(success=True, folder_id=folder_id, campaign_id=campaign_id)
+
+        folders = self.folders.list_for_campaign(campaign_id=campaign_id)
+        children_by_parent: dict[str, list[str]] = {}
+        for candidate in folders:
+            parent_id = str(candidate.get("parent_id") or "")
+            children_by_parent.setdefault(parent_id, []).append(str(candidate["id"]))
+        subtree: list[str] = []
+        pending = [folder_id]
+        while pending:
+            current = pending.pop()
+            subtree.append(current)
+            pending.extend(children_by_parent.get(current, []))
+        subtree_ids = set(subtree)
+        for item in self.items.list_active_for_campaign(campaign_id=campaign_id):
+            if str(item.get("folder_id") or "") not in subtree_ids:
+                continue
+            self.items.soft_delete(item_id=str(item["id"]))
+            self.storage.delete_item(
+                system_id=str(item["system_id"]),
+                campaign_id=campaign_id,
+                item_id=str(item["id"]),
+            )
+        for descendant_id in reversed(subtree):
+            self.folders.delete(folder_id=descendant_id)
         return ItemResult(success=True, folder_id=folder_id, campaign_id=folder["campaign_id"])
 
     def move_folder(self, *, folder_id: str, target_parent_id: str, user_id: str) -> ItemResult:

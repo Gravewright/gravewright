@@ -11,7 +11,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from app.config import config
 from app.engine.rules.rules_registry import SystemRulesService
 from app.engine.sdk.package_locale_service import PackageLocaleService
 from app.helpers.i18n import get_configured_default_locale

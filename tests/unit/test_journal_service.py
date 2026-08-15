@@ -4,6 +4,7 @@ import json
 
 from app.domain.roles import PlayerRole
 from app.engine.journals.journal_service import JournalService
+from app.persistence.repositories.journal_folder_repository import JournalFolderRepository
 from app.persistence.repositories.journal_repository import JournalRepository
 from tests.conftest import seed_campaign, seed_member, seed_user
 
@@ -281,6 +282,8 @@ def test_quest_player_view_strips_gm_and_hidden_items(db):
     assert gm_view["is_gm_view"] is True
     assert gm_view["quest"]["gm"]["secrets_markdown"] == "The baron is a lich"
     assert len(gm_view["quest"]["objectives"]) == 2
+    assert [o["text"] for o in gm_view["quest"]["display_objectives"]] == ["Find the entrance"]
+    assert [r["text"] for r in gm_view["quest"]["display_rewards"]] == ["50 gold"]
 
 
 def test_toggle_objective_marks_completed(db):
@@ -339,6 +342,13 @@ def test_board_player_sees_public_card_not_draft(db):
         title="Draft Quest",
         data={"status": "draft"},
     )
+    archived = service.create_journal(
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        journal_type="quest",
+        title="Archived Quest",
+        data={"status": "archived"},
+    )
     pinned = service.create_journal(
         campaign_id=campaign_id,
         user_id=gm_id,
@@ -356,6 +366,11 @@ def test_board_player_sees_public_card_not_draft(db):
     assert service.add_quest_to_board(
         board_id=board.journal_id,
         quest_id=draft.journal_id,
+        requester_user_id=gm_id,
+    ).success
+    assert service.add_quest_to_board(
+        board_id=board.journal_id,
+        quest_id=archived.journal_id,
         requester_user_id=gm_id,
     ).success
     assert service.add_quest_to_board(
@@ -380,13 +395,20 @@ def test_board_player_sees_public_card_not_draft(db):
     player_entries = player_view["board_entries"]
     player_quest_ids = {entry["quest_id"] for entry in player_entries}
     gm_quest_ids = {entry["quest_id"] for entry in gm_view["board_entries"]}
+    gm_display_ids = {entry["quest_id"] for entry in gm_view["board_display_entries"]}
 
     assert available.journal_id in player_quest_ids
     assert pinned.journal_id in player_quest_ids
     assert draft.journal_id not in player_quest_ids
     # Pinned quests float to the top of the board.
     assert player_entries[0]["quest_id"] == pinned.journal_id
-    assert gm_quest_ids == {available.journal_id, draft.journal_id, pinned.journal_id}
+    assert gm_quest_ids == {
+        available.journal_id,
+        draft.journal_id,
+        archived.journal_id,
+        pinned.journal_id,
+    }
+    assert gm_display_ids == {available.journal_id, pinned.journal_id}
 
 
 def test_player_folder_is_visible_even_when_empty(db):
@@ -403,6 +425,72 @@ def test_player_folder_is_visible_even_when_empty(db):
 
     assert folder.success
     assert folder.folder_id is not None
+
+
+def test_gm_can_edit_and_delete_journal_folder_without_losing_contents(db):
+    gm_id = seed_user(name="GM", email="gm-journal-folders@test.com")
+    campaign_id = seed_campaign(gm_id)
+    service = JournalService()
+    parent = service.create_folder(campaign_id=campaign_id, user_id=gm_id, name="Parent")
+    folder = service.create_folder(
+        campaign_id=campaign_id, user_id=gm_id, name="Sessions",
+        parent_id=parent.folder_id, color="#123456",
+    )
+    child = service.create_folder(
+        campaign_id=campaign_id, user_id=gm_id, name="Child", parent_id=folder.folder_id,
+    )
+    journal = service.create_journal(
+        campaign_id=campaign_id, user_id=gm_id, journal_type="diary",
+        title="Entry", folder_id=folder.folder_id,
+    )
+
+    renamed = service.rename_folder(
+        folder_id=folder.folder_id, name="Archive", requester_user_id=gm_id,
+    )
+    recolored = service.set_folder_color(
+        folder_id=folder.folder_id, color="#abcdef", requester_user_id=gm_id,
+    )
+    deleted = service.delete_folder(folder_id=folder.folder_id, requester_user_id=gm_id)
+
+    assert renamed.success and recolored.success and deleted.success
+    assert JournalFolderRepository().get_by_id(folder_id=folder.folder_id) is None
+    assert JournalFolderRepository().get_by_id(folder_id=child.folder_id)["parent_id"] == parent.folder_id
+    assert JournalRepository().get_by_id(journal.journal_id)["folder_id"] == parent.folder_id
+
+
+def test_diary_sections_hide_gm_content_and_survive_player_edits(db):
+    gm_id = seed_user(name="GM", email="gm-notebook@test.com")
+    player_id = seed_user(name="Player", email="player-notebook@test.com")
+    campaign_id = seed_campaign(gm_id)
+    seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
+    service = JournalService()
+    empty_doc = {"format": "gw-journal-doc-v1", "version": 1, "doc": {"type": "doc", "content": []}}
+    created = service.create_journal(
+        campaign_id=campaign_id, user_id=gm_id, journal_type="diary", title="Chronicle",
+        owner_user_ids=[player_id],
+        data={"sections": [
+            {"id": "public", "title": "Known", "category": "Chapter One", "audience": "public", "content": empty_doc},
+            {"id": "gm-only", "title": "Hidden plan", "audience": "gm", "content": empty_doc},
+        ]},
+    )
+    journal = JournalRepository().get_by_id(created.journal_id)
+    player_view = service.build_view(
+        journal=dict(journal), campaign={"member_role": PlayerRole.PLAYER.value}, user_id=player_id,
+    )
+
+    assert [section["id"] for section in player_view["sections"]] == ["public"]
+    assert player_view["sections"][0]["category"] == "Chapter One"
+    updated = service.update_journal(
+        journal_id=created.journal_id, user_id=player_id, title="Chronicle", data={
+            "content": empty_doc,
+            "sections": [{"id": "public", "title": "Updated", "audience": "gm", "content": empty_doc}],
+        },
+    )
+    stored = json.loads(JournalRepository().get_by_id(created.journal_id)["data_json"])
+
+    assert updated.success
+    assert {section["id"] for section in stored["sections"]} == {"public", "gm-only"}
+    assert next(section for section in stored["sections"] if section["id"] == "public")["audience"] == "public"
 
 
 def test_diary_doc_round_trip_and_player_gm_block_filter(db):
@@ -816,7 +904,7 @@ def test_board_quest_opens_via_board_but_is_not_listed_in_sidebar(db):
     )
 
 
-def test_board_with_all_filters_off_still_shows_quests_to_players(db):
+def test_legacy_board_filters_are_ignored_and_quests_remain_visible(db):
 
     gm = seed_user(name="GM", email="gm-boardfilters@test.com")
     player = seed_user(name="Player", email="player-boardfilters@test.com")

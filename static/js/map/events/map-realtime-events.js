@@ -17,6 +17,7 @@
             handleSceneUpdated,
             handleSessionResumed,
             handleViewportReady,
+            handleGmPrefetchHint,
             handleTokensConditionsUpdated,
             handleTokensCreated,
             handleTokensDeleted,
@@ -44,6 +45,7 @@
 
             if (evtName === "scene.session.resumed") handleSessionResumed(payload);
             if (evtName === "scene.viewport.ready") handleViewportReady(payload);
+            if (evtName === "scene.gm_prefetch.hint") handleGmPrefetchHint(payload);
             if (evtName === "scene.activated") handleSceneActivated(payload);
             if (evtName === "scene.updated") handleSceneUpdated(payload);
             if (evtName === "scene.deleted") {

@@ -1,6 +1,18 @@
 # Documentation Update Summary
 
-This bundle is corrected for **Gravewright v3.0.1-alpha**.
+This documentation set is aligned with **Gravewright v1.0.0-beta.1**.
+
+## Performance documentation refresh — 2026-08-13
+
+- Added canonical English and Brazilian Portuguese performance pages.
+- Added explicit workload boundaries so synthetic dragon ceilings are not
+  presented as realistic campaign token recommendations.
+- Recorded the RTX 4060, driver, ANGLE/D3D11 backend, headed viewport, warm-up,
+  measurement window, and validity rules used by current results.
+- Linked the raw Gravewright realistic-scene and dragon benchmark reports.
+- Replaced the superseded ~5,150 synthetic knee claim with the GPU-confirmed
+  presentation and callback ranges.
+- Converted the main documentation indexes from plain paths to navigable links.
 
 ## Included
 
@@ -13,12 +25,14 @@ This bundle is corrected for **Gravewright v3.0.1-alpha**.
   - `CODE_OF_CONDUCT.md`
   - `NOTICE`
 - Release notes:
-  - `RELEASE_v3.0.1-alpha.md`
+  - `RELEASE_v1.0.0-beta.1.md`
 - GitHub org/profile README:
   - `ORG_PROFILE_README.md`
   - `.github/profile/README.md`
-- English and Brazilian Portuguese Alpha docs updated for `v3.0.1-alpha`.
-- Public status language uses the explicit `v3.0.1-alpha` release name.
+- English and Brazilian Portuguese Beta status documents.
+- Public status language uses the explicit `v1.0.0-beta.1` release name.
+- SDK 1 PDF, annotations, capabilities, runtime, security, and power-map documentation.
+- GM-guided prefetch, adaptive raster, campaign transfer, and renderer benchmark release coverage.
 
 ## Changed in this release
 
@@ -36,10 +50,10 @@ This bundle is corrected for **Gravewright v3.0.1-alpha**.
 Use:
 
 ```text
-Gravewright v3.0.1-alpha
+Gravewright v1.0.0-beta.1
 ```
 
-Avoid old generic pre-release labels. Use the explicit release name instead.
+Use the explicit release name and keep historical version labels only in release history.
 
 ## Recommended validation
 

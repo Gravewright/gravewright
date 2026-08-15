@@ -5,7 +5,7 @@ A Gravewright SDK é o único modelo suportado para extensões do Gravewright.
 Toda extensão instalável é um **pacote**. Um pacote é um diretório em `data/packages/{kind_plural}/{id}/` que contém um `manifest.json` e os arquivos declarados por esse manifesto. O comportamento do pacote é definido por um contrato único de SDK v1.
 
 > [!WARNING]
-> Gravewright e software Alpha, mas a superficie de autoria de pacotes da SDK 1 esta congelada. Pacotes novos devem declarar `compatibility: { "minimum": "1", "verified": "1" }` e podem adicionar `"maximum": "1.x"` quando quiserem que um engine SDK 2 futuro marque o pacote como incompativel.
+> Gravewright é software Beta. A SDK 1 é a linha estável de compatibilidade: contratos existentes permanecem compatíveis e novas autoridades aditivas entram por capabilities explícitas. Pacotes devem declarar `compatibility: { "minimum": "1", "verified": "1" }` e podem adicionar `"maximum": "1.x"`.
 
 ## Tipos de pacote suportados
 

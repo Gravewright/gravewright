@@ -35,7 +35,7 @@
             state.offsetY = event.clientY - worldY * nextZoom;
             scheduleViewportUpdate(canvas);
             scheduleCameraSave(canvas);
-            markDirty(canvas);
+            markDirty(canvas, ["camera", "overlays", "viewport"]);
         }, { passive: false });
     }
 

@@ -1,13 +1,14 @@
 [project]
 name = "Gravewright"
-version = "3.0.2a0"
+version = "1.0.0b1"
 description = "Gravewright is an open-source virtual tabletop platform for tabletop RPGs, built with a focus on performance, extensibility, and full control over the gameplay experience."
 requires-python = ">=3.11"
 dependencies = [
   "alembic==1.18.4",
   "litestar[jinja]==2.22.0",
-  "pillow==12.2.0",
+  "pillow==12.3.0",
   "pyside6>=6.11.1",
+  "pyvips[binary]>=3.1.1",
   "sqlalchemy==2.0.50",
   "uvicorn[standard]==0.47.0",
   "xdice==1.2.1",
@@ -43,6 +44,7 @@ select = ["F"]
 
 [dependency-groups]
 dev = [
+    "playwright==1.62.0",
     "pyinstaller==6.21.0",
     "pytest==9.0.3",
     "pytest-asyncio==1.4.0",

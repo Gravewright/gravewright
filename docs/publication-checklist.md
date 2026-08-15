@@ -1,6 +1,6 @@
-# Public Alpha Publication Checklist
+# Public Release Checklist
 
-Use this checklist before publishing a public Alpha release.
+Use this checklist before publishing a public release.
 
 ## Repository Hygiene
 
@@ -27,8 +27,8 @@ uv run pytest tests/unit/test_cli_run.py tests/unit/test_cli_scaffold.py tests/u
 
 ## Documentation
 
-- `README.md` has the Alpha warning.
-- `docs/alpha.md` explains upgrade risk.
+- `README.md` identifies the current Beta release.
+- `docs/beta.md` explains compatibility and upgrade expectations.
 - `docs/getting-started.md` uses `grave run`.
 - `docs/operations.md` explains `grave backup` and restore.
 - `docs/sdk/cli.md` documents the current CLI surface.
@@ -39,7 +39,7 @@ uv run pytest tests/unit/test_cli_run.py tests/unit/test_cli_scaffold.py tests/u
 
 ## Release Notes
 
-Each Alpha release should include:
+Each release should include:
 
 - install or upgrade steps;
 - breaking changes;

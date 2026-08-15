@@ -14,6 +14,31 @@ from app.realtime.events import TransportEvent
 from app.realtime.transport import WebSocketConnectionManager
 
 
+class _ClosableSocket:
+    def __init__(self):
+        self.closed = []
+
+    async def close(self, *, code, reason):
+        self.closed.append((code, reason))
+
+
+async def test_evict_user_closes_only_connections_attached_to_banned_room():
+    manager = WebSocketConnectionManager()
+    banned_socket = _ClosableSocket()
+    other_room_socket = _ClosableSocket()
+    other_user_socket = _ClosableSocket()
+    await manager.connect(user_id="player", room_ids=["banned-room"], websocket=banned_socket)
+    await manager.connect(user_id="player", room_ids=["other-room"], websocket=other_room_socket)
+    await manager.connect(user_id="other", room_ids=["banned-room"], websocket=other_user_socket)
+
+    closed = await manager.evict_user_from_room(user_id="player", room_id="banned-room")
+
+    assert closed == 1
+    assert banned_socket.closed == [(4003, "Campaign membership revoked.")]
+    assert other_room_socket.closed == []
+    assert other_user_socket.closed == []
+
+
 class _OkSocket:
     def __init__(self) -> None:
         self.messages: list[dict] = []

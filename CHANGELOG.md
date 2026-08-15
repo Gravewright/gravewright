@@ -2,11 +2,169 @@
 
 All notable changes to Gravewright should be documented here.
 
-The project is currently in Alpha. Breaking changes may occur between Alpha releases, especially around database schema, storage layout, the package manifest, package activation, realtime events, and the public SDK.
+The project is currently in Beta. SDK 1 is the stable compatibility line;
+compatible additive methods and fixes remain possible within that line.
 
-## Unreleased
+## v1.0.0-beta.1 — 2026-08-13
 
-No changes documented yet.
+First Beta release. This section consolidates every feature, behavioural change,
+performance improvement, migration, and fix added after `v3.0.2-alpha`.
+
+### Audit hardening
+
+- Bound ID-addressed SDK mutations to the campaign in which the package was authorized.
+- Made journal updates non-destructive for omitted fields.
+- Centralized targeted handout delivery and enforced its feature flag for SDK calls.
+- Added HTTP regression coverage for cross-campaign writes and journal patch semantics.
+- Made the latest schema migrations reentrant for legacy and pre-created databases.
+- Restored Windows launcher compatibility and bundled-package installation checks.
+- Improved CLI discoverability with a zero-argument quick start, workflow examples,
+  typo suggestions, clean cancellation, broken-pipe handling and `--no-color`.
+- Re-audited the SDK registry, browser runtime, server bridge and generated references.
+- Added strong opt-in `grave run --diagnostics`: local redacted rotating JSONL,
+  periodic full metric snapshots, explicit retention and no network upload.
+- Made diagnostics issue-safe by default with per-run identifier pseudonyms,
+  path/network redaction and preservation of older private captures.
+
+### Added
+
+- Completed the SDK 1 gameplay coverage plan with authoritative card reveal,
+  discard, scene play and placement operations; item-data writes; expanded
+  combat control; journal CRUD and transient handout presentation; PDF
+  annotation update/delete; fog operations; scene-image placement; and bounded
+  advanced wall editing. Administrative, storage and renderer internals remain
+  private by design.
+
+- Added GM-guided predictive tile prefetch for one GM and multiple players. GM
+  viewport intent is distributed as bounded, expiring hints; clients consume it
+  only when visible work permits and cancel speculative work under pressure.
+- Added configurable prefetch policies (`simple`, `exponential`, `sigmoid`,
+  `sigmoid_derivative`, and `utility_per_byte`), distance, queue-byte, TTL,
+  idle-only, and visible-backlog limits.
+- Added versioned virtual-raster metadata, level-of-detail tile/chunk addressing,
+  tile index versions, and scene format versions (migration `0044`).
+- Added automatic adaptive raster granularity. Import now chooses a safe raster
+  policy from source dimensions and workload rather than asking the GM to tune
+  implementation-specific map controls; the decision and policy version are
+  persisted by migration `0045`.
+- Added SDK 1 runtime APIs and capabilities for permissions, actors, actor data,
+  items, tokens, scene reads and geometry, effects, UI slots, chat, combat,
+  rules actions, cards, and semantic event subscriptions.
+- Added strict runtime authorization combining package declarations, campaign
+  activation, user authority, resource visibility, bounded payloads, and public
+  DTOs that exclude private persistence fields.
+- Added SDK package diagnostics for undeclared API use, unused capabilities, and
+  forbidden direct access to internal `/game/*` routes.
+- Added SDK 1 PDF support: `pdf.get`, `pdf.metadata`, viewer open/navigation,
+  search/current-page operations, anchors, and separate read/viewer capability
+  gates.
+- Added campaign PDF annotations with list/create operations, page/region/text
+  validation, visibility checks, independent read/write capabilities, and
+  migration `0046`.
+- Added SDK asset-package import and generic package content access so bundled
+  rulesets do not depend on private application routes.
+- Added campaign export/import with selective resources, package state,
+  relationship remapping, validation, security exclusions, and a reusable
+  canonical campaign-state snapshot representation.
+- Added token clipboard operations and keyboard stepping, plus consistent
+  folder initial-state and item-folder deletion choices.
+- Added renderer resource sharing, spatial visibility diagnostics, logical GPU
+  accounting, batched token drawing, shared animated texture sources, and a
+  fast-sprite path for dense homogeneous token populations.
+- Added headed/headless Playwright performance suites for the 100 Dragons
+  renderer, GPU-confirmed scaling and knee discovery, six-client
+  Andromeda/5K map prefetch, and the real-campaign composite workload.
+
+### Changed
+
+- Reworked scene streaming around visible-first scheduling, predictive queues,
+  cancellation, cache-aware tile manifests, and explicit diagnostics rather
+  than treating every frame gap as application render time.
+- Reworked map upload and image decoding for very large rasters, staged
+  retiling, adaptive pyramids, safe pixel/tile bounds, and platform packaging of
+  the required image runtime.
+- Optimized Pixi board rendering, token layers, tile layers, lighting, scene
+  images, selection, measurements, render scheduling, and camera-driven
+  streaming to avoid work when the viewport or scene is unchanged.
+- Expanded campaign snapshots to cover the complete persistent campaign state,
+  physical files, packages, and newer scene metadata while continuing to
+  exclude global accounts, sessions, audit history, and snapshot history.
+- Generalized the bundled rulesets to use SDK 1 for core resources and content;
+  SDK naming was normalized to SDK 1 and direct private-route dependencies were removed.
+- Expanded the Gravewright PDF System to consume the public PDF viewer and
+  annotation APIs.
+- Updated English and Brazilian Portuguese SDK documentation, capability maps,
+  author checklists, reference material, PDF guide, and package power map.
+- Updated desktop packaging, environment templates, defaults, and dependency
+  lock data for the Beta runtime.
+
+### Savage Worlds
+
+- Added a campaign-scoped initiative deck selector to the combat tracker.
+- Added SDK-driven action-card initiative: one public card per combatant,
+  Joker-first and Ace-to-Two ranking, suit tie-breaking in Spades/Hearts/
+  Diamonds/Clubs order, atomic labels/order updates, and immediate card artwork.
+- New cards are dealt when combatants change or a round changes, never when the
+  GM advances between combatants or merely interacts with/repaints the tracker.
+- The highest card becomes the current combatant after each deal.
+- A round containing a Joker resets the selected deck to all 54 cards and
+  reshuffles before the following round; a fresh ordered deck is shuffled before
+  its first deal.
+- Card assignment is cached for first-paint reliability, while authoritative
+  combat events recover an initially empty tracker and reject stale asynchronous
+  repaints that would restore an older row order.
+- Kept the bundled Savage Worlds compatibility package at version `1.1`.
+
+### Fixed
+
+- Fixed combat order races where an older add/remove response could repaint
+  after the atomic SDK initiative response and put rows back in stale order.
+- Fixed card art missing on the first initiative interaction because a second
+  cards-state request raced the render lifecycle.
+- Fixed repeated Savage initiative deals caused by treating every tracker action
+  as a new round.
+- Fixed manual initiative order persistence and ensured the confirmed first row
+  owns turn index zero.
+- Fixed noisy high-frequency `gm_hint.sample` diagnostics in normal terminal
+  output while retaining bounded diagnostic instrumentation.
+- Fixed blocking synchronous asset-package route declarations and package asset
+  cache invalidation during local development.
+- Fixed actor/item/folder refresh consistency, scene/wall update propagation,
+  token vision snapshots, and stale-version handling exposed by the SDK move.
+- Fixed dynamic-lighting and shader lifecycle edge cases found by the expanded
+  browser harnesses.
+
+### Performance validation
+
+- Added reproducible warm-up/measurement protocols, frame/callback/app-render/
+  unattributed-gap percentiles, long-task counts, heap/RSS, spatial query, shared
+  asset, texture source, and logical GPU metrics.
+- Revalidated the optimized shared-asset renderer in headed Chromium with an
+  NVIDIA GeForce RTX 4060 explicitly recorded in every result. The synthetic
+  dragon workload remained in the approximately 60 Hz presentation band through
+  7,500 visible instances and in the approximately 30 Hz band at 10,000. Isolated
+  callback p95 was 16.5 ms at 11,000 and 23.2 ms at 11,500, placing the observed
+  callback-budget crossing between those points. Sequential near-limit runs
+  showed variance, so the project reports ranges rather than a false exact
+  ceiling. Counts refer to entities actually visible, not merely requested.
+- Added a realistic GPU-confirmed 5K scene protocol with names, two bars per
+  token, 150 walls, 12 lights, token vision, and darkness 0.6. Gravewright
+  completed 3/3 valid runs at both 500 tokens (median p95 16.9 ms) and 800 tokens
+  (median p95 33.2 ms).
+- Recorded baseline and guided six-client map runs across every predictive
+  policy, including the 5,000×5,000 fixture and adaptive raster policy.
+
+### Database
+
+- Added migrations `0044_virtual_raster_v2`,
+  `0045_adaptive_raster_policy`, and `0046_pdf_annotations`.
+
+### Release
+
+- Renumbered the application from the experimental `3.x-alpha` line to
+  `1.0.0-beta.1`; Python distribution metadata uses PEP 440 `1.0.0b1`.
+- Removed the general real-campaign warning banner from the main README. Backup
+  instructions and contextual destructive-operation confirmations remain.
 
 ## v3.0.2-alpha — 2026-08-11
 

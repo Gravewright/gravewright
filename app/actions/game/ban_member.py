@@ -17,6 +17,7 @@ from app.helpers.async_blocking import run_blocking
 from app.helpers.http_responses import wants_json
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
+from app.realtime.transport import websocket_manager
 
 
 @dataclass
@@ -46,16 +47,29 @@ async def ban_member(
     )
 
     if result.success and result.member is not None:
-        await RealtimeTransport().to_players(
+        transport = RealtimeTransport()
+        removal_payload = {
+            "room_id": data.campaign_id,
+            "user_id": result.member["user_id"],
+            "name": result.member["name"],
+            "role": result.member["role"],
+            "reason": "banned",
+        }
+        # The banned member is no longer present in room_user_ids. Deliver the
+        # redirect event explicitly before closing their live room sockets.
+        await transport.to_player(
+            player_id=result.member["user_id"],
+            event=TransportEvent.MEMBER_REMOVED,
+            payload=removal_payload,
+        )
+        await transport.to_players(
             player_ids=result.room_user_ids or [],
             event=TransportEvent.MEMBER_REMOVED,
-            payload={
-                "room_id": data.campaign_id,
-                "user_id": result.member["user_id"],
-                "name": result.member["name"],
-                "role": result.member["role"],
-                "reason": "banned",
-            },
+            payload=removal_payload,
+        )
+        await websocket_manager.evict_user_from_room(
+            user_id=result.member["user_id"],
+            room_id=data.campaign_id,
         )
 
     if json_response:

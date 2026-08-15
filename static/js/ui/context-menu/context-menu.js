@@ -120,6 +120,16 @@
             return;
         }
 
+        const journalFolderHeader = e.target.closest("[data-journal-panel] .sheet-folder-header");
+        if (journalFolderHeader) {
+            const folderEl = journalFolderHeader.closest(".journal-folder[data-folder-id]");
+            if (folderEl && folderEl.closest("[data-journal-panel]")?.dataset.isGm === "true") {
+                e.preventDefault();
+                FI.openJournalFolderMenu(e, folderEl);
+                return;
+            }
+        }
+
         const journalCard = e.target.closest(".journal-card[data-journal-select]");
         if (journalCard) {
             e.preventDefault();

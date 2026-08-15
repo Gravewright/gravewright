@@ -74,6 +74,7 @@ class TransportEvent(StrEnum):
     SCENE_LAYER_DELETED = "scene.layer.deleted"
     SCENE_CHUNK_UPDATED = "scene.chunk.updated"
     SCENE_CHUNK_DELETED = "scene.chunk.deleted"
+    SCENE_GM_PREFETCH_HINT = "scene.gm_prefetch.hint"
 
     FOG_UPDATED = "fog.updated"
 

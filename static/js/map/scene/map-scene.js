@@ -28,7 +28,9 @@
             const imageScale = parseFloat(canvas.dataset.sceneImageScale) || 1.0;
             const baseWidth = parseInt(canvas.dataset.sceneWidth, 10);
             const baseHeight = parseInt(canvas.dataset.sceneHeight, 10);
-            const tileSize = parseInt(canvas.dataset.sceneTileSize, 10) || defaultGridSize;
+            const legacyTileSize = parseInt(canvas.dataset.sceneTileSize, 10) || defaultGridSize;
+            const gridSize = parseInt(canvas.dataset.sceneGridSize, 10) || legacyTileSize;
+            const rasterTileSize = parseInt(canvas.dataset.sceneRasterTileSize, 10) || legacyTileSize;
 
             return {
                 id: sceneId,
@@ -36,8 +38,11 @@
                 height: Math.round(baseHeight * imageScale),
                 baseWidth,
                 baseHeight,
-                tileSize,
-                scaledTileSize: tileSize * imageScale,
+                tileSize: gridSize,
+                gridSize,
+                rasterTileSize,
+                scaledTileSize: gridSize * imageScale,
+                scaledRasterTileSize: rasterTileSize * imageScale,
                 imageScale,
                 gridVisible: canvas.dataset.sceneGridVisible !== "false",
                 gridColor: canvas.dataset.sceneGridColor || null,

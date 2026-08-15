@@ -6,6 +6,7 @@
         let activeFreehand = null;
         let activeMeasure = null;
         let activeMeasureMove = null;
+        let measureClipboard = null;
 
         const {
             activeCanvas,
@@ -583,6 +584,29 @@
             return true;
         }
 
+        function copySelectedMeasure(canvas = activeCanvas()) {
+            if (!canvas) return false;
+            const selected = measureStoreFor(canvas).find((item) => item.id === selectedMeasureIdFor(canvas));
+            if (!selected) return false;
+            measureClipboard = cloneMeasure(selected);
+            return true;
+        }
+
+        function pasteMeasure(canvas = activeCanvas()) {
+            if (!canvas || !measureClipboard) return false;
+            const next = cloneMeasure(measureClipboard);
+            next.id = globalThis.crypto?.randomUUID?.() || `measure-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+            const shift = (point) => point && { ...point, worldX: Number(point.worldX || 0) + 16, worldY: Number(point.worldY || 0) + 16 };
+            if (next.start) next.start = shift(next.start);
+            if (next.end) next.end = shift(next.end);
+            if (Array.isArray(next.points)) next.points = next.points.map(shift);
+            if (next.position) next.position = shift(next.position);
+            broadcastMeasureUpsert(canvas, next);
+            setSelectedMeasure(canvas, next.id);
+            pushMeasureUpsertHistory(canvas, next);
+            return true;
+        }
+
         function clearMeasureFlashes(canvas) {
             const timers = storeApi.flashTimerStoreFor(canvas);
             timers.forEach((timer) => clearTimeout(timer));
@@ -762,11 +786,13 @@
             broadcastAreaMarkerUpsert,
             broadcastDrawUpsert,
             clearMeasures,
+            copySelectedMeasure,
             deleteSelectedMeasure,
             handleEscape,
             handleSubtoolChanged,
             measureAtPointForContext,
             moveSelectedMeasureToLayer,
+            pasteMeasure,
             renderMeasureOverlay,
             selectedMeasureIdFor,
             setSelectedMeasure,

@@ -111,7 +111,8 @@ grave.bat run --open
 6. Associe o ruleset à campanha.
 7. Abra a mesa.
 8. Envie um mapa pelo painel de cenas.
-9. Crie atores, itens, diários e tokens.
+9. Crie atores, itens, diários e tokens. Personagens, itens e diários podem ser
+   organizados em pastas e subpastas; consulte [`diretorios.md`](diretorios.md).
 
 ## Backup Antes de Atualizar
 

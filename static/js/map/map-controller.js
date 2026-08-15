@@ -104,6 +104,13 @@
         tokenStoreFor,
         markDirty,
     });
+    const mapTokenClipboard = window.GravewrightMapTokenClipboard.createTokenClipboard({
+        activeCanvas,
+        history: boardHistory,
+        selectedSet,
+        setSelection,
+        tokenStoreFor,
+    });
     const mapMarquee = window.GravewrightMapMarquee.createMarqueeController({
         clearSelection,
         sceneDataFor,
@@ -801,8 +808,8 @@
         mapRenderLoop.requestDrawAll();
     }
 
-    function markDirty(canvas) {
-        mapRenderLoop.markDirty(canvas);
+    function markDirty(canvas, flags = "all") {
+        mapRenderLoop.markDirty(canvas, flags);
     }
 
 
@@ -1116,6 +1123,7 @@
         selectedSet,
         stopAddToScene,
         tokenDelete: mapTokenDelete,
+        tokenClipboard: mapTokenClipboard,
     });
 
     window.GravewrightMapZoom.bindZoomWheel({
@@ -1168,6 +1176,7 @@
         handleSceneUpdated,
         handleSessionResumed,
         handleViewportReady,
+        handleGmPrefetchHint: mapStreaming.handleGmPrefetchHint,
         handleTokensConditionsUpdated,
         handleTokensCreated,
         handleTokensDeleted,
@@ -1283,9 +1292,21 @@
         deleteTokens,
         removeTokensMatching,
         tokenStoreFor,
+        selectTokensInWorldRect: (canvas, rect, opts) => mapMarquee.selectTokensInWorldRect(canvas, rect, opts),
+        history: boardHistory,
         historyUndo: () => boardHistory.undo(),
         historyRedo: () => boardHistory.redo(),
         debugSnapshot,
+        benchmarkSetAnimatedTokens: (tokens, sources) => {
+            const canvas = activeCanvas();
+            const store = canvas ? tokenStoreFor(canvas) : null;
+            if (store) {
+                store.clear();
+                (tokens || []).forEach((token) => store.set(token.token_id, token));
+            }
+            boardRenderer.benchmarkSetAnimatedTokens?.(tokens, sources);
+        },
+        scheduleViewportUpdate: (canvas, immediate = true) => scheduleViewportUpdate(canvas || activeCanvas(), immediate),
 
         viewerIsGm: (canvas) => effectiveIsGm(canvas),
         isPlayerView: () => mapLayerMode.isPlayerView(),

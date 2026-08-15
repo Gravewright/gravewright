@@ -26,15 +26,47 @@ body {
 }
 
 
-#auth-background {
+/* The animated PixiJS canvas is gone — markup, script tags and this rule with
+   it. What replaces it is the one image the product is actually about: a
+   battle map. A square grid at the scale a VTT rules one, a heavier line every
+   fifth cell like a real map, a lamp hung over the table and darkness at the
+   edges. All static, all CSS: no canvas and no renderer on a login screen. */
+body::before {
+    content: "";
     position: fixed;
     inset: 0;
-    width: 100vw;
-    height: 100vh;
-    display: block;
-    pointer-events: none;
     z-index: 0;
-    background: var(--bg);
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(192, 154, 90, 0.075) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(192, 154, 90, 0.075) 1px, transparent 1px),
+        linear-gradient(rgba(192, 154, 90, 0.032) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(192, 154, 90, 0.032) 1px, transparent 1px);
+    background-size:
+        220px 220px,
+        220px 220px,
+        44px 44px,
+        44px 44px;
+}
+
+/* Lamp above, dark at the corners: the map is lit where the form sits. */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(
+            90% 60% at 50% -10%,
+            rgba(192, 154, 90, 0.11),
+            transparent 68%
+        ),
+        radial-gradient(
+            120% 110% at 50% 45%,
+            transparent 32%,
+            rgba(0, 0, 0, 0.78) 100%
+        );
 }
 
 
@@ -357,5 +389,328 @@ body {
 
     .brand h1 {
         font-size: 26px;
+    }
+}
+
+/* ===========================================================================
+   AUTH — SAME IDENTITY AS THE INSIDE PANELS
+
+   The login shell already had the right bones (flat 4px corners, a gold
+   submit, translucent surfaces over the animated background), but it predated
+   the language the inside panels now speak, so arriving at /inside after
+   logging in felt like changing products: no gold hairline, a sans-serif
+   product name, a tinted error box instead of a ruled aside, and micro caps a
+   size below everything else.
+
+   This is the same vocabulary applied here. Register, forgot-password and
+   reset-password share `auth.css` and this class vocabulary, so all four
+   screens move together. No markup, id or class was changed.
+   =========================================================================== */
+
+.auth-shell {
+    --display-font:
+        "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+        Georgia, serif;
+    position: relative;
+    overflow: hidden;
+}
+
+/* The signature: the same gold hairline that crosses the top of every panel
+   inside, so the two halves of the product open the same way. */
+.auth-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        var(--accent),
+        rgba(192, 154, 90, 0.15) 34%,
+        transparent 62%
+    );
+}
+
+/* ---- Tabs --------------------------------------------------------------- */
+
+.auth-tab {
+    font-size: var(--text-sm);
+    letter-spacing: 0.12em;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease);
+}
+
+#tab-login:checked ~ .auth-header .auth-tab--login,
+#tab-privacy:checked ~ .auth-header .auth-tab--privacy {
+    color: var(--text-bright);
+    background: linear-gradient(180deg, var(--accent-glow), transparent);
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* The tabs are <label>s driving hidden radios, so focus lands on the radio,
+   never on the label — the ring has to be drawn from the input's state. */
+#tab-login:focus-visible ~ .auth-header .auth-tab--login,
+#tab-privacy:focus-visible ~ .auth-header .auth-tab--privacy {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+}
+
+/* ---- Masthead ----------------------------------------------------------- */
+
+/* A warm wash at the top of the panel, the same one the campaign cards carry
+   on their covers — enough to keep the shell from reading as a plain box. */
+.auth-panel--login {
+    background: radial-gradient(
+        120% 60% at 0% 0%,
+        rgba(192, 154, 90, 0.06),
+        transparent 60%
+    );
+}
+
+.brand {
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+.brand-label,
+.section-label {
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+    letter-spacing: 0.18em;
+}
+
+/* The product name is the name of a thing: it takes the serif, like every
+   campaign, ruleset and add-on title inside. */
+.brand h1,
+.auth-panel--privacy h2 {
+    color: var(--text-bright);
+    font-family: var(--display-font);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.brand h1 {
+    font-size: 32px;
+    line-height: 1.05;
+}
+
+.auth-panel--privacy h2 {
+    font-size: var(--text-2xl);
+}
+
+.auth-description {
+    margin-bottom: var(--space-8);
+    max-width: 42ch;
+    color: var(--text-faint);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+}
+
+/* ---- Form --------------------------------------------------------------- */
+
+.field span {
+    color: var(--text-faint);
+    font-size: var(--text-sm);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.field input {
+    height: 44px;
+    border-color: #39434f;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    font-size: var(--text-base);
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease);
+}
+
+.field input:focus {
+    box-shadow:
+        inset 0 1px 2px rgba(0, 0, 0, 0.3),
+        var(--ring-accent);
+}
+
+/* The affirmative control, matching the submits inside: a gold gradient with
+   dark type, not a flat fill. */
+.button-primary {
+    height: 44px;
+    margin-top: var(--space-3);
+    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+    color: #1a1206;
+    letter-spacing: 0.1em;
+    transition:
+        background var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease);
+}
+
+.button-primary:hover {
+    background: linear-gradient(180deg, #e2bd7c, var(--accent-hover));
+    box-shadow: 0 4px 16px rgba(192, 154, 90, 0.24);
+}
+
+.button-primary:focus-visible,
+.auth-links a:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* ---- Error -------------------------------------------------------------- */
+
+/* A ruled aside, like the alerts on every panel inside — a tinted rounded box
+   read as another field in the form. */
+.auth-error {
+    border: 0;
+    border-left: 2px solid var(--danger);
+    border-radius: 0;
+    padding: var(--space-3) var(--space-4);
+    background: linear-gradient(
+        90deg,
+        rgba(210, 121, 107, 0.14),
+        transparent 72%
+    );
+    font-size: var(--text-base);
+    font-weight: 400;
+    line-height: var(--leading-normal);
+}
+
+/* ---- Footer links ------------------------------------------------------- */
+
+.auth-links {
+    margin-top: var(--space-6);
+    font-size: var(--text-md);
+}
+
+.auth-links a {
+    border-radius: var(--radius-xs);
+    transition: color var(--motion-fast) var(--ease);
+}
+
+/* ---- Privacy panel ------------------------------------------------------ */
+
+.privacy-updated {
+    font-size: var(--text-md);
+}
+
+.privacy-text,
+.privacy-empty {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+}
+
+@media (max-width: 640px) {
+    .brand h1 {
+        font-size: 27px;
+    }
+
+    .auth-description {
+        margin-bottom: var(--space-6);
+    }
+}
+
+
+/* ---- The shell as a handout on the table -------------------------------- */
+
+/* Two rings and a long shadow: the panel reads as a card laid on the map
+   rather than a rectangle floating in space. */
+.auth-shell {
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.55),
+        0 0 0 7px rgba(12, 14, 16, 0.5),
+        0 34px 90px rgba(0, 0, 0, 0.6);
+}
+
+/* Corner brackets, the way a map frames a region — eight one-pixel rules, one
+   pair per corner, from a single gradient repeated. */
+.auth-shell::after {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0.55;
+    background-image:
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent));
+    background-repeat: no-repeat;
+    background-size:
+        16px 1px, 1px 16px,
+        16px 1px, 1px 16px,
+        16px 1px, 1px 16px,
+        16px 1px, 1px 16px;
+    background-position:
+        left top, left top,
+        right top, right top,
+        left bottom, left bottom,
+        right bottom, right bottom;
+}
+
+/* The mark is the product's sigil: give it the lamp too. */
+.brand-mark {
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 0 18px rgba(192, 154, 90, 0.18);
+}
+
+/* ---- Back ---------------------------------------------------------------- */
+
+/* Register, forgot-password and reset-password are detours from the login
+   screen, and each one used to offer only a text link buried under the form.
+   The way back is a control now, at the top left where a way back belongs. */
+.auth-back {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-5);
+    padding: 0 var(--space-4);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+/* Chevron drawn from the palette, like the disclosure arrows inside. */
+.auth-back::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-left: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+}
+
+.auth-back:hover {
+    border-color: var(--border-accent-strong);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+.auth-back:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+    .auth-shell::after {
+        display: none;
     }
 }

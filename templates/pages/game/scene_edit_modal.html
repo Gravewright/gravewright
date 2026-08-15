@@ -41,7 +41,7 @@
                 <div class="scene-two-col">
                     <label class="game-field">
                         <span>{{ t("game.scenes.grid_size") }}</span>
-                        <input type="number" name="tile_size" min="8" max="1024" value="{{ scene.tile_size }}" required
+                        <input type="number" name="tile_size" min="8" max="1024" value="{{ scene.get('grid_size') or scene.tile_size }}" required
                                data-warn-on-change="{{ t('game.scenes.grid_size_warning') }}" />
                     </label>
                     <label class="game-field">

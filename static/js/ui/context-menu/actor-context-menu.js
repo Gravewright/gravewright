@@ -8,14 +8,6 @@
     const showMenu = FI.showMenu;
     const body = document.body;
 
-    function actorPanelFolders(panel) {
-        if (!panel) return [];
-        return Array.from(panel.querySelectorAll("[data-actor-folder]")).map((el) => ({
-            id: el.dataset.folderId,
-            name: el.dataset.folderName,
-        }));
-    }
-
     function openActorMenu(e, cardEl) {
         const actorId = cardEl.dataset.actorOpen;
         const panel = cardEl.closest("[data-actor-panel]");
@@ -55,20 +47,6 @@
             action() { window.GravewrightActors?.openPermissions(actorId); },
         });
 
-        const folders = actorPanelFolders(panel);
-        items.push({ type: "sep" });
-        items.push({ type: "label", text: body.dataset.ctxActorMoveToFolder || "Move to folder" });
-        items.push({
-            text: body.dataset.ctxActorMoveToRoot || "Move out of folder",
-            action() { window.GravewrightActors?.moveActor(actorId, "", roomId); },
-        });
-        for (const f of folders) {
-            items.push({
-                text: f.name,
-                action() { window.GravewrightActors?.moveActor(actorId, f.id, roomId); },
-            });
-        }
-
         items.push({ type: "sep" });
         items.push({
             text: body.dataset.ctxActorDelete || "Delete actor",
@@ -90,6 +68,7 @@
         const panel = folderEl.closest("[data-actor-panel]");
         const campaignId = panel?.dataset.roomId || "";
         const currentName = folderEl.dataset.folderName || "";
+        const currentColor = folderEl.dataset.folderColor || "";
 
         const folderAction = (path, fields) =>
             window.GravewrightActors?.folderAction(path, fields, campaignId);
@@ -104,6 +83,12 @@
 
         showMenu(e.clientX, e.clientY, [
             {
+                text: body.dataset.ctxActorCreate || "Create actor",
+                action() {
+                    FI.openActorCreateModal?.({ campaignId, folderId });
+                },
+            },
+            {
                 text: body.dataset.ctxActorFolderAddToScene || "Add folder to scene",
                 disabled: !sceneId || !folderActorIds.length,
                 action() {
@@ -115,38 +100,17 @@
             },
             { type: "sep" },
             {
-                text: label("ctxActorFolderRename"),
+                text: body.dataset.ctxFolderEdit || "Edit folder",
                 action() {
-                    const name = window.prompt(label("ctxActorFolderRename"), currentName);
-                    if (name && name.trim()) {
-                        folderAction("actor-folder/rename", { folder_id: folderId, campaign_id: campaignId, name: name.trim() });
-                    }
-                },
-            },
-            {
-                text: label("ctxActorFolderColor"),
-                action() {
-                    showMenu(e.clientX, e.clientY, ["#b9995d", "#8ea8ff", "#7ee0a1", "#e88", "#c98bdb"].map((c) => ({
-                        text: c,
-                        action() {
-                            folderAction("actor-folder/color", { folder_id: folderId, campaign_id: campaignId, color: c });
-                        },
-                    })));
+                    FI.openFolderEditor?.({
+                        kind: "actor", folderId, campaignId, name: currentName, color: currentColor,
+                    });
                 },
             },
             {
                 text: label("ctxActorFolderAddSubfolder"),
                 action() {
-                    const name = window.prompt(label("ctxActorFolderAddSubfolder"), "");
-                    if (name && name.trim()) {
-                        folderAction("actor-folder", { campaign_id: campaignId, name: name.trim(), parent_id: folderId });
-                    }
-                },
-            },
-            {
-                text: label("ctxActorFolderMoveRoot"),
-                action() {
-                    folderAction("actor-folder/move", { folder_id: folderId, parent_id: "" });
+                    FI.openFolderCreateModal?.({ kind: "actor", campaignId, parentId: folderId });
                 },
             },
             { type: "sep" },

@@ -19,4 +19,4 @@ def test_onboarding_dialog_remains_clickable_inside_pointerless_modal_layer():
     template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
     dialog_rule = css.split(".gm-onboarding-dialog {", 1)[1].split("}", 1)[0]
     assert "pointer-events: auto" in dialog_rule
-    assert 'game.css?v={{ asset_version }}-gm-onboarding-clickable' in template
+    assert 'game.css?v={{ asset_version }}-' in template

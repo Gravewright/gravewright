@@ -326,6 +326,31 @@ def test_moving_keeps_the_turn_on_the_same_combatant(table):
     assert moved.state_payload()["current_name"] == "Bran"
 
 
+def test_manual_initiative_batch_relabels_and_reorders_atomically(table):
+    service, _ = start_with(table, "Aria", "Bran", "Cass")
+    use_system(service, input="text")
+    service.advance_turn(campaign_id=table["campaign_id"], user_id=table["gm"], delta=1)
+    state = service.get_state(campaign_id=table["campaign_id"], user_id=table["gm"])
+    by_name = {row["name"]: row for row in state.combatants}
+
+    result = service.set_manual_initiative_order(
+        campaign_id=table["campaign_id"],
+        user_id=table["gm"],
+        entries=[
+            {"combatantId": by_name["Cass"]["id"], "value": "Ace of Spades"},
+            {"combatantId": by_name["Bran"]["id"], "value": "King of Hearts"},
+            {"combatantId": by_name["Aria"]["id"], "value": "Three of Clubs"},
+        ],
+    )
+
+    assert result.success
+    assert names(result) == ["Cass", "Bran", "Aria"]
+    assert [row["initiative"] for row in result.combatants] == [
+        "Ace of Spades", "King of Hearts", "Three of Clubs"
+    ]
+    assert result.state_payload()["current_name"] == "Cass"
+
+
 def test_a_numeric_system_refuses_to_be_reordered_by_hand(table):
     service, _ = start_with(table, "Aria", "Bran")
     set_order(service, table, {"Aria": "20", "Bran": "10"})

@@ -119,6 +119,15 @@
         }
       }
 
+      async function uploadedPdf(assetId) {
+        try {
+          return await sdk.pdf.get(assetId);
+        } catch (error) {
+          console.warn("[gravewright-pdf-system] PDF indisponível para o usuário atual", error);
+          return null;
+        }
+      }
+
       function labelButtons(root) {
         for (const node of root.querySelectorAll("[data-pdf-title]")) {
           const label = t(`ui.${node.dataset.pdfTitle}`, node.dataset.pdfTitle);
@@ -299,9 +308,9 @@
       async function resolveSource(ctx, mapping) {
         const assetId = readPath(ctx.data, "system.pdf.asset") || "";
         if (assetId) {
-          const found = (await uploadedPdfs()).find((item) => item.id === assetId);
+          const found = await uploadedPdf(assetId);
           if (found) {
-            return { kind: "asset", id: assetId, url: found.src, fields: null };
+            return { kind: "asset", id: assetId, url: found.url, fields: null };
           }
           // Arquivo apagado da biblioteca: cai no template em vez de abrir vazio.
           console.warn("[gravewright-pdf-system] PDF enviado não está mais na biblioteca", assetId);
@@ -359,9 +368,8 @@
 
         if (viewer) {
           try {
-            const opened = await viewer.open({
+            const viewerOptions = {
               host: root.querySelector("[data-pdf-page-host]"),
-              url: source.url,
               assetUrl: asset,
               page: Number(readPath(ctx.data, "system.pdf.page")) || 1,
               zoom: Number(readPath(ctx.data, "system.pdf.zoom")) || 1,
@@ -369,7 +377,13 @@
               onPageChange: ({ page, pages }) => {
                 pageLabel.textContent = `${page} / ${pages}`;
               },
-            });
+            };
+            // PDFs da biblioteca passam pela API semântica: capability do pacote
+            // e visibilidade do usuário são verificadas no backend. Templates
+            // internos continuam resolvidos como assets imutáveis do pacote.
+            const opened = source.kind === "asset"
+              ? await sdk.pdf.viewer.open(source.id, viewerOptions)
+              : await viewer.open({ ...viewerOptions, url: source.url });
             // PDF enviado: os nomes vêm do arquivo, lidos pelo visualizador.
             nomesDoPdf = opened.fields || [];
             if (!fields) {

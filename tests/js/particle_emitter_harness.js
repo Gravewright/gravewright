@@ -84,6 +84,8 @@ function buildWorld({ isGm = true, layer = "effects", tool = "particles", subToo
                 // que a tolerancia de clique tem de ser corrigida por ele.
                 worldFromScreen: (_canvas, x, y) => ({ worldX: x / scale, worldY: y / scale }),
                 stateFor: () => ({ zoom: scale }),
+                activeCanvas: () => canvas,
+                history: { push() {} },
             },
             GravewrightVisionMode: { current: () => visionMode, isClassic: () => visionMode === "classic" },
             GravewrightToasts: { showToast() {} },
@@ -282,6 +284,37 @@ function check(label, condition, detail = "") {
             "sem a folga, cada toque viraria uma gravacao");
     }
 
+    // --- multisselecao: mouse e teclado ------------------------------------------
+    {
+        const world = buildWorld();
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 300, clientY: 300 });
+        world.dispatch("pointerdown", { clientX: 600, clientY: 300 });
+        await world.settle();
+        world.tools.activeTool = "select";
+        world.dispatch("pointerdown", { clientX: 250, clientY: 250 });
+        world.dispatch("pointermove", { clientX: 650, clientY: 350 });
+        world.dispatch("pointerup", { clientX: 650, clientY: 350 });
+        check("a caixa seleciona varios efeitos", world.state().picked.emitter.size === 2);
+
+        world.dispatch("pointerdown", { clientX: 300, clientY: 300 });
+        world.dispatch("pointermove", { clientX: 350, clientY: 340 });
+        world.dispatch("pointerup", { clientX: 350, clientY: 340 });
+        await world.settle();
+        let clouds = world.state().particleClouds;
+        check("arrastar um efeito move toda a selecao",
+            clouds[0].x === 350 && clouds[0].y === 340
+            && clouds[1].x === 650 && clouds[1].y === 340,
+            JSON.stringify(clouds));
+
+        world.dispatch("keydown", { key: "ArrowRight", target: { closest: () => null } });
+        await world.settle();
+        clouds = world.state().particleClouds;
+        check("seta move todos os efeitos selecionados",
+            clouds[0].x === 385 && clouds[1].x === 685,
+            JSON.stringify(clouds));
+    }
+
     // --- duplo clique abre o painel ---------------------------------------------
     {
         const world = buildWorld();
@@ -311,10 +344,13 @@ function check(label, condition, detail = "") {
             check(`zoom ${zoom}: os ${spots.length} emissores foram criados`,
                 world.state().particleClouds.length === spots.length,
                 `${world.state().particleClouds.length}`);
+            world.tools.activeTool = "select";
 
             // E cada um responde ao clique no proprio ponto.
             const unreachable = [];
             for (const [x, y] of spots) {
+                world.dispatch("pointerdown", { clientX: 1900 * zoom, clientY: 1900 * zoom });
+                world.dispatch("pointerup", { clientX: 1900 * zoom, clientY: 1900 * zoom });
                 world.dispatch("pointerdown", { clientX: x * zoom, clientY: y * zoom });
                 world.dispatch("pointerup", { clientX: x * zoom, clientY: y * zoom });
                 await world.settle();
@@ -345,11 +381,14 @@ function check(label, condition, detail = "") {
         }
         check("aproximado, os quatro cabem", world.state().particleClouds.length === 4,
             `${world.state().particleClouds.length}`);
+        world.tools.activeTool = "select";
 
         // Agora afastado: os quatro caem dentro da mesma tolerancia.
         world.setZoom(0.5);
         const unreachable = [];
         for (const [x, y] of spots) {
+            world.dispatch("pointerdown", { clientX: 1900 * 0.5, clientY: 1900 * 0.5 });
+            world.dispatch("pointerup", { clientX: 1900 * 0.5, clientY: 1900 * 0.5 });
             world.dispatch("pointerdown", { clientX: x * 0.5, clientY: y * 0.5 });
             world.dispatch("pointerup", { clientX: x * 0.5, clientY: y * 0.5 });
             await world.settle();

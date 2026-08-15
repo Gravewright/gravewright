@@ -44,6 +44,10 @@ class SceneRepository:
         start_zoom: float = 1.0,
         tile_table_version: int = 1,
         scene_epoch: int = 1,
+        grid_size: int | None = None,
+        scene_format_version: int = 1,
+        raster_selection_mode: str = "legacy",
+        raster_policy_version: int = 0,
     ) -> dict:
         now = int(time.time())
         scene_id = uuid.uuid4().hex
@@ -63,6 +67,10 @@ class SceneRepository:
                     width=width,
                     height=height,
                     tile_size=tile_size,
+                    grid_size=grid_size or tile_size,
+                    scene_format_version=scene_format_version,
+                    raster_selection_mode=raster_selection_mode,
+                    raster_policy_version=raster_policy_version,
                     chunk_size=chunk_size,
                     grid_visible=1 if grid_visible else 0,
                     grid_color=grid_color,
@@ -163,6 +171,7 @@ class SceneRepository:
         tile_size: int,
         image_scale: float,
         tile_table_version: int,
+        grid_size: int | None = None,
     ) -> None:
         now = int(time.time())
         with engine_begin() as conn:
@@ -175,6 +184,7 @@ class SceneRepository:
                         scenes_table.c.grid_opacity,
                         scenes_table.c.darkness,
                         scenes_table.c.tile_size,
+                        scenes_table.c.grid_size,
                         scenes_table.c.image_scale,
                         scenes_table.c.tile_table_version,
                     )
@@ -192,6 +202,7 @@ class SceneRepository:
                     or float(existing["grid_opacity"]) != float(grid_opacity)
                     or float(existing["darkness"]) != float(darkness)
                     or existing["tile_size"] != tile_size
+                    or (grid_size is not None and existing["grid_size"] != grid_size)
                     or float(existing["image_scale"]) != float(image_scale)
                     or existing["tile_table_version"] != tile_table_version
                 )
@@ -208,6 +219,7 @@ class SceneRepository:
                     grid_opacity=grid_opacity,
                     darkness=darkness,
                     tile_size=tile_size,
+                    grid_size=grid_size if grid_size is not None else scenes_table.c.grid_size,
                     image_scale=image_scale,
                     tile_table_version=tile_table_version,
                     scene_epoch=scenes_table.c.scene_epoch + (1 if bump_epoch else 0),

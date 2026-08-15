@@ -93,7 +93,8 @@ refuses to run against out-of-domain data rather than silently coercing it.
 
 Always back up before running migrations against data you care about
 (`grave backup --include-packages`), and test a restore on a copy first. See
-[`alpha.md`](alpha.md) for the Alpha upgrade policy.
+[`beta.md`](beta.md) for the current upgrade and compatibility policy; the
+former Alpha policy remains archived in [`alpha.md`](alpha.md).
 
 ## Production Hardening
 
@@ -186,15 +187,16 @@ code per campaign with a partial unique index. Campaign deletion cascades to
 codes and redemption receipts. Downgrading below `0018` deletes all join-code
 data, so create a backup first.
 
-## Alpha 3 migration range
+## Current migration range
 
-The current Alembic head is `0042_particle_kinds`. Revisions after join codes
+The current Alembic head is `0046_pdf_annotations`. Revisions after join codes
 add campaign snapshots and audit events; targeted handouts, lobby state, and GM
 onboarding; scene walls, doors, lighting sources, vision preferences, emission
 shapes, and opacity; simplified combat and token-bar slots; and the scene
 particle/shader model, including stable origins, rotation, blend mode, shader
-opacity, and expanded particle kinds.
+opacity, and expanded particle kinds. Later revisions add ping colors, virtual
+raster metadata, adaptive raster policy, and PDF annotations.
 
-Before moving an existing Alpha installation to `0042`, create a verified
+Before upgrading an existing installation to `0046`, create a verified
 backup, run `grave db status`, execute `grave db upgrade`, and finish with
 `grave doctor`.

@@ -370,6 +370,42 @@ class CombatService:
             combat, campaign_id=campaign_id, user_id=user_id, keep=current_id
         )
 
+    def set_manual_initiative_order(
+        self, *, campaign_id: str, user_id: str, entries: list[dict]
+    ) -> CombatResult:
+        """Atomically replace every label and row in a system-defined manual order."""
+        if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
+            return CombatResult(success=False, error_key="game.combat.errors.gm_required")
+        combat = self.encounters.get_active(campaign_id=campaign_id)
+        if combat is None:
+            return CombatResult(success=False, error_key="game.combat.errors.inactive")
+        config = self._config_for(campaign_id=campaign_id, user_id=user_id)
+        if not config.is_manual_order:
+            return CombatResult(success=False, error_key="game.combat.errors.order_is_automatic")
+        current = self.get_state(campaign_id=campaign_id, user_id=user_id)
+        existing_ids = {str(row["id"]) for row in current.combatants}
+        normalized: list[tuple[str, str | None]] = []
+        seen: set[str] = set()
+        for entry in entries[:MAX_COMBATANTS]:
+            combatant_id = str(entry.get("combatantId") or "") if isinstance(entry, dict) else ""
+            if combatant_id not in existing_ids or combatant_id in seen:
+                return CombatResult(success=False, error_key="game.combat.errors.combatant_not_found")
+            seen.add(combatant_id)
+            raw = entry.get("value")
+            label = str(raw).strip()[:MAX_INITIATIVE_LENGTH] if raw is not None else ""
+            normalized.append((combatant_id, label or None))
+        if seen != existing_ids:
+            return CombatResult(success=False, error_key="game.combat.errors.invalid_order")
+        self.encounters.set_labels_and_order(entries=normalized)
+        # A fresh manual initiative order starts with its first row. Systems such
+        # as Savage Worlds submit the entries already ranked by their drawn card.
+        self.encounters.set_position(
+            combat_id=combat["id"],
+            round_number=int(combat["round_number"]),
+            turn_index=0,
+        )
+        return self.get_state(campaign_id=campaign_id, user_id=user_id)
+
     def record_initiative_roll(
         self,
         *,

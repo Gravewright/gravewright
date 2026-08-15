@@ -24,3 +24,15 @@ Materiais de API incluem:
 A licenca MIT cobre o contrato e os exemplos de API para que autores possam copiar formatos e exemplos com liberdade. Ela nao relicencia a implementacao do core que valida, serve, renderiza, armazena ou executa esses contratos.
 
 Quando um arquivo mistura texto de especificacao de API e texto de implementacao do core, a implementacao continua Apache-2.0 e o material de API documentado continua MIT.
+
+## Materiais de terceiros
+
+Materiais de terceiros mantêm suas próprias licenças e não são relicenciados
+pelas licenças do core ou da API. A lista canônica de créditos está em
+`../../THIRD_PARTY_NOTICES.md`; avisos colocados junto aos assets também devem
+acompanhar qualquer redistribuição.
+
+Os ícones de porta incluídos em `static/icons/` foram feitos por Delapouite,
+publicados pelo Game-icons.net e licenciados sob CC BY 3.0. O mapeamento de cada
+arquivo, links das obras e indicação das adaptações estão em
+`../../static/icons/LICENSE-GAME-ICONS.md`.

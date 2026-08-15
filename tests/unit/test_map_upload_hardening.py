@@ -23,6 +23,12 @@ def _png(width: int, height: int) -> bytes:
     return buffer.getvalue()
 
 
+def _jpeg(width: int, height: int) -> bytes:
+    buffer = BytesIO()
+    Image.new("RGB", (width, height), (10, 20, 30)).save(buffer, format="JPEG", quality=90)
+    return buffer.getvalue()
+
+
 def test_image_decoder_decodes_normal_image() -> None:
     decoded = ImageDecoder(max_dimension=64).decode(_png(32, 32))
     assert decoded.width == 32
@@ -33,6 +39,27 @@ def test_image_decoder_rejects_oversized_dimensions() -> None:
     decoder = ImageDecoder(max_dimension=16)
     with pytest.raises(ValueError):
         decoder.decode(_png(64, 8))
+
+
+def test_region_decoder_materializes_only_requested_tile() -> None:
+    decoded = ImageDecoder(max_dimension=512).decode_regions(_png(256, 192))
+
+    tile = decoded.image.crop((64, 32, 128, 96))
+
+    assert decoded.width == 256
+    assert decoded.height == 192
+    assert tile.size == (64, 64)
+    assert tile.mode == "RGBA"
+
+
+def test_region_decoder_encodes_opaque_tiles_directly_as_webp() -> None:
+    decoded = ImageDecoder(max_dimension=512).decode_regions(_jpeg(256, 192))
+
+    encoded = decoded.image.crop_encoded((64, 32, 128, 96))
+
+    assert encoded.content_type == "image/webp"
+    assert encoded.extension == ".webp"
+    assert encoded.data.startswith(b"RIFF")
 
 
 class _FailingChunkStorage(LocalChunkStorage):

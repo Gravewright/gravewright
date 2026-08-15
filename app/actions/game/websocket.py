@@ -9,6 +9,7 @@ from typing import Any
 from litestar import websocket
 from litestar.connection import WebSocket
 from litestar.exceptions import WebSocketDisconnect
+from uvicorn.protocols.utils import ClientDisconnected
 
 from app.business.campaigns.campaign_service import CampaignService
 from app.config import config
@@ -213,6 +214,7 @@ async def game_websocket(
             realtime_metrics.increment(f"ws.command.{command_metric}.count")
             emit_diagnostic(
                 "ws.command.received",
+                level="debug" if command == ClientCommand.GM_HINT_SAMPLE.value else "info",
                 trace_id=trace_id,
                 command_id=command_id,
                 command=command,
@@ -244,6 +246,12 @@ async def game_websocket(
                         realtime_metrics.increment(f"ws.command.{command_metric}.cas_conflict")
                 emit_diagnostic(
                     "ws.command.completed",
+                    level=(
+                        "debug"
+                        if command == ClientCommand.GM_HINT_SAMPLE.value
+                        and not observation.error_code
+                        else "info"
+                    ),
                     trace_id=trace_id,
                     command_id=command_id,
                     command=command,
@@ -254,7 +262,7 @@ async def game_websocket(
                     error_code=observation.error_code,
                     duration_ms=round(elapsed_ms, 3),
                 )
-            except WebSocketDisconnect:
+            except (WebSocketDisconnect, ClientDisconnected):
                 raise
             except Exception as exc:
                 elapsed_ms = (time.perf_counter() - started) * 1000.0
@@ -280,7 +288,7 @@ async def game_websocket(
                     )
                 )
 
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, ClientDisconnected):
         pass
     finally:
         await websocket_manager.disconnect(connection_id)
@@ -314,6 +322,7 @@ async def _dispatch_message(
     stream_response = await scene_stream.handle(
         message,
         context=command_context,
+        transport=transport,
     )
 
     if stream_response.handled:

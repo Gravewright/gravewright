@@ -13,19 +13,22 @@
     const MIN_WINDOW_WIDTH = 260;
     const MIN_WINDOW_HEIGHT = 180;
 
-    const DEFAULT_FIT_HEIGHT = 520;
+    // Window geometry belongs to the signed-in user. Browsers are commonly
+    // shared between the GM and a player during local sessions; using only the
+    // resource id here leaked the GM's large editor dimensions into the
+    // player's read-only window.
+    const windowOwner = document.body.dataset.currentUserId || "anonymous";
     const modalLayout = window.GravewrightModalLayout.createModalLayout({
         autoFitMargin: AUTO_FIT_MARGIN,
         autoFitPadding: AUTO_FIT_PADDING,
         cssEscape,
-        defaultFitHeight: DEFAULT_FIT_HEIGHT,
         defaultX: DEFAULT_X,
         defaultY: DEFAULT_Y,
         isClassicPanel,
         isGravewrightPanel,
         minWindowHeight: MIN_WINDOW_HEIGHT,
         minWindowWidth: MIN_WINDOW_WIDTH,
-        windowStoragePrefix: "gravewright.game.window.",
+        windowStoragePrefix: `gravewright.game.window.${windowOwner}.`,
     });
     const modalDocking = window.GravewrightModalDocking.createModalDocking({
         bringToFront,
@@ -203,6 +206,60 @@
         showFloatingModal(modal);
     }
 
+    function resourcePanel(resourceType, campaignId = "", resourceId = "", trigger = null) {
+        const panelAttr = `data-${resourceType}-panel`;
+        const directPanel = trigger?.closest?.(`[${panelAttr}]`);
+        if (directPanel) return directPanel.closest("[data-modal-window]") || directPanel;
+
+        const idAttribute = resourceType === "actor"
+            ? "data-actor-open"
+            : resourceType === "item" ? "data-item-open" : "data-journal-id";
+        const candidates = resourceId
+            ? document.querySelectorAll(`[${idAttribute}="${cssEscape(resourceId)}"]`)
+            : document.querySelectorAll(`[${panelAttr}]`);
+        for (const candidate of candidates) {
+            const panelBody = candidate.matches?.(`[${panelAttr}]`)
+                ? candidate
+                : candidate.closest(`[${panelAttr}]`);
+            if (!panelBody) continue;
+            if (campaignId && panelBody.dataset.roomId !== campaignId) continue;
+            const panel = panelBody.closest("[data-modal-window]") || panelBody;
+            if (!panel.hidden) return panel;
+        }
+        return null;
+    }
+
+    function positionModalNearPanel(modalId, resourceType, options = {}) {
+        const modal = document.querySelector(`[data-modal-id="${cssEscape(modalId)}"]`);
+        const panel = resourcePanel(
+            resourceType,
+            String(options.campaignId || ""),
+            String(options.resourceId || ""),
+            options.trigger || null,
+        );
+        if (!modal || !panel) return;
+
+        window.requestAnimationFrame(() => {
+            const layer = modal.closest(".game-modal-layer");
+            const panelRect = panel.getBoundingClientRect();
+            const layerRect = layer?.getBoundingClientRect();
+            if (!layerRect) return;
+            const margin = 12;
+            const x = modalLayout.clamp(
+                panelRect.left - layerRect.left - modal.offsetWidth - margin,
+                margin,
+                Math.max(margin, layerRect.width - modal.offsetWidth - margin),
+            );
+            const y = modalLayout.clamp(
+                panelRect.top - layerRect.top + 10,
+                margin,
+                Math.max(margin, layerRect.height - modal.offsetHeight - margin),
+            );
+            setPosition(modal, x, y);
+            saveWindowState(modal);
+        });
+    }
+
     async function ensureJournalModal(journalId) {
         return modalRemote.ensureJournalModal(journalId);
     }
@@ -334,7 +391,15 @@
         const openButton = event.target.closest("[data-modal-open]");
 
         if (openButton && !event.target.closest("[data-no-modal]")) {
-            openModal(openButton.dataset.modalOpen);
+            const modalId = openButton.dataset.modalOpen;
+            openModal(modalId);
+            const createMatch = modalId.match(/^(actor|item)-create-(.+)$/);
+            if (createMatch) {
+                positionModalNearPanel(modalId, createMatch[1], {
+                    campaignId: createMatch[2],
+                    trigger: openButton,
+                });
+            }
             return;
         }
 
@@ -378,7 +443,12 @@
             if (resourceType && resourceId) {
                 ensureResourcePermissionsModal(resourceType, resourceId).then((ready) => {
                     if (ready) {
-                        openModal(`resource-permissions-${resourceType}-${resourceId}`);
+                        const modalId = `resource-permissions-${resourceType}-${resourceId}`;
+                        openModal(modalId);
+                        positionModalNearPanel(modalId, resourceType, {
+                            resourceId,
+                            trigger: resourcePermissionsButton,
+                        });
                     }
                 });
             }
@@ -562,7 +632,15 @@
         const journalId = e.detail?.journalId;
         if (!journalId) return;
         if (await ensureJournalModal(journalId)) {
+            document.querySelectorAll(".journal-card.is-active").forEach((card) => card.classList.remove("is-active"));
+            document.querySelectorAll(`.journal-card[data-journal-id="${cssEscape(journalId)}"]`)
+                .forEach((card) => card.classList.add("is-active"));
             openModal(`journal-${journalId}`);
+            if (e.detail?.edit) {
+                window.GravewrightJournalsInternals?.openJournalEditor?.(
+                    document.querySelector(`[data-modal-id="journal-${cssEscape(journalId)}"]`),
+                );
+            }
         }
     });
 
@@ -621,7 +699,9 @@
         const { campaignId, folderId } = e.detail ?? {};
         if (!campaignId) return;
         if (await ensureJournalCreateModal(campaignId, folderId)) {
-            openModal(`journal-create-${campaignId}`);
+            const modalId = `journal-create-${campaignId}`;
+            openModal(modalId);
+            positionModalNearPanel(modalId, "journal", { campaignId });
         }
     });
 
@@ -634,6 +714,7 @@
         isClassicPanel,
         minimize: minimizeModal,
         open: openModal,
+        positionNearPanel: positionModalNearPanel,
         saveWindowState,
         setPosition,
         toggleMaximize: toggleMaximizeModal,

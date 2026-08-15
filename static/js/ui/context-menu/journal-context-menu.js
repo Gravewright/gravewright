@@ -72,5 +72,60 @@
         showMenu(e.clientX, e.clientY, items);
     }
 
+    function openJournalFolderMenu(e, folderEl) {
+        const panel = folderEl.closest("[data-journal-panel]");
+        const campaignId = panel?.dataset.roomId || "";
+        const folderId = folderEl.dataset.folderId || "";
+        if (!campaignId || !folderId) return;
+        showMenu(e.clientX, e.clientY, [
+            {
+                text: body.dataset.ctxFolderEdit || "Edit folder",
+                action() {
+                    FI.openFolderEditor({
+                        kind: "journal", folderId, campaignId,
+                        name: folderEl.dataset.folderName || "",
+                        color: folderEl.dataset.folderColor || "",
+                    });
+                },
+            },
+            {
+                text: body.dataset.ctxActorFolderAddSubfolder || "New subfolder",
+                action() {
+                    FI.openFolderCreateModal({ kind: "journal", campaignId, parentId: folderId });
+                },
+            },
+            { type: "sep" },
+            {
+                text: body.dataset.ctxJournalCreate || "Create journal",
+                action() {
+                    document.dispatchEvent(new CustomEvent("vtt:open-journal-create", {
+                        detail: { campaignId, folderId },
+                    }));
+                },
+            },
+            { type: "sep" },
+            {
+                text: body.dataset.ctxJournalFolderDelete || "Delete folder",
+                danger: true,
+                action() {
+                    showMenu(e.clientX, e.clientY, [{
+                        text: body.dataset.ctxActorFolderDeleteConfirm || "Confirm delete folder",
+                        danger: true,
+                        async action() {
+                            const response = await window.GravewrightJournalsInternals.postJournal(
+                                "/game/journal/folder/delete",
+                                { folder_id: folderId, campaign_id: campaignId },
+                            );
+                            if (response.ok) {
+                                window.GravewrightJournalsInternals.refreshJournalPanel(campaignId);
+                            }
+                        },
+                    }]);
+                },
+            },
+        ]);
+    }
+
     FI.openJournalMenu = openJournalMenu;
+    FI.openJournalFolderMenu = openJournalFolderMenu;
 })();

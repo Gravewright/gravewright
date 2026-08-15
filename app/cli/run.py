@@ -11,6 +11,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
+import os
 import threading
 import time
 import urllib.request
@@ -166,14 +167,27 @@ def _open_browser_when_ready(url: str, *, timeout: float = 20.0) -> None:
     threading.Thread(target=_wait_and_open, daemon=True).start()
 
 
-def serve(*, host: str, port: int, dev: bool, open_browser: bool) -> int:
+def serve(
+    *, host: str, port: int, dev: bool, open_browser: bool,
+    diagnostics: bool = False, diagnostics_file: str | None = None,
+) -> int:
     if open_browser:
         shown = "127.0.0.1" if host in {"0.0.0.0", "::"} else host
         _open_browser_when_ready(f"http://{shown}:{port}/")
+    child_env = os.environ.copy()
+    if diagnostics:
+        target = Path(diagnostics_file or (Path(config.data_dir) / "diagnostics" / "gravewright.jsonl"))
+        target = target.expanduser().resolve()
+        child_env["GRAVEWRIGHT_DIAGNOSTICS_CAPTURE"] = "1"
+        child_env["GRAVEWRIGHT_DIAGNOSTICS_FILE"] = str(target)
+        child_env.setdefault("GRAVEWRIGHT_DIAGNOSTICS_INTERVAL", "30")
+        print("Local diagnostics: ON (redacted, rotating JSONL)", flush=True)
+        print(f"Diagnostics file: {target}", flush=True)
+        print("Retention: 5 rotated files × 10 MiB; no network upload", flush=True)
     print(f"Starting Gravewright on http://{host}:{port}/  (Ctrl+C to stop)", flush=True)
     try:
         return subprocess.run(
-            uvicorn_command(host=host, port=port, dev=dev), cwd=str(PROJECT_ROOT)
+            uvicorn_command(host=host, port=port, dev=dev), cwd=str(PROJECT_ROOT), env=child_env
         ).returncode
     except KeyboardInterrupt:
         return 0

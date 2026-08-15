@@ -8,14 +8,6 @@
     const showMenu = FI.showMenu;
     const body = document.body;
 
-    function itemPanelFolders(panel) {
-        if (!panel) return [];
-        return Array.from(panel.querySelectorAll("[data-item-folder]")).map((el) => ({
-            id: el.dataset.folderId,
-            name: el.dataset.folderName,
-        }));
-    }
-
     function openItemMenu(e, cardEl) {
         const itemId = cardEl.dataset.itemOpen;
         const panel = cardEl.closest("[data-item-panel]");
@@ -39,20 +31,6 @@
             action() { window.GravewrightItems?.openPermissions(itemId); },
         });
 
-        const folders = itemPanelFolders(panel);
-        items.push({ type: "sep" });
-        items.push({ type: "label", text: body.dataset.ctxActorMoveToFolder || "Move to folder" });
-        items.push({
-            text: body.dataset.ctxActorMoveToRoot || "Move out of folder",
-            action() { window.GravewrightItems?.moveItem(itemId, "", roomId); },
-        });
-        for (const f of folders) {
-            items.push({
-                text: f.name,
-                action() { window.GravewrightItems?.moveItem(itemId, f.id, roomId); },
-            });
-        }
-
         items.push({ type: "sep" });
         items.push({
             text: body.dataset.ctxItemDelete || "Delete item",
@@ -74,43 +52,23 @@
         const panel = folderEl.closest("[data-item-panel]");
         const campaignId = panel?.dataset.roomId || "";
         const currentName = folderEl.dataset.folderName || "";
+        const currentColor = folderEl.dataset.folderColor || "";
         const folderAction = (path, fields) =>
             window.GravewrightItems?.folderAction(path, fields, campaignId);
 
         showMenu(e.clientX, e.clientY, [
             {
-                text: label("ctxActorFolderRename"),
+                text: body.dataset.ctxFolderEdit || "Edit folder",
                 action() {
-                    const name = window.prompt(label("ctxActorFolderRename"), currentName);
-                    if (name && name.trim()) {
-                        folderAction("item-folder/rename", { folder_id: folderId, campaign_id: campaignId, name: name.trim() });
-                    }
-                },
-            },
-            {
-                text: label("ctxActorFolderColor"),
-                action() {
-                    showMenu(e.clientX, e.clientY, ["#b9995d", "#8ea8ff", "#7ee0a1", "#e88", "#c98bdb"].map((c) => ({
-                        text: c,
-                        action() {
-                            folderAction("item-folder/color", { folder_id: folderId, campaign_id: campaignId, color: c });
-                        },
-                    })));
+                    FI.openFolderEditor?.({
+                        kind: "item", folderId, campaignId, name: currentName, color: currentColor,
+                    });
                 },
             },
             {
                 text: label("ctxActorFolderAddSubfolder"),
                 action() {
-                    const name = window.prompt(label("ctxActorFolderAddSubfolder"), "");
-                    if (name && name.trim()) {
-                        folderAction("item-folder", { campaign_id: campaignId, name: name.trim(), parent_id: folderId });
-                    }
-                },
-            },
-            {
-                text: label("ctxActorFolderMoveRoot"),
-                action() {
-                    folderAction("item-folder/move", { folder_id: folderId, parent_id: "" });
+                    FI.openFolderCreateModal?.({ kind: "item", campaignId, parentId: folderId });
                 },
             },
             { type: "sep" },
@@ -118,13 +76,26 @@
                 text: label("ctxActorFolderDelete"),
                 danger: true,
                 action() {
-                    showMenu(e.clientX, e.clientY, [{
-                        text: label("ctxActorFolderDeleteConfirm"),
-                        danger: true,
-                        action() {
-                            folderAction("item-folder/delete", { folder_id: folderId, campaign_id: campaignId });
+                    showMenu(e.clientX, e.clientY, [
+                        { type: "label", text: label("ctxItemFolderDeleteQuestion") },
+                        {
+                            text: label("ctxItemFolderDeleteOnly"),
+                            action() {
+                                folderAction("item-folder/delete", {
+                                    folder_id: folderId, campaign_id: campaignId, delete_contents: "false",
+                                });
+                            },
                         },
-                    }]);
+                        {
+                            text: label("ctxItemFolderDeleteWithContents"),
+                            danger: true,
+                            action() {
+                                folderAction("item-folder/delete", {
+                                    folder_id: folderId, campaign_id: campaignId, delete_contents: "true",
+                                });
+                            },
+                        },
+                    ]);
                 },
             },
         ]);

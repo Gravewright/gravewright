@@ -502,6 +502,66 @@ Procura uma chave de locale no catálogo de locales do pacote. Retorna `fallback
 const label = sdk.i18n.t("my-rpg.action.attack", "Attack");
 ```
 
+## Expansão semântica do runtime SDK 1 (experimental)
+
+Estes métodos SDK 1 aplicam gates de capability do pacote e permissão do usuário atual e retornam snapshots públicos congelados. Leituras são limitadas a 100 registros; escritas permanecem autoritativas no servidor.
+
+- `sdk.events.on`, `sdk.events.once`, `sdk.events.available`; `sdk.permissions.can`.
+- `sdk.actors.get`, `sdk.actors.list`, `sdk.actors.create`, `sdk.actors.update`, `sdk.actors.delete`.
+- `sdk.items.get`, `sdk.items.list`, `sdk.items.create`, `sdk.items.update`, `sdk.items.delete`.
+- `sdk.tokens.get`, `sdk.tokens.list`, `sdk.tokens.move`, `sdk.tokens.create`, `sdk.tokens.update`, `sdk.tokens.delete`.
+- `sdk.scene.get`, `sdk.scene.list`, `sdk.scene.active`.
+- `sdk.scene.geometry.walls`, `sdk.scene.geometry.lights`, `sdk.scene.geometry.createWall`, `sdk.scene.geometry.updateWall`, `sdk.scene.geometry.deleteWall`, `sdk.scene.geometry.createLight`, `sdk.scene.geometry.updateLight`, `sdk.scene.geometry.deleteLight`, `sdk.scene.geometry.setDoorState`.
+- `sdk.scene.effects.list`, `sdk.scene.effects.create`, `sdk.scene.effects.update`, `sdk.scene.effects.delete`.
+- `sdk.ui.slots.available`, `sdk.ui.slots.register`; `sdk.chat.list`, `sdk.chat.get`.
+- `sdk.combat.current`, `sdk.combat.combatants`, `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`.
+- `sdk.rules.actions.validate`, `sdk.rules.actions.execute`.
+- `sdk.pdf.get`, `sdk.pdf.metadata`; `sdk.pdf.viewer.open`, `sdk.pdf.viewer.goToPage`, `sdk.pdf.viewer.search`, `sdk.pdf.viewer.currentPage`.
+- `sdk.pdf.annotations.list`, `sdk.pdf.annotations.create`. Veja [API de PDF](pdf.md).
+- `sdk.cards.state`, `sdk.cards.shuffle`, `sdk.cards.reset`, `sdk.cards.draw`,
+  `sdk.cards.reveal`, `sdk.cards.discard`, `sdk.cards.play`,
+  `sdk.cards.updatePlacement`, `sdk.cards.discardPlacement`.
+
+Journals em runtime usam `sdk.journals.get`, `sdk.journals.list`,
+`sdk.journals.create`, `sdk.journals.update` e `sdk.journals.delete`.
+A apresentação transitória autorizada usa `sdk.handouts.present`.
+
+As ferramentas de cena incluem `sdk.scene.fog.state`, `sdk.scene.fog.enable`,
+`sdk.scene.fog.disable`, `sdk.scene.fog.reset`, `sdk.scene.fog.paint`,
+`sdk.scene.images.list`, `sdk.scene.images.place`, `sdk.scene.images.update`,
+`sdk.scene.images.delete`, `sdk.scene.geometry.splitWall`,
+`sdk.scene.geometry.moveWallNode`, `sdk.scene.geometry.moveWalls` e
+`sdk.scene.geometry.deleteWalls`.
+
+Annotations suportam `sdk.pdf.annotations.update` e
+`sdk.pdf.annotations.delete`, além de list/create.
+- `sdk.actors.patchData`; `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`.
+
+Updates aceitam `expectedVersion` onde documentado; divergência retorna `STALE_VERSION`. Grafos aceitam no máximo 32 passos. Nenhum acesso bruto a banco, transporte, renderer, filesystem ou DOM do core é exposto.
+
+Dados de ficha de item são atualizados com `sdk.items.patchData`. O gerenciamento
+de combate também fornece `sdk.combat.advanceRound`, `sdk.combat.setFlags` e
+`sdk.combat.rollInitiative`.
+
+## Referências universais de conteúdo
+
+Pacotes com `content.references` criam uma URI canônica com `sdk.content.ref`,
+resolvem com `sdk.content.resolve`, obtêm o valor público autorizado com
+`sdk.content.get` e consultam acesso com `sdk.content.can`. `sdk.content.open`
+solicita ao host a abertura do alvo e `sdk.content.link` cria um link portável.
+A resolução ocorre no servidor e não atravessa a campanha ativa.
+`sdk.content.search` pesquisa o índice autorizado da campanha por texto e tipo.
+
+## Aplicações parciais e configurações por escopo
+
+Pacotes com `ui.applications` usam `sdk.ui.applications.register`,
+`sdk.ui.applications.render` e `sdk.ui.applications.close`. A renderização pode
+nomear apenas as partes alteradas e preservar DOM, foco e scroll não afetados.
+
+As configurações expõem `sdk.settings.scope` e `sdk.settings.onChange`. Os
+escopos são `client`, `user`, `campaign` e `package`; `global` permanece como
+alias legado de `package`.
+
 ## Shortcuts
 
 | Atalho | Equivalente |

@@ -185,6 +185,19 @@
         "content.pack"
       ]
     },
+    "content.references": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Resolve, inspect and open permission-filtered universal content references.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["content.ref", "content.resolve", "content.get", "content.can", "content.open", "content.link"]
+    },
+    "content.index": {
+      "status": "experimental", "since": "1",
+      "description": "Search a permission-filtered index of campaign content.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["content.search"]
+    },
     "settings": {
       "status": "stable",
       "description": "Read and write package settings.",
@@ -197,7 +210,9 @@
         "settings.definitions",
         "settings.all",
         "settings.get",
-        "settings.set"
+        "settings.set",
+        "settings.scope",
+        "settings.onChange"
       ]
     },
     "locales": {
@@ -410,6 +425,196 @@
         "manifest"
       ],
       "methods": []
+    },
+    "events.subscribe": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Subscribe to permission-filtered semantic game events.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["events.on", "events.once", "events.available"]
+    },
+    "permissions.inspect": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Inspect the current user's effective permissions without overriding them.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["permissions.can"]
+    },
+    "actors.read": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Read actors visible to the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["actors.get", "actors.list"]
+    },
+    "items.read": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Read items visible to the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["items.get", "items.list"]
+    },
+    "tokens.read": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Read permission-filtered token snapshots.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["tokens.get", "tokens.list"]
+    },
+    "scene.read": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Read scenes visible to the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.get", "scene.list", "scene.active"]
+    },
+    "combat.read": {
+      "status": "experimental",
+      "since": "1",
+      "description": "Read the permission-filtered current combat state.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["combat.current", "combat.combatants"]
+    },
+    "actors.write": {
+      "status": "experimental", "since": "1", "description": "Create, update and delete actors through validated semantic commands.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["actors.create", "actors.update", "actors.delete"]
+    },
+    "actors.data.write": {
+      "status": "experimental", "since": "1", "description": "Patch validated actor sheet data visible and editable by the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["actors.patchData"]
+    },
+    "items.write": {
+      "status": "experimental", "since": "1", "description": "Create, update and delete items through validated semantic commands.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["items.create", "items.update", "items.delete"]
+    },
+    "items.data.write": {
+      "status": "experimental", "since": "1", "description": "Patch validated item sheet data visible and editable by the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["items.patchData"]
+    },
+    "tokens.move": {
+      "status": "experimental", "since": "1", "description": "Move controlled tokens through the authoritative movement service.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["tokens.move"]
+    },
+    "tokens.manage": {
+      "status": "experimental", "since": "1", "description": "Create, update and delete tokens through validated semantic commands.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["tokens.create", "tokens.update", "tokens.delete"]
+    },
+    "scene.geometry.read": {
+      "status": "experimental", "since": "1", "description": "Read logical scene walls, doors and lights without renderer internals.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.geometry.walls", "scene.geometry.lights"]
+    },
+    "scene.geometry.write": {
+      "status": "experimental", "since": "1", "description": "Manage logical scene walls, doors and lights.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.geometry.createWall", "scene.geometry.updateWall", "scene.geometry.deleteWall", "scene.geometry.splitWall", "scene.geometry.moveWallNode", "scene.geometry.moveWalls", "scene.geometry.deleteWalls", "scene.geometry.createLight", "scene.geometry.updateLight", "scene.geometry.deleteLight", "scene.geometry.setDoorState"]
+    },
+    "scene.effects.read": {
+      "status": "experimental", "since": "1", "description": "Read semantic scene particle and shader effects.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.effects.list"]
+    },
+    "scene.effects.write": {
+      "status": "experimental", "since": "1", "description": "Manage semantic scene particle and shader effects.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.effects.create", "scene.effects.update", "scene.effects.delete"]
+    },
+    "scene.fog.read": {
+      "status": "experimental", "since": "1", "description": "Read logical fog state without renderer internals.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.fog.state"]
+    },
+    "scene.fog.write": {
+      "status": "experimental", "since": "1", "description": "Manage fog through bounded authoritative operations.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.fog.enable", "scene.fog.disable", "scene.fog.reset", "scene.fog.paint"]
+    },
+    "scene.images.read": {
+      "status": "experimental", "since": "1", "description": "Read permission-filtered scene image placements.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.images.list"]
+    },
+    "scene.images.write": {
+      "status": "experimental", "since": "1", "description": "Place, update and remove authorized scene images.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["scene.images.place", "scene.images.update", "scene.images.delete"]
+    },
+    "ui.slots": {
+      "status": "experimental", "since": "1", "description": "Mount package-owned UI into documented host slots with teardown.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["ui.slots.available", "ui.slots.register"]
+    },
+    "ui.applications": {
+      "status": "experimental", "since": "1",
+      "description": "Register and incrementally render package-owned applications by named parts.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["ui.applications.register", "ui.applications.render", "ui.applications.close"]
+    },
+    "chat.read": {
+      "status": "experimental", "since": "1", "description": "Read chat messages visible to the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["chat.list", "chat.get"]
+    },
+    "journals.read": {
+      "status": "experimental", "since": "1", "description": "Read permission-filtered journals and handouts.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["journals.get", "journals.list"]
+    },
+    "journals.write": {
+      "status": "experimental", "since": "1", "description": "Create, update and delete validated journals.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["journals.create", "journals.update", "journals.delete"]
+    },
+    "handouts.present": {
+      "status": "experimental", "since": "1", "description": "Present an authorized journal, item or asset without granting persistent access.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["handouts.present"]
+    },
+    "combat.manage": {
+      "status": "experimental", "since": "1", "description": "Manage authoritative combat state.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["combat.start", "combat.end", "combat.advance", "combat.advanceRound", "combat.setTurn", "combat.add", "combat.remove", "combat.setFlags", "combat.rollInitiative", "combat.setInitiative", "combat.moveCombatant", "combat.setInitiativeOrder"]
+    },
+    "rules.actions": {
+      "status": "experimental", "since": "1", "description": "Execute bounded declarative authoritative action graphs.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["rules.actions.execute", "rules.actions.validate"]
+    },
+    "pdf.read": {
+      "status": "experimental", "since": "1", "description": "Read PDF documents and public metadata visible to the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["pdf.get", "pdf.metadata"]
+    },
+    "pdf.viewer": {
+      "status": "experimental", "since": "1", "description": "Open and navigate PDF documents through the host viewer.",
+      "surfaces": ["manifest", "frontend", "doctor"],
+      "methods": ["pdf.viewer.open", "pdf.viewer.goToPage", "pdf.viewer.search", "pdf.viewer.currentPage"]
+    },
+    "pdf.annotations.read": {
+      "status": "experimental", "since": "1", "description": "Read annotations on PDF documents visible to the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["pdf.annotations.list"]
+    },
+    "pdf.annotations.write": {
+      "status": "experimental", "since": "1", "description": "Create, update and delete validated annotations on PDF documents visible to the current user.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["pdf.annotations.create", "pdf.annotations.update", "pdf.annotations.delete"]
+    },
+    "cards.read": {
+      "status": "experimental", "since": "1", "description": "Read permission-filtered decks, piles, cards and placements.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["cards.state"]
+    },
+    "cards.manage": {
+      "status": "experimental", "since": "1", "description": "Shuffle, reset, draw, reveal, discard and play cards through authoritative deck services.",
+      "surfaces": ["manifest", "backend", "frontend", "doctor"],
+      "methods": ["cards.shuffle", "cards.reset", "cards.draw", "cards.reveal", "cards.discard", "cards.play", "cards.updatePlacement", "cards.discardPlacement"]
     }
   },
   "forbidden": {

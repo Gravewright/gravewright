@@ -57,7 +57,7 @@ async def update_package_setting(
             {"success": False, "error_key": "sdk.errors.setting_unknown"}, status_code=400
         )
 
-    if definition["scope"] == "global":
+    if definition["scope"] in {"global", "package"}:
         if str(current_user["system_role"]) != SystemRole.OWNER.value:
             return Response(
                 {"success": False, "error_key": "sdk.errors.owner_required"}, status_code=403

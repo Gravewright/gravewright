@@ -178,6 +178,15 @@ Use:
 - `assets.pack`
 - media-specific capabilities such as `assets.images`, `assets.audio`, `assets.maps`, `assets.icons`
 
+## Semantic runtime recipes
+
+- Modify an actor: request `actors.read` + `actors.write`; fetch with `sdk.actors.get()` and update with `expectedVersion`.
+- React to token movement: request `events.subscribe`; use `sdk.events.on("token.moved", ...)` and fetch with `tokens.read`.
+- Add a toolbar control: request `ui.slots`; mount in `dock.actions` and retain the disposer.
+- Add a wall/light tool: request only the required `scene.geometry.read`/`scene.geometry.write` pair.
+- Apply damage authoritatively: request `rules.actions`; execute a bounded `tokens.damage` action.
+- Interact with combat: use `combat.read`; add `combat.manage` only for mutations.
+
 ## What to read next
 
 1. [`declarative-model.md`](declarative-model.md) — understand the package model.

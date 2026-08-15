@@ -219,6 +219,7 @@
     removePlayer(payload.room_id, payload.user_id);
 
     if (payload.user_id === getCurrentUserId() && payload.reason === "banned") {
+      window.GravewrightRealtime?.disconnect?.();
       window.location.href = "/inside";
     }
   }

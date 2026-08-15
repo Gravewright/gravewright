@@ -33,6 +33,11 @@ def writable_base_dir() -> Path:
     return base
 
 
+# Private compatibility names are kept because the packaged-launcher contract and
+# its tests patch these seams to avoid touching the real user data directory.
+_writable_base_dir = writable_base_dir
+
+
 def load_user_env() -> None:
     if not getattr(sys, "frozen", False):
         return
@@ -43,42 +48,53 @@ def load_user_env() -> None:
         _apply_file(env_path)
 
 
+_load_user_env = load_user_env
+
+
 def free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.bind(("127.0.0.1", 0))
         return int(sock.getsockname()[1])
 
 
-def configure_environment(port: int) -> None:
-    load_user_env()
-    base = writable_base_dir()
+def _configure_environment(host: str, port: int) -> None:
+    _load_user_env()
+    base = _writable_base_dir()
     storage = base / "storage"
     storage.mkdir(parents=True, exist_ok=True)
     os.environ.setdefault("GRAVEWRIGHT_DATA_DIR", str(base / "data"))
     os.environ.setdefault("DATABASE_URL", f"sqlite:///{(storage / 'gravewright.sqlite3').resolve()}")
-    os.environ.setdefault("APP_ENV", "development")
-    os.environ.setdefault("ALLOWED_HOSTS", "*")
-    os.environ.setdefault("SESSION_COOKIE_SECURE", "false")
-    origins = [f"http://127.0.0.1:{port}", f"http://localhost:{port}"]
+    os.environ["APP_ENV"] = "development"
+    os.environ["ALLOWED_HOSTS"] = "*"
+    os.environ["SESSION_COOKIE_SECURE"] = "false"
+    origins = [f"http://{host}:{port}", f"http://localhost:{port}"]
     origins.extend(x.strip() for x in os.environ.get("WS_ALLOWED_ORIGINS", "").split(",") if x.strip())
     os.environ["WS_ALLOWED_ORIGINS"] = ",".join(dict.fromkeys(origins))
+
+
+def configure_environment(port: int) -> None:
+    _configure_environment("127.0.0.1", port)
 
 
 def install_bundled_packages() -> None:
     if not getattr(sys, "frozen", False):
         return
     bundle_root = Path(getattr(sys, "_MEIPASS", "")) / "bundled-packages"
-    target_root = Path(os.environ["GRAVEWRIGHT_DATA_DIR"]) / "packages"
+    data_root = Path(os.environ["GRAVEWRIGHT_DATA_DIR"])
     for kind in ("rulesets", "addons", "libraries", "themes", "content", "assets"):
         source_kind = bundle_root / kind
         if not source_kind.is_dir():
             continue
         for source in source_kind.iterdir():
             if source.is_dir():
-                target = target_root / kind / source.name
+                target = data_root / "packages" / kind / source.name
                 if not target.exists():
                     target.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copytree(source, target)
+
+
+def _install_bundled_packages() -> None:
+    install_bundled_packages()
 
 
 class SignalWriter(io.TextIOBase):
@@ -95,7 +111,7 @@ class SignalWriter(io.TextIOBase):
 
 
 def build_ui(port: int):
-    from PySide6.QtCore import QObject, QThread, QTimer, QUrl, Signal, Slot
+    from PySide6.QtCore import QObject, QThread, QUrl, Signal, Slot
     from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont
     from PySide6.QtWidgets import (
         QApplication,
@@ -430,7 +446,7 @@ def main() -> int:
     configured_port = os.environ.get("GRAVEWRIGHT_PORT", "").strip()
     port = int(configured_port) if configured_port else free_port()
     configure_environment(port)
-    install_bundled_packages()
+    _install_bundled_packages()
     QApplication, Launcher = build_ui(port)
     app = QApplication(sys.argv)
     app.setApplicationName(APP_TITLE)

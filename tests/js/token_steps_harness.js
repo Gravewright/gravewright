@@ -134,9 +134,13 @@ function check(name, condition, detail = "") {
 }
 
 {
-    // com varios selecionados o arrasto continua sendo o caminho
     const world = buildWorld({ selected: ["t1", "t2"] });
-    check("selecao multipla nao anda pelas setas", world.press("ArrowRight") === false);
+    world.store.set("t2", { token_id: "t2", grid_x: 7, grid_y: 5, width_cells: 1, height_cells: 1 });
+    check("selecao multipla anda pelas setas", world.press("ArrowRight") === true);
+    check("todos os tokens selecionados se movem", world.store.get("t1").grid_x === 6 && world.store.get("t2").grid_x === 8);
+    world.settle();
+    check("movimento em lote envia todos os tokens", world.commands.length === 2, JSON.stringify(world.commands));
+    check("movimento em lote gera uma transacao de historico", world.historyEntries.length === 1);
 }
 
 {

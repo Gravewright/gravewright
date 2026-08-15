@@ -360,9 +360,11 @@ The validator warns when common asset categories use unexpected extensions.
 
 Allowed setting scopes:
 
-- `global`
+- `client`
+- `package`
 - `campaign`
 - `user`
+- `global` (legacy alias for `package`)
 
 Allowed setting types:
 
@@ -373,6 +375,8 @@ Allowed setting types:
 - `enum`
 
 `enum` settings must declare `options`.
+Numeric settings may declare `minimum` and `maximum`; string settings may
+declare a full-match regular expression in `pattern`.
 
 ## Distribution
 

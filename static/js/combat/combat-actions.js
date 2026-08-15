@@ -67,8 +67,18 @@
     }
 
     async function perform(roomId, path, body) {
+        const previousState = lastState.get(roomId) || {};
         const state = await post(roomId, path, body);
-        if (state) publish(roomId, state);
+        if (state) {
+            publish(roomId, state);
+            const systemId = String(state?.config?.system_id || previousState?.config?.system_id || "");
+            window.GravewrightCombat?.dispatch?.(systemId, "afterAction", {
+                action: path,
+                state,
+                previousState,
+                roomId,
+            });
+        }
     }
 
     async function refreshRoom(roomId) {
@@ -161,6 +171,12 @@
         if (!roomId) return;
         selectedTokens.set(roomId, new Set(event.detail?.tokenIds || []));
         publish(roomId, lastState.get(roomId) || {});
+    });
+
+    document.addEventListener("vtt:combat-sdk-state", (event) => {
+        const state = event.detail || {};
+        const roomId = String(state.campaign_id || "");
+        if (roomId) publish(roomId, state);
     });
 
     document.addEventListener("DOMContentLoaded", () => {

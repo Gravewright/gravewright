@@ -27,12 +27,6 @@ from typing import Any
 
 _LOGGER = logging.getLogger("gravewright.diagnostics")
 _METRIC_SAFE_RE = re.compile(r"[^a-zA-Z0-9_.-]+")
-
-
-
-
-
-
 _SENSITIVE_FRAGMENTS = (
     "token",
     "secret",
@@ -120,7 +114,10 @@ def emit_diagnostic(event: str, /, *, level: str = "info", **fields: Any) -> Non
     item = diagnostics_recorder.record(event, **safe_fields)
     payload = {"ts": item.ts, "event": event, **item.fields}
     line = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
-    log_method = getattr(_LOGGER, level, _LOGGER.info)
+    # ``logging.exception`` implicitly appends the active traceback, which would
+    # corrupt local JSONL capture with non-JSON continuation lines. The exception
+    # class is already an explicit sanitized field, so keep the record one-line.
+    log_method = _LOGGER.error if level == "exception" else getattr(_LOGGER, level, _LOGGER.info)
     log_method(line)
 
 

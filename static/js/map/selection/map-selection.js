@@ -66,7 +66,7 @@
                 set.add(tokenId);
             }
             emitChanged(canvas);
-            markDirty(canvas);
+            markDirty(canvas, "overlays");
         }
 
         function setSelection(canvas, ids, { additive = false } = {}) {
@@ -78,7 +78,7 @@
                 if (token && tokenMatchesLayer(token) && canControlToken(token, canvas)) set.add(id);
             });
             emitChanged(canvas);
-            markDirty(canvas);
+            markDirty(canvas, "overlays");
         }
 
         function clear(canvas) {
@@ -86,7 +86,7 @@
             if (!set.size) return;
             set.clear();
             emitChanged(canvas);
-            markDirty(canvas);
+            markDirty(canvas, "overlays");
         }
 
         return {

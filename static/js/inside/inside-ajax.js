@@ -56,6 +56,11 @@
 
 
         if (form.matches(".package-upload-form")) return false;
+        if (form.matches("[data-campaign-clone-form], .campaign-export-form, .campaign-import-form, .campaign-snapshot-create, .snapshot-confirm")) return false;
+        // Lives in a modal now. The ajax path re-opens whichever modal was open
+        // when it re-renders, so creating a campaign would land the user back on
+        // an empty create form instead of the list they just added to.
+        if (form.matches(".campaign-create")) return false;
         if (form.action.endsWith("/logout")) return false;
         return true;
     }

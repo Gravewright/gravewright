@@ -196,6 +196,23 @@ class CombatEncounterRepository:
                     .values(sort_value=float(total - index), updated_at=now)
                 )
 
+    def set_labels_and_order(self, *, entries: list[tuple[str, str | None]]) -> None:
+        """Atomically replace manual initiative labels and their complete order."""
+        now = int(time.time())
+        total = len(entries)
+        with engine_begin() as conn:
+            for index, (combatant_id, initiative) in enumerate(entries):
+                conn.execute(
+                    update(combatants_table)
+                    .where(combatants_table.c.id == combatant_id)
+                    .values(
+                        initiative=initiative,
+                        sort_value=float(total - index),
+                        tie_break=0.0,
+                        updated_at=now,
+                    )
+                )
+
     def set_flags(
         self, *, combatant_id: str, hidden: bool | None = None, defeated: bool | None = None
     ) -> None:

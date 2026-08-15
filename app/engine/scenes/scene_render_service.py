@@ -27,6 +27,7 @@ class RenderTileProjection:
     height: int
     hash: str
     byte_size: int
+    lod: int = 0
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,8 @@ class RenderLayerProjection:
     encoding: str
     tile_table_version: int
     tiles: tuple[RenderTileProjection, ...]
+    max_lod: int = 0
+    tile_index_version: int = 1
 
 
 @dataclass(frozen=True)
@@ -49,6 +52,7 @@ class ActiveSceneRenderProjection:
     width: int
     height: int
     tile_size: int
+    raster_tile_size: int
     grid_size: int
     chunk_size: int
     chunk_pixel_size: int
@@ -243,6 +247,7 @@ class SceneRenderService:
             width=dimensions.width,
             height=dimensions.height,
             tile_size=dimensions.tile_size,
+            raster_tile_size=dimensions.raster_tile_size,
             grid_size=dimensions.grid_size,
             chunk_size=dimensions.chunk_size,
             chunk_pixel_size=dimensions.chunk_pixel_size,
@@ -269,6 +274,8 @@ class SceneRenderService:
             order=layer["display_order"],
             encoding=layer["encoding"],
             tile_table_version=layer["tile_table_version"],
+            max_lod=layer.get("max_lod") or 0,
+            tile_index_version=layer.get("tile_index_version") or 1,
             tiles=tuple(
                 RenderTileProjection(
                     tile_ref=tile["tile_ref"],
@@ -279,6 +286,7 @@ class SceneRenderService:
                     height=tile["height"],
                     hash=tile["hash"],
                     byte_size=tile["byte_size"],
+                    lod=tile.get("lod") or 0,
                 )
                 for tile in tiles
             ),
@@ -335,6 +343,7 @@ class SceneRenderService:
             height=scene["height"],
             tile_size=scene["tile_size"],
             chunk_size=scene["chunk_size"],
+            gameplay_grid_size=scene.get("grid_size") or scene["tile_size"],
         )
 
     def _can_view_scene(

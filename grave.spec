@@ -1,6 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_all
+from importlib.util import find_spec
+from pathlib import Path
 
 
 datas = [
@@ -9,6 +11,9 @@ datas = [
     ('schemas', 'schemas'),
     ('migrations', 'migrations'),
     ('alembic.ini', '.'),
+    ('LICENSE', '.'),
+    ('LICENSE-API.md', '.'),
+    ('THIRD_PARTY_NOTICES.md', '.'),
     (
         'app/engine/sdk/capabilities.json',
         'app/engine/sdk',
@@ -52,6 +57,22 @@ tmp_ret = collect_all('app')
 datas += tmp_ret[0]
 binaries += tmp_ret[1]
 hiddenimports += tmp_ret[2]
+
+# pyvips[binary] ships libvips and its native DLL inside the application.
+# Collecting the binding explicitly keeps map streaming self-contained for
+# desktop users: no system-wide libvips installation is required.
+tmp_ret = collect_all('pyvips')
+datas += tmp_ret[0]
+binaries += tmp_ret[1]
+hiddenimports += tmp_ret[2]
+hiddenimports += ['_libvips']
+
+_libvips_spec = find_spec('_libvips')
+if _libvips_spec is not None and _libvips_spec.origin:
+    _libvips_extension = Path(_libvips_spec.origin)
+    binaries.append((str(_libvips_extension), '.'))
+    for _libvips_dll in _libvips_extension.parent.glob('libvips-*.dll'):
+        binaries.append((str(_libvips_dll), '.'))
 
 
 # Desktop UI is provided by PySide6. PyInstaller's official Qt hook follows the

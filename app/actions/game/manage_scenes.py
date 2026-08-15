@@ -21,6 +21,7 @@ from app.domain.scenes import SceneVisibility
 from app.domain.scenes import SCENE_NATIVE_CHUNK_SIZE
 from app.engine.scenes.map_upload_service import MapUploadService
 from app.engine.scenes.scene_service import SceneService
+from app.config import config
 from app.realtime.transport import RealtimeTransport
 
 
@@ -232,23 +233,10 @@ async def update_scene(
         campaign_id=scene["campaign_id"],
     )
 
-    new_tile_size = _parse_int(data.tile_size) if data.tile_size.strip() else scene["tile_size"]
-    if new_tile_size < 8:
-        new_tile_size = scene["tile_size"]
-
-    tile_table_version = scene["tile_table_version"]
-    if new_tile_size != scene["tile_size"]:
-        retile_result = await map_upload_service.retile_scene(
-            scene_id=data.scene_id,
-            user_id=user["id"],
-            new_tile_size=new_tile_size,
-        )
-        if not retile_result.success:
-            return _redirect_error(
-                retile_result.error_key or "game.scenes.errors.invalid_dimensions",
-                campaign_id=scene["campaign_id"],
-            )
-        tile_table_version += 1
+    current_grid_size = scene.get("grid_size") or scene["tile_size"]
+    new_grid_size = _parse_int(data.tile_size) if data.tile_size.strip() else current_grid_size
+    if new_grid_size < 8:
+        new_grid_size = current_grid_size
 
     raw_scale = data.image_scale.strip()
     try:
@@ -268,9 +256,10 @@ async def update_scene(
         grid_color=_valid_color(data.grid_color, "#6fddb4"),
         grid_opacity=_clamp_opacity(data.grid_opacity, 0.4),
         darkness=_clamp_opacity(data.darkness, 0.0),
-        tile_size=new_tile_size,
+        tile_size=scene["tile_size"],
+        grid_size=new_grid_size,
         image_scale=new_image_scale,
-        tile_table_version=tile_table_version,
+        tile_table_version=scene["tile_table_version"],
     )
 
 
@@ -370,7 +359,12 @@ async def update_scene_start_point(
     return _redirect_message("game.scenes.start_point_updated", campaign_id=scene["campaign_id"])
 
 
-@post("/game/scenes/upload-map")
+@post(
+    "/game/scenes/upload-map",
+    # Multipart framing and the other form fields need a small allowance above
+    # the configured map payload. The map service still enforces the exact cap.
+    request_max_body_size=config.map_upload_max_bytes + 1024 * 1024,
+)
 async def upload_scene_map(
     request: Request,
     cookies: dict[str, str],
@@ -397,7 +391,8 @@ async def upload_scene_map(
         filename=_upload_filename(upload),
         content_type=_upload_content_type(upload),
         data=data,
-        tile_size=_parse_int(form.get("tile_size")),
+        tile_size=None,
+        grid_size=_parse_int(form.get("tile_size")),
         chunk_size=SCENE_NATIVE_CHUNK_SIZE,
         group_id=group_id,
         visibility=_parse_visibility(str(form.get("visibility") or "")),

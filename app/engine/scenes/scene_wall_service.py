@@ -42,6 +42,24 @@ class SceneWallService:
         if any(abs(v) > limit for v in points): return WallResult(False, error_key="lighting.errors.invalid")
         wall = self.walls.create(campaign_id=campaign_id, scene_id=scene_id, created_by_user_id=user_id, kind=kind, x1=x1,y1=y1,x2=x2,y2=y2)
         return WallResult(True, {"wall": wall})
+    def update(self, *, campaign_id: str, wall_id: str, user_id: str, **values) -> WallResult:
+        if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm":
+            return WallResult(False, error_key="lighting.errors.denied")
+        wall = self.walls.get(wall_id)
+        if not wall or wall["campaign_id"] != campaign_id:
+            return WallResult(False, error_key="lighting.errors.not_found")
+        allowed = {key: values[key] for key in ("x1", "y1", "x2", "y2") if key in values}
+        try:
+            allowed = {key: float(value) for key, value in allowed.items()}
+        except (TypeError, ValueError):
+            return WallResult(False, error_key="lighting.errors.invalid")
+        merged = {**wall, **allowed}
+        scene = self.scenes.get_by_id(wall["scene_id"])
+        limit = max(float(scene["width"]), float(scene["height"])) * 2 if scene else 0
+        if (not allowed or not all(isfinite(value) and abs(value) <= limit for value in allowed.values())
+                or hypot(merged["x2"] - merged["x1"], merged["y2"] - merged["y1"]) < 2):
+            return WallResult(False, error_key="lighting.errors.invalid")
+        return WallResult(True, {"wall": self.walls.update(wall_id, **allowed)})
     def move_node(self, *, campaign_id: str, scene_id: str, user_id: str, from_x: float, from_y: float, to_x: float, to_y: float) -> WallResult:
         """Move todas as pontas soldadas em (from_x,from_y) para (to_x,to_y) de uma vez,
         para que paredes encadeadas nao se separem ao arrastar o vertice compartilhado."""
@@ -63,6 +81,26 @@ class SceneWallService:
             pending.append((wall["id"], changes))
         if not pending: return WallResult(False, error_key="lighting.errors.not_found")
         for wall_id, changes in pending: self.walls.update(wall_id, **changes)
+        return WallResult(True, {"scene_id": scene_id, "walls": self.walls.list_for_scene(scene_id)})
+
+    def move_many(self, *, campaign_id: str, scene_id: str, wall_ids: list[str], user_id: str, dx: float, dy: float) -> WallResult:
+        if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm":
+            return WallResult(False, error_key="lighting.errors.denied")
+        scene = self.scenes.get_by_id(scene_id)
+        if not scene or scene["campaign_id"] != campaign_id:
+            return WallResult(False, error_key="lighting.errors.not_found")
+        if not all(isfinite(value) for value in (dx, dy)):
+            return WallResult(False, error_key="lighting.errors.invalid")
+        wanted = {str(value) for value in (wall_ids or []) if value}
+        rows = [row for row in self.walls.list_for_scene(scene_id) if row["id"] in wanted][:MAX_BULK]
+        limit = max(float(scene["width"]), float(scene["height"])) * 2
+        for wall in rows:
+            coords = {key: wall[key] + (dx if key.startswith("x") else dy) for key in ("x1", "y1", "x2", "y2")}
+            if any(abs(value) > limit for value in coords.values()):
+                return WallResult(False, error_key="lighting.errors.invalid")
+        for wall in rows:
+            self.walls.update(wall["id"], x1=wall["x1"] + dx, y1=wall["y1"] + dy,
+                              x2=wall["x2"] + dx, y2=wall["y2"] + dy)
         return WallResult(True, {"scene_id": scene_id, "walls": self.walls.list_for_scene(scene_id)})
     def split(self, *, campaign_id: str, wall_id: str, user_id: str, x: float, y: float) -> WallResult:
         """Parte uma parede em duas no ponto dado, criando um no ali.

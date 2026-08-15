@@ -25,7 +25,11 @@ from app.realtime.metrics import RealtimeMetrics
 from app.realtime.metrics import realtime_metrics
 from app.realtime.viewport_subscriptions import ViewportChunkPayload
 from app.realtime.viewport_subscriptions import ViewportSubscriptionService
+from app.realtime.gm_guided_prefetch import GmGuidedPrefetchBroker
+from app.realtime.gm_guided_prefetch import gm_guided_prefetch_broker
 from app.persistence.repositories.campaign_repository import CampaignRepository
+from app.realtime.events import TransportEvent
+from app.realtime.transport import RealtimeTransport
 
 
 _DEFAULT_DRAIN_MAX_ITEMS = 128
@@ -65,6 +69,7 @@ class SceneStreamCommandHandler:
         metrics: RealtimeMetrics | None = None,
         campaigns: CampaignRepository | None = None,
         scheduler: RenderPriorityScheduler | None = None,
+        gm_prefetch: GmGuidedPrefetchBroker | None = None,
         max_batch_bytes: int = DEFAULT_MAX_BATCH_BYTES,
     ) -> None:
         if max_batch_bytes <= 0:
@@ -76,6 +81,7 @@ class SceneStreamCommandHandler:
         self.campaigns = campaigns or CampaignRepository()
 
         self.scheduler = scheduler or RenderPriorityScheduler()
+        self.gm_prefetch = gm_prefetch or gm_guided_prefetch_broker
         self.max_batch_bytes = max_batch_bytes
 
     def _visible_board_markers(
@@ -96,6 +102,7 @@ class SceneStreamCommandHandler:
         message: Any,
         *,
         context: ClientCommandContext,
+        transport: RealtimeTransport | None = None,
     ) -> SceneStreamCommandResult:
         if not isinstance(message, dict):
             return SceneStreamCommandResult(handled=False)
@@ -105,6 +112,7 @@ class SceneStreamCommandHandler:
             ClientCommand.VIEWPORT_SUBSCRIBE.value,
             ClientCommand.VIEWPORT_UPDATE.value,
             ClientCommand.SESSION_RESUME.value,
+            ClientCommand.GM_HINT_SAMPLE.value,
         }:
             return SceneStreamCommandResult(handled=False)
 
@@ -125,6 +133,19 @@ class SceneStreamCommandHandler:
                 payload=payload,
                 command_id=command_id,
                 context=context,
+            )
+
+        if command == ClientCommand.GM_HINT_SAMPLE.value:
+            if not config.gm_guided_prefetch_enabled:
+                return SceneStreamCommandResult(
+                    handled=True,
+                    response=error_envelope(command_id=command_id, code="feature_disabled", message="GM-guided prefetch is disabled."),
+                )
+            parsed = self._parse_payload(message=message, payload=payload, command_id=command_id)
+            if parsed.get("type") == "error":
+                return SceneStreamCommandResult(handled=True, response=parsed)
+            return await self._handle_gm_hint_sample(
+                parsed=parsed, command_id=command_id, context=context, transport=transport
             )
 
         if command == ClientCommand.VIEWPORT_SUBSCRIBE.value:
@@ -158,6 +179,17 @@ class SceneStreamCommandHandler:
                 ),
             )
 
+        role = await run_blocking(
+            self.campaigns.get_member_role,
+            campaign_id=scene["campaign_id"], user_id=context.user_id,
+        )
+        if config.gm_guided_prefetch_enabled and role not in _GM_ROLES:
+            self.gm_prefetch.record_player_viewport(
+                user_id=context.user_id,
+                scene_id=scene_id,
+                cx0=parsed["cx0"], cy0=parsed["cy0"], cx1=parsed["cx1"], cy1=parsed["cy1"],
+            )
+
         return await self._resolve_viewport(
             event="scene.viewport.ready",
             user_id=context.user_id,
@@ -166,6 +198,85 @@ class SceneStreamCommandHandler:
             parsed=parsed,
             command_id=command_id,
         )
+
+    async def _handle_gm_hint_sample(
+        self,
+        *,
+        parsed: dict[str, Any],
+        command_id: str | None,
+        context: ClientCommandContext,
+        transport: RealtimeTransport | None,
+    ) -> SceneStreamCommandResult:
+        scene = await run_blocking(self.subscriptions.scenes.get_by_id, parsed["scene_id"])
+        if scene is None or scene["campaign_id"] not in context.room_ids:
+            return SceneStreamCommandResult(
+                handled=True,
+                response=error_envelope(command_id=command_id, code="permission_denied", message="You cannot perform this action."),
+            )
+        role = await run_blocking(
+            self.campaigns.get_member_role,
+            campaign_id=scene["campaign_id"], user_id=context.user_id,
+        )
+        if role not in _GM_ROLES:
+            return SceneStreamCommandResult(
+                handled=True,
+                response=error_envelope(command_id=command_id, code="permission_denied", message="Only a GM can publish prefetch hints."),
+            )
+        hints = self.gm_prefetch.observe_gm_viewport(
+            gm_user_id=context.user_id,
+            scene_id=parsed["scene_id"],
+            cx0=parsed["cx0"], cy0=parsed["cy0"], cx1=parsed["cx1"], cy1=parsed["cy1"],
+            camera_speed=parsed.get("camera_speed", 0.0),
+            camera_deceleration=parsed.get("camera_deceleration", 0.0),
+            interaction_count=parsed.get("interaction_count", 0),
+        )
+        self.metrics.increment("gm_hint_created", len(hints))
+        if transport is not None:
+            for hint in hints:
+                layer_ids = await run_blocking(
+                    self.subscriptions._resolve_layers,
+                    scene_id=hint.scene_id,
+                    campaign_id=scene["campaign_id"],
+                    user_id=hint.player_id,
+                    layer_ids=(),
+                )
+                if not layer_ids:
+                    continue
+                await transport.to_player(
+                    hint.player_id,
+                    TransportEvent.SCENE_GM_PREFETCH_HINT,
+                    {
+                        "scene_id": hint.scene_id,
+                        "cx0": hint.cx0, "cy0": hint.cy0,
+                        "cx1": hint.cx1, "cy1": hint.cy1,
+                        "layer_ids": list(layer_ids),
+                        "score": round(hint.score, 4),
+                        "confidence": round(hint.confidence, 4),
+                        "momentum": round(hint.momentum, 4),
+                        "utility": round(hint.utility, 4),
+                        "policy": hint.policy,
+                        "dwell_ms": hint.dwell_ms,
+                        "distance_chunks": hint.distance_chunks,
+                        "expires_at_ms": hint.expires_at_ms,
+                        "revisit_count": hint.revisit_count,
+                        "interaction_count": hint.interaction_count,
+                        "camera_speed": hint.camera_speed,
+                        "camera_deceleration": hint.camera_deceleration,
+                        "recency_score": round(hint.recency_score, 4),
+                        "state": hint.state,
+                        "source": "gm_hint",
+                        "materialization": "blob_only",
+                    },
+                )
+        return SceneStreamCommandResult(
+            handled=True,
+            response=event_envelope(
+                event="scene.gm_prefetch.sampled",
+                room_id=scene["campaign_id"],
+                payload={"command_id": command_id, "hint_count": len(hints)},
+            ),
+        )
+
 
     async def _handle_session_resume(
         self,
@@ -710,6 +821,13 @@ class SceneStreamCommandHandler:
         focus_cx = float(focus_cx) if isinstance(focus_cx, int | float) else None
         focus_cy = float(focus_cy) if isinstance(focus_cy, int | float) else None
 
+        camera_speed = payload.get("camera_speed", 0.0)
+        camera_deceleration = payload.get("camera_deceleration", 0.0)
+        interaction_count = payload.get("interaction_count", 0)
+        camera_speed = max(0.0, min(100.0, float(camera_speed))) if isinstance(camera_speed, int | float) else 0.0
+        camera_deceleration = max(0.0, min(100.0, float(camera_deceleration))) if isinstance(camera_deceleration, int | float) else 0.0
+        interaction_count = max(0, min(100, interaction_count)) if isinstance(interaction_count, int) else 0
+
         return {
             "scene_id": scene_id,
             "viewport_id": viewport_id,
@@ -718,5 +836,8 @@ class SceneStreamCommandHandler:
             "known_chunks": known_chunks,
             "focus_cx": focus_cx,
             "focus_cy": focus_cy,
+            "camera_speed": camera_speed,
+            "camera_deceleration": camera_deceleration,
+            "interaction_count": interaction_count,
             **coords,
         }

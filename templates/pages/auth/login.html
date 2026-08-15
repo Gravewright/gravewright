@@ -14,8 +14,6 @@
 </head>
 
 <body>
-    <canvas id="auth-background" aria-hidden="true"></canvas>
-
     <main class="auth-page">
         <section class="auth-shell" aria-label="{{ t('auth.login.title') }}">
             {% if privacy.enabled %}
@@ -114,9 +112,6 @@
             </section>
         </section>
     </main>
-
-    <script src="/static/vendor/pixi.min.js"></script>
-    <script src="/static/js/auth/auth-background.js"></script>
 </body>
 
 </html>

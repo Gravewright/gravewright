@@ -22,10 +22,143 @@
     let context = {};
     let gameReady = false;
 
+    function coerceClientSetting(definition, value) {
+        let next = value;
+        if (definition.type === "boolean") {
+            if (typeof value === "string") {
+                const token = value.trim().toLowerCase();
+                if (["true", "1", "yes", "on"].includes(token)) next = true;
+                else if (["false", "0", "no", "off", ""].includes(token)) next = false;
+                else throw new TypeError(`Invalid value for setting ${definition.key}`);
+            } else if (value === 0 || value === 1) next = Boolean(value);
+            else if (typeof value !== "boolean") throw new TypeError(`Invalid value for setting ${definition.key}`);
+        } else if (definition.type === "integer") {
+            next = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+            if (!Number.isInteger(next)) throw new TypeError(`Invalid value for setting ${definition.key}`);
+        } else if (definition.type === "number") {
+            next = typeof value === "string" && value.trim() !== "" ? Number(value) : value;
+            if (typeof next !== "number" || !Number.isFinite(next)) throw new TypeError(`Invalid value for setting ${definition.key}`);
+        } else if (definition.type === "enum") {
+            if (!(definition.options || []).includes(value)) throw new TypeError(`Invalid value for setting ${definition.key}`);
+        } else {
+            if (value === null || value === undefined) throw new TypeError(`Invalid value for setting ${definition.key}`);
+            next = String(value);
+        }
+        if (typeof next === "number" && definition.minimum !== null && definition.minimum !== undefined && next < definition.minimum) throw new RangeError(`Setting ${definition.key} is below minimum`);
+        if (typeof next === "number" && definition.maximum !== null && definition.maximum !== undefined && next > definition.maximum) throw new RangeError(`Setting ${definition.key} is above maximum`);
+        if (definition.pattern && typeof next === "string" && !(new RegExp(`^(?:${definition.pattern})$`)).test(next)) throw new TypeError(`Invalid value for setting ${definition.key}`);
+        return next;
+    }
+
 
 
 
     const busListeners = new Map();
+    const sdkEventDisposers = new Map();
+    const SDK_EVENT_TYPES = Object.freeze([
+        "game.ready", "actor.created", "actor.updated", "actor.deleted",
+        "item.created", "item.updated", "item.deleted", "token.created", "token.moved",
+        "token.updated", "token.deleted", "scene.changed", "scene.geometry.changed",
+        "scene.effects.changed", "chat.created", "combat.started", "combat.updated",
+        "combat.turn.changed", "combat.ended", "setting.changed",
+    ]);
+    const TRANSPORT_TO_SDK_EVENT = Object.freeze({
+        "actor.created": "actor.created", "actor.updated": "actor.updated", "actor.deleted": "actor.deleted",
+        "item.created": "item.created", "item.updated": "item.updated", "item.deleted": "item.deleted",
+        "token.created": "token.created", "tokens.created": "token.created",
+        "token.moved": "token.moved", "tokens.moved": "token.moved",
+        "token.updated": "token.updated", "tokens.updated": "token.updated",
+        "token.deleted": "token.deleted", "tokens.deleted": "token.deleted",
+        "scene.activated": "scene.changed", "scene.updated": "scene.changed",
+        "scene.walls.updated": "scene.geometry.changed", "scene.lights.updated": "scene.geometry.changed",
+        "scene.particles.updated": "scene.effects.changed", "scene.shaders.updated": "scene.effects.changed",
+        "chat.message.created": "chat.created", "combat.started": "combat.started",
+        "combat.updated": "combat.updated", "combat.ended": "combat.ended",
+        "setting.changed": "setting.changed", "campaign.table_settings.changed": "setting.changed",
+    });
+
+    function semanticEvent(type, payload) {
+        const id = payload.actor_id || payload.item_id || payload.token_id || payload.scene_id
+            || payload.combat_id || payload.message_id || "";
+        const resource = { id: String(id), version: Number(payload.version || 0) };
+        if (type.startsWith("token.") && Array.isArray(payload.tokens)) {
+            resource.ids = payload.tokens.map((token) => String(token.token_id || token.id || "")).filter(Boolean).slice(0, 100);
+        }
+        const changes = payload.changed && typeof payload.changed === "object"
+            ? Object.keys(payload.changed).slice(0, 32)
+            : [];
+        return { type, version: 1, resource, changes };
+    }
+
+    function createSdkEvents(pkg, requireCap, runtimeRead) {
+        const register = (type, handler, once = false) => {
+            requireCap(once ? "events.once" : "events.on");
+            if (!SDK_EVENT_TYPES.includes(type) || typeof handler !== "function") return () => {};
+            let disposed = false;
+            let pending = null;
+            let queued = false;
+            const dispose = () => {
+                if (disposed) return;
+                disposed = true;
+                document.removeEventListener("vtt:transport-event", transportListener);
+                document.removeEventListener("vtt:game-ready", readyListener);
+                sdkEventDisposers.get(pkg.id)?.delete(dispose);
+            };
+            const deliver = (payload) => {
+                pending = payload;
+                if (queued) return;
+                queued = true;
+                queueMicrotask(() => {
+                    queued = false;
+                    const next = pending;
+                    pending = null;
+                    if (disposed || !next) return;
+                    const started = performance.now();
+                    try {
+                        handler(freeze(clone(next)));
+                    } catch (error) {
+                        console.error(`GravewrightSDK event "${type}" listener failed for "${pkg.id}"`, error);
+                    } finally {
+                        const elapsed = performance.now() - started;
+                        if (elapsed > 16) console.warn(`GravewrightSDK slow event callback: ${pkg.id} ${type} ${elapsed.toFixed(1)}ms`);
+                    }
+                    if (once) dispose();
+                });
+            };
+            const transportListener = async (domEvent) => {
+                const envelope = domEvent.detail || {};
+                if (TRANSPORT_TO_SDK_EVENT[envelope.event] !== type
+                    && !(type === "combat.turn.changed" && envelope.event === "combat.updated")) return;
+                const payload = envelope.payload || {};
+                try {
+                    if (type.startsWith("actor.") && payload.actor_id) {
+                        if (!type.endsWith(".deleted")) {
+                            await runtimeRead("actors", { entity_id: payload.actor_id }, "sdk.events.on");
+                        }
+                    }
+                    if (type.startsWith("item.") && payload.item_id) {
+                        if (!type.endsWith(".deleted")) {
+                            await runtimeRead("items", { entity_id: payload.item_id }, "sdk.events.on");
+                        }
+                    }
+                } catch (_) {
+                    return;
+                }
+                deliver(semanticEvent(type, payload));
+            };
+            const readyListener = () => type === "game.ready" && deliver({ type, version: 1 });
+            document.addEventListener("vtt:transport-event", transportListener);
+            document.addEventListener("vtt:game-ready", readyListener);
+            if (!sdkEventDisposers.has(pkg.id)) sdkEventDisposers.set(pkg.id, new Set());
+            sdkEventDisposers.get(pkg.id).add(dispose);
+            return dispose;
+        };
+        return Object.freeze({
+            on: (type, handler) => register(String(type || ""), handler, false),
+            once: (type, handler) => register(String(type || ""), handler, true),
+            available() { requireCap("events.available"); return Object.freeze([...SDK_EVENT_TYPES]); },
+        });
+    }
 
     function busSubscribe(name, fn) {
         const key = String(name || "").trim();
@@ -144,8 +277,11 @@
         }
     }
 
-    function freeze(value) {
-        return value && typeof value === "object" ? Object.freeze(value) : value;
+    function freeze(value, seen = new WeakSet()) {
+        if (!value || typeof value !== "object" || seen.has(value)) return value;
+        seen.add(value);
+        Object.values(value).forEach((child) => freeze(child, seen));
+        return Object.freeze(value);
     }
 
     function currentScriptPackageIdFromSrc() {
@@ -533,7 +669,7 @@
             const tabs = [...tablist.querySelectorAll(":scope > [data-tab]")];
             if (!tabs.length) return;
             const owner = tablist.parentElement;
-            const panels = [...(owner?.children || [])].filter((node) => node.dataset?.tabPanel);
+            const panels = [...(owner?.querySelectorAll?.(":scope > [data-tab-panel]") || [])];
             const activate = (name) => {
                 tabs.forEach((tab) => {
                     const active = tab.dataset.tab === name;
@@ -749,6 +885,31 @@
     function buildScopedSdk(pkg) {
         const requireCap = (apiName) => caps.requireApiCapability(pkg, apiName);
         const http = () => window.GravewrightCore && window.GravewrightCore.http;
+        const campaignId = () => context.campaign?.id || "";
+        const runtimeUrl = (resource, params = {}) => {
+            const query = new URLSearchParams({
+                campaign_id: campaignId(),
+                package_id: pkg.id,
+            });
+            Object.entries(params).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== "") query.set(key, value);
+            });
+            return `/sdk/runtime/read/${encodeURIComponent(resource)}?${query}`;
+        };
+        const runtimeRead = async (resource, params, method) => {
+            const client = http();
+            if (!client?.getJson) throw new Error("GravewrightCore.http is not available");
+            if (!campaignId()) throw new Error(`${method} requires an active campaign`);
+            return freeze(clone(await unwrap(client.getJson(runtimeUrl(resource, params)), method)));
+        };
+        const runtimeCommand = async (command, payload, method) => {
+            const client = http();
+            if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
+            if (!campaignId()) throw new Error(`${method} requires an active campaign`);
+            return freeze(clone(await unwrap(client.postJson(`/sdk/runtime/command/${encodeURIComponent(command)}`, {
+                campaign_id: campaignId(), package_id: pkg.id, payload: payload || {},
+            }), method)));
+        };
 
         const namespaces = {
             version: VERSION,
@@ -774,6 +935,7 @@
                     return true;
                 },
                 list: () => Object.freeze([...(pkg.capabilities || [])]),
+                supported: (c) => Object.values(caps.CAPABILITIES).includes(String(c || "")),
             }),
             context: () => freeze(clone(context)),
             game: Object.freeze({
@@ -782,6 +944,48 @@
                 scene: () => freeze(clone(context.scene || null)),
                 user: () => freeze(clone(context.user || null)),
                 ready: () => gameReady,
+            }),
+            events: createSdkEvents(pkg, requireCap, runtimeRead),
+            permissions: Object.freeze({
+                async can(action, resource = {}) {
+                    requireCap("permissions.can");
+                    const data = await runtimeRead(
+                        "permissions",
+                        { action, entity_id: resource.actorId || resource.itemId || resource.tokenId || resource.sceneId },
+                        "sdk.permissions.can"
+                    );
+                    return data.allowed === true;
+                },
+            }),
+            actors: Object.freeze({
+                async get(actorId) {
+                    requireCap("actors.get");
+                    return (await runtimeRead("actors", { entity_id: actorId }, "sdk.actors.get")).actor;
+                },
+                async list(query = {}) {
+                    requireCap("actors.list");
+                    const data = await runtimeRead("actors", { entity_type: query.type, folder_id: query.folderId, cursor: query.cursor, limit: Math.min(Number(query.limit) || 100, 100) }, "sdk.actors.list");
+                    return freeze(data.actors || []);
+                },
+                async create(input = {}) { requireCap("actors.create"); return runtimeCommand("actors.create", input, "sdk.actors.create"); },
+                async update(actorId, patch = {}, options = {}) { requireCap("actors.update"); return runtimeCommand("actors.update", { ...patch, id: actorId, expectedVersion: options.expectedVersion }, "sdk.actors.update"); },
+                async delete(actorId) { requireCap("actors.delete"); return runtimeCommand("actors.delete", { id: actorId }, "sdk.actors.delete"); },
+                async patchData(actorId, patch = {}) { requireCap("actors.patchData"); return runtimeCommand("actors.patchData", { actorId, patch }, "sdk.actors.patchData"); },
+            }),
+            items: Object.freeze({
+                async get(itemId) {
+                    requireCap("items.get");
+                    return (await runtimeRead("items", { entity_id: itemId }, "sdk.items.get")).item;
+                },
+                async list(query = {}) {
+                    requireCap("items.list");
+                    const data = await runtimeRead("items", { entity_type: query.type, folder_id: query.folderId, cursor: query.cursor, limit: Math.min(Number(query.limit) || 100, 100) }, "sdk.items.list");
+                    return freeze(data.items || []);
+                },
+                async create(input = {}) { requireCap("items.create"); return runtimeCommand("items.create", input, "sdk.items.create"); },
+                async update(itemId, patch = {}, options = {}) { requireCap("items.update"); return runtimeCommand("items.update", { ...patch, id: itemId, expectedVersion: options.expectedVersion }, "sdk.items.update"); },
+                async delete(itemId) { requireCap("items.delete"); return runtimeCommand("items.delete", { id: itemId }, "sdk.items.delete"); },
+                async patchData(itemId, patch = {}) { requireCap("items.patchData"); return runtimeCommand("items.patchData", { itemId, patch }, "sdk.items.patchData"); },
             }),
             bus: Object.freeze({
 
@@ -879,7 +1083,8 @@
             ui: Object.freeze({
                 toast(message, options) {
                     requireCap("ui.toast");
-                    return window.GravewrightToasts?.show?.(message, options);
+                    const toasts = window.GravewrightToasts;
+                    return toasts?.showToast?.(message, options) ?? toasts?.show?.(message, options);
                 },
                 openModal(modalId) {
                     requireCap("ui.openModal");
@@ -889,6 +1094,49 @@
                     requireCap("ui.closeModal");
                     return window.GravewrightModals?.close?.(modalOrId);
                 },
+                applications: Object.freeze({
+                    register(applicationId, definition) {
+                        requireCap("ui.applications.register");
+                        return window.GravewrightApplications?.register?.(pkg.id, applicationId, definition);
+                    },
+                    render(applicationId, host, appContext = {}, options = {}) {
+                        requireCap("ui.applications.render");
+                        return window.GravewrightApplications?.render?.(pkg.id, applicationId, host, appContext, options);
+                    },
+                    close(applicationId) {
+                        requireCap("ui.applications.close");
+                        return window.GravewrightApplications?.close?.(pkg.id, applicationId);
+                    },
+                }),
+                slots: Object.freeze({
+                    available() {
+                        requireCap("ui.slots.available");
+                        return Object.freeze([...document.querySelectorAll("[data-sdk-slot]")].map((node) => node.dataset.sdkSlot).filter((value, index, all) => all.indexOf(value) === index));
+                    },
+                    register(slotId, render) {
+                        requireCap("ui.slots.register");
+                        const selector = `[data-sdk-slot="${CSS.escape(String(slotId || ""))}"]`;
+                        const hosts = [...document.querySelectorAll(selector)].filter((node) => !node.dataset.roomId || node.dataset.roomId === campaignId());
+                        const roots = hosts.map((host) => {
+                            const root = document.createElement("span");
+                            root.dataset.sdkPackage = pkg.id;
+                            root.dataset.sdkOwnedRoot = String(slotId || "");
+                            host.appendChild(root);
+                            if (typeof render === "function") render(root, freeze(clone(context)));
+                            return root;
+                        });
+                        let disposed = false;
+                        const dispose = () => {
+                            if (disposed) return;
+                            disposed = true;
+                            roots.forEach((root) => root.remove());
+                            sdkEventDisposers.get(pkg.id)?.delete(dispose);
+                        };
+                        if (!sdkEventDisposers.has(pkg.id)) sdkEventDisposers.set(pkg.id, new Set());
+                        sdkEventDisposers.get(pkg.id).add(dispose);
+                        return dispose;
+                    },
+                }),
             }),
             chat: Object.freeze({
                 send(message) {
@@ -899,6 +1147,25 @@
                         })
                     );
                 },
+                async list(options = {}) {
+                    requireCap("chat.list");
+                    const messages = (await runtimeRead("chat", {}, "sdk.chat.list")).messages || [];
+                    return messages.slice(-Math.min(Number(options.limit) || 50, 100));
+                },
+                async get(messageId) {
+                    requireCap("chat.get");
+                    return (await runtimeRead("chat", { entity_id: messageId }, "sdk.chat.get")).message;
+                },
+            }),
+            journals: Object.freeze({
+                async get(journalId) { requireCap("journals.get"); return (await runtimeRead("journals", { entity_id: journalId }, "sdk.journals.get")).journal; },
+                async list(options = {}) { requireCap("journals.list"); return runtimeRead("journals", { entity_type: options.type, folder_id: options.folderId, limit: options.limit || 100 }, "sdk.journals.list"); },
+                async create(input = {}) { requireCap("journals.create"); return runtimeCommand("journals.create", input, "sdk.journals.create"); },
+                async update(journalId, patch = {}) { requireCap("journals.update"); return runtimeCommand("journals.update", { ...patch, journalId }, "sdk.journals.update"); },
+                async delete(journalId) { requireCap("journals.delete"); return runtimeCommand("journals.delete", { journalId }, "sdk.journals.delete"); },
+            }),
+            handouts: Object.freeze({
+                async present(resourceType, resourceId, audience = {}) { requireCap("handouts.present"); return runtimeCommand("handouts.present", { resourceType, resourceId, subjectType: audience.type || "all", subjectId: audience.id || "" }, "sdk.handouts.present"); },
             }),
             dice: Object.freeze({
                 roll({ formula, label = "", actorId = "" } = {}) {
@@ -919,10 +1186,24 @@
                 },
                 all() {
                     requireCap("settings.all");
-                    return freeze(clone(pkg.settingValues || {}));
+                    const values = { ...(pkg.settingValues || {}) };
+                    (pkg.settingDefinitions || []).filter((entry) => entry.scope === "client").forEach((entry) => {
+                        try {
+                            const stored = localStorage.getItem(`gravewright:setting:${pkg.id}:${entry.key}`);
+                            values[entry.key] = stored === null ? entry.default : JSON.parse(stored);
+                        } catch (_error) { values[entry.key] = entry.default; }
+                    });
+                    return freeze(clone(values));
                 },
                 get(key, fallback = undefined) {
                     requireCap("settings.get");
+                    const definition = (pkg.settingDefinitions || []).find((entry) => entry.key === key);
+                    if (definition?.scope === "client") {
+                        try {
+                            const stored = localStorage.getItem(`gravewright:setting:${pkg.id}:${key}`);
+                            return stored === null ? clone(definition.default ?? fallback) : JSON.parse(stored);
+                        } catch (_error) { return clone(definition.default ?? fallback); }
+                    }
                     const values = pkg.settingValues || {};
                     return Object.prototype.hasOwnProperty.call(values, key)
                         ? clone(values[key])
@@ -930,6 +1211,15 @@
                 },
                 async set(key, value, options = {}) {
                     requireCap("settings.set");
+                    const definition = (pkg.settingDefinitions || []).find((entry) => entry.key === key);
+                    if (!definition) throw new TypeError(`Unknown setting: ${key}`);
+                    if (definition.scope === "client") {
+                        value = coerceClientSetting(definition, value);
+                        const previous = this.get(key);
+                        localStorage.setItem(`gravewright:setting:${pkg.id}:${key}`, JSON.stringify(value));
+                        document.dispatchEvent(new CustomEvent("vtt:sdk-setting-changed", { detail: { packageId: pkg.id, key, value: clone(value), previous, scope: "client" } }));
+                        return freeze({ success: true, package_id: pkg.id, key, value: clone(value), scope: "client" });
+                    }
                     const client = http();
                     if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
 
@@ -945,9 +1235,25 @@
                         "sdk.settings.set"
                     );
                     if (body?.success) {
+                        const previous = pkg.settingValues?.[key];
                         pkg.settingValues = { ...(pkg.settingValues || {}), [key]: body.value };
+                        document.dispatchEvent(new CustomEvent("vtt:sdk-setting-changed", { detail: { packageId: pkg.id, key, value: clone(body.value), previous, scope: definition.scope === "global" ? "package" : definition.scope } }));
                     }
                     return body;
+                },
+                scope(key) {
+                    requireCap("settings.get");
+                    const scope = (pkg.settingDefinitions || []).find((entry) => entry.key === key)?.scope;
+                    return scope === "global" ? "package" : (scope || null);
+                },
+                onChange(key, handler) {
+                    requireCap("settings.get");
+                    if (typeof handler !== "function") throw new TypeError("settings.onChange requires a handler");
+                    const listener = (event) => {
+                        if (event.detail?.packageId === pkg.id && (!key || event.detail.key === key)) handler(freeze(clone(event.detail)));
+                    };
+                    document.addEventListener("vtt:sdk-setting-changed", listener);
+                    return () => document.removeEventListener("vtt:sdk-setting-changed", listener);
                 },
             }),
             sheets: Object.freeze({
@@ -965,6 +1271,31 @@
                 },
             }),
             combat: Object.freeze({
+                async current() {
+                    requireCap("combat.current");
+                    return runtimeRead("combat", {}, "sdk.combat.current");
+                },
+                async combatants() {
+                    requireCap("combat.combatants");
+                    return (await runtimeRead("combat", {}, "sdk.combat.combatants")).combatants || [];
+                },
+                async start(input = {}) { requireCap("combat.start"); return runtimeCommand("combat.start", input, "sdk.combat.start"); },
+                async end() { requireCap("combat.end"); return runtimeCommand("combat.end", {}, "sdk.combat.end"); },
+                async advance(delta = 1) { requireCap("combat.advance"); return runtimeCommand("combat.advance", { delta }, "sdk.combat.advance"); },
+                async advanceRound(delta = 1) { requireCap("combat.advanceRound"); return runtimeCommand("combat.advanceRound", { delta }, "sdk.combat.advanceRound"); },
+                async setTurn(combatantId) { requireCap("combat.setTurn"); return runtimeCommand("combat.setTurn", { combatantId }, "sdk.combat.setTurn"); },
+                async add(input = {}) { requireCap("combat.add"); return runtimeCommand("combat.add", input, "sdk.combat.add"); },
+                async remove(combatantId) { requireCap("combat.remove"); return runtimeCommand("combat.remove", { combatantId }, "sdk.combat.remove"); },
+                async setFlags(combatantId, flags = {}) { requireCap("combat.setFlags"); return runtimeCommand("combat.setFlags", { combatantId, hidden: flags.hidden, defeated: flags.defeated }, "sdk.combat.setFlags"); },
+                async rollInitiative(options = {}) { requireCap("combat.rollInitiative"); return runtimeCommand("combat.rollInitiative", { scope: options.scope || "all", combatantId: options.combatantId || "" }, "sdk.combat.rollInitiative"); },
+                async setInitiative(combatantId, value) { requireCap("combat.setInitiative"); return runtimeCommand("combat.setInitiative", { combatantId, value }, "sdk.combat.setInitiative"); },
+                async moveCombatant(combatantId, delta) { requireCap("combat.moveCombatant"); return runtimeCommand("combat.moveCombatant", { combatantId, delta }, "sdk.combat.moveCombatant"); },
+                async setInitiativeOrder(entries) {
+                    requireCap("combat.setInitiativeOrder");
+                    const state = await runtimeCommand("combat.setInitiativeOrder", { entries }, "sdk.combat.setInitiativeOrder");
+                    document.dispatchEvent(new CustomEvent("vtt:combat-sdk-state", { detail: state }));
+                    return state;
+                },
                 register(plugin) {
                     requireCap("combat.register");
                     return window.GravewrightCombat?.registerSystem?.(pkg.id, plugin);
@@ -985,12 +1316,48 @@
                 },
             }),
             tokens: Object.freeze({
+                async get(tokenId, options = {}) {
+                    requireCap("tokens.get");
+                    return (await runtimeRead("tokens", { entity_id: tokenId, scene_id: options.sceneId || context.scene?.id }, "sdk.tokens.get")).token;
+                },
+                async list(options = {}) {
+                    requireCap("tokens.list");
+                    return (await runtimeRead("tokens", { scene_id: options.sceneId || context.scene?.id, limit: Math.min(Number(options.limit) || 100, 500) }, "sdk.tokens.list")).tokens || [];
+                },
+                async move(tokenId, position = {}, options = {}) { requireCap("tokens.move"); return runtimeCommand("tokens.move", { id: tokenId, sceneId: position.sceneId || context.scene?.id, x: position.x, y: position.y, expectedVersion: options.expectedVersion }, "sdk.tokens.move"); },
+                async create(input = {}) { requireCap("tokens.create"); return runtimeCommand("tokens.create", input, "sdk.tokens.create"); },
+                async update(tokenId, patch = {}, options = {}) { requireCap("tokens.update"); return runtimeCommand("tokens.update", { id: tokenId, sceneId: options.sceneId || context.scene?.id, patch, expectedVersion: options.expectedVersion }, "sdk.tokens.update"); },
+                async delete(tokenId, options = {}) { requireCap("tokens.delete"); return runtimeCommand("tokens.delete", { id: tokenId, sceneId: options.sceneId || context.scene?.id }, "sdk.tokens.delete"); },
                 centerOn(tokenId) {
                     requireCap("tokens.centerOn");
                     return window.GravewrightMap?.centerOnToken?.(tokenId);
                 },
             }),
+            cards: Object.freeze({
+                async state() { requireCap("cards.state"); return runtimeRead("cards", {}, "sdk.cards.state"); },
+                async shuffle(deckId) { requireCap("cards.shuffle"); return runtimeCommand("cards.shuffle", { deckId }, "sdk.cards.shuffle"); },
+                async reset(deckId, options = {}) { requireCap("cards.reset"); return runtimeCommand("cards.reset", { deckId, shuffle: options.shuffle !== false }, "sdk.cards.reset"); },
+                async draw(deckId, options = {}) { requireCap("cards.draw"); return runtimeCommand("cards.draw", { deckId, count: options.count || 1, destination: options.destination || "hand", mode: options.mode || "top", targetPileId: options.targetPileId, reveal: Boolean(options.reveal) }, "sdk.cards.draw"); },
+                async reveal(cardIds) { requireCap("cards.reveal"); return runtimeCommand("cards.reveal", { cardIds: Array.isArray(cardIds) ? cardIds : [cardIds] }, "sdk.cards.reveal"); },
+                async discard(cardIds) { requireCap("cards.discard"); return runtimeCommand("cards.discard", { cardIds: Array.isArray(cardIds) ? cardIds : [cardIds] }, "sdk.cards.discard"); },
+                async play(cardId, options = {}) { requireCap("cards.play"); return runtimeCommand("cards.play", { cardId, sceneId: options.sceneId || context.scene?.id, x: options.x || 0, y: options.y || 0, rotation: options.rotation || 0, scale: options.scale || 1, reveal: options.faceUp !== false }, "sdk.cards.play"); },
+                async updatePlacement(placementId, patch = {}) { requireCap("cards.updatePlacement"); return runtimeCommand("cards.updatePlacement", { placementId, patch }, "sdk.cards.updatePlacement"); },
+                async discardPlacement(placementId) { requireCap("cards.discardPlacement"); return runtimeCommand("cards.discardPlacement", { placementId }, "sdk.cards.discardPlacement"); },
+            }),
             scene: Object.freeze({
+                async get(sceneId) {
+                    requireCap("scene.get");
+                    return (await runtimeRead("scenes", { entity_id: sceneId }, "sdk.scene.get")).scene;
+                },
+                async list() {
+                    requireCap("scene.list");
+                    return (await runtimeRead("scenes", {}, "sdk.scene.list")).scenes || [];
+                },
+                async active() {
+                    requireCap("scene.active");
+                    const data = await runtimeRead("scenes", {}, "sdk.scene.active");
+                    return data.scenes.find((scene) => scene.id === data.active_scene_id) || null;
+                },
                 activeCanvas() {
                     requireCap("scene.activeCanvas");
                     return window.GravewrightMap?.activeCanvas?.() || null;
@@ -999,6 +1366,49 @@
                     requireCap("scene.activeCameraForScene");
                     return window.GravewrightMap?.activeCameraForScene?.(sceneId) || null;
                 },
+                geometry: Object.freeze({
+                    async walls(sceneId = context.scene?.id) {
+                        requireCap("scene.geometry.walls");
+                        return (await runtimeRead("geometry", { scene_id: sceneId }, "sdk.scene.geometry.walls")).walls || [];
+                    },
+                    async lights(sceneId = context.scene?.id) {
+                        requireCap("scene.geometry.lights");
+                        return (await runtimeRead("geometry", { scene_id: sceneId }, "sdk.scene.geometry.lights")).lights || [];
+                    },
+                    async createWall(sceneId, input = {}) { requireCap("scene.geometry.createWall"); return runtimeCommand("geometry.createWall", { ...input, sceneId }, "sdk.scene.geometry.createWall"); },
+                    async updateWall(wallId, patch = {}) { requireCap("scene.geometry.updateWall"); return runtimeCommand("geometry.updateWall", { id: wallId, values: patch }, "sdk.scene.geometry.updateWall"); },
+                    async deleteWall(wallId) { requireCap("scene.geometry.deleteWall"); return runtimeCommand("geometry.deleteWall", { id: wallId }, "sdk.scene.geometry.deleteWall"); },
+                    async splitWall(wallId, x, y) { requireCap("scene.geometry.splitWall"); return runtimeCommand("geometry.splitWall", { id: wallId, x, y }, "sdk.scene.geometry.splitWall"); },
+                    async moveWallNode(sceneId, from, to) { requireCap("scene.geometry.moveWallNode"); return runtimeCommand("geometry.moveWallNode", { sceneId, from, to }, "sdk.scene.geometry.moveWallNode"); },
+                    async moveWalls(sceneId, wallIds, delta) { requireCap("scene.geometry.moveWalls"); return runtimeCommand("geometry.moveWalls", { sceneId, wallIds, dx: delta?.x || 0, dy: delta?.y || 0 }, "sdk.scene.geometry.moveWalls"); },
+                    async deleteWalls(wallIds) { requireCap("scene.geometry.deleteWalls"); return runtimeCommand("geometry.deleteWalls", { wallIds }, "sdk.scene.geometry.deleteWalls"); },
+                    async setDoorState(wallId, state) { requireCap("scene.geometry.setDoorState"); return runtimeCommand("geometry.setDoorState", { id: wallId, state }, "sdk.scene.geometry.setDoorState"); },
+                    async createLight(sceneId, input = {}) { requireCap("scene.geometry.createLight"); return runtimeCommand("geometry.createLight", { ...input, sceneId }, "sdk.scene.geometry.createLight"); },
+                    async updateLight(lightId, patch = {}) { requireCap("scene.geometry.updateLight"); return runtimeCommand("geometry.updateLight", { id: lightId, values: patch }, "sdk.scene.geometry.updateLight"); },
+                    async deleteLight(lightId) { requireCap("scene.geometry.deleteLight"); return runtimeCommand("geometry.deleteLight", { id: lightId }, "sdk.scene.geometry.deleteLight"); },
+                }),
+                effects: Object.freeze({
+                    async list(sceneId = context.scene?.id) {
+                        requireCap("scene.effects.list");
+                        return runtimeRead("effects", { scene_id: sceneId }, "sdk.scene.effects.list");
+                    },
+                    async create(sceneId, kind, values = {}) { requireCap("scene.effects.create"); return runtimeCommand("effects.create", { sceneId, kind, values }, "sdk.scene.effects.create"); },
+                    async update(effectId, kind, values = {}) { requireCap("scene.effects.update"); return runtimeCommand("effects.update", { id: effectId, kind, values }, "sdk.scene.effects.update"); },
+                    async delete(effectId, kind) { requireCap("scene.effects.delete"); return runtimeCommand("effects.delete", { id: effectId, kind }, "sdk.scene.effects.delete"); },
+                }),
+                fog: Object.freeze({
+                    async state(sceneId = context.scene?.id) { requireCap("scene.fog.state"); return runtimeRead("fog", { scene_id: sceneId }, "sdk.scene.fog.state"); },
+                    async enable(sceneId = context.scene?.id, initial = "hide_all") { requireCap("scene.fog.enable"); return runtimeCommand("fog.enable", { sceneId, initial }, "sdk.scene.fog.enable"); },
+                    async disable(sceneId = context.scene?.id) { requireCap("scene.fog.disable"); return runtimeCommand("fog.disable", { sceneId }, "sdk.scene.fog.disable"); },
+                    async reset(sceneId = context.scene?.id, to = "hide_all") { requireCap("scene.fog.reset"); return runtimeCommand("fog.reset", { sceneId, to }, "sdk.scene.fog.reset"); },
+                    async paint(sceneId = context.scene?.id, ops = [], options = {}) { requireCap("scene.fog.paint"); return runtimeCommand("fog.paint", { sceneId, ops, expectedVersion: options.expectedVersion }, "sdk.scene.fog.paint"); },
+                }),
+                images: Object.freeze({
+                    async list(sceneId = context.scene?.id) { requireCap("scene.images.list"); return runtimeRead("scene.images", { scene_id: sceneId }, "sdk.scene.images.list"); },
+                    async place(sceneId, assetId, options = {}) { requireCap("scene.images.place"); return runtimeCommand("sceneImages.place", { sceneId, assetId, ...options }, "sdk.scene.images.place"); },
+                    async update(placementId, patch = {}) { requireCap("scene.images.update"); return runtimeCommand("sceneImages.update", { placementId, patch }, "sdk.scene.images.update"); },
+                    async delete(placementId) { requireCap("scene.images.delete"); return runtimeCommand("sceneImages.delete", { placementId }, "sdk.scene.images.delete"); },
+                }),
             }),
             tools: Object.freeze({
                 activeTool() {
@@ -1006,7 +1416,116 @@
                     return window.GravewrightTools?.activeTool || "select";
                 },
             }),
+            rules: Object.freeze({
+                actions: Object.freeze({
+                    async validate(actions) { requireCap("rules.actions.validate"); return runtimeCommand("rules.validate", { actions }, "sdk.rules.actions.validate"); },
+                    async execute(actions) { requireCap("rules.actions.execute"); return runtimeCommand("rules.execute", { actions }, "sdk.rules.actions.execute"); },
+                }),
+            }),
+            pdf: Object.freeze({
+                async get(documentId) {
+                    requireCap("pdf.get");
+                    return (await runtimeRead("pdf", { document_id: documentId }, "sdk.pdf.get")).document;
+                },
+                async metadata(documentId) {
+                    requireCap("pdf.metadata");
+                    const document = (await runtimeRead("pdf", { document_id: documentId }, "sdk.pdf.metadata")).document;
+                    const { url, ...metadata } = document || {};
+                    return metadata;
+                },
+                viewer: Object.freeze({
+                    async open(reference, options = {}) {
+                        requireCap("pdf.viewer.open");
+                        const documentId = typeof reference === "string" ? reference : reference?.documentId || reference?.id;
+                        if (!documentId) throw new TypeError("sdk.pdf.viewer.open requires a document id or ref");
+                        const result = await runtimeRead("pdf.viewer", { document_id: documentId }, "sdk.pdf.viewer.open");
+                        const detail = { document: result.document, options: { ...options }, packageId: pkg.id };
+                        document.dispatchEvent(new CustomEvent("vtt:pdf-viewer-open", { detail }));
+                        const viewer = window.GravewrightPdfViewer;
+                        let opened = {};
+                        if (viewer && options.host) {
+                            opened = await viewer.open({ host: options.host, url: result.document.url, assetUrl: options.assetUrl || null, page: options.page || 1, zoom: options.zoom || 1, spread: Boolean(options.spread), onPageChange: options.onPageChange || null });
+                            if (options.anchor) await viewer.goToAnchor?.(options.anchor);
+                        }
+                        return freeze({ ...result.document, ...opened, page: viewer?.currentPage?.() || Number(options.page) || 1 });
+                    },
+                    async goToPage(documentId, page) {
+                        requireCap("pdf.viewer.goToPage");
+                        const value = await window.GravewrightPdfViewer?.goToPage?.(page);
+                        document.dispatchEvent(new CustomEvent("vtt:pdf-viewer-page", { detail: { documentId, page, packageId: pkg.id } }));
+                        return value ?? Number(page);
+                    },
+                    async search(documentId, query) {
+                        requireCap("pdf.viewer.search");
+                        const matches = await window.GravewrightPdfViewer?.search?.(query);
+                        document.dispatchEvent(new CustomEvent("vtt:pdf-viewer-search", { detail: { documentId, query, packageId: pkg.id } }));
+                        return freeze(matches || []);
+                    },
+                    currentPage(documentId) {
+                        requireCap("pdf.viewer.currentPage");
+                        const page = window.GravewrightPdfViewer?.currentPage?.() ?? null;
+                        document.dispatchEvent(new CustomEvent("vtt:pdf-viewer-current-page", { detail: { documentId, page, packageId: pkg.id } }));
+                        return page;
+                    },
+                }),
+                annotations: Object.freeze({
+                    async list(documentId) {
+                        requireCap("pdf.annotations.list");
+                        return (await runtimeRead("pdf.annotations", { document_id: documentId }, "sdk.pdf.annotations.list")).annotations || [];
+                    },
+                    async create(documentId, annotation = {}) {
+                        requireCap("pdf.annotations.create");
+                        return (await runtimeCommand("pdf.annotations.create", { ...annotation, documentId }, "sdk.pdf.annotations.create")).annotation;
+                    },
+                    async update(documentId, annotationId, annotation = {}) { requireCap("pdf.annotations.update"); return runtimeCommand("pdf.annotations.update", { documentId, annotationId, ...annotation }, "sdk.pdf.annotations.update"); },
+                    async delete(documentId, annotationId) { requireCap("pdf.annotations.delete"); return runtimeCommand("pdf.annotations.delete", { documentId, annotationId }, "sdk.pdf.annotations.delete"); },
+                }),
+            }),
             content: Object.freeze({
+                ref(kind, resourceId, options = {}) {
+                    requireCap("content.ref");
+                    const campaign = options.campaignId || campaignId();
+                    const encode = encodeURIComponent;
+                    if (!campaign || !kind || !resourceId) throw new TypeError("sdk.content.ref requires kind, id and an active campaign");
+                    const parent = options.parentKind && options.parentId
+                        ? `/${encode(options.parentKind)}/${encode(options.parentId)}` : "";
+                    const query = new URLSearchParams();
+                    if (options.page) query.set("page", String(options.page));
+                    if (options.anchor) query.set("anchor", String(options.anchor));
+                    return `grave://campaign/${encode(campaign)}${parent}/${encode(kind)}/${encode(resourceId)}${query.size ? `?${query}` : ""}`;
+                },
+                async resolve(reference) {
+                    requireCap("content.resolve");
+                    const value = typeof reference === "string" ? reference : this.ref(reference.kind, reference.id || reference.documentId, reference);
+                    return runtimeRead("content.references", { reference: value }, "sdk.content.resolve");
+                },
+                async get(reference) {
+                    requireCap("content.get");
+                    return (await this.resolve(reference)).value;
+                },
+                async can(reference, action = "read") {
+                    requireCap("content.can");
+                    if (action !== "read" && action !== "view" && action !== "open") return false;
+                    try { return Boolean((await this.resolve(reference)).value); }
+                    catch (_error) { return false; }
+                },
+                async open(reference, options = {}) {
+                    requireCap("content.open");
+                    const resolved = await this.resolve(reference);
+                    const detail = { ...resolved, options: { ...options }, packageId: pkg.id };
+                    document.dispatchEvent(new CustomEvent("vtt:content-open", { detail }));
+                    return resolved;
+                },
+                link(reference, options = {}) {
+                    requireCap("content.link");
+                    const uri = typeof reference === "string" ? reference : this.ref(reference.kind, reference.id || reference.documentId, reference);
+                    return freeze({ type: "grave-reference", ref: uri, label: String(options.label || ""), icon: String(options.icon || "") });
+                },
+                async search(query = "", options = {}) {
+                    requireCap("content.search");
+                    const kinds = Array.isArray(options.kinds) ? options.kinds.join(",") : (options.kinds || "");
+                    return (await runtimeRead("content.index", { q: query, kinds, limit: Math.min(Number(options.limit) || 50, 100) }, "sdk.content.search")).entries || [];
+                },
                 async packs() {
                     requireCap("content.packs");
                     const client = http();
@@ -1194,6 +1713,12 @@
         unmount: unmountHtmlSheet,
         sanitizeRichText,
     });
+    window.addEventListener("beforeunload", () => {
+        for (const disposers of sdkEventDisposers.values()) {
+            [...disposers].forEach((dispose) => dispose());
+        }
+        sdkEventDisposers.clear();
+    }, { once: true });
 
     context = Object.freeze({ ...(parseJsonScript("gravewright-game-context", {}) || {}) });
     loadManifests(parseJsonScript("gravewright-sdk-packages", []) || []);

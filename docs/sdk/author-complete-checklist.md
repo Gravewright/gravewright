@@ -267,6 +267,15 @@ Before publishing a package, verify:
 
 ## 13. Documentation completeness test
 
+Before publishing a runtime package:
+
+- [ ] It requests only required read/write capabilities.
+- [ ] It uses no private globals, core DOM selectors, renderer nodes, raw transport, or raw persistence.
+- [ ] Every event subscription and UI slot is disposed.
+- [ ] Every mutation handles `PERMISSION_DENIED`; versioned writes handle `STALE_VERSION`.
+- [ ] Event handlers never assume that hidden resources exist.
+- [ ] Optional capabilities degrade cleanly and callbacks cannot create unbounded event loops.
+
 The SDK docs should answer these author questions without external help:
 
 - What package kind should I choose?

@@ -275,6 +275,37 @@ def is_empty_document(document: object) -> bool:
     return not (isinstance(content, list) and len(content) > 0)
 
 
+def has_renderable_content(document: object) -> bool:
+    """Return whether a document contains something a reader can actually see.
+
+    ProseMirror persists its blank editor as one empty paragraph. Structurally
+    that is a node, but treating it as content creates an empty reader region.
+    """
+    if not isinstance(document, dict):
+        return False
+    doc = document.get("doc")
+    blocks = doc.get("content") if isinstance(doc, dict) else None
+    if not isinstance(blocks, list):
+        return False
+
+    def visible(node: object) -> bool:
+        if not isinstance(node, dict):
+            return False
+        node_type = node.get("type")
+        if node_type in {"gwImage", "horizontalRule"}:
+            return True
+        text = node.get("text")
+        if isinstance(text, str) and text.strip():
+            return True
+        attrs = node.get("attrs")
+        if node_type == "gwCallout" and isinstance(attrs, dict) and str(attrs.get("title") or "").strip():
+            return True
+        children = node.get("content")
+        return isinstance(children, list) and any(visible(child) for child in children)
+
+    return any(visible(block) for block in blocks)
+
+
 def filter_doc_for_role(document: object, *, is_gm: bool) -> dict:
     """Strip ``visibility == "gm"`` nodes for non-GM roles.
 

@@ -38,17 +38,21 @@ Settings are package-scoped. A package can read and write only its own setting v
 | Field | Required | Description |
 |---|---:|---|
 | `key` | Yes | Stable setting key. |
-| `scope` | No | `global`, `campaign`, or `user`. Defaults to package/runtime behavior when omitted. |
+| `scope` | No | `client`, `user`, `campaign`, or `package`. Legacy `global` aliases `package`. |
 | `type` | Yes | `boolean`, `string`, `number`, `integer`, or `enum`. |
 | `default` | No | Default value. |
 | `label` | No | Human-readable label. |
 | `options` | Required for `enum` | Allowed enum values. |
+| `minimum` / `maximum` | No | Inclusive bounds for numeric settings. |
+| `pattern` | No | Full regular-expression match required for string settings. |
 
 ## Scopes
 
 | Scope | Use for |
 |---|---|
-| `global` | Installation-wide operator configuration. |
+| `client` | Preference stored only in the current browser profile. |
+| `package` | Installation-wide package configuration controlled by the operator. |
+| `global` | Legacy alias for `package`. |
 | `campaign` | Campaign-level package behavior controlled by the GM/operator. |
 | `user` | Per-user preferences such as visual toggles or colors. |
 
@@ -76,6 +80,8 @@ Read a single value:
 
 ```js
 const enabled = sdk.settings.get("enabled", true);
+const scope = sdk.settings.scope("enabled");
+const off = sdk.settings.onChange("enabled", ({ value }) => console.log(value));
 ```
 
 Write a value:
@@ -102,9 +108,10 @@ await sdk.setting("enabled", false);
 The validator reports `sdk.validation.setting_invalid` when:
 
 - `key` is empty;
-- `scope` is not `global`, `campaign`, or `user`;
+- `scope` is not `client`, `user`, `campaign`, `package`, or legacy `global`;
 - `type` is not `boolean`, `string`, `number`, `integer`, or `enum`;
 - `type` is `enum` and `options` is missing or empty.
+- numeric bounds are inverted, or `pattern` is not a valid regular expression.
 
 ## Best practices
 
@@ -112,6 +119,7 @@ The validator reports `sdk.validation.setting_invalid` when:
 - Prefix keys by feature area, for example `dice.color`, `ui.enabled`, `automation.mode`.
 - Use `user` scope for personal display preferences.
 - Use `campaign` scope for game behavior that should be shared by table participants.
+- Use `client` for device-local presentation and `package` for operator-wide configuration.
 - Avoid storing secrets in package settings.
 - Keep defaults safe and reversible.
 
@@ -132,3 +140,6 @@ Scope precedence for the effective value is **default → campaign → user**.
 `user` scope is **per user, global across campaigns** (keyed by user id, not by
 campaign). A stored value that is corrupted JSON falls back to the default at
 read time and is reported by the doctor (`setting_value_corrupted`).
+
+`client` values do not enter server storage or campaign exports. Changes from
+all scopes notify listeners registered through `sdk.settings.onChange`.

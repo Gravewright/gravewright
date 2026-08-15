@@ -500,6 +500,67 @@ Looks up a locale key from the package locale catalog. Returns `fallback` when p
 const label = sdk.i18n.t("my-rpg.action.attack", "Attack");
 ```
 
+## SDK 1 semantic runtime expansion (experimental)
+
+These SDK 1 methods apply package-capability and current-user permission gates and return frozen public snapshots. Reads are bounded to 100 entries; writes remain server-authoritative.
+
+- `sdk.events.on`, `sdk.events.once`, `sdk.events.available`; `sdk.permissions.can`.
+- `sdk.actors.get`, `sdk.actors.list`, `sdk.actors.create`, `sdk.actors.update`, `sdk.actors.delete`.
+- `sdk.items.get`, `sdk.items.list`, `sdk.items.create`, `sdk.items.update`, `sdk.items.delete`.
+- `sdk.tokens.get`, `sdk.tokens.list`, `sdk.tokens.move`, `sdk.tokens.create`, `sdk.tokens.update`, `sdk.tokens.delete`.
+- `sdk.scene.get`, `sdk.scene.list`, `sdk.scene.active`.
+- `sdk.scene.geometry.walls`, `sdk.scene.geometry.lights`, `sdk.scene.geometry.createWall`, `sdk.scene.geometry.updateWall`, `sdk.scene.geometry.deleteWall`, `sdk.scene.geometry.createLight`, `sdk.scene.geometry.updateLight`, `sdk.scene.geometry.deleteLight`, `sdk.scene.geometry.setDoorState`.
+- `sdk.scene.effects.list`, `sdk.scene.effects.create`, `sdk.scene.effects.update`, `sdk.scene.effects.delete`.
+- `sdk.ui.slots.available`, `sdk.ui.slots.register`; `sdk.chat.list`, `sdk.chat.get`.
+- `sdk.combat.current`, `sdk.combat.combatants`, `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`.
+- `sdk.rules.actions.validate`, `sdk.rules.actions.execute`.
+- `sdk.pdf.get`, `sdk.pdf.metadata`; `sdk.pdf.viewer.open`, `sdk.pdf.viewer.goToPage`, `sdk.pdf.viewer.search`, `sdk.pdf.viewer.currentPage`.
+- `sdk.pdf.annotations.list`, `sdk.pdf.annotations.create`. See [PDF API](pdf.md).
+- `sdk.cards.state`, `sdk.cards.shuffle`, `sdk.cards.reset`, `sdk.cards.draw`,
+  `sdk.cards.reveal`, `sdk.cards.discard`, `sdk.cards.play`,
+  `sdk.cards.updatePlacement`, `sdk.cards.discardPlacement`.
+
+Runtime journals use `sdk.journals.get`, `sdk.journals.list`,
+`sdk.journals.create`, `sdk.journals.update`, and `sdk.journals.delete`.
+Authorized transient presentation uses `sdk.handouts.present`.
+
+Scene tooling includes `sdk.scene.fog.state`, `sdk.scene.fog.enable`,
+`sdk.scene.fog.disable`, `sdk.scene.fog.reset`, `sdk.scene.fog.paint`,
+`sdk.scene.images.list`, `sdk.scene.images.place`, `sdk.scene.images.update`,
+`sdk.scene.images.delete`, `sdk.scene.geometry.splitWall`,
+`sdk.scene.geometry.moveWallNode`, `sdk.scene.geometry.moveWalls`, and
+`sdk.scene.geometry.deleteWalls`.
+
+Annotations support `sdk.pdf.annotations.update` and
+`sdk.pdf.annotations.delete` in addition to list/create.
+- `sdk.actors.patchData`; `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`.
+
+Updates accept `expectedVersion` where documented; a mismatch returns `STALE_VERSION`. Action graphs accept at most 32 steps. No raw database, transport, renderer, filesystem, or core-DOM access is exposed.
+
+Item sheet data is updated with `sdk.items.patchData`. Combat management also
+provides `sdk.combat.advanceRound`, `sdk.combat.setFlags`, and
+`sdk.combat.rollInitiative`.
+
+## Universal content references
+
+Packages declaring `content.references` can create a canonical URI with
+`sdk.content.ref`, resolve it with `sdk.content.resolve`, obtain its authorized
+public value with `sdk.content.get`, and probe access with `sdk.content.can`.
+Use `sdk.content.open` to ask the host to open the target and `sdk.content.link`
+to build a portable rich-link payload. Resolution is server-side and cannot
+cross the active campaign.
+`sdk.content.search` queries the authorized campaign content index by text and kind.
+
+## Partial applications and scoped settings
+
+Packages declaring `ui.applications` use `sdk.ui.applications.register`,
+`sdk.ui.applications.render`, and `sdk.ui.applications.close`. A render may name
+only changed parts, preserving unrelated DOM, focus, and scroll state.
+
+Settings expose `sdk.settings.scope` and `sdk.settings.onChange`. Supported
+scopes are `client`, `user`, `campaign`, and `package`; legacy `global` is an
+alias for `package`.
+
 ## Shortcuts
 
 | Shortcut | Equivalent |

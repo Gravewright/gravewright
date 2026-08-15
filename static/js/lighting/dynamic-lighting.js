@@ -35,6 +35,7 @@
 
     const EDIT_LAYERS = { wall: "walls", door: "walls", light: "lighting", particles: "effects", shader: "effects" };
     let selectedTokenId = "";
+    let componentClipboard = null;
 
 
 
@@ -84,6 +85,14 @@
         if (url === "/game/walls") return { wall: { id: id("wall"), ...withoutMeta(body), door_state: "closed" } };
         if (url === "/game/walls/door-state") return { wall: update(controller.walls, body.wall_id, { door_state: body.door_state }) };
         if (url === "/game/walls/move-node") return {};
+        if (url === "/game/walls/move-many") {
+            const wanted = new Set(body.wall_ids || []);
+            controller.walls = controller.walls.map((wall) => wanted.has(wall.id) ? {
+                ...wall, x1: wall.x1 + body.dx, y1: wall.y1 + body.dy,
+                x2: wall.x2 + body.dx, y2: wall.y2 + body.dy,
+            } : wall);
+            return { walls: controller.walls };
+        }
         if (url === "/game/walls/split") {
             const wall = controller.walls.find((item) => item.id === body.wall_id);
             if (!wall) throw new Error("lighting.errors.not_found");
@@ -645,6 +654,7 @@
             this.selected = "";
             this.selectedLight = "";
             this.selectedEmitter = "";
+            this.componentDrag = null;
             this.drawingPointerId = null;
             this.downClient = null;
             this.nodeDrag = null;
@@ -717,7 +727,7 @@
             let best = null, bestDistance = tolerance;
             this.walls.forEach((wall) => {
                 if (wall.kind !== "door") return;
-                if (activeLayer !== EDIT_LAYERS.door && !this.visibleDoorIds.has(wall.id)) return;
+                if (activeLayer !== EDIT_LAYERS.door && this.visibleDoorIds.size && !this.visibleDoorIds.has(wall.id)) return;
                 const centre = midpoint(wall);
                 const distance = Math.min(
                     Math.hypot(point.x - centre.x, point.y - centre.y),
@@ -1464,11 +1474,13 @@
 
                     if (inside(wall.x1, wall.y1) && inside(wall.x2, wall.y2)) this.picks.wall.add(wall.id);
                 });
-            } else if (activeLayer === EDIT_LAYERS.light) {
+            }
+            if (activeLayer === EDIT_LAYERS.light) {
                 (this.lights || []).forEach((light) => {
                     if (inside(light.x, light.y)) this.picks.light.add(light.id);
                 });
-            } else if (activeLayer === EDIT_LAYERS.particles) {
+            }
+            if (activeLayer === EDIT_LAYERS.particles) {
                 (this.emitters || []).forEach((emitter) => {
                     if (inside(emitter.x, emitter.y)) this.picks.emitter.add(emitter.id);
                 });
@@ -1501,6 +1513,51 @@
             await this.patchShader(drag.id, { x: drag.to.x, y: drag.to.y }).catch((error) => {
                 console.error("Scene shader move failed", error);
             });
+        }
+
+        beginComponentDrag(kind, id, event, surface) {
+            if (!this.picked(kind, id)) this.pick(kind, id, false);
+            const items = this.selectedSnapshots();
+            if (!items.length) return false;
+            const from = this.world(event);
+            if (!from) return false;
+            this.componentDrag = { pointerId: event.pointerId, from, to: from, items };
+            try { surface.setPointerCapture(event.pointerId); } catch {}
+            redraw();
+            return true;
+        }
+
+        previewComponentDrag(point) {
+            const drag = this.componentDrag;
+            if (!drag || !point) return;
+            drag.to = point;
+            const dx = point.x - drag.from.x;
+            const dy = point.y - drag.from.y;
+            drag.items.forEach(({ kind, value }) => {
+                const list = { wall: this.walls, light: this.lights, emitter: this.emitters, shader: this.shaders }[kind];
+                const item = (list || []).find((candidate) => candidate.id === value.id);
+                if (!item) return;
+                if (kind === "wall") Object.assign(item, {
+                    x1: value.x1 + dx, y1: value.y1 + dy, x2: value.x2 + dx, y2: value.y2 + dy,
+                });
+                else Object.assign(item, { x: value.x + dx, y: value.y + dy });
+            });
+            this.invalidateGeometry();
+            redraw();
+        }
+
+        finishComponentDrag(drag) {
+            if (!drag) return;
+            const dx = drag.to.x - drag.from.x;
+            const dy = drag.to.y - drag.from.y;
+            drag.items.forEach(({ kind, value }) => {
+                const list = { wall: this.walls, light: this.lights, emitter: this.emitters, shader: this.shaders }[kind];
+                const item = (list || []).find((candidate) => candidate.id === value.id);
+                if (item) Object.assign(item, value);
+            });
+            this.invalidateGeometry();
+            if (Math.hypot(dx, dy) < 0.5) { redraw(); return; }
+            this.moveSelected(dx, dy);
         }
 
 
@@ -1761,7 +1818,8 @@
 
 
         handlePlayDoor(event) {
-            if (activeLayer === EDIT_LAYERS.door) return false;
+            const currentLayer = window.GravewrightTools?.activeLayer || activeLayer;
+            if (currentLayer === EDIT_LAYERS.door) return false;
             if (event.button !== 0 && event.button !== 2) return false;
 
             if (event.button === 2 && !this.isGm) return false;
@@ -1777,6 +1835,10 @@
             const surface = this.canvas.closest("[data-map-viewport]");
             if (!surface) return;
             surface.addEventListener("pointermove", (event) => {
+                if (this.componentDrag) {
+                    this.previewComponentDrag(this.world(event));
+                    return;
+                }
                 if (this.marquee) {
                     this.marquee.to = this.world(event) || this.marquee.to;
                     redraw();
@@ -1834,7 +1896,7 @@
                 if (tool === "light") {
                     event.preventDefault(); event.stopPropagation();
                     const existing = this.lightAt(raw);
-                    if (existing) { this.selectedLight = existing.id; redraw(); return; }
+                    if (existing) { this.beginComponentDrag("light", existing.id, event, surface); return; }
                     void this.placeLight(this.target(event));
                     return;
                 }
@@ -1846,8 +1908,7 @@
 
 
                     if (existing) {
-                        this.selectedShader = existing.id;
-                        redraw();
+                        this.beginComponentDrag("shader", existing.id, event, surface);
                         document.dispatchEvent(new CustomEvent("lighting:edit-shader", {
                             detail: { canvas: this.canvas, roomId: this.roomId, shaderId: existing.id },
                         }));
@@ -1864,54 +1925,33 @@
                     const shader = this.shaderAt(raw);
                     if (shader) {
                         event.preventDefault(); event.stopPropagation();
-                        this.selectedShader = shader.id;
-                        this.selectedEmitter = "";
-                        this.shaderDrag = {
-                            id: shader.id,
-                            from: { x: shader.x, y: shader.y },
-                            to: { x: shader.x, y: shader.y },
-                            pointerId: event.pointerId,
-                        };
-                        try { surface.setPointerCapture(event.pointerId); } catch {}
-                        redraw();
+                        this.beginComponentDrag("shader", shader.id, event, surface);
                         return;
                     }
                     const existing = this.emitterAt(raw);
                     if (existing) {
                         event.preventDefault(); event.stopPropagation();
-                        this.pick("emitter", existing.id, event.shiftKey);
-
-
-                        this.emitterDrag = {
-                            id: existing.id,
-                            from: { x: existing.x, y: existing.y },
-                            to: { x: existing.x, y: existing.y },
-                            pointerId: event.pointerId,
-                        };
-                        try { surface.setPointerCapture(event.pointerId); } catch {}
-                        redraw();
+                        this.beginComponentDrag("emitter", existing.id, event, surface);
                         return;
                     }
 
-                    if (tool !== "particles") return;
-                    event.preventDefault(); event.stopPropagation();
-                    void this.placeEmitter(this.target(event));
-                    return;
+                    if (tool === "particles") {
+                        event.preventDefault(); event.stopPropagation();
+                        void this.placeEmitter(this.target(event));
+                        return;
+                    }
                 }
 
 
 
                 if (tool === "select") {
-                    const light = this.lightAt(raw);
+                    const light = activeLayer === EDIT_LAYERS.light ? this.lightAt(raw) : null;
                     if (light) {
                         event.preventDefault(); event.stopPropagation();
-                        this.pick("light", light.id, event.shiftKey);
-                        this.lightDrag = { id: light.id, from: { x: light.x, y: light.y }, to: { x: light.x, y: light.y }, pointerId: event.pointerId };
-                        try { surface.setPointerCapture(event.pointerId); } catch {}
-                        redraw();
+                        this.beginComponentDrag("light", light.id, event, surface);
                         return;
                     }
-                    const node = this.nodeAt(raw);
+                    const node = activeLayer === EDIT_LAYERS.wall ? this.nodeAt(raw) : null;
                     if (node) {
                         event.preventDefault(); event.stopPropagation();
                         this.nodeDrag = { from: { ...node }, to: { ...node }, pointerId: event.pointerId };
@@ -1921,7 +1961,7 @@
                     }
                 }
                 const hit = this.hit(raw);
-                if (tool === "select" && hit) {
+                if (tool === "select" && activeLayer === EDIT_LAYERS.wall && hit) {
                     event.preventDefault(); event.stopPropagation();
 
 
@@ -1929,8 +1969,7 @@
                     if (hit.kind === "door" && this.picked("wall", hit.id) && this.pickCount() === 1) {
                         void this.cycleDoor(hit);
                     } else {
-                        this.pick("wall", hit.id, event.shiftKey);
-                        redraw();
+                        this.beginComponentDrag("wall", hit.id, event, surface);
                     }
                     return;
                 }
@@ -1969,6 +2008,14 @@
                 void this.create(point, tool, !event.altKey);
             }, true);
             surface.addEventListener("pointerup", (event) => {
+                if (this.componentDrag && event.pointerId === this.componentDrag.pointerId) {
+                    const drag = this.componentDrag;
+                    this.componentDrag = null;
+                    try { surface.releasePointerCapture(event.pointerId); } catch {}
+                    event.preventDefault(); event.stopPropagation();
+                    this.finishComponentDrag(drag);
+                    return;
+                }
                 if (this.marquee && event.pointerId === this.marquee.pointerId) {
                     const box = this.marquee;
                     this.marquee = null;
@@ -1979,10 +2026,11 @@
 
 
                     if (width > 2 || height > 2) {
-                        this.pickInside({
+                        const rect = {
                             x0: Math.min(box.from.x, box.to.x), x1: Math.max(box.from.x, box.to.x),
                             y0: Math.min(box.from.y, box.to.y), y1: Math.max(box.from.y, box.to.y),
-                        }, box.additive);
+                        };
+                        this.pickInside(rect, box.additive);
                     }
                     redraw();
                     return;
@@ -2065,6 +2113,11 @@
                     const wall = at ? this.hit(at) : null;
                     if (!wall) return;
 
+                    // Portas sao segmentos atomicos: seus extremos podem ser
+                    // movidos, mas um duplo clique nao deve transforma-las em
+                    // dois segmentos (e, consequentemente, duas portas).
+                    if (wall.kind === "door") return;
+
 
                     if (this.nodeAt(at)) return;
                     event.preventDefault(); event.stopPropagation();
@@ -2131,9 +2184,7 @@
         }
 
         async removeSelected() {
-
-
-
+            const snapshots = this.selectedSnapshots();
             const lots = [
                 ["light", "/game/lights/delete-many", "light_ids"],
                 ["wall", "/game/walls/delete-many", "wall_ids"],
@@ -2152,6 +2203,121 @@
                 toast("Não foi possível apagar a seleção.");
             }
             if (!this.isStreamer) await this.refresh();
+            if (snapshots.length) {
+                let live = snapshots;
+                window.GravewrightMap?.history?.push?.({
+                    undo: async () => { live = await this.restoreSnapshots(snapshots, 0); },
+                    redo: () => { void this.deleteSnapshots(live); },
+                });
+            }
+        }
+
+        selectedSnapshots() {
+            const sources = { wall: this.walls, light: this.lights, emitter: this.emitters, shader: this.shaders };
+            return Object.entries(sources).flatMap(([kind, items]) =>
+                (items || []).filter((item) => this.picked(kind, item.id)).map((item) => ({ kind, value: { ...item } })));
+        }
+
+        copySelected() {
+            const items = this.selectedSnapshots();
+            if (!items.length) return false;
+            componentClipboard = { items, sceneId: this.scene()?.id || "" };
+            return true;
+        }
+
+        async createSnapshot(snapshot, offset = 0) {
+            const scene = this.scene();
+            if (!scene) return null;
+            const value = snapshot.value || {};
+            const shifted = { ...value };
+            if (snapshot.kind === "wall") {
+                Object.assign(shifted, { x1: value.x1 + offset, y1: value.y1 + offset, x2: value.x2 + offset, y2: value.y2 + offset });
+            } else {
+                Object.assign(shifted, { x: value.x + offset, y: value.y + offset });
+            }
+            const specs = {
+                wall: ["/game/walls", "wall", ["kind", "x1", "y1", "x2", "y2"]],
+                light: ["/game/lights", "light", ["x", "y", "bright_radius", "dim_radius", "color", "intensity", "angle", "rotation", "animation", "enabled"]],
+                emitter: ["/game/particles", "emitter", ["x", "y", "kind", "scale", "density", "color", "enabled"]],
+                shader: ["/game/shaders", "shader", ["x", "y", "name", "source", "radius", "rotation", "blend_mode", "intensity", "opacity", "scale", "speed", "color", "enabled"]],
+            };
+            const spec = specs[snapshot.kind];
+            if (!spec) return null;
+            const payload = { campaign_id: this.roomId, scene_id: scene.id };
+            spec[2].forEach((key) => { if (shifted[key] !== undefined) payload[key] = shifted[key]; });
+            const result = await post(spec[0], payload);
+            const created = result[spec[1]];
+            if (!created) return null;
+            const listName = { wall: "walls", light: "lights", emitter: "emitters", shader: "shaders" }[snapshot.kind];
+            this[listName] = [...(this[listName] || []), created];
+            return { kind: snapshot.kind, value: { ...created } };
+        }
+
+        async restoreSnapshots(snapshots, offset = 0) {
+            const created = (await Promise.all((snapshots || []).map((item) => this.createSnapshot(item, offset)))).filter(Boolean);
+            this.clearPicks();
+            created.forEach((item) => this.picks[item.kind].add(item.value.id));
+            this.invalidateGeometry(); redraw();
+            return created;
+        }
+
+        async deleteSnapshots(snapshots) {
+            const ids = { wall: [], light: [], emitter: [], shader: [] };
+            (snapshots || []).forEach((item) => { if (item?.value?.id && ids[item.kind]) ids[item.kind].push(item.value.id); });
+            const specs = { wall: ["/game/walls/delete-many", "wall_ids"], light: ["/game/lights/delete-many", "light_ids"], emitter: ["/game/particles/delete-many", "emitter_ids"], shader: ["/game/shaders/delete-many", "shader_ids"] };
+            await Promise.all(Object.entries(ids).filter(([, values]) => values.length).map(([kind, values]) =>
+                post(specs[kind][0], { campaign_id: this.roomId, [specs[kind][1]]: values })));
+            if (!this.isStreamer) await this.refresh();
+            this.invalidateGeometry(); redraw();
+        }
+
+        async pasteClipboard() {
+            if (!componentClipboard?.items?.length) return false;
+            let created = await this.restoreSnapshots(componentClipboard.items, 16);
+            if (!created.length) return false;
+            window.GravewrightMap?.history?.push?.({
+                undo: () => { void this.deleteSnapshots(created); },
+                redo: async () => { created = await this.restoreSnapshots(componentClipboard.items, 16); },
+            });
+            return true;
+        }
+
+        async applySelectedMove(dx, dy) {
+            const scene = this.scene();
+            if (!scene || (!dx && !dy)) return false;
+            const wallIds = this.pickedIds("wall");
+            const jobs = [];
+            if (wallIds.length) {
+                jobs.push(post("/game/walls/move-many", {
+                    campaign_id: this.roomId, scene_id: scene.id, wall_ids: wallIds, dx, dy,
+                }).then((result) => { if (result.walls) this.walls = result.walls; }));
+            }
+            this.pickedIds("light").forEach((id) => {
+                const item = this.lights.find((value) => value.id === id);
+                if (item) jobs.push(this.patchLight(id, { x: item.x + dx, y: item.y + dy }));
+            });
+            this.pickedIds("emitter").forEach((id) => {
+                const item = this.emitters.find((value) => value.id === id);
+                if (item) jobs.push(this.patchEmitter(id, { x: item.x + dx, y: item.y + dy }));
+            });
+            this.pickedIds("shader").forEach((id) => {
+                const item = this.shaders.find((value) => value.id === id);
+                if (item) jobs.push(this.patchShader(id, { x: item.x + dx, y: item.y + dy }));
+            });
+            if (!jobs.length) return false;
+            await Promise.all(jobs);
+            this.invalidateGeometry(); redraw();
+            return true;
+        }
+
+        moveSelected(dx, dy) {
+            if (!this.pickCount()) return false;
+            void this.applySelectedMove(dx, dy);
+            window.GravewrightMap?.history?.push?.({
+                undo: () => { void this.applySelectedMove(-dx, -dy); },
+                redo: () => { void this.applySelectedMove(dx, dy); },
+            });
+            return true;
         }
 
     }
@@ -2203,6 +2369,28 @@
         });
         document.addEventListener("keydown", (event) => {
             if (event.key === "Escape") { controllers.forEach((controller) => { controller.cancelDrawing(); controller.selected = ""; controller.selectedLight = ""; }); redraw(); }
+            const editing = Object.values(EDIT_LAYERS).includes(activeLayer)
+                && !event.target.closest("input,textarea,select,[contenteditable]");
+            const commandModifier = event.metaKey || event["ctrlKey"];
+            const activeController = controllers.get(window.GravewrightMap?.activeCanvas?.());
+            if (editing && commandModifier && event.key.toLowerCase() === "c") {
+                const copied = activeController?.copySelected();
+                if (copied) event.preventDefault();
+                return;
+            }
+            if (editing && commandModifier && event.key.toLowerCase() === "v") {
+                event.preventDefault();
+                if (activeController?.scene()?.id) void activeController.pasteClipboard();
+                return;
+            }
+            const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+            if (editing && arrows[event.key]) {
+                const [x, y] = arrows[event.key];
+                const controller = activeController;
+                const step = event.shiftKey ? 1 : (controller?.scene()?.scaledTileSize || 50) / SNAP_DIVISIONS;
+                if (controller?.moveSelected(x * step, y * step)) event.preventDefault();
+                return;
+            }
             const erasing = (event.key === "Delete" || event.key === "Backspace")
                 && !event.target.closest("input,textarea,select,[contenteditable]");
             if (!erasing) return;

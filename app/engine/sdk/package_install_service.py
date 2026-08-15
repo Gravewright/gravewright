@@ -384,6 +384,7 @@ class PackageInstallService:
             "author": "",
             "color": "",
             "capabilities": [],
+            "capability_summary": {},
             "actor_types": [],
             "item_types": [],
             "area_markers": [],

@@ -1,0 +1,41 @@
+{
+  "headless": false,
+  "warmup_seconds": 10,
+  "measurement_seconds": 30,
+  "results": [
+    {
+      "total_entities": 1500,
+      "requested_visible": 1500,
+      "unique_assets": 1,
+      "frames": 1793,
+      "frame_ms_average": 16.740602342442834,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 16.900000000001455,
+      "frame_ms_p99": 17.099999999998545,
+      "js_heap_mb": 10.646650314331055,
+      "animation_callback_ms_p95": 0.0,
+      "unattributed_frame_gap_ms_p95": 16.900000000001455,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 499.14453125,
+      "renderer": {},
+      "resources": {
+        "instances": 1500,
+        "visible": 0,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 1499,
+        "tokenNodes": 0,
+        "fastSprites": 0
+      },
+      "spatial": {
+        "total": 0,
+        "candidates": 0,
+        "visible": 0,
+        "culled": 0,
+        "queryMs": 0
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ]
+}

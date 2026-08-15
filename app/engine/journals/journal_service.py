@@ -258,16 +258,26 @@ class JournalService:
                 normalized_data["content"] = journal_doc.merge_preserving_gm_blocks(
                     normalized_data["content"], existing["content"]
                 )
+                existing_by_id = {section["id"]: section for section in existing["sections"]}
+                public_sections = []
+                for section in normalized_data["sections"]:
+                    section["audience"] = "public"
+                    old_section = existing_by_id.get(section["id"])
+                    if old_section and old_section["audience"] == "public":
+                        section["content"] = journal_doc.merge_preserving_gm_blocks(
+                            section["content"], old_section["content"]
+                        )
+                    public_sections.append(section)
+                normalized_data["sections"] = sorted(
+                    public_sections
+                    + [section for section in existing["sections"] if section["audience"] == "gm"],
+                    key=lambda section: section["sortOrder"],
+                )
             elif journal_type == "quest":
                 existing = journal_data.normalize_quest_data(stored)
                 normalized_data["gm"] = existing["gm"]
                 normalized_data["public"]["description"] = journal_doc.merge_preserving_gm_blocks(
                     normalized_data["public"]["description"], existing["public"]["description"]
-                )
-            elif journal_type == "quest_board":
-                existing = journal_data.normalize_board_data(stored)
-                normalized_data["description"] = journal_doc.merge_preserving_gm_blocks(
-                    normalized_data["description"], existing["description"]
                 )
 
         version = self.journals.update(
@@ -512,8 +522,17 @@ class JournalService:
 
             view["content_doc"] = journal_doc.filter_doc_for_role(diary["content"], is_gm=is_gm)
             view["cover_image"] = diary["cover"]
+            view["sections"] = [
+                {
+                    **section,
+                    "content": journal_doc.filter_doc_for_role(section["content"], is_gm=is_gm),
+                }
+                for section in diary["sections"]
+                if is_gm or section["audience"] == "public"
+            ]
+            view["editable_sections"] = diary["sections"] if is_gm else view["sections"]
             if is_gm:
-                view["diary"] = {"gm": diary["gm"]}
+                view["diary"] = {"gm": diary["gm"], "sections": diary["sections"]}
 
             view["content_markdown"] = (
                 journal.get("content_markdown", "")
@@ -542,19 +561,20 @@ class JournalService:
             from app.engine.journals import journal_doc
 
             board = journal_data.normalize_board_data(data)
-            view["board"] = {
-                "description": journal_doc.filter_doc_for_role(board["description"], is_gm=is_gm),
-                "description_markdown": board["description_markdown"],
-                "image": board["image"],
-                "filters": board["filters"],
-            }
+            view["board"] = board
             view["board_entries"] = self._build_board_entries(
                 board_id=journal["id"],
                 campaign=campaign,
                 user_id=user_id,
-                filters=board["filters"],
                 full_access=full_access,
             )
+            # Drafts and archived quests remain linked and manageable by the GM,
+            # but are never notices on the board itself.
+            view["board_display_entries"] = [
+                entry
+                for entry in view["board_entries"]
+                if entry["card"]["status"] not in {"draft", "archived"}
+            ]
             return view
 
         return view
@@ -565,7 +585,6 @@ class JournalService:
         board_id: str,
         campaign: dict,
         user_id: str,
-        filters: dict,
         full_access: bool,
     ) -> list[dict]:
         entries = self.journals.list_board_entries(board_id=board_id)
@@ -581,15 +600,6 @@ class JournalService:
             if not full_access:
                 if status not in journal_data.PLAYER_VISIBLE_STATUSES:
                     continue
-                if status == "available" and not filters.get("showAvailable", True):
-                    continue
-                if status == "active" and not filters.get("showActive", True):
-                    continue
-                if status == "completed" and not filters.get("showCompleted", True):
-                    continue
-                if status == "failed" and not filters.get("showFailed", True):
-                    continue
-
             result.append(
                 {
                     "quest_id": entry["quest_id"],
@@ -808,6 +818,58 @@ class JournalService:
             folder_id=folder_id,
             campaign_id=with_campaign_id,
         )
+
+    def rename_folder(
+        self, *, folder_id: str, name: str, requester_user_id: str
+    ) -> JournalResult:
+        folder, error = self._load_gm_folder(folder_id, requester_user_id)
+        if error is not None:
+            return error
+        clean_name = name.strip()
+        if not clean_name:
+            return JournalResult(success=False, error_key="game.journal.folders.errors.name_required")
+        assert folder is not None
+        self.folders.rename(folder_id=folder_id, name=clean_name)
+        return JournalResult(success=True, folder_id=folder_id, campaign_id=folder["campaign_id"])
+
+    def set_folder_color(
+        self, *, folder_id: str, color: str, requester_user_id: str
+    ) -> JournalResult:
+        folder, error = self._load_gm_folder(folder_id, requester_user_id)
+        if error is not None:
+            return error
+        assert folder is not None
+        clean_color = color.strip() or None
+        self.folders.set_color(folder_id=folder_id, color=clean_color)
+        return JournalResult(success=True, folder_id=folder_id, campaign_id=folder["campaign_id"])
+
+    def delete_folder(
+        self, *, folder_id: str, requester_user_id: str
+    ) -> JournalResult:
+        folder, error = self._load_gm_folder(folder_id, requester_user_id)
+        if error is not None:
+            return error
+        assert folder is not None
+        parent_id = folder.get("parent_id") or None
+        self.journals.move_from_folder(folder_id=folder_id, target_folder_id=parent_id)
+        self.folders.move_children(folder_id=folder_id, parent_id=parent_id)
+        self.folders.delete(folder_id=folder_id)
+        return JournalResult(success=True, folder_id=folder_id, campaign_id=folder["campaign_id"])
+
+    def _load_gm_folder(
+        self, folder_id: str, requester_user_id: str
+    ) -> tuple[dict | None, JournalResult | None]:
+        folder = self.folders.get_by_id(folder_id=folder_id)
+        if folder is None:
+            return None, JournalResult(
+                success=False, error_key="game.journal.folders.errors.not_found"
+            )
+        campaign = self.campaigns.get_for_user(
+            campaign_id=folder["campaign_id"], user_id=requester_user_id
+        )
+        if campaign is None or not _is_gm(dict(campaign)):
+            return None, JournalResult(success=False, error_key="game.journal.errors.not_owner")
+        return folder, None
 
     def _load_editable_quest(
         self, quest_id: str, requester_user_id: str

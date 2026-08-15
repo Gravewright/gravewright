@@ -6,8 +6,10 @@ The ``grave`` command is the local operator/developer interface.
 from __future__ import annotations
 
 import argparse
+import difflib
 import inspect
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Sequence
@@ -15,6 +17,35 @@ from typing import Any, Sequence
 from app.config import config
 
 PACKAGE_KINDS = ("ruleset", "addon", "library", "theme", "assets", "content")
+TOP_LEVEL_COMMANDS = (
+    "doctor", "run", "backup", "restore", "db", "lock", "package", "campaign",
+    *PACKAGE_KINDS,
+)
+
+
+class GravewrightArgumentParser(argparse.ArgumentParser):
+    """Argparse with actionable, compact failures for humans."""
+
+    def error(self, message: str) -> None:
+        suggestion = ""
+        if "invalid choice" in message:
+            entered = message.split("invalid choice:", 1)[1].split("(", 1)[0].strip(" '\"")
+            matches = difflib.get_close_matches(entered, TOP_LEVEL_COMMANDS, n=1, cutoff=0.55)
+            if matches:
+                suggestion = f"\nDid you mean: grave {matches[0]} --help"
+        self.print_usage(sys.stderr)
+        self.exit(2, f"grave: error: {message}{suggestion}\nTry 'grave --help' for examples.\n")
+
+
+def _print_welcome(parser: argparse.ArgumentParser) -> None:
+    print(f"Gravewright {config.gravewright_version}")
+    print("Run and maintain your table, or build SDK 1 packages.\n")
+    print("Quick start:")
+    print("  grave doctor              Check the installation")
+    print("  grave run --open          Start Gravewright and open the browser")
+    print("  grave package validate    Validate the package in this directory")
+    print("  grave ruleset new         Create a ruleset interactively")
+    print("\nUse 'grave --help' for every command or 'grave <command> --help' for details.")
 
 
 def _print_json(payload: Any) -> None:
@@ -251,7 +282,14 @@ def _cmd_run(args: argparse.Namespace) -> int:
         print(line)
     if abort is not None:
         return abort
-    return serve(host=args.host, port=args.port, dev=args.dev, open_browser=args.open)
+    return serve(
+        host=args.host,
+        port=args.port,
+        dev=args.dev,
+        open_browser=args.open,
+        diagnostics=args.diagnostics or bool(args.diagnostics_file),
+        diagnostics_file=args.diagnostics_file,
+    )
 
 
 def _cmd_db_status(args: argparse.Namespace) -> int:
@@ -1030,11 +1068,27 @@ def _add_kind_command(sub, *, kind: str) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="grave", description="Gravewright operator CLI")
+    parser = GravewrightArgumentParser(
+        prog="grave",
+        description="Run, maintain, and extend Gravewright.",
+        epilog=(
+            "Common workflows:\n"
+            "  grave doctor                         check local health\n"
+            "  grave run --open                     start and open the table\n"
+            "  grave backup -o table.zip --verify   create a verified backup\n"
+            "  grave package validate               validate the current SDK package\n"
+            "  grave ruleset new                    build a ruleset interactively\n\n"
+            "Documentation: docs/README.md and docs/sdk/README.md"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument(
         "--version", action="version", version=f"Gravewright {config.gravewright_version}"
     )
-    sub = parser.add_subparsers(dest="command", required=True)
+    parser.add_argument(
+        "--no-color", action="store_true", help="disable styled terminal output"
+    )
+    sub = parser.add_subparsers(dest="command")
 
     doctor = sub.add_parser("doctor", help="diagnose the local Gravewright install")
     doctor.add_argument("--packages-dir", default=str(_default_packages_dir()))
@@ -1055,6 +1109,16 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--no-migrate", action="store_true")
     run.add_argument("--strict-doctor", action="store_true")
     run.add_argument("--verbose", action="store_true")
+    run.add_argument(
+        "--diagnostics",
+        action="store_true",
+        help="capture redacted local diagnostics and metric snapshots to rotating JSONL",
+    )
+    run.add_argument(
+        "--diagnostics-file",
+        metavar="PATH",
+        help="local diagnostics JSONL destination (implies --diagnostics)",
+    )
     run.set_defaults(func=_cmd_run)
 
     backup = sub.add_parser("backup", help="write a Gravewright backup zip")
@@ -1132,8 +1196,20 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
-    args = parser.parse_args(argv)
-    return int(args.func(args))
+    effective_argv = list(sys.argv[1:] if argv is None else argv)
+    if not effective_argv:
+        _print_welcome(parser)
+        return 0
+    args = parser.parse_args(effective_argv)
+    if getattr(args, "no_color", False):
+        os.environ["NO_COLOR"] = "1"
+    try:
+        return int(args.func(args))
+    except KeyboardInterrupt:
+        print("\nCancelled.", file=sys.stderr)
+        return 130
+    except BrokenPipeError:
+        return 0
 
 
 __all__ = ["build_parser", "main"]

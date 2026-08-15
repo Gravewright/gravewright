@@ -63,3 +63,12 @@ docker compose -f tests/docker-compose.max-stress.yml config
 docker compose -f tests/docker-compose.i5-stress.yml config
 docker compose -f tests/docker-compose.chunk-stream.yml config
 ```
+## Testes de performance
+
+Os artefatos de performance ficam em `tests/performance/`. Testes de aceitação
+de frame pacing devem usar Chromium headed e registrar GPU, driver, backend
+WebGL, viewport, aquecimento, janela de medição e gates de visibilidade.
+
+Tentativas inválidas devem ser preservadas para auditoria, mas nunca misturadas
+à mediana. Consulte [Performance e metodologia de benchmark](performance.md)
+antes de publicar números do renderer.

@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import hashlib
 import sqlite3
+import re
 
 from app.engine.sdk import package_registry
 from app.engine.sdk.capability_registry import get_registry
@@ -234,6 +235,35 @@ class PackageDoctorService:
                         details={"capability": capability},
                     )
                 )
+        source = ""
+        for entrypoint in getattr(loaded.manifest, "entrypoints", {}).values():
+            for relative in entrypoint.scripts:
+                path = safe_join(getattr(loaded, "package_dir", None), relative) if getattr(loaded, "package_dir", None) else None
+                if path is not None and path.is_file():
+                    try:
+                        source += "\n" + path.read_text(encoding="utf-8")
+                    except (OSError, UnicodeError):
+                        continue
+        declared = set(loaded.manifest.capabilities)
+        internal_routes = sorted(set(re.findall(r'["\'](/game/[^"\']*)', source)))
+        for route in internal_routes:
+            findings.append(DoctorFinding(
+                code="package_internal_route_access",
+                severity=SEVERITY_ERROR,
+                package_id=package_id,
+                details={"route": route},
+            ))
+        used_capabilities: set[str] = set()
+        for method, capability in registry.method_to_capability().items():
+            method_pattern = re.escape(method).replace(r"\.", r"\s*\.\s*")
+            if re.search(rf"\bsdk\s*\.\s*{method_pattern}\s*\(", source):
+                used_capabilities.add(capability)
+                if capability not in declared:
+                    findings.append(DoctorFinding(code="capability_used_undeclared", severity=SEVERITY_ERROR, package_id=package_id, details={"capability": capability, "method": f"sdk.{method}"}))
+        for capability in sorted(declared - used_capabilities) if source else ():
+            registered = registry.capabilities.get(capability)
+            if registered and registered.methods and registered.is_frontend:
+                findings.append(DoctorFinding(code="capability_declared_unused", severity=SEVERITY_WARNING, package_id=package_id, details={"capability": capability}))
         return findings
 
     def _audit_manifest_integrity(

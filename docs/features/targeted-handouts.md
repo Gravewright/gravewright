@@ -1,7 +1,7 @@
 # Show to Players
 
 The action lives on a journal, standalone item, or library image. It opens a
-transient Foundry-style dialog where the GM chooses all players or specific
+transient recipient dialog where the GM chooses all players or specific
 members. Submitting immediately opens the content for those recipients.
 
 The contextual action does **not** create a permission grant. Ordinary `can_view`,

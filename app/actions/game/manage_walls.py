@@ -43,6 +43,17 @@ async def move_wall_node(request: Request, current_user: dict, scene_wall_servic
     result=await run_blocking(scene_wall_service.move_node,campaign_id=cid,scene_id=sid,user_id=current_user["id"],**coords)
     if result.success: await broadcast(cid,sid)
     return response(result)
+@post("/game/walls/move-many")
+async def move_walls(request: Request, current_user: dict, scene_wall_service: SceneWallService) -> Response[dict[str, Any]]:
+    if off := disabled(): return off
+    d=await body(request); cid=str(d.get("campaign_id") or ""); sid=str(d.get("scene_id") or "")
+    try: dx=float(d.get("dx")); dy=float(d.get("dy"))
+    except (TypeError,ValueError): dx=dy=float("nan")
+    ids=d.get("wall_ids")
+    result=await run_blocking(scene_wall_service.move_many,campaign_id=cid,scene_id=sid,
+                              wall_ids=ids if isinstance(ids,list) else [],user_id=current_user["id"],dx=dx,dy=dy)
+    if result.success: await broadcast(cid,sid)
+    return response(result)
 @post("/game/walls/door-state")
 async def set_door_state(request: Request,current_user:dict,scene_wall_service:SceneWallService) -> Response[dict[str, Any]]:
     if off := disabled(): return off

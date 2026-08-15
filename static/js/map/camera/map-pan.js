@@ -2,7 +2,6 @@
     function createPanController(deps) {
         const {
             markDirty,
-            saveCameraNow,
             scheduleCameraSave,
             scheduleViewportUpdate,
             stateFor,
@@ -27,12 +26,15 @@
         function update(event) {
             if (!activePan || activePan.pointerId !== event.pointerId) return false;
 
+            const inputStartedAt = window.__gravewrightMeasureRender === true ? performance.now() : 0;
+            const cameraStartedAt = inputStartedAt ? performance.now() : 0;
             const state = stateFor(activePan.canvas);
             state.offsetX = activePan.offsetX + event.clientX - activePan.startX;
             state.offsetY = activePan.offsetY + event.clientY - activePan.startY;
+            if (cameraStartedAt) window.__gravewrightPerfRecord?.("camera_update", performance.now() - cameraStartedAt);
             scheduleViewportUpdate(activePan.canvas);
-            scheduleCameraSave(activePan.canvas);
-            markDirty(activePan.canvas);
+            markDirty(activePan.canvas, ["camera", "overlays", "viewport"]);
+            if (inputStartedAt) window.__gravewrightPerfRecord?.("input_processing", performance.now() - inputStartedAt);
             return true;
         }
 
@@ -46,7 +48,7 @@
             }
 
             activePan.canvas.classList.remove("is-panning");
-            saveCameraNow(activePan.canvas);
+            scheduleCameraSave(activePan.canvas);
             activePan = null;
             return true;
         }

@@ -35,12 +35,26 @@ const enabled = sdk.settings.get("enabled");
 sdk.settings.set("enabled", false);
 const all = sdk.settings.all();
 const defs = sdk.settings.definitions();
+const scope = sdk.settings.scope("enabled");
+const off = sdk.settings.onChange("enabled", ({ value }) => console.log(value));
 
 sdk.setting("enabled");
 sdk.setting("enabled", true);
 ```
 
 Capability exigida: `settings`.
+
+## Escopos e restrições
+
+Os escopos aceitos são `client`, `user`, `campaign` e `package`; `global`
+permanece como alias legado de `package`. Use `client` para preferências locais,
+`campaign` para valores compartilhados na mesa e `package` para configuração
+geral do pacote.
+
+Settings numéricas podem declarar `minimum` e `maximum`, e strings podem
+declarar `pattern`. Valores `client` ficam no navegador, não são enviados ao
+servidor e não entram na exportação da campanha. Mudanças podem ser observadas
+com `sdk.settings.onChange`.
 
 ## Boas práticas
 

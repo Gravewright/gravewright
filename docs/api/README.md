@@ -56,13 +56,13 @@ Package code must not rely on:
 
 ## Stability expectations
 
-During Alpha:
+During Beta:
 
 - manifests must declare `schemaVersion: 1` and `sdkVersion: "1"`;
 - packages should declare `compatibility.minimum`, `compatibility.verified`, and `compatibility.maximum`;
 - package authors should test against the exact Gravewright release they mark as `verified`;
 - documented APIs are the only public contract;
-- breaking API changes should update docs, schemas, example packages, and tests in the same change.
+- SDK 1 changes must remain compatible and update docs, schemas, example packages, and tests in the same change.
 
 ## API material license
 

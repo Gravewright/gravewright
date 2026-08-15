@@ -89,6 +89,122 @@
 
   const controllers = new Map();
 
+  async function getJson(url) {
+    const response = await fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error_key || "game.assets.errors.request_failed");
+    return data;
+  }
+
+  function node(tag, cls, text) {
+    const element = document.createElement(tag);
+    if (cls) element.className = cls;
+    if (text != null) element.textContent = String(text);
+    return element;
+  }
+
+  async function openAssetPackageBrowser(controller) {
+    const dialog = node("dialog", "content-package-modal asset-package-modal");
+    const shell = node("section", "content-package-modal-shell");
+    const header = node("header", "content-package-modal-header");
+    const close = node("button", "content-package-modal-close", "×");
+    close.type = "button";
+    header.append(close, node("h3", "content-package-modal-title", label("assetLabelImportPackage", "Import asset package")));
+    const status = node("p", "content-package-import-status");
+    const body = node("div", "content-package-modal-body");
+    shell.append(header, status, body);
+    dialog.append(shell);
+    document.body.append(dialog);
+    close.addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+    dialog.addEventListener("close", () => dialog.remove());
+    dialog.showModal();
+
+    const packageState = await getJson(`/game/assets/packages/${encodeURIComponent(controller.roomId)}`).catch(() => null);
+    const packages = packageState?.packages || [];
+    if (!packages.length) {
+      body.append(node("p", "content-empty", label("assetLabelNoPackages", "No active asset packages.")));
+      return;
+    }
+    for (const packageInfo of packages) {
+      const details = node("details", "content-pack");
+      const summary = node("summary", "content-pack-summary", packageInfo.name || packageInfo.id);
+      details.append(summary);
+      const packageActions = node("div", "content-package-modal-actions");
+      const importAll = node("button", "content-import-all", label("assetLabelImportAll", "Import all"));
+      importAll.type = "button";
+      packageActions.append(importAll);
+      details.append(packageActions);
+      const list = node("ul", "content-entry-list");
+      details.append(list);
+      let loaded = false;
+      let rendered = false;
+      let entries = [];
+      async function loadEntries() {
+        if (loaded) return entries;
+        loaded = true;
+        const state = await getJson(
+          `/game/assets/packages/${encodeURIComponent(controller.roomId)}/${encodeURIComponent(packageInfo.id)}`
+        ).catch(() => null);
+        entries = state?.assets || [];
+        return entries;
+      }
+      importAll.addEventListener("click", async () => {
+        importAll.disabled = true;
+        const available = await loadEntries();
+        const result = await jsonRequest("/game/assets/packages/import", {
+          campaign_id: controller.roomId,
+          package_id: packageInfo.id,
+          asset_ids: available.map((entry) => entry.id),
+          folder_id: controller.selectedFolderId || null,
+        }).catch(() => null);
+        importAll.disabled = false;
+        if (!result) return;
+        status.textContent = label("assetLabelImportedCount", "{count} assets imported.")
+          .replace("{count}", String(result.imported || 0));
+        await controller.refresh();
+      });
+      details.addEventListener("toggle", async () => {
+        if (!details.open || rendered) return;
+        rendered = true;
+        const available = await loadEntries();
+        available.forEach((entry) => {
+          const row = node("li", "content-entry asset-package-entry");
+          if (entry.category !== "audio") {
+            const preview = document.createElement("img");
+            preview.className = "asset-package-entry__preview";
+            preview.src = entry.src;
+            preview.alt = "";
+            preview.loading = "lazy";
+            row.append(preview);
+          }
+          row.append(node("span", "content-entry-name", entry.label || entry.id));
+          const button = node("button", "content-import-btn", "+");
+          button.type = "button";
+          button.title = label("assetLabelImportOne", "Import");
+          button.addEventListener("click", async () => {
+            button.disabled = true;
+            const result = await jsonRequest("/game/assets/packages/import", {
+              campaign_id: controller.roomId,
+              package_id: packageInfo.id,
+              asset_id: entry.id,
+              folder_id: controller.selectedFolderId || null,
+            }).catch(() => null);
+            button.disabled = false;
+            if (!result?.imported) return;
+            button.textContent = "✓";
+            status.textContent = label("assetLabelImported", "Asset imported.");
+            await controller.refresh();
+          });
+          row.append(button);
+          list.append(row);
+        });
+        if (!available.length) list.append(node("li", "content-entry-empty", "—"));
+      });
+      body.append(details);
+    }
+  }
+
   function assetName(asset) {
     const tail = asset.filename || String(asset.src || "").split("/").pop() || asset.id || "asset";
     return tail.length > 18 ? `${tail.slice(0, 18)}...` : tail;
@@ -109,8 +225,8 @@
 
   function reportUploadFailure(file, error) {
     const message = `${file?.name || "?"}: ${uploadErrorLabel(error)}`;
-    if (window.GravewrightToasts?.show) {
-      window.GravewrightToasts.show(message, { type: "error" });
+    if (window.GravewrightToasts?.showToast) {
+      window.GravewrightToasts.showToast(message, { type: "error" });
     } else {
       console.error("[assets]", message, error);
     }
@@ -337,6 +453,14 @@
       const kind = uploadButton.dataset.sceneAssetUpload || "image";
       const input = workspace?.querySelector(`[data-scene-asset-upload-input="${kind}"]`);
       input?.click();
+      return;
+    }
+
+    const packageButton = event.target.closest("[data-asset-package-open]");
+    if (packageButton) {
+      const workspace = packageButton.closest("[data-scene-assets-workspace]");
+      const controller = workspace ? controllers.get(workspace.dataset.roomId || "") : null;
+      if (controller) void openAssetPackageBrowser(controller);
     }
   });
 

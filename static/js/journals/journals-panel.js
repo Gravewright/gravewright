@@ -13,18 +13,6 @@
   const flushEditors = FI.flushEditors;
 
 
-  async function promptCreateFolder(button) {
-    const campaignId = button.dataset.campaignId;
-    const parentId = button.dataset.parentId || "";
-    if (!campaignId) return;
-    const name = window.prompt(parentId ? "Nome da subpasta" : "Nome da nova pasta");
-    if (!name || !name.trim()) return;
-    const res = await postJournal("/game/journal/folder", {
-      campaign_id: campaignId, parent_id: parentId, name: name.trim(),
-    });
-    if (res.ok) refreshJournalPanel(campaignId);
-  }
-
   function initPanel(panel) {
     panel.addEventListener("click", (event) => {
       if (event.target.closest(".sheet-folder-drag-handle")) return;
@@ -50,25 +38,15 @@
 
       const folderCreateBtn = event.target.closest("[data-journal-folder-create]");
       if (folderCreateBtn) {
-        promptCreateFolder(folderCreateBtn);
+        window.GravewrightContextMenuInternals?.openFolderCreateModal({
+          kind: "journal",
+          campaignId: folderCreateBtn.dataset.campaignId,
+          parentId: folderCreateBtn.dataset.parentId || "",
+        });
         return;
       }
 
-      const folderCollapse = event.target.closest("[data-journal-folder-collapse]");
-      if (folderCollapse) {
-        const folder = folderCollapse.closest("[data-journal-folder]");
-        if (folder) {
-          if (folder.hasAttribute("data-open")) {
-            folder.removeAttribute("data-open");
-            const body = folder.querySelector(":scope > .sheet-folder-body");
-            if (body) body.hidden = true;
-          } else {
-            folder.setAttribute("data-open", "");
-            const body = folder.querySelector(":scope > .sheet-folder-body");
-            if (body) body.hidden = false;
-          }
-        }
-      }
+      // Folder expansion is handled by the shared directory tree controller.
     });
   }
 
@@ -76,6 +54,7 @@
 
   let folderDragFromHandle = false;
   let activeDragZone = null;
+  let directoryDrag = null;
 
   function setActiveDragZone(el, cls) {
     if (activeDragZone && activeDragZone.el !== el) {
@@ -96,7 +75,7 @@
   });
 
   document.addEventListener("dragstart", (e) => {
-    const listArea = e.target.closest(".journal-list-area");
+    const listArea = e.target.closest("[data-journal-panel]");
     if (!listArea) return;
     if (!isGmJournalArea(listArea)) { e.preventDefault(); return; }
 
@@ -105,6 +84,11 @@
       e.dataTransfer.setData("vtt/journal", card.dataset.journalId);
       e.dataTransfer.effectAllowed = "move";
       card.classList.add("is-dragging");
+      directoryDrag = { kind: "journal", id: card.dataset.journalId, source: card };
+      window.GravewrightDirectoryDrag?.start({
+        event: e, source: card, panel: listArea, kind: "journal", id: card.dataset.journalId,
+        label: card.dataset.directoryName || card.querySelector("strong")?.textContent?.trim() || "",
+      });
       folderDragFromHandle = false;
       return;
     }
@@ -115,6 +99,12 @@
       e.dataTransfer.setData("vtt/journal-folder", folder.dataset.folderId);
       e.dataTransfer.effectAllowed = "move";
       folder.classList.add("is-dragging");
+      directoryDrag = { kind: "folder", id: folder.dataset.folderId, source: folder };
+      window.GravewrightDirectoryDrag?.start({
+        event: e, source: folder, panel: listArea, kind: "folder", id: folder.dataset.folderId,
+        label: folder.querySelector(":scope > .sheet-folder-header .sheet-folder-name")?.textContent?.trim() || "",
+        count: folder.querySelectorAll(".journal-card[data-journal-id]").length,
+      });
       folderDragFromHandle = false;
     }
   });
@@ -123,31 +113,42 @@
     e.target.closest(".journal-card[data-journal-id]")?.classList.remove("is-dragging");
     e.target.closest(".journal-folder[data-folder-id]")?.classList.remove("is-dragging");
     setActiveDragZone(null);
+    window.GravewrightDirectoryDrag?.end();
+    directoryDrag = null;
   });
 
   document.addEventListener("dragover", (e) => {
-    const listArea = e.target.closest(".journal-list-area");
+    const listArea = e.target.closest("[data-journal-panel]");
     if (!listArea || !isGmJournalArea(listArea)) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-
-    const rootDropZone = e.target.closest("[data-journal-root-drop]");
     const folderHeader = e.target.closest(".journal-folder .sheet-folder-header");
-    if (folderHeader) { setActiveDragZone(folderHeader, "drag-over"); return; }
     const folderBody = e.target.closest(".journal-folder .sheet-folder-body");
-    if (folderBody) { setActiveDragZone(folderBody, "drag-over"); return; }
-    if (rootDropZone) { setActiveDragZone(rootDropZone, "drag-over-root"); return; }
-    setActiveDragZone(listArea, "drag-over-root");
+    const folder = (folderHeader || folderBody)?.closest(".journal-folder[data-folder-id]") || null;
+    const target = folderHeader || folderBody || listArea;
+    const targetFolderId = folder?.dataset.folderId || "";
+    const valid = directoryDrag && (window.GravewrightDirectoryDrag?.canDrop({
+      source: directoryDrag.source, kind: directoryDrag.kind, targetFolder: folder, targetFolderId,
+      folderSelector: ".journal-folder",
+    }) ?? true);
+    setActiveDragZone(null);
+    if (window.GravewrightDirectoryDrag) {
+      window.GravewrightDirectoryDrag.mark(e, {
+        target, valid, folder, type: "journals", visual: Boolean(folder),
+      });
+    } else if (valid) {
+      e.preventDefault(); e.dataTransfer.dropEffect = "move";
+      setActiveDragZone(target, folder ? "drag-over" : "drag-over-root");
+    }
   });
 
   document.addEventListener("dragleave", (e) => {
-    if (!e.relatedTarget || !e.relatedTarget.closest(".journal-list-area")) {
+    if (!e.relatedTarget || !e.relatedTarget.closest("[data-journal-panel]")) {
       setActiveDragZone(null);
+      window.GravewrightDirectoryDrag?.clearTarget();
     }
   });
 
   document.addEventListener("drop", async (e) => {
-    const listArea = e.target.closest(".journal-list-area");
+    const listArea = e.target.closest("[data-journal-panel]");
     if (!listArea || !isGmJournalArea(listArea)) return;
     e.preventDefault();
     setActiveDragZone(null);
@@ -164,6 +165,15 @@
     } else if (folderBody) {
       targetFolderId = folderBody.closest(".journal-folder[data-folder-id]")?.dataset.folderId || "";
     }
+
+    const targetFolder = (folderHeader || folderBody)?.closest(".journal-folder[data-folder-id]") || null;
+    const valid = directoryDrag && (window.GravewrightDirectoryDrag?.canDrop({
+      source: directoryDrag.source, kind: directoryDrag.kind, targetFolder, targetFolderId,
+      folderSelector: ".journal-folder",
+    }) ?? true);
+    if (!valid) return;
+    window.GravewrightDirectoryDrag?.end();
+    directoryDrag = null;
 
     const roomId = roomIdForJournalEl(listArea);
     if (journalId) {
@@ -190,12 +200,24 @@
   });
 
 
-  document.addEventListener("click", (event) => {
-    const card = event.target.closest(".quest-card[data-journal-select]");
-    if (!card) return;
+  const openBoardCard = (card) => {
     document.dispatchEvent(new CustomEvent("vtt:open-journal", {
       detail: { journalId: card.dataset.journalSelect },
     }));
+  };
+
+  document.addEventListener("click", (event) => {
+    const card = event.target.closest(".board-card[data-journal-select]");
+    if (card) openBoardCard(card);
+  });
+
+  // The cards carry role="button"; keyboard has to open them as one.
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    const card = event.target.closest?.(".board-card[data-journal-select]");
+    if (!card) return;
+    event.preventDefault();
+    openBoardCard(card);
   });
 
 
@@ -207,7 +229,10 @@
     const name = (form.querySelector("input[name='name']")?.value || "").trim();
     if (!name) return;
     const color = form.querySelector("[data-journal-folder-color-text]")?.value || "";
-    const res = await postJournal("/game/journal/folder", { campaign_id: roomId, name, color });
+    const parentId = form.querySelector("input[name='parent_id']")?.value || "";
+    const res = await postJournal("/game/journal/folder", {
+      campaign_id: roomId, parent_id: parentId, name, color,
+    });
     if (res.ok) {
       form.querySelector("input[name='name']").value = "";
       form.closest("[data-modal-window]")?.querySelector("[data-modal-close]")?.click();
@@ -233,7 +258,9 @@
     form.closest("[data-modal-window]")?.querySelector("[data-modal-close]")?.click();
     if (roomId) refreshJournalPanel(roomId);
     if (data.journal_id) {
-      document.dispatchEvent(new CustomEvent("vtt:open-journal", { detail: { journalId: data.journal_id } }));
+      document.dispatchEvent(new CustomEvent("vtt:open-journal", {
+        detail: { journalId: data.journal_id, edit: true },
+      }));
     }
   });
 

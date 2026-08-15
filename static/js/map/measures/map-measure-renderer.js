@@ -227,20 +227,13 @@
         }
 
         function renderOverlay(canvas = activeCanvas()) {
-            const overlay = ensureOverlay();
-            overlay.setAttribute("viewBox", `0 0 ${window.innerWidth} ${window.innerHeight}`);
-            overlay.setAttribute("width", String(window.innerWidth));
-            overlay.setAttribute("height", String(window.innerHeight));
-            while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
-
             const scene = canvas ? sceneDataFor(canvas) : null;
             if (!canvas || !scene || !canvas.closest(".room-workspace")?.classList.contains("is-active")) {
-                overlay.hidden = true;
+                if (overlayEl) overlayEl.hidden = true;
                 return;
             }
 
             const state = stateFor(canvas);
-            onRenderStart?.(canvas);
             const showGmLayer = effectiveIsGm(canvas);
             const roomId = canvas.dataset.roomId || "";
             const measures = measureStoreFor(canvas)
@@ -249,21 +242,35 @@
                     measure.layer === "gm" ? "gm" : "game", roomId
                 ) !== false);
             const flashes = flashStoreFor(canvas);
+            const activeFreehand = getActiveFreehand?.();
+            const activeMeasure = getActiveMeasure?.();
+            const hasActiveFreehand = activeFreehand?.canvas === canvas;
+            const hasActiveMeasure = activeMeasure?.canvas === canvas;
+
+            // Empty scenes are the common case. Avoid creating or mutating a
+            // document-sized SVG on every camera frame when there is nothing
+            // for the overlay to draw.
+            if (!measures.length && !flashes.length && !hasActiveMeasure && !hasActiveFreehand) {
+                if (overlayEl) overlayEl.hidden = true;
+                return;
+            }
+
+            const overlay = ensureOverlay();
+            overlay.setAttribute("viewBox", `0 0 ${window.innerWidth} ${window.innerHeight}`);
+            overlay.setAttribute("width", String(window.innerWidth));
+            overlay.setAttribute("height", String(window.innerHeight));
+            while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
+            onRenderStart?.(canvas);
             measures.forEach((measure) => renderSingleMeasure(overlay, measure, scene, state));
             flashes.forEach((measure) => renderSingleMeasure(overlay, measure, scene, state, false));
 
-            const activeFreehand = getActiveFreehand?.();
-            const activeMeasure = getActiveMeasure?.();
-            if (activeFreehand?.canvas === canvas) {
+            if (hasActiveFreehand) {
                 renderSingleMeasure(overlay, activeFreehand, scene, state, true);
             }
-            if (activeMeasure?.canvas === canvas) {
+            if (hasActiveMeasure) {
                 renderSingleMeasure(overlay, activeMeasure, scene, state, true);
             }
-            overlay.hidden = !measures.length
-                && !flashes.length
-                && activeMeasure?.canvas !== canvas
-                && activeFreehand?.canvas !== canvas;
+            overlay.hidden = false;
         }
 
         return {

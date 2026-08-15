@@ -139,3 +139,9 @@ runners to reuse test data, and `--keep` on the chunk-stream runner to leave its
 containers running.
 
 Performance outputs are written under `tests/performance/`.
+
+Browser frame-pacing acceptance runs must use headed Chromium and record the GPU,
+driver, WebGL backend, viewport, warm-up, measurement window, and visibility
+gates. Keep invalid attempts for audit, but never mix them into a median. See
+[Performance and benchmark methodology](performance.md) before publishing a
+renderer number.

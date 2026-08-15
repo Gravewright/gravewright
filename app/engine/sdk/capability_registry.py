@@ -18,7 +18,7 @@ from pathlib import Path
 
 REGISTRY_PATH = Path(__file__).with_name("capabilities.json")
 
-VALID_STATUSES = frozenset({"stable", "forbidden"})
+VALID_STATUSES = frozenset({"stable", "experimental", "deprecated", "forbidden"})
 VALID_SURFACES = frozenset({"manifest", "backend", "frontend", "doctor"})
 
 
@@ -29,6 +29,7 @@ class Capability:
     description: str
     surfaces: tuple[str, ...]
     methods: tuple[str, ...]
+    since: str = "1"
 
     @property
     def is_frontend(self) -> bool:
@@ -78,6 +79,7 @@ def _load(path: Path) -> CapabilityRegistry:
             description=str(raw.get("description", "")),
             surfaces=tuple(raw.get("surfaces", []) or []),
             methods=tuple(raw.get("methods", []) or []),
+            since=str(raw.get("since", "1")),
         )
     forbidden = {
         name: str(raw.get("reason", "")) for name, raw in data.get("forbidden", {}).items()

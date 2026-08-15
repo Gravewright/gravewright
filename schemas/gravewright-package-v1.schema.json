@@ -168,7 +168,7 @@
           "key": { "type": "string", "minLength": 1 },
           "scope": {
             "type": "string",
-            "enum": ["global", "campaign", "user"]
+            "enum": ["global", "package", "campaign", "user", "client"]
           },
           "type": {
             "type": "string",
@@ -176,7 +176,10 @@
           },
           "default": {},
           "label": { "type": "string" },
-          "options": { "type": "array" }
+          "options": { "type": "array" },
+          "minimum": { "type": "number" },
+          "maximum": { "type": "number" },
+          "pattern": { "type": "string" }
         }
       }
     },

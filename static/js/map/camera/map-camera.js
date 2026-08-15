@@ -146,7 +146,7 @@
             state.offsetY = viewport.height / 2 - worldY * state.zoom;
             scheduleViewportUpdate(canvas);
             scheduleSave(canvas);
-            markDirty(canvas);
+            markDirty(canvas, ["camera", "overlays", "viewport"]);
         }
 
         return {

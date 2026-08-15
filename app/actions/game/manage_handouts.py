@@ -8,18 +8,14 @@ from litestar import get, post
 from litestar.params import Body, FromPath, FromQuery
 from litestar.response import File, Response, Template
 
-from app.business.handouts import HandoutService
-from app.business.handouts.presentation_ticket import (
-    issue_presentation_ticket, verify_presentation_ticket,
-)
+from app.business.handouts import HandoutService, dispatch_handout_presentation
+from app.business.handouts.presentation_ticket import verify_presentation_ticket
 from app.business.audit import AuditService
 from app.config import config
 from app.helpers.async_blocking import run_blocking
 from app.persistence.rows import Row
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
-from app.persistence.repositories.realtime_recipient_repository import RealtimeRecipientRepository
-from app.domain.roles import PlayerRole
 from app.engine.assets.asset_read_service import AssetReadService
 from app.engine.journals.journal_page_service import JournalPageService
 from app.engine.sheets.item_sheet_service import ItemSheetService
@@ -55,6 +51,10 @@ def _disabled() -> Response[dict[str, Any]] | None:
     return Response({"ok": False, "error_key": "handout.errors.disabled"}, status_code=404)
 
 
+async def _notify_presentation(grant: dict) -> None:
+    await dispatch_handout_presentation(grant)
+
+
 async def _announce_change(campaign_id: str) -> None:
 
 
@@ -63,37 +63,6 @@ async def _announce_change(campaign_id: str) -> None:
         event=TransportEvent.HANDOUT_ACCESS_CHANGED,
         payload={"room_id": campaign_id},
     )
-
-
-async def _present(grant: dict) -> None:
-    recipients = RealtimeRecipientRepository()
-    subject_type = grant["subject_type"]
-    if subject_type == "user":
-        user_ids = [grant["subject_id"]]
-    elif subject_type == "role":
-        try:
-            role = PlayerRole(grant["subject_id"])
-        except ValueError:
-            return
-        user_ids = await run_blocking(
-            recipients.list_role_member_user_ids,
-            room_id=grant["campaign_id"], role=role,
-        )
-    else:
-        user_ids = await run_blocking(
-            recipients.list_room_member_user_ids, grant["campaign_id"]
-        )
-    user_ids = [user_id for user_id in user_ids if user_id != grant["created_by_user_id"]]
-    transport = RealtimeTransport()
-    for user_id in user_ids:
-        ticket = issue_presentation_ticket(
-            campaign_id=grant["campaign_id"], user_id=user_id,
-            resource_type=grant["resource_type"], resource_id=grant["resource_id"],
-        )
-        await transport.to_player(
-            player_id=user_id, event=TransportEvent.HANDOUT_PRESENTED,
-            payload={"ticket": ticket, "resource_type": grant["resource_type"]},
-        )
 
 
 @post("/game/handouts/present")
@@ -116,7 +85,7 @@ async def present_handout(
             {"ok": False, "error_key": result.error_key},
             status_code=_status_for(result.error_key),
         )
-    await _present(result.grant)
+    await _notify_presentation(result.grant)
     await run_blocking(
         audit_service.record,
         campaign_id=data.campaign_id.strip(), actor_user_id=current_user["id"],
@@ -210,7 +179,7 @@ async def grant_handout(
         metadata={"resource_type": data.resource_type.strip(), "audience_type": data.subject_type.strip()},
     )
     await _announce_change(data.campaign_id.strip())
-    await _present(result.grant)
+    await _notify_presentation(result.grant)
     return Response({"ok": True, "grant": result.grant}, status_code=200)
 
 

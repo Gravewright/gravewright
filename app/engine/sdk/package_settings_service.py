@@ -21,6 +21,7 @@ Scope semantics:
 from __future__ import annotations
 
 import json
+import re
 
 from app.engine.sdk.diagnostics import SdkActionResult, SdkError
 from app.engine.sdk.package_install_service import PackageInstallService
@@ -95,9 +96,13 @@ def coerce_setting_value(definition: PackageSetting, value: object) -> object:
         if definition.type == "boolean":
             return _coerce_boolean(value)
         if definition.type == "integer":
-            return _coerce_integer(value)
+            coerced = _coerce_integer(value)
+            _validate_constraints(definition, coerced)
+            return coerced
         if definition.type == "number":
-            return _coerce_number(value)
+            coerced = _coerce_number(value)
+            _validate_constraints(definition, coerced)
+            return coerced
         if definition.type == "enum":
             if value in definition.options:
                 return value
@@ -105,9 +110,21 @@ def coerce_setting_value(definition: PackageSetting, value: object) -> object:
 
         if value is None:
             raise ValueError(value)
-        return str(value)
+        coerced = str(value)
+        _validate_constraints(definition, coerced)
+        return coerced
     except (TypeError, ValueError) as exc:
         raise SettingValueError(definition.key, definition.type, value) from exc
+
+
+def _validate_constraints(definition: PackageSetting, value: object) -> None:
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if definition.minimum is not None and value < definition.minimum:
+            raise ValueError(value)
+        if definition.maximum is not None and value > definition.maximum:
+            raise ValueError(value)
+    if definition.pattern and isinstance(value, str) and re.fullmatch(definition.pattern, value) is None:
+        raise ValueError(value)
 
 
 def _parse_stored(value_json: str, default: object) -> object:
@@ -209,6 +226,15 @@ class PackageSettingsService:
                     code="sdk.settings.invalid_value",
                     message="user-scoped setting requires a user",
                     details={"setting_key": key, "reason": "missing_user"},
+                    package_id=package_id,
+                )
+            )
+        if definition.scope == "client":
+            return SdkActionResult.fail(
+                SdkError(
+                    code="sdk.settings.client_only",
+                    message="client settings are stored by the browser",
+                    details={"setting_key": key},
                     package_id=package_id,
                 )
             )

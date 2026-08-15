@@ -57,6 +57,26 @@ def test_upload_valid_png(db, tmp_path):
     assert result.width == 12 and result.height == 8
 
 
+def test_upload_valid_pdf_page(db, tmp_path):
+    gm = seed_user(name="GM", email="gm-asset-pdf@test.com")
+    campaign_id = seed_campaign(gm)
+    journal_id = _journal(campaign_id, gm)
+    service = JournalAssetService(storage=LocalJournalAssetStorage(root=tmp_path / "ja"))
+
+    result = service.upload_image(
+        journal_id=journal_id,
+        user_id=gm,
+        filename="handout.pdf",
+        content_type="application/pdf",
+        data=b"%PDF-1.7\n%%EOF",
+        purpose="journal_pdf",
+    )
+
+    assert result.success
+    assert result.src == f"/game/journal/asset/{result.asset_id}"
+    assert result.width is None and result.height is None
+
+
 def test_upload_rejects_unsupported_type(db, tmp_path):
     gm = seed_user(name="GM", email="gm-asset2@test.com")
     campaign_id = seed_campaign(gm)

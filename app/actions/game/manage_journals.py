@@ -92,6 +92,7 @@ def _build_data(form: Any, journal_type: str) -> dict | None:
         return {
             "content": _json_object(form, "content_doc"),
             "cover": {"src": _str(form, "diary_image_src")},
+            "sections": _json_field(form, "sections_json"),
             "gm": {
                 "notes": _json_object(form, "gm_notes_doc"),
                 "secrets": _json_object(form, "gm_secrets_doc"),
@@ -116,16 +117,7 @@ def _build_data(form: Any, journal_type: str) -> dict | None:
             "tags": [tag.strip() for tag in _str(form, "tags").split(",") if tag.strip()],
         }
     if journal_type == "quest_board":
-        return {
-            "description": _json_object(form, "board_description_doc"),
-            "image": {"src": _str(form, "board_image_src")},
-            "filters": {
-                "showAvailable": _bool(form, "board_show_available"),
-                "showActive": _bool(form, "board_show_active"),
-                "showCompleted": _bool(form, "board_show_completed"),
-                "showFailed": _bool(form, "board_show_failed"),
-            },
-        }
+        return {}
     return None
 
 
@@ -517,6 +509,88 @@ async def journals_panel_fragment(
         template_name="pages/game/_journals_panel.html",
         context=view_context(cookies, room=room),
     )
+
+
+@post("/game/journal/folder/rename")
+async def rename_journal_folder(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    journal_service: JournalService,
+) -> Response[dict[str, Any]] | Redirect:
+    user, form, early_response = await _authenticated_form(request, cookies, current_user)
+    if early_response is not None:
+        return early_response
+    assert user is not None
+    result = journal_service.rename_folder(
+        folder_id=_str(form, "folder_id"),
+        name=_str(form, "name"),
+        requester_user_id=user["id"],
+    )
+    if result.success:
+        await announce_resource_tree_change(
+            resource_type="journal", campaign_id=result.campaign_id, transport=RealtimeTransport()
+        )
+    if _wants_json(request):
+        return Response(
+            {"folder_id": result.folder_id} if result.success else {"error_key": result.error_key},
+            status_code=200 if result.success else 400,
+        )
+    return _journal_redirect(result.campaign_id or _str(form, "campaign_id"))
+
+
+@post("/game/journal/folder/color")
+async def set_journal_folder_color(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    journal_service: JournalService,
+) -> Response[dict[str, Any]] | Redirect:
+    user, form, early_response = await _authenticated_form(request, cookies, current_user)
+    if early_response is not None:
+        return early_response
+    assert user is not None
+    result = journal_service.set_folder_color(
+        folder_id=_str(form, "folder_id"),
+        color=_str(form, "color"),
+        requester_user_id=user["id"],
+    )
+    if result.success:
+        await announce_resource_tree_change(
+            resource_type="journal", campaign_id=result.campaign_id, transport=RealtimeTransport()
+        )
+    if _wants_json(request):
+        return Response(
+            {"folder_id": result.folder_id} if result.success else {"error_key": result.error_key},
+            status_code=200 if result.success else 400,
+        )
+    return _journal_redirect(result.campaign_id or _str(form, "campaign_id"))
+
+
+@post("/game/journal/folder/delete")
+async def delete_journal_folder(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    journal_service: JournalService,
+) -> Response[dict[str, Any]] | Redirect:
+    user, form, early_response = await _authenticated_form(request, cookies, current_user)
+    if early_response is not None:
+        return early_response
+    assert user is not None
+    result = journal_service.delete_folder(
+        folder_id=_str(form, "folder_id"), requester_user_id=user["id"]
+    )
+    if result.success:
+        await announce_resource_tree_change(
+            resource_type="journal", campaign_id=result.campaign_id, transport=RealtimeTransport()
+        )
+    if _wants_json(request):
+        return Response(
+            {"folder_id": result.folder_id} if result.success else {"error_key": result.error_key},
+            status_code=200 if result.success else 400,
+        )
+    return _journal_redirect(result.campaign_id or _str(form, "campaign_id"))
 
 
 @get("/game/journal/modal/{journal_id:str}")

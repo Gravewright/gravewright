@@ -1,0 +1,109 @@
+{
+  "headless": false,
+  "warmup_seconds": 10,
+  "measurement_seconds": 30,
+  "gpu": {
+    "device_string": "NVIDIA GeForce RTX 4060",
+    "driver_vendor": "NVIDIA",
+    "driver_version": "32.0.15.9621",
+    "webgl_renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 (0x00002882) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "hardware_accelerated": true
+  },
+  "results": [
+    {
+      "total_entities": 11500,
+      "requested_visible": 11500,
+      "unique_assets": 1,
+      "frames": 1010,
+      "frame_ms_average": 29.751881188118812,
+      "frame_ms_p50": 33.20000000000073,
+      "frame_ms_p95": 50.10000000000218,
+      "frame_ms_p99": 66.29999999999927,
+      "js_heap_mb": 121.34088706970215,
+      "animation_callback_ms_p95": 23.200000002980232,
+      "unattributed_frame_gap_ms_p95": 26.89999999702195,
+      "long_tasks": 43,
+      "long_task_ms_p95": 68,
+      "process_rss_mb": 809.9140625,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.06401384088201094,
+          "p95": 0.20000000298023224,
+          "p99": 0.20000000298023224
+        },
+        "render_prepare": {
+          "average": 7.394463667987643,
+          "p95": 11.199999995529652,
+          "p99": 14.600000001490116
+        },
+        "app_render": {
+          "average": 4.4776239906885635,
+          "p95": 6.899999998509884,
+          "p99": 9.299999997019768
+        },
+        "dom_layout_style": {
+          "average": 0.03644752018196635,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "raf_wait": {
+          "average": 29.493762376373358,
+          "p95": 52.29999999701977,
+          "p99": 62.79999999701977
+        },
+        "animation_canvas": {
+          "average": 0.03455445545882282,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "redraw_total": {
+          "average": 16.444950495055405,
+          "p95": 23.19999999552965,
+          "p99": 28.799999997019768
+        },
+        "animation_callback": {
+          "average": 16.48277227720707,
+          "p95": 23.200000002980232,
+          "p99": 28.799999997019768
+        },
+        "image_decode": {
+          "average": 75.44804469262921,
+          "p95": 109.79999999701977,
+          "p99": 140.89999999850988
+        },
+        "texture_create": {
+          "average": 0.10726256976580487,
+          "p95": 0.20000000298023224,
+          "p99": 0.29999999701976776
+        },
+        "texture_pipeline_total": {
+          "average": 1257.5826815643125,
+          "p95": 1572.2000000029802,
+          "p99": 1587.3999999985099
+        },
+        "texture_materialization": {
+          "average": 0.021590909116308798,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 11500,
+        "visible": 11500,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 11499,
+        "tokenNodes": 11500,
+        "fastSprites": 11500
+      },
+      "spatial": {
+        "total": 11500,
+        "candidates": 11500,
+        "visible": 11500,
+        "culled": 0,
+        "queryMs": 5
+      },
+      "logical_gpu_mb": 58.5625
+    }
+  ]
+}

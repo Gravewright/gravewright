@@ -1,0 +1,76 @@
+{
+  "headless": false,
+  "warmup_seconds": 10,
+  "measurement_seconds": 30,
+  "results": [
+    {
+      "total_entities": 1000,
+      "requested_visible": 1000,
+      "unique_assets": 1,
+      "frames": 1796,
+      "frame_ms_average": 16.72188195991091,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 17,
+      "frame_ms_p99": 17.100000000000364,
+      "js_heap_mb": 103.47783660888672,
+      "animation_callback_ms_p95": 12.100000001490116,
+      "unattributed_frame_gap_ms_p95": 4.899999998509884,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 706.3671875,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.0645879732324578,
+          "p95": 0.19999999552965164,
+          "p99": 0.20000000298023224
+        },
+        "streaming_update": {
+          "average": 0.03580178169819852,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "render_prepare": {
+          "average": 1.946937639174987,
+          "p95": 2.899999998509884,
+          "p99": 3.899999998509884
+        },
+        "app_render": {
+          "average": 5.793485523390279,
+          "p95": 8.5,
+          "p99": 11.199999995529652
+        },
+        "dom_layout_style": {
+          "average": 0.02383073502715951,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 8.700222717170792,
+          "p95": 12,
+          "p99": 15
+        },
+        "animation_callback": {
+          "average": 8.768986636946986,
+          "p95": 12.100000001490116,
+          "p99": 15.100000001490116
+        }
+      },
+      "resources": {
+        "instances": 1000,
+        "visible": 1000,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 999,
+        "tokenNodes": 1000
+      },
+      "spatial": {
+        "total": 1000,
+        "candidates": 1000,
+        "visible": 1000,
+        "culled": 0,
+        "queryMs": 1.2000000029802322
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ]
+}

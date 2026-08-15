@@ -29,7 +29,9 @@ from app.actions.game.manage_actors import execute_item_action
 from app.actions.game.manage_actors import get_embedded_item_sheet_bundle
 from app.actions.game.manage_actors import get_content_pack
 from app.actions.game.manage_actors import import_content_entry
+from app.actions.game.manage_actors import import_content_package
 from app.actions.game.manage_actors import list_content_packs
+from app.actions.game.manage_actors import list_active_content_packages
 from app.actions.game.manage_actors import get_sheet_bundle
 from app.actions.game.manage_actors import get_sheet_data
 from app.actions.game.manage_actors import get_token_sheet_bundle
@@ -74,6 +76,9 @@ from app.actions.game.manage_assets import get_asset_library_state
 from app.actions.game.manage_assets import move_asset_to_folder
 from app.actions.game.manage_assets import serve_asset
 from app.actions.game.manage_assets import upload_asset_library_image
+from app.actions.game.manage_assets import import_asset_package_entry
+from app.actions.game.manage_assets import list_asset_package_entries
+from app.actions.game.manage_assets import list_asset_packages
 from app.actions.game.manage_scene_images import delete_scene_image
 from app.actions.game.manage_scene_images import get_scene_images_state
 from app.actions.game.manage_scene_images import place_asset_on_scene
@@ -121,9 +126,10 @@ from app.actions.game.manage_lobby import update_lobby_state
 from app.actions.game.manage_particles import create_particle, delete_particle, delete_particles, get_particles, update_particle
 from app.actions.game.manage_shaders import create_shader, delete_shader, delete_shaders, get_shaders, update_shader
 from app.actions.game.manage_lights import create_light, delete_light, delete_lights, get_lights, update_light
-from app.actions.game.manage_walls import create_wall, delete_wall, delete_walls, get_walls, move_wall_node, set_door_state, split_wall
+from app.actions.game.manage_walls import create_wall, delete_wall, delete_walls, get_walls, move_wall_node, move_walls, set_door_state, split_wall
 from app.actions.game.manage_onboarding import get_gm_onboarding
 from app.actions.game.manage_onboarding import update_gm_onboarding_preference
+from app.actions.game.player_onboarding import claim_player_onboarding
 from app.actions.game.resource_permissions import show_resource_permissions
 from app.actions.game.resource_permissions import update_resource_permissions
 from app.actions.game.send_chat_message import clear_chat_messages
@@ -131,7 +137,7 @@ from app.actions.game.send_chat_message import delete_chat_message
 from app.actions.game.send_chat_message import send_chat_message
 from app.actions.game.serve_scene_image import serve_scene_image
 from app.actions.game.serve_scene_tile import serve_scene_tile
-from app.actions.game.scene_manifest import get_scene_manifest
+from app.actions.game.scene_manifest import get_scene_manifest, get_scene_tile_index
 from app.actions.game.scene_tokens import get_scene_tokens
 from app.actions.game.scene_tokens import update_token_hp
 from app.actions.game.show_game import show_game
@@ -151,6 +157,7 @@ from app.helpers.auth import require_user
 _protected_handlers = [
     show_game,
     get_scene_manifest,
+    get_scene_tile_index,
     get_scene_tokens,
     update_token_hp,
     serve_scene_image,
@@ -185,6 +192,9 @@ _protected_handlers = [
     create_asset_folder,
     move_asset_to_folder,
     upload_asset_library_image,
+    list_asset_packages,
+    list_asset_package_entries,
+    import_asset_package_entry,
     delete_library_asset,
     serve_asset,
     get_scene_images_state,
@@ -218,9 +228,11 @@ _protected_handlers = [
     show_actor_sheet_modal,
     show_token_sheet_modal,
     list_content_packs,
+    list_active_content_packages,
     get_content_pack,
     drop_on_actor,
     import_content_entry,
+    import_content_package,
     create_journal,
     update_journal,
     delete_journal,
@@ -246,6 +258,7 @@ _protected_handlers = [
     get_walls,
     create_wall,
     move_wall_node,
+    move_walls,
     set_door_state,
     delete_wall,
     delete_walls,
@@ -267,6 +280,7 @@ _protected_handlers = [
     delete_lights,
     get_gm_onboarding,
     update_gm_onboarding_preference,
+    claim_player_onboarding,
     invite_to_campaign,
     global_search,
     update_campaign_permissions,

@@ -1,0 +1,36 @@
+{
+  "password": "Andromeda1!",
+  "gm": {
+    "email": "andromeda-gm@test.local",
+    "user_id": "93a0fe9502ca49098e24ae02787c6215"
+  },
+  "players": [
+    {
+      "email": "andromeda-player-1@test.local",
+      "user_id": "14823601fefb4d7383e3957b8f91c9b8"
+    },
+    {
+      "email": "andromeda-player-2@test.local",
+      "user_id": "22115791f6cb49a7bfab5b4df02be6da"
+    },
+    {
+      "email": "andromeda-player-3@test.local",
+      "user_id": "0aba4f655a774214bc036a316c5e7591"
+    },
+    {
+      "email": "andromeda-player-4@test.local",
+      "user_id": "5bc14777382448eb9f84774bba951619"
+    },
+    {
+      "email": "andromeda-player-5@test.local",
+      "user_id": "c5a5f08689d846bea30f366ef991074f"
+    }
+  ],
+  "campaign_id": "9456741070444fbf9b943a69b603b3f2",
+  "scene_id": "5d33b8797aa743f0bd0084b9f6f9a747",
+  "image": {
+    "path": "C:\\Users\\ricardo\\Desktop\\Nova pasta (4)\\4601217.jpg",
+    "bytes": 3407325
+  },
+  "ingest_seconds": 4.989
+}

@@ -11,6 +11,7 @@ path, and the dependency/conflict format. It returns a structured result with
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 
 from app.engine.sdk.capability_registry import get_registry
 from app.engine.sdk.package_compatibility import (
@@ -32,7 +33,7 @@ FORBIDDEN_CAPABILITIES = get_registry().forbidden_names()
 
 ACTIVATION_MODES = {"exclusive", "multiple", "passive", "none"}
 ACTIVATION_SCOPES = {"campaign", "global", "user"}
-SETTING_SCOPES = {"global", "campaign", "user"}
+SETTING_SCOPES = {"global", "package", "campaign", "user", "client"}
 SETTING_TYPES = {"boolean", "string", "number", "integer", "enum"}
 DISTRIBUTION_TYPES = {"zip", "git", "directory"}
 KNOWN_PROVIDES_KEYS = {
@@ -260,6 +261,11 @@ def _validate_assets(manifest: PackageManifest, result: PackageManifestValidatio
         if not isinstance(path, str) or not path_is_safe(path):
             result.add("sdk.validation.assets_invalid_assets")
             continue
+        folder = entry.get("folder")
+        if folder is not None and (
+            not isinstance(folder, str) or not folder or not path_is_safe(folder.replace("\\", "/"))
+        ):
+            result.add("sdk.validation.assets_invalid_assets")
         ids = seen.setdefault(category, set())
         if entry_id in ids:
             result.add("sdk.validation.assets_invalid_assets")
@@ -289,6 +295,13 @@ def _validate_settings(manifest: PackageManifest, result: PackageManifestValidat
             result.add("sdk.validation.setting_invalid")
         if setting.type == "enum" and not setting.options:
             result.add("sdk.validation.setting_invalid")
+        if setting.minimum is not None and setting.maximum is not None and setting.minimum > setting.maximum:
+            result.add("sdk.validation.setting_invalid")
+        if setting.pattern:
+            try:
+                re.compile(setting.pattern)
+            except re.error:
+                result.add("sdk.validation.setting_invalid")
 
 
 def _validate_html_sheets(manifest: PackageManifest, result: PackageManifestValidation) -> None:

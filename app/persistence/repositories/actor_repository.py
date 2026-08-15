@@ -82,12 +82,15 @@ class ActorRepository:
         folder_id: str | None,
         portrait_asset_id: str | None,
         token_asset_id: str | None,
-    ) -> int:
+        expected_version: int | None = None,
+    ) -> int | None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(
-                update(actors_core)
-                .where(actors_core.c.id == actor_id)
+            statement = update(actors_core).where(actors_core.c.id == actor_id)
+            if expected_version is not None:
+                statement = statement.where(actors_core.c.version == expected_version)
+            changed = conn.execute(
+                statement
                 .values(
                     name=name,
                     folder_id=folder_id,
@@ -97,12 +100,14 @@ class ActorRepository:
                     updated_at=now,
                 )
             )
+            if changed.rowcount == 0:
+                return None
             row = one_or_none(
                 conn.execute(
                     select(actors_core.c.version).where(actors_core.c.id == actor_id).limit(1)
                 )
             )
-        return int(row["version"]) if row is not None else 0
+        return int(row["version"]) if row is not None else None
 
     def set_asset(self, *, actor_id: str, kind: str, storage_path: str) -> None:
         field = {

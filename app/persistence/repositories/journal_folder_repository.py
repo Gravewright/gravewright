@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 import uuid
 
+from sqlalchemy import delete
 from sqlalchemy import insert
 from sqlalchemy import select
 from sqlalchemy import update
@@ -62,6 +63,12 @@ class JournalFolderRepository:
                 )
             )
 
+    def get_by_id(self, *, folder_id: str) -> dict | None:
+        with engine_connect() as conn:
+            return one_or_none(
+                conn.execute(select(folder_table).where(folder_table.c.id == folder_id).limit(1))
+            )
+
     def set_parent(self, *, folder_id: str, parent_id: str | None) -> None:
         now = int(time.time())
         with engine_begin() as conn:
@@ -70,3 +77,34 @@ class JournalFolderRepository:
                 .where(folder_table.c.id == folder_id)
                 .values(parent_id=parent_id, updated_at=now)
             )
+
+    def rename(self, *, folder_id: str, name: str) -> None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(folder_table)
+                .where(folder_table.c.id == folder_id)
+                .values(name=name, updated_at=now)
+            )
+
+    def set_color(self, *, folder_id: str, color: str | None) -> None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(folder_table)
+                .where(folder_table.c.id == folder_id)
+                .values(color=color, updated_at=now)
+            )
+
+    def move_children(self, *, folder_id: str, parent_id: str | None) -> None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(folder_table)
+                .where(folder_table.c.parent_id == folder_id)
+                .values(parent_id=parent_id, updated_at=now)
+            )
+
+    def delete(self, *, folder_id: str) -> None:
+        with engine_begin() as conn:
+            conn.execute(delete(folder_table).where(folder_table.c.id == folder_id))

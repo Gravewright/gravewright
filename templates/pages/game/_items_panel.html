@@ -1,5 +1,5 @@
 {% macro item_card(item) %}
-<li class="item-card" data-item-open="{{ item.id }}" data-item-card="{{ item.id }}"
+<li class="item-card" data-item-open="{{ item.id }}" data-item-card="{{ item.id }}" data-directory-name="{{ item.name | e }}"
     role="button" tabindex="0"
     {% if room.member_role == 'gm' %}draggable="true"{% endif %}
     data-can-edit="{{ 'true' if item.can_edit else 'false' }}"
@@ -20,20 +20,19 @@
      data-folder-name="{{ folder.name }}"
      data-folder-parent-id="{{ folder.parent_id or '' }}"
      data-folder-color="{{ folder.color or '' }}"
-     data-open
      {% if room.member_role == 'gm' %}draggable="true"{% endif %}>
     <div class="sheet-folder-header" data-item-folder-drop="{{ folder.id }}">
         {% if room.member_role == 'gm' %}
         <i class="ph ph-dots-six-vertical sheet-folder-drag-handle" aria-hidden="true"></i>
         {% endif %}
-        <button class="sheet-folder-toggle" type="button" data-item-folder-collapse>
+        <button class="sheet-folder-toggle" type="button" data-item-folder-collapse aria-expanded="false">
             <i class="ph ph-folder sheet-folder-icon" aria-hidden="true"></i>
             <span class="sheet-folder-name">{{ folder.name }}</span>
             <span class="sheet-folder-count">{{ folder.all_count }}</span>
             <i class="ph ph-caret-right sheet-folder-caret" aria-hidden="true"></i>
         </button>
     </div>
-    <div class="sheet-folder-body">
+    <div class="sheet-folder-body" hidden>
         {% for child in folder.children %}{{ item_folder(child) }}{% endfor %}
         <ul class="item-list">
             {% for item in folder.entries %}{{ item_card(item) }}{% endfor %}

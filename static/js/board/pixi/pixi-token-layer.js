@@ -34,6 +34,7 @@
 
     Object.assign(proto, {
         _renderTokens(board, cssW, cssH) {
+            const spatialStartedAt = performance.now();
             const scene = this.scene;
             const layer = board.tokenWorldLayer;
 
@@ -41,6 +42,7 @@
                 board.tokenNodes.forEach((node) => {
                     node.container.visible = false;
                 });
+                board.fastTokenSprites.forEach((sprite) => { sprite.visible = false; });
                 return;
             }
 
@@ -63,6 +65,9 @@
             const cullY1 = Math.ceil(wy1) + 1;
 
             const live = new Set();
+            const liveFast = new Set();
+            const existing = new Set(this.tokens.map((token) => token.token_id));
+            let spatialCandidates = 0;
 
             this.tokens.forEach((token) => {
                 if (token.hidden && !viewerIsGm) return;
@@ -91,11 +96,26 @@
                 ) {
                     return;
                 }
+                spatialCandidates += 1;
 
                 const ww = s * wCells;
                 const wh = s * hCells;
                 if (Math.min(ww, wh) * zoom < 4) return;
 
+                const hasBars = Object.keys(token.bars || {}).length > 0;
+                const isSelected = selectedIds.has(token.token_id);
+                const isHovered = hoveredId === token.token_id;
+                const fast = !!token.asset_url
+                    && (token.benchmark_animated || token.asset_render_mode === "transparent")
+                    && !token.name && !hasBars && !token.combat_marker
+                    && !isDragging && !isSelected && !isHovered;
+                if (fast) {
+                    liveFast.add(token.token_id);
+                    this._renderFastToken(board, token, {
+                        wx: renderWorldX, wy: renderWorldY, ww, wh,
+                    });
+                    return;
+                }
                 live.add(token.token_id);
                 this._renderToken(board, layer, token, {
                     wx: renderWorldX,
@@ -104,19 +124,72 @@
                     wh,
                     zoom,
                     isDragging,
-                    selected: selectedIds.has(token.token_id),
-                    hovered: hoveredId === token.token_id,
+                    selected: isSelected,
+                    hovered: isHovered,
                 });
             });
 
             board.tokenNodes.forEach((node, id) => {
+                if (!existing.has(id)) {
+                    node.container.destroy({ children: true });
+                    node.label.destroy();
+                    node.labelBg.destroy();
+                    board.tokenNodes.delete(id);
+                    return;
+                }
                 if (!live.has(id)) {
                     node.container.visible = false;
                     node.label.visible = false;
-                    node.labelBg.visible = false;
-                    node.labelBg.clear();
+                    if (node.labelBg.visible) {
+                        node.labelBg.visible = false;
+                        node.labelBg.clear();
+                    }
                 }
             });
+            board.fastTokenSprites.forEach((sprite, id) => {
+                if (!existing.has(id)) {
+                    sprite.destroy();
+                    board.fastTokenSprites.delete(id);
+                    return;
+                }
+                sprite.visible = liveFast.has(id);
+            });
+            board.tokenSpatialMetrics = {
+                total: this.tokens.length,
+                candidates: spatialCandidates,
+                visible: live.size + liveFast.size,
+                culled: Math.max(0, this.tokens.length - live.size - liveFast.size),
+                queryMs: performance.now() - spatialStartedAt,
+            };
+        },
+
+        _renderFastToken(board, token, { wx, wy, ww, wh }) {
+            let sprite = board.fastTokenSprites.get(token.token_id);
+            if (!sprite) {
+                sprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
+                sprite.eventMode = "none";
+                board.fastTokenSprites.set(token.token_id, sprite);
+                board.tokenSpriteLayer.addChild(sprite);
+            }
+            const staleNode = board.tokenNodes.get(token.token_id);
+            if (staleNode) {
+                staleNode.container.destroy({ children: true });
+                staleNode.label.destroy();
+                staleNode.labelBg.destroy();
+                board.tokenNodes.delete(token.token_id);
+            }
+            const texture = this._texture(token.asset_url, {
+                visible: true, priority: -1_000_000,
+                generation: this.tiles?.generation || 0,
+            });
+            sprite.visible = !!texture;
+            if (!texture) return;
+            sprite.texture = texture;
+            const size = Math.min(ww, wh);
+            sprite.position.set(wx + (ww - size) / 2, wy + (wh - size) / 2);
+            sprite.width = size;
+            sprite.height = size;
+            sprite.alpha = token.hidden ? TOKEN_HIDDEN_OPACITY : 1;
         },
 
         _renderToken(board, layer, token, ctx) {
@@ -124,6 +197,11 @@
             const px = 1 / zoom;
 
             let node = board.tokenNodes.get(token.token_id);
+            const staleFast = board.fastTokenSprites.get(token.token_id);
+            if (staleFast) {
+                staleFast.destroy();
+                board.fastTokenSprites.delete(token.token_id);
+            }
             if (!node) {
                 node = {
                     container: new PIXI.Container(),
@@ -140,6 +218,7 @@
                         },
                     }),
                     labelBg: new PIXI.Graphics(),
+                    visualKey: null,
                 };
 
                 node.sprite.mask = node.mask;
@@ -148,67 +227,66 @@
                 node.labelBg.roundPixels = true;
                 node.container.addChild(node.gfx, node.mask, node.sprite);
                 board.tokenNodes.set(token.token_id, node);
-                layer.addChild(node.container);
+                board.tokenAdornmentLayer.addChild(node.container);
                 board.tokenLabelLayer?.addChild(node.labelBg, node.label);
             }
 
             node.container.visible = true;
+            node.container.position.set(wx, wy);
             node.container.alpha = token.hidden ? TOKEN_HIDDEN_OPACITY : 1;
             if (isDragging) node.container.alpha *= 0.75;
 
             const dispColor = DISPOSITION_COLORS[token.disposition] ?? DISPOSITION_COLORS.neutral;
-            const cx = wx + ww / 2;
-            const cy = wy + wh / 2;
+            const cx = ww / 2;
+            const cy = wh / 2;
             const tokenSize = Math.min(ww, wh);
             const radius = tokenSize * 0.42;
             const tokenX = cx - tokenSize / 2;
             const tokenY = cy - tokenSize / 2;
 
             const g = node.gfx;
-            g.clear();
 
-            const texture = token.asset_url ? this._texture(token.asset_url) : null;
+            const texture = token.asset_url ? this._texture(token.asset_url, {
+                visible: true,
+                priority: -1_000_000,
+                generation: this.tiles?.generation || 0,
+            }) : null;
             if (texture) {
                 node.sprite.visible = true;
                 node.sprite.texture = texture;
                 node.sprite.position.set(tokenX, tokenY);
                 node.sprite.width = tokenSize;
                 node.sprite.height = tokenSize;
-
-                node.mask.clear();
-                node.mask.circle(cx, cy, radius).fill({ color: 0xffffff });
             } else {
                 node.sprite.visible = false;
+            }
+
+            const barsKey = JSON.stringify(token.bars || {});
+            const markerPhase = token.combat_marker?.role && token.combat_marker.role !== "acted"
+                ? Math.floor(performance.now() / 50) : 0;
+            const markerKey = `${JSON.stringify(token.combat_marker || null)}:${markerPhase}`;
+            const visualKey = [tokenSize, zoom, dispColor, !!texture, selected, hovered, isDragging, barsKey, markerKey].join("|");
+            if (node.visualKey !== visualKey) {
+                node.visualKey = visualKey;
+                g.clear();
                 node.mask.clear();
-                g.circle(cx, cy, radius).fill({ color: dispColor, alpha: 0.53 });
-            }
-
-            g.circle(cx, cy, radius).stroke({
-                width: Math.max(1.5 * px, tokenSize * 0.04),
-                color: dispColor,
-            });
-
-            if (hovered && !selected && !isDragging) {
-                g.circle(cx, cy, radius + Math.max(2 * px, tokenSize * 0.045))
-                    .stroke({
-                        width: Math.max(2 * px, tokenSize * 0.045),
-                        color: 0xe8c87e,
-                        alpha: 0.82,
+                if (texture) node.mask.circle(cx, cy, radius).fill({ color: 0xffffff });
+                else g.circle(cx, cy, radius).fill({ color: dispColor, alpha: 0.53 });
+                g.circle(cx, cy, radius).stroke({
+                    width: Math.max(1.5 * px, tokenSize * 0.04), color: dispColor,
+                });
+                if (hovered && !selected && !isDragging) {
+                    g.circle(cx, cy, radius + Math.max(2 * px, tokenSize * 0.045)).stroke({
+                        width: Math.max(2 * px, tokenSize * 0.045), color: 0xe8c87e, alpha: 0.82,
                     });
-            }
-
-            if (selected || isDragging) {
-                g.circle(cx, cy, radius + Math.max(2.5 * px, tokenSize * 0.06))
-                    .stroke({
-                        width: Math.max(2 * px, tokenSize * 0.055),
-                        color: 0xe8c87e,
+                }
+                if (selected || isDragging) {
+                    g.circle(cx, cy, radius + Math.max(2.5 * px, tokenSize * 0.06)).stroke({
+                        width: Math.max(2 * px, tokenSize * 0.055), color: 0xe8c87e,
                     });
-            }
-
-            this._renderCombatTurnRing(g, token, { cx, cy, radius, tokenSize, px });
-
-            if (tokenSize * zoom > 20) {
-                this._renderTokenBars(g, token, { tokenX, tokenY, tokenSize, px });
+                }
+                this._renderCombatTurnRing(g, token, { cx, cy, radius, tokenSize, px });
+                if (tokenSize * zoom > 20) this._renderTokenBars(g, token, { tokenX, tokenY, tokenSize, px });
             }
 
             if (tokenSize * zoom > 20 && token.name) {
@@ -224,7 +302,7 @@
 
 
 
-                const screenCx = cx * zoom + this.camera.offsetX;
+                const screenCx = (wx + cx) * zoom + this.camera.offsetX;
                 const screenY = (wy + wh) * zoom + this.camera.offsetY + 3;
                 const tw = node.label.width;
                 const labelX = Math.round(screenCx - tw / 2);
@@ -238,8 +316,10 @@
                     .fill({ color: 0x000000, alpha: 0.72 });
             } else {
                 node.label.visible = false;
-                node.labelBg.visible = false;
-                node.labelBg.clear();
+                if (node.labelBg.visible) {
+                    node.labelBg.visible = false;
+                    node.labelBg.clear();
+                }
             }
         },
 

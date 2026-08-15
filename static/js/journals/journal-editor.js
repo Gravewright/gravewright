@@ -10,6 +10,7 @@
   const editors = new WeakMap();
   const blockControllers = new WeakMap();
   const autosaveTimers = new WeakMap();
+  const autosaveQueues = new WeakMap();
 
   function escapeHtml(value) {
     return String(value == null ? "" : value)
@@ -120,9 +121,37 @@
   }
 
 
+  // The stored path is never typed: the field owns a hidden input, and the
+  // preview beside it is what the master actually reads.
+  function showImage(field, src) {
+    const preview = field?.querySelector("[data-image-preview]");
+    if (!preview) return;
+    if (src) preview.src = src;
+    else preview.removeAttribute("src");
+    field.classList.toggle("has-image", !!src);
+  }
+
   function initImageUpload(modal) {
     const journalId = modal.dataset.journalId || "";
     if (!journalId) return;
+
+    modal.querySelectorAll("[data-image-field]").forEach((field) => {
+      showImage(field, field.querySelector("[data-image-src]")?.value || "");
+    });
+
+    modal.querySelectorAll("[data-image-clear]").forEach((btn) => {
+      if (btn.dataset.imageClearBound) return;
+      btn.dataset.imageClearBound = "1";
+      const field = btn.closest("[data-image-field]");
+      const input = field?.querySelector("[data-image-src]");
+      if (!input) return;
+      btn.addEventListener("click", () => {
+        input.value = "";
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+        showImage(field, "");
+      });
+    });
+
     modal.querySelectorAll("[data-image-upload]").forEach((btn) => {
       if (btn.dataset.imageUploadBound) return;
       btn.dataset.imageUploadBound = "1";
@@ -142,6 +171,7 @@
             if (result?.src) {
               input.value = result.src;
               input.dispatchEvent(new Event("change", { bubbles: true }));
+              showImage(field, result.src);
             }
           } catch {
 
@@ -232,13 +262,20 @@
     return `<label class="journal-list-check"><input type="checkbox" data-field="${field}" ${checked ? "checked" : ""}/> ${escapeHtml(label)}</label>`;
   }
 
+  // The row leads with its mark — a checkbox for an objective, a coin for a
+  // reward — so a list of them reads as the quest sheet does.
   function renderObjectiveRow(editor, obj) {
     const ds = editor.dataset;
     return `<div class="journal-list-row" draggable="false">
+      <label class="journal-list-mark" title="${escapeHtml(ds.labelCompleted || "Done")}">
+        <input type="checkbox" data-field="completed" ${obj.completed ? "checked" : ""} />
+        <i class="ph ph-check" aria-hidden="true"></i>
+      </label>
       <input type="text" class="journal-list-text" data-field="text" value="${escapeHtml(obj.text)}" placeholder="${escapeHtml(ds.placeholder || "")}" />
-      ${checkboxField("completed", ds.labelCompleted || "Done", obj.completed)}
-      ${checkboxField("optional", ds.labelOptional || "Optional", obj.optional)}
-      ${checkboxField("visibleToPlayers", ds.labelVisible || "Visible", obj.visibleToPlayers)}
+      <div class="journal-list-flags">
+        ${checkboxField("optional", ds.labelOptional || "Optional", obj.optional)}
+        ${checkboxField("visibleToPlayers", ds.labelVisible || "Visible", obj.visibleToPlayers)}
+      </div>
       <button type="button" class="journal-list-remove" data-row-remove title="${escapeHtml(ds.labelRemove || "Remove")}"><i class="ph ph-trash" aria-hidden="true"></i></button>
     </div>`;
   }
@@ -246,8 +283,11 @@
   function renderRewardRow(editor, reward) {
     const ds = editor.dataset;
     return `<div class="journal-list-row" draggable="false">
+      <span class="journal-list-mark journal-list-mark--static"><i class="ph ph-medal" aria-hidden="true"></i></span>
       <input type="text" class="journal-list-text" data-field="text" value="${escapeHtml(reward.text)}" placeholder="${escapeHtml(ds.placeholder || "")}" />
-      ${checkboxField("visibleToPlayers", ds.labelVisible || "Visible", reward.visibleToPlayers)}
+      <div class="journal-list-flags">
+        ${checkboxField("visibleToPlayers", ds.labelVisible || "Visible", reward.visibleToPlayers)}
+      </div>
       <button type="button" class="journal-list-remove" data-row-remove title="${escapeHtml(ds.labelRemove || "Remove")}"><i class="ph ph-trash" aria-hidden="true"></i></button>
     </div>`;
   }
@@ -326,12 +366,27 @@
       if (editor) editor.codemirror.save();
     });
     flushBlockEditors(scope);
+    FI.syncJournalSections?.(scope);
   }
 
-  async function autosaveJournal(form) {
+  function setAutosaveState(form, state) {
+    const hint = form?.querySelector("[data-journal-autosave-hint]");
+    if (!hint) return;
+    const labels = {
+      dirty: hint.dataset.dirtyLabel || "Changed",
+      saving: hint.dataset.savingLabel || "Saving…",
+      saved: hint.dataset.savedLabel || "Saved",
+      error: hint.dataset.errorLabel || "Could not save",
+    };
+    hint.textContent = labels[state] || "";
+    hint.dataset.state = state;
+    hint.classList.add("is-visible");
+  }
+
+  async function performAutosave(form) {
     if (!form) return;
     flushEditors(form);
-    const hint = form.querySelector("[data-journal-autosave-hint]");
+    setAutosaveState(form, "saving");
     try {
       const res = await fetch(form.action, {
         method: "POST",
@@ -342,27 +397,38 @@
           "Content-Type": "application/x-www-form-urlencoded",
         },
       });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error(`Journal autosave failed: ${res.status}`);
       const data = await res.json().catch(() => ({}));
       const modal = form.closest("[data-modal-window]");
       if (modal && data.version) modal.dataset.journalVersion = data.version;
-      if (hint) {
-        hint.textContent = hint.dataset.savedLabel || "Saved";
-        hint.classList.add("is-visible");
-      }
+      setAutosaveState(form, "saved");
+      return true;
     } catch {
-
+      setAutosaveState(form, "error");
+      return false;
     }
+  }
+
+  function autosaveJournal(form) {
+    if (!form) return Promise.resolve(false);
+    clearTimeout(autosaveTimers.get(form));
+    autosaveTimers.delete(form);
+    const previous = autosaveQueues.get(form) || Promise.resolve();
+    const next = previous.catch(() => false).then(() => performAutosave(form));
+    autosaveQueues.set(form, next);
+    return next;
   }
 
   function scheduleAutosave(form, immediate) {
     if (!form) return;
     clearTimeout(autosaveTimers.get(form));
     if (immediate) {
-      autosaveJournal(form);
+      return autosaveJournal(form);
     } else {
+      setAutosaveState(form, "dirty");
       autosaveTimers.set(form, setTimeout(() => autosaveJournal(form), 700));
     }
+    return Promise.resolve(true);
   }
 
   FI.editors = editors;
@@ -374,6 +440,7 @@
   FI.destroyBlockEditorsIn = destroyBlockEditorsIn;
   FI.initQuestEditors = initQuestEditors;
   FI.initImageUpload = initImageUpload;
+  FI.uploadJournalImage = uploadJournalImage;
   FI.flushEditors = flushEditors;
   FI.autosaveJournal = autosaveJournal;
   FI.scheduleAutosave = scheduleAutosave;

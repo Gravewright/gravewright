@@ -40,78 +40,75 @@
 
         function commit() {
             if (!pending) return;
-            const { canvas, scene, tokenId, from, to } = pending;
+            const { canvas, scene, moves } = pending;
             pending = null;
-            if (from.x === to.x && from.y === to.y) return;
-
             const roomId = canvas.dataset.roomId || "";
-            const send = (cell) => window.GravewrightRealtime?.sendCommand?.(
-                "token.move",
-                { scene_id: scene.id, token_id: tokenId, grid_x: cell.x, grid_y: cell.y },
-                { sceneId: scene.id, roomId },
-            );
-            send(to);
+            const send = (move, cell) => window.GravewrightRealtime?.sendCommand?.(
+                "token.move", { scene_id: scene.id, token_id: move.tokenId, grid_x: cell.x, grid_y: cell.y },
+                { sceneId: scene.id, roomId });
+            const changed = moves.filter((move) => move.from.x !== move.to.x || move.from.y !== move.to.y);
+            if (!changed.length) return;
+            changed.forEach((move) => send(move, move.to));
 
 
             history?.push?.({
-                undo() { send(from); },
-                redo() { send(to); },
+                undo() { changed.forEach((move) => send(move, move.from)); },
+                redo() { changed.forEach((move) => send(move, move.to)); },
             });
         }
 
-        function schedule(canvas, scene, tokenId, from, to) {
-            if (pending && pending.tokenId === tokenId) {
+        function schedule(canvas, scene, moves) {
+            const key = moves.map((move) => move.tokenId).sort().join("|");
+            if (pending && pending.key === key) {
                 window.clearTimeout(pending.timer);
-                pending = { ...pending, to };
+                const original = new Map(pending.moves.map((move) => [move.tokenId, move.from]));
+                pending = { ...pending, moves: moves.map((move) => ({ ...move, from: original.get(move.tokenId) || move.from })) };
             } else {
                 commit();
-                pending = { canvas, scene, tokenId, from, to };
+                pending = { canvas, scene, key, moves };
             }
             pending.timer = window.setTimeout(commit, SETTLE_MS);
         }
 
 
 
-        function steppableToken(canvas) {
-            const selected = [...selectedSet(canvas)];
-            if (selected.length !== 1) return null;
-            const token = tokenStoreFor(canvas).get(selected[0]);
-            if (!token || !canControlToken(token, canvas)) return null;
-            return token;
+        function steppableTokens(canvas) {
+            return [...selectedSet(canvas)]
+                .map((id) => tokenStoreFor(canvas).get(id))
+                .filter((token) => token && canControlToken(token, canvas));
         }
 
         function step(canvas, key) {
             const [dx, dy] = KEYS[key];
             const scene = sceneDataFor(canvas);
             if (!scene) return false;
-            const token = steppableToken(canvas);
-            if (!token) return false;
-
-            const target = clampGridPosition(token.grid_x + dx, token.grid_y + dy, scene, token);
-            if (target.grid_x === token.grid_x && target.grid_y === token.grid_y) return true;
-
-            const cell = { x: target.grid_x, y: target.grid_y };
-
-
-            const blocked = !effectiveIsGm?.(canvas) && window.GravewrightLighting?.blocksMovement?.(
-                canvas,
-                centreOf(token, { x: token.grid_x, y: token.grid_y }, scene),
-                centreOf(token, cell, scene),
-            );
-            if (blocked) return true;
-
+            const tokens = steppableTokens(canvas);
+            if (!tokens.length) return false;
             const store = tokenStoreFor(canvas);
-            const from = pending && pending.tokenId === token.token_id
-                ? pending.from
-                : { x: token.grid_x, y: token.grid_y };
-            store.set(token.token_id, { ...token, grid_x: cell.x, grid_y: cell.y });
+            const pendingFrom = new Map((pending?.moves || []).map((move) => [move.tokenId, move.from]));
+            const moves = tokens.map((token) => {
+                const target = clampGridPosition(token.grid_x + dx, token.grid_y + dy, scene, token);
+                return {
+                    token, tokenId: token.token_id,
+                    from: pendingFrom.get(token.token_id) || { x: token.grid_x, y: token.grid_y },
+                    current: { x: token.grid_x, y: token.grid_y },
+                    to: { x: target.grid_x, y: target.grid_y },
+                };
+            });
+            const blocked = !effectiveIsGm?.(canvas) && moves.some((move) =>
+                window.GravewrightLighting?.blocksMovement?.(
+                    canvas, centreOf(move.token, move.current, scene), centreOf(move.token, move.to, scene)));
+            if (blocked) return true;
+            moves.forEach((move) => store.set(move.tokenId, {
+                ...move.token, grid_x: move.to.x, grid_y: move.to.y,
+            }));
 
 
 
 
             window.GravewrightLighting?.invalidateFor?.(canvas);
             markDirty(canvas);
-            schedule(canvas, scene, token.token_id, from, cell);
+            schedule(canvas, scene, moves.map(({ tokenId, from, to }) => ({ tokenId, from, to })));
             return true;
         }
 

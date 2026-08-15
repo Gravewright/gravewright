@@ -1,0 +1,77 @@
+{
+  "headless": true,
+  "warmup_seconds": 10,
+  "measurement_seconds": 30,
+  "results": [
+    {
+      "total_entities": 10,
+      "requested_visible": 10,
+      "unique_assets": 1,
+      "frames": 1801,
+      "frame_ms_average": 16.666018878400887,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 16.700000000004366,
+      "frame_ms_p99": 16.80000000000291,
+      "js_heap_mb": 10.762164115905762,
+      "animation_callback_ms_p95": 1.3000000044703484,
+      "unattributed_frame_gap_ms_p95": 15.399999995534017,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 379.93359375,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.035757912270133196,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "streaming_update": {
+          "average": 0.029816768496715645,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 0.22359800116592882,
+          "p95": 0.4000000059604645,
+          "p99": 0.5
+        },
+        "app_render": {
+          "average": 0.18645197099311558,
+          "p95": 0.3999999985098839,
+          "p99": 0.4000000059604645
+        },
+        "dom_layout_style": {
+          "average": 0.01676846199618784,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 0.6894503053792777,
+          "p95": 1.2999999970197678,
+          "p99": 1.4000000059604645
+        },
+        "animation_callback": {
+          "average": 0.7294836202093391,
+          "p95": 1.3000000044703484,
+          "p99": 1.5
+        }
+      },
+      "resources": {
+        "instances": 10,
+        "visible": 10,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 9,
+        "tokenNodes": 10,
+        "fastSprites": 10
+      },
+      "spatial": {
+        "total": 10,
+        "candidates": 10,
+        "visible": 10,
+        "culled": 0,
+        "queryMs": 0
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ]
+}

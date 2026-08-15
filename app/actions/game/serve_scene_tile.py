@@ -6,6 +6,7 @@ from litestar import get
 from litestar.exceptions import NotAuthorizedException
 from litestar.exceptions import NotFoundException
 from litestar.params import FromPath
+from litestar.params import FromQuery
 from litestar.response import File
 
 from app.engine.scenes.scene_tile_read_service import SceneTileReadService
@@ -23,12 +24,14 @@ async def serve_scene_tile(
     cookies: dict[str, str],
     current_user: Row,
     scene_tile_read_service: SceneTileReadService,
+    lod: FromQuery[int] = 0,
 ) -> File:
     result = scene_tile_read_service.get_tile(
         scene_id=scene_id,
         layer_id=layer_id,
         tx=tx,
         ty=ty,
+        lod=lod,
         user_id=current_user["id"],
         cookies=cookies,
     )

@@ -100,6 +100,7 @@
 
 
   let activeLayer = "game";
+  let imageClipboard = [];
 
   class SceneImageController {
     constructor(layer) {
@@ -362,13 +363,27 @@
           if (drag.mode === "resize") payload.scale = placement.scale;
           else payload.rotation = placement.rotation;
           api.update(this.roomId, payload).catch(() => this.refresh());
+          const key = drag.mode === "resize" ? "scale" : "rotation";
+          const before = drag.mode === "resize" ? drag.baseScale : drag.startRotation;
+          const after = placement[key];
+          window.GravewrightMap?.history?.push?.({
+            undo: () => { placement[key] = before; this.positionNode(this.nodeFor(placement.id), placement); void api.update(this.roomId, { placement_id: placement.id, [key]: before }); },
+            redo: () => { placement[key] = after; this.positionNode(this.nodeFor(placement.id), placement); void api.update(this.roomId, { placement_id: placement.id, [key]: after }); },
+          });
           return;
         }
+        const moves = drag.items.map((item) => ({ id: item.placement.id, placement: item.placement,
+          from: { x: item.startX, y: item.startY }, to: { x: item.placement.x, y: item.placement.y } }));
         drag.items.forEach((item) => {
           api.update(this.roomId, {
             placement_id: item.placement.id, x: item.placement.x, y: item.placement.y,
           }).catch(() => this.refresh());
         });
+        const apply = (side) => moves.forEach((move) => {
+          Object.assign(move.placement, move[side]); this.positionNode(this.nodeFor(move.id), move.placement);
+          void api.update(this.roomId, { placement_id: move.id, ...move[side] });
+        });
+        window.GravewrightMap?.history?.push?.({ undo: () => apply("from"), redo: () => apply("to") });
       };
 
       document.addEventListener("pointermove", this._onPointerMove);
@@ -435,6 +450,29 @@
       return true;
     }
 
+    moveSelectedBy(dx, dy, record = true, placementIds = null) {
+      const movers = placementIds
+        ? placementIds.map((id) => this.placementById(id)).filter((item) => item && !item.locked)
+        : this.selectedMovable();
+      if (!movers.length || (!dx && !dy)) return false;
+      movers.forEach((placement) => {
+        placement.x = Number(placement.x || 0) + dx;
+        placement.y = Number(placement.y || 0) + dy;
+        const node = this.nodeFor(placement.id);
+        if (node) this.positionNode(node, placement);
+        api.update(this.roomId, { placement_id: placement.id, x: placement.x, y: placement.y })
+          .catch(() => this.refresh());
+      });
+      if (record) {
+        const ids = movers.map((placement) => placement.id);
+        window.GravewrightMap?.history?.push?.({
+        undo: () => this.moveSelectedBy(-dx, -dy, false, ids),
+        redo: () => this.moveSelectedBy(dx, dy, false, ids),
+      });
+      }
+      return true;
+    }
+
     openMenu(placement, clientX, clientY) {
       const targets = this.selectedMovable();
       const suffix = targets.length > 1 ? ` (${targets.length})` : "";
@@ -492,13 +530,45 @@
     duplicateSelected() {
       const list = this.selectedMovable();
       if (!list.length) return false;
+      imageClipboard = list.map((placement) => ({ ...placement }));
+      return this.pasteSnapshots(imageClipboard, true);
+    }
+
+    copySelected() {
+      const list = this.selectedMovable();
+      if (!list.length) return false;
+      imageClipboard = list.map((placement) => ({ ...placement }));
+      return true;
+    }
+
+    pasteSnapshots(source = imageClipboard, record = true) {
+      const list = (source || []).filter((placement) => placement.scene_id === this.activeSceneId());
+      if (!list.length) return false;
       const offset = activeLayer === "composition" ? 12 / (this.camera().zoom || 1) : 12;
       Promise.all(list.map((placement) => api.placeAsset(this.roomId, {
         scene_id: placement.scene_id, asset_id: placement.asset_id,
         x: Number(placement.x || 0) + offset, y: Number(placement.y || 0) + offset,
         rotation: Number(placement.rotation || 0), scale: Number(placement.scale || 1), layer: activeLayer,
-      }))).then(() => this.refresh()).catch(() => this.refresh());
+      }))).then((results) => {
+        let live = results.map((result) => result.placement).filter(Boolean);
+        this.placements.push(...live); this.selectedIds = new Set(live.map((item) => item.id)); this.render();
+        if (record) window.GravewrightMap?.history?.push?.({
+          undo: async () => { await Promise.all(live.map((item) => api.remove(this.roomId, item.id))); this.placements = this.placements.filter((item) => !live.some((gone) => gone.id === item.id)); this.render(); },
+          redo: async () => { live = await this.createSnapshots(list, offset); },
+        });
+      }).catch(() => this.refresh());
       return true;
+    }
+
+    async createSnapshots(list, offset = 0) {
+      const results = await Promise.all(list.map((placement) => api.placeAsset(this.roomId, {
+        scene_id: placement.scene_id, asset_id: placement.asset_id,
+        x: Number(placement.x || 0) + offset, y: Number(placement.y || 0) + offset,
+        rotation: Number(placement.rotation || 0), scale: Number(placement.scale || 1), layer: activeLayer,
+      })));
+      const created = results.map((result) => result.placement).filter(Boolean);
+      this.placements.push(...created); this.selectedIds = new Set(created.map((item) => item.id)); this.render();
+      return created;
     }
 
     zOrder(placements, toFront) {
@@ -520,6 +590,11 @@
       this.placements = this.placements.filter((p) => !ids.includes(p.id));
       this.render();
       ids.forEach((id) => api.remove(this.roomId, id).catch(() => this.refresh()));
+      let live = movers.map((item) => ({ ...item }));
+      window.GravewrightMap?.history?.push?.({
+        undo: async () => { live = await this.createSnapshots(movers, 0); },
+        redo: async () => { await Promise.all(live.map((item) => api.remove(this.roomId, item.id))); this.placements = this.placements.filter((item) => !live.some((gone) => gone.id === item.id)); this.render(); },
+      });
       return true;
     }
 
@@ -698,6 +773,21 @@
       if (event.key === "Escape") {
         controllers.forEach((controller) => controller.deselect());
         return;
+      }
+      if (!isEditableTarget(event.target) && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c") {
+        for (const controller of controllers.values()) if (controller.copySelected()) { event.preventDefault(); return; }
+      }
+      if (!isEditableTarget(event.target) && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "v") {
+        for (const controller of controllers.values()) if (controller.pasteSnapshots()) { event.preventDefault(); return; }
+      }
+      const arrows = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+      if (!isEditableTarget(event.target) && arrows[event.key]) {
+        const [x, y] = arrows[event.key];
+        for (const controller of controllers.values()) {
+          const tile = Number(window.GravewrightMap?.sceneDataFor?.(controller.canvas)?.scaledTileSize || 32);
+          const step = event.shiftKey ? 1 : tile / 2;
+          if (controller.moveSelectedBy(x * step, y * step)) { event.preventDefault(); return; }
+        }
       }
       if (event.key !== "Delete" && event.key !== "Backspace") return;
       if (isEditableTarget(event.target)) return;

@@ -130,6 +130,14 @@ def test_empty_document_helper():
     assert not journal_doc.is_empty_document(_doc({"type": "paragraph"}))
 
 
+def test_renderable_content_ignores_prosemirror_empty_paragraph():
+    assert not journal_doc.has_renderable_content(_doc({"type": "paragraph"}))
+    assert journal_doc.has_renderable_content(
+        _doc({"type": "paragraph", "content": [{"type": "text", "text": "Visible"}]})
+    )
+    assert journal_doc.has_renderable_content(_doc({"type": "horizontalRule"}))
+
+
 def test_validate_rejects_mismatched_image_asset_id_and_src():
     raw = _doc(
         {

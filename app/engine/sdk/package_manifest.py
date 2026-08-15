@@ -51,6 +51,23 @@ DIRECTORY_TO_KIND: dict[str, str] = {v: k for k, v in KIND_TO_DIRECTORY.items()}
 SDK_VERSION = "1"
 
 
+def capability_install_summary(capabilities: list[str]) -> dict[str, list[str]]:
+    groups: dict[str, list[str]] = {"read": [], "write": [], "ui": [], "storage": [], "other": []}
+    for capability in sorted(set(capabilities)):
+        if capability.endswith(".read") or capability in {"permissions.inspect", "events.subscribe", "packages.inspect", "presence.read"}:
+            bucket = "read"
+        elif capability.endswith((".write", ".manage", ".move", ".play")) or capability == "rules.actions":
+            bucket = "write"
+        elif capability.startswith("ui.") or capability in {"assets.ui", "scene.tools", "scene.overlays"}:
+            bucket = "ui"
+        elif capability.startswith("storage."):
+            bucket = "storage"
+        else:
+            bucket = "other"
+        groups[bucket].append(capability)
+    return {name: values for name, values in groups.items() if values}
+
+
 def _str(value: object, default: str = "") -> str:
     return value if isinstance(value, str) else default
 
@@ -117,6 +134,9 @@ class PackageSetting:
     default: object = None
     label: str = ""
     options: list = field(default_factory=list)
+    minimum: float | None = None
+    maximum: float | None = None
+    pattern: str = ""
 
     @classmethod
     def from_dict(cls, raw: object) -> PackageSetting:
@@ -128,6 +148,9 @@ class PackageSetting:
             default=raw.get("default"),
             label=_str(raw.get("label")),
             options=_list(raw.get("options")),
+            minimum=raw.get("minimum") if isinstance(raw.get("minimum"), (int, float)) else None,
+            maximum=raw.get("maximum") if isinstance(raw.get("maximum"), (int, float)) else None,
+            pattern=_str(raw.get("pattern")),
         )
 
     def to_dict(self) -> dict:
@@ -138,6 +161,9 @@ class PackageSetting:
             "default": self.default,
             "label": self.label,
             "options": list(self.options),
+            "minimum": self.minimum,
+            "maximum": self.maximum,
+            "pattern": self.pattern,
         }
 
 
@@ -500,6 +526,7 @@ class PackageManifest:
             "homepage": self.homepage,
             "color": _str(self.display.get("color")),
             "capabilities": list(self.capabilities),
+            "capability_summary": capability_install_summary(self.capabilities),
             "activation": {"scope": self.activation.scope, "mode": self.activation.mode},
             "compatibility": {
                 "minimum": self.compatibility.minimum,

@@ -33,6 +33,7 @@ from app.domain.scenes import SceneDimensions
 from app.domain.scenes import SceneLayerKind
 from app.domain.scenes import SceneLayerVisibility
 from app.domain.scenes import SceneVisibility
+from app.engine.scenes.adaptive_raster_policy import choose_raster_granularity
 from app.domain.scenes import SCENE_NATIVE_CHUNK_SIZE
 from app.domain.scenes import UINT32_MAX
 from app.engine.scenes.chunk_codec import encode_uint32_tile_refs
@@ -183,6 +184,7 @@ class _StagedRetileTile:
     hash: str
     byte_size: int
     storage_path: str
+    content_type: str = "image/png"
 
 
 @dataclass(frozen=True)
@@ -250,8 +252,9 @@ class MapUploadService:
         filename: str,
         content_type: str,
         data: bytes,
-        tile_size: int,
+        tile_size: int | None,
         chunk_size: int,
+        grid_size: int | None = None,
         group_id: str | None = None,
         visibility: SceneVisibility = SceneVisibility.PLAYERS,
         grid_visible: bool = True,
@@ -260,6 +263,7 @@ class MapUploadService:
         transport: RealtimeGatewayContract | None = None,
         upload_id: str | None = None,
     ) -> MapUploadResult:
+        requested_tile_size = tile_size
         emit_diagnostic(
             "map.upload.started",
             campaign_id=campaign_id,
@@ -291,13 +295,25 @@ class MapUploadService:
             )
 
         try:
-            decoded = self.image_decoder.decode(data)
+            decoded = self.image_decoder.decode_regions(data)
         except ValueError:
             return MapUploadResult(
                 success=False,
                 error_key="game.maps.errors.invalid_image",
             )
 
+        decision = None
+        if tile_size is None:
+            decision = choose_raster_granularity(
+                width=decoded.width, height=decoded.height, source_bytes=len(data), chunk_span=chunk_size,
+            )
+            tile_size = decision.tile_size
+            emit_diagnostic(
+                "adaptive_raster_selected", campaign_id=campaign_id,
+                candidate_tile_sizes=[item.tile_size for item in decision.candidates],
+                estimated_cost_by_size={str(item.tile_size): round(item.estimated_cost, 2) for item in decision.candidates},
+                selected_tile_size=tile_size, policy_version=decision.policy_version,
+            )
         try:
             dimensions = self._validate_dimensions(
                 width=decoded.width,
@@ -318,6 +334,12 @@ class MapUploadService:
             height=dimensions.height,
             tile_size=dimensions.tile_size,
             chunk_size=dimensions.chunk_size,
+            # Gameplay grid is independent from raster paging. The fallback is
+            # a gameplay default, never the selected raster tile size.
+            grid_size=grid_size or 70,
+            scene_format_version=2,
+            raster_selection_mode="adaptive" if requested_tile_size is None else "manual",
+            raster_policy_version=decision.policy_version if decision else 0,
             group_id=group_id or None,
             visibility=visibility,
             grid_visible=grid_visible,
@@ -527,7 +549,7 @@ class MapUploadService:
 
         try:
             data = self.asset_storage.read_asset(original_asset["storage_path"])
-            decoded = self.image_decoder.decode(data)
+            decoded = self.image_decoder.decode_regions(data)
         except (ValueError, OSError):
             return MapUploadResult(success=False, error_key="game.maps.errors.invalid_image")
 
@@ -773,11 +795,24 @@ class MapUploadService:
                     upper = ty * dimensions.tile_size
                     right = min(left + dimensions.tile_size, dimensions.width)
                     lower = min(upper + dimensions.tile_size, dimensions.height)
-                    tile_image = image.crop((left, upper, right, lower))
-
-                    with BytesIO() as buffer:
-                        tile_image.save(buffer, format="PNG", optimize=True)
-                        data = buffer.getvalue()
+                    crop_box = (left, upper, right, lower)
+                    crop_encoded = getattr(image, "crop_encoded", None)
+                    if crop_encoded is not None:
+                        encoded = crop_encoded(crop_box)
+                        data = encoded.data
+                        tile_width = encoded.width
+                        tile_height = encoded.height
+                        tile_content_type = encoded.content_type
+                        tile_extension = encoded.extension
+                    else:
+                        tile_image = image.crop(crop_box)
+                        tile_width = tile_image.width
+                        tile_height = tile_image.height
+                        tile_content_type = "image/png"
+                        tile_extension = ".png"
+                        with BytesIO() as buffer:
+                            tile_image.save(buffer, format="PNG", optimize=True)
+                            data = buffer.getvalue()
 
                     tile_hash = hashlib.sha256(data).hexdigest()
                     self.asset_storage.write_staged_tile_bytes(
@@ -785,14 +820,15 @@ class MapUploadService:
                         tx=tx,
                         ty=ty,
                         data=data,
+                        extension=tile_extension,
                     )
                     staged_tiles.append(
                         _StagedRetileTile(
                             tx=tx,
                             ty=ty,
                             tile_ref=tile_ref,
-                            width=tile_image.width,
-                            height=tile_image.height,
+                            width=tile_width,
+                            height=tile_height,
                             hash=tile_hash,
                             byte_size=len(data),
                             storage_path=self.asset_storage.final_tile_storage_path(
@@ -800,7 +836,9 @@ class MapUploadService:
                                 layer_id=layer["id"],
                                 tx=tx,
                                 ty=ty,
+                                extension=tile_extension,
                             ),
+                            content_type=tile_content_type,
                         )
                     )
                     tile_refs[(tx, ty)] = tile_ref
@@ -878,7 +916,7 @@ class MapUploadService:
                             byte_size=tile.byte_size,
                             width=tile.width,
                             height=tile.height,
-                            content_type="image/png",
+                            content_type=tile.content_type,
                             created_at=now,
                         )
                     )
@@ -1088,14 +1126,30 @@ class MapUploadService:
         upper = ty * dimensions.tile_size
         right = min(left + dimensions.tile_size, dimensions.width)
         lower = min(upper + dimensions.tile_size, dimensions.height)
-        tile_image = image.crop((left, upper, right, lower))
-        storage_path, tile_data = self.asset_storage.write_tile_png(
-            scene_id=scene_id,
-            layer_id=layer_id,
-            tx=tx,
-            ty=ty,
-            image=tile_image,
-        )
+        crop_box = (left, upper, right, lower)
+        crop_encoded = getattr(image, "crop_encoded", None)
+        if crop_encoded is not None:
+            encoded = crop_encoded(crop_box)
+            tile_data = encoded.data
+            tile_width = encoded.width
+            tile_height = encoded.height
+            tile_content_type = encoded.content_type
+            storage_path = self.asset_storage.write_tile_bytes(
+                scene_id=scene_id, layer_id=layer_id, tx=tx, ty=ty, data=tile_data,
+                extension=encoded.extension,
+            )
+        else:
+            tile_image = image.crop(crop_box)
+            tile_width = tile_image.width
+            tile_height = tile_image.height
+            tile_content_type = "image/png"
+            storage_path, tile_data = self.asset_storage.write_tile_png(
+                scene_id=scene_id,
+                layer_id=layer_id,
+                tx=tx,
+                ty=ty,
+                image=tile_image,
+            )
         tile_hash = hashlib.sha256(tile_data).hexdigest()
         asset = self.assets.create(
             scene_id=scene_id,
@@ -1103,9 +1157,9 @@ class MapUploadService:
             storage_path=storage_path,
             hash=tile_hash,
             byte_size=len(tile_data),
-            width=tile_image.width,
-            height=tile_image.height,
-            content_type="image/png",
+            width=tile_width,
+            height=tile_height,
+            content_type=tile_content_type,
         )
         self.tiles.create(
             scene_id=scene_id,
@@ -1114,8 +1168,8 @@ class MapUploadService:
             asset_id=asset["id"],
             tx=tx,
             ty=ty,
-            width=tile_image.width,
-            height=tile_image.height,
+            width=tile_width,
+            height=tile_height,
             hash=tile_hash,
             byte_size=len(tile_data),
         )

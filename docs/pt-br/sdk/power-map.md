@@ -56,7 +56,7 @@ Use-a quando você sabe o que quer construir mas ainda não sabe qual superfíci
 | Mostrar toast | `sdk.ui.toast`, `sdk.toast` | `assets.ui` | Helper de UI. |
 | Abrir/fechar modal | `sdk.ui.openModal`, `sdk.ui.closeModal` | `assets.ui` | Apenas ids de modal documentados/do core. |
 | Enviar chat card/intent | `sdk.chat.send` | `chat.cards` | Trate como intent; o core permanece autoritativo. |
-| Rolar uma fÃ³rmula | `sdk.dice.roll` | `dice.roll` | Rolagem autoritativa no servidor com card de chat. |
+| Rolar uma fórmula | `sdk.dice.roll` | `dice.roll` | Rolagem autoritativa no servidor com card de chat. |
 | Executar intent de rolagem/action | `sdk.rolls.intent` | `rolls.intent` | Action de Sheet IR autoritativa, targets, dano e iniciativa. |
 | Listar settings | `sdk.settings.definitions`, `sdk.settings.all` | `settings` | Valores visíveis ao pacote atual. |
 | Ler setting | `sdk.settings.get`, `sdk.setting(key)` | `settings` | Use valores de fallback. |
@@ -177,6 +177,15 @@ Use:
 - `provides.assets`
 - `assets.pack`
 - capabilities específicas de mídia como `assets.images`, `assets.audio`, `assets.maps`, `assets.icons`
+
+## Receitas de runtime semântico
+
+- Modificar ator: solicite `actors.read` + `actors.write`; leia com `sdk.actors.get()` e atualize com `expectedVersion`.
+- Reagir ao movimento: solicite `events.subscribe`; use `sdk.events.on("token.moved", ...)` e busque com `tokens.read`.
+- Adicionar controle no dock: solicite `ui.slots`; monte em `dock.actions` e guarde o disposer.
+- Criar ferramenta de parede/luz: solicite apenas `scene.geometry.read`/`scene.geometry.write` necessárias.
+- Aplicar dano: solicite `rules.actions`; execute a ação limitada `tokens.damage`.
+- Interagir com combate: use `combat.read`; adicione `combat.manage` somente para mutações.
 
 ## O que ler em seguida
 

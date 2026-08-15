@@ -33,6 +33,12 @@ uv run python -m app.cli run --open
 
 The launchers call `uv run python -m app.cli`, so they work even before the `grave` console-script entry point is installed.
 
+Running `grave` without arguments prints a short quick-start guide and exits
+successfully. Use `grave --help` for the complete command list and
+`grave <command> --help` for command-specific options. Mistyped top-level
+commands suggest the nearest valid command. `grave --no-color <command>`
+disables styled terminal output for plain logs.
+
 ## Exit codes
 
 | Code | Meaning |
@@ -53,9 +59,20 @@ grave run --host 0.0.0.0 --port 8000
 grave run --dev
 grave run --no-install
 grave run --no-migrate
+grave run --diagnostics
+grave run --diagnostics --diagnostics-file ./diagnostics/table.jsonl
 ```
 
 `grave run` prepares runtime directories, checks dependencies, ensures the database schema exists, summarizes `doctor`, and starts the server.
+
+`--diagnostics` enables an explicit local diagnostics mode. Redacted structured
+events and complete metric snapshots are written every 30 seconds to a rotating
+JSONL file (10 MiB each, five backups). The default is
+`data/diagnostics/gravewright.jsonl`. Diagnostics are never uploaded; the CLI prints
+the destination and retention policy before starting.
+The resulting file is suitable for an issue attachment: user, campaign, room,
+scene, command and trace identifiers become stable per-run pseudonyms, while
+paths, hosts, origins and URLs are redacted. Always review attachments anyway.
 
 ## `grave doctor`
 

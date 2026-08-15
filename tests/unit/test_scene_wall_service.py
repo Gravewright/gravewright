@@ -76,6 +76,16 @@ def test_move_node_rejects_collapsing_and_non_gm(db):
     unchanged=service.state(campaign_id=campaign,scene_id=scene["id"],user_id=gm).payload["walls"][0]
     assert (unchanged["x1"],unchanged["y1"],unchanged["x2"],unchanged["y2"]) == (0,0,100,0)
 
+def test_move_many_preserves_ids_and_only_moves_the_selection(db):
+    gm=seed_user(name="GM"); campaign=seed_campaign(gm); scene=seed_scene(campaign); service=SceneWallService()
+    first=service.create(campaign_id=campaign,scene_id=scene["id"],user_id=gm,kind="wall",x1=0,y1=0,x2=100,y2=0).payload["wall"]
+    second=service.create(campaign_id=campaign,scene_id=scene["id"],user_id=gm,kind="wall",x1=100,y1=0,x2=200,y2=0).payload["wall"]
+    result=service.move_many(campaign_id=campaign,scene_id=scene["id"],wall_ids=[first["id"]],user_id=gm,dx=25,dy=50)
+    assert result.success
+    walls={wall["id"]:wall for wall in result.payload["walls"]}
+    assert (walls[first["id"]]["x1"],walls[first["id"]]["y1"],walls[first["id"]]["x2"],walls[first["id"]]["y2"]) == (25,50,125,50)
+    assert (walls[second["id"]]["x1"],walls[second["id"]]["y1"]) == (100,0)
+
 def test_invalid_and_cross_campaign_walls_are_rejected(db):
     gm=seed_user(name="GM"); other=seed_user(name="Other"); campaign=seed_campaign(gm); other_campaign=seed_campaign(other); scene=seed_scene(other_campaign); service=SceneWallService()
     assert not service.create(campaign_id=campaign,scene_id=scene["id"],user_id=gm,kind="wall",x1=0,y1=0,x2=20,y2=20).success

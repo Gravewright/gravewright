@@ -445,6 +445,16 @@
                 return flat;
             };
 
+            // Lighting state is scene-wide. Submit only sources that can affect
+            // this viewport; offscreen masks and halos are pure GPU overhead.
+            const visibleLights = (lighting.lights || []).filter((light) => {
+                const centre = screen(light.x, light.y);
+                const radius = Math.max(0, Number(light.dim) || 0) * cam.zoom;
+                return centre.x + radius >= 0 && centre.y + radius >= 0
+                    && centre.x - radius <= cssW && centre.y - radius <= cssH;
+            });
+            board.visibleLightingSources = visibleLights.length;
+
 
 
 
@@ -460,7 +470,7 @@
 
             const litAreas = [
                 ...lighting.visionPolygons,
-                ...lighting.lights.map((light) => light.polygon),
+                ...visibleLights.map((light) => light.polygon),
             ].filter((polygon) => polygon && polygon.length >= 3);
 
 
@@ -485,7 +495,7 @@
 
 
 
-                    lighting.lights.map((l) => [
+                    visibleLights.map((l) => [
                         l.id, Math.round(l.x), Math.round(l.y), Math.round(l.dim),
                         l.intensity.toFixed(2), l.angle, l.rotation,
                     ].join("/")).join("|"),
@@ -499,12 +509,12 @@
 
 
 
-                    lighting.lights.map((l) => `${Math.round(l.dim)}/${l.intensity.toFixed(2)}`).join("|"),
+                    visibleLights.map((l) => `${Math.round(l.dim)}/${l.intensity.toFixed(2)}`).join("|"),
                 ].join(":");
                 if (board.lightingKey !== key) {
                     board.lightingKey = key;
                     this._composeDarkness(board, rt, cssW, cssH, lighting,
-                        litAreas.map(flatten), lighting.lights, screen, flatten, cam);
+                        litAreas.map(flatten), visibleLights, screen, flatten, cam);
                 }
                 board.lightingSprite.texture = rt;
                 board.lightingSprite.position.set(0, 0);
@@ -563,8 +573,8 @@
 
 
             let glowSlot = 0;
-            pruneEffects(lighting.lights);
-            if (!classic) lighting.lights.forEach((light) => {
+            pruneEffects(visibleLights);
+            if (!classic) visibleLights.forEach((light) => {
                 if (!light.polygon || light.polygon.length < 3 || light.alpha <= 0 || !(light.dim > 0)) return;
                 const centre = screen(light.x, light.y);
                 const flat = flatten(light.polygon);
@@ -693,7 +703,7 @@
             }
 
             if (lighting.editingLights) {
-                lighting.lights.forEach((light) => {
+                visibleLights.forEach((light) => {
                     const centre = screen(light.x, light.y);
                     const selected = lighting.picked?.light?.has(light.id);
                     wallsGfx.circle(centre.x, centre.y, selected ? 9 : 7)
@@ -706,6 +716,16 @@
                             .stroke({ color: LIGHT_MARKER, width: 1.5, alpha: 0.35 + 0.45 * light.alpha });
                     }
                 });
+            }
+
+            if (lighting.marquee) {
+                const a = screen(lighting.marquee.from.x, lighting.marquee.from.y);
+                const b = screen(lighting.marquee.to.x, lighting.marquee.to.y);
+                const broadSelection = lighting.marquee.to.x >= lighting.marquee.from.x;
+                const color = broadSelection ? 0x4ce2a5 : 0x93c5fd;
+                wallsGfx.rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y))
+                    .fill({ color, alpha: broadSelection ? 0.24 : 0.12 })
+                    .stroke({ color, width: broadSelection ? 2 : 1, alpha: 0.9 });
             }
 
             if (!lighting.editing) {
@@ -756,14 +776,6 @@
             });
 
 
-
-            if (lighting.marquee) {
-                const a = screen(lighting.marquee.from.x, lighting.marquee.from.y);
-                const b = screen(lighting.marquee.to.x, lighting.marquee.to.y);
-                wallsGfx.rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y))
-                    .fill({ color: 0x93c5fd, alpha: 0.12 })
-                    .stroke({ color: 0x93c5fd, width: 1, alpha: 0.9 });
-            }
 
             if (lighting.start && lighting.preview) {
                 const a = screen(lighting.start.x, lighting.start.y);

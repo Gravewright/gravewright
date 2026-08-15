@@ -1,0 +1,1098 @@
+{
+  "benchmark": "gravewright-100-dragons",
+  "version": 1,
+  "environment": {
+    "os": "Windows-11-10.0.26200-SP0",
+    "browser": "Chromium",
+    "browser_version": "151.0.7922.34",
+    "viewport": [
+      1366,
+      768
+    ],
+    "device_pixel_ratio": 1,
+    "headless": true
+  },
+  "asset": {
+    "kind": "shared-animated-canvas",
+    "width": 128,
+    "height": 128,
+    "unique_main_run": 1,
+    "webm_decoder_measured": false
+  },
+  "ladder": [
+    {
+      "total_entities": 1,
+      "requested_visible": 1,
+      "unique_assets": 1,
+      "frames": 301,
+      "frame_ms_average": 16.665780730897012,
+      "frame_ms_p50": 16.699999999999818,
+      "frame_ms_p95": 16.700000000000728,
+      "frame_ms_p99": 16.800000000000182,
+      "js_heap_mb": 11.135111808776855,
+      "process_rss_mb": 393.07421875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.02458471760302287,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 0.214285714211456,
+          "p95": 0.30000000447034836,
+          "p99": 0.4000000059604645
+        },
+        "app_render": {
+          "average": 0.24285714283734064,
+          "p95": 0.3999999985098839,
+          "p99": 0.6999999955296516
+        },
+        "dom_layout_style": {
+          "average": 0.016611295681063124,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 1,
+        "visible": 1,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 0,
+        "tokenNodes": 1
+      },
+      "spatial": {
+        "total": 1,
+        "candidates": 1,
+        "visible": 1,
+        "culled": 0,
+        "queryMs": 0
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 10,
+      "requested_visible": 10,
+      "unique_assets": 1,
+      "frames": 299,
+      "frame_ms_average": 16.777591973244146,
+      "frame_ms_p50": 16.69999999999891,
+      "frame_ms_p95": 16.799999999999272,
+      "frame_ms_p99": 16.80000000000109,
+      "js_heap_mb": 17.219094276428223,
+      "process_rss_mb": 421.03515625,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.03745819398990044,
+          "p95": 0.10000000149011612,
+          "p99": 0.30000000447034836
+        },
+        "render_prepare": {
+          "average": 0.37926421411659406,
+          "p95": 0.6000000014901161,
+          "p99": 0.8999999985098839
+        },
+        "app_render": {
+          "average": 0.7056856186792604,
+          "p95": 1.2000000029802322,
+          "p99": 1.9000000059604645
+        },
+        "dom_layout_style": {
+          "average": 0.036454849269079125,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        }
+      },
+      "resources": {
+        "instances": 10,
+        "visible": 10,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 9,
+        "tokenNodes": 10
+      },
+      "spatial": {
+        "total": 10,
+        "candidates": 10,
+        "visible": 10,
+        "culled": 0,
+        "queryMs": 0.10000000149011612
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 25,
+      "requested_visible": 25,
+      "unique_assets": 1,
+      "frames": 289,
+      "frame_ms_average": 17.358131487889274,
+      "frame_ms_p50": 16.700000000000728,
+      "frame_ms_p95": 16.799999999999272,
+      "frame_ms_p99": 33.39999999999782,
+      "js_heap_mb": 16.682015419006348,
+      "process_rss_mb": 446.046875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.030795847797270053,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 0.514186851319351,
+          "p95": 0.8999999985098839,
+          "p99": 1.1999999955296516
+        },
+        "app_render": {
+          "average": 0.9529411762591877,
+          "p95": 1.8999999985098839,
+          "p99": 2.100000001490116
+        },
+        "dom_layout_style": {
+          "average": 0.022145328843469852,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 25,
+        "visible": 25,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 24,
+        "tokenNodes": 25
+      },
+      "spatial": {
+        "total": 25,
+        "candidates": 25,
+        "visible": 25,
+        "culled": 0,
+        "queryMs": 0.3999999985098839
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 50,
+      "requested_visible": 50,
+      "unique_assets": 1,
+      "frames": 211,
+      "frame_ms_average": 23.85355450236966,
+      "frame_ms_p50": 16.700000000000728,
+      "frame_ms_p95": 33.400000000001455,
+      "frame_ms_p99": 33.400000000001455,
+      "js_heap_mb": 26.1227388381958,
+      "process_rss_mb": 474.10546875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.027014217776427336,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 0.7156398104265402,
+          "p95": 1.2000000029802322,
+          "p99": 1.6999999955296516
+        },
+        "app_render": {
+          "average": 1.5971563980689545,
+          "p95": 2.6999999955296516,
+          "p99": 3.2999999970197678
+        },
+        "dom_layout_style": {
+          "average": 0.03175355433993995,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        }
+      },
+      "resources": {
+        "instances": 50,
+        "visible": 50,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 49,
+        "tokenNodes": 50
+      },
+      "spatial": {
+        "total": 50,
+        "candidates": 50,
+        "visible": 50,
+        "culled": 0,
+        "queryMs": 0.8000000044703484
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 1,
+      "frames": 132,
+      "frame_ms_average": 38.25530303030301,
+      "frame_ms_p50": 33.400000000001455,
+      "frame_ms_p95": 50,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 23.883366584777832,
+      "process_rss_mb": 500.96875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.029545454703497166,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "render_prepare": {
+          "average": 0.9924242423677986,
+          "p95": 1.6000000014901161,
+          "p99": 1.8999999985098839
+        },
+        "app_render": {
+          "average": 2.7553030304384953,
+          "p95": 4.100000001490116,
+          "p99": 5.5
+        },
+        "dom_layout_style": {
+          "average": 0.024999999864534897,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 99,
+        "tokenNodes": 100
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 0.7999999970197678
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 150,
+      "requested_visible": 150,
+      "unique_assets": 1,
+      "frames": 92,
+      "frame_ms_average": 54.345652173913074,
+      "frame_ms_p50": 50,
+      "frame_ms_p95": 66.70000000000437,
+      "frame_ms_p99": 66.70000000000437,
+      "js_heap_mb": 36.737656593322754,
+      "process_rss_mb": 540.9765625,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.035869565023028335,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "render_prepare": {
+          "average": 1.3532608700511248,
+          "p95": 2.100000001490116,
+          "p99": 3.7999999970197678
+        },
+        "app_render": {
+          "average": 4.185869564585712,
+          "p95": 5.600000001490116,
+          "p99": 8.700000002980232
+        },
+        "dom_layout_style": {
+          "average": 0.03043478241433268,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 150,
+        "visible": 150,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 149,
+        "tokenNodes": 150
+      },
+      "spatial": {
+        "total": 150,
+        "candidates": 150,
+        "visible": 150,
+        "culled": 0,
+        "queryMs": 1.2000000029802322
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 250,
+      "requested_visible": 250,
+      "unique_assets": 1,
+      "frames": 62,
+      "frame_ms_average": 80.90967741935486,
+      "frame_ms_p50": 83.30000000000291,
+      "frame_ms_p95": 100,
+      "frame_ms_p99": 100.10000000000582,
+      "js_heap_mb": 46.43930912017822,
+      "process_rss_mb": 564.2578125,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.03225806403544641,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "render_prepare": {
+          "average": 1.7241935476420387,
+          "p95": 2.600000001490116,
+          "p99": 2.7999999970197678
+        },
+        "app_render": {
+          "average": 5.891935484063241,
+          "p95": 8,
+          "p99": 10.399999998509884
+        },
+        "dom_layout_style": {
+          "average": 0.02903225813661852,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 250,
+        "visible": 250,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 249,
+        "tokenNodes": 250
+      },
+      "spatial": {
+        "total": 250,
+        "candidates": 250,
+        "visible": 250,
+        "culled": 0,
+        "queryMs": 1.5
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 500,
+      "requested_visible": 500,
+      "unique_assets": 1,
+      "frames": 36,
+      "frame_ms_average": 138.88611111111115,
+      "frame_ms_p50": 133.3000000000029,
+      "frame_ms_p95": 166.59999999999854,
+      "frame_ms_p99": 166.59999999999854,
+      "js_heap_mb": 32.98412799835205,
+      "process_rss_mb": 653.57421875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.016666666708058782,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 2.98888888851636,
+          "p95": 5.300000004470348,
+          "p99": 5.699999995529652
+        },
+        "app_render": {
+          "average": 10.347222222015262,
+          "p95": 12.899999998509884,
+          "p99": 17.899999998509884
+        },
+        "dom_layout_style": {
+          "average": 0.03611111123528746,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 500,
+        "visible": 500,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 499,
+        "tokenNodes": 500
+      },
+      "spatial": {
+        "total": 500,
+        "candidates": 500,
+        "visible": 500,
+        "culled": 0,
+        "queryMs": 2.100000001490116
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 1000,
+      "requested_visible": 1000,
+      "unique_assets": 1,
+      "frames": 26,
+      "frame_ms_average": 196.14615384615368,
+      "frame_ms_p50": 199.90000000000146,
+      "frame_ms_p95": 216.70000000000437,
+      "frame_ms_p99": 233.29999999999563,
+      "js_heap_mb": 78.40937900543213,
+      "process_rss_mb": 801.5859375,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.03846153874809925,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 4.788461540467464,
+          "p95": 6.5,
+          "p99": 9.300000004470348
+        },
+        "app_render": {
+          "average": 17.56153846044953,
+          "p95": 20.299999997019768,
+          "p99": 21.399999998509884
+        },
+        "dom_layout_style": {
+          "average": 0.03461538484463325,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 1000,
+        "visible": 805,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 999,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 1000,
+        "candidates": 805,
+        "visible": 805,
+        "culled": 195,
+        "queryMs": 2.9000000059604645
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ],
+  "culling": [
+    {
+      "total_entities": 200,
+      "requested_visible": 200,
+      "unique_assets": 1,
+      "frames": 72,
+      "frame_ms_average": 69.67222222222215,
+      "frame_ms_p50": 66.69999999999709,
+      "frame_ms_p95": 83.39999999999418,
+      "frame_ms_p99": 83.40000000000873,
+      "js_heap_mb": 42.03952121734619,
+      "process_rss_mb": 798.48828125,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.029166666687362723,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 2.036111111028327,
+          "p95": 3.4000000059604645,
+          "p99": 4.399999998509884
+        },
+        "app_render": {
+          "average": 5.608333333291942,
+          "p95": 8.399999998509884,
+          "p99": 15.600000001490116
+        },
+        "dom_layout_style": {
+          "average": 0.05000000033113691,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        }
+      },
+      "resources": {
+        "instances": 200,
+        "visible": 200,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 199,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 200,
+        "candidates": 200,
+        "visible": 200,
+        "culled": 0,
+        "queryMs": 2
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 1000,
+      "requested_visible": 200,
+      "unique_assets": 1,
+      "frames": 72,
+      "frame_ms_average": 69.90416666666675,
+      "frame_ms_p50": 66.69999999999709,
+      "frame_ms_p95": 83.39999999999418,
+      "frame_ms_p99": 83.40000000000873,
+      "js_heap_mb": 58.435940742492676,
+      "process_rss_mb": 799.08203125,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.02222222203595771,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "render_prepare": {
+          "average": 1.8319444441133075,
+          "p95": 2.8000000044703484,
+          "p99": 3.399999998509884
+        },
+        "app_render": {
+          "average": 5.130555556155741,
+          "p95": 6.899999998509884,
+          "p99": 8.100000001490116
+        },
+        "dom_layout_style": {
+          "average": 0.0347222224291828,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        }
+      },
+      "resources": {
+        "instances": 1000,
+        "visible": 200,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 999,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 1000,
+        "candidates": 200,
+        "visible": 200,
+        "culled": 800,
+        "queryMs": 1.8999999985098839
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 1000,
+      "requested_visible": 50,
+      "unique_assets": 1,
+      "frames": 209,
+      "frame_ms_average": 24.002392344497608,
+      "frame_ms_p50": 16.70000000001164,
+      "frame_ms_p95": 33.40000000000873,
+      "frame_ms_p99": 33.40000000000873,
+      "js_heap_mb": 41.09988498687744,
+      "process_rss_mb": 799.29296875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.030143540619948263,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 0.950717703577434,
+          "p95": 1.8999999985098839,
+          "p99": 2.2999999970197678
+        },
+        "app_render": {
+          "average": 1.5497607654005146,
+          "p95": 2.7999999970197678,
+          "p99": 3.5
+        },
+        "dom_layout_style": {
+          "average": 0.024401913668835564,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 1000,
+        "visible": 50,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 999,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 1000,
+        "candidates": 50,
+        "visible": 50,
+        "culled": 950,
+        "queryMs": 1.1000000014901161
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 5000,
+      "requested_visible": 50,
+      "unique_assets": 1,
+      "frames": 192,
+      "frame_ms_average": 26.127604166666668,
+      "frame_ms_p50": 33.29999999998836,
+      "frame_ms_p95": 33.40000000000873,
+      "frame_ms_p99": 33.40000000000873,
+      "js_heap_mb": 60.81398105621338,
+      "process_rss_mb": 779.77734375,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.026562499968955915,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.122395832867672,
+          "p95": 2.2999999970197678,
+          "p99": 2.7999999970197678
+        },
+        "app_render": {
+          "average": 1.5348958335040759,
+          "p95": 2.5,
+          "p99": 3
+        },
+        "dom_layout_style": {
+          "average": 0.022916666775320966,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 5000,
+        "visible": 50,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 4999,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 5000,
+        "candidates": 50,
+        "visible": 50,
+        "culled": 4950,
+        "queryMs": 0.8999999985098839
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ],
+  "sharing": [
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 1,
+      "frames": 137,
+      "frame_ms_average": 36.737226277372265,
+      "frame_ms_p50": 33.30000000000291,
+      "frame_ms_p95": 50,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 45.397427558898926,
+      "process_rss_mb": 798.80859375,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.021897810273361903,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.3189781017764641,
+          "p95": 2.5,
+          "p99": 2.8000000044703484
+        },
+        "app_render": {
+          "average": 2.6613138690047022,
+          "p95": 4.300000004470348,
+          "p99": 5.9000000059604645
+        },
+        "dom_layout_style": {
+          "average": 0.02700729945497791,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 99,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 0.8000000044703484
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 10,
+      "frames": 129,
+      "frame_ms_average": 38.8875968992248,
+      "frame_ms_p50": 33.39999999999418,
+      "frame_ms_p95": 50,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 61.984463691711426,
+      "process_rss_mb": 801.05078125,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.025581395267978195,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.2635658917616504,
+          "p95": 2.0999999940395355,
+          "p99": 2.5
+        },
+        "app_render": {
+          "average": 2.720930232615896,
+          "p95": 3.8000000044703484,
+          "p99": 4.100000001490116
+        },
+        "dom_layout_style": {
+          "average": 0.027131782830223557,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 10,
+        "textureSources": 10,
+        "sharedAssetHits": 90,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 1
+      },
+      "logical_gpu_mb": 0.625
+    },
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 100,
+      "frames": 120,
+      "frame_ms_average": 41.94333333333343,
+      "frame_ms_p50": 49.89999999999418,
+      "frame_ms_p95": 50.10000000000582,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 69.97852420806885,
+      "process_rss_mb": 822.8203125,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.016666666604578495,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.3533333340038856,
+          "p95": 2.2999999970197678,
+          "p99": 2.5
+        },
+        "app_render": {
+          "average": 2.8091666663686437,
+          "p95": 3.899999998509884,
+          "p99": 4.200000002980232
+        },
+        "dom_layout_style": {
+          "average": 0.024999999875823655,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 100,
+        "textureSources": 100,
+        "sharedAssetHits": 0,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 1.2000000029802322
+      },
+      "logical_gpu_mb": 6.25
+    }
+  ],
+  "canonical_runs": [
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 1,
+      "frames": 816,
+      "frame_ms_average": 36.80404411764707,
+      "frame_ms_p50": 33.30000000001746,
+      "frame_ms_p95": 50,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 52.14276695251465,
+      "process_rss_mb": 807.71484375,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.024142156930311638,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.216789215693579,
+          "p95": 1.8999999985098839,
+          "p99": 2.4000000059604645
+        },
+        "app_render": {
+          "average": 2.5578431372768153,
+          "p95": 3.7999999970197678,
+          "p99": 4.399999998509884
+        },
+        "dom_layout_style": {
+          "average": 0.02769607839667622,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 99,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 0.7999999970197678
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 1,
+      "frames": 791,
+      "frame_ms_average": 37.96713021491782,
+      "frame_ms_p50": 33.39999999999418,
+      "frame_ms_p95": 50.09999999997672,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 40.86104965209961,
+      "process_rss_mb": 822.60546875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.024525916634784487,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.2659924147196124,
+          "p95": 2.2999999970197678,
+          "p99": 2.899999998509884
+        },
+        "app_render": {
+          "average": 2.7463969659206238,
+          "p95": 4.700000002980232,
+          "p99": 5.600000001490116
+        },
+        "dom_layout_style": {
+          "average": 0.03160556260727148,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 99,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 1.2999999970197678
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 1,
+      "frames": 784,
+      "frame_ms_average": 38.28494897959183,
+      "frame_ms_p50": 33.39999999999418,
+      "frame_ms_p95": 50.09999999997672,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 68.94332504272461,
+      "process_rss_mb": 822.80859375,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.022959183663966095,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.293112244932171,
+          "p95": 2.100000001490116,
+          "p99": 2.7000000029802322
+        },
+        "app_render": {
+          "average": 2.6964285713335383,
+          "p95": 4,
+          "p99": 4.700000002980232
+        },
+        "dom_layout_style": {
+          "average": 0.027295918279916655,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 99,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 1.1000000014901161
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 1,
+      "frames": 780,
+      "frame_ms_average": 38.50282051282049,
+      "frame_ms_p50": 33.39999999999418,
+      "frame_ms_p95": 50,
+      "frame_ms_p99": 50.10000000000582,
+      "js_heap_mb": 41.709232330322266,
+      "process_rss_mb": 804.31640625,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.02410256409874329,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.2997435899308094,
+          "p95": 2.1999999955296516,
+          "p99": 2.7999999970197678
+        },
+        "app_render": {
+          "average": 2.7716666665883403,
+          "p95": 4.200000002980232,
+          "p99": 4.9000000059604645
+        },
+        "dom_layout_style": {
+          "average": 0.028461538427151167,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 99,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 2.3000000044703484
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 100,
+      "requested_visible": 100,
+      "unique_assets": 1,
+      "frames": 794,
+      "frame_ms_average": 37.844710327455935,
+      "frame_ms_p50": 33.399999999965075,
+      "frame_ms_p95": 50.09999999997672,
+      "frame_ms_p99": 50.100000000034925,
+      "js_heap_mb": 52.59092712402344,
+      "process_rss_mb": 796.2421875,
+      "renderer": {
+        "streaming_update": {
+          "average": 0.02594458439413186,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 1.2976070528648211,
+          "p95": 2.2000000029802322,
+          "p99": 3
+        },
+        "app_render": {
+          "average": 2.713476070557118,
+          "p95": 4.200000002980232,
+          "p99": 5.600000001490116
+        },
+        "dom_layout_style": {
+          "average": 0.029596977386276428,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        }
+      },
+      "resources": {
+        "instances": 100,
+        "visible": 100,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 99,
+        "tokenNodes": 893
+      },
+      "spatial": {
+        "total": 100,
+        "candidates": 100,
+        "visible": 100,
+        "culled": 0,
+        "queryMs": 0.8000000044703484
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ],
+  "teardown": {
+    "resources": {
+      "instances": 0,
+      "visible": 0,
+      "uniqueAssets": 0,
+      "textureSources": 0,
+      "sharedAssetHits": 0,
+      "tokenNodes": 893
+    },
+    "spatial": {
+      "total": 0,
+      "candidates": 0,
+      "visible": 0,
+      "culled": 0,
+      "queryMs": 0.6000000014901161
+    },
+    "logical_gpu_mb": 0.0
+  }
+}

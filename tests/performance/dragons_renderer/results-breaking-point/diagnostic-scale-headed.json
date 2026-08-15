@@ -1,0 +1,352 @@
+{
+  "headless": false,
+  "warmup_seconds": 10,
+  "measurement_seconds": 30,
+  "results": [
+    {
+      "total_entities": 1000,
+      "requested_visible": 1000,
+      "unique_assets": 1,
+      "frames": 1801,
+      "frame_ms_average": 16.66596335369239,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 16.900000000001455,
+      "frame_ms_p99": 17,
+      "js_heap_mb": 133.3866424560547,
+      "animation_callback_ms_p95": 9.199999995529652,
+      "unattributed_frame_gap_ms_p95": 7.7000000044718035,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 680.79296875,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.0625763465461633,
+          "p95": 0.19999999552965164,
+          "p99": 0.20000000298023224
+        },
+        "streaming_update": {
+          "average": 0.0415324819610888,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "render_prepare": {
+          "average": 1.6614658522612515,
+          "p95": 2.5,
+          "p99": 2.8000000044703484
+        },
+        "app_render": {
+          "average": 4.44547473625598,
+          "p95": 6.200000002980232,
+          "p99": 9.200000002980232
+        },
+        "dom_layout_style": {
+          "average": 0.02248750689921943,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 6.948639644509484,
+          "p95": 9.100000001490116,
+          "p99": 13.599999994039536
+        },
+        "animation_callback": {
+          "average": 7.013936701762815,
+          "p95": 9.199999995529652,
+          "p99": 13.699999995529652
+        }
+      },
+      "resources": {
+        "instances": 1000,
+        "visible": 1000,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 999,
+        "tokenNodes": 1000
+      },
+      "spatial": {
+        "total": 1000,
+        "candidates": 1000,
+        "visible": 1000,
+        "culled": 0,
+        "queryMs": 2.899999998509884
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 1500,
+      "requested_visible": 1500,
+      "unique_assets": 1,
+      "frames": 326,
+      "frame_ms_average": 92.12484662576686,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 1000.2000000000044,
+      "frame_ms_p99": 1016.6000000000058,
+      "js_heap_mb": 51.05413818359375,
+      "animation_callback_ms_p95": 21,
+      "unattributed_frame_gap_ms_p95": 979.2000000000044,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 585.21875,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.05490797515844275,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "streaming_update": {
+          "average": 0.03680981588235662,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "render_prepare": {
+          "average": 1.92331288357271,
+          "p95": 3.0999999940395355,
+          "p99": 5.5
+        },
+        "app_render": {
+          "average": 13.092638036773248,
+          "p95": 16.900000005960464,
+          "p99": 18.69999999552965
+        },
+        "dom_layout_style": {
+          "average": 0.028220858836283714,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "redraw_total": {
+          "average": 16.099693251556598,
+          "p95": 20.899999998509884,
+          "p99": 23.399999998509884
+        },
+        "animation_callback": {
+          "average": 16.156441717517158,
+          "p95": 21,
+          "p99": 23.700000002980232
+        }
+      },
+      "resources": {
+        "instances": 1500,
+        "visible": 1500,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 1499,
+        "tokenNodes": 1500
+      },
+      "spatial": {
+        "total": 1500,
+        "candidates": 1500,
+        "visible": 1500,
+        "culled": 0,
+        "queryMs": 2.2000000029802322
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 2000,
+      "requested_visible": 2000,
+      "unique_assets": 1,
+      "frames": 30,
+      "frame_ms_average": 1009.4133333333336,
+      "frame_ms_p50": 1016.3000000000029,
+      "frame_ms_p95": 1016.7000000000116,
+      "frame_ms_p99": 1016.8000000000029,
+      "js_heap_mb": 68.53669738769531,
+      "animation_callback_ms_p95": 29.30000000447035,
+      "unattributed_frame_gap_ms_p95": 987.3999999955413,
+      "long_tasks": 1,
+      "long_task_ms_p95": 69,
+      "process_rss_mb": 604.69140625,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.07666666731238365,
+          "p95": 0.30000000447034836,
+          "p99": 0.3999999985098839
+        },
+        "streaming_update": {
+          "average": 0.046666666368643445,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 4.573333332687616,
+          "p95": 7.600000001490116,
+          "p99": 8
+        },
+        "app_render": {
+          "average": 14.013333334277073,
+          "p95": 17.899999998509884,
+          "p99": 45.399999998509884
+        },
+        "dom_layout_style": {
+          "average": 0.02666666656732559,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "redraw_total": {
+          "average": 21.373333334177733,
+          "p95": 29.200000002980232,
+          "p99": 55
+        },
+        "animation_callback": {
+          "average": 21.470000001539788,
+          "p95": 29.30000000447035,
+          "p99": 55.5
+        }
+      },
+      "resources": {
+        "instances": 2000,
+        "visible": 2000,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 1999,
+        "tokenNodes": 2000
+      },
+      "spatial": {
+        "total": 2000,
+        "candidates": 2000,
+        "visible": 2000,
+        "culled": 0,
+        "queryMs": 2.2000000029802322
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 3000,
+      "requested_visible": 3000,
+      "unique_assets": 1,
+      "frames": 387,
+      "frame_ms_average": 78.50645994832041,
+      "frame_ms_p50": 33.5,
+      "frame_ms_p95": 66.89999999999418,
+      "frame_ms_p99": 1016.7000000000116,
+      "js_heap_mb": 137.39381790161133,
+      "animation_callback_ms_p95": 46,
+      "unattributed_frame_gap_ms_p95": 20.89999999999418,
+      "long_tasks": 6,
+      "long_task_ms_p95": 59,
+      "process_rss_mb": 879.80859375,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.04470284235030798,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "streaming_update": {
+          "average": 0.032816537436896824,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 3.6736434108411617,
+          "p95": 5.800000004470348,
+          "p99": 7.600000001490116
+        },
+        "app_render": {
+          "average": 31.51317829455824,
+          "p95": 39.600000001490116,
+          "p99": 46.399999998509884
+        },
+        "dom_layout_style": {
+          "average": 0.025322997292806935,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 36.7297157622508,
+          "p95": 46,
+          "p99": 52.899999998509884
+        },
+        "animation_callback": {
+          "average": 36.77700258391002,
+          "p95": 46,
+          "p99": 52.899999998509884
+        }
+      },
+      "resources": {
+        "instances": 3000,
+        "visible": 3000,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 2999,
+        "tokenNodes": 3000
+      },
+      "spatial": {
+        "total": 3000,
+        "candidates": 3000,
+        "visible": 3000,
+        "culled": 0,
+        "queryMs": 5
+      },
+      "logical_gpu_mb": 0.0625
+    },
+    {
+      "total_entities": 5000,
+      "requested_visible": 5000,
+      "unique_assets": 1,
+      "frames": 409,
+      "frame_ms_average": 73.55110024449877,
+      "frame_ms_p50": 66.89999999999418,
+      "frame_ms_p95": 83.79999999998836,
+      "frame_ms_p99": 100,
+      "js_heap_mb": 287.36690521240234,
+      "animation_callback_ms_p95": 87.39999999850988,
+      "unattributed_frame_gap_ms_p95": 0,
+      "long_tasks": 409,
+      "long_task_ms_p95": 87,
+      "process_rss_mb": 917.9921875,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.029095354574233803,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "streaming_update": {
+          "average": 0.019315403510422463,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "render_prepare": {
+          "average": 6.772860635627598,
+          "p95": 12.899999998509884,
+          "p99": 14.699999995529652
+        },
+        "app_render": {
+          "average": 63.81295843515318,
+          "p95": 76,
+          "p99": 83.40000000596046
+        },
+        "dom_layout_style": {
+          "average": 0.028361858249002097,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 73.08581907089007,
+          "p95": 87.29999999701977,
+          "p99": 95
+        },
+        "animation_callback": {
+          "average": 73.1180929095646,
+          "p95": 87.39999999850988,
+          "p99": 95.20000000298023
+        }
+      },
+      "resources": {
+        "instances": 5000,
+        "visible": 4688,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 4999,
+        "tokenNodes": 4874
+      },
+      "spatial": {
+        "total": 5000,
+        "candidates": 4688,
+        "visible": 4688,
+        "culled": 312,
+        "queryMs": 13.800000004470348
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ]
+}

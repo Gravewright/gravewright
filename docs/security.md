@@ -68,6 +68,14 @@ correlated by a non-sensitive `request_id` (also returned as the `X-Request-ID`
 response header). See [`operations.md`](operations.md) for audit events, log
 levels and retention.
 
+When `grave run --diagnostics` is enabled, this redacted stream and periodic
+in-process metric snapshots are persisted only to bounded rotating JSONL files.
+The mode performs no network upload and is disabled by default.
+Capture files are issue-safe by default: identifiers are replaced with stable,
+per-run pseudonyms and local paths, hosts, origins and URLs are redacted. A
+pre-existing capture without this privacy marker is preserved as
+`*.private-<timestamp>` and never appended to the share-safe JSONL.
+
 ## Production Checklist
 
 - HTTPS only.

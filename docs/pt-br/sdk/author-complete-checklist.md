@@ -267,6 +267,15 @@ Antes de publicar um pacote, verifique:
 
 ## 13. Teste de completude da documentação
 
+Antes de publicar um pacote de runtime:
+
+- [ ] Solicita somente capabilities de leitura/escrita necessárias.
+- [ ] Não usa globals privados, seletores do DOM do core, renderer, transporte ou persistência bruta.
+- [ ] Toda subscription de evento e slot de UI tem disposer.
+- [ ] Toda mutação trata `PERMISSION_DENIED`; writes versionados tratam `STALE_VERSION`.
+- [ ] Eventos nunca presumem que recursos invisíveis existem.
+- [ ] Capabilities opcionais degradam corretamente e callbacks não criam loops ilimitados.
+
 Os docs da SDK devem responder a estas perguntas do autor sem ajuda externa:
 
 - Que kind de pacote devo escolher?

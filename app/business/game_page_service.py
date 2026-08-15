@@ -80,6 +80,7 @@ class GamePageService:
                 }
             )
 
+        package_items = self.system_install.list_for_tab()
         enabled_systems = [
             {
                 "id": item["id"],
@@ -88,10 +89,15 @@ class GamePageService:
                 "item_types": item.get("item_types", []),
                 "area_markers": item.get("area_markers", []),
             }
-            for item in self.system_install.list_for_tab()
+            for item in package_items
             if item["status"] == "enabled" and item["kind"] == "ruleset"
         ]
         enabled_systems_by_id = {system["id"]: system for system in enabled_systems}
+        enabled_content_packages_by_id = {
+            item["id"]: {"id": item["id"], "name": item["name"]}
+            for item in package_items
+            if item["status"] == "enabled" and "content.packs" in item.get("capabilities", [])
+        }
         available_systems = [
             {"id": s["id"], "name": s["name"], "version": ""} for s in enabled_systems
         ]
@@ -313,6 +319,22 @@ class GamePageService:
             room["actor_folder_tree"] = build_actor_folder_tree(all_actor_folders, actors_by_folder)
             room["unfoldered_actors"] = unfoldered_actors
             room["enabled_systems"] = enabled_systems if is_gm_room else []
+            active_content_package_ids = {
+                str(row["package_id"])
+                for row in self.system_install.campaign_packages.list_for_campaign(campaign["id"])
+                if row.get("status") == "active"
+            }
+            if sys_id:
+                active_content_package_ids.add(str(sys_id))
+            room["content_packages"] = (
+                [
+                    enabled_content_packages_by_id[package_id]
+                    for package_id in enabled_content_packages_by_id
+                    if package_id in active_content_package_ids
+                ]
+                if is_gm_room
+                else []
+            )
 
             owners_by_item = self.items.list_owners_for_campaign_items(campaign_id=campaign["id"])
             all_items = []

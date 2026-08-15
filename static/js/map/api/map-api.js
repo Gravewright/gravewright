@@ -24,6 +24,13 @@
                 errorMessage: "manifest failed",
             });
         },
+        loadSceneTileIndex(sceneId, layerId, query) {
+            const params = new URLSearchParams(query);
+            return jsonFetch(
+                `/game/scenes/${encodeURIComponent(sceneId)}/layers/${encodeURIComponent(layerId)}/tile-index?${params}`,
+                { errorMessage: "tile index failed" },
+            );
+        },
         loadSceneTokens(sceneId) {
             return jsonFetch(`/game/scenes/${sceneId}/tokens`);
         },

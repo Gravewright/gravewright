@@ -80,13 +80,16 @@ class ItemRepository:
             )
 
     def update_core(
-        self, *, item_id: str, name: str, folder_id: str | None, portrait_asset_id: str | None
-    ) -> int:
+        self, *, item_id: str, name: str, folder_id: str | None, portrait_asset_id: str | None,
+        expected_version: int | None = None,
+    ) -> int | None:
         now = int(time.time())
         with engine_begin() as conn:
-            conn.execute(
-                update(items_table)
-                .where(items_table.c.id == item_id)
+            statement = update(items_table).where(items_table.c.id == item_id)
+            if expected_version is not None:
+                statement = statement.where(items_table.c.version == expected_version)
+            changed = conn.execute(
+                statement
                 .values(
                     name=name,
                     folder_id=folder_id,
@@ -95,10 +98,12 @@ class ItemRepository:
                     updated_at=now,
                 )
             )
+            if changed.rowcount == 0:
+                return None
             row = one_or_none(
                 conn.execute(select(items_table.c.version).where(items_table.c.id == item_id))
             )
-        return int(row["version"]) if row is not None else 0
+        return int(row["version"]) if row is not None else None
 
     def set_folder(self, *, item_id: str, folder_id: str | None) -> None:
         now = int(time.time())
@@ -116,6 +121,15 @@ class ItemRepository:
                 update(items_table)
                 .where(items_table.c.folder_id == folder_id)
                 .values(folder_id=None, updated_at=now)
+            )
+
+    def move_from_folder(self, *, folder_id: str, target_folder_id: str | None) -> None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(items_table)
+                .where(items_table.c.folder_id == folder_id)
+                .values(folder_id=target_folder_id, updated_at=now)
             )
 
     def has_owner(self, *, item_id: str, user_id: str) -> bool:

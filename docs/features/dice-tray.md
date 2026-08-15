@@ -7,7 +7,7 @@ instead of two.
 
 ## Notation
 
-The tray speaks the evaluator's notation, not Foundry's:
+The tray uses the notation accepted by Gravewright's evaluator:
 
 | Intent | Notation | Notes |
 | --- | --- | --- |

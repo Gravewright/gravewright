@@ -1,0 +1,77 @@
+{
+  "headless": false,
+  "warmup_seconds": 10,
+  "measurement_seconds": 30,
+  "results": [
+    {
+      "total_entities": 1500,
+      "requested_visible": 1500,
+      "unique_assets": 1,
+      "frames": 1801,
+      "frame_ms_average": 16.666240977234867,
+      "frame_ms_p50": 16.69999999999709,
+      "frame_ms_p95": 16.80000000000291,
+      "frame_ms_p99": 16.900000000001455,
+      "js_heap_mb": 19.50108242034912,
+      "animation_callback_ms_p95": 6.300000004470348,
+      "unattributed_frame_gap_ms_p95": 10.499999995532562,
+      "long_tasks": 0,
+      "long_task_ms_p95": 0.0,
+      "process_rss_mb": 515.19140625,
+      "renderer": {
+        "animation_canvas": {
+          "average": 0.038867295996339236,
+          "p95": 0.10000000149011612,
+          "p99": 0.20000000298023224
+        },
+        "streaming_update": {
+          "average": 0.037034980547322224,
+          "p95": 0.10000000149011612,
+          "p99": 0.19999999552965164
+        },
+        "render_prepare": {
+          "average": 1.6255413658466027,
+          "p95": 2.7000000029802322,
+          "p99": 3.3000000044703484
+        },
+        "app_render": {
+          "average": 0.4157690173102908,
+          "p95": 0.6000000014901161,
+          "p99": 0.9000000059604645
+        },
+        "dom_layout_style": {
+          "average": 0.013992226505233208,
+          "p95": 0.10000000149011612,
+          "p99": 0.10000000149011612
+        },
+        "redraw_total": {
+          "average": 4.1288728484762895,
+          "p95": 6.299999997019768,
+          "p99": 7.200000002980232
+        },
+        "animation_callback": {
+          "average": 4.172015547040831,
+          "p95": 6.300000004470348,
+          "p99": 7.200000002980232
+        }
+      },
+      "resources": {
+        "instances": 1500,
+        "visible": 1500,
+        "uniqueAssets": 1,
+        "textureSources": 1,
+        "sharedAssetHits": 1499,
+        "tokenNodes": 1500,
+        "fastSprites": 1500
+      },
+      "spatial": {
+        "total": 1500,
+        "candidates": 1500,
+        "visible": 1500,
+        "culled": 0,
+        "queryMs": 2.100000001490116
+      },
+      "logical_gpu_mb": 0.0625
+    }
+  ]
+}

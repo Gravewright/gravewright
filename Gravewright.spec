@@ -2,7 +2,7 @@
 from PyInstaller.utils.hooks import collect_all
 from PyInstaller.utils.hooks import copy_metadata
 
-datas = [('templates', 'templates'), ('static', 'static'), ('schemas', 'schemas'), ('migrations', 'migrations'), ('alembic.ini', '.'), ('app/engine/sdk/capabilities.json', 'app/engine/sdk'), ('data/packages/rulesets/gravewright-pdf-system', 'bundled-packages/rulesets/gravewright-pdf-system')]
+datas = [('templates', 'templates'), ('static', 'static'), ('schemas', 'schemas'), ('migrations', 'migrations'), ('alembic.ini', '.'), ('LICENSE', '.'), ('LICENSE-API.md', '.'), ('THIRD_PARTY_NOTICES.md', '.'), ('app/engine/sdk/capabilities.json', 'app/engine/sdk'), ('data/packages/rulesets/gravewright-pdf-system', 'bundled-packages/rulesets/gravewright-pdf-system')]
 binaries = []
 hiddenimports = ['bottle', 'proxy_tools']
 datas += copy_metadata('pywebview')

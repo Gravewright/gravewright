@@ -11,6 +11,9 @@
             board.worldLayer = new PIXI.Container();
             board.tilesLayer = new PIXI.Container();
             board.tokenWorldLayer = new PIXI.Container();
+            board.tokenSpriteLayer = new PIXI.Container();
+            board.tokenAdornmentLayer = new PIXI.Container();
+            board.tokenWorldLayer.addChild(board.tokenSpriteLayer, board.tokenAdornmentLayer);
             board.tokenLabelLayer = new PIXI.Container();
             board.ghostWorldLayer = new PIXI.Container();
             board.originWorldLayer = new PIXI.Container();

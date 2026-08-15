@@ -92,6 +92,16 @@ def _sdk_surface() -> dict[str, set[str]]:
     for shortcut in re.findall(r"namespaces\.(\w+) =", source):
         surface.setdefault(shortcut, set())
 
+    # Factory-produced namespaces are public too, even though their methods do
+    # not appear inline in the `namespaces` object literal.
+    for namespace, factory in re.findall(r"^            (\w+): (createSdk\w+)\(", block, re.MULTILINE):
+        factory_start = source.find(f"function {factory}(")
+        factory_end = source.find("\n    function ", factory_start + 1)
+        factory_source = source[factory_start:factory_end if factory_end >= 0 else len(source)]
+        methods = set(re.findall(r"^            (\w+)(?:\([^)]*\)|:) ", factory_source, re.MULTILINE))
+        methods.update(re.findall(r"^            (\w+): ", factory_source, re.MULTILINE))
+        surface.setdefault(namespace, set()).update(methods)
+
     assert "sheets" in surface and "registerController" in surface["sheets"], surface.get("sheets")
     return surface
 

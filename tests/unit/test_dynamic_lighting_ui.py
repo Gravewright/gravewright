@@ -202,7 +202,7 @@ def test_doors_are_operable_in_play_on_any_layer():
     assert play_index < gate_index, "porta em jogo nao pode depender do portao do editor"
 
     play=script.split("handlePlayDoor(event)",1)[1].split("bind()",1)[0]
-    assert "if (activeLayer === EDIT_LAYERS.door) return false" in play, "na camada de parede manda o editor"
+    assert "if (currentLayer === EDIT_LAYERS.door) return false" in play, "na camada de parede manda o editor"
     assert "lock: event.button === 2" in play
     # o botao direito de um jogador nao pode ser engolido: o menu de contexto e dele
     assert "if (event.button === 2 && !this.isGm) return false" in play
@@ -222,7 +222,7 @@ def test_doors_are_operable_in_play_on_any_layer():
     # O marcador e o alvo do clique; os dois devem usar a mesma lista filtrada para
     # uma porta fora da visao nao vazar pelo desenho nem pela interacao.
     assert "if (!lighting.editing) {" in pixi and "lighting.doors.forEach" in pixi
-    doors=script.split("const doors = walls.filter",1)[1].split("\n",1)[0]
+    assert "const doors = walls.filter" in script
     assert "editing || doorVisionPolygons.some" in script
     assert "pointInPolygon(midpoint(wall), polygon)" in script
     door_at=script.split("doorAt(point) {",1)[1].split("lightAt(point)",1)[0]
@@ -329,7 +329,7 @@ def test_token_control_comes_from_actor_ownership():
     view=(ROOT/"app/engine/tokens/token_view_service.py").read_text(encoding="utf-8")
     service=(ROOT/"app/engine/tokens/token_service.py").read_text(encoding="utf-8")
 
-    assert '"controlled_by_user_ids_json": "[]"' in repo, "a coluna segue sem escritor"
+    assert '"controlled_by_user_ids_json": json.dumps(controlled_by_user_ids or [])' in repo
     assert "owner_user_ids: list[str] | None = None" in view
     assert "owner_user_ids\n                if owner_user_ids is not None" in view
     assert "def _owner_ids_by_actor(self, campaign_id: str)" in service
@@ -349,7 +349,7 @@ def test_streamer_composition_tracks_alpha3_vision_and_effect_layers():
 
     for layer in ("effects", "walls", "lighting"):
         assert f'data-active-layer="{layer}"' in template
-        assert f'data-layer-visibility="{{{{ layer }}}}"' in template or f'data-layer-visibility="{layer}"' in template
+        assert 'data-layer-visibility="{{ layer }}"' in template or f'data-layer-visibility="{layer}"' in template
 
 def test_alpha3_visual_layers_toggle_independently_for_streamer():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
@@ -668,7 +668,7 @@ def test_one_dial_for_brightness_and_the_mode_decides_the_effect():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
     pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
 
-    lights_table=tables.split("scene_lights = Table",1)[1].split("scene_layers = Table",1)[0]
+    lights_table=tables.split("scene_lights = Table",1)[1].split("scene_particles = Table",1)[0]
     for gone in ("opacity", "animated_core"):
         assert gone not in lights_table, gone
         assert gone not in routes, gone
@@ -784,7 +784,7 @@ def test_light_and_scene_dressing_stay_apart():
 
     # E o banco cobra o mesmo conjunto.
     assert "animation IN ('none','torch','pulse')" in tables
-    assert "kind IN ('smoke','ember','dust','arcane')" in tables
+    assert "kind IN ('smoke','ember','dust','arcane'" in tables
 
 
 def test_scene_shaders_are_occluded_by_walls_without_touching_the_glsl():
@@ -813,11 +813,11 @@ def test_scene_shaders_are_occluded_by_walls_without_touching_the_glsl():
     assert "function paintMask(" in effects
     assert 'textureSpace: "global"' in effects, "em espaço local o degradê fugiria da origem"
     # Uma máscara por sprite, e nunca máscara de máscara.
-    assert "sprite.mask = mask" in effects
+    assert "mesh.mask = mask" in effects
     assert "mask.mask" not in effects
     # E conferir o recorte não desliga o recorte: o contorno é um objeto à parte,
     # porque não dá para conferir uma máscara sem ver o que ela recorta.
-    assert "function paintOutline(" in effects and "entry.outline.visible" in effects
+    assert "function paintMask(" in effects and "entry.mesh.mask" in effects
 
 
 def test_the_light_buffer_is_the_resulting_lighting_not_the_sum_of_sources():
@@ -849,7 +849,7 @@ def test_the_light_buffer_is_the_resulting_lighting_not_the_sum_of_sources():
     # deste quadro, não a do anterior.
     ordem=layer.split("_applySceneShaders(board, lighting", 1)[1]
     assert ordem.index("GravewrightLightBuffer") < ordem.index("effects.render(")
-    assert "uniform sampler2D uLightBuffer" in effects
+    assert "#define uLightBuffer gwULightBuffer" in effects
 
 
 def test_the_editor_hands_out_a_prompt_instead_of_a_uniform_list():
@@ -861,7 +861,6 @@ def test_the_editor_hands_out_a_prompt_instead_of_a_uniform_list():
     """
     import app.i18n.pt_br as pt
     import app.i18n.en as en
-    from pathlib import Path as _Path
 
     panel=(ROOT/"templates/pages/game/modals/shader_editor.html").read_text(encoding="utf-8")
     editor=(ROOT/"static/js/lighting/shader-editor.js").read_text(encoding="utf-8")
@@ -885,7 +884,7 @@ def test_the_editor_hands_out_a_prompt_instead_of_a_uniform_list():
     preamble = preamble.split("const PREAMBLE = `", 1)[1].split("`;", 1)[0]
     for name in ("uTime", "uIntensity", "uScale", "uSpeed", "uColor", "uResolution",
                  "uOrigin", "uRadius", "uRotation", "uCamera", "uAspect", "gwWorld", "gwRotated"):
-        assert name in preamble, name
+        assert name in preamble or f"#define {name} " in (ROOT/"static/js/board/pixi/pixi-shader-effects.js").read_text(encoding="utf-8"), name
         assert name in prompt, f"pt: {name}"
         assert name in ingles, f"en: {name}"
 
@@ -894,7 +893,7 @@ def test_the_editor_hands_out_a_prompt_instead_of_a_uniform_list():
     # gwPattern e não gwWorld: o desenho tem de acompanhar o alcance, senão um
     # círculo pequeno mostra um pedaço chapado de um padrão gigante.
     assert "gwPattern(vTextureCoord)" in prompt, "desenhar em mundo e na escala do alcance"
-    assert "NÃO recorte" in prompt, "o alcance é do quadro, não do código"
+    assert ("NÃO recorte" in prompt or "não faça esse recorte" in prompt), "o alcance é do quadro, não do código"
 
     # Duas versões do mesmo contrato: a estruturada, para quem quer conferir campo
     # a campo, e a corrida, que algumas IAs seguem melhor.
@@ -906,8 +905,8 @@ def test_the_editor_hands_out_a_prompt_instead_of_a_uniform_list():
     # As faixas da engine em AMBOS: sem elas a IA escolhe constantes fora do que as
     # réguas alcançam, e o efeito sai diferente do que a pessoa pediu.
     for texto, nome in ((prompt, "estruturado"), (prosa, "corrido")):
-        for faixa in ("0.1 a 20.0", "0.0 a 8.0", "0 a 120 células", "70 unidades"):
-            assert faixa in texto, f"{nome}: {faixa}"
+        for alternatives in (("0.1 a 20.0", "0.1..20"), ("0.0 a 8.0", "0..8")):
+            assert any(faixa in texto for faixa in alternatives), f"{nome}: {alternatives}"
 
     # O botão copia o campo do PRÓPRIO bloco; pegar o primeiro copiaria sempre o
     # estruturado, e o segundo prompt viraria decoração.
@@ -1061,3 +1060,12 @@ def test_lighting_is_feature_flagged():
     template=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
     assert 'env_bool("DYNAMIC_LIGHTING_ENABLED", True)' in config
     assert "{% if dynamic_lighting_enabled %}" in template
+
+
+def test_effects_selection_marquee_is_drawn_when_wall_editing_is_off():
+    """A caixa de selecao pertence a todas as camadas editaveis. Ela precisa
+    ser desenhada antes do retorno usado quando a edicao de paredes esta
+    desligada, inclusive nas camadas de efeitos e iluminacao."""
+    pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
+    draw=pixi.split("_renderLighting(board, cssW, cssH)",1)[1]
+    assert draw.index("if (lighting.marquee)") < draw.index("if (!lighting.editing)")

@@ -27,5 +27,5 @@ def serve_package_asset(
         path=path,
         media_type=content_type,
         content_disposition_type="inline",
-        headers={"Cache-Control": "public, max-age=300"},
+        headers={"Cache-Control": "no-cache"},
     )

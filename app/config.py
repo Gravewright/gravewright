@@ -165,6 +165,9 @@ def _validate_config(cfg: "AppConfig") -> None:
         "SCENE_VIEWPORT_MAX_HEIGHT_CHUNKS": cfg.scene_viewport_max_height_chunks,
         "SCENE_VIEWPORT_MAX_AREA_CHUNKS": cfg.scene_viewport_max_area_chunks,
         "SCENE_VIEWPORT_MAX_KNOWN_CHUNKS": cfg.scene_viewport_max_known_chunks,
+        "GM_HINT_MAX_DISTANCE_CHUNKS": cfg.gm_hint_max_distance_chunks,
+        "GM_HINT_MAX_QUEUED_BYTES": cfg.gm_hint_max_queued_bytes,
+        "GM_HINT_TTL_SECONDS": cfg.gm_hint_ttl_seconds,
         "SCENE_VIEWPORT_MAX_LAYERS": cfg.scene_viewport_max_layers,
         "FOG_MAX_OPS_PER_COMMAND": cfg.fog_max_ops_per_command,
         "FOG_MAX_POLYGON_POINTS": cfg.fog_max_polygon_points,
@@ -180,6 +183,11 @@ def _validate_config(cfg: "AppConfig") -> None:
     }
     for name, value in positive_values.items():
         _validate_positive_int(name, value)
+
+    if cfg.gm_hint_policy not in {
+        "simple", "exponential", "sigmoid", "sigmoid_derivative", "utility_per_byte"
+    }:
+        raise RuntimeError("GM_HINT_POLICY must be simple, exponential, sigmoid, sigmoid_derivative, or utility_per_byte")
 
     if not (
         cfg.join_code_min_expires_hours
@@ -328,6 +336,13 @@ class AppConfig:
     scene_viewport_max_area_chunks: int
     scene_viewport_max_known_chunks: int
     scene_viewport_max_layers: int
+    gm_guided_prefetch_enabled: bool
+    gm_hint_max_distance_chunks: int
+    gm_hint_max_queued_bytes: int
+    gm_hint_ttl_seconds: int
+    gm_hint_idle_only: bool
+    gm_hint_cancel_on_visible_backlog: bool
+    gm_hint_policy: str
 
     fog_max_ops_per_command: int
     fog_max_polygon_points: int
@@ -359,7 +374,7 @@ config = AppConfig(
     allowed_hosts=_allowed_hosts,
     trusted_proxies=_csv("TRUSTED_PROXIES"),
     ws_allowed_origins=_resolve_ws_allowed_origins(_allowed_hosts),
-    gravewright_version=env_str("GRAVEWRIGHT_VERSION", "3.0.2-alpha"),
+    gravewright_version=env_str("GRAVEWRIGHT_VERSION", "1.0.0-beta.1"),
     data_dir=_resolve_data_dir(),
     database_url=_resolve_database_url(),
     allow_sqlite_in_production=env_bool("ALLOW_SQLITE_IN_PRODUCTION", False),
@@ -419,6 +434,13 @@ config = AppConfig(
     scene_viewport_max_area_chunks=env_int("SCENE_VIEWPORT_MAX_AREA_CHUNKS", 256),
     scene_viewport_max_known_chunks=env_int("SCENE_VIEWPORT_MAX_KNOWN_CHUNKS", 512),
     scene_viewport_max_layers=env_int("SCENE_VIEWPORT_MAX_LAYERS", 4),
+    gm_guided_prefetch_enabled=env_bool("GM_GUIDED_PREFETCH_ENABLED", True),
+    gm_hint_max_distance_chunks=env_int("GM_HINT_MAX_DISTANCE_CHUNKS", 1),
+    gm_hint_max_queued_bytes=env_int("GM_HINT_MAX_QUEUED_BYTES", 64 * 1024 * 1024),
+    gm_hint_ttl_seconds=env_int("GM_HINT_TTL_SECONDS", 60),
+    gm_hint_idle_only=env_bool("GM_HINT_IDLE_ONLY", True),
+    gm_hint_cancel_on_visible_backlog=env_bool("GM_HINT_CANCEL_ON_VISIBLE_BACKLOG", True),
+    gm_hint_policy=env_str("GM_HINT_POLICY", "simple").strip().lower(),
     fog_max_ops_per_command=env_int("FOG_MAX_OPS_PER_COMMAND", 64),
     fog_max_polygon_points=env_int("FOG_MAX_POLYGON_POINTS", 128),
     fog_max_coordinate_abs=env_int("FOG_MAX_COORDINATE_ABS", 100_000),
@@ -426,9 +448,9 @@ config = AppConfig(
     token_create_many_max=env_int("TOKEN_CREATE_MANY_MAX", 50),
     board_markers_max_per_scene=env_int("BOARD_MARKERS_MAX_PER_SCENE", 500),
     board_measurements_max_per_user=env_int("BOARD_MEASUREMENTS_MAX_PER_USER", 50),
-    map_upload_max_bytes=env_int("MAP_UPLOAD_MAX_BYTES", 25 * 1024 * 1024),
-    map_image_max_width=env_int("MAP_IMAGE_MAX_WIDTH", 8192),
-    map_image_max_height=env_int("MAP_IMAGE_MAX_HEIGHT", 8192),
+    map_upload_max_bytes=env_int("MAP_UPLOAD_MAX_BYTES", 50 * 1024 * 1024 * 1024),
+    map_image_max_width=env_int("MAP_IMAGE_MAX_WIDTH", 500_000),
+    map_image_max_height=env_int("MAP_IMAGE_MAX_HEIGHT", 500_000),
     map_tile_size=env_int("MAP_TILE_SIZE", 256),
     map_max_tile_count=env_int("MAP_MAX_TILE_COUNT", 4096),
     map_re_tile_use_staging=env_bool("MAP_RE_TILE_USE_STAGING", True),

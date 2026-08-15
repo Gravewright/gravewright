@@ -10,10 +10,11 @@
     Object.assign(proto, {
         debugSnapshot() {
             const board = this.active && this.boards.get(this.active);
-            const textures = { loading: 0, error: 0, ready: 0 };
+            const textures = { queued: 0, loading: 0, error: 0, ready: 0 };
 
             this.textures.forEach((texture) => {
-                if (texture === "loading") textures.loading += 1;
+                if (texture === "queued") textures.queued += 1;
+                else if (texture === "loading") textures.loading += 1;
                 else if (texture === "error") textures.error += 1;
                 else textures.ready += 1;
             });
@@ -21,12 +22,74 @@
             return {
                 boardReady: !!board?.ready,
                 textures,
+                textureMaterializationBudget: this.maxTextureMaterializationsPerFrame,
+                textureMaterializationBudgetRange: {
+                    min: this.minTextureMaterializationsPerFrame,
+                    max: this.maxAdaptiveTextureMaterializationsPerFrame,
+                },
+                textureFrameWorkEmaMs: this.textureFrameWorkEmaMs,
+                textureMaterializationCostEmaMs: this.textureMaterializationCostEmaMs,
+                textureGovernorState: this.textureGovernorState,
+                textureGovernorAdjustments: {
+                    increases: this.textureGovernorIncreases,
+                    decreases: this.textureGovernorDecreases,
+                },
+                prefetchPaused: performance.now() < this.prefetchPausedUntil,
+                textureMaterializationsThisFrame: board?.textureMaterializationsThisFrame || 0,
+                deferredTextureMaterializations: board?.deferredTextureMaterializations || 0,
+                deferredVisibleTextureMaterializations: board?.deferredVisibleTextureMaterializations || 0,
+                deferredPrefetchTextureMaterializations: board?.deferredPrefetchTextureMaterializations || 0,
+                textureMaterializationWorkMs: board?.textureMaterializationWorkMs || 0,
+                textureCache: {
+                    entries: this.textureMeta.size,
+                    bytes: this.textureCacheBytes,
+                    maxEntries: this.maxTextureCacheEntries,
+                    maxBytes: this.maxTextureCacheBytes,
+                    evictions: this.textureCacheEvictions,
+                    evictedBytes: this.textureCacheEvictedBytes,
+                },
+                blobCache: window.GravewrightTileBlobCache?.snapshot?.() || null,
                 tileSprites: board?.tileSprites.size || 0,
                 visibleTileSprites: board
                     ? [...board.tileSprites.values()].filter((sprite) => sprite.visible).length
                     : 0,
+                animatedEntities: (() => {
+                    const animated = this.tokens.filter((token) => token.benchmark_animated);
+                    const assets = new Set(animated.map((token) => token.asset_url).filter(Boolean));
+                    return {
+                        instances: animated.length,
+                        visible: board?.tokenSpatialMetrics?.visible || 0,
+                        uniqueAssets: assets.size,
+                        textureSources: assets.size,
+                        sharedAssetHits: Math.max(0, animated.length - assets.size),
+                        tokenNodes: (board?.tokenNodes?.size || 0) + (board?.fastTokenSprites?.size || 0),
+                        fastSprites: board?.fastTokenSprites?.size || 0,
+                    };
+                })(),
+                spatialIndex: board?.tokenSpatialMetrics || {
+                    total: this.tokens.length, candidates: 0, visible: 0,
+                    culled: this.tokens.length, queryMs: 0,
+                },
+                visibleLightingSources: board?.visibleLightingSources || 0,
                 samples: board ? this._sampleSprites(board) : null,
             };
+        },
+
+        benchmarkSetAnimatedTokens(tokens, sources) {
+            const wanted = new Set((sources || []).map((source) => source.url));
+            [...this.textures.keys()].forEach((url) => {
+                if (String(url).startsWith("benchmark://") && !wanted.has(url)) this._forgetTexture(url);
+            });
+            (sources || []).forEach(({ url, canvas }) => {
+                const existing = this.textures.get(url);
+                if (existing && existing !== "queued" && existing !== "loading" && existing !== "error") return;
+                const texture = PIXI.Texture.from(canvas);
+                this.textures.set(url, texture);
+                this.textureMeta.set(url, { bytes: canvas.width * canvas.height * 4, lastUsedAt: performance.now() });
+                this.textureCacheBytes += canvas.width * canvas.height * 4;
+            });
+            this.setTokens(tokens);
+            this.deps.requestRender?.();
         },
 
 

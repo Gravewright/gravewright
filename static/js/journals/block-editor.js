@@ -410,6 +410,11 @@ function mount(host, opts = {}) {
     getDoc: () => wrapDoc(editor.getJSON()),
     setContent: (document) => editor.commands.setContent(pmContentFrom(document)),
     setContentFromHTML: (html) => editor.commands.setContent(html || ""),
+    insertHeading: (level, text = "") => editor.chain().focus().insertContent({
+      type: "heading",
+      attrs: { level: Math.max(1, Math.min(3, Number(level) || 2)) },
+      content: text ? [{ type: "text", text }] : undefined,
+    }).run(),
     isEmpty: () => editor.isEmpty,
     focus: () => editor.commands.focus(),
     destroy: () => {

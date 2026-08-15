@@ -1,0 +1,1571 @@
+/* Gravewright — Quests & Quest Boards
+ *
+ * The diary is a book; a quest is a contract and a board is the wall it hangs
+ * on. This layer gives those two journal types their own object language,
+ * built from the same tokens and the same rules as the journal workspace:
+ * squared corners (0 or 4px), accent washes over `--border` hairlines, and no
+ * `!important` unless a base rule is itself `!important`.
+ *
+ * The one idea that carries everything: the *seal*. A quest's status is a
+ * stamped mark — icon plus word, tinted per state — and the same seal appears
+ * on the sheet, on every board card, in the board's admin list and in the
+ * status picker of the editor. One object, four places, so a player learns to
+ * read a colour once.
+ */
+
+.journal-modal[data-journal-type="quest"],
+.journal-modal[data-journal-type="quest_board"] {
+    --quest-gutter: 28px;
+    --quest-measure: 78ch;
+}
+
+.journal-modal[data-journal-type="quest"] {
+    width: min(880px, calc(100vw - 36px));
+    height: min(860px, calc(100vh - 36px));
+}
+
+.journal-modal[data-journal-type="quest_board"] {
+    width: min(920px, calc(100vw - 36px));
+    height: min(760px, calc(100vh - 36px));
+}
+
+/* Both types are a single scrolling sheet: the head stays put, the paper runs
+ * under it, and the gutter belongs to the sheet rather than to each block. */
+.journal-modal[data-journal-type="quest"] .journal-reader,
+.journal-modal[data-journal-type="quest"] .journal-editor-form,
+.journal-modal[data-journal-type="quest_board"] .journal-reader,
+.journal-modal[data-journal-type="quest_board"] .journal-editor-form {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: 0 var(--quest-gutter) var(--space-6);
+    overflow-y: auto;
+}
+
+/* The head is an action bar, not a title band: the window titlebar already
+ * names the quest and its type, and the seal below states its standing. */
+.journal-modal[data-journal-type="quest"] .journal-reader-head,
+.journal-modal[data-journal-type="quest_board"] .journal-reader-head {
+    justify-content: flex-end;
+    min-height: 46px;
+    margin-inline: calc(var(--quest-gutter) * -1);
+    padding-inline: var(--quest-gutter);
+}
+
+.journal-modal .board-titlebar-edit {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+    border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border));
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-raised));
+    color: var(--text);
+    font-size: var(--text-xs);
+    font-weight: 650;
+    cursor: pointer;
+}
+
+.journal-modal .board-titlebar-edit:hover {
+    border-color: var(--border-accent-strong);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
+}
+
+/* The board starts in the upper-left like a working surface. Its action belongs
+ * to that same origin; neither the card nor Edit should float in open space. */
+.journal-modal[data-journal-type="quest_board"] .journal-reader {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+
+.journal-modal[data-journal-type="quest_board"] .journal-modal-body {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.journal-modal[data-journal-type="quest_board"] .journal-reader-head {
+    box-sizing: border-box;
+    justify-content: flex-start;
+    margin-inline: calc(var(--quest-gutter) * -1);
+    padding-inline: var(--quest-gutter);
+}
+
+.journal-modal[data-journal-type="quest"] .journal-reader-heading,
+.journal-modal[data-journal-type="quest_board"] .journal-reader-heading { display: none; }
+
+/* With nothing left to act on, the bar itself goes (a player without edit
+ * rights gets the sheet and nothing else). */
+.journal-modal[data-journal-type="quest"] .journal-reader-head:not(:has(.journal-edit-btn)),
+.journal-modal[data-journal-type="quest_board"] .journal-reader-head:not(:has(.journal-edit-btn)) {
+    display: none;
+}
+
+/* ── The seal ──────────────────────────────────────────────────────────── */
+
+/* Per-status colour lives here once, as a pair of custom properties every
+ * other rule reads: the ink and the wash it sits on. */
+.journal-modal .quest-seal,
+.journal-modal .board-card,
+.journal-modal .quest-sheet {
+    --seal-ink: var(--text-muted);
+    --seal-wash: rgba(255, 255, 255, 0.04);
+}
+
+.journal-modal .quest-seal--draft,
+.journal-modal .board-card--draft,
+.journal-modal .quest-sheet--draft {
+    --seal-ink: var(--text-faint);
+    --seal-wash: rgba(255, 255, 255, 0.05);
+}
+
+.journal-modal .quest-seal--available,
+.journal-modal .board-card--available,
+.journal-modal .quest-sheet--available {
+    --seal-ink: var(--accent);
+    --seal-wash: rgba(192, 154, 90, 0.12);
+}
+
+.journal-modal .quest-seal--active,
+.journal-modal .board-card--active,
+.journal-modal .quest-sheet--active {
+    --seal-ink: #8fb8e8;
+    --seal-wash: rgba(143, 184, 232, 0.12);
+}
+
+.journal-modal .quest-seal--completed,
+.journal-modal .board-card--completed,
+.journal-modal .quest-sheet--completed {
+    --seal-ink: var(--success);
+    --seal-wash: rgba(109, 179, 134, 0.12);
+}
+
+.journal-modal .quest-seal--failed,
+.journal-modal .board-card--failed,
+.journal-modal .quest-sheet--failed {
+    --seal-ink: var(--danger);
+    --seal-wash: rgba(210, 121, 107, 0.12);
+}
+
+.journal-modal .quest-seal--archived,
+.journal-modal .board-card--archived,
+.journal-modal .quest-sheet--archived {
+    --seal-ink: var(--text-faint);
+    --seal-wash: rgba(255, 255, 255, 0.03);
+}
+
+.journal-modal .quest-seal {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 5px var(--space-3);
+    border: 1px solid color-mix(in srgb, var(--seal-ink) 40%, transparent);
+    border-radius: var(--radius-sm);
+    background: var(--seal-wash);
+    color: var(--seal-ink);
+    font-size: var(--text-xs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.journal-modal .quest-seal i { font-size: var(--text-base); }
+
+.journal-modal .quest-seal--compact {
+    padding: 2px var(--space-2);
+    gap: var(--space-1);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.06em;
+}
+
+.journal-modal .quest-seal--compact i { font-size: var(--text-sm); }
+
+/* ── Quest sheet (what the table reads) ────────────────────────────────── */
+
+.journal-modal .journal-reader {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(192, 154, 90, 0.55) rgba(255, 255, 255, 0.04);
+}
+
+.journal-modal .quest-sheet {
+    display: flex;
+    width: min(96ch, 100%);
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-inline: auto;
+    padding-block: var(--space-4) var(--space-8);
+}
+
+.journal-modal .quest-sheet-head {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: 0 0 var(--space-4) var(--space-4);
+    /* The rule under the head is the fold of the contract. */
+    border-bottom: 1px solid var(--border);
+}
+
+.journal-modal .quest-sheet-head::before {
+    position: absolute;
+    top: 0;
+    bottom: var(--space-4);
+    left: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--seal-ink), transparent);
+    content: "";
+}
+
+.journal-modal .quest-title {
+    margin: var(--space-1) 0 0;
+    color: var(--text-bright);
+    font-family: var(--font-display, inherit);
+    font-size: clamp(25px, 3.4vw, 34px);
+    font-weight: 720;
+    letter-spacing: -0.025em;
+    line-height: 1.08;
+}
+
+.journal-modal .quest-poster {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-height: 260px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    object-position: center 22%;
+    box-shadow: var(--shadow-sm);
+}
+
+.journal-modal .quest-reader-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 0.8fr) minmax(320px, 1.35fr);
+    align-items: start;
+    gap: var(--space-4);
+}
+
+.journal-modal .quest-context,
+.journal-modal .quest-details {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+/* Location and patron: the two facts a player checks before accepting. */
+.journal-modal .quest-facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    margin: 0;
+    padding: var(--space-3);
+    border-left: 2px solid var(--border-accent);
+    background: rgba(255, 255, 255, 0.012);
+}
+
+.journal-modal .quest-facts > div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+    padding-right: var(--space-3);
+}
+
+.journal-modal .quest-facts dt {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.journal-modal .quest-facts dd {
+    margin: 0;
+    color: var(--text);
+    font-size: var(--text-base);
+}
+
+.journal-modal .quest-body {
+    padding: 0 var(--space-4);
+    border-left: 2px solid color-mix(in srgb, var(--seal-ink) 55%, var(--border));
+    color: var(--text);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+}
+
+.journal-modal .quest-body > .journal-reader-content {
+    flex: 0 0 auto;
+    overflow: visible;
+}
+
+.journal-modal .quest-body:not(:has(.journal-reader-content)) { display: none; }
+
+.journal-modal .quest-outcomes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    align-items: start;
+    gap: var(--space-3);
+}
+
+.journal-modal .quest-block {
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--seal-wash) 55%, transparent), transparent 55%),
+        rgba(255, 255, 255, 0.012);
+}
+
+.journal-modal .quest-block h4 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.journal-modal .quest-block h4 > i {
+    color: var(--accent);
+    font-size: var(--text-base);
+}
+
+/* The tally is the quest's progress at a glance: 2/5 done. */
+.journal-modal .quest-tally {
+    margin-left: auto;
+    color: var(--accent);
+    font-size: var(--text-xs);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+}
+
+.journal-modal .quest-objectives,
+.journal-modal .quest-rewards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.journal-modal .quest-objectives li,
+.journal-modal .quest-rewards li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--text);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+}
+
+.journal-modal .quest-objectives li > i,
+.journal-modal .quest-rewards li > i {
+    flex: 0 0 auto;
+    color: var(--text-faint);
+    font-size: var(--text-base);
+}
+
+.journal-modal .quest-objectives li.is-done {
+    color: var(--text-faint);
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in srgb, var(--success) 60%, transparent);
+}
+
+.journal-modal .quest-objectives li.is-done > i { color: var(--success); }
+.journal-modal .quest-rewards li > i { color: var(--accent); }
+
+.journal-modal .quest-optional {
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-style: normal;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.journal-modal .quest-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.journal-modal .quest-tags li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 2px var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.journal-modal .quest-context-status {
+    display: flex;
+    flex: 0 0 auto;
+    margin-left: var(--space-4);
+}
+
+/* ── Quest editor: rail + panel ────────────────────────────────────────── */
+
+/* The four parts of a contract stand side by side with the rail, instead of
+ * stacking into one long scroll where the GM's half is a screen away. */
+.journal-modal .quest-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 220px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+/* The rail owns the window's height, so the sheet's own gutter and scrolling
+ * step aside for it — each panel scrolls on its own. */
+.journal-modal[data-journal-type="quest"] .journal-modal-body { overflow: hidden; }
+
+.journal-modal[data-journal-type="quest"] .journal-editor-form:has(.quest-workspace) {
+    height: 100%;
+    min-height: 0;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.journal-modal .quest-nav {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 1px;
+    padding: var(--space-3) var(--space-2);
+    border-right: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.012);
+}
+
+.journal-modal .quest-nav button {
+    display: flex;
+    min-height: 34px;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0 var(--space-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    text-align: left;
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .quest-nav button > i {
+    flex: 0 0 auto;
+    color: var(--text-faint);
+    font-size: var(--text-base);
+}
+
+.journal-modal .quest-nav button > span {
+    overflow: hidden;
+    flex: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* How many objectives / rewards are already written. */
+.journal-modal .quest-nav button > em {
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+}
+
+.journal-modal .quest-nav button:hover {
+    border-color: var(--border);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+.journal-modal .quest-nav button.is-active {
+    border-color: var(--border-accent);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text-bright);
+}
+
+.journal-modal .quest-nav button.is-active > i,
+.journal-modal .quest-nav button.is-active > em { color: var(--accent); }
+
+.journal-modal .quest-panels {
+    min-width: 0;
+    min-height: 0;
+    padding: var(--space-4) var(--quest-gutter) var(--space-8);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(192, 154, 90, 0.55) rgba(255, 255, 255, 0.04);
+}
+
+/* One part at a time: the panel is the sheet, not a card inside it. */
+.journal-modal .quest-panels > .quest-edit-block {
+    width: min(var(--quest-measure), 100%);
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.journal-modal .quest-panels > .quest-edit-block--gm {
+    padding-left: var(--space-3);
+    border-left: 2px solid var(--accent);
+    background: transparent;
+}
+
+.journal-modal .quest-editor {
+    display: flex;
+    width: min(var(--quest-measure), 100%);
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-inline: auto;
+    padding-bottom: var(--space-8);
+}
+
+.journal-modal .quest-edit-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.012);
+}
+
+.journal-modal .quest-edit-block > h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.journal-modal .quest-edit-block > h3 > i {
+    color: var(--accent);
+    font-size: var(--text-base);
+}
+
+/* The GM's half of the contract is marked, not hidden. */
+.journal-modal .quest-edit-block--gm {
+    border-left: 2px solid var(--accent);
+    background: var(--accent-glow);
+}
+
+.journal-modal .quest-add {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: 26px;
+    margin-left: auto;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .quest-add:hover {
+    border-color: var(--border-accent-strong);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+/* Status is picked by stamping a seal, not by reading a dropdown. */
+.journal-modal .quest-status-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.journal-modal .quest-status-option {
+    cursor: pointer;
+}
+
+.journal-modal .quest-status-option input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.journal-modal .quest-status-option .quest-seal {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--text-faint);
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.journal-modal .quest-status-option:hover .quest-seal { color: var(--text); }
+
+.journal-modal .quest-status-option input:checked + .quest-seal {
+    border-color: color-mix(in srgb, var(--seal-ink) 40%, transparent);
+    background: var(--seal-wash);
+    color: var(--seal-ink);
+}
+
+.journal-modal .quest-status-option input:focus-visible + .quest-seal {
+    outline: 1px solid var(--focus-ring);
+    outline-offset: 1px;
+}
+
+.journal-modal .quest-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+}
+
+/* Compact contract form: related facts share a row while the portrait remains
+ * a contained reference instead of dictating the height of every field. */
+.journal-modal .quest-identity {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
+    align-items: start;
+    gap: var(--space-4);
+}
+
+.journal-modal .quest-identity-terms {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    gap: var(--space-3);
+}
+
+.journal-modal .quest-identity-terms > .quest-status-picker,
+.journal-modal .quest-identity-terms > .quest-field--summary,
+.journal-modal .quest-identity-terms > .quest-field--tags {
+    grid-column: 1 / -1;
+}
+
+/* The summary is the crier's line — it gets room to be written, not a slot. */
+.journal-modal .quest-field--summary { min-height: 0; }
+
+.journal-modal .quest-title-field { margin-bottom: var(--space-3); }
+
+.journal-modal .quest-title-field input {
+    font-family: var(--font-display, inherit);
+    font-size: var(--text-lg);
+    font-weight: 700;
+}
+
+.journal-modal .quest-field--summary textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 88px;
+    height: 88px;
+    padding: var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    resize: vertical;
+}
+
+.journal-modal .quest-field--summary textarea:focus {
+    border-color: var(--border-accent-strong);
+    box-shadow: var(--ring-accent);
+    outline: none;
+}
+
+.journal-modal .quest-identity-portrait { min-width: 0; }
+
+/* The portrait fills its half, cropped to it. */
+.journal-modal .quest-identity-portrait .quest-image-drop {
+    width: 100%;
+    min-height: 0;
+    aspect-ratio: 4 / 5;
+    padding: 0;
+}
+
+.journal-modal .quest-identity-portrait .quest-image-drop img {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: cover;
+}
+
+.journal-modal .quest-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.journal-modal .quest-field > span {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.journal-modal .quest-field input[type="text"],
+.journal-modal .quest-field input[type="url"] {
+    width: 100%;
+    min-width: 0;
+    height: 30px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text);
+    font-size: var(--text-md);
+}
+
+.journal-modal .quest-field input:focus {
+    border-color: var(--border-accent-strong);
+    box-shadow: var(--ring-accent);
+    outline: none;
+}
+
+/* Empty, it is a place to drop a portrait; filled, it is the portrait with the
+ * actions laid over it. Either way there is no path to type. */
+.journal-modal .quest-image-drop {
+    position: relative;
+    display: grid;
+    min-height: 120px;
+    place-items: center;
+    padding: var(--space-4);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--surface-raised) 45%, transparent);
+}
+
+.journal-modal [data-image-field].has-image .quest-image-drop {
+    padding: 0;
+    border-style: solid;
+    border-color: var(--border);
+    background: var(--surface-field);
+}
+
+.journal-modal .quest-image-drop img {
+    display: none;
+    width: 100%;
+    max-height: 220px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+.journal-modal [data-image-field].has-image .quest-image-drop img { display: block; }
+
+.journal-modal .quest-image-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 30px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background-color var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease),
+        opacity var(--motion-fast) var(--ease);
+}
+
+.journal-modal .quest-image-action:hover {
+    border-color: var(--border-accent-strong);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+/* Over a portrait the actions step back until the pointer arrives. */
+.journal-modal [data-image-field].has-image .quest-image-action {
+    position: absolute;
+    bottom: var(--space-2);
+    left: var(--space-2);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    opacity: 0;
+}
+
+.journal-modal .quest-image-clear {
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    display: none;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease);
+}
+
+.journal-modal [data-image-field].has-image .quest-image-clear { display: grid; }
+
+.journal-modal [data-image-field].has-image .quest-image-drop:hover .quest-image-action,
+.journal-modal [data-image-field].has-image .quest-image-drop:hover .quest-image-clear,
+.journal-modal .quest-image-action:focus-visible,
+.journal-modal .quest-image-clear:focus-visible { opacity: 1; }
+
+.journal-modal .quest-image-clear:hover {
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 20%, var(--surface));
+    color: var(--danger-text);
+}
+
+/* ── Objective / reward rows ───────────────────────────────────────────── */
+
+.journal-modal .journal-list-editor-rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.journal-modal .journal-list-row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) auto 26px;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+}
+
+.journal-modal .journal-list-row:hover {
+    border-color: var(--border);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.journal-modal .journal-list-mark {
+    position: relative;
+    display: grid;
+    width: 22px;
+    height: 22px;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: transparent;
+    cursor: pointer;
+}
+
+.journal-modal .journal-list-mark input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.journal-modal .journal-list-mark i { font-size: var(--text-sm); }
+.journal-modal .journal-list-mark:has(input:checked) {
+    border-color: color-mix(in srgb, var(--success) 50%, var(--border));
+    background: color-mix(in srgb, var(--success) 18%, transparent);
+    color: var(--success);
+}
+
+.journal-modal .journal-list-mark--static {
+    border-color: transparent;
+    background: transparent;
+    color: var(--accent);
+    cursor: default;
+}
+
+/* Quiet until touched: a checklist, not a stack of form fields. The extra class
+ * outranks the sheet's blanket `input[type="text"]` styling. */
+.journal-modal .journal-editor-form .journal-list-text {
+    width: 100%;
+    min-width: 0;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text);
+    font-size: var(--text-md);
+}
+
+.journal-modal .journal-list-row:hover .journal-list-text,
+.journal-modal .journal-editor-form .journal-list-text:focus {
+    border-color: var(--border);
+    background: var(--surface-field);
+}
+
+.journal-modal .journal-editor-form .journal-list-text:focus {
+    border-color: var(--border-accent-strong);
+    box-shadow: var(--ring-accent);
+    outline: none;
+}
+
+.journal-modal .journal-list-flags {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.journal-modal .journal-list-check {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.journal-modal .journal-list-check input { accent-color: var(--accent); }
+
+.journal-modal .journal-list-remove {
+    display: grid;
+    width: 26px;
+    height: 26px;
+    place-items: center;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease);
+}
+
+.journal-modal .journal-list-row:hover .journal-list-remove,
+.journal-modal .journal-list-remove:focus-visible { opacity: 1; }
+
+.journal-modal .journal-list-remove:hover {
+    background: color-mix(in srgb, var(--danger) 14%, transparent);
+    color: var(--danger-text);
+}
+
+/* ── The board ─────────────────────────────────────────────────────────── */
+
+.journal-modal .board-sheet {
+    display: flex;
+    width: min(840px, 100%);
+    min-height: 0;
+    flex: 0 0 auto;
+    align-self: flex-start;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin: 0;
+    padding-block: var(--space-3) var(--space-6);
+}
+
+.journal-modal .board-sheet.is-empty {
+    display: flex;
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+    padding: 0;
+}
+
+.journal-modal[data-journal-type="quest_board"] .journal-reader:has(> .board-sheet.is-empty) {
+    overflow: hidden;
+}
+
+/* Cards are posted notices: they tile, they do not stretch to fill a row. */
+.journal-modal .board-wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 340px));
+    align-items: start;
+    justify-content: start;
+    gap: var(--space-4);
+}
+
+.journal-modal .board-wall.is-empty {
+    width: 100%;
+    min-height: 0;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr);
+    place-items: center;
+}
+
+.journal-modal .board-card {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-left: 2px solid var(--seal-ink);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        transform var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease);
+}
+
+.journal-modal .board-card:hover {
+    border-color: color-mix(in srgb, var(--seal-ink) 45%, var(--border));
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+
+.journal-modal .board-card:focus-visible {
+    outline: 1px solid var(--focus-ring);
+    outline-offset: -1px;
+}
+
+/* A pinned notice is the one the patron wants read first. */
+.journal-modal .board-card.is-pinned {
+    border-color: var(--border-accent);
+    border-left-color: var(--seal-ink);
+    box-shadow: var(--ring-accent-hairline);
+}
+
+.journal-modal .board-card-pinned {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: auto;
+    color: var(--accent);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.journal-modal .board-card-art {
+    display: block;
+    width: 100%;
+    height: 96px;
+    object-fit: cover;
+    object-position: center 18%;
+}
+
+.journal-modal .board-card-body {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+}
+
+.journal-modal .board-card-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.journal-modal .board-card-heading {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.journal-modal .board-card-head h4 {
+    min-width: 0;
+    margin: 0;
+    color: var(--text-bright);
+    font-size: var(--text-lg);
+    font-weight: 650;
+    line-height: var(--leading-tight);
+}
+
+.journal-modal .board-card-summary {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: 0;
+    color: var(--text-bright);
+    font-size: var(--text-base);
+    font-style: italic;
+    line-height: var(--leading-normal);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.journal-modal .board-card-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-left: 2px solid var(--border-accent);
+    background: rgba(255, 255, 255, 0.012);
+    list-style: none;
+}
+
+.journal-modal .board-card-facts li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+}
+
+.journal-modal .board-card-section {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.012);
+}
+
+.journal-modal .board-card-section h5 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-1);
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.journal-modal .board-card-section h5 > i { color: var(--accent); font-size: var(--text-base); }
+
+.journal-modal .board-card-section h5 em {
+    margin-left: auto;
+    color: var(--accent);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+}
+
+.journal-modal .board-card-objectives {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.journal-modal .board-card-objectives li {
+    display: flex;
+    min-width: 0;
+    align-items: baseline;
+    gap: var(--space-2);
+    color: var(--text);
+    font-size: var(--text-sm);
+}
+
+.journal-modal .board-card-objectives li > i { flex: 0 0 auto; color: var(--text-faint); }
+.journal-modal .board-card-objectives li.is-done { color: var(--text-faint); text-decoration: line-through; }
+.journal-modal .board-card-objectives li.is-done > i { color: var(--success); }
+.journal-modal .board-card-objectives .board-card-more { color: var(--text-faint); font-size: var(--text-2xs); }
+
+.journal-modal .board-card-section--rewards p {
+    overflow: hidden;
+    margin: 0;
+    color: var(--accent);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.journal-modal .board-empty {
+    position: relative;
+    display: flex;
+    grid-column: 1 / -1;
+    width: min(520px, calc(100% - var(--space-8)));
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-8) var(--space-6);
+    border-block: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    text-align: center;
+}
+
+.journal-modal .board-empty::before,
+.journal-modal .board-empty::after {
+    position: absolute;
+    left: 50%;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--accent);
+    background: var(--surface);
+    content: "";
+    opacity: 0.65;
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.journal-modal .board-empty::before { top: -4px; }
+.journal-modal .board-empty::after { bottom: -4px; }
+
+.journal-modal .board-empty > i {
+    color: var(--accent);
+    font-size: 34px;
+    filter: drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 35%, transparent));
+    opacity: 0.85;
+}
+
+.journal-modal .board-empty strong {
+    color: var(--text-bright);
+    font-family: var(--font-display, inherit);
+    font-size: var(--text-xl);
+    letter-spacing: 0.03em;
+}
+
+.journal-modal .board-empty p {
+    max-width: 44ch;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    font-style: italic;
+    line-height: var(--leading-relaxed);
+}
+
+/* ── Board admin (the GM's side of the wall) ───────────────────────────── */
+
+.journal-modal .board-admin {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--quest-gutter) var(--space-8);
+}
+
+.journal-modal .board-admin-head h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.journal-modal .board-admin-head h3 > i { color: var(--accent); font-size: var(--text-base); }
+
+.journal-modal .board-admin-head p {
+    margin: var(--space-1) 0 0;
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    line-height: var(--leading-normal);
+}
+
+.journal-modal .board-admin-filters {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-block: var(--space-2);
+    border-block: 1px solid var(--border);
+}
+
+.journal-modal .board-admin-filters > strong {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: var(--space-1);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.journal-modal .board-admin-filters > strong i { color: var(--accent); }
+
+.journal-modal .board-admin-filters .quest-filter-chip {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.journal-modal .board-admin-filters .quest-filter-chip:not(.is-active) .quest-seal {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--text-faint);
+    opacity: 0.45;
+}
+
+.journal-modal .board-admin-filters .quest-filter-chip:focus-visible {
+    outline: 1px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.journal-modal .board-admin-add {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+}
+
+.journal-modal .board-admin-add select {
+    width: 100%;
+    min-width: 0;
+    height: 30px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text);
+    font-size: var(--text-md);
+}
+
+.journal-modal .board-admin-add button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: 30px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.journal-modal .board-admin-add button:hover {
+    border-color: var(--border-accent-strong);
+    background: rgba(192, 154, 90, 0.08);
+    color: var(--text);
+}
+
+.journal-modal .board-admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.journal-modal .board-admin-row {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 34px;
+    padding: var(--space-1) var(--space-2);
+    border-bottom: 1px solid var(--border);
+}
+
+.journal-modal .board-admin-row:hover { background: rgba(192, 154, 90, 0.06); }
+.journal-modal .board-admin-row:last-child { border-bottom: 0; }
+.journal-modal .board-admin-row.is-pinned .board-admin-mark { color: var(--accent); }
+.journal-modal .board-admin-mark { color: var(--text-faint); font-size: var(--text-base); }
+
+.journal-modal .board-admin-title {
+    overflow: hidden;
+    color: var(--text);
+    font-size: var(--text-md);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.journal-modal .board-admin-status {
+    min-width: 118px;
+    height: 28px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    cursor: pointer;
+}
+
+.journal-modal .board-admin-status:hover,
+.journal-modal .board-admin-status:focus {
+    border-color: var(--border-accent-strong);
+    color: var(--text);
+    outline: none;
+}
+
+.journal-modal .board-admin-actions {
+    display: flex;
+    gap: 2px;
+}
+
+.journal-modal .board-admin-actions button {
+    display: grid;
+    width: 24px;
+    height: 24px;
+    place-items: center;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease);
+}
+
+.journal-modal .board-admin-row:hover .board-admin-actions button,
+.journal-modal .board-admin-actions button:focus-visible { opacity: 1; }
+
+.journal-modal .board-admin-actions button:hover {
+    background: rgba(192, 154, 90, 0.12);
+    color: var(--text);
+}
+
+.journal-modal .board-admin-actions button.is-danger:hover {
+    background: color-mix(in srgb, var(--danger) 14%, transparent);
+    color: var(--danger-text);
+}
+
+/* ── Filter chips (board settings) ─────────────────────────────────────── */
+
+.journal-modal .quest-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.journal-modal .quest-filter-chip { cursor: pointer; }
+
+.journal-modal .quest-filter-chip input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.journal-modal .quest-filter-chip .quest-seal {
+    border-color: var(--border);
+    background: transparent;
+    color: var(--text-faint);
+}
+
+.journal-modal .quest-filter-chip input:checked + .quest-seal {
+    border-color: color-mix(in srgb, var(--seal-ink) 40%, transparent);
+    background: var(--seal-wash);
+    color: var(--seal-ink);
+}
+
+.journal-modal .quest-filter-chip input:focus-visible + .quest-seal {
+    outline: 1px solid var(--focus-ring);
+    outline-offset: 1px;
+}
+
+/* ── Narrow windows ────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+    .journal-modal[data-journal-type="quest"],
+    .journal-modal[data-journal-type="quest_board"] {
+        --quest-gutter: var(--space-4);
+    }
+
+    .journal-modal .quest-identity { grid-template-columns: minmax(0, 1fr); }
+    .journal-modal .quest-reader-layout { grid-template-columns: minmax(0, 1fr); }
+    .journal-modal .board-wall { grid-template-columns: minmax(0, 1fr); }
+    .journal-modal .journal-list-row { grid-template-columns: 24px minmax(0, 1fr) 26px; }
+    .journal-modal .journal-list-flags { grid-column: 1 / -1; padding-left: 32px; }
+}
+
+/* Journal creation is a short decision, not an empty editor window. */
+.journal-modal.journal-modal--create {
+    width: min(320px, calc(100vw - 32px)) !important;
+    height: auto !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-height: calc(100vh - 48px);
+    resize: none;
+}
+
+.journal-modal--create .journal-modal-body {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+}
+
+.journal-modal--create .journal-editor-form {
+    min-height: 0;
+    gap: 0;
+    padding: var(--space-4);
+    overflow: visible;
+}
+
+.journal-modal--create .journal-create-simple {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.journal-modal--create .journal-create-simple-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+}
+
+.journal-modal--create .journal-editor-title-field,
+.journal-modal--create .journal-editor-type-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.journal-modal--create .journal-editor-title-field > span,
+.journal-modal--create .journal-editor-type-field > span {
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.journal-modal--create .journal-editor-title-field input,
+.journal-modal--create .journal-editor-type-field select {
+    width: 100%;
+    height: 36px;
+}
+
+.journal-modal--create .journal-editor-submit {
+    width: 100%;
+    min-height: 36px;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+@media (max-width: 460px) {
+    .journal-modal--create .journal-create-simple-actions { grid-template-columns: minmax(0, 1fr); }
+    .journal-modal--create .journal-editor-submit { width: 100%; justify-content: center; }
+}

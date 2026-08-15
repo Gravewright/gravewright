@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -127,13 +128,56 @@ def test_no_content_ships_with_the_ruleset():
     manifest = _json("manifest.json")
     assert "contentPacks" not in manifest["provides"], "este pacote não traz conteúdo"
     assert manifest["name"] == "Savage Worlds Compatibility Package for Gravewright"
-    assert manifest["version"] == "0.1.0"
+    assert manifest["version"] == "1.1"
 
 
 def test_character_sheet_opens_at_the_reference_dimensions():
     source = (PACKAGE / "scripts/character-sheet.js").read_text(encoding="utf-8")
     assert 'actorType === "character" ? 859 : null' in source
     assert 'actorType === "character" ? 741 : null' in source
+
+
+def test_combat_tracker_uses_selected_sdk_deck_and_public_card_url():
+    manifest = _json("manifest.json")
+    source = (PACKAGE / "scripts/character-sheet.js").read_text(encoding="utf-8")
+    definitions = {setting["key"]: setting for setting in manifest["settings"]}
+
+    assert definitions["initiative_deck_id"]["scope"] == "campaign"
+    assert 'sdk.settings.get("initiative_deck_id"' in source
+    assert 'sdk.settings.set("initiative_deck_id"' in source
+    assert "sdk.cards.state()" in source
+    assert "sdk.cards.draw(deck.id" in source
+    assert "sdk.combat.setInitiativeOrder" in source
+    assert "initiativeCardsByCampaign.set" in source
+    assert "confirmedInitiativeStateByCampaign.set" in source
+    assert "restoreConfirmedInitiativeOrder(payload)" in source
+    assert "if (!assigned.size)" in source
+    assert "card.front_asset_url" in source
+    assert 'fetch("/game/' not in source
+    assert "events.subscribe" in manifest["capabilities"]
+    assert 'sdk.events.on("combat.updated"' in source
+    assert "function shouldDealForObservedState" in source
+    assert "afterAction:" not in source
+    assert "automateInitiativeTurn" not in source
+    after_render = source.split("afterRender:", 1)[1].split("},", 1)[0]
+    assert "dealInitiative" not in after_render
+    assert "previousTurnHadJoker" in source
+    assert source.index("if (previousTurnHadJoker") < source.index("const dealt = []")
+
+
+def test_initiative_deals_once_per_round_not_on_next_player():
+    harness = PACKAGE.parents[3] / "tests/js/savage_initiative_trigger_harness.js"
+    result = subprocess.run(["node", str(harness)], capture_output=True, text=True, check=True)
+    assert json.loads(result.stdout) == {
+        "initialBlank": True,
+        "initialPopulated": False,
+        "add": True,
+        "nextPlayer": False,
+        "reorderedRows": False,
+        "wrappedRound": True,
+        "repaint": False,
+        "inactive": False,
+    }
 
 
 # --- the dice ---------------------------------------------------------------

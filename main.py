@@ -25,9 +25,14 @@ from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.persistence.session_store import SQLiteStore
 from app.routes import route_handlers
+from app.observability.telemetry import configure_local_diagnostics_from_environment
 
 
 BASE_DIR = Path(__file__).resolve().parent
+
+# Must run before Litestar configures logging so the dedicated rotating handler
+# owns the opt-in high-volume diagnostic stream from process start.
+local_diagnostics_runtime = configure_local_diagnostics_from_environment()
 
 
 _AUTH_EXCLUDE = ["^/static", "^/sdk/packages/[^/]+/asset/", "^/schema"]

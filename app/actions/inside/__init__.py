@@ -8,6 +8,7 @@ from app.actions.inside.administrative_audit import route_handlers as audit_hand
 from app.actions.inside.decline_campaign_invitation import decline_campaign_invitation
 from app.actions.inside.delete_campaign import delete_campaign
 from app.actions.inside.export_campaign import export_campaign
+from app.actions.inside.import_campaign import import_campaign
 from app.actions.inside.list_campaign_invitations import list_campaign_invitations
 from app.actions.inside.manage_settings import update_inside_settings
 from app.actions.inside.manage_settings import update_privacy_settings
@@ -28,6 +29,7 @@ route_handlers = [
     request_delete_campaign,
     delete_campaign,
     export_campaign,
+    import_campaign,
     accept_campaign_invitation,
     decline_campaign_invitation,
     list_campaign_invitations,

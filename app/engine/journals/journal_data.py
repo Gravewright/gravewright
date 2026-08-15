@@ -23,6 +23,7 @@ TEXT_LIMIT = 240
 OBJECTIVE_LIMIT = 64
 REWARD_LIMIT = 64
 TAG_LIMIT = 32
+SECTION_LIMIT = 64
 
 
 def normalize_visibility(value: object) -> str:
@@ -109,6 +110,27 @@ def _normalize_reward(raw: object) -> dict:
     }
 
 
+def _normalize_section(raw: object, fallback_order: int) -> dict:
+    raw = raw if isinstance(raw, dict) else {}
+    level = max(1, min(3, _int(raw.get("level"), 1)))
+    kind = str(raw.get("kind") or "text").strip().lower()
+    if kind not in {"text", "image", "pdf"}:
+        kind = "text"
+    level = 1
+    audience = str(raw.get("audience") or "public").strip()
+    return {
+        "id": _short(raw.get("id"), 40) or _gen_id("section"),
+        "title": _short(raw.get("title"), 120) or "Untitled",
+        "category": _short(raw.get("category"), 80),
+        "kind": kind,
+        "src": _short(raw.get("src"), 1024),
+        "level": level,
+        "audience": audience if audience in {"public", "gm"} else "public",
+        "sortOrder": _int(raw.get("sortOrder"), fallback_order),
+        "content": _doc(raw.get("content")),
+    }
+
+
 def empty_data_for(journal_type: str) -> dict:
     if journal_type == "quest":
         return normalize_quest_data({})
@@ -127,9 +149,16 @@ def normalize_diary_data(raw: object) -> dict:
     """
     raw = raw if isinstance(raw, dict) else {}
     gm = raw.get("gm") if isinstance(raw.get("gm"), dict) else {}
+    sections_raw = raw.get("sections") if isinstance(raw.get("sections"), list) else []
+    sections = [
+        _normalize_section(section, (index + 1) * 10)
+        for index, section in enumerate(sections_raw[:SECTION_LIMIT])
+    ]
+    sections.sort(key=lambda section: section["sortOrder"])
     return {
         "content": _doc(raw.get("content")),
         "cover": _normalize_image(raw.get("cover")),
+        "sections": sections,
         "gm": {
             "notes": _doc(gm.get("notes")),
             "secrets": _doc(gm.get("secrets")),
@@ -184,23 +213,7 @@ def normalize_quest_data(raw: object) -> dict:
 
 
 def normalize_board_data(raw: object) -> dict:
-    raw = raw if isinstance(raw, dict) else {}
-    filters = raw.get("filters") if isinstance(raw.get("filters"), dict) else {}
-    status_filters = {
-        "showAvailable": _bool(filters.get("showAvailable", True)),
-        "showActive": _bool(filters.get("showActive", True)),
-        "showCompleted": _bool(filters.get("showCompleted", True)),
-        "showFailed": _bool(filters.get("showFailed", True)),
-    }
-
-    if not any(status_filters.values()):
-        status_filters = dict.fromkeys(status_filters, True)
-    return {
-        "description": _doc(raw.get("description")),
-        "description_markdown": _markdown(raw.get("description_markdown")),
-        "image": _normalize_image(raw.get("image")),
-        "filters": status_filters,
-    }
+    return {}
 
 
 def normalize_data_for(journal_type: str, raw: object) -> dict:
@@ -215,6 +228,8 @@ def normalize_data_for(journal_type: str, raw: object) -> dict:
 
 def build_quest_gm_view(*, title: str, data: dict) -> dict:
     data = normalize_quest_data(data)
+    visible_objectives = [obj for obj in data["objectives"] if obj["visibleToPlayers"]]
+    visible_rewards = [reward for reward in data["rewards"] if reward["visibleToPlayers"]]
     return {
         "title": title,
         "status": data["status"],
@@ -222,6 +237,8 @@ def build_quest_gm_view(*, title: str, data: dict) -> dict:
         "gm": data["gm"],
         "objectives": data["objectives"],
         "rewards": data["rewards"],
+        "display_objectives": visible_objectives,
+        "display_rewards": visible_rewards,
         "tags": data["tags"],
     }
 
@@ -231,6 +248,8 @@ def build_quest_player_view(*, title: str, data: dict) -> dict:
     from app.engine.journals import journal_doc
 
     data = normalize_quest_data(data)
+    visible_objectives = [obj for obj in data["objectives"] if obj["visibleToPlayers"]]
+    visible_rewards = [reward for reward in data["rewards"] if reward["visibleToPlayers"]]
     return {
         "title": title,
         "status": data["status"],
@@ -244,8 +263,10 @@ def build_quest_player_view(*, title: str, data: dict) -> dict:
             "location": data["public"]["location"],
             "giver": data["public"]["giver"],
         },
-        "objectives": [obj for obj in data["objectives"] if obj["visibleToPlayers"]],
-        "rewards": [reward for reward in data["rewards"] if reward["visibleToPlayers"]],
+        "objectives": visible_objectives,
+        "rewards": visible_rewards,
+        "display_objectives": visible_objectives,
+        "display_rewards": visible_rewards,
         "tags": data["tags"],
     }
 

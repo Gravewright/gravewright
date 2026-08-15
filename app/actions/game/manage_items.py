@@ -16,8 +16,11 @@ from litestar.params import FromPath
 from litestar.response import Redirect, Response, Template
 
 from app.config import config
-from app.engine.content.content_import_service import ContentImportService
 from app.engine.items.item_service import ItemResult, ItemService
+from app.engine.items.item_permissions import can_view_item
+from app.persistence.repositories.item_repository import ItemRepository
+from app.persistence.repositories.campaign_repository import CampaignRepository
+from app.engine.sdk.package_content_service import PackageContentService
 from app.engine.sheets.item_sheet_data_service import ItemSheetDataResult, ItemSheetDataService
 from app.engine.sheets.item_sheet_service import ItemSheetService
 from app.helpers.view import view_context
@@ -44,7 +47,10 @@ async def _emit_item(event: TransportEvent, result: ItemResult, *, user_id: str)
     }
     if result.version is not None:
         payload["version"] = result.version
-    await RealtimeTransport().to_room(room_id=result.campaign_id, event=event, payload=payload)
+    item = ItemRepository().get(str(result.item_id or ""))
+    members = CampaignRepository().list_members(campaign_id=result.campaign_id)
+    audience = [member["user_id"] for member in members if item and can_view_item(item=item, campaign={"member_role": member["role"]}, user_id=member["user_id"])]
+    await RealtimeTransport().to_players(player_ids=audience, event=event, payload=payload)
 
 
 @post("/game/item")
@@ -242,14 +248,14 @@ async def import_item_content(
     request: Request,
     cookies: dict[str, str],
     current_user: Row,
-    content_import_service: ContentImportService,
+    package_content_service: PackageContentService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
-    result = content_import_service.import_item_entry(
+    result = package_content_service.import_entry(
         campaign_id=str(body.get("campaign_id", "")),
         user_id=user["id"],
-        system_id=str(body.get("system_id", "")),
+        package_id=str(body.get("package_id") or body.get("system_id") or ""),
         pack_id=str(body.get("pack_id", "")),
         entry_id=str(body.get("entry_id", "")),
     )

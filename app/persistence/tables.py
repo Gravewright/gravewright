@@ -180,6 +180,15 @@ campaign_gm_onboarding = Table(
     Index("idx_campaign_gm_onboarding_user", "user_id", "updated_at"),
 )
 
+campaign_player_onboarding = Table(
+    "campaign_player_onboarding",
+    metadata,
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("shown_at", Integer, nullable=False),
+    Index("idx_campaign_player_onboarding_user", "user_id", "shown_at"),
+)
+
 campaign_snapshots = Table(
     "campaign_snapshots",
     metadata,
@@ -770,6 +779,22 @@ library_assets = Table(
 )
 
 
+pdf_annotations = Table(
+    "pdf_annotations",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("document_id", _ID, ForeignKey("library_assets.id", ondelete="CASCADE"), nullable=False),
+    Column("author_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("page", Integer, nullable=False),
+    Column("region_json", Text, nullable=False),
+    Column("text", Text, nullable=False),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_pdf_annotations_document_page", "campaign_id", "document_id", "page", "created_at"),
+)
+
+
 scene_groups = Table(
     "scene_groups",
     metadata,
@@ -796,6 +821,10 @@ scenes = Table(
     Column("width", Integer, nullable=False),
     Column("height", Integer, nullable=False),
     Column("tile_size", Integer, nullable=False),
+    Column("grid_size", Integer, nullable=False, server_default=text("70")),
+    Column("scene_format_version", Integer, nullable=False, server_default=text("1")),
+    Column("raster_selection_mode", _STR, nullable=False, server_default=text("'legacy'")),
+    Column("raster_policy_version", Integer, nullable=False, server_default=text("0")),
     Column("chunk_size", Integer, nullable=False),
     Column("grid_visible", Integer, nullable=False, server_default=text("1")),
     Column("grid_color", _STR, nullable=False, server_default=text("'#6fddb4'")),
@@ -936,6 +965,8 @@ scene_layers = Table(
     Column("display_order", Integer, nullable=False),
     Column("encoding", _STR, nullable=False),
     Column("tile_table_version", Integer, nullable=False),
+    Column("max_lod", Integer, nullable=False, server_default=text("0")),
+    Column("tile_index_version", Integer, nullable=False, server_default=text("1")),
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
     Index("idx_scene_layers_scene_order", "scene_id", "display_order"),
@@ -963,6 +994,7 @@ scene_tiles = Table(
     Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), primary_key=True),
     Column("layer_id", _ID, ForeignKey("scene_layers.id", ondelete="CASCADE"), primary_key=True),
     Column("tile_ref", Integer, primary_key=True),
+    Column("lod", Integer, nullable=False, server_default=text("0")),
     Column("asset_id", _ID, ForeignKey("scene_assets.id", ondelete="CASCADE"), nullable=False),
     Column("tx", Integer, nullable=False),
     Column("ty", Integer, nullable=False),
@@ -971,7 +1003,7 @@ scene_tiles = Table(
     Column("hash", _STR, nullable=False),
     Column("byte_size", Integer, nullable=False),
     Column("created_at", Integer, nullable=False),
-    Index("idx_scene_tiles_layer_coord", "layer_id", "tx", "ty"),
+    Index("idx_scene_tiles_layer_lod_coord", "layer_id", "lod", "tx", "ty"),
 )
 
 scene_chunks = Table(
@@ -982,14 +1014,15 @@ scene_chunks = Table(
     Column("layer_id", _ID, ForeignKey("scene_layers.id", ondelete="CASCADE"), nullable=False),
     Column("cx", Integer, nullable=False),
     Column("cy", Integer, nullable=False),
+    Column("lod", Integer, nullable=False, server_default=text("0")),
     Column("version", Integer, nullable=False),
     Column("hash", _STR, nullable=False),
     Column("byte_size", Integer, nullable=False),
     Column("encoding", _STR, nullable=False),
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
-    UniqueConstraint("layer_id", "cx", "cy"),
-    Index("idx_scene_chunks_scene_layer_coord", "scene_id", "layer_id", "cx", "cy"),
+    UniqueConstraint("layer_id", "lod", "cx", "cy"),
+    Index("idx_scene_chunks_scene_layer_lod_coord", "scene_id", "layer_id", "lod", "cx", "cy"),
 )
 
 

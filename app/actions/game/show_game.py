@@ -59,6 +59,8 @@ def _game_client_context(
                 "width": active_scene["width"],
                 "height": active_scene["height"],
                 "tile_size": active_scene["tile_size"],
+                "raster_tile_size": active_scene["tile_size"],
+                "grid_size": active_scene.get("grid_size") or active_scene["tile_size"],
             }
             if active_scene
             else None
@@ -187,5 +189,10 @@ async def show_game(
             targeted_handouts_enabled=config.targeted_handouts_enabled,
             lobby_ready_check_enabled=config.lobby_ready_check_enabled,
             dynamic_lighting_enabled=config.dynamic_lighting_enabled,
+            gm_guided_prefetch_enabled=config.gm_guided_prefetch_enabled,
+            gm_hint_max_queued_bytes=config.gm_hint_max_queued_bytes,
+            gm_hint_idle_only=config.gm_hint_idle_only,
+            gm_hint_cancel_on_visible_backlog=config.gm_hint_cancel_on_visible_backlog,
+            gm_hint_policy=config.gm_hint_policy,
         ),
     )

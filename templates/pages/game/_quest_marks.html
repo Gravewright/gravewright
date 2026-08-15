@@ -1,0 +1,17 @@
+{# Shared quest marks: the status seal is the same object on a quest sheet and on
+   a board card, so both read from one place. #}
+
+{% macro seal(status, compact=False) %}
+{% set icons = {
+    "draft": "ph-pencil-line",
+    "available": "ph-scroll",
+    "active": "ph-sword",
+    "completed": "ph-seal-check",
+    "failed": "ph-skull",
+    "archived": "ph-archive-box",
+} %}
+<span class="quest-seal quest-seal--{{ status }}{% if compact %} quest-seal--compact{% endif %}">
+    <i class="ph {{ icons.get(status, 'ph-scroll') }}" aria-hidden="true"></i>
+    <span>{{ t("game.journal.quest.status_values." ~ status) }}</span>
+</span>
+{% endmacro %}

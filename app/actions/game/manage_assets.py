@@ -13,6 +13,7 @@ from litestar.response import Response
 from app.engine.assets.asset_library_service import MAX_PDF_BYTES
 from app.engine.assets.asset_library_service import AssetLibraryService
 from app.engine.assets.asset_read_service import AssetReadService
+from app.engine.sdk.package_asset_import_service import PackageAssetImportService
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
 
@@ -48,6 +49,59 @@ async def _broadcast_library(campaign_id: str, user_id: str) -> None:
         event=TransportEvent.ASSETS_LIBRARY_UPDATED,
         payload={"room_id": campaign_id, "updated_by": user_id},
     )
+
+
+@get("/game/assets/packages/{campaign_id:str}", sync_to_thread=True)
+def list_asset_packages(
+    campaign_id: FromPath[str],
+    current_user: dict,
+    package_asset_import_service: PackageAssetImportService,
+) -> Response[dict[str, Any]]:
+    packages = package_asset_import_service.list_active_packages(
+        campaign_id=str(campaign_id), user_id=current_user["id"]
+    )
+    return Response({"packages": packages})
+
+
+@get("/game/assets/packages/{campaign_id:str}/{package_id:str}", sync_to_thread=True)
+def list_asset_package_entries(
+    campaign_id: FromPath[str],
+    package_id: FromPath[str],
+    current_user: dict,
+    package_asset_import_service: PackageAssetImportService,
+) -> Response[dict[str, Any]]:
+    entries = package_asset_import_service.list_entries(
+        campaign_id=str(campaign_id), package_id=str(package_id), user_id=current_user["id"]
+    )
+    return Response({"assets": entries})
+
+
+@post("/game/assets/packages/import")
+async def import_asset_package_entry(
+    request: Request,
+    current_user: dict,
+    package_asset_import_service: PackageAssetImportService,
+) -> Response[dict[str, Any]]:
+    body = await _json_body(request)
+    campaign_id = str(body.get("campaign_id") or "")
+    package_id = str(body.get("package_id") or "")
+    folder_id = str(body.get("folder_id") or "") or None
+    asset_ids = body.get("asset_ids")
+    if not isinstance(asset_ids, list):
+        asset_ids = [str(body.get("asset_id") or "")]
+    imported = 0
+    for asset_id in asset_ids:
+        asset = package_asset_import_service.import_entry(
+            campaign_id=campaign_id,
+            package_id=package_id,
+            asset_id=str(asset_id),
+            user_id=current_user["id"],
+            folder_id=folder_id,
+        )
+        imported += int(asset is not None)
+    if imported:
+        await _broadcast_library(campaign_id, current_user["id"])
+    return Response({"imported": imported})
 
 
 @get("/game/assets/state/{campaign_id:str}")

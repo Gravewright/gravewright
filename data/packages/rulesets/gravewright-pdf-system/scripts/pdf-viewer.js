@@ -206,6 +206,36 @@
       state.page = Math.max(1, state.page);
       await render();
     },
+    async goToPage(page) {
+      if (!state.doc) return null;
+      const target = Math.max(1, Math.min(state.doc.numPages, Number(page) || 1));
+      state.page = target;
+      await render();
+      return state.page;
+    },
+    async goToAnchor(anchor) {
+      if (!state.doc || !anchor) return null;
+      const destination = await state.doc.getDestination(String(anchor));
+      if (!destination) return null;
+      const reference = destination[0];
+      const index = typeof reference === "number" ? reference : await state.doc.getPageIndex(reference);
+      state.page = Math.max(1, Math.min(state.doc.numPages, index + 1));
+      await render();
+      return state.page;
+    },
+    async search(query) {
+      if (!state.doc) return [];
+      const needle = String(query || "").trim().toLocaleLowerCase();
+      if (!needle) return [];
+      const matches = [];
+      for (let number = 1; number <= state.doc.numPages; number += 1) {
+        const page = await state.doc.getPage(number);
+        const content = await page.getTextContent();
+        const text = content.items.map((item) => item.str || "").join(" ");
+        if (text.toLocaleLowerCase().includes(needle)) matches.push({ page: number, text });
+      }
+      return matches;
+    },
     async zoomBy(factor) {
       state.zoom = Math.max(0.1, Math.min(8, state.zoom * factor));
       await render();
@@ -217,6 +247,7 @@
       return state.spread;
     },
     viewState: () => ({ page: state.page, zoom: state.zoom, spread: state.spread }),
+    currentPage: () => state.doc ? state.page : null,
 
     // Baixa o template, não uma cópia preenchida: os valores são da ficha, e o
     // arquivo continua sendo só a aparência.

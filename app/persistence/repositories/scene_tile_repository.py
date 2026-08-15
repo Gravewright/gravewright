@@ -28,6 +28,7 @@ class SceneTileRepository:
         height: int,
         hash: str,
         byte_size: int,
+        lod: int = 0,
     ) -> dict:
         now = int(time.time())
         with engine_begin() as conn:
@@ -36,6 +37,7 @@ class SceneTileRepository:
                     scene_id=scene_id,
                     layer_id=layer_id,
                     tile_ref=tile_ref,
+                    lod=lod,
                     asset_id=asset_id,
                     tx=tx,
                     ty=ty,
@@ -71,22 +73,71 @@ class SceneTileRepository:
                 )
             )
 
-    def delete_by_layer(self, layer_id: str) -> None:
-        with engine_begin() as conn:
-            conn.execute(delete(scene_tiles_table).where(scene_tiles_table.c.layer_id == layer_id))
-
-    def list_by_layer(self, layer_id: str) -> list[dict]:
+    def get_by_coord(
+        self, *, scene_id: str, layer_id: str, lod: int, tx: int, ty: int
+    ) -> dict | None:
         with engine_connect() as conn:
-            return all_dicts(
+            return one_or_none(
                 conn.execute(
                     select(
                         scene_tiles_table,
                         scene_assets_table.c.storage_path.label("storage_path"),
+                        scene_assets_table.c.content_type.label("content_type"),
                     )
-                    .join(
-                        scene_assets_table, scene_assets_table.c.id == scene_tiles_table.c.asset_id
-                    )
+                    .join(scene_assets_table, scene_assets_table.c.id == scene_tiles_table.c.asset_id)
+                    .where(scene_tiles_table.c.scene_id == scene_id)
                     .where(scene_tiles_table.c.layer_id == layer_id)
+                    .where(scene_tiles_table.c.lod == lod)
+                    .where(scene_tiles_table.c.tx == tx)
+                    .where(scene_tiles_table.c.ty == ty)
+                    .limit(1)
+                )
+            )
+
+    def delete_by_layer(self, layer_id: str) -> None:
+        with engine_begin() as conn:
+            conn.execute(delete(scene_tiles_table).where(scene_tiles_table.c.layer_id == layer_id))
+
+    def list_by_layer(self, layer_id: str, *, lod: int | None = None) -> list[dict]:
+        stmt = (
+            select(
+                scene_tiles_table,
+                scene_assets_table.c.storage_path.label("storage_path"),
+            )
+            .join(scene_assets_table, scene_assets_table.c.id == scene_tiles_table.c.asset_id)
+            .where(scene_tiles_table.c.layer_id == layer_id)
+        )
+        if lod is not None:
+            stmt = stmt.where(scene_tiles_table.c.lod == lod)
+        with engine_connect() as conn:
+            return all_dicts(conn.execute(stmt.order_by(scene_tiles_table.c.tile_ref.asc())))
+
+    def list_by_region(
+        self,
+        *,
+        scene_id: str,
+        layer_id: str,
+        lod: int,
+        tx0: int,
+        ty0: int,
+        tx1: int,
+        ty1: int,
+        limit: int = 1024,
+        after_ref: int = 0,
+    ) -> list[dict]:
+        """Sparse, bounded descriptor lookup for one viewport/index page."""
+        safe_limit = max(1, min(int(limit), 4096))
+        with engine_connect() as conn:
+            return all_dicts(
+                conn.execute(
+                    select(scene_tiles_table)
+                    .where(scene_tiles_table.c.scene_id == scene_id)
+                    .where(scene_tiles_table.c.layer_id == layer_id)
+                    .where(scene_tiles_table.c.lod == lod)
+                    .where(scene_tiles_table.c.tx.between(min(tx0, tx1), max(tx0, tx1)))
+                    .where(scene_tiles_table.c.ty.between(min(ty0, ty1), max(ty0, ty1)))
+                    .where(scene_tiles_table.c.tile_ref > max(0, after_ref))
                     .order_by(scene_tiles_table.c.tile_ref.asc())
+                    .limit(safe_limit)
                 )
             )

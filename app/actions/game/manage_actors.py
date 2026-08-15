@@ -20,10 +20,13 @@ from litestar.response import File, Redirect, Response, Template
 from app.engine.actors.actor_asset_read_service import ActorAssetReadService
 from app.engine.actors.actor_asset_service import ActorAssetService
 from app.engine.actors.actor_service import ActorResult, ActorService
+from app.engine.actors.actor_permissions import can_view_actor
+from app.persistence.repositories.actor_repository import ActorRepository
+from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.engine.chat.chat_service import ChatService
 from app.engine.combat.combat_service import CombatService
-from app.engine.content.content_import_service import ContentImportService
 from app.engine.content.content_pack_service import ContentPackService
+from app.engine.sdk.package_content_service import PackageContentService
 from app.engine.sheets.actor_sheet_service import ActorSheetService
 from app.engine.sheets.sheet_action_service import ActionResult, SheetActionService
 from app.engine.sheets.sheet_data_service import SheetDataResult, SheetDataService
@@ -68,7 +71,10 @@ async def _emit_actor(event: TransportEvent, result: ActorResult, *, user_id: st
     }
     if result.version is not None:
         payload["version"] = result.version
-    await RealtimeTransport().to_room(room_id=result.campaign_id, event=event, payload=payload)
+    actor = ActorRepository().get(str(result.actor_id or ""))
+    members = CampaignRepository().list_members(campaign_id=result.campaign_id)
+    audience = [member["user_id"] for member in members if actor and can_view_actor(actor=actor, campaign={"member_role": member["role"]}, user_id=member["user_id"])]
+    await RealtimeTransport().to_players(player_ids=audience, event=event, payload=payload)
 
 
 @post("/game/actor")
@@ -871,6 +877,20 @@ async def list_content_packs(
     return Response({"packs": content_pack_service.list_packs(system_id)}, status_code=200)
 
 
+@get("/game/content/active-packages")
+async def list_active_content_packages(
+    request: Request,
+    current_user: Row,
+    package_content_service: PackageContentService,
+) -> Response[dict[str, Any]]:
+    campaign_id = str(request.query_params.get("campaign_id") or "")
+    packages = package_content_service.list_active_packages(
+        campaign_id=campaign_id,
+        user_id=current_user["id"],
+    )
+    return Response({"packages": packages}, status_code=200)
+
+
 @get("/game/content/pack/{system_id:str}/{pack_id:str}")
 async def get_content_pack(
     system_id: FromPath[str],
@@ -956,14 +976,14 @@ async def import_content_entry(
     request: Request,
     cookies: dict[str, str],
     current_user: Row,
-    content_import_service: ContentImportService,
+    package_content_service: PackageContentService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
-    result = content_import_service.import_entry(
+    result = package_content_service.import_entry(
         campaign_id=str(body.get("campaign_id", "")),
         user_id=user["id"],
-        system_id=str(body.get("system_id", "")),
+        package_id=str(body.get("package_id") or body.get("system_id") or ""),
         pack_id=str(body.get("pack_id", "")),
         entry_id=str(body.get("entry_id", "")),
     )
@@ -981,6 +1001,107 @@ async def import_content_entry(
             },
         )
     return Response({"actor_id": result.actor_id}, status_code=201)
+
+
+@post("/game/content/package/import")
+async def import_content_package(
+    request: Request,
+    current_user: Row,
+    package_content_service: PackageContentService,
+) -> Response[dict[str, Any]]:
+    """Import every importable entry from one active content package."""
+    body = await _json_body(request)
+    campaign_id = str(body.get("campaign_id") or "")
+    package_id = str(body.get("package_id") or "")
+    created_items: list[str] = []
+    created_actors: list[str] = []
+    created_journals: list[str] = []
+    errors: list[dict[str, str]] = []
+    active_package = next(
+        (
+            package
+            for package in package_content_service.list_active_packages(
+                campaign_id=campaign_id,
+                user_id=current_user["id"],
+            )
+            if package["id"] == package_id
+        ),
+        None,
+    )
+    if active_package is None:
+        return Response({"error_key": "sdk.errors.dependency_inactive"}, status_code=400)
+    for summary in package_content_service.list_packs(package_id):
+        pack_id = str(summary.get("id") or "")
+        pack = package_content_service.get_pack(package_id, pack_id)
+        if pack is None:
+            continue
+        destination_folder_id = package_content_service.ensure_import_folder(
+            campaign_id=campaign_id,
+            user_id=current_user["id"],
+            package_name=str(active_package["name"]),
+            pack={**pack, "label": summary.get("label") or pack.get("label")},
+        )
+        entries = sorted(
+            pack.get("entries", []),
+            key=lambda entry: (
+                (entry.get("data") or {}).get("importOrder", 999)
+                if isinstance(entry.get("data"), dict)
+                else 999
+            ),
+        )
+        for entry in entries:
+            entry_id = str(entry.get("id") or "")
+            result = package_content_service.import_entry(
+                campaign_id=campaign_id,
+                user_id=current_user["id"],
+                package_id=package_id,
+                pack_id=pack_id,
+                entry_id=entry_id,
+                folder_id=destination_folder_id,
+            )
+            if not result.success:
+                errors.append({"pack_id": pack_id, "entry_id": entry_id, "error_key": result.error_key or ""})
+                continue
+            if result.item_id:
+                created_items.append(result.item_id)
+                event = TransportEvent.ITEM_CREATED
+                entity_id = result.item_id
+            elif result.actor_id:
+                created_actors.append(result.actor_id)
+                event = TransportEvent.ACTOR_CREATED
+                entity_id = result.actor_id
+            elif result.journal_id:
+                created_journals.append(result.journal_id)
+                event = TransportEvent.JOURNAL_CREATED
+                entity_id = result.journal_id
+            else:
+                continue
+            await RealtimeTransport().to_room(
+                room_id=campaign_id,
+                event=event,
+                payload={
+                    "room_id": campaign_id,
+                    (
+                        "item_id"
+                        if result.item_id
+                        else "actor_id"
+                        if result.actor_id
+                        else "journal_id"
+                    ): entity_id,
+                    "system_id": result.system_id or "",
+                    "updated_by": current_user["id"],
+                },
+            )
+    return Response(
+        {
+            "imported": len(created_items) + len(created_actors) + len(created_journals),
+            "item_ids": created_items,
+            "actor_ids": created_actors,
+            "journal_ids": created_journals,
+            "errors": errors,
+        },
+        status_code=200,
+    )
 
 
 @post("/game/actor/sheet-data/set")

@@ -226,6 +226,91 @@ def test_manifest_contains_metadata_without_chunk_payload(db):
     assert "data" not in result.manifest
 
 
+def test_virtual_raster_manifest_keeps_tile_metadata_out_of_bootstrap(db):
+    gm_id = seed_user(name="GM", email="gm-virtual-manifest@test.com")
+    campaign_id = seed_campaign(gm_id)
+    scene = SceneRepository().create(
+        campaign_id=campaign_id,
+        name="Continent",
+        width=500_000,
+        height=500_000,
+        tile_size=512,
+        grid_size=70,
+        chunk_size=8,
+        scene_format_version=2,
+    )
+    layer = SceneLayerRepository().create(
+        scene_id=scene["id"],
+        name="Ground",
+        kind=SceneLayerKind.RASTER_TILE_REFS,
+        visibility=SceneLayerVisibility.VISIBLE,
+        display_order=0,
+        encoding=SceneChunkEncoding.UINT32_TILE_REFS_V1,
+    )
+    assets = SceneAssetRepository()
+    tiles = SceneTileRepository()
+    for tile_ref, tx in enumerate(range(32), start=1):
+        asset = assets.create(
+            scene_id=scene["id"], kind=SceneAssetKind.RASTER_TILE,
+            storage_path=f"tiles/{tx}_0.png", hash=f"hash-{tx}", byte_size=10,
+            width=512, height=512, content_type="image/png",
+        )
+        tiles.create(
+            scene_id=scene["id"], layer_id=layer["id"], tile_ref=tile_ref,
+            asset_id=asset["id"], tx=tx, ty=0, width=512, height=512,
+            hash=f"hash-{tx}", byte_size=10,
+        )
+
+    result = SceneService().get_scene_manifest(scene_id=scene["id"], user_id=gm_id)
+
+    assert result.success
+    assert result.manifest["version"] == 2
+    assert result.manifest["grid_size"] == 70
+    assert result.manifest["raster_tile_size"] == 512
+    assert result.manifest["capabilities"] == ["virtual_raster", "sparse_tile_index", "lod"]
+    assert result.manifest["assets"] == []
+    assert result.manifest["layers"][0]["tiles"] == []
+    assert result.manifest["layers"][0]["tile_index_url"].endswith("/tile-index")
+
+
+def test_virtual_raster_tile_index_is_sparse_bounded_and_paginated(db):
+    gm_id = seed_user(name="GM", email="gm-tile-index@test.com")
+    campaign_id = seed_campaign(gm_id)
+    scene = SceneRepository().create(
+        campaign_id=campaign_id, name="Continent", width=500_000,
+        height=500_000, tile_size=512, grid_size=70, chunk_size=8,
+        scene_format_version=2,
+    )
+    layer = SceneLayerRepository().create(
+        scene_id=scene["id"], name="Ground",
+        kind=SceneLayerKind.RASTER_TILE_REFS,
+        visibility=SceneLayerVisibility.VISIBLE, display_order=0,
+        encoding=SceneChunkEncoding.UINT32_TILE_REFS_V1,
+    )
+    assets = SceneAssetRepository()
+    tiles = SceneTileRepository()
+    for tile_ref, tx in enumerate((1, 2, 999), start=1):
+        asset = assets.create(
+            scene_id=scene["id"], kind=SceneAssetKind.RASTER_TILE,
+            storage_path=f"tiles/{tx}_0.png", hash=f"hash-{tx}", byte_size=10,
+            width=512, height=512, content_type="image/png",
+        )
+        tiles.create(
+            scene_id=scene["id"], layer_id=layer["id"], tile_ref=tile_ref,
+            asset_id=asset["id"], tx=tx, ty=0, width=512, height=512,
+            hash=f"hash-{tx}", byte_size=10,
+        )
+
+    page = SceneService().get_scene_tile_index(
+        scene_id=scene["id"], layer_id=layer["id"], user_id=gm_id,
+        lod=0, tx0=0, ty0=0, tx1=10, ty1=10, limit=1, after_ref=0,
+    )
+
+    assert page.success
+    assert [tile["tx"] for tile in page.manifest["tiles"]] == [1]
+    assert page.manifest["next_after_ref"] == 1
+
+
 def test_manifest_filters_hidden_layers_for_player(db):
     gm_id = seed_user(name="GM", email="gm-scene-filter@test.com")
     player_id = seed_user(name="Player", email="player-scene-filter@test.com")

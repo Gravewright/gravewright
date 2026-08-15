@@ -18,6 +18,7 @@ _TOKEN_COMMANDS = frozenset(
     {
         ClientCommand.TOKEN_CREATE.value,
         ClientCommand.TOKEN_CREATE_MANY_FROM_ACTORS.value,
+        ClientCommand.TOKEN_DUPLICATE_MANY.value,
         ClientCommand.TOKEN_MOVE.value,
         ClientCommand.TOKEN_UPDATE_OVERRIDE.value,
         ClientCommand.TOKEN_HIDE.value,
@@ -102,6 +103,8 @@ class TokenCommandHandler:
                 return await self._create_one(command_id, room_id, payload, context, transport)
             case ClientCommand.TOKEN_CREATE_MANY_FROM_ACTORS.value:
                 return await self._create_many(command_id, room_id, payload, context, transport)
+            case ClientCommand.TOKEN_DUPLICATE_MANY.value:
+                return await self._duplicate_many(command_id, room_id, payload, context, transport)
             case ClientCommand.TOKEN_MOVE.value:
                 return await self._move(command_id, room_id, payload, context, transport)
             case ClientCommand.TOKEN_UPDATE_OVERRIDE.value:
@@ -128,6 +131,21 @@ class TokenCommandHandler:
                 )
 
         return TokenCommandResult(handled=False)
+
+    async def _duplicate_many(self, command_id, campaign_id, payload, context, transport):
+        scene_id = payload.get("scene_id")
+        token_ids = payload.get("token_ids")
+        if not isinstance(scene_id, str) or not scene_id or not isinstance(token_ids, list) or not token_ids:
+            return _invalid(command_id, "scene_id and token_ids are required.")
+        if len(token_ids) > _MAX_TOKENS_PER_CREATE or not all(isinstance(value, str) and value for value in token_ids):
+            return _invalid(command_id, "invalid token_ids.")
+        result = await self.service.duplicate_many(campaign_id=campaign_id, scene_id=scene_id,
+            token_ids=token_ids, offset_x=int(payload.get("offset_x", 1)), offset_y=int(payload.get("offset_y", 1)),
+            user_id=context.user_id, transport=transport)
+        if not result.success: return _service_error(command_id, result.error_key)
+        return TokenCommandResult(handled=True, response=_ack(command_id=command_id,
+            command=ClientCommand.TOKEN_DUPLICATE_MANY.value, campaign_id=campaign_id,
+            extra={"token_ids": [token["token_id"] for token in result.tokens or []]}))
 
     async def _create_one(
         self,

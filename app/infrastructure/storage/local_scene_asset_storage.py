@@ -101,6 +101,7 @@ class LocalSceneAssetStorage:
         tx: int,
         ty: int,
         data: bytes,
+        extension: str = ".png",
     ) -> str:
         """Write pre-encoded PNG bytes for a tile (used by staged retile)."""
         self._validate_id(scene_id, "scene_id")
@@ -108,7 +109,9 @@ class LocalSceneAssetStorage:
         self._validate_coord(tx, "tx")
         self._validate_coord(ty, "ty")
 
-        path = self.root / scene_id / "assets" / "tiles" / layer_id / f"{tx}_{ty}.png"
+        if extension not in {".png", ".webp", ".jpg"}:
+            raise ValueError("tile extension is invalid")
+        path = self.root / scene_id / "assets" / "tiles" / layer_id / f"{tx}_{ty}{extension}"
         self._atomic_write(path, data)
         return self._storage_path(path)
 
@@ -128,20 +131,28 @@ class LocalSceneAssetStorage:
         path.mkdir(parents=True, exist_ok=False)
         return path
 
-    def final_tile_storage_path(self, *, scene_id: str, layer_id: str, tx: int, ty: int) -> str:
+    def final_tile_storage_path(
+        self, *, scene_id: str, layer_id: str, tx: int, ty: int, extension: str = ".png"
+    ) -> str:
         self._validate_id(scene_id, "scene_id")
         self._validate_id(layer_id, "layer_id")
         self._validate_coord(tx, "tx")
         self._validate_coord(ty, "ty")
-        path = self.root / scene_id / "assets" / "tiles" / layer_id / f"{tx}_{ty}.png"
+        if extension not in {".png", ".webp", ".jpg"}:
+            raise ValueError("tile extension is invalid")
+        path = self.root / scene_id / "assets" / "tiles" / layer_id / f"{tx}_{ty}{extension}"
         self._assert_inside_root(path)
         return self._storage_path(path)
 
-    def write_staged_tile_bytes(self, *, staging_dir: Path, tx: int, ty: int, data: bytes) -> None:
+    def write_staged_tile_bytes(
+        self, *, staging_dir: Path, tx: int, ty: int, data: bytes, extension: str = ".png"
+    ) -> None:
         self._assert_inside_root(staging_dir)
         self._validate_coord(tx, "tx")
         self._validate_coord(ty, "ty")
-        path = staging_dir / f"{tx}_{ty}.png"
+        if extension not in {".png", ".webp", ".jpg"}:
+            raise ValueError("tile extension is invalid")
+        path = staging_dir / f"{tx}_{ty}{extension}"
         self._assert_inside_root(path)
         self._atomic_write(path, data)
 

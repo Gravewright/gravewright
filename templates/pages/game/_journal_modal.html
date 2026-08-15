@@ -1,18 +1,43 @@
 {% import "pages/game/_journal_block_field.html" as blockfield with context %}
-<article class="game-modal-window journal-modal" data-modal-window
+{% import "pages/game/_quest_marks.html" as questmark with context %}
+<article class="game-modal-window journal-modal journal-modal--{{ journal.type }}{% if not can_edit %} journal-modal--readonly{% endif %}" data-modal-window
          data-modal-id="journal-{{ journal.id }}"
          data-window-key="journal-{{ journal.id }}"
+         data-auto-fit-width="{% if journal.type == 'diary' %}{% if can_edit %}880{% else %}720{% endif %}{% elif journal.type == 'quest' %}920{% else %}900{% endif %}"
+         data-auto-fit-min-width="{% if journal.type == 'diary' and not can_edit %}560{% else %}680{% endif %}"
+         data-auto-fit-height="{% if journal.type == 'diary' and not can_edit %}600{% elif journal.type == 'diary' %}700{% else %}720{% endif %}"
+         data-auto-fit-min-height="{% if journal.type == 'diary' and not can_edit %}360{% else %}480{% endif %}"
          data-journal-campaign="{{ room_id }}"
          data-journal-id="{{ journal.id }}"
          data-journal-type="{{ journal.type }}"
          data-journal-version="{{ view.version }}"
          hidden>
     <header class="game-modal-titlebar" data-modal-drag-handle>
-        <div class="game-modal-sheet-title">
+        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+        <div class="game-modal-sheet-title" data-journal-reader-chrome>
             <span class="sheet-modal-name">{{ journal.title }}</span>
             <span class="sheet-modal-owner">{{ t(journal.type_label_key) }}</span>
         </div>
+        {% if can_edit %}
+        <div class="journal-window-editor-title" data-journal-editor-chrome hidden>
+            <input type="text" name="title" form="journal-editor-form-{{ journal.id }}"
+                   maxlength="120" value="{{ journal.title }}" required aria-label="{{ t('game.journal.title') }}" />
+            <span class="journal-autosave-hint" data-journal-autosave-hint aria-live="polite"
+                  data-dirty-label="{{ t('game.journal.autosave_dirty') }}"
+                  data-saving-label="{{ t('game.journal.autosave_saving') }}"
+                  data-saved-label="{{ t('game.journal.autosaved') }}"
+                  data-error-label="{{ t('game.journal.autosave_error') }}"></span>
+        </div>
+        {% endif %}
         <div class="game-modal-controls">
+            {% if can_edit and journal.type in ("quest", "quest_board") %}
+            <button type="button" class="board-titlebar-edit" data-journal-edit-toggle
+                    data-label-edit="{{ t('game.journal.edit') }}"
+                    data-label-back="{{ t('game.journal.back') }}">
+                <i class="ph ph-pencil-simple" aria-hidden="true"></i>
+                <span data-journal-toggle-label>{{ t("game.journal.edit") }}</span>
+            </button>
+            {% endif %}
             {% if is_gm %}
             {% if targeted_handouts_enabled %}
             <button class="game-modal-control" type="button" data-handout-resource="journal"
@@ -41,13 +66,13 @@
 
     <div class="journal-modal-body" data-journal-modal data-journal-id="{{ journal.id }}">
         
-        <div class="journal-reader" data-journal-reader="{{ journal.id }}" data-journal-view="reader">
+        <div class="journal-reader{% if journal.type == 'diary' %} journal-reader--editorial{% endif %}" data-journal-reader="{{ journal.id }}" data-journal-view="reader">
             <header class="journal-reader-head">
                 <div class="journal-reader-heading">
                     <span>{{ t(journal.type_label_key) }}</span>
                     <h2>{{ journal.title }}</h2>
                 </div>
-                {% if can_edit %}
+                {% if can_edit and journal.type not in ("quest", "quest_board") %}
                 <button type="button" class="journal-edit-btn" data-journal-edit-toggle>
                     <i class="ph ph-pencil-simple" aria-hidden="true"></i>
                     <span>{{ t("game.journal.edit") }}</span>
@@ -56,56 +81,133 @@
             </header>
 
             {% if journal.type == "diary" %}
-            {% if view.cover_image.src %}
-            <img class="journal-reader-image" src="{{ view.cover_image.src }}" alt="{{ journal.title }}" />
-            {% endif %}
-            {{ blockfield.reader(view.content_doc, view.content_markdown) }}
+            {# This diary has no cover: the journal opens straight into its pages. #}
+            <div class="journal-notebook{% if view.sections %} has-sections{% endif %}" data-journal-notebook>
+                {% if view.sections %}
+                <nav class="journal-notebook-rail" aria-label="{{ t('game.journal.sections.summary') }}">
+                    <strong>{{ t("game.journal.sections.summary") }}</strong>
+                    <button type="button" data-journal-section-link="journal-opening-{{ journal.id }}">
+                        {{ t("game.journal.sections.opening") }}
+                    </button>
+                    {% for section in view.sections %}
+                    <button type="button" class="level-{{ section.level }}" data-journal-section-link="journal-section-{{ section.id }}">
+                        {% if section.audience == "gm" %}<i class="ph ph-lock-key" aria-hidden="true"></i>{% endif %}
+                        {{ section.title }}
+                    </button>
+                    {% endfor %}
+                </nav>
+                {% endif %}
+                <div class="journal-notebook-pages">
+                    <section class="journal-notebook-section" id="journal-opening-{{ journal.id }}">
+                        {{ blockfield.reader(view.content_doc, view.content_markdown) }}
+                    </section>
+                    {% for section in view.sections %}
+                    <section class="journal-notebook-section{% if section.audience == 'gm' %} is-gm{% endif %}"
+                             id="journal-section-{{ section.id }}">
+                        <h{{ section.level + 1 }}>{{ section.title }}</h{{ section.level + 1 }}>
+                        {# An empty src is not "no media": the browser resolves it to this very
+                           page and loads the whole game inside the frame. Media pages without a
+                           file render as a placeholder instead. #}
+                        {% if section.kind in ("image", "pdf") and not section.src %}
+                        <p class="journal-page-missing">{{ t("game.journal.assets.empty") }}</p>
+                        {% elif section.kind == "image" %}<img class="journal-page-media" src="{{ section.src }}" alt="{{ section.title }}" />
+                        {% elif section.kind == "pdf" %}<iframe class="journal-page-pdf" src="{{ section.src }}" title="{{ section.title }}"></iframe>
+                        {% else %}{{ blockfield.reader(section.content) }}{% endif %}
+                    </section>
+                    {% endfor %}
+                </div>
+            </div>
 
             {% elif journal.type == "quest" %}
-            <div class="journal-quest-status journal-quest-status--{{ view.quest.status }}">
-                {{ t("game.journal.quest.status_values." ~ view.quest.status) }}
-            </div>
-            {% if view.quest.public.image.src %}
-            <img class="journal-reader-image" src="{{ view.quest.public.image.src }}" alt="{{ journal.title }}" />
-            {% endif %}
-            {% if view.quest.public.summary %}<p class="journal-reader-summary">{{ view.quest.public.summary }}</p>{% endif %}
-            <dl class="journal-reader-meta">
-                {% if view.quest.public.location %}<dt>{{ t("game.journal.quest.location") }}</dt><dd>{{ view.quest.public.location }}</dd>{% endif %}
-                {% if view.quest.public.giver %}<dt>{{ t("game.journal.quest.giver") }}</dt><dd>{{ view.quest.public.giver }}</dd>{% endif %}
-            </dl>
-            {{ blockfield.reader(view.quest.public.description, view.quest.public.description_markdown) }}
-            {% if view.quest.objectives %}
-            <div class="journal-objectives">
-                <h4>{{ t("game.journal.quest.objectives") }}</h4>
-                <ul>
-                    {% for obj in view.quest.objectives %}
-                    <li class="{% if obj.completed %}is-done{% endif %}">
-                        <i class="ph {% if obj.completed %}ph-check-circle{% else %}ph-circle{% endif %}" aria-hidden="true"></i>
-                        <span>{{ obj.text }}{% if obj.optional %} <em>({{ t("game.journal.quest.optional") }})</em>{% endif %}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-            {% if view.quest.rewards %}
-            <div class="journal-rewards">
-                <h4>{{ t("game.journal.quest.rewards") }}</h4>
-                <ul>{% for reward in view.quest.rewards %}<li>{{ reward.text }}</li>{% endfor %}</ul>
-            </div>
-            {% endif %}
+            {# A quest reads as the contract it is: seal, terms, the deal struck. #}
+            {% set done = view.quest.display_objectives | selectattr("completed") | list | length %}
+            <article class="quest-sheet quest-sheet--{{ view.quest.status }}">
+                <header class="quest-sheet-head">
+                    <h2 class="quest-title">{{ journal.title }}</h2>
+                    <div class="quest-context-status">
+                        {{ questmark.seal(view.quest.status) }}
+                    </div>
+                </header>
+
+                <div class="quest-reader-layout">
+                    <aside class="quest-context">
+                        {% if view.quest.public.image.src %}
+                        <img class="quest-poster" src="{{ view.quest.public.image.src }}" alt="{{ journal.title }}" />
+                        {% endif %}
+
+                        {% if view.quest.public.location or view.quest.public.giver %}
+                        <dl class="quest-facts">
+                            {% if view.quest.public.location %}
+                            <div><dt><i class="ph ph-map-pin" aria-hidden="true"></i>{{ t("game.journal.quest.location") }}</dt><dd>{{ view.quest.public.location }}</dd></div>
+                            {% endif %}
+                            {% if view.quest.public.giver %}
+                            <div><dt><i class="ph ph-user-focus" aria-hidden="true"></i>{{ t("game.journal.quest.giver") }}</dt><dd>{{ view.quest.public.giver }}</dd></div>
+                            {% endif %}
+                        </dl>
+                        {% endif %}
+
+                        {% if view.quest.tags %}
+                        <ul class="quest-tags">
+                            {% for tag in view.quest.tags %}<li><i class="ph ph-tag" aria-hidden="true"></i>{{ tag }}</li>{% endfor %}
+                        </ul>
+                        {% endif %}
+
+                    </aside>
+
+                    <div class="quest-details">
+                        <div class="quest-body">
+                            {{ blockfield.reader(view.quest.public.description, view.quest.public.description_markdown) }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quest-outcomes">
+                        {% if view.quest.display_objectives %}
+                        <section class="quest-block">
+                            <h4>
+                                <i class="ph ph-list-checks" aria-hidden="true"></i>
+                                <span>{{ t("game.journal.quest.objectives") }}</span>
+                                <em class="quest-tally">{{ done }}/{{ view.quest.display_objectives | length }}</em>
+                            </h4>
+                            <ul class="quest-objectives">
+                                {% for obj in view.quest.display_objectives %}
+                                <li class="{% if obj.completed %}is-done{% endif %}">
+                                    <i class="ph {% if obj.completed %}ph-check-circle{% else %}ph-circle{% endif %}" aria-hidden="true"></i>
+                                    <span>{{ obj.text }}</span>
+                                    {% if obj.optional %}<em class="quest-optional">{{ t("game.journal.quest.optional") }}</em>{% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                        {% endif %}
+
+                        {% if view.quest.display_rewards %}
+                        <section class="quest-block quest-block--rewards">
+                            <h4>
+                                <i class="ph ph-coins" aria-hidden="true"></i>
+                                <span>{{ t("game.journal.quest.rewards") }}</span>
+                            </h4>
+                            <ul class="quest-rewards">
+                                {% for reward in view.quest.display_rewards %}
+                                <li><i class="ph ph-medal" aria-hidden="true"></i><span>{{ reward.text }}</span></li>
+                                {% endfor %}
+                            </ul>
+                        </section>
+                        {% endif %}
+                </div>
+            </article>
 
             {% elif journal.type == "quest_board" %}
-            {% if view.board.image.src %}
-            <img class="journal-reader-image" src="{{ view.board.image.src }}" alt="{{ journal.title }}" />
-            {% endif %}
-            {{ blockfield.reader(view.board.description, view.board.description_markdown) }}
-            {% include "pages/game/_journal_board_cards.html" %}
+            <div class="board-sheet{% if not view.board_display_entries %} is-empty{% endif %}">
+                {% include "pages/game/_journal_board_cards.html" %}
+            </div>
             {% endif %}
         </div>
 
         {% if can_edit %}
         
-        <form class="journal-editor-form" method="post" action="/game/journal/update"
+        <form class="journal-editor-form" id="journal-editor-form-{{ journal.id }}"
+              method="post" action="/game/journal/update"
               data-journal-editor="{{ journal.id }}"
               data-journal-type="{{ journal.type }}"
               data-journal-view="editor" hidden>
@@ -114,177 +216,306 @@
             <input type="hidden" name="journal_id" value="{{ journal.id }}" />
             <input type="hidden" name="type" value="{{ journal.type }}" />
 
-            <header class="journal-editor-head">
-                <button type="button" class="journal-read-btn" data-journal-read-toggle>
-                    <i class="ph ph-arrow-left" aria-hidden="true"></i>
-                    <span>{{ t("game.journal.back_to_read") }}</span>
-                </button>
-                <label class="journal-editor-title-field">
-                    <span>{{ t("game.journal.title") }}</span>
-                    <input type="text" name="title" maxlength="120" value="{{ journal.title }}" required />
-                </label>
-                <span class="journal-autosave-hint" data-journal-autosave-hint
-                      data-saved-label="{{ t('game.journal.autosaved') }}"></span>
-            </header>
-
-            
             <input type="hidden" name="folder_id" value="{{ journal.folder_id or '' }}" />
             <input type="hidden" name="visibility" value="{{ view.visibility }}" />
             {{ blockfield.labels() }}
 
             {% if journal.type == "diary" %}
-            <label class="journal-field" data-image-field>
-                <span>{{ t("game.journal.cover") }}</span>
-                <div class="journal-image-input">
-                    <input type="url" name="diary_image_src" data-image-src maxlength="1024"
-                           placeholder="/assets/..." value="{{ view.cover_image.src }}" />
-                    <button type="button" class="journal-mini-action" data-image-upload
-                            data-error-label="{{ t('game.journal.assets.errors.generic') }}">
-                        <i class="ph ph-upload-simple" aria-hidden="true"></i> {{ t("game.journal.image_upload") }}
+            <div class="journal-diary-workspace journal-diary-workspace--editorial" data-journal-diary-workspace>
+            <aside class="journal-editorial-browser" data-journal-browser>
+                {# The window titlebar already names the journal; this row holds only
+                   controls. The home button is the opening page, which has no row of
+                   its own in the list. #}
+                <header>
+                    <button type="button" class="journal-browser-home" data-journal-page-target="cover"
+                            data-journal-heading aria-label="{{ t('game.journal.sections.opening') }}"
+                            title="{{ t('game.journal.sections.opening') }}"><i class="ph ph-house"></i></button>
+                    <label><i class="ph ph-magnifying-glass"></i><input type="search" data-journal-page-search placeholder="Buscar páginas…" aria-label="Buscar páginas"></label>
+                    <button type="button" data-journal-filter-toggle aria-expanded="false"
+                            aria-label="Filtrar páginas" title="Filtrar páginas"><i class="ph ph-funnel"></i></button>
+                    {% if is_gm %}
+                    <button type="button" data-journal-diary-tab="gm" aria-pressed="false"
+                            aria-label="{{ t('game.journal.quest.gm_area') }}"
+                            title="{{ t('game.journal.quest.gm_area') }}"><i class="ph ph-lock-key"></i></button>
+                    {% endif %}
+                    <button type="button" data-journal-browser-collapse aria-expanded="true"
+                            aria-label="Recolher páginas" title="Recolher páginas"><i class="ph ph-sidebar-simple"></i></button>
+                </header>
+                <div class="journal-page-filters" data-journal-page-filters hidden>
+                    <button type="button" class="is-active" data-journal-kind-filter="all">Todas</button>
+                    <button type="button" data-journal-kind-filter="text">Texto</button>
+                    <button type="button" data-journal-kind-filter="image">Imagem</button>
+                    <button type="button" data-journal-kind-filter="pdf">PDF</button>
+                    {% if is_gm %}<button type="button" data-journal-audience-filter="gm">GM</button>{% endif %}
+                </div>
+                <aside class="journal-index-drawer" data-journal-index-drawer>
+                    <header>
+                        <div><strong>Páginas</strong><small>Conteúdo do diário</small></div>
+                    </header>
+                    <nav data-journal-index-list></nav>
+                    <p class="journal-index-empty" data-journal-index-empty hidden>Nenhuma página corresponde à busca.</p>
+                    <div class="journal-chapter-composer" data-journal-chapter-composer hidden>
+                        <input type="text" data-journal-chapter-name maxlength="80" placeholder="Nome do capítulo" aria-label="Nome do novo capítulo" />
+                        <button type="button" data-journal-chapter-confirm aria-label="Criar capítulo" title="Criar capítulo"><i class="ph ph-check"></i></button>
+                    </div>
+                    <footer class="journal-index-create">
+                        <button type="button" class="journal-new-chapter" data-journal-chapter-add><i class="ph ph-folder-plus"></i><span>Novo capítulo</span></button>
+                        <button type="button" data-journal-section-add data-journal-add-kind="text" title="Página de texto" aria-label="Página de texto"><i class="ph ph-file-text"></i></button>
+                        <button type="button" data-journal-section-add data-journal-add-kind="image" title="Página de imagem" aria-label="Página de imagem"><i class="ph ph-image"></i></button>
+                        <button type="button" data-journal-section-add data-journal-add-kind="pdf" title="Página PDF" aria-label="Página PDF"><i class="ph ph-file-pdf"></i></button>
+                    </footer>
+                </aside>
+            </aside>
+            <main class="journal-diary-main" data-journal-diary-pane="content">
+                <div class="journal-page-toolbar" data-journal-page-toolbar>
+                    <button type="button" class="journal-page-back" data-journal-browser-show
+                            aria-label="Mostrar páginas" title="Mostrar páginas"><i class="ph ph-sidebar-simple"></i></button>
+                    <div class="journal-page-identity">
+                        <span data-journal-current-chapter>Sem capítulo</span>
+                        <strong class="journal-current-page-title" data-journal-current-page-title></strong>
+                    </div>
+                    <span class="journal-page-position" aria-hidden="true"></span>
+                </div>
+                {# Shown when the journal has no pages yet — the diary opens on its
+                   first page, and there is none to open. #}
+                <div class="journal-page-empty" data-journal-page-empty hidden>
+                    <i class="ph ph-feather" aria-hidden="true"></i>
+                    <strong>{{ t("game.journal.empty_pages.title") }}</strong>
+                    <p>{{ t("game.journal.empty_pages.hint") }}</p>
+                    <div class="journal-page-empty-actions">
+                        <button type="button" data-journal-section-add data-journal-add-kind="text">
+                            <i class="ph ph-file-plus" aria-hidden="true"></i> {{ t("game.journal.empty_pages.new_page") }}
+                        </button>
+                        <button type="button" data-journal-chapter-add>
+                            <i class="ph ph-folder-plus" aria-hidden="true"></i> {{ t("game.journal.empty_pages.new_chapter") }}
+                        </button>
+                    </div>
+                </div>
+                <div class="journal-content-field journal-content-field--blocks" data-journal-base-page>
+                    <span class="journal-content-label">{{ t("game.journal.content") }}</span>
+                    {{ blockfield.editor("content_doc", view.content_doc) }}
+                </div>
+                <section class="journal-sections-editor" data-journal-sections-editor data-is-gm="{{ 'true' if is_gm else 'false' }}">
+                <header class="journal-sections-head">
+                    <div>
+                        <h3>{{ t("game.journal.sections.title") }}</h3>
+                        <p>{{ t("game.journal.sections.hint") }}</p>
+                    </div>
+                    <button type="button" class="journal-mini-action" data-journal-section-add>
+                        <i class="ph ph-plus" aria-hidden="true"></i> {{ t("game.journal.sections.add") }}
                     </button>
+                </header>
+                <div class="journal-sections-list" data-journal-sections-list>
+                    {% for section in view.editable_sections %}
+                    <article class="journal-section-card" data-journal-section data-section-id="{{ section.id }}"
+                             data-section-kind="{{ section.kind }}" draggable="true">
+                        <header>
+                            <i class="ph ph-dots-six-vertical journal-section-grip" data-section-drag-handle aria-hidden="true"></i>
+                            <button type="button" class="journal-section-collapse" data-journal-section-collapse
+                                    aria-expanded="true" aria-label="{{ t('game.journal.sections.collapse') }}">
+                                <i class="ph ph-caret-down" aria-hidden="true"></i>
+                            </button>
+                            <input type="text" data-section-title value="{{ section.title | e }}"
+                                   aria-label="{{ t('game.journal.sections.name') }}" maxlength="120" />
+                            <input type="text" data-section-category value="{{ section.category | e }}"
+                                   maxlength="80" list="journal-chapters-{{ journal.id }}" aria-label="Capítulo" placeholder="Sem capítulo" />
+                            <select data-section-kind aria-label="{{ t('game.journal.sections.level') }}">
+                                <option value="text" {% if section.kind == 'text' %}selected{% endif %}>Texto</option>
+                                <option value="image" {% if section.kind == 'image' %}selected{% endif %}>Imagem</option>
+                                <option value="pdf" {% if section.kind == 'pdf' %}selected{% endif %}>PDF</option>
+                            </select>
+                            <select data-section-audience aria-label="{{ t('game.journal.sections.audience') }}">
+                                <option value="public" {% if section.audience == 'public' %}selected{% endif %}>{{ t("game.journal.sections.public") }}</option>
+                                <option value="gm" {% if section.audience == 'gm' %}selected{% endif %}>{{ t("game.journal.sections.gm") }}</option>
+                            </select>
+                            <button type="button" class="journal-mini-action is-danger" data-journal-section-remove
+                                    aria-label="{{ t('game.journal.sections.remove') }}"><i class="ph ph-trash" aria-hidden="true"></i></button>
+                        </header>
+                        {{ blockfield.editor("section_doc_" ~ section.id, section.content) }}
+                        <div class="journal-page-asset" data-page-asset>
+                            <input type="hidden" data-page-src value="{{ section.src }}" />
+                            <button type="button" data-page-asset-upload><i class="ph ph-upload-simple"></i> Enviar arquivo</button>
+                            <img data-page-image-preview {% if section.src %}src="{{ section.src }}"{% endif %} alt="" />
+                            <iframe data-page-pdf-preview {% if section.src %}src="{{ section.src }}"{% endif %} title="{{ section.title }}"></iframe>
+                        </div>
+                    </article>
+                    {% endfor %}
                 </div>
-            </label>
-            <div class="journal-content-field journal-content-field--blocks">
-                <span class="journal-content-label">{{ t("game.journal.content") }}</span>
-                {{ blockfield.editor("content_doc", view.content_doc) }}
-            </div>
+                <datalist id="journal-chapters-{{ journal.id }}" data-journal-chapter-options></datalist>
+                <input type="hidden" name="sections_json" data-journal-sections-json />
+                </section>
+            </main>
             {% if is_gm %}
-            <div class="journal-section journal-section--gm">
-                <h3 class="journal-section-title">
-                    <i class="ph ph-lock-key" aria-hidden="true"></i> {{ t("game.journal.quest.gm_area") }}
-                </h3>
-                <div class="journal-content-field">
-                    <span class="journal-content-label">{{ t("game.journal.quest.gm_notes") }}</span>
-                    {{ blockfield.editor("gm_notes_doc", view.diary.gm.notes, gm=true) }}
+            {# The GM area is a page of the journal, so it wears the same chrome:
+               a sticky toolbar over the reading column, and a way back. #}
+            <aside class="journal-diary-sidebar" data-journal-diary-pane="gm" hidden>
+                <div class="journal-page-toolbar">
+                    <button type="button" class="journal-page-back" data-journal-diary-tab="content"
+                            aria-label="{{ t('game.journal.back_to_pages') }}"
+                            title="{{ t('game.journal.back_to_pages') }}"><i class="ph ph-arrow-left"></i></button>
+                    <div class="journal-page-identity">
+                        <span>{{ t(journal.type_label_key) }}</span>
+                        <strong class="journal-current-page-title">{{ t("game.journal.quest.gm_area") }}</strong>
+                    </div>
+                    <span class="journal-page-position"><i class="ph ph-lock-key" aria-hidden="true"></i></span>
                 </div>
-                <div class="journal-content-field">
-                    <span class="journal-content-label">{{ t("game.journal.quest.gm_secrets") }}</span>
-                    {{ blockfield.editor("gm_secrets_doc", view.diary.gm.secrets, gm=true) }}
+                <div class="journal-section journal-section--gm">
+                    <div class="journal-content-field">
+                        <span class="journal-content-label">{{ t("game.journal.quest.gm_notes") }}</span>
+                        {{ blockfield.editor("gm_notes_doc", view.diary.gm.notes, gm=true) }}
+                    </div>
+                    <div class="journal-content-field">
+                        <span class="journal-content-label">{{ t("game.journal.quest.gm_secrets") }}</span>
+                        {{ blockfield.editor("gm_secrets_doc", view.diary.gm.secrets, gm=true) }}
+                    </div>
                 </div>
-            </div>
+            </aside>
             {% endif %}
+            </div>
 
             {% elif journal.type == "quest" %}
-            <div class="journal-section journal-section--public">
-                <h3 class="journal-section-title">
-                    <i class="ph ph-eye" aria-hidden="true"></i> {{ t("game.journal.quest.public_area") }}
-                </h3>
-                <div class="journal-meta-grid">
-                    <label>
-                        <span>{{ t("game.journal.quest.status") }}</span>
-                        <select name="quest_status">
-                            {% for value in ["draft", "available", "active", "completed", "failed", "archived"] %}
-                            <option value="{{ value }}" {% if view.quest.status == value %}selected{% endif %}>
-                                {{ t("game.journal.quest.status_values." ~ value) }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                    <label>
-                        <span>{{ t("game.journal.quest.location") }}</span>
-                        <input type="text" name="public_location" maxlength="240" value="{{ view.quest.public.location }}" />
-                    </label>
-                    <label>
-                        <span>{{ t("game.journal.quest.giver") }}</span>
-                        <input type="text" name="public_giver" maxlength="240" value="{{ view.quest.public.giver }}" />
-                    </label>
-                    <label data-image-field>
-                        <span>{{ t("game.journal.quest.image") }}</span>
-                        <div class="journal-image-input">
-                            <input type="url" name="public_image_src" data-image-src maxlength="1024"
-                                   placeholder="/assets/..." value="{{ view.quest.public.image.src }}" />
-                            <button type="button" class="journal-mini-action" data-image-upload
-                                    data-error-label="{{ t('game.journal.assets.errors.generic') }}">
-                                <i class="ph ph-upload-simple" aria-hidden="true"></i> {{ t("game.journal.image_upload") }}
-                            </button>
-                        </div>
-                    </label>
-                </div>
-                <label class="journal-field">
-                    <span>{{ t("game.journal.quest.summary") }}</span>
-                    <input type="text" name="public_summary" maxlength="480" value="{{ view.quest.public.summary }}" />
-                </label>
-                <div class="journal-content-field">
-                    <span class="journal-content-label">{{ t("game.journal.quest.description") }}</span>
-                    {{ blockfield.editor("public_description_doc", view.quest.public.description) }}
-                </div>
+            {# Four parts of one contract, reached from a rail: what the table
+               sees, what is asked, what is paid, and the GM's half. #}
+            <div class="quest-workspace" data-quest-workspace>
+            <nav class="quest-nav" aria-label="{{ t('game.journal.quest.public_area') }}">
+                <button type="button" class="is-active" data-quest-tab="content" aria-pressed="true">
+                    <i class="ph ph-scroll" aria-hidden="true"></i><span>{{ t("game.journal.content") }}</span>
+                </button>
+                <button type="button" data-quest-tab="objectives" aria-pressed="false">
+                    <i class="ph ph-list-checks" aria-hidden="true"></i><span>{{ t("game.journal.quest.objectives") }}</span>
+                    <em data-quest-count="objectives"></em>
+                </button>
+                <button type="button" data-quest-tab="rewards" aria-pressed="false">
+                    <i class="ph ph-coins" aria-hidden="true"></i><span>{{ t("game.journal.quest.rewards") }}</span>
+                    <em data-quest-count="rewards"></em>
+                </button>
+                {% if is_gm %}
+                <button type="button" data-quest-tab="gm" aria-pressed="false">
+                    <i class="ph ph-lock-key" aria-hidden="true"></i><span>{{ t("game.journal.quest.gm_area") }}</span>
+                </button>
+                {% endif %}
+            </nav>
+            <div class="quest-panels">
+                <section class="quest-edit-block" data-quest-panel="content">
+                    <h3><i class="ph ph-eye" aria-hidden="true"></i>{{ t("game.journal.quest.public_area") }}</h3>
 
-                <div class="journal-list-editor" data-objectives-editor
+                    <label class="quest-field quest-title-field">
+                        <span><i class="ph ph-text-t" aria-hidden="true"></i>{{ t("game.journal.quest.title") }}</span>
+                        <input type="text" data-quest-title-input maxlength="120" value="{{ journal.title }}" required />
+                    </label>
+
+                    {# Terms on the left, the patron's face on the right — the two
+                       halves of who is asking and for what. #}
+                    <div class="quest-identity">
+                        <div class="quest-identity-terms">
+                            <div class="quest-status-picker" role="radiogroup" aria-label="{{ t('game.journal.quest.status') }}">
+                                {% for value in ["draft", "available", "active", "completed", "failed", "archived"] %}
+                                <label class="quest-status-option quest-status-option--{{ value }}">
+                                    <input type="radio" name="quest_status" value="{{ value }}"
+                                           {% if view.quest.status == value %}checked{% endif %} />
+                                    {{ questmark.seal(value, compact=True) }}
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                            <label class="quest-field">
+                                <span><i class="ph ph-map-pin" aria-hidden="true"></i>{{ t("game.journal.quest.location") }}</span>
+                                <input type="text" name="public_location" maxlength="240" value="{{ view.quest.public.location }}" />
+                            </label>
+                            <label class="quest-field">
+                                <span><i class="ph ph-user-focus" aria-hidden="true"></i>{{ t("game.journal.quest.giver") }}</span>
+                                <input type="text" name="public_giver" maxlength="240" value="{{ view.quest.public.giver }}" />
+                            </label>
+
+                            <label class="quest-field quest-field--summary">
+                                <span><i class="ph ph-quotes" aria-hidden="true"></i>{{ t("game.journal.quest.summary") }}</span>
+                                <textarea name="public_summary" maxlength="480" rows="3"
+                                          placeholder="{{ t('game.journal.quest.summary_placeholder') }}">{{ view.quest.public.summary }}</textarea>
+                            </label>
+
+                            <label class="quest-field quest-field--tags">
+                                <span><i class="ph ph-tag" aria-hidden="true"></i>{{ t("game.journal.quest.tags") }}</span>
+                                <input type="text" name="tags" value="{{ view.quest.tags | join(', ') }}"
+                                       placeholder="{{ t('game.journal.quest.tags_placeholder') }}" />
+                            </label>
+                        </div>
+
+                        {# The portrait is uploaded, not typed: the path rides in a
+                           hidden field and the drop zone shows the face. #}
+                        <div class="quest-field quest-identity-portrait" data-image-field>
+                            <span><i class="ph ph-image-square" aria-hidden="true"></i>{{ t("game.journal.quest.image") }}</span>
+                            <div class="quest-image-drop">
+                                <input type="hidden" name="public_image_src" data-image-src value="{{ view.quest.public.image.src }}" />
+                                <img data-image-preview {% if view.quest.public.image.src %}src="{{ view.quest.public.image.src }}"{% endif %} alt="" />
+                                <button type="button" class="quest-image-action" data-image-upload
+                                        data-error-label="{{ t('game.journal.assets.errors.generic') }}">
+                                    <i class="ph ph-upload-simple" aria-hidden="true"></i>
+                                    <span>{{ t("game.journal.image_upload") }}</span>
+                                </button>
+                                <button type="button" class="quest-image-clear" data-image-clear
+                                        aria-label="{{ t('game.journal.quest.remove') }}"
+                                        title="{{ t('game.journal.quest.remove') }}"><i class="ph ph-x" aria-hidden="true"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="journal-content-field quest-description">
+                        <span class="journal-content-label">{{ t("game.journal.quest.description") }}</span>
+                        {{ blockfield.editor("public_description_doc", view.quest.public.description) }}
+                    </div>
+
+                </section>
+
+                <section class="quest-edit-block journal-list-editor" data-quest-panel="objectives" hidden
+                     data-objectives-editor
                      data-placeholder="{{ t('game.journal.quest.objective_placeholder') }}"
                      data-label-completed="{{ t('game.journal.quest.completed') }}"
                      data-label-optional="{{ t('game.journal.quest.optional') }}"
                      data-label-visible="{{ t('game.journal.quest.visible_to_players') }}"
                      data-label-remove="{{ t('game.journal.quest.remove') }}">
-                    <div class="journal-list-editor-head">
-                        <span>{{ t("game.journal.quest.objectives") }}</span>
-                        <button type="button" class="journal-mini-action" data-objective-add>
+                    <h3>
+                        <i class="ph ph-list-checks" aria-hidden="true"></i>{{ t("game.journal.quest.objectives") }}
+                        <button type="button" class="quest-add" data-objective-add>
                             <i class="ph ph-plus" aria-hidden="true"></i> {{ t("game.journal.quest.add_objective") }}
                         </button>
-                    </div>
+                    </h3>
                     <div class="journal-list-editor-rows" data-objectives-rows></div>
                     <textarea name="objectives_json" data-objectives-json hidden>{{ view.quest.objectives | tojson }}</textarea>
-                </div>
+                </section>
 
-                <div class="journal-list-editor" data-rewards-editor
+                <section class="quest-edit-block journal-list-editor" data-quest-panel="rewards" hidden
+                     data-rewards-editor
                      data-placeholder="{{ t('game.journal.quest.reward_placeholder') }}"
                      data-label-visible="{{ t('game.journal.quest.visible_to_players') }}"
                      data-label-remove="{{ t('game.journal.quest.remove') }}">
-                    <div class="journal-list-editor-head">
-                        <span>{{ t("game.journal.quest.rewards") }}</span>
-                        <button type="button" class="journal-mini-action" data-reward-add>
+                    <h3>
+                        <i class="ph ph-coins" aria-hidden="true"></i>{{ t("game.journal.quest.rewards") }}
+                        <button type="button" class="quest-add" data-reward-add>
                             <i class="ph ph-plus" aria-hidden="true"></i> {{ t("game.journal.quest.add_reward") }}
                         </button>
-                    </div>
+                    </h3>
                     <div class="journal-list-editor-rows" data-rewards-rows></div>
                     <textarea name="rewards_json" data-rewards-json hidden>{{ view.quest.rewards | tojson }}</textarea>
-                </div>
+                </section>
 
-                <label class="journal-field">
-                    <span>{{ t("game.journal.quest.tags") }}</span>
-                    <input type="text" name="tags" value="{{ view.quest.tags | join(', ') }}"
-                           placeholder="{{ t('game.journal.quest.tags_placeholder') }}" />
-                </label>
+                {% if is_gm %}
+                <section class="quest-edit-block quest-edit-block--gm" data-quest-panel="gm" hidden>
+                    <h3><i class="ph ph-lock-key" aria-hidden="true"></i>{{ t("game.journal.quest.gm_area") }}</h3>
+                    <div class="journal-content-field">
+                        <span class="journal-content-label">{{ t("game.journal.quest.gm_notes") }}</span>
+                        {{ blockfield.editor("gm_notes_doc", view.quest.gm.notes, gm=true) }}
+                    </div>
+                    <div class="journal-content-field">
+                        <span class="journal-content-label">{{ t("game.journal.quest.gm_secrets") }}</span>
+                        {{ blockfield.editor("gm_secrets_doc", view.quest.gm.secrets, gm=true) }}
+                    </div>
+                </section>
+                {% endif %}
             </div>
-
-            {% if is_gm %}
-            <div class="journal-section journal-section--gm">
-                <h3 class="journal-section-title">
-                    <i class="ph ph-lock-key" aria-hidden="true"></i> {{ t("game.journal.quest.gm_area") }}
-                </h3>
-                <div class="journal-content-field">
-                    <span class="journal-content-label">{{ t("game.journal.quest.gm_notes") }}</span>
-                    {{ blockfield.editor("gm_notes_doc", view.quest.gm.notes, gm=true) }}
-                </div>
-                <div class="journal-content-field">
-                    <span class="journal-content-label">{{ t("game.journal.quest.gm_secrets") }}</span>
-                    {{ blockfield.editor("gm_secrets_doc", view.quest.gm.secrets, gm=true) }}
-                </div>
             </div>
-            {% endif %}
 
             {% elif journal.type == "quest_board" %}
-            <label class="journal-field" data-image-field>
-                <span>{{ t("game.journal.board.image") }}</span>
-                <div class="journal-image-input">
-                    <input type="url" name="board_image_src" data-image-src maxlength="1024"
-                           placeholder="/assets/..." value="{{ view.board.image.src }}" />
-                    <button type="button" class="journal-mini-action" data-image-upload
-                            data-error-label="{{ t('game.journal.assets.errors.generic') }}">
-                        <i class="ph ph-upload-simple" aria-hidden="true"></i> {{ t("game.journal.image_upload") }}
-                    </button>
-                </div>
-            </label>
-            <div class="journal-content-field">
-                <span class="journal-content-label">{{ t("game.journal.board.description") }}</span>
-                {{ blockfield.editor("board_description_doc", view.board.description) }}
-            </div>
-            <fieldset class="journal-filters">
-                <legend>{{ t("game.journal.board.filters") }}</legend>
-                <label><input type="checkbox" name="board_show_available" {% if view.board.filters.showAvailable %}checked{% endif %} /> {{ t("game.journal.quest.status_values.available") }}</label>
-                <label><input type="checkbox" name="board_show_active" {% if view.board.filters.showActive %}checked{% endif %} /> {{ t("game.journal.quest.status_values.active") }}</label>
-                <label><input type="checkbox" name="board_show_completed" {% if view.board.filters.showCompleted %}checked{% endif %} /> {{ t("game.journal.quest.status_values.completed") }}</label>
-                <label><input type="checkbox" name="board_show_failed" {% if view.board.filters.showFailed %}checked{% endif %} /> {{ t("game.journal.quest.status_values.failed") }}</label>
-            </fieldset>
+            {# Board content is managed by the linked-quests workspace below. #}
             {% endif %}
 
         </form>

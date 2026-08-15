@@ -29,6 +29,12 @@ If a file mixes API specification text with core implementation text, the implem
 
 Runtime dependencies, browser libraries, bundled systems, bundled modules, generated assets, and content packs may have their own licenses. Keep their license and notice files with the package.
 
+The canonical project-wide attribution list is `THIRD_PARTY_NOTICES.md`.
+License notices stored beside an asset must also remain beside that asset when
+it is copied or redistributed. In particular, the bundled door icons are works
+by Delapouite from Game-icons.net under CC BY 3.0; their per-file attribution is
+stored in `static/icons/LICENSE-GAME-ICONS.md`.
+
 ## Contributions
 
 Unless explicitly stated otherwise:

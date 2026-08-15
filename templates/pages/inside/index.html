@@ -22,6 +22,7 @@
     {% if campaign_clone_enabled %}<script defer src="/static/js/inside/campaign-clone.js?v={{ asset_version }}"></script>{% endif %}
     {% if administrative_audit_enabled %}<script defer src="/static/js/inside/audit-log.js?v={{ asset_version }}"></script>{% endif %}
     {% if campaign_snapshots_enabled %}<script defer src="/static/js/inside/campaign-snapshots.js?v={{ asset_version }}"></script>{% endif %}
+    {% if campaign_export_enabled %}<script defer src="/static/js/inside/campaign-transfer.js?v={{ asset_version }}"></script>{% endif %}
     <script defer src="/static/js/inside/package-upload.js"></script>
 </head>
 
@@ -108,36 +109,142 @@
                         </div>
                         {% endif %}
 
-                        {% if campaign_join_code_enabled %}
-                        <section class="join-campaign-block" data-inside-join-code>
-                            <div class="invitation-block-head">
-                                <p class="panel-eyebrow">{{ t("inside.join_code.title") }}</p>
-                                <p>{{ t("inside.join_code.description") }}</p>
-                            </div>
-                            <div class="notice" data-inside-join-code-notice role="status" aria-live="polite"
-                                hidden></div>
-                            {% if has_pending_join_code %}
-                            <div class="join-code-pending" data-inside-pending-code>
-                                <p>{{ t("inside.join_code.pending") }}</p>
-                                <button class="primary-action" type="button" data-inside-redeem-pending>
-                                    {{ t("inside.join_code.confirm") }}
-                                </button>
-                            </div>
+                        <div class="section-actions">
+                            <button class="system-action system-action--primary" type="button"
+                                data-inside-modal-open="campaign-create-modal">
+                                <span>{{ t("inside.campaigns.form.submit") }}</span>
+                            </button>
+
+                            {% if campaign_join_code_enabled %}
+                            <button class="system-action" type="button"
+                                data-inside-modal-open="campaign-join-modal">
+                                <span>{{ t("inside.join_code.title") }}</span>
+                            </button>
                             {% endif %}
-                            <form class="join-code-entry-form" data-inside-join-code-form
-                                action="/campaigns/join-code/redeem" method="post">
-                                {{ csrf_input | safe }}
-                                <label class="field">
-                                    <span>{{ t("inside.join_code.code_label") }}</span>
-                                    <input type="text" name="code" inputmode="text" autocomplete="off"
-                                        autocapitalize="characters" spellcheck="false" maxlength="32"
-                                        placeholder="ABCD-EFGH-JK23" required data-inside-join-code-input />
-                                </label>
-                                <button class="primary-action" type="submit">
-                                    {{ t("inside.join_code.submit") }}
-                                </button>
-                            </form>
-                        </section>
+
+                            {% if campaign_export_enabled %}
+                            <button class="system-action" type="button"
+                                data-inside-modal-open="campaign-import-modal">
+                                <span>{{ t("campaign.import.title") }}</span>
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-create-modal"
+                            role="presentation" hidden>
+                            <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                aria-labelledby="campaign-create-title">
+                                <div class="delete-modal-header">
+                                    <div>
+                                        <p class="panel-eyebrow">{{ t("inside.tabs.campaigns") }}</p>
+                                        <h2 id="campaign-create-title">{{ t("inside.campaigns.form.submit") }}</h2>
+                                    </div>
+                                    <button class="modal-close" type="button" data-inside-modal-close
+                                        aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                </div>
+                                <div class="campaign-tool-body">
+                                    <form class="campaign-create campaign-create--compact" method="post"
+                                        action="/campaigns">
+                                        {{ csrf_input | safe }}
+
+                                        <label class="field">
+                                            <span>{{ t("inside.campaigns.form.title") }}</span>
+                                            <input type="text" name="title"
+                                                placeholder="{{ t('inside.campaigns.form.title_placeholder') }}"
+                                                maxlength="120" required />
+                                        </label>
+
+                                        <label class="field">
+                                            <span>{{ t("inside.campaigns.form.description") }}</span>
+                                            <textarea name="description" rows="1"
+                                                placeholder="{{ t('inside.campaigns.form.description_placeholder') }}"
+                                                maxlength="2000"></textarea>
+                                        </label>
+
+                                        <button class="primary-action" type="submit">
+                                            {{ t("inside.campaigns.form.submit") }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </section>
+                        </div>
+
+                        {% if campaign_join_code_enabled %}
+                        <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-join-modal"
+                            role="presentation" {% if not has_pending_join_code %}hidden{% endif %}>
+                            <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                aria-labelledby="campaign-join-title">
+                                <div class="delete-modal-header">
+                                    <div>
+                                        <p class="panel-eyebrow">{{ t("inside.tabs.campaigns") }}</p>
+                                        <h2 id="campaign-join-title">{{ t("inside.join_code.title") }}</h2>
+                                    </div>
+                                    <button class="modal-close" type="button" data-inside-modal-close
+                                        aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                </div>
+                                <div class="campaign-tool-body" data-inside-join-code>
+                                    <p class="delete-modal-copy">{{ t("inside.join_code.description") }}</p>
+                                    <div class="notice" data-inside-join-code-notice role="status" aria-live="polite"
+                                        hidden></div>
+                                    {% if has_pending_join_code %}
+                                    <div class="join-code-pending" data-inside-pending-code>
+                                        <p>{{ t("inside.join_code.pending") }}</p>
+                                        <button class="primary-action" type="button" data-inside-redeem-pending>
+                                            {{ t("inside.join_code.confirm") }}
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                    <form class="join-code-entry-form" data-inside-join-code-form
+                                        action="/campaigns/join-code/redeem" method="post">
+                                        {{ csrf_input | safe }}
+                                        <label class="field">
+                                            <span>{{ t("inside.join_code.code_label") }}</span>
+                                            <input type="text" name="code" inputmode="text" autocomplete="off"
+                                                autocapitalize="characters" spellcheck="false" maxlength="32"
+                                                placeholder="ABCD-EFGH-JK23" required data-inside-join-code-input />
+                                        </label>
+                                        <button class="primary-action" type="submit">
+                                            {{ t("inside.join_code.submit") }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </section>
+                        </div>
+                        {% endif %}
+
+                        {% if campaign_export_enabled %}
+                        <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="campaign-import-modal"
+                            role="presentation" hidden>
+                            <section class="delete-modal campaign-tool-modal" role="dialog" aria-modal="true"
+                                aria-labelledby="campaign-import-title">
+                                <div class="delete-modal-header">
+                                    <div>
+                                        <p class="panel-eyebrow">{{ t("inside.tabs.campaigns") }}</p>
+                                        <h2 id="campaign-import-title">{{ t("campaign.import.title") }}</h2>
+                                    </div>
+                                    <button class="modal-close" type="button" data-inside-modal-close
+                                        aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                </div>
+                                <div class="campaign-tool-body">
+                                    <p class="delete-modal-copy">{{ t("campaign.import.help") }}</p>
+                                    <form class="campaign-import-form" method="post" action="/campaigns/import"
+                                        enctype="multipart/form-data">
+                                        {{ csrf_input | safe }}
+                                        <label class="field">
+                                            <span>{{ t("campaign.import.file") }}</span>
+                                            <input type="file" name="campaign_file"
+                                                accept=".gwcampaign,application/zip" required />
+                                        </label>
+                                        <label class="field">
+                                            <span>{{ t("campaign.import.title_override") }}</span>
+                                            <input type="text" name="title" maxlength="120" />
+                                        </label>
+                                        <button class="primary-action" type="submit">{{ t("campaign.import.submit")
+                                            }}</button>
+                                    </form>
+                                </div>
+                            </section>
+                        </div>
                         {% endif %}
 
                         <section id="pending-invitations-section" class="invitation-block" {% if not pending_invitations
@@ -192,28 +299,6 @@
                         </section>
 
                         <section class="campaign-layout">
-                            <form class="campaign-create" method="post" action="/campaigns">
-                                {{ csrf_input | safe }}
-
-                                <label class="field">
-                                    <span>{{ t("inside.campaigns.form.title") }}</span>
-                                    <input type="text" name="title"
-                                        placeholder="{{ t('inside.campaigns.form.title_placeholder') }}" maxlength="120"
-                                        required />
-                                </label>
-
-                                <label class="field">
-                                    <span>{{ t("inside.campaigns.form.description") }}</span>
-                                    <textarea name="description"
-                                        placeholder="{{ t('inside.campaigns.form.description_placeholder') }}"
-                                        maxlength="2000"></textarea>
-                                </label>
-
-                                <button class="primary-action" type="submit">
-                                    {{ t("inside.campaigns.form.submit") }}
-                                </button>
-                            </form>
-
                             {% if campaigns %}
                             <div class="campaign-list">
                                 {% for campaign in campaigns %}
@@ -383,7 +468,7 @@
                                                 aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
                                         </div>
                                         <div class="campaign-tool-body">
-                                            <form method="post" action="/campaigns/export">
+                                            <form class="campaign-export-form" method="post" action="/campaigns/export">
                                                 {{ csrf_input | safe }}
                                                 <input type="hidden" name="campaign_id" value="{{ campaign.id }}" />
                                                 <fieldset class="campaign-clone-options">
@@ -1019,8 +1104,9 @@
 
                                     {% if module.capabilities %}
                                     <div class="system-chips">
-                                        {% for capability in module.capabilities %}
-                                        <span class="system-chip">{{ capability }}</span>
+                                        {% for authority, capabilities in module.capability_summary.items() %}
+                                        <strong class="system-chip">{{ authority | upper }}</strong>
+                                        {% for capability in capabilities %}<span class="system-chip">{{ capability }}</span>{% endfor %}
                                         {% endfor %}
                                     </div>
                                     {% endif %}

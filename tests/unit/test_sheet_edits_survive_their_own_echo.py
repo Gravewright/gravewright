@@ -68,7 +68,7 @@ def test_your_own_echo_never_rebuilds_your_sheet():
     assert "document.body?.dataset?.currentUserId" in guard, "é a convenção do projeto"
     assert 'payload?.updated_by === eu' in guard
 
-    ouvinte = source.split('if (envelope.event !== "sheet.data.updated") return;', 1)[1]
+    ouvinte = source.split('if (!["sheet.data.updated", "actor.updated"].includes(envelope.event)) return;', 1)[1]
     assert "souEu(envelope.payload)" in ouvinte.split("\n  });", 1)[0], (
         "o eco precisa ser descartado antes de procurar a ficha"
     )

@@ -118,6 +118,7 @@ class ActorService:
         folder_id: str = "",
         portrait_asset_id: str = "",
         token_asset_id: str = "",
+        expected_version: int | None = None,
     ) -> ActorResult:
         actor, campaign, error = self._load_editable(actor_id, user_id)
         if error is not None:
@@ -133,7 +134,10 @@ class ActorService:
             folder_id=folder_id or None,
             portrait_asset_id=portrait_asset_id or None,
             token_asset_id=token_asset_id or None,
+            expected_version=expected_version,
         )
+        if version is None:
+            return ActorResult(success=False, actor_id=actor_id, error_key="sdk.errors.stale_version")
         return ActorResult(
             success=True,
             actor_id=actor_id,

@@ -191,7 +191,11 @@ async def delete_item_folder(
     if early is not None:
         return early
     assert user is not None
-    result = item_service.delete_folder(folder_id=_str(form, "folder_id"), user_id=user["id"])
+    result = item_service.delete_folder(
+        folder_id=_str(form, "folder_id"),
+        user_id=user["id"],
+        delete_contents=_str(form, "delete_contents").lower() in {"1", "true", "yes"},
+    )
     return await _result_response(request, result)
 
 

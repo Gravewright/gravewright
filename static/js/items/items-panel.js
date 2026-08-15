@@ -40,10 +40,11 @@
         event.preventDefault();
         const roomId = form.dataset.roomId || "";
         const name = (form.querySelector("input[name='name']")?.value || "").trim();
+        const parentId = form.querySelector("input[name='parent_id']")?.value || "";
         if (!name) return;
         const color = form.querySelector("[data-item-folder-color-text]")?.value || "";
         const ok = await window.GravewrightItems.folderAction(
-            "item-folder", { campaign_id: roomId, name, color }, roomId,
+            "item-folder", { campaign_id: roomId, name, color, parent_id: parentId }, roomId,
         );
         if (ok) {
             form.querySelector("input[name='name']").value = "";

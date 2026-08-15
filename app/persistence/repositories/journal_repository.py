@@ -148,6 +148,15 @@ class JournalRepository:
                 .values(folder_id=None, updated_at=now)
             )
 
+    def move_from_folder(self, *, folder_id: str, target_folder_id: str | None) -> None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(journals_table)
+                .where(journals_table.c.folder_id == folder_id)
+                .values(folder_id=target_folder_id, updated_at=now)
+            )
+
     def has_owner(self, *, journal_id: str, user_id: str) -> bool:
         with engine_connect() as conn:
             row = one_or_none(

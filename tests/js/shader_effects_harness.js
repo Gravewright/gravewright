@@ -92,6 +92,8 @@ function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, la
                 screenToWorldXY: (x, y) => ({ worldX: x, worldY: y }),
                 worldFromScreen: (_canvas, x, y) => ({ worldX: x, worldY: y }),
                 stateFor: () => ({ zoom: 1 }),
+                activeCanvas: () => canvas,
+                history: { push() {} },
             },
             GravewrightVisionMode: { current: () => visionMode, isClassic: () => visionMode === "classic" },
             GravewrightShaderPreference: { enabled: () => shadersEnabled },
@@ -206,6 +208,67 @@ async function stateChecks() {
 // --- a origem: ver, pegar e mover -------------------------------------------
 
 async function originChecks() {
+    {
+        const world = buildWorld({ layer: "effects" });
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 300, clientY: 200 });
+        world.dispatch("pointermove", { clientX: 1000, clientY: 1000 });
+        world.dispatch("pointerup", { clientX: 1000, clientY: 1000 });
+        check("a caixa seleciona varios shaders sem modificador",
+            world.state().picked.shader.size === 2);
+    }
+
+    {
+        const world = buildWorld({ layer: "effects", emitters: [
+            { id: "E1", x: 700, y: 300, kind: "smoke", scale: 3, density: 0.6, color: "#9aa3ad", enabled: 1 },
+        ] });
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 350, clientY: 250 });
+        world.dispatch("pointermove", { clientX: 750, clientY: 350 });
+        world.dispatch("pointerup", { clientX: 750, clientY: 350 });
+        check("a multisselecao mistura shader e emissor",
+            world.state().picked.shader.has("s1") && world.state().picked.emitter.has("E1"));
+        world.dispatch("pointerdown", { clientX: 700, clientY: 300 });
+        world.dispatch("pointermove", { clientX: 730, clientY: 325 });
+        world.dispatch("pointerup", { clientX: 730, clientY: 325 });
+        await world.settle();
+        const state = world.state();
+        check("arrastar move efeitos de tipos diferentes juntos",
+            state.shaderMarkers.find((item) => item.id === "s1").x === 430
+            && state.particleClouds.find((item) => item.id === "E1").x === 730);
+    }
+
+    {
+        const world = buildWorld({ layer: "effects" });
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 400, clientY: 300 });
+        world.dispatch("pointerup", { clientX: 400, clientY: 300 });
+        world.dispatch("pointerdown", { clientX: 900, clientY: 900 });
+        world.dispatch("pointerup", { clientX: 900, clientY: 900 });
+        check("clique individual troca a selecao",
+            !world.state().shaderMarkers[0].selected && world.state().shaderMarkers[1].selected);
+        world.dispatch("pointerdown", { clientX: 300, clientY: 200 });
+        world.dispatch("pointermove", { clientX: 1000, clientY: 1000 });
+        world.dispatch("pointerup", { clientX: 1000, clientY: 1000 });
+        check("a caixa seleciona varios shaders",
+            world.state().shaderMarkers.every((marker) => marker.selected));
+        world.dispatch("pointerdown", { clientX: 400, clientY: 300 });
+        world.dispatch("pointermove", { clientX: 450, clientY: 340 });
+        world.dispatch("pointerup", { clientX: 450, clientY: 340 });
+        await world.settle();
+        let markers = world.state().shaderMarkers;
+        check("arrastar um shader move todos os selecionados",
+            markers[0].x === 450 && markers[0].y === 340
+            && markers[1].x === 950 && markers[1].y === 940,
+            JSON.stringify(markers));
+        world.dispatch("keydown", { key: "ArrowRight", target: { closest: () => null } });
+        await world.settle();
+        markers = world.state().shaderMarkers;
+        check("seta move todos os shaders selecionados",
+            markers[0].x === 485 && markers[1].x === 985,
+            JSON.stringify(markers));
+    }
+
     {
         const world = buildWorld({ layer: "effects" });
         await world.settle();

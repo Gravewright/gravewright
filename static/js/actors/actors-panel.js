@@ -17,10 +17,11 @@
         const roomId = form.dataset.roomId || "";
         const name = (form.querySelector("[data-actor-create-name]")?.value || "").trim();
         const target = form.querySelector("[data-actor-create-target]")?.value || "";
+        const folderId = form.querySelector("input[name='folder_id']")?.value || "";
         const [systemId, type] = target.split("::");
         if (!name || !systemId || !type) return;
         const res = await postJson("/game/actor", {
-            campaign_id: roomId, system_id: systemId, type, name,
+            campaign_id: roomId, system_id: systemId, type, name, folder_id: folderId,
         });
         if (!res.ok) return;
         const data = await res.json().catch(() => ({}));
@@ -39,10 +40,11 @@
         event.preventDefault();
         const roomId = form.dataset.roomId || "";
         const name = (form.querySelector("input[name='name']")?.value || "").trim();
+        const parentId = form.querySelector("input[name='parent_id']")?.value || "";
         if (!name) return;
         const color = form.querySelector("[data-actor-folder-color-text]")?.value || "";
         const ok = await window.GravewrightActors.folderAction(
-            "actor-folder", { campaign_id: roomId, name, color }, roomId,
+            "actor-folder", { campaign_id: roomId, name, color, parent_id: parentId }, roomId,
         );
         if (ok) {
             form.querySelector("input[name='name']").value = "";

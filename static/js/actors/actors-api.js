@@ -65,14 +65,14 @@
             });
             if (!res.ok) return;
             const html = await res.text();
-            const collapsed = new Set(
-                Array.from(host.querySelectorAll(".actor-folder:not([data-open])"))
+            const expanded = new Set(
+                Array.from(host.querySelectorAll(".actor-folder[data-open]"))
                     .map((f) => f.dataset.folderId),
             );
             host.innerHTML = html;
-            collapsed.forEach((id) => {
+            expanded.forEach((id) => {
                 const f = host.querySelector(`.actor-folder[data-folder-id="${CSS.escape(id)}"]`);
-                if (f) FI.setFolderOpen(f, false);
+                if (f) FI.setFolderOpen(f, true);
             });
             FI.applyFolderColors(host);
             FI.applySearch(panelFor(roomId));

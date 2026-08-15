@@ -2,52 +2,55 @@
 
 This directory is the canonical documentation set for Gravewright.
 
-Current release: **Gravewright v3.0.1-alpha**. See
-`../RELEASE_v3.0.1-alpha.md` and `../CHANGELOG.md`.
+Current release: **Gravewright v1.0.0-beta.1**. See the
+[release notes](../RELEASE_v1.0.0-beta.1.md) and [changelog](../CHANGELOG.md).
 
-Brazilian Portuguese documentation is available in `pt-br/README.md`.
+Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
 
 ## Start Here
 
-- `getting-started.md` explains local setup and first run with the `grave` CLI.
-- `alpha.md` explains Alpha risk, backups, and upgrade expectations.
-- `operations.md` documents backups, restore, diagnostics, and runtime storage.
-- `sdk/README.md` is the entry point for SDK package authors.
+- [Getting started](getting-started.md) explains local setup and the first run.
+- [Beta status](beta.md) defines compatibility expectations for the current release.
+- [Operations](operations.md) covers backup, restore, diagnostics, and runtime storage.
+- [Performance](performance.md) defines benchmark methodology and current verified results.
+- [Core/SDK coverage audit](core-sdk-coverage.md) records missing gameplay APIs and intentional private boundaries.
+- [Benchmark reports](benchmarks/README.md) preserve the realistic-scene and synthetic renderer results.
+- [SDK documentation](sdk/README.md) is the entry point for package authors.
 
 ## Project Guides
 
-- `configuration.md` documents environment variables and runtime configuration.
-- `architecture.md` explains the backend, frontend, persistence, realtime, and SDK package boundaries.
-- `development.md` documents the local workflow and contribution expectations.
-- `testing.md` documents unit, CLI, E2E, Docker, and performance tests.
-- `deployment.md` documents production deployment requirements.
-- `desktop-distribution.md` documents building and shipping the unzip-and-run desktop app to end users.
-- `security.md` documents the security model and hardening checklist.
-- `licensing.md` documents the Apache-2.0 core and MIT API-material split.
-- `storage.md` documents uploaded files, package-scoped data, and cleanup behavior.
-- `docker-tests.md` documents the test Docker Compose layout.
-- `publication-checklist.md` documents the public Alpha publication checklist.
-- `features/dynamic-lighting.md` documents walls, doors, scene shaders, blend modes, presets, particles, layer visibility, and the streamer composition sandbox.
-- `features/dice-tray.md` documents the dice notation, open-ended explosion, naming a roll, and the local tray history.
+- [Configuration](configuration.md)
+- [Architecture](architecture.md)
+- [Development](development.md)
+- [Testing](testing.md)
+- [Deployment](deployment.md)
+- [Desktop distribution](desktop-distribution.md)
+- [Security](security.md)
+- [Licensing](licensing.md)
+- [Storage](storage.md)
+- [Docker test layout](docker-tests.md)
+- [Publication checklist](publication-checklist.md)
+- [Dynamic lighting](features/dynamic-lighting.md)
+- [Dice tray](features/dice-tray.md)
 
 ## API Guides
 
-- `api/README.md` is the entry point for public API documentation.
-- `api/http.md` lists HTTP route groups and their authorization boundaries.
-- `api/realtime.md` documents WebSocket transport, commands, events, and replay behavior.
+- [API overview](api/README.md)
+- [HTTP API and authorization](api/http.md)
+- [Realtime protocol](api/realtime.md)
 
 ## SDK: the only extension model
 
-- `sdk/README.md` is the entry point for the Gravewright SDK.
-- `sdk/manifest.md` documents the package manifest (v1).
-- `sdk/declarative-packages.md` documents declarative schemas, sheets, items, content packs, rules, mappings, locales, and assets.
-- `sdk/kinds.md` documents package kinds.
-- `sdk/capabilities.md` documents capabilities and enforcement.
-- `sdk/runtime.md` documents the `window.GravewrightSDK` browser runtime.
-- `sdk/messaging.md` documents package-to-package events.
-- `sdk/cli.md` documents the `grave` CLI.
-- `sdk/creating-packages-with-ai.md` documents the AI-assisted package creation workflow.
-- `sdk/security.md` documents path safety, uploads, and authorization.
+- [SDK overview](sdk/README.md)
+- [Manifest v1](sdk/manifest.md)
+- [Declarative packages](sdk/declarative-packages.md)
+- [Package kinds](sdk/kinds.md)
+- [Capabilities](sdk/capabilities.md)
+- [Browser runtime](sdk/runtime.md)
+- [Package messaging](sdk/messaging.md)
+- [CLI](sdk/cli.md)
+- [Creating packages with AI](sdk/creating-packages-with-ai.md)
+- [SDK security](sdk/security.md)
 
 ## Documentation Rules
 

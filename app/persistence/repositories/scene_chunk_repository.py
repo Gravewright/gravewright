@@ -30,6 +30,7 @@ class SceneChunkRepository:
         byte_size: int,
         encoding: SceneChunkEncoding,
         version: int = 1,
+        lod: int = 0,
     ) -> dict:
         now = int(time.time())
         chunk_id = uuid.uuid4().hex
@@ -41,6 +42,7 @@ class SceneChunkRepository:
                     layer_id=layer_id,
                     cx=cx,
                     cy=cy,
+                    lod=lod,
                     version=version,
                     hash=hash,
                     byte_size=byte_size,
@@ -49,22 +51,23 @@ class SceneChunkRepository:
                     updated_at=now,
                 )
             )
-            row = self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy)
+            row = self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy, lod=lod)
         if row is None:
             raise RuntimeError("Created scene chunk could not be read back.")
         return row
 
-    def get_metadata(self, *, layer_id: str, cx: int, cy: int) -> dict | None:
+    def get_metadata(self, *, layer_id: str, cx: int, cy: int, lod: int = 0) -> dict | None:
         with engine_connect() as conn:
-            return self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy)
+            return self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy, lod=lod)
 
-    def list_by_scene_layer(self, *, scene_id: str, layer_id: str) -> list[dict]:
+    def list_by_scene_layer(self, *, scene_id: str, layer_id: str, lod: int = 0) -> list[dict]:
         with engine_connect() as conn:
             return all_dicts(
                 conn.execute(
                     select(scene_chunks_table)
                     .where(scene_chunks_table.c.scene_id == scene_id)
                     .where(scene_chunks_table.c.layer_id == layer_id)
+                    .where(scene_chunks_table.c.lod == lod)
                     .order_by(scene_chunks_table.c.cy.asc(), scene_chunks_table.c.cx.asc())
                 )
             )
@@ -78,6 +81,7 @@ class SceneChunkRepository:
         cy0: int,
         cx1: int,
         cy1: int,
+        lod: int = 0,
     ) -> list[dict]:
         min_cx = min(cx0, cx1)
         max_cx = max(cx0, cx1)
@@ -89,6 +93,7 @@ class SceneChunkRepository:
                     select(scene_chunks_table)
                     .where(scene_chunks_table.c.scene_id == scene_id)
                     .where(scene_chunks_table.c.layer_id == layer_id)
+                    .where(scene_chunks_table.c.lod == lod)
                     .where(scene_chunks_table.c.cx.between(min_cx, max_cx))
                     .where(scene_chunks_table.c.cy.between(min_cy, max_cy))
                     .order_by(scene_chunks_table.c.cy.asc(), scene_chunks_table.c.cx.asc())
@@ -112,6 +117,7 @@ class SceneChunkRepository:
         byte_size: int,
         encoding: SceneChunkEncoding,
         expected_version: int | None = None,
+        lod: int = 0,
     ) -> dict | None:
         """Upsert chunk metadata, bumping ``version``.
 
@@ -124,7 +130,7 @@ class SceneChunkRepository:
         """
         now = int(time.time())
         with engine_begin() as conn:
-            existing = self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy)
+            existing = self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy, lod=lod)
             if existing is None:
                 conn.execute(
                     insert(scene_chunks_table).values(
@@ -133,6 +139,7 @@ class SceneChunkRepository:
                         layer_id=layer_id,
                         cx=cx,
                         cy=cy,
+                        lod=lod,
                         version=1,
                         hash=hash,
                         byte_size=byte_size,
@@ -156,7 +163,7 @@ class SceneChunkRepository:
                 )
                 if result.rowcount != 1:
                     return None
-            row = self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy)
+            row = self._get_metadata(conn, layer_id=layer_id, cx=cx, cy=cy, lod=lod)
         if row is None:
             raise RuntimeError("Written scene chunk could not be read back.")
         return row
@@ -167,6 +174,7 @@ class SceneChunkRepository:
         scene_id: str,
         layer_id: str,
         coords: tuple[tuple[int, int], ...],
+        lod: int = 0,
     ) -> list[dict]:
         if not coords:
             return []
@@ -182,18 +190,20 @@ class SceneChunkRepository:
                     select(scene_chunks_table)
                     .where(scene_chunks_table.c.scene_id == scene_id)
                     .where(scene_chunks_table.c.layer_id == layer_id)
+                    .where(scene_chunks_table.c.lod == lod)
                     .where(coord_filter)
                     .order_by(scene_chunks_table.c.cy.asc(), scene_chunks_table.c.cx.asc())
                 )
             )
 
-    def _get_metadata(self, conn, *, layer_id: str, cx: int, cy: int) -> dict | None:
+    def _get_metadata(self, conn, *, layer_id: str, cx: int, cy: int, lod: int = 0) -> dict | None:
         return one_or_none(
             conn.execute(
                 select(scene_chunks_table)
                 .where(scene_chunks_table.c.layer_id == layer_id)
                 .where(scene_chunks_table.c.cx == cx)
                 .where(scene_chunks_table.c.cy == cy)
+                .where(scene_chunks_table.c.lod == lod)
                 .limit(1)
             )
         )

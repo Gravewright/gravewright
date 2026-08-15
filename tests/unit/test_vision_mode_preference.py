@@ -103,7 +103,7 @@ def test_the_cinematic_numbers_sit_inside_the_photography_recipe():
     # `light.tint` e a cor DAQUELE instante (so a arcana anda entre duas); a cor
     # escolhida pelo mestre segue sendo o ponto de partida dela.
     assert "desaturate(hexToInt(light.tint || light.color), HALO_SATURATION)" in PIXI
-    marker = PIXI.split("lighting.lights.forEach((light) => {", 1)[1]
+    marker = PIXI.split("visibleLights.forEach((light) => {", 1)[1]
     assert "fill({ color: hexToInt(light.color)" in marker, "marcador mantém a cor cheia"
 
 
@@ -168,7 +168,7 @@ def test_classic_drops_the_costly_passes():
     assert 'animation: classic ? "none" : (light.animation || "none")' in SCRIPT
 
     # Sem halo colorido: é o passe mais caro por foco, dois sprites mascarados.
-    assert "if (!classic) lighting.lights.forEach" in PIXI
+    assert "if (!classic) visibleLights.forEach" in PIXI
 
     # E sem o véu animado, que é o que faz a cena ter quadro a entregar a 25fps
     # mesmo sem tocha nenhuma acesa.

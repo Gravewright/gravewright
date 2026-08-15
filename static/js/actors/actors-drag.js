@@ -10,6 +10,7 @@
     let dragKind = null;
     let dragId = null;
     let tableDropPayload = null;
+    let folderDragFromHandle = false;
 
     function folderActorIds(folder) {
         return Array.from(folder.querySelectorAll("[data-actor-card]"))
@@ -50,6 +51,12 @@
         } catch {  }
     }
 
+    document.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("[data-actor-panel]")) {
+            folderDragFromHandle = !!event.target.closest(".sheet-folder-drag-handle");
+        }
+    }, true);
+
     document.addEventListener("dragstart", (event) => {
         const card = event.target.closest("[data-actor-card]");
         const folderHeader = event.target.closest(".actor-folder .sheet-folder-header");
@@ -57,38 +64,61 @@
         if (card) {
             dragKind = "actor"; dragId = card.dataset.actorCard;
             setTableDropPayload(event, card);
-        } else if (folder && (folderHeader || event.target.closest(".sheet-folder-header"))) {
+        } else if (folder && folderDragFromHandle) {
             dragKind = "folder"; dragId = folder.dataset.folderId;
             setTableDropPayload(event, folder);
         } else {
+            if (folder) event.preventDefault();
+            folderDragFromHandle = false;
             return;
         }
+        const source = card || folder;
+        const label = source.dataset.directoryName || source.dataset.folderName ||
+            source.querySelector(":scope > .sheet-folder-header .sheet-folder-name, strong")?.textContent?.trim() || "";
+        const count = folder ? folderActorIds(folder).length : 0;
+        window.GravewrightDirectoryDrag?.start({
+            event, source, panel: source.closest("[data-actor-panel]"), kind: dragKind, id: dragId, label, count,
+        });
+        folderDragFromHandle = false;
         event.dataTransfer.effectAllowed = "copyMove";
         try { event.dataTransfer.setData("text/plain", dragId); } catch {  }
     });
 
-    document.addEventListener("dragend", () => { clearDropHints(); dragKind = null; dragId = null; tableDropPayload = null; });
+    document.addEventListener("dragend", () => {
+        clearDropHints(); window.GravewrightDirectoryDrag?.end();
+        dragKind = null; dragId = null; tableDropPayload = null; folderDragFromHandle = false;
+    });
 
-    function dropTarget(event) { return event.target.closest("[data-actor-folder-drop]"); }
+    function dropTarget(event) {
+        const folder = event.target.closest(".actor-folder[data-folder-id]");
+        return folder?.querySelector(":scope > .sheet-folder-header[data-actor-folder-drop]") ||
+            event.target.closest("[data-actor-panel]");
+    }
     function clearDropHints() {
         document.querySelectorAll(".actor-drop-over").forEach((el) => el.classList.remove("actor-drop-over"));
+        window.GravewrightDirectoryDrag?.clearTarget();
     }
 
     document.addEventListener("dragover", (event) => {
         if (!dragKind) return;
         const target = dropTarget(event);
         if (!target) return;
-        if (dragKind === "folder") {
-            const folderEl = target.closest(".actor-folder");
-            if (folderEl && (folderEl.dataset.folderId === dragId ||
-                folderEl.closest(`.actor-folder[data-folder-id="${CSS.escape(dragId)}"]`))) {
-                return;
-            }
-        }
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
+        const source = document.querySelector(dragKind === "folder"
+            ? `.actor-folder[data-folder-id="${CSS.escape(dragId)}"]`
+            : `[data-actor-card="${CSS.escape(dragId)}"]`);
+        const folderEl = target.closest(".actor-folder");
+        const targetFolderId = target.dataset.actorFolderDrop || "";
+        const valid = window.GravewrightDirectoryDrag?.canDrop({
+            source, kind: dragKind, targetFolder: folderEl, targetFolderId, folderSelector: ".actor-folder",
+        }) ?? true;
         clearDropHints();
-        target.classList.add("actor-drop-over");
+        if (window.GravewrightDirectoryDrag) {
+            window.GravewrightDirectoryDrag.mark(event, {
+                target, valid, folder: folderEl, type: "actors", visual: Boolean(folderEl),
+            });
+        } else if (valid) {
+            event.preventDefault(); event.dataTransfer.dropEffect = "move"; target.classList.add("actor-drop-over");
+        }
     });
 
     document.addEventListener("drop", async (event) => {
@@ -96,11 +126,20 @@
         const target = dropTarget(event);
         if (!target) return;
         event.preventDefault();
-        clearDropHints();
-        const roomId = roomIdFromEvent(target);
+        const source = document.querySelector(dragKind === "folder"
+            ? `.actor-folder[data-folder-id="${CSS.escape(dragId)}"]`
+            : `[data-actor-card="${CSS.escape(dragId)}"]`);
         const targetFolderId = target.dataset.actorFolderDrop || "";
+        const valid = window.GravewrightDirectoryDrag?.canDrop({
+            source, kind: dragKind, targetFolder: target.closest(".actor-folder"), targetFolderId,
+            folderSelector: ".actor-folder",
+        }) ?? true;
+        clearDropHints();
+        if (!valid) return;
+        const roomId = roomIdFromEvent(target);
         const kind = dragKind, id = dragId;
         dragKind = null; dragId = null;
+        window.GravewrightDirectoryDrag?.end();
         if (!id) return;
         if (kind === "actor") {
             await window.GravewrightActors.moveActor(id, targetFolderId, roomId);

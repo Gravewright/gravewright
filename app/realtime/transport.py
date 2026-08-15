@@ -93,6 +93,29 @@ class WebSocketConnectionManager:
 
             return connected_by_room
 
+    async def evict_user_from_room(self, *, user_id: str, room_id: str) -> int:
+        """Close every live connection that still carries access to ``room_id``.
+
+        The membership is removed before this is called. Closing after the
+        MEMBER_REMOVED delivery lets the browser redirect cleanly while also
+        preventing a stale tab from continuing to issue realtime commands.
+        """
+        async with self._lock:
+            connections = [
+                self._connections[connection_id]
+                for connection_id in self._connections_by_user.get(user_id, set())
+                if connection_id in self._connections
+                and room_id in self._connections[connection_id].room_ids
+            ]
+
+        for connection in connections:
+            try:
+                await connection.websocket.close(code=4003, reason="Campaign membership revoked.")
+            except Exception:
+                await self.disconnect(connection.id)
+
+        return len(connections)
+
     async def send_to_users(
         self,
         *,

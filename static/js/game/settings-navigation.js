@@ -1,4 +1,6 @@
 (() => {
+    const shownThisPage = new Set();
+
     function makeControl(iconClass, attribute, label) {
         const button = document.createElement("button");
         button.className = "game-modal-control";
@@ -115,6 +117,43 @@
             dashboard.dataset.launcherReady = "true";
             dashboard.replaceChildren(launcher, ...inlineSections);
         });
+
+        openPlayerFirstVisitForActiveRoom();
+    }
+
+    function activeRoomId() {
+        return document.querySelector('input[name="selected-room"]:checked')?.value
+            || document.querySelector("[data-panel-room]")?.dataset.panelRoom
+            || "";
+    }
+
+    async function openPlayerFirstVisit(roomId) {
+        if (!roomId || shownThisPage.has(roomId)) return;
+        const settingsPanel = document.querySelector(
+            `[data-modal-id="panel-settings-${CSS.escape(roomId)}"]`,
+        );
+        if (!settingsPanel || settingsPanel.dataset.memberRole !== "player") return;
+
+        const modalId = `settings-interface-${roomId}`;
+        if (!document.querySelector(`[data-modal-id="${CSS.escape(modalId)}"]`)) return;
+        shownThisPage.add(roomId);
+        try {
+            const response = await fetch("/game/player-onboarding/claim", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ campaign_id: roomId }),
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            if (payload.show === true) window.GravewrightModalInternals?.open?.(modalId);
+        } catch {
+            shownThisPage.delete(roomId);
+        }
+    }
+
+    function openPlayerFirstVisitForActiveRoom() {
+        openPlayerFirstVisit(activeRoomId());
     }
 
     if (document.readyState === "loading") {
@@ -122,4 +161,9 @@
     } else {
         initialise();
     }
+
+    document.addEventListener("change", (event) => {
+        if (!event.target.matches('input[name="selected-room"]')) return;
+        window.requestAnimationFrame(() => openPlayerFirstVisit(event.target.value));
+    });
 })();

@@ -4,16 +4,8 @@ Gravewright is an open-source virtual tabletop platform for tabletop RPGs.
 
 It is built for self-hosted tables that want server-authoritative gameplay, a documented SDK with declarative ruleset/addon/library/theme/content/asset packages, a first-class operator CLI, and predictable performance under large maps and realtime collaboration.
 
-> [!WARNING]
-> **v3.0.2-alpha — SDK 1 FROZEN. BACK UP REGULARLY.**
->
-> Gravewright is still Alpha software, but the planned **SDK 1 extension surface is now frozen**. Real campaigns are no longer discouraged, provided you keep regular backups and accept that bugs, migrations, and compatibility fixes may still happen before LTS 1.
->
-> After this release, SDK 1 receives no new extension surfaces — only bug fixes, documentation, security/compatibility fixes, tests, examples, and implementation hardening.
->
-> Migrations may still be required between versions. Before updating, create a backup (`grave backup --include-packages`) and test a restore on a copy first.
->
-> Test it, break it, and report problems and suggestions in [issues](https://github.com/Gravewright/gravewright/issues).
+Current release: **Gravewright 1.0.0 Beta 1**, on the stable SDK 1 compatibility line.
+See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
 
 ## Installation and Demo Video
 
@@ -23,7 +15,7 @@ New to Gravewright? Start here:
 
 [Watch the Gravewright install guide and demo](https://youtu.be/19F2UvY4j9w)
 
-The video walks through local installation and shows the current Alpha experience.
+The video walks through local installation and shows the application experience.
 
 ## Easy Install (recommended for most people)
 
@@ -128,6 +120,7 @@ Common commands:
 grave doctor
 grave doctor --json
 grave run --open
+grave run --diagnostics
 grave backup -o backup.zip --include-assets --verify
 grave restore backup.zip --dry-run
 grave package list
@@ -169,11 +162,11 @@ Restore is destructive. Gravewright keeps a `*.pre-restore` safety copy of the p
 
 ## Current Status
 
-Gravewright is currently **v3.0.2-alpha — Shader Lifecycle Hotfix**.
+Gravewright is currently **v1.0.0-beta.1 — Beta 1**.
 
-The planned SDK 1 extension surface is frozen: package manifests, package kinds, canonical capabilities, settings, assets, content packs, frontend lifecycle, managed `storage.sqlite`, the `sdk.bus` package-to-package channel, and HTML sheets. SDK 1 receives no new extension surfaces.
+SDK 1 is the stable compatibility line: existing contracts are not broken during the Beta cycle. Additive, capability-gated methods may be introduced when they preserve that compatibility; incompatible changes require a future SDK line.
 
-Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, and browser SDK runtime continue to be hardened toward LTS 1. Migrations and compatibility fixes may still happen between Alpha releases.
+Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, and browser SDK runtime are included in the Beta 1 line.
 
 ## What Gravewright Includes
 
@@ -233,29 +226,29 @@ grave package doctor my-rpg
 
 Start with:
 
-* `docs/README.md`
-* `docs/getting-started.md`
-* `docs/configuration.md`
-* `docs/architecture.md`
-* `docs/development.md`
-* `docs/testing.md`
-* `docs/deployment.md`
-* `docs/operations.md`
-* `docs/security.md`
-* `docs/licensing.md`
-* `docs/api/README.md`
-* `docs/sdk/README.md`
-* `docs/sdk/cli.md`
+- [Documentation index](docs/README.md)
+- [Getting started](docs/getting-started.md)
+- [Configuration](docs/configuration.md)
+- [Architecture](docs/architecture.md)
+- [Operations](docs/operations.md)
+- [Performance and benchmarks](docs/performance.md)
+- [Testing](docs/testing.md)
+- [Deployment](docs/deployment.md)
+- [Security](docs/security.md)
+- [API](docs/api/README.md)
+- [SDK](docs/sdk/README.md)
 
 Brazilian Portuguese documentation starts at:
 
-* `docs/pt-br/README.md`
+- [Documentação em português brasileiro](docs/pt-br/README.md)
 
 ## Licensing
 
 * Gravewright core is licensed under Apache-2.0. See `LICENSE`.
 * Gravewright public API materials are licensed under MIT. See `LICENSE-API.md`.
 * The dual-license boundary is documented in `docs/licensing.md`.
+* Bundled third-party materials and their attributions are listed in
+  `THIRD_PARTY_NOTICES.md`.
 
 ## Development Commands
 

@@ -11,11 +11,11 @@ from app.persistence.repositories.journal_repository import JournalRepository
 
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 8_000
-ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
-ALLOWED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp")
+ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+ALLOWED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".pdf")
 
 ALLOWED_FORMATS = {"JPEG", "PNG", "WEBP"}
-VALID_PURPOSES = {"journal_image", "journal_cover", "quest_image", "quest_board_image"}
+VALID_PURPOSES = {"journal_image", "journal_cover", "journal_pdf", "quest_image"}
 
 
 def asset_src(asset_id: str) -> str:
@@ -78,21 +78,19 @@ class JournalAssetService:
         if error is not None:
             return JournalAssetResult(success=False, error_key=error)
 
-        try:
-            decoded = self.image_decoder.decode(data)
-        except ValueError:
-            return JournalAssetResult(
-                success=False, error_key="game.journal.assets.errors.invalid_image"
-            )
-
-        if decoded.format.upper() not in ALLOWED_FORMATS:
-            return JournalAssetResult(
-                success=False, error_key="game.journal.assets.errors.unsupported_type"
-            )
-        if decoded.width > MAX_IMAGE_DIMENSION or decoded.height > MAX_IMAGE_DIMENSION:
-            return JournalAssetResult(
-                success=False, error_key="game.journal.assets.errors.too_large"
-            )
+        decoded = None
+        if content_type == "application/pdf":
+            if not data.startswith(b"%PDF-"):
+                return JournalAssetResult(success=False, error_key="game.journal.assets.errors.unsupported_type")
+        else:
+            try:
+                decoded = self.image_decoder.decode(data)
+            except ValueError:
+                return JournalAssetResult(success=False, error_key="game.journal.assets.errors.invalid_image")
+            if decoded.format.upper() not in ALLOWED_FORMATS:
+                return JournalAssetResult(success=False, error_key="game.journal.assets.errors.unsupported_type")
+            if decoded.width > MAX_IMAGE_DIMENSION or decoded.height > MAX_IMAGE_DIMENSION:
+                return JournalAssetResult(success=False, error_key="game.journal.assets.errors.too_large")
 
         purpose = purpose if purpose in VALID_PURPOSES else "journal_image"
         asset = self.assets.create(
@@ -103,8 +101,8 @@ class JournalAssetService:
             filename=filename[:255],
             content_type=content_type,
             byte_size=len(data),
-            width=decoded.width,
-            height=decoded.height,
+            width=decoded.width if decoded else None,
+            height=decoded.height if decoded else None,
             storage_path="",
             hash=hashlib.sha256(data).hexdigest(),
         )
@@ -121,8 +119,8 @@ class JournalAssetService:
             success=True,
             asset_id=asset["id"],
             src=asset_src(asset["id"]),
-            width=decoded.width,
-            height=decoded.height,
+            width=decoded.width if decoded else None,
+            height=decoded.height if decoded else None,
         )
 
     def _validate(self, *, filename: str, content_type: str, data: bytes) -> str | None:

@@ -6,6 +6,8 @@ from app.domain.scenes import RenderPriority
 from app.domain.scenes import RenderPriorityAgingPolicy
 from app.domain.scenes import SceneDimensions
 from app.domain.scenes import SceneTile
+from app.domain.scenes import LodSelectionPolicy
+from app.domain.scenes import TileKey
 from app.domain.scenes import TileCoord
 from app.domain.scenes import UINT32_MAX
 
@@ -37,6 +39,37 @@ def test_scene_dimensions_round_partial_edge_tiles_up():
     assert dimensions.tile_columns == 21
     assert dimensions.tile_rows == 20
     assert dimensions.chunk_columns == 2
+
+
+def test_scene_dimensions_separate_gameplay_grid_from_raster_tiles():
+    dimensions = SceneDimensions(
+        width=4096,
+        height=4096,
+        tile_size=512,
+        gameplay_grid_size=70,
+        chunk_size=8,
+    )
+
+    assert dimensions.grid_size == 70
+    assert dimensions.raster_tile_size == 512
+    assert dimensions.tile_columns == 8
+    assert dimensions.chunk_pixel_size == 4096
+
+
+def test_tile_key_cache_identity_includes_lod():
+    full = TileKey(scene_id="scene", layer_id="ground", lod=0, x=3, y=7)
+    overview = TileKey(scene_id="scene", layer_id="ground", lod=2, x=3, y=7)
+
+    assert full.cache_key != overview.cache_key
+
+
+def test_lod_selection_uses_hysteresis_near_threshold():
+    policy = LodSelectionPolicy(hysteresis=0.15)
+
+    assert policy.select(zoom=0.49, max_lod=4, current_lod=0) == 0
+    assert policy.select(zoom=0.40, max_lod=4, current_lod=0) == 1
+    assert policy.select(zoom=0.54, max_lod=4, current_lod=1) == 1
+    assert policy.select(zoom=0.60, max_lod=4, current_lod=1) == 0
 
 
 def test_scene_tile_accepts_uint32_refs():
