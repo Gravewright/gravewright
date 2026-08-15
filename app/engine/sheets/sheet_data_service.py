@@ -63,7 +63,7 @@ class SheetDataService:
 
         Reconciling on every patch rather than only when a ``conditions.*`` path
         changed is what makes an actor created before the ruleset declared a
-        condition — or edited by a path that bypassed this service — converge on
+        condition, or edited by a path that bypassed this service: converge on
         the next save, instead of carrying a stale effects list forever.
         """
         declared = self.rules.get_conditions(system_id)

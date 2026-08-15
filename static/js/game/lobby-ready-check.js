@@ -30,7 +30,7 @@
       card.className = "player-card";
       const status = member.is_online ? "●" : "○";
       const ready = member.is_ready ? (document.body.dataset.lobbyReady || "Pronto") : (document.body.dataset.lobbyWaiting || "Aguardando");
-      card.textContent = `${status} ${member.name} — ${ready} — ${member.selected_actor_name || (document.body.dataset.lobbyNoActor || "Sem personagem")} — ${member.assets_state}`;
+      card.textContent = `${status} ${member.name}: ${ready}: ${member.selected_actor_name || (document.body.dataset.lobbyNoActor || "Sem personagem")}: ${member.assets_state}`;
       root.append(card);
     });
   }

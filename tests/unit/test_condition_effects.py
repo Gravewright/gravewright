@@ -79,7 +79,7 @@ def test_unticking_takes_the_effect_away():
 
 
 def test_an_effect_nobody_declared_is_never_touched():
-    """Um efeito solto na ficha — arrastado, escrito pelo mestre — não é nosso.
+    """Um efeito solto na ficha: arrastado, escrito pelo mestre: não é nosso.
     Reconstruir as condições não pode varrê-lo junto."""
     dropped = {"id": "bless", "name": "Bênção", "data": {"category": "buff", "modifiers": []}}
     data = _sheet(shaken=True)

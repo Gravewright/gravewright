@@ -5,7 +5,7 @@ Unlike the chunk-stream seed (which exists to exercise the binary viewport
 stream), this scenario is about *interactive* realtime traffic:
 
     * token movement      (token.move)
-    * fog of war ops      (fog.paint — fog is enabled here so paint never fails)
+    * fog of war ops      (fog.paint: fog is enabled here so paint never fails)
     * chat / dice rolls    (HTTP POST /game/chat, incl. "/roll")
     * reconnect / resume   (close + re-subscribe / session.resume)
 

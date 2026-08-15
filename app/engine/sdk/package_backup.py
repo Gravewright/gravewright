@@ -2,9 +2,9 @@
 
 Two operations with different data boundaries:
 
-* **export/publish** — ships only the package directory; managed storage (a
+* **export/publish**: ships only the package directory; managed storage (a
   campaign's private data) is excluded by default.
-* **backup** — includes both the package directory and its managed storage.
+* **backup**: includes both the package directory and its managed storage.
 
 These helpers return the directories each operation should include so the CLI
 (``grave package export|backup``) and any tooling agree on the boundary.

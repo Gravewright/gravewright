@@ -1,7 +1,7 @@
 """O pdf.js vendorizado precisa ser o build ``legacy``.
 
-O build moderno usa APIs que nem todo navegador tem — Map.getOrInsertComputed
-(que o Chrome ainda não traz) e Uint8Array.toHex (Chrome 140+) — e usa justamente
+O build moderno usa APIs que nem todo navegador tem: Map.getOrInsertComputed
+(que o Chrome ainda não traz) e Uint8Array.toHex (Chrome 140+), e usa justamente
 nos caminhos de FORMULÁRIO e DESCRIPTOGRAFIA, por onde passa toda ficha de RPG
 preenchível. Com ele, o documento nem abre e a ficha só diz "não foi possível
 abrir o PDF", sem indicar que o problema é o navegador.
@@ -27,7 +27,7 @@ PACKAGE = ROOT / "data/packages/rulesets/gravewright-pdf-system"
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node ausente: harness de pdf.js pulado")
 def test_the_vendored_pdfjs_works_without_bleeding_edge_apis():
-    """Roda o pdf.js vendorizado num Node que não tem nenhuma das APIs novas —
+    """Roda o pdf.js vendorizado num Node que não tem nenhuma das APIs novas -
     espelho de um navegador atrasado (ver o harness)."""
     result = subprocess.run(
         ["node", str(HARNESS)], capture_output=True, text=True, cwd=ROOT, timeout=120

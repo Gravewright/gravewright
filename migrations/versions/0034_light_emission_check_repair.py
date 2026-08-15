@@ -8,7 +8,7 @@ derrubava ``opacity``/``animated_core``, mas não mexia no CHECK de ``animation`
 Quem migrou naquele momento ficou com a tabela nova e a lista de emissões velha:
 gravar uma vela ou um farol falha com ``CHECK constraint failed``.
 
-Corrigir o arquivo da 0033 não resolve — Alembic não reaplica revisão já
+Corrigir o arquivo da 0033 não resolve: Alembic não reaplica revisão já
 carimbada, e o banco de quem migrou continua como estava. Reparo de migração
 aplicada mora numa revisão nova; é o que esta é.
 

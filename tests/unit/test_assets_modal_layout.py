@@ -1,4 +1,4 @@
-"""A modal de assets é uma grade com pastas, busca e filtro — não uma lista.
+"""A modal de assets é uma grade com pastas, busca e filtro: não uma lista.
 
 A lista em linha única servia quando só havia imagem. Com ficha em PDF na mesma
 pasta, ela deixou de servir por dois motivos: a miniatura de 48px não ajuda a

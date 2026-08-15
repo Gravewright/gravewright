@@ -1,4 +1,4 @@
-"""Builds the render bundle for an item sheet (Gravewright SDK — mirrors ActorSheetService).
+"""Builds the render bundle for an item sheet (Gravewright SDK: mirrors ActorSheetService).
 
 Items have no canvas/token projection, so the bundle is just:
 

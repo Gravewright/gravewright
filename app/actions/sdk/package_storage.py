@@ -5,7 +5,7 @@ Part of the SDK 1 surface frozen by Alpha 2.0.0.
 A package's browser SDK calls ``sdk.storage.sqlite.query/execute/status``; those
 post here. The backend is the authority: it resolves the package and the
 caller's role, builds the :class:`StorageContext`, and runs the declared named
-query. The client never supplies SQL or a path — only a scope, a query name, and
+query. The client never supplies SQL or a path: only a scope, a query name, and
 typed params. Errors are returned with the structured ``code``.
 """
 

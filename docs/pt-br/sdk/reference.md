@@ -121,7 +121,7 @@ Requer `assets.library`.
 Lista a biblioteca de assets da campanha. O servidor já filtra pelo papel do
 membro, então um pacote nunca enxerga mais do que o usuário atual pode ver.
 
-Cada item traz `kind` — `"image"` ou `"pdf"` — para o pacote não precisar
+Cada item traz `kind`: `"image"` ou `"pdf"`: para o pacote não precisar
 reinterpretar `content_type`. Filtre com `options.kind`; `options.campaignId` usa a
 campanha ativa por padrão.
 

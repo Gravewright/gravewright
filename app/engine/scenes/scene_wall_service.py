@@ -106,7 +106,7 @@ class SceneWallService:
         """Parte uma parede em duas no ponto dado, criando um no ali.
 
         Sem isto, corrigir o meio de uma parede longa era apagar e redesenhar as
-        duas metades — e junto ia a porta, o estado dela e a solda com as vizinhas.
+        duas metades, e junto ia a porta, o estado dela e a solda com as vizinhas.
 
         O ponto e projetado sobre o segmento antes de cortar: um duplo clique
         raramente cai exatamente em cima da linha, e cortar no ponto cru dobraria

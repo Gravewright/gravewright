@@ -35,7 +35,7 @@ Use PostgreSQL for production unless you have a deliberate reason to run SQLite 
 **Alembic is the authority for schema creation and evolution.** A fresh database
 must be created with `alembic upgrade head`, and every schema change ships as a
 new numbered Alembic revision with `upgrade`/`downgrade`. No migration
-reconstructs the whole schema from `metadata` — the baseline revision
+reconstructs the whole schema from `metadata`: the baseline revision
 (`0001_initial_schema`) is a static, self-contained rendering so its result does
 not change when `tables.py` changes. See
 [`adr/ADR-migration-baseline.md`](adr/ADR-migration-baseline.md).
@@ -47,7 +47,7 @@ matching migration fails CI.
 
 For convenience, application startup can still create missing objects from
 SQLAlchemy Core metadata to bootstrap local and test databases quickly. This is
-a developer convenience, **not** the supported upgrade mechanism — do not rely on
+a developer convenience, **not** the supported upgrade mechanism: do not rely on
 it to evolve a database with data you care about, and do not reintroduce raw
 `sqlite3` schema bootstrap packages.
 
@@ -70,7 +70,7 @@ alembic revision --autogenerate -m "describe change"
 ```
 
 The initial migration (`0001_initial_schema`) is a static rendering of the base
-schema — it does not import `metadata` — so a fresh `alembic upgrade head`
+schema: it does not import `metadata`: so a fresh `alembic upgrade head`
 deterministically reproduces the schema declared in `tables.py`. SQLite and
 PostgreSQL also get the partial unique index that enforces at most one active
 scene per campaign. MySQL/MariaDB do not support that partial index in the same
@@ -85,7 +85,7 @@ and `campaign_invitations.role` (`PlayerRole`), `campaign_invitations.status`
 (`InvitationStatus`), and `campaign_permission_overrides.effect`
 (`PermissionEffect`). The allowed sets are derived from the domain enums in
 `app/persistence/tables.py` (`enum_check`), so the constraint and the
-application validation cannot drift — `tests/unit/test_enum_constraints.py`
+application validation cannot drift: `tests/unit/test_enum_constraints.py`
 enforces this. The migration that adds them audits existing rows first and
 refuses to run against out-of-domain data rather than silently coercing it.
 
@@ -94,7 +94,7 @@ refuses to run against out-of-domain data rather than silently coercing it.
 Always back up before running migrations against data you care about
 (`grave backup --include-packages`), and test a restore on a copy first. See
 [`beta.md`](beta.md) for the current upgrade and compatibility policy; the
-former Alpha policy remains archived in [`alpha.md`](alpha.md).
+former Alpha policy remains archived in [`RELEASE_NOTES.md`](../RELEASE_NOTES.md).
 
 ## Production Hardening
 

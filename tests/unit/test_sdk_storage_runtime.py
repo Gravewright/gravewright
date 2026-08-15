@@ -71,7 +71,7 @@ def test_storage_does_not_expose_absolute_path_to_frontend(storage_env):
 
 
 def test_storage_rejects_raw_sql_from_frontend():
-    # No public runtime method accepts a SQL string — only a query *name*.
+    # No public runtime method accepts a SQL string: only a query *name*.
     for name in ("query", "execute"):
         params = set(inspect.signature(getattr(PackageStorageRuntime, name)).parameters)
         assert "sql" not in params

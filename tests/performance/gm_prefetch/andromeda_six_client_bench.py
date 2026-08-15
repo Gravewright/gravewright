@@ -144,7 +144,7 @@ def main() -> None:
     }
     (output / "results_summary.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     (output / "summary.md").write_text(
-        "# Andromeda — GM-guided prefetch, 1 GM + 5 players\n\n"
+        "# Andromeda: GM-guided prefetch, 1 GM + 5 players\n\n"
         f"- Baseline reveal p50: {baseline['reveal_p50_ms']:.1f} ms\n"
         f"- GM-guided reveal p50: {guided['reveal_p50_ms']:.1f} ms\n"
         f"- Improvement: {result['improvement_pct_p50']:.2f}%\n"

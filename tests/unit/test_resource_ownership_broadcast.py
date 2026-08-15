@@ -2,7 +2,7 @@
 
 Dar um ator a um jogador não fazia nada aparecer na tela dele: a rota gravava e
 ficava calada. Pior no caso do ator, porque a posse alimenta
-``controlled_by_user_ids``, que é de onde sai a visão de token — o jogador ganhava
+``controlled_by_user_ids``, que é de onde sai a visão de token, o jogador ganhava
 o personagem e continuava sem enxergar por ele até recarregar a página.
 
 O modal de permissões (``/game/resource-permissions``) já anunciava. Os dois
@@ -108,7 +108,7 @@ def test_granting_an_actor_announces_it_to_the_room(db, captured_room_events):
     assert updates[0]["room_id"] == campaign
     assert updates[0]["payload"]["actor_id"] == actor_id
 
-    # e a posse chegou de verdade — é dela que a visão de token depende
+    # e a posse chegou de verdade: é dela que a visão de token depende
     assert player in [o["id"] for o in ActorService().list_owners(actor_id=actor_id)]
 
 

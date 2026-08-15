@@ -266,7 +266,7 @@
     const type = applied.damageType ? ` ${applied.damageType}` : "";
     let msg = `${applied.targetName} ${verb} ${applied.amount}${type} (HP ${applied.valueAfter})`;
     if (applied.mode !== "heal" && applied.rawAmount != null && applied.rawAmount !== applied.amount) {
-      msg += ` — ${L.reducedFrom || "reduced from"} ${applied.rawAmount}`;
+      msg += `: ${L.reducedFrom || "reduced from"} ${applied.rawAmount}`;
     }
     window.GravewrightToasts.showToast(msg, { duration: 5000 });
   }

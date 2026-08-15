@@ -1,7 +1,7 @@
 """Quem assina uma rolagem no chat.
 
 Uma rolagem é do **personagem**, não da conta. Na mesa ninguém diz "o ricardo
-tirou 18" — diz o nome do personagem. E o mestre fala como mestre, não pelo nome
+tirou 18": diz o nome do personagem. E o mestre fala como mestre, não pelo nome
 dele.
 
 A regra, nesta ordem:
@@ -9,11 +9,11 @@ A regra, nesta ordem:
 1. **GM** (e o assistente) assina como ``GM``. O papel é o personagem dele.
 2. **Jogador** assina com o nome do ator que ele possui.
 3. Sem ator possuído (espectador, streamer, alguém que ainda não recebeu
-   personagem), continua o nome da conta — é melhor do que uma rolagem anônima.
+   personagem), continua o nome da conta: é melhor do que uma rolagem anônima.
 
 O projeto não tem um campo "personagem deste membro": a posse vive em
 ``actor_owners``, e um jogador pode possuir mais de um ator. Nesse caso vale o
-**alterado mais recentemente**, que é o que ele está usando de fato — melhor
+**alterado mais recentemente**, que é o que ele está usando de fato: melhor
 heurística do que ordem alfabética, que fixaria no mesmo personagem para sempre.
 """
 

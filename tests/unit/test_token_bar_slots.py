@@ -1,7 +1,7 @@
 """A token draws two bars and the core never decides what they count.
 
 ``bar_1`` sits under the token, ``bar_2`` above it. A system points each slot at
-whatever it tracks — hit points, stress, ammunition, a countdown — and the core
+whatever it tracks: hit points, stress, ammunition, a countdown, and the core
 only resolves the paths and picks an ink.
 """
 

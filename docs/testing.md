@@ -26,7 +26,7 @@ uv run pytest tests/integration -q
 
 `ruff format --check` is **not** enforced yet (a large one-time reformat is
 pending); it is a tracked follow-up. On-failure CI artifacts contain only JUnit
-XML (test names/timings) — no secrets, cookies, codes or payloads.
+XML (test names/timings): no secrets, cookies, codes or payloads.
 
 ## Recommended Local Gate
 
@@ -88,7 +88,7 @@ MySQL/MariaDB URLs may be used for experimental schema portability checks, but M
 
 ## End-to-End Tests
 
-`tests/e2e/` boots a real `uvicorn` server in a subprocess against a temporary database and drives it over genuine HTTP — no bundled packages and no browser required. It seeds a GM and a campaign, performs a real CSRF-protected form login, confirms the authenticated dashboard renders, checks that a protected route redirects anonymous visitors to the login page, and that the SDK runtime script is served as a static asset.
+`tests/e2e/` boots a real `uvicorn` server in a subprocess against a temporary database and drives it over genuine HTTP: no bundled packages and no browser required. It seeds a GM and a campaign, performs a real CSRF-protected form login, confirms the authenticated dashboard renders, checks that a protected route redirects anonymous visitors to the login page, and that the SDK runtime script is served as a static asset.
 
 ```bash
 uv run pytest tests/e2e -q

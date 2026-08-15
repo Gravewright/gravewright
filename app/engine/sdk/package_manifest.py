@@ -2,7 +2,7 @@
 
 The manifest *describes* a package; it never executes anything. ``from_dict`` is
 deliberately defensive so a malformed manifest still parses into a stable shape
-— :mod:`app.engine.sdk.package_manifest_validator` is what reports problems with
+- :mod:`app.engine.sdk.package_manifest_validator` is what reports problems with
 precise, user-facing error keys.
 
 Every installable thing in Gravewright is a *package* with a ``kind``:
@@ -235,13 +235,13 @@ class TypeDef:
 
     @property
     def drop_zones(self) -> list[dict]:
-        """Where a dropped item lands, by type — the HTML sheet's ``dropZone``s.
+        """Where a dropped item lands, by type: the HTML sheet's ``dropZone``s.
 
         A declarative sheet declares this inside its layout, and the server picks
         the zone whose ``accepts`` matches the dropped item; nobody has to hit a
         target. An HTML sheet has no layout to read, so it says the same thing
         here: ``{"list": "weapons", "accepts": ["item.weapon"]}``. Without it the
-        drop can only fall back to a generic collection that no sheet draws — the
+        drop can only fall back to a generic collection that no sheet draws: the
         item is saved and never seen again.
         """
         raw = self.sheet.get("dropZones") if isinstance(self.sheet, dict) else None
@@ -452,6 +452,16 @@ class PackageManifest:
         return _dict(self.raw.get("display"))
 
     @property
+    def directory_visibility(self) -> dict[str, bool]:
+        """Directory tabs requested by the package, with safe visible defaults."""
+        directories = _dict(self.display.get("directories"))
+        return {
+            "actors": directories.get("actors") is not False,
+            "items": directories.get("items") is not False,
+            "journals": directories.get("journals") is not False,
+        }
+
+    @property
     def area_markers(self) -> list[dict]:
         return [m for m in _list(self.provides.raw.get("areaMarkers")) if isinstance(m, dict)]
 
@@ -525,6 +535,7 @@ class PackageManifest:
             "license": self.license,
             "homepage": self.homepage,
             "color": _str(self.display.get("color")),
+            "directories": self.directory_visibility,
             "capabilities": list(self.capabilities),
             "capability_summary": capability_install_summary(self.capabilities),
             "activation": {"scope": self.activation.scope, "mode": self.activation.mode},

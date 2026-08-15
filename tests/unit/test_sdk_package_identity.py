@@ -1,4 +1,4 @@
-"""Phase 5 — manifest identity and kind-root binding.
+"""Phase 5: manifest identity and kind-root binding.
 
 A package's on-disk location is bound to its manifest: the directory name must
 equal ``manifest.id`` and the kind_plural root must match ``manifest.kind``.

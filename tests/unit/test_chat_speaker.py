@@ -1,6 +1,6 @@
 """Uma rolagem no chat sai pelo personagem, não pela conta.
 
-Na mesa ninguém diz "o ricardo tirou 18" — diz o nome do personagem. E o mestre
+Na mesa ninguém diz "o ricardo tirou 18": diz o nome do personagem. E o mestre
 fala como mestre. A ficha já seguia essa regra (``actor_name or author_name``);
 o que faltava era o ``/roll`` digitado ou vindo da bandeja.
 
@@ -81,7 +81,7 @@ def test_a_player_signs_with_the_character_they_own(speakers):
 
 def test_with_several_characters_the_most_recently_touched_wins(speakers):
     """O projeto não tem "personagem deste membro". Com mais de um, vale o que a
-    pessoa está usando agora — ordem alfabética fixaria no mesmo para sempre."""
+    pessoa está usando agora: ordem alfabética fixaria no mesmo para sempre."""
     gm = seed_user(name="GM")
     campaign_id = seed_campaign(gm)
     jogador = seed_user(name="ricardo")
@@ -127,7 +127,7 @@ def test_a_character_of_another_player_is_not_borrowed(speakers):
 
 
 def test_only_rolls_change_the_signature():
-    """Mensagem de texto continua pelo nome da conta — e a consulta ao banco só
+    """Mensagem de texto continua pelo nome da conta, e a consulta ao banco só
     acontece quando é rolagem."""
     from pathlib import Path
 

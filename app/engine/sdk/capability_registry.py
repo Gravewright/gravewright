@@ -2,7 +2,7 @@
 
 ``capabilities.json`` (next to this module) is the single source of truth for
 SDK capabilities. The Python validator, the doctor, the frontend capability map,
-and the generated docs all derive from — or are validated against — it.
+and the generated docs all derive from, or are validated against: it.
 
 Each capability declares ``status``, ``description``, ``surfaces`` and
 ``methods``. A separate ``forbidden`` block lists capabilities that are always

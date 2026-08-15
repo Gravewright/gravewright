@@ -1,4 +1,4 @@
-"""Phase 4 — stable settings coercion.
+"""Phase 4: stable settings coercion.
 
 Boolean coercion is explicit (no ``bool("false") is True``); integer/number/enum
 reject invalid input with the stable code ``sdk.settings.invalid_value`` instead

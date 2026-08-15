@@ -6,12 +6,12 @@ Revises: 0025_door_locked_state
 Three additions that together make dynamic lighting playable rather than just
 drawable:
 
-* ``scenes.darkness`` (0..1) — how dark the unlit area of the scene is. 0 keeps
+* ``scenes.darkness`` (0..1): how dark the unlit area of the scene is. 0 keeps
   the previous behaviour of a fully lit map for everyone.
-* ``tokens.vision_enabled`` / ``tokens.vision_range`` — per-token sight, so each
+* ``tokens.vision_enabled`` / ``tokens.vision_range``: per-token sight, so each
   player sees from the tokens they control. ``vision_range`` is in grid cells;
   0 means "as far as the walls allow", which is what tokens did before.
-* ``scene_lights`` — placed light sources with a bright/dim falloff and an
+* ``scene_lights``: placed light sources with a bright/dim falloff and an
   optional 'torch' or 'pulse' animation.
 
 Defaults are chosen so existing scenes render exactly as they did before this

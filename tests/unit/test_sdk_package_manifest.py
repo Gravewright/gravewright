@@ -75,3 +75,13 @@ def test_summary_shape():
     assert s["id"] == "my-addon"
     assert s["kind"] == "addon"
     assert s["activation"] == {"scope": "campaign", "mode": "multiple"}
+    assert s["directories"] == {"actors": True, "items": True, "journals": True}
+
+
+def test_summary_exposes_declarative_directory_visibility():
+    raw = _addon()
+    raw["display"] = {"directories": {"items": False}}
+
+    summary = PackageManifest.from_dict(raw).summary()
+
+    assert summary["directories"] == {"actors": True, "items": False, "journals": True}

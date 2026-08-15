@@ -5,10 +5,10 @@ Live-session WebSocket load driver.
 Simulates a table of players hammering the realtime gateway with the kind of
 traffic a real session produces:
 
-    * token.move      — every user nudges its own token around the grid
-    * fog.paint       — periodic reveal/hide ops (fog is pre-enabled by seed.py)
-    * chat / rolls    — HTTP POST /game/chat, half plain text, half "/roll NdM"
-    * reconnect       — every user periodically drops its socket and resumes
+    * token.move     : every user nudges its own token around the grid
+    * fog.paint      : periodic reveal/hide ops (fog is pre-enabled by seed.py)
+    * chat / rolls   : HTTP POST /game/chat, half plain text, half "/roll NdM"
+    * reconnect      : every user periodically drops its socket and resumes
 
 Each virtual user owns one pre-seeded token (round-robin) so token moves never
 collide on CAS. The driver discovers the live scene over HTTP and reads token
@@ -416,7 +416,7 @@ async def do_pan_zoom(
     Models a user panning the map or changing zoom: it requests a different
     chunk window (panned by ``seq``) at a random zoom level. The gateway drops
     frames tagged with an older generation, so callers must advance the
-    generation before each pan/zoom — hence ``generation`` is passed in already
+    generation before each pan/zoom: hence ``generation`` is passed in already
     bumped.
     """
     width, height = random.choice(_ZOOM_LEVELS)
@@ -789,7 +789,7 @@ def write_outputs(
     (output / "results_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     with (output / "summary.md").open("w", encoding="utf-8") as f:
-        f.write("# WS Live Session — token / fog / chat / reconnect load\n\n")
+        f.write("# WS Live Session: token / fog / chat / reconnect load\n\n")
         f.write("## Result\n\n```txt\n")
         f.write(f"finished:            {finished}\n")
         f.write(f"host:                {args.host}\n")

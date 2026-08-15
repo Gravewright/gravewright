@@ -1,4 +1,4 @@
-"""STABILIZATION_V1 P1.5 — a dead socket must not sink the whole broadcast.
+"""STABILIZATION_V1 P1.5: a dead socket must not sink the whole broadcast.
 
 ``WebSocketConnectionManager.send_to_users`` isolates failure per connection:
 a ``send_json`` that raises (client dropped without a clean disconnect) is

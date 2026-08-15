@@ -88,6 +88,9 @@ class GamePageService:
                 "actor_types": item["actor_types"],
                 "item_types": item.get("item_types", []),
                 "area_markers": item.get("area_markers", []),
+                "directories": item.get(
+                    "directories", {"actors": True, "items": True, "journals": True}
+                ),
             }
             for item in package_items
             if item["status"] == "enabled" and item["kind"] == "ruleset"
@@ -190,6 +193,9 @@ class GamePageService:
                     "actor_types": active_system.get("actor_types", []),
                     "item_types": active_system.get("item_types", []),
                     "area_markers": active_system.get("area_markers", []),
+                    "directories": active_system.get(
+                        "directories", {"actors": True, "items": True, "journals": True}
+                    ),
                 }
                 if record is not None and active_system is not None
                 else None
@@ -396,7 +402,7 @@ def _with_roll_payload(message: dict) -> dict:
     A roll message is drawn by ``chat-roll-cards.js``, which reads the system's
     chat card out of ``metadata.rendered``. The page used to re-implement that
     message in the template instead, so a reload quietly replaced every mapped
-    card with the raw dice — same message, two looks, depending on whether you
+    card with the raw dice: same message, two looks, depending on whether you
     had reloaded. The template now ships this payload and lets the one renderer
     draw it.
     """

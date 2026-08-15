@@ -1,6 +1,6 @@
 """HTTP surface for the Actor + Sheet Data commands (Gravewright SDK, §14).
 
-These are JSON command endpoints (no server-rendered UI yet — the declarative
+These are JSON command endpoints (no server-rendered UI yet: the declarative
 Sheet renderer is a later slice). The backend stays authoritative: it validates
 permissions, applies patches, bumps versions and emits realtime events.
 """
@@ -102,7 +102,11 @@ async def create_actor(
 
 @post("/game/actor/update-core")
 async def update_actor_core(
-    request: Request, cookies: dict[str, str], current_user: Row, actor_service: ActorService
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    actor_service: ActorService,
+    token_service: TokenService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
@@ -117,6 +121,11 @@ async def update_actor_core(
     await _emit_actor(TransportEvent.ACTOR_UPDATED, result, user_id=user["id"])
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
+    await _refresh_actor_tokens(
+        campaign_id=result.campaign_id,
+        actor_id=result.actor_id,
+        token_service=token_service,
+    )
     return Response({"actor_id": result.actor_id, "version": result.version}, status_code=200)
 
 

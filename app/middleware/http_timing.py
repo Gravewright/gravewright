@@ -5,8 +5,8 @@ latency (e.g. ``POST /game/chat``) can be read from real server metrics instead
 of being inferred from a load client whose own event loop may be the bottleneck.
 
 Emits into ``realtime_metrics``:
-    http.request.duration_ms              — every request
-    http.request.<sanitized-path>.duration_ms  — per route (ids collapsed)
+    http.request.duration_ms             : every request
+    http.request.<sanitized-path>.duration_ms : per route (ids collapsed)
 """
 
 from __future__ import annotations

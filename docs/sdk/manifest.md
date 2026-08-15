@@ -1,4 +1,4 @@
-# Package manifest reference — SDK v1
+# Package manifest reference: SDK v1
 
 Every Gravewright SDK package has a `manifest.json`. The manifest describes the package; it never executes code.
 
@@ -73,7 +73,24 @@ schemas/gravewright-package-v1.schema.json
 | `dependencies` | array | Required package relationships. |
 | `conflicts` | array | Packages that cannot coexist with this package. |
 | `settings` | array | Declared package settings. |
-| `display` | object | Optional UI metadata such as `color`. |
+| `display` | object | Optional UI metadata such as `color` and directory visibility. |
+
+### Directory visibility
+
+A ruleset may omit core directory tabs that do not belong to its data model:
+
+```json
+"display": {
+  "directories": {
+    "items": false
+  }
+}
+```
+
+`actors`, `items`, and `journals` default to `true`. Setting one to `false`
+hides its dock tab and directory panel while that ruleset is active. This is a
+presentation preference only: it does not delete records, revoke permissions,
+or prevent another documented SDK surface from referencing those records.
 
 ## Compatibility
 
@@ -87,12 +104,12 @@ schemas/gravewright-package-v1.schema.json
 
 The engine computes a compatibility status against the running **SDK API version
 line** (the same line named by `sdkVersion`, frozen at `1` by Alpha 2.0.0), not
-the core Gravewright marketing version — so a core release bump does not
+the core Gravewright marketing version: so a core release bump does not
 retroactively make SDK 1 packages incompatible:
 
-- `compatible` — the package is within the declared compatibility window.
-- `unverified` — the package did not declare enough information to prove compatibility.
-- `incompatible` — the package is outside the declared compatibility window.
+- `compatible`: the package is within the declared compatibility window.
+- `unverified`: the package did not declare enough information to prove compatibility.
+- `incompatible`: the package is outside the declared compatibility window.
 
 ## Activation
 
@@ -111,10 +128,10 @@ Allowed `scope` values:
 
 Allowed `mode` values:
 
-- `exclusive` — exactly one active package in this slot. Required for `ruleset`.
-- `multiple` — many packages can be active. Required for `addon`, `theme`, `content`, and `assets`.
-- `passive` — not activated directly; loaded as a dependency. Required for `library`.
-- `none` — reserved for non-activated metadata/content use.
+- `exclusive`: exactly one active package in this slot. Required for `ruleset`.
+- `multiple`: many packages can be active. Required for `addon`, `theme`, `content`, and `assets`.
+- `passive`: not activated directly; loaded as a dependency. Required for `library`.
+- `none`: reserved for non-activated metadata/content use.
 
 ## Entrypoints
 
@@ -211,7 +228,7 @@ the browser APIs `sdk.dice.roll` and `sdk.rolls.intent`.
 
 #### `rules/combat.gw.json`
 
-The core owns the combat tracker — the round, the turn order, the panel — but
+The core owns the combat tracker: the round, the turn order, the panel: but
 not what initiative *is*. It stores the value as text and never parses it. The
 ruleset decides how a value gets there and whether it means an ordering.
 
@@ -242,7 +259,7 @@ ruleset decides how a value gets there and whether it means an ordering.
 | `number` | A numeric field only | By the value, using `sort` |
 | `text` | A free-text field | By hand: the GM moves rows up and down |
 
-Use `text` whenever the turn order is not a number the engine could compare —
+Use `text` whenever the turn order is not a number the engine could compare -
 drawn cards, named phases, "ambushers first", or a sheet the table reads off
 paper. The core will not invent a ranking for a string.
 

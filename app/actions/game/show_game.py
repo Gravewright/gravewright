@@ -75,7 +75,7 @@ def _package_assets(package_asset_service: PackageAssetService, *, campaign_id: 
     ``nonce``. The browser SDK only honors a ``register({id})`` call from a
     ``<script>`` whose declared package id and nonce match what the server
     emitted, so a package script cannot register on behalf of another package
-    (or be injected into the page by other code) — an explicit, testable
+    (or be injected into the page by other code): an explicit, testable
     upgrade over relying on ``document.currentScript.src`` alone.
     """
     styles: list[str] = []

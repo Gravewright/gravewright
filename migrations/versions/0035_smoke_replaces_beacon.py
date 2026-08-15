@@ -12,7 +12,7 @@ escuros numa cena que o mestre já montou, e o alcance e a cor deles continuam
 fazendo sentido para a luz nova.
 
 A troca é feita em três passos, e não em dois: as duas ordens possíveis falham
-por motivos simétricos — converter antes esbarra no CHECK em vigor, recriar
+por motivos simétricos: converter antes esbarra no CHECK em vigor, recriar
 antes esbarra nas linhas antigas durante a cópia. Ver ``_swap``.
 """
 from __future__ import annotations

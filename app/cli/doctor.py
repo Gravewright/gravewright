@@ -1,4 +1,4 @@
-"""``grave doctor`` — the operational health check for a Gravewright install.
+"""``grave doctor``: the operational health check for a Gravewright install.
 
 Doctor answers five questions for every problem it finds: *what* is wrong, *why*,
 *where*, *how to fix it*, and *whether it can be fixed automatically*. It checks

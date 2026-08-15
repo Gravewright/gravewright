@@ -1,6 +1,6 @@
 """A biblioteca de assets aceita PDF, e só PDF de verdade.
 
-Fichas em PDF entram pela mesma biblioteca das imagens — é onde o GM já procura
+Fichas em PDF entram pela mesma biblioteca das imagens: é onde o GM já procura
 arquivo. Mas o caminho de validação é outro: não há nada para o Pillow decodificar,
 então a única prova de que o arquivo é um PDF é a assinatura no começo dele. Sem
 essa checagem, qualquer arquivo renomeado para `.pdf` entraria na biblioteca e
@@ -91,7 +91,7 @@ def test_a_renamed_file_is_refused_even_with_the_right_content_type(service):
 
 def test_the_pdf_extension_alone_is_not_enough(service):
     """Content-type e extensão vêm do navegador. Combinar os dois ainda é palavra
-    do cliente — por isso a assinatura é conferida sempre."""
+    do cliente: por isso a assinatura é conferida sempre."""
     result = service.create_asset(
         campaign_id="c1",
         user_id="u1",
@@ -117,7 +117,7 @@ def test_images_still_go_through_the_decoder(service):
 
 def test_pdf_is_not_in_the_image_content_types():
     """Se PDF entrasse em ALLOWED_CONTENT_TYPES, cairia no ramo das imagens e
-    seria rejeitado pelo decodificador — silenciosamente, como 'imagem inválida'."""
+    seria rejeitado pelo decodificador: silenciosamente, como 'imagem inválida'."""
     assert PDF_CONTENT_TYPE not in ALLOWED_CONTENT_TYPES
 
 
@@ -144,7 +144,7 @@ def test_storage_refuses_extensions_outside_the_safe_list():
 
 def test_a_pdf_cannot_become_a_scene_image():
     """A camada de cena precisa de largura e altura. Sem guarda, o asset seria
-    criado e só então faltaria o decoded — linha órfã no banco mais um 500."""
+    criado e só então faltaria o decoded: linha órfã no banco mais um 500."""
     from app.engine.scenes.scene_image_service import SceneImageService
 
     source = Path(ROOT / "app/engine/scenes/scene_image_service.py").read_text(encoding="utf-8")
@@ -157,7 +157,7 @@ def test_a_pdf_cannot_become_a_scene_image():
 
 def test_image_and_pdf_have_separate_upload_buttons():
     """Um diálogo só, aceitando imagem e ficha ao mesmo tempo, faz o GM caçar um
-    PDF no meio de uma lista de imagens — e esconde que dá para enviar ficha."""
+    PDF no meio de uma lista de imagens, e esconde que dá para enviar ficha."""
     import re
 
     template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
@@ -190,7 +190,7 @@ def test_the_library_still_accepts_both_kinds_after_the_split():
 
 def test_the_route_body_limit_is_above_the_pdf_cap():
     """O Litestar corta o corpo antes de qualquer handler rodar. Se o limite da
-    rota ficar abaixo do nosso teto, o cliente recebe 413 sem chave de erro — a
+    rota ficar abaixo do nosso teto, o cliente recebe 413 sem chave de erro: a
     validação nunca chega a dizer 'grande demais'. O padrão do Litestar (10 MB
     decimais) é mais baixo até que MAX_ASSET_BYTES (10 MiB), então a faixa entre
     os dois já falhava assim antes de existir PDF."""

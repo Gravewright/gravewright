@@ -1,8 +1,8 @@
-"""``sdk.bus.*`` interop — stable, frozen by Alpha 2.0.0 SDK Freeze.
+"""``sdk.bus.*`` interop: stable, frozen by Alpha 2.0.0 SDK Freeze.
 
 Validates the manifest ``interop`` block (namespacing, event names, schema
-paths), the on-disk schema existence check, the doctor surfacing, and — via
-static source checks, since there is no JS runner — that the frontend bus is the
+paths), the on-disk schema existence check, the doctor surfacing, and: via
+static source checks, since there is no JS runner: that the frontend bus is the
 package-to-package channel. The strict enforcement policy requires a package to
 declare every event/method it publishes, subscribes, provides, or requests.
 """

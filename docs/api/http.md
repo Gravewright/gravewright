@@ -63,8 +63,8 @@ POST /game/settings/table
 
 `view_scene` opens a scene locally for the requesting user without activating it
 for the table, and is honoured only for roles with full scene view (GM and
-streamer). The `preferences` routes store per-user settings — layout mode, vision
-mode, and ping colour — and affect only the requesting user.
+streamer). The `preferences` routes store per-user settings: layout mode, vision
+mode, and ping colour, and affect only the requesting user.
 
 Deleting a chat message requires `chat.delete_any`, or `chat.delete_own` on a
 message the requester wrote. `chat.delete_own` is not a player default.

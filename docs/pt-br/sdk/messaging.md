@@ -35,7 +35,7 @@ mesa aberta e e a unica superficie de mensageria client-side no SDK 1.
 }
 ```
 
-Política estrita (Alpha 2.0.0 SDK Freeze) — todas as quatro direções são
+Política estrita (Alpha 2.0.0 SDK Freeze): todas as quatro direções são
 hard-enforced em runtime:
 
 `sdk.bus.publish` exige uma declaracao em `interop.emits`.

@@ -149,7 +149,7 @@
         const fill = el("span", "gw-combat-bar__fill");
         fill.style.width = `${percent}%`;
         track.appendChild(fill);
-        wrap.append(track, el("span", "gw-combat-bar__value", `${bar.value ?? "—"}/${bar.max ?? "—"}`));
+        wrap.append(track, el("span", "gw-combat-bar__value", `${bar.value ?? "-"}/${bar.max ?? "-"}`));
         return wrap;
     }
 
@@ -158,7 +158,7 @@
     function initiativeCell(combatant, state, isGm, L) {
         const text = combatant.initiative == null ? "" : String(combatant.initiative);
         if (!isGm) {
-            const cell = el("span", "gw-combat-combatant__score", text || "—");
+            const cell = el("span", "gw-combat-combatant__score", text || "-");
             cell.title = initiativeLabel(state, L);
             return cell;
         }
@@ -176,9 +176,9 @@
             input.maxLength = 24;
         }
         input.value = text;
-        input.placeholder = "—";
+        input.placeholder = "-";
         input.title = L.setInitiative;
-        input.setAttribute("aria-label", `${initiativeLabel(state, L)} — ${combatant.name}`);
+        input.setAttribute("aria-label", `${initiativeLabel(state, L)}: ${combatant.name}`);
         input.dataset.combatInitiative = combatant.id;
         return input;
     }
@@ -276,7 +276,7 @@
             return wrap;
         }
         wrap.appendChild(el("strong", "gw-combat-header__title", `${L.round} ${state.round}`));
-        const current = state.current_name || "—";
+        const current = state.current_name || "-";
         wrap.appendChild(el("span", "gw-combat-header__current", current));
         if (state.next_name && state.next_name !== current) {
             wrap.appendChild(el("span", "gw-combat-header__next", `${L.nextUp}: ${state.next_name}`));

@@ -5,9 +5,9 @@ desktop é um pacote autocontido gerado pelo PyInstaller no modo *one-dir*: ele
 embute o Python, todas as dependências e o próprio projeto e oferece um launcher
 nativo em PySide6 para a CLI `grave`. O launcher sobe o servidor local e abre a
 mesa no navegador padrão do usuário. O usuário só
-**descompacta e executa** — sem Python, sem `uv`, sem terminal.
+**descompacta e executa**: sem Python, sem `uv`, sem terminal.
 
-A versão em inglês desta página é `../desktop-distribution.md`.
+A versão em inglês desta página é [`../distribution/desktop.md`](../distribution/desktop.md).
 
 ## 1. Gerar o pacote
 
@@ -20,11 +20,11 @@ uv run pyinstaller --noconfirm grave.spec
 
 Saída: `dist/Gravewright/`, contendo:
 
-- `Gravewright.exe` — o lançador (alvo do duplo-clique, sem console).
-- `Gravewright-debug.exe` — o mesmo app, mas abre um console mostrando os logs do
+- `Gravewright.exe`, o lançador (alvo do duplo-clique, sem console).
+- `Gravewright-debug.exe`, o mesmo app, mas abre um console mostrando os logs do
   uvicorn e os tracebacks do Python. Para diagnosticar uma falha; o usuário final
   usa o exe normal.
-- `_internal/` — runtime do Python, bibliotecas, templates, assets estáticos,
+- `_internal/`: runtime do Python, bibliotecas, templates, assets estáticos,
   schemas (compartilhado pelos dois exes).
 
 A pasta `GravewrightData/` **não** faz parte do build. Ela é criada ao lado do exe
@@ -33,7 +33,7 @@ distribua nem versione essa pasta.
 
 ## 2. Montar o ZIP
 
-Distribua a **pasta `Gravewright` inteira**. O exe não roda sozinho — ele precisa
+Distribua a **pasta `Gravewright` inteira**. O exe não roda sozinho: ele precisa
 do `_internal/` ao lado. Mantenha essa pasta como raiz do ZIP, para o usuário
 extrair um único diretório autocontido:
 
@@ -75,7 +75,7 @@ acesso à pasta de dados e logs ao vivo sem exigir um terminal.
 O app congelado lê um `.env` opcional colocado **ao lado do `Gravewright.exe`** (a
 pasta que o usuário extrai). Os valores ali têm precedência sobre os defaults
 embutidos, então é a forma suportada de configurar uma cópia instalada. Não edite
-nada dentro de `_internal/` — essa pasta é sobrescrita a cada atualização.
+nada dentro de `_internal/`: essa pasta é sobrescrita a cada atualização.
 
 ```dotenv
 # dist/Gravewright/.env  (opcional)
@@ -89,27 +89,27 @@ Observações:
   (janela só loopback) e, quando você não os define, `DATABASE_URL` e
   `GRAVEWRIGHT_DATA_DIR` (apontando para `GravewrightData/` ao lado do exe).
 - Se sobrescrever `GRAVEWRIGHT_DATA_DIR` ou `DATABASE_URL`, use **caminhos
-  absolutos** — caminhos relativos são resolvidos contra uma pasta interna, não
+  absolutos**: caminhos relativos são resolvidos contra uma pasta interna, não
   contra o exe.
 - Deixar o `.env` ausente é normal; o app roda com defaults locais sensatos.
 
 ## Observações e ressalvas
 
-- **Navegador** — a mesa roda no navegador padrão do usuário. O launcher PySide6
+- **Navegador**: a mesa roda no navegador padrão do usuário. O launcher PySide6
   permanece aberto para parar o servidor e executar comandos de manutenção.
-- **SmartScreen** — executáveis não assinados disparam o "O Windows protegeu o seu
+- **SmartScreen**: executáveis não assinados disparam o "O Windows protegeu o seu
   PC". O usuário contorna com **Mais informações → Executar assim mesmo**. Para
   eliminar o aviso, assine o exe com um certificado Authenticode (um certificado EV
   remove na hora; um certificado comum ganha reputação com o tempo).
-- **Falsos positivos de antivírus** — executáveis do PyInstaller às vezes são
+- **Falsos positivos de antivírus**: executáveis do PyInstaller às vezes são
   marcados por heurística. A assinatura de código reduz isso; reporte falsos
   positivos ao fornecedor se ocorrerem.
-- **Build por plataforma** — um build feito no Windows roda só no Windows. Gere o
+- **Build por plataforma**: um build feito no Windows roda só no Windows. Gere o
   build no macOS/Linux para essas plataformas.
 
 ## Diagnosticar uma falha ao abrir
 
-Rode o **`Gravewright-debug.exe`** — ele abre um console com os logs do servidor ao
+Rode o **`Gravewright-debug.exe`**: ele abre um console com os logs do servidor ao
 vivo e qualquer traceback do Python, que é a forma mais rápida de ver por que o exe
 normal falhou.
 

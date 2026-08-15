@@ -1,7 +1,7 @@
 """Per-campaign activation of installed SDK packages.
 
 A campaign has exactly one active *ruleset* (stored on the campaign as its
-``active_system_id`` — the ruleset package id) and any number of active
+``active_system_id``: the ruleset package id) and any number of active
 ``addon`` / ``theme`` / ``assets`` / ``content`` packages, recorded in
 ``campaign_packages`` keyed by their activation role (the package ``kind``).
 ``library`` packages are passive and cannot be activated directly.

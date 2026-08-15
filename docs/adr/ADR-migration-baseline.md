@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-04
-- **Stage:** Maintenance Plan — Etapa 1 (Governança e imutabilidade de migrações)
+- **Stage:** Maintenance Plan: Etapa 1 (Governança e imutabilidade de migrações)
 
 ## Context
 
@@ -25,11 +25,12 @@ changed silently whenever `tables.py` changed. Consequences:
 
 **Has `0001` been distributed to persistent installations that must be
 preserved byte-for-byte?** No hard guarantee is owed. The project is
-`v2.1.0-alpha`, and `docs/alpha.md` states the operative policy:
+`v2.1.0-alpha`, and the historical policy preserved in
+[`RELEASE_NOTES.md`](../../RELEASE_NOTES.md) states:
 
 > During Alpha, maintainers may ship breaking changes without an automatic
 > migration path … old data may still require manual repair or fresh setup.
-> Structural changes — database schema … may still occur between Alpha
+> Structural changes: database schema … may still occur between Alpha
 > releases, and a guaranteed automatic upgrade path is not promised yet.
 
 Given that policy, **rebaselining `0001` is authorized**. We rewrote

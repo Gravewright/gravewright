@@ -3,7 +3,7 @@
 Instead of remembering intent flags, an author can answer a few selection
 questions and the wizard builds the same :class:`~app.cli.scaffold.Intent` the
 flags would. Selection uses ``questionary`` (prompt_toolkit) when it is
-installed — the ``dev`` extra ships it — which renders scrollable, resize-safe
+installed: the ``dev`` extra ships it: which renders scrollable, resize-safe
 checkbox/select prompts. When it is absent the wizard degrades to a plain
 numbered text menu.
 
@@ -651,7 +651,7 @@ def _run_ruleset_scratch(default_name: str | None) -> WizardResult | None:
     _wizard_step(2, 5, "Core mechanic")
     mechanic = _choose(
         "Which core mechanic does the system use?",
-        [(mid, f"{mid}  —  {MECHANICS[mid]['label']}") for mid in mechanic_ids()],
+        [(mid, f"{mid} :  {MECHANICS[mid]['label']}") for mid in mechanic_ids()],
     )
     if mechanic is None:
         return None

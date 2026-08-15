@@ -1,4 +1,4 @@
-"""Storage *contract* for SDK packages (Phase 7A) — validation only.
+"""Storage *contract* for SDK packages (Phase 7A): validation only.
 
 This module validates a package's declared ``storage.sqlite`` contract:
 
@@ -9,7 +9,7 @@ This module validates a package's declared ``storage.sqlite`` contract:
   a single ``sql`` statement.
 
 It deliberately does **not** open a database, run a query, or expose any
-endpoint — that is Phase 7B. Named queries are only ever loaded from the
+endpoint: that is Phase 7B. Named queries are only ever loaded from the
 validated package on disk; SQL or queries supplied by a client are never
 accepted.
 """

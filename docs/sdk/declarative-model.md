@@ -353,7 +353,7 @@ These conventions make packages easier to inspect and safer to validate:
 data/packages/<id>/
 ├─ manifest.json
 ├─ README.md
-├─ CHANGELOG.md
+├─ RELEASE_NOTES.md
 ├─ LICENSE
 ├─ assets/
 │  ├─ main.js

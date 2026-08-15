@@ -9,7 +9,7 @@ services/validation), **frontend** (`window.GravewrightSDK` + the scoped `sdk`),
 **persistence** (DB-backed install registry), **storage** (managed SQLite),
 **interop** (`sdk.bus.*`), and **HTML sheets**.
 
-## Frontend — global entry point
+## Frontend: global entry point
 
 | API | Status | Notes |
 |---|---|---|
@@ -17,16 +17,16 @@ services/validation), **frontend** (`window.GravewrightSDK` + the scoped `sdk`),
 | `window.GravewrightSDK.register(definition)` | `stable` | `{ id, setup, ready }`; ownership + nonce enforced. Returns `false` on rejection. |
 | `window.GravewrightSDKDebug.*` | `internal` | Only present when `context.debug === true`. |
 
-## Frontend — scoped `sdk` (delivered to each package)
+## Frontend: scoped `sdk` (delivered to each package)
 
 | Member | Capability | Status |
 |---|---|---|
-| `sdk.version` | — (public) | `stable` |
-| `sdk.package` | — (public) | `stable` |
-| `sdk.kind` | — (public) | `stable` |
-| `sdk.capabilities.has/require/list` | — (public) | `stable` |
-| `sdk.context()` | — (public) | `stable` |
-| `sdk.game.context/campaign/scene/user/ready` | — (public) | `stable` |
+| `sdk.version` |: (public) | `stable` |
+| `sdk.package` |: (public) | `stable` |
+| `sdk.kind` |: (public) | `stable` |
+| `sdk.capabilities.has/require/list` |: (public) | `stable` |
+| `sdk.context()` |: (public) | `stable` |
+| `sdk.game.context/campaign/scene/user/ready` |: (public) | `stable` |
 | `sdk.settings.definitions/all/get/set` | `settings` | `stable` |
 | `sdk.content.packs/pack` | `content.packs` | `stable` |
 | `sdk.i18n.t` | `locales` | `stable` |
@@ -47,7 +47,7 @@ services/validation), **frontend** (`window.GravewrightSDK` + the scoped `sdk`),
 Ergonomic shortcuts (`sdk.toast`, `sdk.setting`) delegate
 to the namespaces above and inherit their status.
 
-## Manifest — public fields
+## Manifest: public fields
 
 | Field | Status |
 |---|---|
@@ -67,7 +67,7 @@ to the namespaces above and inherit their status.
 | `interop{emits,listens,provides,requires}` | `stable` |
 | `provides.*.sheet{mode:"html",...}` | `stable` |
 
-## Backend — services / validation
+## Backend: services / validation
 
 | Symbol | Status | Notes |
 |---|---|---|

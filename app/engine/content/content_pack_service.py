@@ -1,7 +1,7 @@
 """Read-only Content Pack access (Gravewright SDK, §10).
 
 Content packs are declared in the manifest (``contentPacks``) and live as JSON
-files in the package. They are read-only catalogues — when the GM uses an entry
+files in the package. They are read-only catalogues: when the GM uses an entry
 the core copies it into the campaign (via ``sheet.drop`` / ``content.entry.import``).
 """
 

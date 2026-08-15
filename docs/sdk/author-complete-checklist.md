@@ -258,7 +258,7 @@ Before publishing a package, verify:
 
 - `manifest.json` is valid.
 - `README.md` explains install, activation, capabilities, settings, and compatibility.
-- `CHANGELOG.md` documents changes.
+- `RELEASE_NOTES.md` documents changes.
 - License and asset attribution are included.
 - Compatibility range is honest.
 - No development-only paths are present.

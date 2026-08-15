@@ -8,7 +8,7 @@ Existing rows are already inside the new set, so no data is rewritten going up.
 
 SQLite cannot alter a CHECK in place, so alembic batch mode rebuilds the table.
 The rebuild copies from ``_walls_snapshot()`` rather than from reflection because
-SQLAlchemy does not reflect CHECK constraints on SQLite — reflecting would
+SQLAlchemy does not reflect CHECK constraints on SQLite: reflecting would
 silently drop ``ck_scene_walls_kind``. The snapshot mirrors the schema as of
 ``0024``. PostgreSQL/MySQL get plain DROP/ADD CONSTRAINT and ignore it.
 """

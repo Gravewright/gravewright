@@ -1,4 +1,4 @@
-"""Phase 9 — strict package doctor.
+"""Phase 9: strict package doctor.
 
 The doctor speaks the canonical DoctorFinding contract, never crashes on a
 broken/corrupt package, and serializes findings for the CLI/UI.

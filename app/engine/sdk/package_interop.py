@@ -1,8 +1,8 @@
-"""Interop contract for SDK packages — ``sdk.bus.*``.
+"""Interop contract for SDK packages: ``sdk.bus.*``.
 
 Validates a package's declared ``interop`` block: the events it ``emits`` and
 ``listens`` to, and the methods it ``provides`` / ``requires``. Namespacing is
-enforced — a package may only emit/provide in its own ``{id}.*`` namespace, and
+enforced: a package may only emit/provide in its own ``{id}.*`` namespace, and
 the reserved ``gravewright.*`` / ``core.*`` / ``system.*`` / ``sdk.*`` namespaces
 are owned by the engine. Declared event/RPC schema paths must be safe
 package-relative paths.

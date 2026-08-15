@@ -4,7 +4,7 @@ Gravewright publishes raw benchmark artifacts together with the harnesses that p
 
 ## Current reference machine
 
-The latest renderer comparisons were executed on 13 August 2026 with:
+The latest renderer comparisons were executed on 15 August 2026 with:
 
 - NVIDIA GeForce RTX 4060, driver 32.0.15.9621;
 - Chromium headed using ANGLE over Direct3D 11;

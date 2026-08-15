@@ -326,7 +326,7 @@
         .map((entrada, i) => `
           <span class="dice-recent ${entrada.nome ? "dice-recent--named" : ""}">
             <button type="button" class="dice-recent__use" data-dice-reuse="${i}"
-                    title="${esc(entrada.nome ? `${entrada.nome} — ${entrada.expressao}` : entrada.expressao)}">
+                    title="${esc(entrada.nome ? `${entrada.nome}: ${entrada.expressao}` : entrada.expressao)}">
               ${esc(entrada.nome || entrada.expressao)}
             </button>
             <button type="button" class="dice-recent__remove" data-dice-forget="${i}"

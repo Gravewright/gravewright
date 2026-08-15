@@ -6,7 +6,7 @@ derrubava ``opacity``/``animated_core``, mas não trocava o CHECK de
 emissões velha, e gravar uma vela falhava com ``IntegrityError``.
 
 Corrigir o arquivo da 0033 não alcança esse banco: Alembic não reaplica revisão
-carimbada. Reparo de migração aplicada mora em revisão nova — e é isso que este
+carimbada. Reparo de migração aplicada mora em revisão nova, e é isso que este
 teste cobra, reproduzindo o estado exato antes de rodar o upgrade.
 """
 from __future__ import annotations
@@ -115,7 +115,7 @@ def test_the_repair_revision_reconciles_it(tmp_path, monkeypatch):
     reference = create_engine(f"sqlite:///{(tmp_path / 'reference.sqlite3').as_posix()}")
     metadata.create_all(reference)
     try:
-        # As emissões de hoje passam a ser aceitas — o sintoma que a mesa via.
+        # As emissões de hoje passam a ser aceitas, o sintoma que a mesa via.
         for index, animation in enumerate(
             ("none", "torch", "pulse")
         ):
@@ -140,8 +140,8 @@ def test_the_repair_revision_reconciles_it(tmp_path, monkeypatch):
 def test_swapping_an_emission_survives_a_row_that_still_uses_the_old_one(tmp_path, monkeypatch):
     """A troca farol → fumaça não pode ser barrada pelo próprio CHECK.
 
-    Com um foco `beacon` gravado — que é o caso de qualquer mesa que já usou o
-    tipo — as duas ordens ingênuas falham: converter antes é recusado pelo CHECK
+    Com um foco `beacon` gravado: que é o caso de qualquer mesa que já usou o
+    tipo: as duas ordens ingênuas falham: converter antes é recusado pelo CHECK
     em vigor, que não conhece `smoke`; recriar antes é recusado pelas linhas
     `beacon` durante a cópia. Só passa alargando o CHECK no meio do caminho.
     """

@@ -85,7 +85,7 @@ Regras principais:
 ## Limites
 
 O runtime aplica limite de tamanho do banco (padrão 50 MB, configurável via
-`maxSizeMB` — um número positivo até 1024; o validador de manifest rejeita
+`maxSizeMB`: um número positivo até 1024; o validador de manifest rejeita
 valores inválidos ou fora do intervalo com `sdk.storage.max_size_invalid` /
 `sdk.storage.max_size_too_large`), timeout de query, limite de linhas
 retornadas e limite de bytes de resposta. Migrations possuem estado persistido e

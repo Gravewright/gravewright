@@ -13,6 +13,19 @@ test
 
 Production mode performs strict startup validation and fails fast on unsafe settings.
 
+## Versioned templates
+
+| File | Intended use |
+| --- | --- |
+| `.env.example` | Minimal local quick-start template copied to `.env`. |
+| `.env.development.example` | Development defaults loaded when `APP_ENV=development`. |
+| `.env.staging.example` | Staging defaults and placeholders. |
+| `.env.production-postgresql.example` | Recommended production baseline using PostgreSQL. |
+| `.env.production-sqlite.example` | Small, private, single-server production installs. Copy it to `.env` explicitly. |
+
+Only `.env` contains private deployment values. Files ending in `.example` are
+sanitized templates and must never contain real credentials.
+
 ## Core Settings
 
 | Variable | Purpose |

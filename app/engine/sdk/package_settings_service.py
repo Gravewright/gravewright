@@ -11,9 +11,9 @@ rather than silently falling back to a default or a truthy ``bool("false")``.
 
 Scope semantics:
 
-* ``global``  — one value per package (owner-managed).
-* ``campaign`` — one value per package per campaign (GM-managed).
-* ``user``    — one value per package per user, **global to that user** (not
+* ``global`` : one value per package (owner-managed).
+* ``campaign``: one value per package per campaign (GM-managed).
+* ``user``   : one value per package per user, **global to that user** (not
   per-campaign): user-scoped rows are keyed by ``user_id`` with an empty
   ``campaign_id``.
 """

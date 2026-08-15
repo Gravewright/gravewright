@@ -87,7 +87,7 @@ async def consume_streamer_link(
 ) -> Redirect:
     """Public bearer entrypoint: opens a read-only streamer guest session.
 
-    No login required — the link itself is the credential. On success the visitor
+    No login required: the link itself is the credential. On success the visitor
     gets a ``streamer`` guest session (read-only by permission defaults) and is
     sent to the game. An invalid/expired/revoked token falls through to login.
     """

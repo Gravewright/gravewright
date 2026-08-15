@@ -46,5 +46,5 @@ clicáveis onde estão de fato visíveis.
 A visão de streamer compõe iluminação, paredes, partículas e shaders como se
 fosse GM, mas nada disso sai do navegador: as alterações são aplicadas ao estado
 local da cena e nunca chegam ao servidor, à mesa nem ao banco. É superfície de
-enquadramento, não uma segunda cadeira de GM — recarregar a página descarta a
+enquadramento, não uma segunda cadeira de GM: recarregar a página descarta a
 composição.

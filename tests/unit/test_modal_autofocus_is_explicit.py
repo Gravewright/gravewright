@@ -2,7 +2,7 @@
 
 Os modais de criação vivem no DOM desde o carregamento da página, apenas ocultos.
 O navegador guarda o candidato a autofocus e só o processa quando o elemento passa
-a ser renderizado — ou seja, ao abrir o modal. Como se chega lá por clique, o foco
+a ser renderizado, ou seja, ao abrir o modal. Como se chega lá por clique, o foco
 já está no botão, e o navegador recusa:
 
     Autofocus processing was blocked because a document already has a

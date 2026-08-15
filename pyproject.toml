@@ -25,6 +25,13 @@ postgres = ["psycopg[binary]==3.3.4"]
 [project.scripts]
 grave = "app.cli:main"
 
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

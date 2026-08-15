@@ -1,4 +1,4 @@
-/* Gravewright — Quests & Quest Boards
+/* Gravewright: Quests & Quest Boards
  *
  * The diary is a book; a quest is a contract and a board is the wall it hangs
  * on. This layer gives those two journal types their own object language,
@@ -7,7 +7,7 @@
  * `!important` unless a base rule is itself `!important`.
  *
  * The one idea that carries everything: the *seal*. A quest's status is a
- * stamped mark — icon plus word, tinted per state — and the same seal appears
+ * stamped mark: icon plus word, tinted per state, and the same seal appears
  * on the sheet, on every board card, in the board's admin list and in the
  * status picker of the editor. One object, four places, so a player learns to
  * read a colour once.
@@ -442,7 +442,7 @@
 }
 
 /* The rail owns the window's height, so the sheet's own gutter and scrolling
- * step aside for it — each panel scrolls on its own. */
+ * step aside for it: each panel scrolls on its own. */
 .journal-modal[data-journal-type="quest"] .journal-modal-body { overflow: hidden; }
 
 .journal-modal[data-journal-type="quest"] .journal-editor-form:has(.quest-workspace) {
@@ -681,7 +681,7 @@
     grid-column: 1 / -1;
 }
 
-/* The summary is the crier's line — it gets room to be written, not a slot. */
+/* The summary is the crier's line: it gets room to be written, not a slot. */
 .journal-modal .quest-field--summary { min-height: 0; }
 
 .journal-modal .quest-title-field { margin-bottom: var(--space-3); }

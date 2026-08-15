@@ -60,7 +60,7 @@ async def test_run_blocking_keeps_event_loop_responsive():
             await asyncio.sleep(0.005)
 
         # The loop kept advancing the heartbeat while the blocking call was
-        # stuck in its thread — i.e. an independent route would still respond.
+        # stuck in its thread: i.e. an independent route would still respond.
         ticks_before = ticks
         await asyncio.sleep(0.05)
         assert ticks > ticks_before, "event loop was blocked by the offloaded call"

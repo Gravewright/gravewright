@@ -2,7 +2,7 @@
 
 Duas coisas tornam isso fácil de errar:
 
-1. No xdice, ``Ln``/``Hn`` **descartam** os n menores/maiores — não "mantêm".
+1. No xdice, ``Ln``/``Hn`` **descartam** os n menores/maiores: não "mantêm".
    Vantagem em d20 é ``2d20L1``. Quem vem do Foundry escreve ``kh1``, que aqui é
    sintaxe inválida e volta como "rolagem inválida" na cara de quem joga.
 2. ``L`` precisa vir **antes** de ``H`` num mesmo termo (``6D6L1H2``).
@@ -77,7 +77,7 @@ def test_the_tray_rolls_through_the_chat_command():
 
 def test_the_bonus_die_keeps_the_better_of_two_exploding_dice():
     """Rola o conjunto E um d6 extra, e fica com o melhor. Os dois explodem. Como
-    o xdice aceita ``max``, isso vira ``max(1d8!,1d6!)`` — e o cartão mostra os
+    o xdice aceita ``max``, isso vira ``max(1d8!,1d6!)``, e o cartão mostra os
     dois dados."""
     from app.engine.dice.roll_service import RollService
 
@@ -135,13 +135,13 @@ def test_the_panel_is_reachable_and_labelled():
                   'data-dice-roll="public"', 'data-dice-roll="gm"'):
         assert marca in corpo, f"falta {marca} no painel"
 
-    # O campo de fórmula é a saída para o que os botões não montam — e mostra a
+    # O campo de fórmula é a saída para o que os botões não montam, e mostra a
     # notação que o servidor entende, que é como se aprende.
     assert "game.dice.formula_placeholder" in corpo
 
 
 def test_the_optional_name_travels_as_a_label_never_inside_the_notation():
-    """O nome é opcional e vai como rótulo depois de ``#`` — separador que não
+    """O nome é opcional e vai como rótulo depois de ``#``: separador que não
     existe na notação do avaliador. Se ele entrasse na fórmula, a rolagem voltaria
     como inválida. E o histórico deixou de ser volátil: sem localStorage a estante
     de rolagens some a cada F5."""
@@ -176,7 +176,7 @@ def test_the_optional_name_travels_as_a_label_never_inside_the_notation():
 def test_the_name_shows_up_where_the_table_looks():
     """Pedido explícito: se a pessoa nomeou a rolagem, o nome aparece no toast e
     no chat. O rótulo viaja em ``content``, que é o mesmo campo que o histórico
-    da página reidrata — então vale ao vivo e depois do reload."""
+    da página reidrata: então vale ao vivo e depois do reload."""
     cards = (ROOT / "static/js/chat/chat-roll-cards.js").read_text(encoding="utf-8")
     toasts = (ROOT / "static/js/ui/toasts.js").read_text(encoding="utf-8")
     page_service = (ROOT / "app/business/game_page_service.py").read_text(encoding="utf-8")
@@ -194,7 +194,7 @@ def test_the_name_shows_up_where_the_table_looks():
 
 def test_the_roll_payload_carries_what_the_card_needs_to_show():
     """Um card que só recebe os dados que contaram não consegue mostrar o que a
-    rolagem descartou — e é justamente isso que se quer ver numa rolagem com
+    rolagem descartou, e é justamente isso que se quer ver numa rolagem com
     descarte: qual dado perdeu. O tamanho do dado vem junto para marcar o valor
     máximo sem reinterpretar a notação do outro lado."""
     from app.engine.dice.roll_service import RollService
@@ -235,7 +235,7 @@ def test_history_and_live_messages_come_from_the_same_renderer():
     Manter as duas parecidas conferindo se o Jinja e o JS usam as mesmas classes
     é o que já falhou: o cartão do sistema entrou só no JS, e recarregar a página
     trocava Aumentos e Margem pela rolagem crua. Agora o template entrega o
-    payload e quem desenha é o mesmo arquivo nos dois casos — então o que se
+    payload e quem desenha é o mesmo arquivo nos dois casos: então o que se
     fixa aqui é que ele *não* redesenhe a rolagem por conta própria.
     """
     html = TEMPLATE.read_text(encoding="utf-8")

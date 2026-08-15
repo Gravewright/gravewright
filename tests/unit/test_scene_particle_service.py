@@ -2,7 +2,7 @@
 
 A separação é o ponto. Vela, fogueira, arcana e fumaça moravam no foco de luz
 porque era o lugar que existia, e o editor de foco acabou cheio de controles que
-não acendiam nada. Aqui não há raio claro, intensidade nem ângulo — há tipo,
+não acendiam nada. Aqui não há raio claro, intensidade nem ângulo: há tipo,
 escala, densidade e cor.
 """
 from __future__ import annotations
@@ -94,7 +94,7 @@ def test_only_the_gm_places_and_edits(db):
 
 
 def test_the_route_round_trip(db):
-    """A travessia inteira — rota, validação, banco, CHECK — para cada tipo."""
+    """A travessia inteira: rota, validação, banco, CHECK: para cada tipo."""
     from main import app
 
     gm = seed_user(name="GM")

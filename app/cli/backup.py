@@ -1,4 +1,4 @@
-"""``grave backup`` / ``grave restore`` — first-class safety net.
+"""``grave backup`` / ``grave restore``: first-class safety net.
 
 A backup is a single ``.zip`` containing the SQLite database, a ``grave.lock.json``
 snapshot, and optionally the ``storage/`` assets (``--include-assets``) and the
@@ -211,7 +211,7 @@ def restore_backup(*, path: Path, dry_run: bool, yes: bool) -> int:
         print(f"Target assets:   {_storage_root()}")
 
     if dry_run:
-        print("\nDry run — nothing was changed.")
+        print("\nDry run: nothing was changed.")
         return EXIT_OK
     if not yes:
         print("\nRefusing to overwrite your data without confirmation.")

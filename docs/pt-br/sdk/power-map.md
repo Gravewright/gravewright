@@ -189,9 +189,9 @@ Use:
 
 ## O que ler em seguida
 
-1. [`declarative-model.md`](declarative-model.md) — entenda o modelo de pacote.
-2. [`author-complete-checklist.md`](author-complete-checklist.md) — garanta que os autores usem toda a SDK.
-3. [`manifest.md`](manifest.md) — escreva o contrato.
-4. [`capabilities.md`](capabilities.md) — solicite as permissões certas.
-5. [`runtime.md`](runtime.md) e [`reference.md`](reference.md) — adicione comportamento de navegador.
-6. [`validation.md`](validation.md) — valide e depure.
+1. [`declarative-model.md`](declarative-model.md): entenda o modelo de pacote.
+2. [`author-complete-checklist.md`](author-complete-checklist.md): garanta que os autores usem toda a SDK.
+3. [`manifest.md`](manifest.md): escreva o contrato.
+4. [`capabilities.md`](capabilities.md): solicite as permissões certas.
+5. [`runtime.md`](runtime.md) e [`reference.md`](reference.md): adicione comportamento de navegador.
+6. [`validation.md`](validation.md): valide e depure.

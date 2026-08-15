@@ -47,7 +47,7 @@ def test_metadata_has_named_constraints_for_migrations():
 # migracao aditiva precisa ser reentrante, porque ``test_schema_legacy_upgrade``
 # roda ``upgrade head`` sobre um banco que ja tem os objetos mais novos. A
 # convencao foi seguida ate a 0016 e depois abandonada por nove revisoes seguidas
-# sem que nada acusasse — este teste e o que acusa.
+# sem que nada acusasse: este teste e o que acusa.
 _UNGUARDED_BASELINE = {"0001_initial_schema"}
 
 

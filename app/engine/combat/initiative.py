@@ -17,7 +17,7 @@ class InitiativeRoller:
 
     The formula is the system's, from ``combat.gw.json`` or from the roll action
     it points at, so a package declares it once. The core has no formula of its
-    own — a system that never declared one has nothing to roll, and says so by
+    own: a system that never declared one has nothing to roll, and says so by
     getting ``None`` back.
     """
 

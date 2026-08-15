@@ -1,7 +1,7 @@
 /*
  * Shader de cena, dos dois lados.
  *
- * Um shader e a unica coisa da mesa que uma pessoa escreve e OUTRA executa — na
+ * Um shader e a unica coisa da mesa que uma pessoa escreve e OUTRA executa: na
  * GPU dela, a cada quadro. As duas garantias que fazem isso ser aceitavel sao
  * comportamento, nao texto no codigo, e por isso estao aqui:
  *
@@ -273,7 +273,7 @@ async function originChecks() {
         const world = buildWorld({ layer: "effects" });
         await world.settle();
         const state = world.state();
-        // Sem marcador a origem e invisivel — o shader desenha na tela inteira, e
+        // Sem marcador a origem e invisivel, o shader desenha na tela inteira, e
         // nao ha nada no mapa que revele de onde ele sai.
         check("a camada de efeitos mostra a origem", state.editingShaders === true);
         check("inclusive a do shader desligado", state.shaderMarkers.length === 2,
@@ -363,8 +363,8 @@ async function originChecks() {
 // --- o fluxo da ferramenta ---------------------------------------------------
 //
 // Escolhe na barra, pinga no mapa, o editor abre naquele shader, cola o codigo,
-// salva. O caminho anterior — criar pelo editor, achar na lista, so entao
-// escrever — cobrava tres passos antes da primeira linha de GLSL.
+// salva. O caminho anterior: criar pelo editor, achar na lista, so entao
+// escrever: cobrava tres passos antes da primeira linha de GLSL.
 
 async function toolFlowChecks() {
     {
@@ -565,7 +565,7 @@ function effectChecks() {
 
         // A regra desta rodada: o texto de quem escreve chega INTEIRO a GPU. Nao ha
         // renomeacao de `main`, nao ha embrulho, nao ha nada acrescentado depois.
-        // Enquanto havia, o GLSL deixava de ser da pessoa — e era o preco de tentar
+        // Enquanto havia, o GLSL deixava de ser da pessoa, e era o preco de tentar
         // conter o efeito lendo texto.
         check("o texto do mestre entra inteiro", fragment.includes(SHADERS[0].source));
         check("a opacidade e aplicada no mesmo passe",
@@ -593,7 +593,7 @@ function effectChecks() {
     // Com tamanho fixo no mundo, um circulo pequeno mostrava um pedaco chapado de
     // um padrao gigante: a nevoa virava mancha, e diminuir o alcance parecia
     // quebrar o efeito. A lei abaixo e lida do proprio preambulo, e nao repetida
-    // aqui — se a constante mudar la, esta verificacao muda junto.
+    // aqui: se a constante mudar la, esta verificacao muda junto.
     {
         const world = loadEffects();
         const lei = /gwURadius > 0\.0 \? gwURadius \* ([0-9.]+) : ([0-9.]+)/.exec(world.api.PREAMBLE);
@@ -615,7 +615,7 @@ function effectChecks() {
 
         // Escala MAIOR tem de dar desenho MAIOR. Antes o exemplo dividia o mundo
         // por uma constante e multiplicava por uScale, entao a regua "Escala"
-        // encolhia o padrao ao ser aumentada — o contrario do que ela promete.
+        // encolhia o padrao ao ser aumentada, o contrario do que ela promete.
         check("aumentar a escala aumenta o desenho", feature(280, 4) > feature(280, 1),
             `${feature(280, 1)} -> ${feature(280, 4)}`);
 
@@ -652,7 +652,7 @@ function effectChecks() {
 
         const u = world.built[0].resources.shaderUniforms.uniforms;
         // A camera vai CRUA. Ela ja foi corrigida pelo canto do quadro, e essa
-        // correcao so valia enquanto o quadro coubesse inteiro na tela — foi o que
+        // correcao so valia enquanto o quadro coubesse inteiro na tela: foi o que
         // trouxe o zoom de volta.
         check("a camera vai crua para o shader",
             u.gwUCamera[0] === cam.offsetX && u.gwUCamera[1] === cam.offsetY && u.gwUCamera[2] === cam.zoom,
@@ -675,7 +675,7 @@ function effectChecks() {
 
         // 2) quadro cortado: o Pixi entrega so o pedaco na tela, com outro tamanho
         // e outro canto. A MESMA origem tem de sair, senao o desenho escorrega
-        // conforme o zoom — que era o defeito.
+        // conforme o zoom: que era o defeito.
         const corte = { size: [sprite.width / 3, sprite.height / 4], at: [0, 0] };
         const uvDaOrigem = [
             (250 * cam.zoom + cam.offsetX - corte.at[0]) / corte.size[0],
@@ -687,7 +687,7 @@ function effectChecks() {
     }
 
     {
-        // Sem alcance o quadro e a tela inteira — e ai nao ha mascara, senao os
+        // Sem alcance o quadro e a tela inteira, e ai nao ha mascara, senao os
         // cantos do que se pediu inteiro sairiam recortados.
         const world = loadEffects();
         draw(world, [{ ...SHADERS[0], x: 100, y: 100, radiusWorld: 0 }]);
@@ -748,7 +748,7 @@ function effectChecks() {
         draw(world, [shader], cam);
         check("cena parada nao repinta a mascara", world.masks()[0].shapes === antes);
 
-        // Porta abrindo muda a geometria, e ai a forma TEM de ser refeita — e o
+        // Porta abrindo muda a geometria, e ai a forma TEM de ser refeita, e o
         // que faz a fumaca aparecer pelo vao.
         draw(world, [{ ...shader, occlusionStamp: "geo-2", occlusion: [...visivel, { x: 800, y: 800 }] }], cam);
         check("geometria nova repinta", world.masks()[0].shapes !== antes
@@ -851,7 +851,7 @@ function effectChecks() {
 
     {
         // Orcamento: cada quadro de efeito custa por quadro de tela, e a cena nao
-        // pode ser afundada por uma lista que ninguem revisou — porque ninguem
+        // pode ser afundada por uma lista que ninguem revisou: porque ninguem
         // revisa mais.
         const world = loadEffects();
         const many = Array.from({ length: 9 }, (_, i) => ({ ...SHADERS[0], id: `m${i}` }));
@@ -871,7 +871,7 @@ function effectChecks() {
     }
 
     {
-        // Shader apagado, desligado ou de outra cena leva o quadro junto — senao
+        // Shader apagado, desligado ou de outra cena leva o quadro junto: senao
         // ele fica aceso na tela para sempre.
         const world = loadEffects();
         draw(world, [SHADERS[0]]);

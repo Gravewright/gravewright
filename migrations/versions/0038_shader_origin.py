@@ -5,13 +5,13 @@ Revises: 0037_scene_shaders
 
 Um shader sem origem só sabe ser clima: ele cobre a tela inteira e pronto. Isso
 serve para chuva e granulado, e não serve para a fogueira que fumega naquele
-canto — que é justamente o efeito que dá sentido a uma cena.
+canto: que é justamente o efeito que dá sentido a uma cena.
 
 O passe continua sendo de tela, porque é o que um filtro sabe fazer. O que muda é
 que ele passa a *receber onde fica*: origem em coordenadas de mundo e raio em
 células, os mesmos que o foco de luz e o emissor de partícula já usam.
 
-``radius`` zero mantém o que existe hoje — cena inteira —, então o que já estava
+``radius`` zero mantém o que existe hoje: cena inteira -, então o que já estava
 gravado continua exatamente como estava.
 """
 from __future__ import annotations

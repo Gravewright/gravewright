@@ -5,7 +5,7 @@ Revises: 0027_light_animated_core
 
 ``intensity`` diz quanto o foco levanta a escuridao; ``opacity`` diz quanto o
 brilho colorido aparece por cima do mapa. Eram a mesma coisa, entao nao havia
-como ter um foco que ilumina bastante com tinta discreta — ou o contrario.
+como ter um foco que ilumina bastante com tinta discreta, ou o contrario.
 
 Padrao 1.0 reproduz exatamente o brilho anterior.
 """

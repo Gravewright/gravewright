@@ -5,7 +5,7 @@
  * invisível e inalcançável na mesa, por dois motivos que nenhuma asserção de
  * texto pegaria: o clique era barrado antes de chegar à ferramenta (a porta
  * checava a camada da iluminação, e partícula mora na de composição), e não havia
- * marcador desenhado — a nuvem fica sob a escuridão, então numa sala escura não
+ * marcador desenhado: a nuvem fica sob a escuridão, então numa sala escura não
  * havia nada para ver nem onde clicar.
  *
  * Sai != 0 na primeira falha.
@@ -368,7 +368,7 @@ function check(label, condition, detail = "") {
     {
         // O aglomerado nao nasce de cliques seguidos: a tolerancia faz o segundo
         // clique SELECIONAR o vizinho em vez de criar. Ele nasce de colocar com o
-        // mapa aproximado e depois trabalhar afastado — a tolerancia e em pixels de
+        // mapa aproximado e depois trabalhar afastado: a tolerancia e em pixels de
         // tela, entao afastar junta tudo dentro dela. E o caso da mesa.
         const world = buildWorld({ zoom: 4 });
         await world.settle();
@@ -408,7 +408,7 @@ function check(label, condition, detail = "") {
     {
         // A regra: cinematográfico desenha o efeito por shader, clássico o desenha
         // por partícula. Suprimir partícula no clássico deixava o modo leve sem
-        // efeito nenhum — o oposto da intenção.
+        // efeito nenhum, o oposto da intenção.
         const world = buildWorld();
         world.setVisionMode("classic");
         await world.settle();

@@ -74,7 +74,7 @@ def test_a_cut_too_close_to_the_end_is_refused(db):
         login(client, gm)
         wall = _wall(client, campaign, scene)
         # Um toco menor que a tolerância do nó é impossível de pegar e some no
-        # próximo arrasto — melhor recusar do que criar lixo invisível.
+        # próximo arrasto: melhor recusar do que criar lixo invisível.
         refused = client.post("/game/walls/split", json={
             "campaign_id": campaign, "wall_id": wall["id"], "x": 102.0, "y": 100.0,
         })
@@ -175,7 +175,7 @@ def test_bulk_delete_is_gm_only(db):
 
 
 def test_every_kind_can_be_bulk_deleted(db):
-    """Luz, parede, partícula e shader — a seleção pega qualquer um deles."""
+    """Luz, parede, partícula e shader: a seleção pega qualquer um deles."""
     from main import app
     gm = seed_user(name="GM")
     campaign = seed_campaign(gm)

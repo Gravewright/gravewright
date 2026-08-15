@@ -5,7 +5,7 @@ Revises: 0038_shader_origin
 
 Escala e velocidade não dão direção. Chuva torta, varredura de facho e faixa de
 poeira precisam de um ângulo, e sem ele o único jeito de girar um efeito era
-reescrever o GLSL — o que transforma um botão em trabalho de programação.
+reescrever o GLSL, o que transforma um botão em trabalho de programação.
 
 Zero é o que já existia, então nada muda para o que está gravado.
 """

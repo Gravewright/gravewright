@@ -5,7 +5,7 @@ Each actor/item's full system data is one JSON file:
     { "<kind>_id", "system_id", "version", "data": {...}, "updated_at": <iso> }
 
 Reads/writes go through the path resolver (confinement) and atomic writer
-(durability). The store knows nothing about rules or permissions — callers
+(durability). The store knows nothing about rules or permissions: callers
 (SheetDataService) enforce those. ``*_actor`` methods are thin wrappers over the
 generic ``*_entity`` methods, kept so existing actor callers stay unchanged.
 """

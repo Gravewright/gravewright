@@ -145,7 +145,7 @@
 
   function formatMod(value) {
     const n = Number(value);
-    if (!Number.isFinite(n)) return value ?? "—";
+    if (!Number.isFinite(n)) return value ?? "-";
     return n > 0 ? `+${n}` : String(n);
   }
 
@@ -453,7 +453,7 @@
         stat.appendChild(el("span", "actor-combat-stat-abbr", node.abbr || node.label || ""));
         if (node.label && node.abbr) stat.appendChild(el("span", "actor-combat-stat-label", node.label));
         const raw = getPath(ctx, node.valuePath);
-        const valueText = node.signed ? formatMod(raw) : (raw ?? "—");
+        const valueText = node.signed ? formatMod(raw) : (raw ?? "-");
         const interaction = normalizeInteraction(node.interaction, node.rollAction, node.rollLabel || node.label);
         if (interaction) {
           const btn = el("button", "actor-combat-stat-value actor-combat-stat-roll", valueText);
@@ -617,7 +617,7 @@
       case "readonlyField": {
         const wrap = el("div", variantClass("actor-field", node.variant, "actor-field--readonly"));
         wrap.appendChild(el("span", "actor-field-label", node.label || ""));
-        wrap.appendChild(el("span", "actor-readonly-value", getPath(ctx, node.path) ?? "—"));
+        wrap.appendChild(el("span", "actor-readonly-value", getPath(ctx, node.path) ?? "-"));
         return wrap;
       }
       case "text":

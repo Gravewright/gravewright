@@ -98,7 +98,7 @@ When changing SDK package, browser runtime, manifest, content-pack, schema, CLI,
 2. update schemas when applicable;
 3. add compatibility or migration notes;
 4. add tests that cover both valid and invalid inputs;
-5. update `CHANGELOG.md`.
+5. update `RELEASE_NOTES.md`.
 
 ## Generated and Runtime Files
 

@@ -90,7 +90,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `ui.slots` | Mount package-owned UI in documented host slots. |
 <!-- END GENERATED -->
 
-> Generated from `KNOWN_CAPABILITIES` in `app/engine/sdk/package_manifest_validator.py` and `docs/sdk/_data/capability-descriptions.json`. Do not edit by hand — run `uv run python scripts/generate_sdk_reference.py`.
+> Generated from `KNOWN_CAPABILITIES` in `app/engine/sdk/package_manifest_validator.py` and `docs/sdk/_data/capability-descriptions.json`. Do not edit by hand: run `uv run python scripts/generate_sdk_reference.py`.
 
 ## Forbidden capabilities
 
@@ -256,7 +256,7 @@ There is no backend plugin execution in SDK v1. Packages are declarative plus br
 | `sdk.ui.toast` | `assets.ui` |
 <!-- END GENERATED -->
 
-> Generated from `CAPABILITY_REQUIREMENTS` in `static/js/sdk/sdk-capabilities.js`. Do not edit by hand — run `uv run python scripts/generate_sdk_reference.py`.
+> Generated from `CAPABILITY_REQUIREMENTS` in `static/js/sdk/sdk-capabilities.js`. Do not edit by hand: run `uv run python scripts/generate_sdk_reference.py`.
 
 ## Review guidance
 

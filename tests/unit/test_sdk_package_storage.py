@@ -1,4 +1,4 @@
-"""Phase 7A — storage contract (validation only, no runtime).
+"""Phase 7A: storage contract (validation only, no runtime).
 
 Validates the manifest ``storage.sqlite`` declaration, the declared migrations
 directory, and the named-queries file (type/params/sql), with parameters

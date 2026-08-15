@@ -3,7 +3,7 @@
 O modal de edição é AJAX e atualiza o canvas de quem editou pela própria
 resposta (``syncCanvasFromResponse``). Sem um evento de sala, todo o resto da
 mesa continuava com a grade, a escala e a escuridão antigas até recarregar a
-página — o GM subia a escuridão, via a cena escurecer, e os jogadores não.
+página, o GM subia a escuridão, via a cena escurecer, e os jogadores não.
 """
 
 from __future__ import annotations

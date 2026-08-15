@@ -1,7 +1,18 @@
 {
   "app": {
     "app_name": "Gravewright",
-    "default_locale": "en"
+    "default_locale": "pt-BR"
   },
-  "privacy": {}
+  "privacy": {
+    "contact_email": "yoga@decisne.com",
+    "content": "Esta Política de Privacidade descreve como esta instância do Gravewright coleta, utiliza, armazena e protege os dados pessoais dos usuários, em linha com os princípios da Lei Geral de Proteção de Dados (Lei nº 13.709/2018 — LGPD). Ao criar uma conta e utilizar esta plataforma, você declara estar ciente das práticas aqui descritas.",
+    "data_controller": "Ikki de Fenix",
+    "data_subject_rights": "O titular pode solicitar acesso, correção, portabilidade, revogação de consentimento e exclusão de dados.",
+    "dpo_contact": "Yoga de Cisne",
+    "enabled": true,
+    "legal_basis": "Consentimento, execução de contrato e legítimo interesse, conforme aplicável.",
+    "retention_policy": "Os dados são mantidos pelo tempo necessário para operar o serviço e cumprir obrigações legais.",
+    "title": "Política de Privacidade",
+    "updated_at": "2026-08-14"
+  }
 }

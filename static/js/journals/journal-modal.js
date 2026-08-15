@@ -342,7 +342,7 @@
       if (open) composerInput?.focus();
       else if (composerInput) composerInput.value = "";
     };
-    // A chapter is a page carrying its name — the same shape the index groups by.
+    // A chapter is a page carrying its name: the same shape the index groups by.
     const createChapter = () => {
       const name = composerInput?.value.trim();
       if (!name) return;
@@ -635,7 +635,7 @@
       action: () => setPageField(pageId, selector, value),
     }));
 
-    // Renaming a chapter is renaming the label its pages carry — there is no
+    // Renaming a chapter is renaming the label its pages carry: there is no
     // chapter record of its own to edit.
     const renameChapter = (chapter) => {
       const header = indexList.querySelector(`.journal-chapter-group[data-chapter="${CSS.escape(chapter)}"] > header`);
@@ -719,7 +719,7 @@
             danger: true,
             action: () => menu.showMenu(event.clientX, event.clientY, [{
               // Only the label goes: the pages move to "Sem capítulo".
-              text: "Confirmar — as páginas ficam sem capítulo",
+              text: "Confirmar: as páginas ficam sem capítulo",
               danger: true,
               action: () => {
                 cardsInChapter(chapter).forEach((card) => {
@@ -806,7 +806,7 @@
       if (current === "cover" && currentTitle) currentTitle.textContent = journalTitle();
     });
 
-    // The diary opens on its first page — the first of the first chapter, since
+    // The diary opens on its first page: the first of the first chapter, since
     // the index groups pages in list order. The opening page stays one click
     // away, on the home control.
     const openFirstPage = () => {

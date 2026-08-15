@@ -1,6 +1,6 @@
 """The combat tracker: who is in the order, in what order, and whose turn it is.
 
-The core never interprets an initiative value — the active system decides
+The core never interprets an initiative value: the active system decides
 whether it is rolled, typed as a number, or typed as free text with the order
 arranged by hand. These tests cover all three shapes.
 """

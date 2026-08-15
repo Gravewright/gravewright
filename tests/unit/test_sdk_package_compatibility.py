@@ -1,4 +1,4 @@
-"""Phase 3 — compatibility and versioning.
+"""Phase 3: compatibility and versioning.
 
 Pin reliable SemVer-ish ordering (including alpha/beta/rc/final pre-releases),
 the minimum/maximum/verified window semantics, and stable error codes.

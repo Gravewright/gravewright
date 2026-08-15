@@ -2,7 +2,7 @@
 
 ``installed_packages.manifest_json`` é uma cópia tirada na hora de instalar. Se
 alguma camada ler essa cópia em vez do arquivo em disco, editar o manifest passa a
-exigir reinstalar o pacote — e, pior, o servidor fica dividido: uma parte enxerga a
+exigir reinstalar o pacote: e, pior, o servidor fica dividido: uma parte enxerga a
 capability nova e outra não. Foi exatamente assim que ``sdk.assets.list`` passou na
 validação do manifest e mesmo assim explodiu no navegador com
 
@@ -25,13 +25,13 @@ SDK_DIR = ROOT / "app/engine/sdk"
 
 
 def test_only_the_install_service_reads_the_stored_snapshot():
-    """Qualquer serviço que abra ``manifest_json`` está reimplementando a regra —
+    """Qualquer serviço que abra ``manifest_json`` está reimplementando a regra -
     e nada garante que a reimplemente na mesma direção.
 
     Este teste já existiu varrendo só ``app/engine/sdk``, e por isso deixou passar
     quatro serviços fora dessa pasta: o registry de regras (mapeamento de token),
     o schema das fichas (que sanitiza as escritas), o layout e os content packs.
-    O sintoma foi caro de achar — token sem imagem no tabuleiro e campo novo
+    O sintoma foi caro de achar: token sem imagem no tabuleiro e campo novo
     sumindo na gravação, ambos sem erro nenhum. A varredura agora é o app inteiro.
     """
     # O doctor é a exceção legítima: o trabalho dele é justamente comparar o
@@ -130,7 +130,7 @@ def test_install_service_get_manifest_is_the_shared_entry_point():
 def test_package_asset_urls_change_when_the_file_changes(tmp_path):
     """A versão do manifest não muda quando só um script muda. Sem outro sinal, o
     navegador reusa o ``?v=0.1.0`` em cache e o autor depura código que não está
-    mais rodando — foi o que aconteceu ao editar o controlador da ficha PDF."""
+    mais rodando: foi o que aconteceu ao editar o controlador da ficha PDF."""
     from app.engine.sdk.package_asset_service import PackageAssetService
 
     script = tmp_path / "app.js"

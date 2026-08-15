@@ -164,7 +164,7 @@ class ActorRepository:
     def list_visible_to_user(self, *, campaign_id: str, user_id: str) -> list[dict]:
         """Active actors this user may read without table-wide authority.
 
-        Ownership or an explicit ``can_view`` grant — the two things that let a
+        Ownership or an explicit ``can_view`` grant: the two things that let a
         player see a sheet that is not the GM's to show. Roles that read the
         whole table are decided elsewhere and never need this.
         """

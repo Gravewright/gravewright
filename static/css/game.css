@@ -3235,7 +3235,7 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
 
 /* Composer do chat em três faixas: bandeja (largura inteira), enviar + apagar
    lado a lado, e o campo por último ocupando tudo. A bandeja é ação de
-   composição, não de envio — fica separada dos dois botões que mandam ou apagam. */
+   composição, não de envio: fica separada dos dois botões que mandam ou apagam. */
 .chat-composer {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -7779,7 +7779,7 @@ body[data-game-layout="classic"] .game-panel-body {
 
 /* Sem `max-height` fixo: a janela é `grid-template-rows: auto minmax(0, 1fr)` e
    já tem o próprio teto. Um 70vh aqui prendia a ficha a 70% da tela por mais
-   alta que a janela fosse — o auto-encaixe media esse corpo travado, dimensionava
+   alta que a janela fosse, o auto-encaixe media esse corpo travado, dimensionava
    a janela por ele, e sobrava um vão embaixo com a ficha rolando por dentro. */
 .actor-sheet-body {
     padding: 12px;
@@ -9889,7 +9889,7 @@ body[data-game-layout="classic"] .gw-effects-hud {
     max-width: none;
     width: 100%;
     /* The panel body sets overflow-y:auto, which makes overflow-x compute to
-       auto too — force it hidden so the fan never produces a horizontal bar. */
+       auto too: force it hidden so the fan never produces a horizontal bar. */
     overflow-x: hidden;
 }
 
@@ -11277,7 +11277,7 @@ body.command-palette-open {
 /* Editor de shader. Herda o painel do editor de foco, mas com duas exigencias
    opostas: o codigo precisa de largura, e o resto precisa sair da frente do mapa.
    A primeira versao empilhava rotulo sobre regua e despejava dois paragrafos de
-   referencia no fim — um painel de meia tela para ajustar tres numeros. */
+   referencia no fim: um painel de meia tela para ajustar tres numeros. */
 /* O 320px do dialogo padrao e a largura de um formulario de tres campos; aqui
    ha codigo dentro, e ele divide a largura com as reguas. */
 .game-modal-window.shader-editor-modal {
@@ -11289,13 +11289,13 @@ body.command-palette-open {
     gap: 10px;
     align-content: start;
     /* Sem max-height propria: quem mede a janela e o auto-fit, pela altura do
-       conteudo. Um teto aqui deixava o corpo menor que a janela — e a sobra
+       conteudo. Um teto aqui deixava o corpo menor que a janela, e a sobra
        aparecia como faixa preta debaixo da barra de salvar. O corpo ja rola
        sozinho pelo `overflow: auto` do .game-modal-body. */
 }
 
 /* Codigo a esquerda, reguas a direita. O auto-fit devolve tudo a uma coluna
-   quando a janela nao tem 296px por lado — celular e janela apertada continuam
+   quando a janela nao tem 296px por lado: celular e janela apertada continuam
    com o mesmo painel, so que empilhado. */
 .shader-editor-columns {
     display: grid;
@@ -11321,7 +11321,7 @@ body.command-palette-open {
     grid-template-rows: auto minmax(0, 1fr);
 }
 
-/* Campos agrupados por pergunta — como se parece, como se move, onde alcanca.
+/* Campos agrupados por pergunta: como se parece, como se move, onde alcanca.
    Uma pilha de doze controles iguais nao diz qual mexe em que; a moldura e o
    titulo dizem, e custam uma linha cada. */
 .shader-section {
@@ -11602,7 +11602,7 @@ body.command-palette-open {
 /* ---------------------------------------------------------------------------
    Assets: barra de comando, pastas em coluna e grade de cartões.
    A lista em linha única deixava de servir quando imagem e ficha passaram a
-   dividir a mesma pasta — miniatura pequena para escolher imagem, e nenhum jeito
+   dividir a mesma pasta: miniatura pequena para escolher imagem, e nenhum jeito
    de separar os tipos. */
 .asset-panel-body { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
 
@@ -11757,7 +11757,7 @@ body.command-palette-open {
 }
 .dice-chip__remove:hover { background: rgba(0, 0, 0, 0.55); color: #fca5a5; }
 
-/* Opções valem para o termo selecionado — L/H são por termo na notação. */
+/* Opções valem para o termo selecionado: L/H são por termo na notação. */
 .dice-term-options {
     display: flex; flex-direction: column; gap: 5px;
     padding: 8px; border-radius: var(--radius-md);
@@ -11934,7 +11934,7 @@ body.command-palette-open {
 }
 
 /* ---------------------------------------------------------------------------
-   Gravewright mode — keyboard parity and labelling.
+   Gravewright mode: keyboard parity and labelling.
 
    The mode's own chrome (bottom dock, left tool rail, window controls, the
    minimised-window tray, the layer switch) carried 155 `:hover` rules and not a
@@ -11944,7 +11944,7 @@ body.command-palette-open {
    The tool rail was worse: its buttons carry `data-tooltip`, but no rule ever
    rendered it, so the attribute was dead and the buttons were icon-only with no
    name at all. The label is now announced (aria-label, in the template) and
-   drawn — on focus as well as hover, so it is not mouse-only either.
+   drawn: on focus as well as hover, so it is not mouse-only either.
    --------------------------------------------------------------------------- */
 
 .game-dock-btn:focus-visible,
@@ -12003,7 +12003,7 @@ body.command-palette-open {
 
    The rails are fixed and centred on their axis, with no size cap: the tool
    rail needs ~464px of height for its 11 buttons and 4 separators, the bottom
-   dock ~377px of width. Below that they overflowed past both ends at once —
+   dock ~377px of width. Below that they overflowed past both ends at once -
    centred, so nothing was reachable by scrolling the page either.
 
    They shrink rather than scroll deliberately: `overflow` on a rail would clip

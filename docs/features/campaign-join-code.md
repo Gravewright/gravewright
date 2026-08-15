@@ -1,4 +1,4 @@
-# Campaign join code — frozen MVP contract
+# Campaign join code: frozen MVP contract
 
 Status: contract frozen for implementation (roadmap stage 4.0).
 

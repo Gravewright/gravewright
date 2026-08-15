@@ -10,7 +10,7 @@ Process model: the ring buffer is per-process state guarded by a threading
 lock. It is whole only under the V1 single-worker deployment (``WEB_WORKERS=1``,
 enforced in ``app/config.py``). Running multiple workers would fragment the
 buffer into N independent copies and ``/inside/diagnostics`` would report a
-single worker's slice — see STABILIZATION_V1 P0.4. A multi-worker future needs a
+single worker's slice: see STABILIZATION_V1 P0.4. A multi-worker future needs a
 shared substrate (Prometheus export or broker aggregation), not this buffer.
 """
 

@@ -9,7 +9,7 @@
 > **Do not stabilize accidental behaviour. Stabilize only intentional contract.**
 
 The SDK is considered stable when a package valid for `sdkVersion: "1"` keeps
-installing, enabling, and running across `1.x` releases — unless it uses
+installing, enabling, and running across `1.x` releases: unless it uses
 capabilities marked `forbidden`.
 
 Package authors should target the final SDK line with `compatibility.minimum`
@@ -49,7 +49,7 @@ and `compatibility.verified` set to `"1"`; pre-release values such as
 ## Release gates (summary)
 
 > Historical: these were the internal stability-sprint gates. Their contents
-> shipped together as **Gravewright Alpha 2.0.0 — SDK Freeze** (`v2.0.0-alpha.0`),
+> shipped together as **Gravewright Alpha 2.0.0: SDK Freeze** (`v2.0.0-alpha.0`),
 > which froze the SDK 1 surface. The version names below are the sprint plan's,
 > not the released tag.
 
@@ -62,4 +62,4 @@ and `compatibility.verified` set to `"1"`; pre-release values such as
 | `v1.0.0-beta.1` | Freeze: manifest v1 frozen, compatibility policy published. |
 | `v1.0.0-rc.1` | Bugfixes/docs/tests only. |
 
-See the plan's "Fase 14 — Release gates" for the full per-gate contents.
+See the plan's "Fase 14: Release gates" for the full per-gate contents.

@@ -1,7 +1,7 @@
 """Ready-made ruleset scaffolds (``templates``) for ``grave ruleset new``.
 
 A *template* is a curated, complete :class:`~app.cli.scaffold.Intent` for a
-recognizable family of tabletop systems — "classic d20 fantasy", "Powered by the
+recognizable family of tabletop systems: "classic d20 fantasy", "Powered by the
 Apocalypse", "percentile horror", and so on. Instead of answering a dozen
 questions about a system they may not have designed yet, an author picks a
 template that already declares sensible actor/item types, a core dice mechanic,
@@ -57,7 +57,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="blank",
         label="Blank slate",
-        tagline="One character sheet, no dice mechanic — total freedom.",
+        tagline="One character sheet, no dice mechanic: total freedom.",
         description=(
             "A single character actor type with the common fields and nothing "
             "else. Pick this when you want to design the system yourself."
@@ -98,7 +98,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="osr-roll-under",
         label="Old-school roll-under",
-        tagline="Roll under your ability on a d20 — lean, lethal, classic.",
+        tagline="Roll under your ability on a d20: lean, lethal, classic.",
         description=(
             "Characters and monsters with the six classic abilities, weapon, "
             "armor and spell items, and active effects. Tests succeed when you "
@@ -123,7 +123,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
         description=(
             "Player characters and NPCs driven by the five PbtA stats "
             "(cool/hard/hot/sharp/weird). Moves resolve on 2d6 + stat. No item "
-            "types — fiction first — with a Biography tab for playbooks."
+            "types: fiction first: with a Biography tab for playbooks."
         ),
         kind="ruleset",
         name_suggestion="My PbtA Hack",
@@ -139,7 +139,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="forged-dark",
         label="Forged in the Dark",
-        tagline="d6 dice pools, crews and abilities — heist-and-consequence play.",
+        tagline="d6 dice pools, crews and abilities: heist-and-consequence play.",
         description=(
             "Characters, NPCs and a shared crew sheet. Abilities and gear as "
             "items, active effects, and action rolls built from d6 dice pools "
@@ -182,7 +182,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="fate-core",
         label="Fate / Fudge",
-        tagline="4dF approaches and aspects — pure narrative engine.",
+        tagline="4dF approaches and aspects: pure narrative engine.",
         description=(
             "Characters and NPCs using the six Fate approaches and 4dF rolls. "
             "Active effects stand in for aspects and stunts, with a Biography "
@@ -230,7 +230,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="action-2d20",
         label="2d20 action",
-        tagline="Attribute + skill on 2d20 — momentum-fueled cinematic play.",
+        tagline="Attribute + skill on 2d20: momentum-fueled cinematic play.",
         description=(
             "Characters and NPCs testing attribute + skill on 2d20. Weapon and "
             "talent items, plus active effects for momentum and complications."
@@ -250,7 +250,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="card-narrative",
         label="Card-driven narrative",
-        tagline="Draw from a deck instead of rolling dice — storytelling games.",
+        tagline="Draw from a deck instead of rolling dice: storytelling games.",
         description=(
             "Characters and NPCs that resolve actions by drawing from a 52-card "
             "deck. A Biography tab keeps the story front and centre; add your "

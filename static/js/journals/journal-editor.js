@@ -262,8 +262,8 @@
     return `<label class="journal-list-check"><input type="checkbox" data-field="${field}" ${checked ? "checked" : ""}/> ${escapeHtml(label)}</label>`;
   }
 
-  // The row leads with its mark — a checkbox for an objective, a coin for a
-  // reward — so a list of them reads as the quest sheet does.
+  // The row leads with its mark: a checkbox for an objective, a coin for a
+  // reward: so a list of them reads as the quest sheet does.
   function renderObjectiveRow(editor, obj) {
     const ds = editor.dataset;
     return `<div class="journal-list-row" draggable="false">

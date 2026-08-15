@@ -30,7 +30,7 @@ from app.persistence.repositories.campaign_repository import CampaignRepository
 def action_dialogs(actions: dict, catalog: dict[str, str]) -> dict:
     """Localized roll dialogs, keyed by action id, for the actions that ask.
 
-    Only the dialog travels — the formula stays on the server, where the roll is
+    Only the dialog travels: the formula stays on the server, where the roll is
     resolved. Sending it would invite a client to argue about the result.
     """
     if not isinstance(actions, dict):
@@ -49,8 +49,8 @@ def action_dialogs(actions: dict, catalog: dict[str, str]) -> dict:
 def bundle_to_dict(bundle: "ActorSheetBundle") -> dict:
     """The JSON an open sheet renders itself from.
 
-    One implementation on purpose. There are two services that build a bundle —
-    the actor's and the token instance's — and while each also serialised its
+    One implementation on purpose. There are two services that build a bundle -
+    the actor's and the token instance's, and while each also serialised its
     own, the two drifted: the token copy silently lacked ``dialogs`` (so a roll
     opened no options when the sheet came from a token) and ``token_link_mode``
     (so edits to a *linked* token were written to a token-local override instead

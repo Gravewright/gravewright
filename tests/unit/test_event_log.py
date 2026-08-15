@@ -77,7 +77,7 @@ def test_room_event_log_skips_token_events_to_avoid_private_replay(db):
 
 
 def test_replay_since_flags_gap_when_events_expired(db):
-    """STABILIZATION_V1 P1.4 — reconnect after a retention gap must signal resync.
+    """STABILIZATION_V1 P1.4: reconnect after a retention gap must signal resync.
 
     A client that reconnects with an ``after_seq`` older than the oldest retained
     event has missed events that already aged out; ``replay_since`` must report

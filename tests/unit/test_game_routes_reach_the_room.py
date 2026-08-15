@@ -4,7 +4,7 @@ O GM mexia em algo, via mudar na própria tela, e os jogadores continuavam com o
 estado antigo até recarregar a página. O silêncio era invisível: nada acusava.
 
 Este teste percorre os handlers ``@post`` de ``app/actions/game`` e resolve, de
-forma transitiva, se cada um alcança o transporte — direto ou por um helper. O
+forma transitiva, se cada um alcança o transporte: direto ou por um helper. O
 que for silencioso de propósito precisa estar listado abaixo com o motivo, então
 uma rota nova nasce acusada e a decisão fica escrita.
 """
@@ -93,7 +93,7 @@ def test_every_shared_state_route_reaches_the_room():
                     if route not in DELIBERATELY_SILENT]
 
     assert not undocumented, (
-        "rotas que mudam estado sem avisar a sala — emita um evento ou registre o "
+        "rotas que mudam estado sem avisar a sala: emita um evento ou registre o "
         "motivo em DELIBERATELY_SILENT: " + str(undocumented)
     )
 

@@ -7,6 +7,12 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 ENV_FILE = PROJECT_ROOT / ".env"
 
+ENVIRONMENT_TEMPLATES = {
+    "development": PROJECT_ROOT / ".env.development.example",
+    "staging": PROJECT_ROOT / ".env.staging.example",
+    "production": PROJECT_ROOT / ".env.production-postgresql.example",
+}
+
 _loaded = False
 
 
@@ -59,12 +65,12 @@ def _detect_app_env() -> str:
 
 
 def load_environment() -> None:
-    """Load environment variables from ``.env`` then ``.env.<APP_ENV>``.
+    """Load variables from ``.env`` then the sanitized environment template.
 
-    Order is ``.env`` first, ``.env.<APP_ENV>`` second. Under "first write wins"
-    this means a developer's local ``.env`` overrides the committed
-    per-environment file, which in turn supplies the environment's defaults. Real
-    OS environment variables always win over both. Runs once per process.
+    The committed templates have explicit ``.example`` suffixes so they cannot
+    be mistaken for private deployment configuration. Under "first write wins",
+    a developer's local ``.env`` overrides template defaults. Real OS environment
+    variables always win. Runs once per process.
     """
     global _loaded
     if _loaded:
@@ -72,7 +78,9 @@ def load_environment() -> None:
 
     app_env = _detect_app_env()
     _apply_file(ENV_FILE)
-    _apply_file(PROJECT_ROOT / f".env.{app_env}")
+    template = ENVIRONMENT_TEMPLATES.get(app_env)
+    if template is not None:
+        _apply_file(template)
     _loaded = True
 
 

@@ -106,7 +106,7 @@ seus dicts de finding existentes.
 ## Códigos de finding do doctor
 
 O `grave doctor` emite findings cujo campo `code` está **congelado e estável na
-Alpha 2.0.0** — ferramentas e testes podem casar com eles. O conjunto atual
+Alpha 2.0.0**: ferramentas e testes podem casar com eles. O conjunto atual
 mistura dois estilos de nomenclatura por razões históricas.
 
 Namespaced (`sdk.<área>.<detalhe>`):

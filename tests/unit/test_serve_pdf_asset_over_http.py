@@ -1,7 +1,7 @@
 """Servir um PDF da biblioteca precisa funcionar pela HTTP de verdade.
 
-Toda a cadeia foi testada em pedaços — upload valida, o banco guarda, o serviço de
-leitura resolve o caminho — e mesmo assim a ficha não abria o arquivo. O pedaço
+Toda a cadeia foi testada em pedaços: upload valida, o banco guarda, o serviço de
+leitura resolve o caminho, e mesmo assim a ficha não abria o arquivo. O pedaço
 que ninguém exercitava era o último: a resposta HTTP em si, com os cabeçalhos que
 o navegador realmente recebe.
 """
@@ -55,7 +55,7 @@ def test_uploading_and_serving_a_pdf_round_trips(client):
 
 def test_the_pdf_is_served_as_an_attachment_but_still_readable(client):
     """Inline abriria o visualizador nativo do navegador, que executa o JavaScript
-    embutido no PDF. Como anexo, `fetch` continua lendo os bytes — que é como o
+    embutido no PDF. Como anexo, `fetch` continua lendo os bytes: que é como o
     pdf.js trabalha."""
     gm = seed_user(name="GM")
     campaign_id = seed_campaign(gm)

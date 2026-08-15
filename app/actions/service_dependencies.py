@@ -1,7 +1,7 @@
 """Dependency-injection providers for the service layer.
 
 Handlers receive services through Litestar DI (``campaign_service: CampaignService``)
-instead of instantiating them inline. The services are stateless — they use SQLAlchemy Core connections per method call — so each provider is an app-lifetime singleton
+instead of instantiating them inline. The services are stateless: they use SQLAlchemy Core connections per method call: so each provider is an app-lifetime singleton
 (``use_cache=True``); the parameter name is the snake_case of the class.
 
 Register this in the ``Litestar(dependencies=...)`` map.

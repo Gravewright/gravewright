@@ -398,7 +398,6 @@
             {% endfor %}
 
             <section class="game-board">
-                {% set show_journal_panel = true %}
                 {% set show_combat_panel = true %}
                 {% for room in rooms %}
                 <article class="room-workspace {% if room.id == active_room_id %}is-active{% endif %}"
@@ -712,7 +711,7 @@
                                 <!-- Só o payload: quem desenha é o mesmo chat-roll-cards.js
                                      que monta a mensagem ao vivo. Reimplementar a rolagem
                                      aqui em Jinja fez o histórico perder o cartão do
-                                     sistema — a mensagem nova vinha com Aumentos e
+                                     sistema: a mensagem nova vinha com Aumentos e
                                      Margem, e ao recarregar a página virava a rolagem
                                      crua. Duas implementações da mesma coisa divergem;
                                      esta some. -->
@@ -918,6 +917,7 @@
                 </article>
 
                 
+                {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["actors"] %}
                 <article class="game-modal-window game-panel" data-modal-window
                     data-modal-id="panel-actors-{{ room.id }}" data-window-key="panel-actors-{{ room.id }}"
                     data-panel-room="{{ room.id }}" hidden>
@@ -974,8 +974,10 @@
                         </div>
                     </div>
                 </article>
+                {% endif %}
 
                 
+                {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["items"] %}
                 <article class="game-modal-window game-panel" data-modal-window
                     data-modal-id="panel-items-{{ room.id }}" data-window-key="panel-items-{{ room.id }}"
                     data-panel-room="{{ room.id }}" hidden>
@@ -1029,6 +1031,7 @@
                         </div>
                     </div>
                 </article>
+                {% endif %}
 
                 {% if room.member_role == "gm" %}
                 {% if room.active_system and room.active_system.item_types %}
@@ -1227,7 +1230,7 @@
                 </article>
                 {% endif %}
 
-                {% if show_journal_panel %}
+                {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["journals"] %}
                 
                 <article class="game-modal-window game-panel" data-modal-window
                     data-modal-id="panel-journal-{{ room.id }}" data-window-key="panel-journal-{{ room.id }}"
@@ -2621,33 +2624,29 @@
                 <div class="game-dock-group" data-dock-room="{{ room.id }}" {% if room.id !=active_room_id %}hidden{%
                     endif %}>
                     <span data-sdk-slot="dock.actions" data-room-id="{{ room.id }}"></span>
-                    {% if command_palette_enabled %}
-                    <button class="game-dock-btn" type="button" data-command-palette-open
-                        aria-keyshortcuts="Control+K Meta+K" data-tooltip="{{ t('search.title') }} (Ctrl+K)"
-                        title="{{ t('search.title') }} (Ctrl+K)">
-                        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
-                        <span class="sr-only">{{ t("search.title") }}</span>
-                    </button>
-                    {% endif %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-chat-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.tools.chat') }}"
                         title="{{ t('game.tools.chat') }}">
                         <i class="ph ph-chat-circle-text" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.chat") }}</span>
                     </button>
+                    {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["actors"] %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-actors-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.tools.actors') }}"
                         title="{{ t('game.tools.actors') }}">
                         <i class="ph ph-user-circle-gear" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.actors") }}</span>
                     </button>
+                    {% endif %}
+                    {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["items"] %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-items-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.tools.items') }}"
                         title="{{ t('game.tools.items') }}">
                         <i class="ph ph-package" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.items") }}</span>
                     </button>
-                    {% if show_journal_panel %}
+                    {% endif %}
+                    {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["journals"] %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-journal-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.tools.journal') }}"
                         title="{{ t('game.tools.journal') }}">
@@ -2669,6 +2668,14 @@
                         title="{{ t('game.tools.combat') }}">
                         <i class="ph ph-sword" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.combat") }}</span>
+                    </button>
+                    {% endif %}
+                    {% if command_palette_enabled %}
+                    <button class="game-dock-btn" type="button" data-command-palette-open
+                        aria-keyshortcuts="Control+K Meta+K" data-tooltip="{{ t('search.title') }} (Ctrl+K)"
+                        title="{{ t('search.title') }} (Ctrl+K)">
+                        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("search.title") }}</span>
                     </button>
                     {% endif %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-settings-{{ room.id }}"

@@ -99,7 +99,7 @@ def _outcome(spec: Any, context: dict) -> dict | None:
     """Degrees of success, when the card declares how to measure them.
 
     ``{"target": 4, "step": 4}`` says a roll succeeds at 4 and gains one more
-    degree every 4 over it — SWADE raises, but the shape is not SWADE's: a
+    degree every 4 over it: SWADE raises, but the shape is not SWADE's: a
     system with a different target, or one that only cares about pass/fail
     (``step`` omitted), declares its own. ``target`` may be an ``@`` path, so a
     dialog that asks for a target number can feed it.

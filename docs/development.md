@@ -49,7 +49,7 @@ When changing SDK package, browser runtime, manifest, content-pack, schema, CLI,
 2. update schemas when applicable;
 3. add compatibility or migration notes;
 4. add tests that cover both valid and invalid inputs;
-5. update `CHANGELOG.md`.
+5. update `RELEASE_NOTES.md`.
 
 ## Useful Test Commands
 
@@ -72,7 +72,7 @@ Follow one pattern per handler (see
 
 - **Purely-synchronous handler** (no `await`): declare it as a plain `def` with
   `sync_to_thread=True`. Litestar runs it in a worker thread, so the whole
-  handler — including its single transaction — stays off the event loop and on
+  handler: including its single transaction: stays off the event loop and on
   one thread.
 
   ```python
@@ -111,14 +111,14 @@ const result = await GravewrightCore.http.postForm(url, new FormData(form), {
 if (!result.ok) {
   // result.errorKey is canonical: http.errors.network (status 0), 401
   // auth.errors.session_expired, 403 forbidden, 409 conflict, 429 rate_limited,
-  // 5xx server — or the JSON body's error_key when present.
+  // 5xx server, or the JSON body's error_key when present.
   show(result.errorKey);
   return;
 }
 ```
 
 This is what lets the UI tell a **transport/server failure apart from a form
-validation error** — the previous `ui/invitations.js` bug showed any failure
+validation error**: the previous `ui/invitations.js` bug showed any failure
 (offline, 500) as "invalid email".
 
 Backend handlers answer JSON callers with the standard envelope via

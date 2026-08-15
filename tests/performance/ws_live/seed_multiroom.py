@@ -1,7 +1,7 @@
 """
 Seeds the *sharded* live-session stress scenario.
 
-Instead of one giant room, this provisions many small tables — the realistic
+Instead of one giant room, this provisions many small tables: the realistic
 shape of a 500-player load. Each room gets its own GM-staffed campaign, active
 scene (chunks + fog), and one token per player, so the realtime fan-out of any
 command only reaches that room's handful of sockets (not all 500).

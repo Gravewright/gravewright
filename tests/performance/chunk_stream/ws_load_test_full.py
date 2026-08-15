@@ -771,7 +771,7 @@ def write_outputs(
     (output / "results_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
     with (output / "summary.md").open("w", encoding="utf-8") as f:
-        f.write("# Gate WS-P — WebSocket Chunk Stream Load Test\n\n")
+        f.write("# Gate WS-P: WebSocket Chunk Stream Load Test\n\n")
         f.write("## Result\n\n")
         f.write("```txt\n")
         f.write(f"finished: {finished}\n")

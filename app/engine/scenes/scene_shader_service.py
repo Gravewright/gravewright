@@ -57,7 +57,7 @@ def review(source: str) -> str | None:
 
     So resta o que e sobre o CAMPO: vazio nao e shader, e texto sem teto encheria
     banco e rede. Se o GLSL compila, se e bonito ou se e lento, quem responde e a
-    GPU de quem esta olhando — e a resposta dela volta como frase no editor.
+    GPU de quem esta olhando, e a resposta dela volta como frase no editor.
     """
     if not source.strip(): return "lighting.errors.shader_empty"
     if len(source) > MAX_SOURCE: return "lighting.errors.shader_long"
@@ -179,7 +179,7 @@ class SceneShaderService:
 DEFAULT_SOURCE = """// Névoa. Este é um fragment shader: ele roda uma vez por pixel do quadro do
 // efeito e escreve a cor final em finalColor.
 //
-// O quadro tem o tamanho do ALCANCE, e a máscara circular recorta a borda — o que
+// O quadro tem o tamanho do ALCANCE, e a máscara circular recorta a borda, o que
 // você pintar fora dele não tem onde existir. Pinte à vontade.
 //
 // O alfa é o que deixa o mapa aparecer por baixo. Escreva sempre com a cor já
@@ -198,7 +198,7 @@ float suave(vec2 p) {
 }
 
 void main() {
-    // gwPattern dá o ponto de mundo do pixel — girado pela régua de rotação e já
+    // gwPattern dá o ponto de mundo do pixel: girado pela régua de rotação e já
     // na escala certa. Desenhar em cima dele é o que mantém a névoa colada no mapa
     // quando alguém mexe no zoom, e o que faz um alcance pequeno mostrar o mesmo
     // tanto de desenho que um grande, em vez de um pedaço chapado.

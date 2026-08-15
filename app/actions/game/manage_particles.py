@@ -58,7 +58,7 @@ async def delete_particles(request: Request, current_user: dict, scene_particle_
     """Apagar uma selecao inteira. Um pedido, uma transacao, um aviso.
 
     Em laco pelo cliente, apagar trinta paredes eram trinta requisicoes e trinta
-    avisos de tempo real para todo mundo na mesa — e a cena aparecia sumindo aos
+    avisos de tempo real para todo mundo na mesa, e a cena aparecia sumindo aos
     pedacos na tela dos outros.
     """
     if off := disabled(): return off

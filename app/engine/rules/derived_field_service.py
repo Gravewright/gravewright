@@ -3,7 +3,7 @@
 Given an actor's stored data and the system's ``derived`` rules for that actor
 type, evaluates each derived expression and writes the result back. Derived
 fields may depend on each other, so we iterate to a fixed point (bounded).
-Derived expressions are deterministic — they must not roll dice.
+Derived expressions are deterministic: they must not roll dice.
 """
 
 from __future__ import annotations

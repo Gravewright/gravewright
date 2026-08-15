@@ -49,3 +49,13 @@ def test_game_page_renders_palette_and_shortcut(db):
     assert "data-command-palette" in response.text
     assert "data-command-palette-open" in response.text
     assert "Control+K Meta+K" in response.text
+
+
+def test_search_button_is_immediately_before_settings_in_the_dock():
+    template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
+    dock = template.split('<nav class="game-dock"', 1)[1]
+    search = dock.index("data-command-palette-open")
+    settings = dock.index('data-panel-toggle="panel-settings-{{ room.id }}"')
+
+    assert search < settings
+    assert "data-panel-toggle=" not in dock[search:settings]

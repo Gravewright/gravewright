@@ -185,7 +185,7 @@ grave package install my-rpg --yes --enable
 
 A ruleset is **exclusive**, so it is not activated with `grave campaign package activate`.
 Instead, choose **My RPG** as the campaign's ruleset when you create or edit the campaign
-in the Gravewright app — it becomes the campaign's authoritative active ruleset.
+in the Gravewright app: it becomes the campaign's authoritative active ruleset.
 
 ## 8. See it work
 

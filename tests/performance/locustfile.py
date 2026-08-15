@@ -2,10 +2,10 @@
 Performance test suite for Gravewright.
 
 Covers:
-  1. Tile endpoint latency        — TileUser: viewport tile requests (concurrent)
-  2. General API throughput       — AuthedUser: game page + light navigation
-  3. Upload / retile time         — RetileUser: POST scene update with new tile_size
-  4. Memory / CPU under load      — all users run concurrently; monitor via `docker stats`
+  1. Tile endpoint latency       : TileUser: viewport tile requests (concurrent)
+  2. General API throughput      : AuthedUser: game page + light navigation
+  3. Upload / retile time        : RetileUser: POST scene update with new tile_size
+  4. Memory / CPU under load     : all users run concurrently; monitor via `docker stats`
 
 Run headless via docker-compose.perf.yml or interactively:
 
@@ -219,7 +219,7 @@ class BaseAuthedUser(HttpUser):
             self.environment.process_exit_code = 1
             if self.environment.runner:
                 self.environment.runner.quit()
-            raise StopUser("Login failed — check seed.py, login route, or credentials")
+            raise StopUser("Login failed: check seed.py, login route, or credentials")
 
         with self.client.get(
             "/game",
@@ -256,7 +256,7 @@ class BaseAuthedUser(HttpUser):
 
 
 class TileUser(BaseAuthedUser):
-    """Requests random tiles from the viewport — simulates real map panning."""
+    """Requests random tiles from the viewport: simulates real map panning."""
 
     weight = 5
     wait_time = between(0.05, 0.3)
@@ -318,7 +318,7 @@ class RetileUser(BaseAuthedUser):
     """
     Triggers a retile by changing tile_size via the scene update form.
 
-    Runs infrequently — this is a heavy operation.
+    Runs infrequently: this is a heavy operation.
     """
 
     weight = 1

@@ -8,7 +8,7 @@ from tests.conftest import seed_campaign, seed_member, seed_scene, seed_system, 
 
 def test_snapshot_reports_the_owners_who_can_see_through_a_token(db):
     """A visao do jogador depende de controlled_by_user_ids. A coluna homonima na
-    tabela nunca e escrita, entao a posse tem de vir de actor_owners — sem isso
+    tabela nunca e escrita, entao a posse tem de vir de actor_owners: sem isso
     nenhum jogador tem token e ninguem enxerga nada."""
     gm=seed_user(name="GM"); player=seed_user(name="Player")
     campaign=seed_campaign(gm); seed_member(campaign,player,"player")

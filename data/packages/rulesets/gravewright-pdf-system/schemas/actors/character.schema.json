@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "title": "PDF Character",
-  "description": "Um personagem cuja ficha é um PDF. Os valores dos campos vivem em 'fields', endereçados pelo mapeamento — nunca dentro do arquivo.",
+  "description": "Um personagem cuja ficha é um PDF. Os valores dos campos vivem em 'fields', endereçados pelo mapeamento: nunca dentro do arquivo.",
   "properties": {
     "pdf": {
       "type": "object",

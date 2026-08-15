@@ -1,6 +1,6 @@
 """Chave de ``provides.mappings`` que ninguém lê é mapeamento que não existe.
 
-O validador de manifest aceita qualquer chave em ``provides.mappings`` — o
+O validador de manifest aceita qualquer chave em ``provides.mappings``: o
 arquivo existe, o caminho é seguro, tudo passa. Mas o servidor só procura nomes
 específicos (``tokens``, ``chatCards``, ``rollToast``). Declarar ``token`` em vez
 de ``tokens`` faz o mapeamento simplesmente não ser encontrado.
@@ -41,7 +41,7 @@ def test_every_declared_mapping_key_is_read_by_the_server():
         for key in declared:
             # ``pdfFields`` e afins são lidos pelo próprio pacote, no navegador;
             # o servidor não precisa conhecê-los. O que não pode é um nome QUASE
-            # certo — o singular de um plural que o servidor espera.
+            # certo, o singular de um plural que o servidor espera.
             if key in consumed:
                 continue
             quase = {c for c in consumed if c.rstrip("s") == key.rstrip("s")}
@@ -80,6 +80,6 @@ def test_a_missing_token_mapping_costs_the_image_not_only_the_bars():
     saida_cedo = corpo.index("return {}")
     imagem = corpo.index("token_asset_url")
     assert saida_cedo < imagem, (
-        "sem mapeamento o projetor desiste antes da imagem — é isso que faz o "
+        "sem mapeamento o projetor desiste antes da imagem: é isso que faz o "
         "token sumir do tabuleiro, não só perder a barra"
     )

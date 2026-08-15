@@ -13,6 +13,19 @@ test
 
 O modo `production` faz validacao rigorosa no startup e falha cedo quando encontra configuracoes inseguras.
 
+## Templates versionados
+
+| Arquivo | Uso indicado |
+| --- | --- |
+| `.env.example` | Inicio rapido local; copie para `.env`. |
+| `.env.development.example` | Defaults de desenvolvimento carregados com `APP_ENV=development`. |
+| `.env.staging.example` | Defaults e placeholders de staging. |
+| `.env.production-postgresql.example` | Base recomendada de producao com PostgreSQL. |
+| `.env.production-sqlite.example` | Producao pequena, privada e em servidor unico; copie explicitamente para `.env`. |
+
+Somente `.env` contem valores privados do deployment. Arquivos terminados em
+`.example` sao templates sanitizados e nunca devem conter credenciais reais.
+
 ## Configuracoes Principais
 
 | Variavel | Funcao |

@@ -27,7 +27,7 @@ _KIND_DIRS = frozenset(DIRECTORY_TO_KIND)
 def package_dir_for(kind: str, package_id: str) -> Path | None:
     """The grouped package directory for a validated ``(kind, id)``.
 
-    ``None`` when the kind is unknown or the id is unsafe — callers must derive
+    ``None`` when the kind is unknown or the id is unsafe: callers must derive
     package/storage paths only from a validated kind and id, never from
     attacker-controlled input.
     """

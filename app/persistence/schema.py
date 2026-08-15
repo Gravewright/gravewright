@@ -3,10 +3,10 @@
 This module keeps the three concerns the maintenance plan (Etapa 2) asked to
 separate cleanly apart:
 
-- **status / head detection** — read the applied revision and the expected head;
-- **official upgrade path** — ``alembic upgrade head`` (creates a new database or
+- **status / head detection**: read the applied revision and the expected head;
+- **official upgrade path**: ``alembic upgrade head`` (creates a new database or
   upgrades an existing one; the *only* supported way to evolve production data);
-- **dev/test bootstrap** — ``metadata.create_all`` plus the partial active-scene
+- **dev/test bootstrap**: ``metadata.create_all`` plus the partial active-scene
   index, for fast, throwaway local and test databases only.
 
 Production startup validates the database is at head and fails with an
@@ -96,7 +96,7 @@ def bootstrap_schema_from_metadata(engine: Engine) -> None:
     """DEV/TEST ONLY: create the schema directly from metadata.
 
     Fast bootstrap for throwaway local and test databases. It does NOT alter
-    existing tables and is NOT the supported production upgrade mechanism — use
+    existing tables and is NOT the supported production upgrade mechanism: use
     :func:`upgrade_to_head` for anything with data you care about.
     """
     from app.persistence.tables import metadata

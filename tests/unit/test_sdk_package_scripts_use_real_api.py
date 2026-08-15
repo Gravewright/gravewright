@@ -11,8 +11,8 @@ morrer na primeira abertura de ficha com
 
 ou pior, chamar um namespace que nunca existiu (sdk.mappings) e falhar calado.
 
-O teste é dirigido pelas tabelas do próprio SDK — CAPABILITY_REQUIREMENTS em
-sdk-capabilities.js e o objeto `namespaces` em gravewright-sdk.js — então ele
+O teste é dirigido pelas tabelas do próprio SDK: CAPABILITY_REQUIREMENTS em
+sdk-capabilities.js e o objeto `namespaces` em gravewright-sdk.js: então ele
 acompanha o SDK sozinho, em vez de repetir uma lista que envelhece.
 """
 

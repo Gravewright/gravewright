@@ -273,7 +273,7 @@ class TokenService:
 
         Called after an actor's sheet data changes (patch/append/action/drop).
         Clients re-fetch the scene snapshot, which re-projects the bars/name from
-        the updated Actor Core data — completing "HP on the sheet updates the token".
+        the updated Actor Core data: completing "HP on the sheet updates the token".
         """
         if transport is None:
             return
@@ -717,7 +717,7 @@ class TokenService:
 
     def _owner_ids_by_actor(self, campaign_id: str) -> dict[str, list[str]]:
         """Posse dos atores da campanha, achatada em ids: e o que diz a cada jogador
-        quais tokens sao dele — e portanto de onde ele enxerga."""
+        quais tokens sao dele, e portanto de onde ele enxerga."""
         owners = self.actors.list_owners_for_campaign_actors(campaign_id=campaign_id)
         return {actor_id: [owner["id"] for owner in people] for actor_id, people in owners.items()}
 

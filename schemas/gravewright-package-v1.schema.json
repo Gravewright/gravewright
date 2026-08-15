@@ -71,6 +71,22 @@
         "maximum": { "type": "string" }
       }
     },
+    "display": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "color": { "type": "string" },
+        "directories": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "actors": { "type": "boolean" },
+            "items": { "type": "boolean" },
+            "journals": { "type": "boolean" }
+          }
+        }
+      }
+    },
     "capabilities": {
       "type": "array",
       "items": { "type": "string" }

@@ -1,7 +1,7 @@
 """Instance-owner administration (the user whose ``system_role`` is OWNER).
 
 The instance owner manages the registered users (list / delete / reset password).
-Every method re-verifies the requester is the instance owner — the HTTP layer
+Every method re-verifies the requester is the instance owner: the HTTP layer
 gates too, but destructive ops defend in depth.
 """
 

@@ -6,8 +6,8 @@ Mapping values are dotted paths (``core.name``, ``sheet.hp.value``) resolved
 against the actor context. The caller should apply derived fields to the sheet
 data first so mapped derived values (initiative, defense) resolve.
 
-``bars`` is the one part with a fixed shape. A token draws exactly two bars —
-``bar_1`` under it and ``bar_2`` above it — and the system decides what each one
+``bars`` is the one part with a fixed shape. A token draws exactly two bars -
+``bar_1`` under it and ``bar_2`` above it, and the system decides what each one
 reads. Their ``value``/``max`` are paths; ``color`` is a literal hex and is
 never path-resolved.
 """

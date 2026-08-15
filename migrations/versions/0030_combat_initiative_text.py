@@ -8,7 +8,7 @@ game ranks turns by a number it can compare. It does not: a table may track the
 order with a drawn card, a named phase, or a word the GM types off a sheet.
 
 So the value the table sees becomes text the core never parses, and the single
-thing ordering reads moves to ``sort_value`` — the parsed number for systems
+thing ordering reads moves to ``sort_value``: the parsed number for systems
 that count, or the hand-arranged position for systems that do not.
 
 The old numeric initiative becomes both: it keeps ordering as ``sort_value`` and

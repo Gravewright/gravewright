@@ -10,8 +10,8 @@ Type policy (important for MySQL portability):
 - ``Text`` only for large, never-indexed payloads (JSON blobs, markdown, paths).
 - ``LargeBinary`` for BLOBs, ``BigInteger`` for the autoincrement event sequence.
 
-The one construct that is genuinely not portable — the partial UNIQUE index
-``scenes(campaign_id) WHERE active = 1`` — is created out of band by the schema
+The one construct that is genuinely not portable: the partial UNIQUE index
+``scenes(campaign_id) WHERE active = 1``: is created out of band by the schema
 bootstrap / migration for SQLite/PostgreSQL only (see ``app.persistence.schema``).
 """
 

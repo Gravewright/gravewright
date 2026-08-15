@@ -1,9 +1,9 @@
-"""``grave.lock.json`` — a reproducible record of what is installed.
+"""``grave.lock.json``: a reproducible record of what is installed.
 
 The lockfile snapshots the core/SDK versions and every installed package (id,
 kind, version, status, source, checksum, install time). It lets an operator
 reproduce an install and lets `grave backup`/`restore` and (later) `grave update`
-reason about drift. It is data-only — generating it never mutates the database.
+reason about drift. It is data-only: generating it never mutates the database.
 """
 
 from __future__ import annotations

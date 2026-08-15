@@ -4,10 +4,10 @@ The manifest validator treats package manifests as untrusted input. It parses de
 
 Validation returns:
 
-- `errors` — blocking validation failures;
-- `warnings` — non-blocking risks or compatibility concerns;
-- `compatibility_status` — computed compatibility status for the running Gravewright version;
-- `ok` — true when there are no errors.
+- `errors`: blocking validation failures;
+- `warnings`: non-blocking risks or compatibility concerns;
+- `compatibility_status`: computed compatibility status for the running Gravewright version;
+- `ok`: true when there are no errors.
 
 ## Validation coverage
 

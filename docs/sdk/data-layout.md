@@ -1,8 +1,8 @@
-# SDK Data Layout — Universal Packages + Managed Storage
+# SDK Data Layout: Universal Packages + Managed Storage
 
 > Defines where packages and their persistent storage live on disk. The
 > universal grouped layout `data/packages/{kind_plural}/{id}` is the only
-> supported layout, frozen by Alpha 2.0.0 — SDK Freeze.
+> supported layout, frozen by Alpha 2.0.0: SDK Freeze.
 
 ## Architectural rule
 

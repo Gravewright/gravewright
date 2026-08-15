@@ -7,8 +7,8 @@ Duas colunas saem porque deixaram de significar coisas diferentes:
 
 ``opacity`` nasceu como "quanto da tinta colorida aparece", separada de
 ``intensity``, que era "quanto o foco levanta a escuridão". Depois que os dois
-modos de visão passaram a apagar o polígono do foco igual e duro — para que
-escolher a visão bonita nunca custasse área revelada —, intensidade parou de
+modos de visão passaram a apagar o polígono do foco igual e duro: para que
+escolher a visão bonita nunca custasse área revelada -, intensidade parou de
 mexer no recorte. Sobraram duas réguas multiplicando o mesmo alfa do halo.
 
 ``animated_core`` era um botão para deixar a tocha mais bonita, e virou condição
@@ -17,7 +17,7 @@ tem efeito nenhum. Ninguém precisa escolher o que o modo já decide.
 
 E entram ``angle`` e ``rotation``: até aqui todo foco emitia em círculo. Com
 abertura e direção o mesmo foco vira lanterna, facho de porta entreaberta ou
-holofote. 360 graus é o círculo de sempre, e é o padrão — nenhum foco existente
+holofote. 360 graus é o círculo de sempre, e é o padrão: nenhum foco existente
 muda de aparência.
 
 A lista de animações também cresce, e o CHECK precisa acompanhar: no SQLite ele

@@ -795,7 +795,7 @@ textarea {
 }
 
 /* This only ever set a colour and a font-size, so the button kept the browser's
-   default chrome — a grey, bevelled OS button sitting on a dark modal. It is an
+   default chrome: a grey, bevelled OS button sitting on a dark modal. It is an
    icon button now, matching `.game-modal-control` on the board side. */
 .modal-close {
     flex: 0 0 auto;
@@ -1970,7 +1970,7 @@ html {
     outline-offset: 2px;
 }
 
-/* An open management panel needs the full width back — a form squeezed into a
+/* An open management panel needs the full width back: a form squeezed into a
    grid cell is worse than a wide row. */
 .campaign-card:has(.campaign-manage[open]) {
     grid-column: 1 / -1;
@@ -1993,7 +1993,7 @@ html {
    Every card carried its own admin console: edit, clone, export, snapshots,
    audit log, packages and delete, each an always-visible control stacked in the
    footer. Seven entry points per card, repeated for every table, buried the one
-   thing the screen is actually for — finding a table and opening it.
+   thing the screen is actually for: finding a table and opening it.
 
    The tools are unchanged and in the same order; they just sit behind a single
    quiet row now. Reading the list costs nothing until you want to manage.
@@ -2150,7 +2150,7 @@ html {
 
    Each entry now leads with what happened, in the reader's language, followed
    by when and how it ended. Allowlisted metadata becomes labelled pairs; the
-   stored record — event id, subject type/id, raw metadata — stays one click
+   stored record: event id, subject type/id, raw metadata: stays one click
    away for support, instead of being the first thing on screen.
    --------------------------------------------------------------------------- */
 
@@ -2251,7 +2251,7 @@ html {
 
    Now: name, origin and date, then two plain buttons. Choosing one reveals only
    that flow with a sentence saying what it does. Same POST, same confirmation
-   value the server requires — it just travels in a hidden field.
+   value the server requires: it just travels in a hidden field.
    --------------------------------------------------------------------------- */
 
 .snapshot-head {
@@ -2279,7 +2279,7 @@ html {
     white-space: nowrap;
 }
 
-/* An automatic point is the undo rope after a restore — worth telling apart
+/* An automatic point is the undo rope after a restore: worth telling apart
    from one the GM deliberately made. */
 .snapshot-kind--safety {
     border-color: var(--border-accent);
@@ -2330,7 +2330,7 @@ html {
    Rulesets and add-ons cards.
 
    The <article> carried no chrome at all (`border: 0; background: transparent`)
-   — the thing that looked like a card was the inner <button>. The install /
+  : the thing that looked like a card was the inner <button>. The install /
    enable / disable forms are siblings of that button, so they rendered *below*
    the visible box, reading as loose buttons floating under a card rather than
    part of it.
@@ -2464,11 +2464,11 @@ html {
 }
 
 /* ===========================================================================
-   INSIDE — SHARED VISUAL IDENTITY
+   INSIDE: SHARED VISUAL IDENTITY
 
    The campaigns tab was redesigned first; this section lifts that language out
-   of `.editor-panel--campaigns` and applies it to all five panels — campaigns,
-   rulesets, add-ons, settings, privacy — so moving between tabs no longer
+   of `.editor-panel--campaigns` and applies it to all five panels: campaigns,
+   rulesets, add-ons, settings, privacy: so moving between tabs no longer
    changes the rules of the page. Only what is genuinely specific to a campaign
    card (the cover plate, its tints, the shelf grid) stays scoped, in the second
    half of this file.
@@ -2477,14 +2477,14 @@ html {
 
      · a sticky head with a gold hairline across the top and a serif title in
        near-white, the description demoted to a line beside it;
-     · one gutter, owned by `.editor-panel-inner`, that every block inherits —
+     · one gutter, owned by `.editor-panel-inner`, that every block inherits -
        the head escapes it with negative margins so it can span edge to edge;
      · reading order fixed by flex `order`, not by DOM order, so every panel
        reads head → alerts → actions → content;
      · alerts as a left gold rule, never a tinted box;
      · flat 4px corners, hairline borders, `--surface` fills;
      · serif for the name of a thing, micro caps for its metadata;
-     · one gold-filled control per view — the affirmative submit.
+     · one gold-filled control per view: the affirmative submit.
 
    No markup, id or class was changed anywhere in this section.
    =========================================================================== */
@@ -2499,7 +2499,7 @@ html {
 
 /* ---- Shell -------------------------------------------------------------- */
 
-/* The gutter lives here, so every block a panel contains — present or future —
+/* The gutter lives here, so every block a panel contains: present or future -
    lines up without having to know about it. */
 .editor-panel .editor-panel-inner {
     display: flex;
@@ -2584,7 +2584,7 @@ html {
 }
 
 /* ---- Type scale ---------------------------------------------------------
-   The interface was reaching for 10px far too often — field labels, chips,
+   The interface was reaching for 10px far too often: field labels, chips,
    badges and every button all sat at the bottom of the scale, which read as
    fine print rather than as controls. Nothing here is decorative: 10px moves
    to 11px, secondary prose to 14px. `--text-2xs` stays defined for the few
@@ -2757,7 +2757,7 @@ html {
 
 /* The caps treatment goes on the <span>, never on the <label>: a label wraps
    its own control, and `text-transform`, `letter-spacing` and `font-weight`
-   all inherit — put them on the label and the typed value inherits them too. */
+   all inherit: put them on the label and the typed value inherits them too. */
 .editor-panel .field > span,
 .editor-panel .settings-form label > span {
     color: var(--text-faint);
@@ -2802,7 +2802,7 @@ html {
     line-height: var(--leading-normal);
 }
 
-/* A file field renders the OS button unless it is told otherwise — a light
+/* A file field renders the OS button unless it is told otherwise: a light
    grey bevel sitting on a dark dialog. The package uploader already restyled
    its own; this covers every other file input on the page. */
 .editor-panel input[type="file"] {
@@ -3068,7 +3068,7 @@ html {
 }
 
 /* ===========================================================================
-   CAMPAIGNS — WHAT IS ONLY TRUE OF A CAMPAIGN
+   CAMPAIGNS: WHAT IS ONLY TRUE OF A CAMPAIGN
 
    Everything above is shared. What remains here is the card anatomy: a shelf
    of tables, each with a cover plate the data does not provide, so the card
@@ -3177,7 +3177,7 @@ html {
     padding: var(--space-3);
 }
 
-/* The three trigger modals hold a couple of fields each — the 720px shell the
+/* The three trigger modals hold a couple of fields each: the 720px shell the
    snapshot and audit tools need would be a mostly empty box. Keyed off the
    existing `data-inside-modal` hooks, so no new class is introduced. */
 [data-inside-modal="campaign-create-modal"] .campaign-tool-modal,
@@ -3254,7 +3254,7 @@ html {
 }
 
 /* Five tints, cycling down the shelf, so a wall of cards reads as distinct
-   objects rather than repeated rows. Counting <article> only — the tool
+   objects rather than repeated rows. Counting <article> only: the tool
    modals are <div> siblings in the same list. */
 .editor-panel--campaigns .campaign-list > article:nth-of-type(5n + 2) {
     --plate-a: #24313f;
@@ -3404,7 +3404,7 @@ html {
     font-size: var(--text-xs);
 }
 
-/* The card no longer needs to seize the row to show its tools — the menu is a
+/* The card no longer needs to seize the row to show its tools: the menu is a
    wrapping chip row now. */
 .editor-panel--campaigns .campaign-card:has(.campaign-manage[open]) {
     grid-column: auto;

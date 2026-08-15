@@ -50,7 +50,7 @@ sozinhos. Os valores são da ficha, não do arquivo.
 A ficha é `mode: "html"`. O host carrega `sheets/character.html`, chama o
 controlador registrado por `sdk.sheets.registerController` e **depois** liga os
 atributos que conhece: `data-bind` (valor ↔ caminho), `data-action` (botão) e
-`data-text` (caminho de dado — *não* chave de tradução; rótulo se traduz no
+`data-text` (caminho de dado: *não* chave de tradução; rótulo se traduz no
 controlador, via `sdk.i18n.t`).
 
 PDFs enviados para a biblioteca são resolvidos por `sdk.pdf.get` e abertos por
@@ -75,12 +75,12 @@ de binding mora numa função só (`bindingPath`), e o host reconverte na escrit
 
 `data-action` tem duas saídas: o controlador do pacote e, se ele não reivindicar,
 a ação server-side do ruleset. **Devolver `true` reivindica.** Todos os botões
-daqui são de cliente puro — virar página não é regra de sistema —, então todos
+daqui são de cliente puro: virar página não é regra de sistema -, então todos
 devolvem `true`; `default` devolve `false` para não engolir o que é do servidor.
 
 Como o controlador precisa buscar o mapeamento e o pdf.js antes de existir campo
 algum, e o host não espera por `mount`, o trabalho assíncrono termina chamando
-`GravewrightHTMLSheets.update(root, ctx.data)` — que devolve a ligação dos campos
+`GravewrightHTMLSheets.update(root, ctx.data)`: que devolve a ligação dos campos
 recém-criados ao host.
 
 ## As três abas
@@ -91,7 +91,7 @@ recém-criados ao host.
 | **Token** | Imagem do token e qual campo alimenta cada barra. |
 | **Notas** | Biografia, história e anotações. |
 
-O host liga as abas sozinho — `[role="tablist"]` com filhos `[data-tab]` e painéis
+O host liga as abas sozinho: `[role="tablist"]` com filhos `[data-tab]` e painéis
 irmãos `[data-tab-panel]` de mesmo nome. O pacote só declara a forma.
 
 ### Imagem do token
@@ -100,7 +100,7 @@ O slot `data-actor-image="token"` recebe **o mesmo quadro de upload da ficha
 nativa**. Upload de imagem carrega CSRF, transmissão para a sala e recálculo dos
 tokens da cena; um pacote reimplementando isso erraria algum dos três. Uma ficha
 HTML substitui a raiz inteira e por isso não herda o cabeçalho onde esse quadro
-vive — o slot é a ponte.
+vive, o slot é a ponte.
 
 ### Qual campo alimenta a barra
 
@@ -124,7 +124,7 @@ mora em `sheet.token.bars.<slot>` e guarda o **nome** do campo.
 3. Pronto. Os campos aparecem sobre a página e já gravam.
 
 **Por que funciona sem mapeamento:** os nomes de campo vêm do próprio PDF
-(`getAnnotations`), e cada um cai em `sheet.fields.<nome>` — que o schema deixa
+(`getAnnotations`), e cada um cai em `sheet.fields.<nome>`: que o schema deixa
 aberto de propósito. Nome conhecido (`HP`, `AC`, `CharacterName`…) reaproveita o
 caminho canônico do template `generic`, e é só por isso que a barra do token
 funciona num PDF que ninguém mapeou.
@@ -139,7 +139,7 @@ campo por regra, rolagem e barra de token com um caminho estável.
 ### Duas origens, exclusivas
 
 `sheet.pdf.asset` (envio do GM) ganha de `sheet.pdf.template` (template do pacote).
-Escolher um limpa o outro — senão um envio antigo continuaria ganhando do template
+Escolher um limpa o outro: senão um envio antigo continuaria ganhando do template
 recém-escolhido. Se o arquivo for apagado da biblioteca, a ficha cai de volta no
 template em vez de abrir vazia.
 
@@ -147,11 +147,11 @@ template em vez de abrir vazia.
 
 1. Coloque o arquivo em `assets/sheets/`.
 2. **Declare em `provides.assets.sheets`** no manifest. Sem isso o servidor devolve
-   404 — o manifest é quem autoriza servir, não o mapeamento.
+   404, o manifest é quem autoriza servir, não o mapeamento.
 3. Adicione uma entrada em `templates` no mapeamento, ligando cada campo a um
    caminho.
 4. Caminho em `sheet.*` precisa existir no schema. Campo sem entrada no mapeamento
-   cai em `sheet.fields.<nome>` e funciona — só não é endereçável por regra.
+   cai em `sheet.fields.<nome>` e funciona: só não é endereçável por regra.
 
 `tests/unit/test_gravewright_pdf_system_package.py` verifica os quatro passos.
 
@@ -163,7 +163,7 @@ desenha a página e, para cada campo, devolve onde ele está na tela.
 **As coordenadas vêm do PDF, não do mapeamento.** O visualizador lê
 `page.getAnnotations()` e usa `convertToViewportRectangle` para converter o
 retângulo do campo (origem embaixo à esquerda, no PDF) para a tela. Por isso o
-mapeamento fala só de *nomes* — trocar o template não obriga a medir nada com
+mapeamento fala só de *nomes*: trocar o template não obriga a medir nada com
 régua, e um teste recusa mapeamento que carregue coordenadas.
 
 ### Por que o build `legacy` do pdf.js
@@ -177,7 +177,7 @@ todo navegador tem:
 | `Uint8Array.prototype.toHex` | **descriptografia** | Chrome 140+ |
 | `Uint8Array.fromBase64` | assinaturas, fontes embutidas | Chrome 140+ |
 
-Repare onde ficam: formulário e descriptografia — exatamente por onde passa uma
+Repare onde ficam: formulário e descriptografia: exatamente por onde passa uma
 ficha de RPG preenchível, que ainda por cima costuma vir protegida por senha de
 dono. Com o build moderno o documento **nem abre** num navegador um pouco atrás:
 `getDocument` rejeita com um TypeError sobre uma função inexistente, e a ficha só
@@ -189,7 +189,7 @@ roda em contexto separado. Por isso não há nada de nosso nesse caminho.
 Trocar de volta pelo moderno é uma regressão silenciosa: passa em qualquer máquina
 de desenvolvimento atual e quebra na mão de quem joga.
 `tests/js/pdf_compat_harness.js` roda o pdf.js vendorizado num Node que não tem
-nenhuma das três APIs — espelho de um navegador atrasado — e falha na hora se o
+nenhuma das três APIs: espelho de um navegador atrasado, e falha na hora se o
 build errado entrar.
 
 Dois cuidados que valem lembrar antes de mexer:
@@ -200,7 +200,7 @@ Dois cuidados que valem lembrar antes de mexer:
   aberta, uma vez por sessão.
 - **`workerSrc` precisa ser explícito.** O padrão do pdf.js é procurar um irmão
   `./pdf.worker.mjs` relativo à página, que aqui não existe. O caminho é resolvido
-  por `sdk.package.assetUrl`, o mesmo resolvedor que serve o template — o
+  por `sdk.package.assetUrl`, o mesmo resolvedor que serve o template: o
   visualizador o recebe no `open()` em vez de remontar a URL por conta própria.
 
 O adaptador continua opcional: sem `window.GravewrightPdfViewer` a ficha abre com

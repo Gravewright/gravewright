@@ -1,6 +1,6 @@
 # Package-to-package Messaging
 
-`sdk.bus.*` is the stable package interoperability contract — the only
+`sdk.bus.*` is the stable package interoperability contract: the only
 client-side messaging surface in SDK 1.
 
 ## Stable Interop Bus
@@ -91,7 +91,7 @@ declared schema files exist on disk. The doctor reports provider conflicts and
 missing required providers for active campaign packages.
 
 Under the Alpha 2.0.0 SDK Freeze, enforcement is **strict**: all four directions
-are hard-enforced at runtime — `publish`→`emits`, `subscribe`→`listens`,
+are hard-enforced at runtime: `publish`→`emits`, `subscribe`→`listens`,
 `provide`→`provides`, and `request`→`requires`. Runtime payload/response schema
 validation against the declared schemas is tracked as post-freeze hardening
 toward LTS 1.

@@ -40,7 +40,7 @@
     position: absolute;
     border: 1px solid transparent; border-radius: 3px;
     background: color-mix(in srgb, var(--accent, #c09a5a) 12%, transparent);
-    /* O campo fica sobre a PÁGINA do PDF, que é clara — herdar a cor do tema
+    /* O campo fica sobre a PÁGINA do PDF, que é clara: herdar a cor do tema
        escuro da modal deixava o texto num cinza quase ilegível. O padrão é
        escuro; a ficha pode trocar pela variável. */
     color: var(--pdf-field-text, #111111);

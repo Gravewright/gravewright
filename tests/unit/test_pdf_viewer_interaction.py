@@ -15,7 +15,7 @@ def test_pdf_viewer_places_fields_over_the_page():
     """Executa o pdf-viewer.js real contra um pdf.js falso (ver o harness).
 
     O que só um teste de execução pega: o eixo Y do PDF cresce para cima, então um
-    erro de inversão põe todos os campos espelhados na vertical — a ficha abre
+    erro de inversão põe todos os campos espelhados na vertical: a ficha abre
     bonita e os campos ficam no lugar errado.
     """
     result = subprocess.run(

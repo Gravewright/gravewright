@@ -6,10 +6,10 @@ Every package under `packages/` passes `grave package validate` and is checked i
 (see `.github/workflows/ci.yml`). The SDK docs reference these packages as their
 single source of truth for example manifests and runtime code:
 
-- [`packages/hello-toast`](packages/hello-toast) — minimal addon that shows a toast.
-- [`packages/toggle-example`](packages/toggle-example) — addon with a user setting.
-- [`packages/my-rpg`](packages/my-rpg) — minimal ruleset (actor/item types, a rule, locales).
-- [`packages/dark-fantasy-assets`](packages/dark-fantasy-assets) — asset pack (images, maps, icons).
+- [`packages/hello-toast`](packages/hello-toast): minimal addon that shows a toast.
+- [`packages/toggle-example`](packages/toggle-example): addon with a user setting.
+- [`packages/my-rpg`](packages/my-rpg): minimal ruleset (actor/item types, a rule, locales).
+- [`packages/dark-fantasy-assets`](packages/dark-fantasy-assets): asset pack (images, maps, icons).
 
 Validate them all:
 

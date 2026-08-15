@@ -5,8 +5,8 @@ sheet stores each as a boolean under ``sheet.conditions.<id>``. On its own that
 flag is inert: it colours a checkbox and nothing else.
 
 This module is the bridge to the machinery that already exists for effects.
-Ticking a condition writes a real entry into ``sheet.effects`` — the same list
-a dropped Active Effect item lands in — so a condition immediately gets, for
+Ticking a condition writes a real entry into ``sheet.effects``: the same list
+a dropped Active Effect item lands in: so a condition immediately gets, for
 free, everything an effect already has:
 
 * :mod:`app.engine.effects.active_effects` applies its ``modifiers`` to rolls
@@ -17,8 +17,8 @@ free, everything an effect already has:
 Entries are rebuilt from the flags on every write and tagged with
 ``source: "condition"``. Rebuilding rather than patching is what keeps the two
 representations from drifting: the flags are the truth, the effects are their
-projection. Anything in ``sheet.effects`` without that tag is somebody else's —
-a dropped effect item, a GM-authored buff — and is never touched.
+projection. Anything in ``sheet.effects`` without that tag is somebody else's -
+a dropped effect item, a GM-authored buff, and is never touched.
 """
 
 from __future__ import annotations

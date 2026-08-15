@@ -26,7 +26,7 @@ class CombatConfig:
 
     The core owns the encounter, the turn order and the panel. A system answers
     three questions: what initiative is called, how a value is produced, and
-    which resource bar to draw. It is never asked what initiative *means* — the
+    which resource bar to draw. It is never asked what initiative *means*: the
     stored value is opaque text, so a system that tracks cards, phases or plain
     words is as native as one that rolls a die.
     """

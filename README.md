@@ -5,7 +5,7 @@ Gravewright is an open-source virtual tabletop platform for tabletop RPGs.
 It is built for self-hosted tables that want server-authoritative gameplay, a documented SDK with declarative ruleset/addon/library/theme/content/asset packages, a first-class operator CLI, and predictable performance under large maps and realtime collaboration.
 
 Current release: **Gravewright 1.0.0 Beta 1**, on the stable SDK 1 compatibility line.
-See [CHANGELOG.md](CHANGELOG.md) for the complete release history.
+See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the complete release history.
 
 ## Installation and Demo Video
 
@@ -19,8 +19,8 @@ The video walks through local installation and shows the application experience.
 
 ## Easy Install (recommended for most people)
 
-No terminal knowledge required. The installer sets up everything for you —
-including the correct Python version — and then opens Gravewright in your
+No terminal knowledge required. The installer sets up everything for you -
+including the correct Python version, and then opens Gravewright in your
 browser. No administrator rights are needed.
 
 1. Download this project to a folder on your computer.
@@ -36,14 +36,14 @@ browser. No administrator rights are needed.
 3. Wait for setup to finish (the first run can take a few minutes). Your browser
    opens automatically at `http://127.0.0.1:8000`.
 
-To play again later, just run the same installer again — it skips setup and
+To play again later, just run the same installer again: it skips setup and
 starts right away. Keep the window open while you play; close it or press
 `Ctrl+C` to stop.
 
 ## Run with Docker
 
 If you already have [Docker](https://docs.docker.com/get-docker/) installed, you
-can run everything with one command — no Python or `uv` needed:
+can run everything with one command: no Python or `uv` needed:
 
 ```bash
 docker compose up -d --build
@@ -162,7 +162,7 @@ Restore is destructive. Gravewright keeps a `*.pre-restore` safety copy of the p
 
 ## Current Status
 
-Gravewright is currently **v1.0.0-beta.1 — Beta 1**.
+Gravewright is currently **v1.0.0-beta.1: Beta 1**.
 
 SDK 1 is the stable compatibility line: existing contracts are not broken during the Beta cycle. Additive, capability-gated methods may be introduced when they preserve that compatibility; incompatible changes require a future SDK line.
 
@@ -237,6 +237,7 @@ Start with:
 - [Security](docs/security.md)
 - [API](docs/api/README.md)
 - [SDK](docs/sdk/README.md)
+- [SDK governance policy](GRAVEWRIGHT_SDK_GOVERNANCE_POLICY.md)
 
 Brazilian Portuguese documentation starts at:
 

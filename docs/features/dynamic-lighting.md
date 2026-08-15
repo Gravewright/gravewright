@@ -51,7 +51,7 @@ not a click target.
 A streamer view can compose lighting, walls, particles, and shaders as if it were
 a GM, but every edit stays in that browser: the mutations are applied to the
 local scene state and never reach the server, the table, or the database. It is
-a staging surface for framing a shot, not a second GM seat — reloading the
+a staging surface for framing a shot, not a second GM seat: reloading the
 streamer view discards everything it composed.
 
 The streamer view also sees the scene lit as the table's audience view, not

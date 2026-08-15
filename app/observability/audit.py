@@ -1,7 +1,7 @@
 """Structured audit events for security-relevant operations.
 
 Thin wrapper over ``emit_diagnostic`` that records *what happened to what*, by
-whom, and the result — with internal IDs only. Redaction and request-id
+whom, and the result: with internal IDs only. Redaction and request-id
 correlation are inherited from ``emit_diagnostic``, so a code/token/cookie passed
 here by mistake is still masked (maintenance plan, Etapa 10).
 

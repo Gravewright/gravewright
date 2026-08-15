@@ -125,13 +125,13 @@
         let text;
         if (rollToast) {
             const title = rollToast.title || author;
-            const subtitle = rollToast.subtitle ? ` — ${rollToast.subtitle}` : "";
+            const subtitle = rollToast.subtitle ? `: ${rollToast.subtitle}` : "";
             const value = rollToast.total ?? total;
             text = `${title}${subtitle}: ${value}`;
         } else if (rotulo) {
 
             // Quem nomeou a rolagem quer ler o nome, não a notação.
-            const template = document.body.dataset.toastRollNamed || "{author} — {label}: {total}";
+            const template = document.body.dataset.toastRollNamed || "{author}: {label}: {total}";
             text = template
                 .replace("{author}", author)
                 .replace("{label}", rotulo)

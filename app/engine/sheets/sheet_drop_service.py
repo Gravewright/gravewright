@@ -1,4 +1,4 @@
-"""``sheet.drop`` — drop content onto an actor sheet (§11.3, Canonical Drop Entry API).
+"""``sheet.drop``: drop content onto an actor sheet (§11.3, Canonical Drop Entry API).
 
 Validates every step server-side (can the user edit the actor? does the dropZone
 exist? is the entry accepted? does the onDrop action exist?) then runs the zone's

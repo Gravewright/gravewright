@@ -5,7 +5,7 @@
  * régua de 0,1 a 20 dentro de um painel estreito, um pixel de mouse vale mais que
  * o passo, e "um pouquinho mais" não tem como ser pedido arrastando.
  *
- * O que este harness cobra é o passo, o arredondamento e os limites — três coisas
+ * O que este harness cobra é o passo, o arredondamento e os limites: três coisas
  * que uma asserção de "o botão existe" não pegaria.
  *
  * Sai != 0 na primeira falha.
@@ -42,7 +42,7 @@ function load() {
 const api = load();
 
 // `input[type=range]` NAO aceita qualquer numero: o navegador encaixa o valor no
-// passo declarado. Escrever 8.1 numa regua de passo 1 devolve 8 — e foi assim que
+// passo declarado. Escrever 8.1 numa regua de passo 1 devolve 8, e foi assim que
 // os botoes de rotacao e alcance nasceram mortos, com o harness passando porque o
 // duble aceitava o decimal que a plataforma recusa.
 function range({ value, step = "0.1", min = "0", max = "20", disabled = false } = {}) {

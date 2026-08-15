@@ -75,7 +75,7 @@ class AssetReadService:
     ) -> bool:
         """Whether one of the user's own sheets points at this file.
 
-        A sheet can *be* a library file — the PDF ruleset is the plain case,
+        A sheet can *be* a library file: the PDF ruleset is the plain case,
         where the character sheet is the uploaded document. Reading the library
         answers to table-wide authority, so without this a player opens their own
         sheet and is denied its contents.

@@ -1,5 +1,5 @@
 /*
- * Gravewright PDF System — controlador da ficha.
+ * Gravewright PDF System: controlador da ficha.
  *
  * A ideia do sistema: o PDF é a APARÊNCIA da ficha, não o depósito dos dados.
  * Cada campo do PDF é ligado a um caminho de dado, e o valor vive em
@@ -14,7 +14,7 @@
  * Como se encaixa no SDK: a ficha é `mode: "html"`, então o host carrega o
  * template, chama este controlador e só depois liga os atributos que conhece
  * (data-bind, data-action, data-text). Os campos são criados aqui já com
- * data-bind — quem grava e persiste é o host, pelo mesmo caminho de qualquer
+ * data-bind: quem grava e persiste é o host, pelo mesmo caminho de qualquer
  * outra ficha. Este controlador não inventa transporte.
  */
 (() => {
@@ -22,7 +22,7 @@
   const SHEET_TYPE = "character";
 
   // Quais valores do token podem ser alimentados por um campo do PDF. O caminho é
-  // o MESMO que mappings/token.gw.json lê — e um teste garante que os dois não
+  // o MESMO que mappings/token.gw.json lê, e um teste garante que os dois não
   // se separem, senão a escolha aqui não chegaria ao token.
   //
   // As barras são bar_1 (embaixo do token) e bar_2 (em cima). Nenhuma delas quer
@@ -39,7 +39,7 @@
 
   // O mapeamento guarda o caminho CANÔNICO do servidor (core.name, sheet.hp.value)
   // porque token.gw.json lê os mesmos caminhos. Já o data-bind do host fala outro
-  // vocabulário — ctx.data é { actor, system, canEdit } e a escrita reconverte
+  // vocabulário: ctx.data é { actor, system, canEdit } e a escrita reconverte
   // actor.* / system.* de volta para core.* / sheet.*. A tradução mora aqui.
   function bindingPath(canonical) {
     const path = String(canonical || "");
@@ -89,8 +89,8 @@
 
       // Gravar é sempre duas coisas, na ordem que o host usa em bindHtmlSheet:
       // atualizar ctx.data e só então avisar. Chamar só ctx.onChange deixava
-      // ctx.data com o valor antigo, e qualquer releitura logo em seguida —
-      // remontar a ficha depois de escolher outro PDF, por exemplo — via o valor
+      // ctx.data com o valor antigo, e qualquer releitura logo em seguida -
+      // remontar a ficha depois de escolher outro PDF, por exemplo: via o valor
       // que acabou de ser substituído.
       function change(ctx, path, value) {
         writePath(ctx.data, path, value);
@@ -179,7 +179,7 @@
 
           const vazio = document.createElement("option");
           vazio.value = "";
-          vazio.textContent = t("ui.barNone", "— none —");
+          vazio.textContent = t("ui.barNone", "- none -");
           select.append(vazio);
           for (const name of fieldNames) {
             const opcao = document.createElement("option");
@@ -193,7 +193,7 @@
         }
 
         // Trocar a origem muda só para onde o campo grava. Reconstruir a ficha
-        // inteira aqui reabriria o PDF do zero — o documento pisca, a página
+        // inteira aqui reabriria o PDF do zero, o documento pisca, a página
         // volta para a primeira, e parece que a ficha deu submit.
         host.addEventListener("change", () => {
           void remapFields(ctx).catch((error) => {
@@ -203,7 +203,7 @@
       }
 
       // Um PDF enviado pelo GM não tem mapeamento escrito. Os nomes de campo vêm do
-      // próprio arquivo, então cada um cai em sheet.fields.<nome> — que o schema
+      // próprio arquivo, então cada um cai em sheet.fields.<nome>: que o schema
       // deixa aberto de propósito. Nomes conhecidos (HP, CA...) reaproveitam o
       // caminho canônico do template do pacote, e só por isso a barra do token
       // funciona num PDF que ninguém mapeou.
@@ -218,7 +218,7 @@
         }
 
         // Dois nomes diferentes podem virar o mesmo segmento seguro ("HP atual" e
-        // "HP-atual"), e aí os dois gravariam no mesmo caminho — um apagando o
+        // "HP-atual"), e aí os dois gravariam no mesmo caminho: um apagando o
         // outro sem aviso. O sufixo mantém cada campo com o seu lugar.
         const usados = new Map();
 
@@ -248,7 +248,7 @@
       }
 
       // Os inputs entram com data-bind; o host os liga ao dado logo depois. Por
-      // isso não há gravação manual aqui — seria um segundo caminho de escrita.
+      // isso não há gravação manual aqui: seria um segundo caminho de escrita.
       // A cor vale para a camada inteira, não campo a campo: uma variável CSS no
       // container evita reescrever estilo em 124 inputs a cada troca.
       function applyTextColor(ctx) {
@@ -274,7 +274,7 @@
           input.className = "pdf-sheet-field";
           input.dataset.pdfField = pdfField;
           input.dataset.bind = bindingPath(spec.path);
-          // readOnly não trava checkbox — só campo de texto. Sem o disabled, quem
+          // readOnly não trava checkbox: só campo de texto. Sem o disabled, quem
           // não pode editar ainda marcaria a caixa.
           if (input.type === "checkbox") input.disabled = !canEdit;
           else input.readOnly = !canEdit;
@@ -391,7 +391,7 @@
                 opened.fields, mapping?.templates?.generic?.fields, viewer, barChoices,
               );
             } else if (opened.fields?.length) {
-              // Template do pacote cujo mapeamento não bate com o arquivo — o PDF
+              // Template do pacote cujo mapeamento não bate com o arquivo, o PDF
               // foi trocado sem atualizar o mapeamento. Sem isto a ficha abre com a
               // página desenhada e nenhum campo, porque todo input mapeado aponta
               // para um nome que o arquivo não tem.
@@ -542,7 +542,7 @@
 
       sdk.sheets.registerController(SHEET_TYPE, {
         // O host chama isto quando um campo ligado muda. Trocar a cor é só
-        // repintar — reconstruir a ficha aqui reabriria o PDF a cada ajuste.
+        // repintar: reconstruir a ficha aqui reabriria o PDF a cada ajuste.
         update(ctx) {
           applyTextColor(ctx);
         },
@@ -556,7 +556,7 @@
         },
 
         // Devolver `true` reivindica a ação e impede o host de encaminhá-la como
-        // ação server-side do ruleset. Todas as daqui são de cliente puro — virar
+        // ação server-side do ruleset. Todas as daqui são de cliente puro: virar
         // página não é regra de sistema, e encaminhar daria 400 a cada clique.
         onAction(action, ctx) {
           const current = open.get(ctx.root);

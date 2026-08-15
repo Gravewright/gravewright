@@ -1,4 +1,4 @@
-"""``grave run`` — "I want to play, fix the basics for me, then start the server."
+"""``grave run``: "I want to play, fix the basics for me, then start the server."
 
 The default does the boring-but-essential setup an operator forgets: ensure the
 data/storage directories exist, install dependencies if they are missing, ensure

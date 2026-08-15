@@ -1,5 +1,5 @@
 """
-MAXIMUM STRESS TEST — Gravewright
+MAXIMUM STRESS TEST: Gravewright
 =================================
 
 This simulates a scenario that will practically never happen in a real session:
@@ -8,7 +8,7 @@ This simulates a scenario that will practically never happen in a real session:
       (reality: 5-20 players per session)
   • 8 000 x 6 000 px map, 32 px tiles → 47 000 tiles
       (reality: 2 000 x 1 500 px, 50-100 px tiles)
-  • Constant viewport panning — no idle time
+  • Constant viewport panning: no idle time
       (reality: players look at the map, barely move)
   • 20×15 = 300 tile viewport bursts
       (reality: a 1920×1080 canvas at 1x zoom needs ≈ 10×8 tiles)
@@ -17,7 +17,7 @@ This simulates a scenario that will practically never happen in a real session:
   • 5 minute sustained load at full spawn
       (reality: a few requests per minute)
 
-Goal: find the saturation point, not to pass — failure is expected and informative.
+Goal: find the saturation point, not to pass: failure is expected and informative.
 """
 
 from __future__ import annotations
@@ -100,7 +100,7 @@ class StressBase(HttpUser):
 
     def on_start(self):
         if not _login(self.client):
-            raise RuntimeError("Login failed — run seed.py first")
+            raise RuntimeError("Login failed: run seed.py first")
         r = self.client.get("/game", name="GET /game page", allow_redirects=True)
         if r.status_code == 200:
             meta = _parse_meta(r.text)
@@ -137,7 +137,7 @@ class TileBombardier(StressBase):
     @tag("tiles")
     @task(5)
     def scatter_random(self):
-        """Random tiles anywhere on the map — simulates teleporting / scene sharing."""
+        """Random tiles anywhere on the map: simulates teleporting / scene sharing."""
         if not _scene_meta:
             return
         sid = _scene_meta["scene_id"]
@@ -165,7 +165,7 @@ class PageHammer(StressBase):
 
 
 class ParallelRetiler(StressBase):
-    """Triggers retile as fast as possible — simulates 10 GMs spamming tile_size changes."""
+    """Triggers retile as fast as possible: simulates 10 GMs spamming tile_size changes."""
 
     weight = 1
     wait_time = between(2, 5)
@@ -211,7 +211,7 @@ def on_test_stop(environment, **_kwargs):
     total = stats.total
 
     print("\n" + "=" * 70)
-    print("MAX STRESS RESULTS — 500 users / 8000×6000 map / 47 000 tiles")
+    print("MAX STRESS RESULTS: 500 users / 8000×6000 map / 47 000 tiles")
     print("=" * 70)
 
     header = ("Endpoint", "Reqs", "Fails%", "p50", "p95", "p99", "p999", "RPS")

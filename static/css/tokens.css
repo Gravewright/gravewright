@@ -1,4 +1,4 @@
-/* Gravewright design tokens — single source of truth.
+/* Gravewright design tokens: single source of truth.
  *
  * Loaded before every page stylesheet (game / inside / auth). The palette used
  * to be copy-pasted into all three `:root` blocks, so a colour change had to be
@@ -7,7 +7,7 @@
  * over its background art, the game dock width, the inside nav width).
  *
  * The scales below were derived from what game.css already uses, so adopting a
- * token is a no-op or a sub-pixel move — not a redesign. They exist because the
+ * token is a no-op or a sub-pixel move: not a redesign. They exist because the
  * raw values had drifted into neighbours the eye cannot tell apart: 51 distinct
  * font sizes (0.68/0.7/0.72rem all reading as "small"), 25 border radii
  * (5/6/7/8/9px), and 34 transition timings (0.1/0.12/0.14/0.15/0.18s).

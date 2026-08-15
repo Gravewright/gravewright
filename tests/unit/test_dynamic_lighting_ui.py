@@ -316,7 +316,7 @@ def test_vision_is_per_viewer_and_gm_is_not_blinded():
 
 def test_radial_samples_share_the_atan2_range():
     """Amostras em [0,2PI) caem depois dos cantos ao ordenar e o contorno enrola
-    duas vezes — o foco se desenha como varias luzes empilhadas."""
+    duas vezes, o foco se desenha como varias luzes empilhadas."""
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
     body=script.split("function visibilityPolygon",1)[1].split("function pointInPolygon",1)[0]
     assert "angles.push(-Math.PI + (i / RADIAL_SAMPLES) * Math.PI * 2)" in body
@@ -552,7 +552,7 @@ def test_gm_borrows_the_vision_of_the_token_they_select():
 
 def test_wall_and_light_fetches_do_not_take_each_other_down():
     """Com Promise.all e um catch mudo, uma falha em /game/lights zerava tambem as
-    paredes — a cena ficava sem portas e sem nenhum aviso."""
+    paredes: a cena ficava sem portas e sem nenhum aviso."""
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
     load=script.split("const load = async (path) => {",1)[1].split("};",1)[0]
     assert "try {" in load and "catch (error)" in load, "cada recurso trata a propria falha"
@@ -622,7 +622,7 @@ def test_light_animation_is_sampled_above_the_frame_rate():
         assert period / interval >= 6, f"periodo {period}ms a cada {interval}ms alias"
 
     # A formula antiga usava divisores crus; garantir que nao voltem. Com busca de
-    # substring, `now / 900` contém `now / 90` — o limite de digito e o que separa
+    # substring, `now / 900` contém `now / 90`, o limite de digito e o que separa
     # um periodo legitimo do divisor proibido.
     for banned in (37, 90):
         assert not re.search(rf"now / {banned}(?![0-9])", script), banned
@@ -657,8 +657,8 @@ def test_one_dial_for_brightness_and_the_mode_decides_the_effect():
     para "melhorar a tocha" e uma escolha que o modo de visao ja fez.
 
     `opacity` separava tinta de quanto o foco levantava a escuridao; quando o
-    recorte do foco passou a ser duro nos dois modos — para que a visao bonita
-    nunca custasse area revelada — ela virou copia de `intensity`. E o nucleo
+    recorte do foco passou a ser duro nos dois modos: para que a visao bonita
+    nunca custasse area revelada: ela virou copia de `intensity`. E o nucleo
     pulsante deixou de ser opcao por foco: ele existe no cinematografico e nao
     existe no classico, que nao tem efeito nenhum.
     """
@@ -683,7 +683,7 @@ def test_the_client_never_posts_an_emission_it_does_not_know():
     """A barra de ferramentas e a iluminacao sao servidas com versao fixa no
     template, entao uma pode estar um passo atras da outra. Um nome de emissao
     fora da lista volta do servidor como "lighting.errors.invalid", que nao diz a
-    ninguem o que aconteceu — melhor cair na tocha e acender a luz."""
+    ninguem o que aconteceu: melhor cair na tocha e acender a luz."""
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
     template=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
 
@@ -697,7 +697,7 @@ def test_the_client_never_posts_an_emission_it_does_not_know():
 
 def test_a_failed_request_is_not_disguised_as_a_validation_error():
     """`lighting.errors.invalid` era o retorno de QUALQUER resposta sem corpo
-    conhecido — 500, sessao expirada, proxy no meio. Um banco atras da migracao
+    conhecido: 500, sessao expirada, proxy no meio. Um banco atras da migracao
     ficava com o sintoma identico ao de um campo mal preenchido, e mandava
     procurar erro de validacao onde nao havia nenhum."""
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
@@ -710,7 +710,7 @@ def test_a_light_moves_by_shape_not_only_by_brightness():
     parou junto.
 
     A receita limita brilho porque brilho e o que mexe em quanto se enxerga.
-    Forma e deslocamento nao mexem — o recorte do foco e duro nos dois modos —,
+    Forma e deslocamento nao mexem, o recorte do foco e duro nos dois modos -,
     entao e neles que a vida da luz pode morar.
     """
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
@@ -721,7 +721,7 @@ def test_a_light_moves_by_shape_not_only_by_brightness():
     assert "function spinAngle(light, now)" in script
     assert "light.alpha / Math.max(0.001, light.intensity)" not in pixi
     # O tamanho de cada fonte chega pronto do estado, ja com a respiracao e a
-    # defasagem daquele instante — o desenho nao recalcula forma a partir do brilho.
+    # defasagem daquele instante, o desenho nao recalcula forma a partir do brilho.
     assert "const radius = source.radius * (source.wobble ?? 1);" in pixi
 
     # E a forma tem folga bem maior que o brilho, senao nao se ve diferenca.
@@ -740,25 +740,25 @@ def test_a_light_moves_by_shape_not_only_by_brightness():
     # verdade. Sobrepondo, a de cima apagava a de baixo.
     assert 'sprite.blendMode = "add";' in pixi
 
-    # E o centro passeia sem levar a mascara junto — mover a mascara faria a luz
+    # E o centro passeia sem levar a mascara junto: mover a mascara faria a luz
     # espiar por tras da parede a cada tremida.
     assert "const drift = light.offset || { x: 0, y: 0 };" in pixi
     assert "mask.poly(flat)" in pixi
 
-    # O entalhe protege so o miolo — recortar ali abriria um buraco girando no
-    # meio da luz — e nunca estica para fora, senao a mascara do poligono cortaria
+    # O entalhe protege so o miolo: recortar ali abriria um buraco girando no
+    # meio da luz, e nunca estica para fora, senao a mascara do poligono cortaria
     # metade do efeito. A prova numerica disso esta em tests/js/flame_profile_harness.js.
     assert "const guard = Math.min(1, distance / 0.25);" in pixi
     assert "window.GravewrightBoardInternals.flameProfile = flameProfile;" in pixi
 
-    # E foco sem lobulo cai no halo liso — o classico zera a silhueta, entao ele
+    # E foco sem lobulo cai no halo liso, o classico zera a silhueta, entao ele
     # nunca chega a desenhar padrao nenhum.
     assert "if (!count || !bite) return falloff();" in pixi
     assert "{ lobes: 0, lobeDepth: 0 }" in script
 
 def test_light_and_scene_dressing_stay_apart():
     """Vela, fogueira, arcana e fumaça moravam no foco de luz porque era o lugar
-    que existia — e o editor de foco acabou cheio de controle que não acendia
+    que existia, e o editor de foco acabou cheio de controle que não acendia
     nada. Fonte de luz ficou com o que muda a iluminação: chama e respiração.
 
     A separação precisa de guarda porque é fácil de desfazer sem perceber: basta
@@ -791,7 +791,7 @@ def test_scene_shaders_are_occluded_by_walls_without_touching_the_glsl():
     """A fumaça atravessava muro e aparecia em sala fechada.
 
     O arquivo ``luz`` propunha entregar a oclusão como sampler para o shader
-    multiplicar o alfa — o que só funciona se quem escreveu lembrar de usar. Aqui
+    multiplicar o alfa, o que só funciona se quem escreveu lembrar de usar. Aqui
     ela é a FORMA da máscara do quadro, então vale para qualquer shader já
     escrito: a parede deixou de ser cortesia do autor e virou propriedade do
     container, igual ao alcance.
@@ -918,7 +918,7 @@ def test_every_slider_gets_fine_adjustment_buttons():
     """Arrastar acha a região; não faz o ajuste fino.
 
     Numa régua de 0,1 a 20 dentro de um painel de 400px, um pixel de mouse vale
-    mais do que o passo — "um pouquinho mais" não tem como ser pedido arrastando.
+    mais do que o passo: "um pouquinho mais" não tem como ser pedido arrastando.
     """
     nudge=(ROOT/"static/js/ui/slider-nudge.js").read_text(encoding="utf-8")
     index=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
@@ -934,7 +934,7 @@ def test_every_slider_gets_fine_adjustment_buttons():
     assert "input.disabled" in nudge
 
     # `input[type=range]` encaixa o valor no passo declarado, então numa régua de
-    # passo 1 — rotação, alcance — escrever 8,1 devolvia 8 e o clique não fazia
+    # passo 1: rotação, alcance: escrever 8,1 devolvia 8 e o clique não fazia
     # nada. O passo precisa ser afrouxado antes, com o original guardado para a
     # exibição decidir as casas.
     assert "function prepare(input)" in nudge and 'input.dataset.baseStep = input.step' in nudge
@@ -943,7 +943,7 @@ def test_every_slider_gets_fine_adjustment_buttons():
     assert ".slider-row:has(input[type=\"range\"]:disabled) .slider-nudge" in css
 
     # E o evento tem de existir de verdade. Escutar um nome inventado é código
-    # morto que ninguém percebe — já aconteceu com `modal:closed` neste arquivo.
+    # morto que ninguém percebe: já aconteceu com `modal:closed` neste arquivo.
     assert "vtt:modal-opened" not in nudge
     assert "MutationObserver" in nudge
 
@@ -952,7 +952,7 @@ def test_unlimited_range_is_a_checkbox_not_a_hidden_zero():
     """Zero continua sendo o que vai ao banco; deixa de ser o que se pede na tela.
 
     Arrastar uma régua até o mínimo e receber o alcance MÁXIMO não é algo que se
-    descubra — se descobre por acidente, com a cena inteira acesa.
+    descubra: se descobre por acidente, com a cena inteira acesa.
     """
     light=(ROOT/"templates/pages/game/modals/light_editor.html").read_text(encoding="utf-8")
     vision=(ROOT/"templates/pages/game/modals/token_vision.html").read_text(encoding="utf-8")
@@ -964,7 +964,7 @@ def test_unlimited_range_is_a_checkbox_not_a_hidden_zero():
     for panel, key in ((light, "dim_radius"), (vision, "vision_range"), (shader, "radius")):
         assert f'data-limit-target="{key}"' in panel, key
         assert f'data-limit-for="{key}"' in panel, key
-        # Sem valor de volta, desmarcar devolve zero — e o checkbox não teria
+        # Sem valor de volta, desmarcar devolve zero, e o checkbox não teria
         # como ser desmarcado.
         assert "data-limit-default=" in panel, key
 
@@ -979,7 +979,7 @@ def test_the_shader_tool_places_on_the_map_like_every_other_tool():
     editor=(ROOT/"static/js/lighting/shader-editor.js").read_text(encoding="utf-8")
     panel=(ROOT/"templates/pages/game/modals/shader_editor.html").read_text(encoding="utf-8")
 
-    # Ferramenta de verdade, na mesma camada da particula — nao um botao que abre
+    # Ferramenta de verdade, na mesma camada da particula: nao um botao que abre
     # um editor onde se cria o objeto.
     assert 'shader: ["effects"]' in registry
     assert 'data-tool="shader"' in template
@@ -1015,7 +1015,7 @@ def test_particle_emitters_are_scene_dressing_not_light():
 
 def test_the_animated_halo_does_not_recompose_the_darkness():
     """O halo mora na camada, por cima da textura de escuridao. Se forma e giro
-    entrassem na chave dela, cada quadro da chama recomporia a textura inteira —
+    entrassem na chave dela, cada quadro da chama recomporia a textura inteira -
     que e exatamente o que aquele cache existe para evitar."""
     pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
     key=pixi.split("const key = [",1)[1].split('].join(":")',1)[0]

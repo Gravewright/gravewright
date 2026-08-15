@@ -3,7 +3,7 @@
 O ``xdice`` implementa ``!`` como um único dado extra por máximo e nunca
 reexamina o que ele mesmo adicionou: um d12 que tira 12, explode e tira 12 de
 novo parava ali. O total saía sistematicamente baixo e, num sistema com dado
-aberto, isso é a regra errada — não um detalhe de apresentação.
+aberto, isso é a regra errada: não um detalhe de apresentação.
 """
 
 from __future__ import annotations

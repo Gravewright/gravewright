@@ -1,11 +1,11 @@
 """Método do SDK devolve o dado, não o envelope do transporte.
 
 ``GravewrightCore.http`` responde ``{ok, status, data}``. Nenhum método do SDK
-promete isso — a documentação fala em "packs", "rows", "assets". Quando um método
+promete isso: a documentação fala em "packs", "rows", "assets". Quando um método
 esquece de desembrulhar, o erro nunca aparece: ler o campo errado devolve
 ``undefined``, que vira lista vazia ou condição falsa. Foi assim duas vezes:
 
-- ``sdk.assets.list`` lia ``state.assets`` do envelope e devolvia ``[]`` sempre —
+- ``sdk.assets.list`` lia ``state.assets`` do envelope e devolvia ``[]`` sempre -
   a biblioteca da campanha parecia vazia, sem erro nenhum;
 - ``sdk.settings.set`` lia ``result.success`` do envelope, então nunca atualizava
   o valor em memória e ``settings.get`` devolvia o antigo até recarregar a página.

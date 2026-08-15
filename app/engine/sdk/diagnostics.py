@@ -1,11 +1,11 @@
-"""SDK diagnostics contract — the common shape for errors, findings and results.
+"""SDK diagnostics contract: the common shape for errors, findings and results.
 
 This module is the single, machine-readable contract every SDK service speaks:
 
-* :class:`SdkError` — one problem, identified by a stable ``code``.
-* :class:`SdkActionResult` — the outcome of an install/enable/activate-style
+* :class:`SdkError`: one problem, identified by a stable ``code``.
+* :class:`SdkActionResult`: the outcome of an install/enable/activate-style
   action, carrying an optional error and any warnings.
-* :class:`DoctorFinding` — one health-audit observation with a ``severity``.
+* :class:`DoctorFinding`: one health-audit observation with a ``severity``.
 
 SDK endpoints return the structured ``code`` (also surfaced as ``error_key`` at
 the HTTP boundary). See ``docs/sdk/diagnostics.md`` for the full policy.

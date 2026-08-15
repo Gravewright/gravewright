@@ -4,7 +4,7 @@
  * Existe porque a versão anterior estava certa no código e invisível na tela: a
  * mordida do lóbulo era multiplicada por `distância ao quadrado`, o que a punha no
  * ponto em que a queda quadrática já tinha levado o alfa a quase zero. Nenhuma
- * asserção de texto pega isso — só a conta pega. Sai != 0 na primeira falha.
+ * asserção de texto pega isso: só a conta pega. Sai != 0 na primeira falha.
  */
 const fs = require("fs");
 const path = require("path");

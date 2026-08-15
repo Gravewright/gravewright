@@ -4,7 +4,7 @@
  * O que importa provar aqui não é o pdf.js (não é nosso), e sim a ponte: que os
  * inputs da ficha pousam exatamente sobre os retângulos que o PDF declara, que
  * campo de outra página some, e que a inversão de eixo do PDF é respeitada. Um
- * erro de um destes deixa a ficha bonita e os campos no lugar errado — o tipo de
+ * erro de um destes deixa a ficha bonita e os campos no lugar errado, o tipo de
  * defeito que nenhuma leitura de arquivo pega.
  *
  * O resolvedor de asset é injetável (open({assetUrl})), então apontamos o
@@ -25,7 +25,7 @@ function check(label, condition, detail) {
   checks += 1;
   if (condition) return;
   failures += 1;
-  console.error(`FALHOU: ${label}${detail === undefined ? "" : ` — ${detail}`}`);
+  console.error(`FALHOU: ${label}${detail === undefined ? "" : `: ${detail}`}`);
 }
 
 function near(a, b, tolerance = 1e-6) {
@@ -109,7 +109,7 @@ export function getDocument({ url }) {
             scale,
             // A MESMA superficie do pdf.js 6: um ponto por vez. Um duble que
             // oferece mais do que a biblioteca real transforma o harness em prova
-            // da minha suposicao, nao do codigo — foi assim que
+            // da minha suposicao, nao do codigo: foi assim que
             // convertToViewportRectangle (que nao existe mais) passou batido.
             convertToViewportPoint(x, y) {
               return [x * scale, (842 - y) * scale];
@@ -205,7 +205,7 @@ async function main() {
   check("campo comum não vira somente-leitura", name.readOnly === false);
 
   // Os inputs são registrados DEPOIS do open(), porque num PDF enviado os nomes
-  // dos campos vêm do arquivo. Antes do refresh eles ainda não têm posição — este
+  // dos campos vêm do arquivo. Antes do refresh eles ainda não têm posição: este
   // é o estado em que a ficha ficava presa: tudo empilhado na origem.
   check(
     "recém-registrado, o input ainda não tem posição",

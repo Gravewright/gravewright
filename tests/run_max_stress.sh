@@ -17,7 +17,7 @@ done
 
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║  Gravewright  —  MAXIMUM STRESS TEST                     ║"
+echo "║  Gravewright :  MAXIMUM STRESS TEST                     ║"
 echo "║  500 users  •  8000x6000 map  •  47 000 tiles  •  5 min ║"
 echo "║  constraint: 1 CPU / 4 GB RAM (Docker limits)           ║"
 echo "╚══════════════════════════════════════════════════════════╝"
@@ -61,7 +61,7 @@ docker stats --no-trunc --format \
 STATS_PID=$!
 
 echo ""
-echo "[5/5] Running Locust — 500 users / spawn 20/s / 300s..."
+echo "[5/5] Running Locust: 500 users / spawn 20/s / 300s..."
 docker compose -f "$COMPOSE_FILE" run --rm locust \
   2>&1 | tee "$OUT/locust_output.txt" || true
 
@@ -71,10 +71,10 @@ docker compose -f "$COMPOSE_FILE" down
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
 echo "║  Done. Results in $OUT/"
-echo "║    report.html         — visual Locust report"
-echo "║    results_stats.csv   — per-endpoint p50/p95/p99"
-echo "║    results_history.csv — time-series RPS and latency"
-echo "║    docker_stats.txt    — CPU and RAM samples"
-echo "║    locust_output.txt   — full console output"
+echo "║    report.html        : visual Locust report"
+echo "║    results_stats.csv  : per-endpoint p50/p95/p99"
+echo "║    results_history.csv: time-series RPS and latency"
+echo "║    docker_stats.txt   : CPU and RAM samples"
+echo "║    locust_output.txt  : full console output"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""

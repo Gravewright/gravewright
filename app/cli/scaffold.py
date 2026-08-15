@@ -785,7 +785,7 @@ MECHANICS: dict[str, dict] = {
         },
     },
     "dice-pool-successes": {
-        "label": "Dice pool — count successes",
+        "label": "Dice pool: count successes",
         "fields": [
             {"path": "pool.size", "label": "Pool size", "type": "number", "default": 3},
             {"path": "pool.target", "label": "Target number", "type": "number", "default": 6},
@@ -797,7 +797,7 @@ MECHANICS: dict[str, dict] = {
         },
     },
     "dice-pool-count-hits": {
-        "label": "Dice pool — count hits",
+        "label": "Dice pool: count hits",
         "fields": [
             {"path": "pool.size", "label": "Pool size", "type": "number", "default": 6},
             {"path": "pool.hit", "label": "Hit on", "type": "number", "default": 5},
@@ -1312,7 +1312,7 @@ def _item_schema(type_id: str, intent: Intent) -> dict:
 
 
 def _rich_doc_schema() -> dict:
-    """A block-editor document field (``gw-journal-doc-v1`` shape) — free-form object."""
+    """A block-editor document field (``gw-journal-doc-v1`` shape): free-form object."""
     return {"type": "object", "default": {}}
 
 

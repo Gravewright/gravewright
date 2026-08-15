@@ -2,8 +2,8 @@
 
 Nenhum teste montava um bundle, e a suíte inteira passou com um `NameError`
 dentro de `build_bundle`: o erro só aparecia ao abrir a ficha de um token no
-navegador. São dois construtores para a mesma dataclass — o do ator e o do
-token desvinculado —, e é fácil um crescer um campo que o outro não preenche.
+navegador. São dois construtores para a mesma dataclass, o do ator e o do
+token desvinculado -, e é fácil um crescer um campo que o outro não preenche.
 """
 
 from __future__ import annotations
@@ -140,7 +140,7 @@ def test_the_bundle_reaches_the_client(service_cls, field_name):
     Os dois serviços têm de responder igual: enquanto cada um serializava a sua
     cópia, a do token perdeu `dialogs` (rolagem sem opções quando a ficha vinha
     de um token) e `token_link_mode` (edição de token vinculado escrita numa
-    cópia local em vez do ator — e a ficha parava de ver o que era posto nele).
+    cópia local em vez do ator, e a ficha parava de ver o que era posto nele).
     """
     service = service_cls.__new__(service_cls)
     bundle = ActorSheetBundle(

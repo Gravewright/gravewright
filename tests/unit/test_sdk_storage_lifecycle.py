@@ -1,4 +1,4 @@
-"""Phase 7B — storage lifecycle: doctor orphan detection and backup/export.
+"""Phase 7B: storage lifecycle: doctor orphan detection and backup/export.
 
 Removing a package preserves its managed storage; the doctor then flags that
 storage as orphaned. Export excludes managed storage by default; backup includes

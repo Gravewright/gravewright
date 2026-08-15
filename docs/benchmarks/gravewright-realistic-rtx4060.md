@@ -1,6 +1,6 @@
-# Gravewright realistic scene — RTX 4060
+# Gravewright realistic scene: RTX 4060
 
-Executed on 13 August 2026 with NVIDIA GeForce RTX 4060, driver 32.0.15.9621, ANGLE/D3D11, hardware acceleration enabled, Chromium headed, viewport 1366×768, 10-second warm-up, and 30-second measurement.
+Executed on 15 August 2026 with NVIDIA GeForce RTX 4060, driver 32.0.15.9621, ANGLE/D3D11, hardware acceleration enabled, Chromium headed, viewport 1366×768, 10-second warm-up, and 30-second measurement.
 
 ## Workload
 
@@ -31,4 +31,3 @@ Executed on 13 August 2026 with NVIDIA GeForce RTX 4060, driver 32.0.15.9621, AN
 | 800 | 3/3 | 16.7 ms | **33.2 ms** | 49.9 ms | 22.0 ms |
 
 Every run reported `document_hidden=false`, zero visibility changes, zero rAF gaps above 500 ms, all requested tokens visible, 12 lighting sources, and `fast_sprites=0`.
-

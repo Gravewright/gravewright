@@ -2,7 +2,7 @@
 
 Mirrors the journals model: the GM always passes; other users are granted
 view/edit only via explicit ownership (``actor_owners``) or a per-user
-``actor_permissions`` row — never by the client.
+``actor_permissions`` row: never by the client.
 """
 
 from __future__ import annotations

@@ -478,8 +478,8 @@ class MapUploadService:
         """Permanently delete a scene along with its original map, tiles and chunks.
 
         Dependent database rows (layers, tiles, chunks, assets) are removed via
-        ON DELETE CASCADE; the on-disk tree — originals, tiles and chunks all live
-        under ``<root>/<scene_id>/`` — is removed from storage.
+        ON DELETE CASCADE; the on-disk tree: originals, tiles and chunks all live
+        under ``<root>/<scene_id>/``: is removed from storage.
         """
         scene = self.scenes.get_by_id(scene_id)
         if scene is None:

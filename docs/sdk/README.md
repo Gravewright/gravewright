@@ -22,19 +22,19 @@ A campaign has exactly one active `ruleset` and any number of active `addon`, `t
 
 ## Canonical SDK files
 
-- `manifest.json` — package metadata, capabilities, activation, entrypoints, settings, dependencies, conflicts, and `provides` data.
-- `schemas/gravewright-package-v1.schema.json` — public JSON Schema for SDK v1 manifests.
-- `static/js/sdk/sdk-capabilities.js` — browser capability allow-list and method-to-capability gates.
-- `static/js/sdk/gravewright-sdk.js` — browser runtime and `window.GravewrightSDK` public entry point.
-- `app/engine/sdk/` — server-side package loading, validation, install, activation, dependencies, content, assets, settings, locales, and diagnostics.
+- `manifest.json`: package metadata, capabilities, activation, entrypoints, settings, dependencies, conflicts, and `provides` data.
+- `schemas/gravewright-package-v1.schema.json`: public JSON Schema for SDK v1 manifests.
+- `static/js/sdk/sdk-capabilities.js`: browser capability allow-list and method-to-capability gates.
+- `static/js/sdk/gravewright-sdk.js`: browser runtime and `window.GravewrightSDK` public entry point.
+- `app/engine/sdk/`: server-side package loading, validation, install, activation, dependencies, content, assets, settings, locales, and diagnostics.
 
 ## Start here for package authors
 
 If you are creating a package, read these three pages first:
 
-1. [`declarative-model.md`](declarative-model.md) — explains the declarative-first package model and when to add runtime JavaScript.
-2. [`author-complete-checklist.md`](author-complete-checklist.md) — defines what an author needs to build and use the full SDK surface.
-3. [`power-map.md`](power-map.md) — maps author goals to manifest fields, capabilities, runtime APIs, and docs.
+1. [`declarative-model.md`](declarative-model.md): explains the declarative-first package model and when to add runtime JavaScript.
+2. [`author-complete-checklist.md`](author-complete-checklist.md): defines what an author needs to build and use the full SDK surface.
+3. [`power-map.md`](power-map.md): maps author goals to manifest fields, capabilities, runtime APIs, and docs.
 
 The intended SDK model is not “write a plugin and discover globals”. It is:
 
@@ -112,27 +112,27 @@ grave package doctor my-rpg
 
 ## Documentation map
 
-- [`tutorial-addon.md`](tutorial-addon.md) — end-to-end: from zero to a working addon.
-- [`tutorial-ruleset.md`](tutorial-ruleset.md) — end-to-end: from zero to a minimal working ruleset.
-- [`declarative-model.md`](declarative-model.md) — declarative-first package model, examples, and author decision rules.
-- [`author-complete-checklist.md`](author-complete-checklist.md) — 100% SDK author checklist from scaffold to release.
-- [`power-map.md`](power-map.md) — author goal → manifest field → capability → runtime API map.
-- [`manifest.md`](manifest.md) — complete manifest contract.
-- [`kinds.md`](kinds.md) — package kinds and kind-specific rules.
-- [`capabilities.md`](capabilities.md) — allowed, forbidden, and method-gated capabilities.
-- [`runtime.md`](runtime.md) — browser runtime lifecycle and `window.GravewrightSDK`.
-- [`html-sheets.md`](html-sheets.md) — complete HTML actor/item sheet guide, from templates to controllers.
-- [`reference.md`](reference.md) — complete scoped SDK namespace reference.
+- [`tutorial-addon.md`](tutorial-addon.md): end-to-end: from zero to a working addon.
+- [`tutorial-ruleset.md`](tutorial-ruleset.md): end-to-end: from zero to a minimal working ruleset.
+- [`declarative-model.md`](declarative-model.md): declarative-first package model, examples, and author decision rules.
+- [`author-complete-checklist.md`](author-complete-checklist.md): 100% SDK author checklist from scaffold to release.
+- [`power-map.md`](power-map.md): author goal → manifest field → capability → runtime API map.
+- [`manifest.md`](manifest.md): complete manifest contract.
+- [`kinds.md`](kinds.md): package kinds and kind-specific rules.
+- [`capabilities.md`](capabilities.md): allowed, forbidden, and method-gated capabilities.
+- [`runtime.md`](runtime.md): browser runtime lifecycle and `window.GravewrightSDK`.
+- [`html-sheets.md`](html-sheets.md): complete HTML actor/item sheet guide, from templates to controllers.
+- [`reference.md`](reference.md): complete scoped SDK namespace reference.
 - [`rolls.md`](rolls.md) - authoritative formula rolls, roll intents, and dice syntax.
-- [`authoring-guide.md`](authoring-guide.md) — package author workflow from scaffold to publish.
-- [`settings.md`](settings.md) — manifest settings and runtime settings API.
-- [`content-and-assets.md`](content-and-assets.md) — content packs, asset packs, and safe paths.
-- [`messaging.md`](messaging.md) — package-to-package events.
-- [`cli.md`](cli.md) — `grave` SDK and operator CLI.
-- [`validation.md`](validation.md) — manifest validation rules and common error keys.
-- [`security.md`](security.md) — security model and private API boundaries.
-- [`examples.md`](examples.md) — minimal ruleset and addon examples.
-- [`troubleshooting.md`](troubleshooting.md) — diagnosis playbook.
+- [`authoring-guide.md`](authoring-guide.md): package author workflow from scaffold to publish.
+- [`settings.md`](settings.md): manifest settings and runtime settings API.
+- [`content-and-assets.md`](content-and-assets.md): content packs, asset packs, and safe paths.
+- [`messaging.md`](messaging.md): package-to-package events.
+- [`cli.md`](cli.md): `grave` SDK and operator CLI.
+- [`validation.md`](validation.md): manifest validation rules and common error keys.
+- [`security.md`](security.md): security model and private API boundaries.
+- [`examples.md`](examples.md): minimal ruleset and addon examples.
+- [`troubleshooting.md`](troubleshooting.md): diagnosis playbook.
 
 ## What is not public SDK
 

@@ -1,7 +1,7 @@
 """Coerência do pacote Gravewright PDF System.
 
 A ideia do sistema é que o PDF seja a aparência da ficha e o mapeamento
-transforme cada campo num caminho de dado — é isso que deixa a barra de HP do
+transforme cada campo num caminho de dado: é isso que deixa a barra de HP do
 token ler o mesmo número que o jogador digitou no papel. Um mapeamento que
 aponta para um caminho fora do schema, ou para um arquivo que o manifest não
 declara, quebra essa ponte em silêncio: a ficha abre e nada persiste.
@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 import pytest
+from jinja2 import Template
 
 from app.engine.sdk.package_manifest import PackageManifest
 from app.engine.sdk.package_manifest_validator import validate_manifest
@@ -37,8 +38,45 @@ def test_manifest_is_valid_sdk_1(manifest_raw):
     assert manifest_raw["sdkVersion"] == "1"
     assert manifest_raw["kind"] == "ruleset"
     assert manifest_raw["id"] == "gravewright-pdf-system"
-    assert manifest_raw["version"] == "0.2.0"
+    assert manifest_raw["version"] == "0.2.2"
     assert {"pdf.read", "pdf.viewer"} <= set(manifest_raw["capabilities"])
+    assert manifest_raw["display"]["directories"]["items"] is False
+
+
+def test_pdf_ruleset_hides_the_items_directory_through_the_sdk(manifest_raw):
+    manifest = PackageManifest.from_dict(manifest_raw)
+
+    assert manifest.directory_visibility == {
+        "actors": True,
+        "items": False,
+        "journals": True,
+    }
+
+    template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
+    for directory in ("actors", "items", "journals"):
+        guard = (
+            "not room.active_system or room.active_system.directories is not defined "
+            f'or room.active_system.directories["{directory}"]'
+        )
+        assert template.count(guard) == 2
+
+
+@pytest.mark.parametrize("directory", ["actors", "items", "journals"])
+def test_directory_conditions_read_explicit_keys_and_keep_safe_defaults(directory):
+    condition = Template(
+        "{% if not room.active_system or room.active_system.directories is not defined "
+        f'or room.active_system.directories["{directory}"] %}}visible'
+        "{% else %}hidden{% endif %}"
+    )
+
+    assert condition.render(room={"active_system": None}) == "visible"
+    assert condition.render(room={"active_system": {}}) == "visible"
+    assert condition.render(
+        room={"active_system": {"directories": {directory: True}}}
+    ) == "visible"
+    assert condition.render(
+        room={"active_system": {"directories": {directory: False}}}
+    ) == "hidden"
 
 
 def test_every_declared_file_exists(manifest_raw):
@@ -50,7 +88,7 @@ def test_every_declared_file_exists(manifest_raw):
 def test_the_pdf_template_is_declared_so_it_can_be_served(manifest_raw):
     """O mapeamento aponta o arquivo, mas quem autoriza servir é o manifest.
 
-    Sem a declaração em provides.assets o PDF volta 404 e a ficha abre vazia —
+    Sem a declaração em provides.assets o PDF volta 404 e a ficha abre vazia -
     e nada no mapeamento acusaria isso.
     """
     manifest = PackageManifest.from_dict(manifest_raw)
@@ -63,7 +101,7 @@ def test_the_pdf_template_is_declared_so_it_can_be_served(manifest_raw):
 
 def test_the_bundled_template_is_a_structurally_valid_pdf():
     """PDF real usa CR, LF ou CRLF conforme o gerador. Exigir só LF fazia o teste
-    recusar arquivos legítimos — e foi o que aconteceu ao trocar o template por um
+    recusar arquivos legítimos, e foi o que aconteceu ao trocar o template por um
     PDF de verdade."""
     import re
 
@@ -140,7 +178,7 @@ def test_every_label_key_used_has_a_translation():
     assert used, "o teste precisa achar alguma chave, senão não guarda nada"
 
     # data-text é caminho de DADO no host, não chave de tradução. Usá-lo para
-    # rótulo renderiza vazio — foi assim que o aviso de 'sem template' sumiu.
+    # rótulo renderiza vazio: foi assim que o aviso de 'sem template' sumiu.
     for key in re.findall(r'data-text="([^"]+)"', template):
         assert not key.startswith("gravewright-pdf-system."), (
             f"data-text='{key}' é caminho de dado, não chave de i18n"
@@ -213,7 +251,7 @@ def test_the_sheet_survives_without_a_pdf_renderer():
 
 def test_vendor_carries_only_what_is_declared(manifest_raw):
     """Uma distribuição do pdf.js vem com 7 MB de source maps e um bundle de
-    sandbox que só serve para executar JavaScript embutido no PDF — coisa que este
+    sandbox que só serve para executar JavaScript embutido no PDF: coisa que este
     sistema não faz. Arquivo não declarado não é servível, então seria peso morto
     no repositório e 404 no devtools."""
     vendor_dir = PACKAGE / "vendor"
@@ -244,7 +282,7 @@ def test_the_viewer_asks_the_sdk_where_assets_live():
 
 
 def test_a_fresh_sheet_resolves_a_template(manifest_raw):
-    """Sem template resolvido a ficha não desenha nada e não cria campo algum —
+    """Sem template resolvido a ficha não desenha nada e não cria campo algum -
     abre inerte, sem erro nenhum no console. Com a configuração em branco era
     exatamente isso que acontecia numa instalação nova."""
     templates = _json("mappings/pdf-fields.gw.json")["templates"]
@@ -261,7 +299,7 @@ def test_a_fresh_sheet_resolves_a_template(manifest_raw):
 
 def test_the_template_picker_is_never_a_dead_end():
     """O aviso de 'nenhum template' manda usar o botão PDF. Se o botão recusar
-    quando só há um template, não há saída — que era o caso. E ciclar no clique
+    quando só há um template, não há saída: que era o caso. E ciclar no clique
     também não mostrava o que existe."""
     controller = (PACKAGE / "scripts/pdf-sheet.js").read_text(encoding="utf-8")
     template = (PACKAGE / "sheets/character.html").read_text(encoding="utf-8")
@@ -317,7 +355,7 @@ def test_a_template_whose_mapping_does_not_match_the_pdf_still_shows_fields():
 def test_writing_a_value_updates_the_local_data_before_notifying():
     """O host, ao ligar um data-bind, faz duas coisas: setPath(ctx.data, ...) e
     depois ctx.onChange(...). Chamar só a segunda deixa ctx.data com o valor
-    antigo — e qualquer releitura logo em seguida vê o que acabou de ser
+    antigo, e qualquer releitura logo em seguida vê o que acabou de ser
     substituído. Foi assim que escolher um PDF enviado não trocava nada: o
     remonte relia o id anterior e caía de volta no template do pacote."""
     controller = (PACKAGE / "scripts/pdf-sheet.js").read_text(encoding="utf-8")
@@ -348,7 +386,7 @@ def test_fields_are_positioned_after_they_are_created():
     """Os inputs nascem DEPOIS do open(): num PDF enviado os nomes dos campos vêm
     do arquivo, então é preciso abrir para saber o que criar. Só que quem
     posiciona é o render(), que já rodou com a lista vazia. Sem uma segunda
-    passada, os campos ficam sem left/top e empilham todos na origem — o que
+    passada, os campos ficam sem left/top e empilham todos na origem, o que
     aparece como uma barra única no canto da ficha, com só o último clicável."""
     controller = (PACKAGE / "scripts/pdf-sheet.js").read_text(encoding="utf-8")
     viewer = (PACKAGE / "scripts/pdf-viewer.js").read_text(encoding="utf-8")
@@ -387,7 +425,7 @@ def test_two_field_names_never_share_a_data_path():
 def test_the_field_layer_shares_the_canvas_coordinate_system():
     """As coordenadas de cada campo vêm do canvas (convertToViewportRectangle).
     Se a camada de campos se alinhar ao palco, e o canvas for centralizado dentro
-    dele, todo campo sai deslocado na horizontal — e desgruda ao rolar, porque o
+    dele, todo campo sai deslocado na horizontal, e desgruda ao rolar, porque o
     palco é que rola."""
     template = (PACKAGE / "sheets/character.html").read_text(encoding="utf-8")
     styles = (PACKAGE / "styles/pdf-sheet.css").read_text(encoding="utf-8")
@@ -463,6 +501,26 @@ def test_the_token_image_reuses_the_host_upload():
 
     controller = (PACKAGE / "scripts/pdf-sheet.js").read_text(encoding="utf-8")
     assert "/game/actor/" not in controller, "o pacote não fala com rotas do host direto"
+
+
+def test_token_tab_edits_the_canonical_actor_and_representation_name():
+    """O nome não pode ser uma cópia em sheet.*: ficha, diretório e tokens
+    vinculados devem ler e escrever a mesma identidade canônica do ator."""
+    template = (PACKAGE / "sheets/character.html").read_text(encoding="utf-8")
+    mapping = _json("mappings/token.gw.json")
+    controller = (PACKAGE / "scripts/pdf-sheet.js").read_text(encoding="utf-8")
+    actions = (ROOT / "app/actions/game/manage_actors.py").read_text(encoding="utf-8")
+
+    token_panel = template.split('data-tab-panel="token"', 1)[1].split(
+        'data-tab-panel="notas"', 1
+    )[0]
+    assert 'data-bind="actor.name"' in token_panel
+    assert mapping["character"]["name"] == "core.name"
+    assert 'if (path === "core.name") return "actor.name"' in controller
+
+    update_core = actions.split("async def update_actor_core", 1)[1].split("\n\n@post", 1)[0]
+    assert "token_service: TokenService" in update_core
+    assert "await _refresh_actor_tokens(" in update_core
 
 
 def test_biography_history_and_notes_persist_like_any_field():

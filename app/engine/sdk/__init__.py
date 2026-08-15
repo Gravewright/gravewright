@@ -1,4 +1,4 @@
-"""Gravewright SDK engine — the only supported extension model.
+"""Gravewright SDK engine: the only supported extension model.
 
 Everything installable is a *Gravewright package* described by a single manifest
 contract (``schemas/gravewright-package-v1.schema.json``). This package contains

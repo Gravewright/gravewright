@@ -66,7 +66,7 @@ class ChatService:
     ) -> ChatResult:
         """Broadcast a public, system-authored message (combat ticks, automation).
 
-        Live-only — like whispers/secret rolls, system notices are not persisted
+        Live-only: like whispers/secret rolls, system notices are not persisted
         (the chat_messages table requires a real author_user_id).
         """
         content = (content or "").strip()

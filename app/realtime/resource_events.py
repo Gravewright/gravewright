@@ -1,7 +1,7 @@
 """Anúncio de mudança de acesso a um recurso da campanha.
 
 Trocar o dono de um ator/item/diário e conceder acesso pelo modal de permissões
-mudam a mesma coisa — quem enxerga o recurso — então precisam anunciar o mesmo
+mudam a mesma coisa: quem enxerga o recurso: então precisam anunciar o mesmo
 evento, com o mesmo formato. Antes só o modal anunciava: a troca de dono era
 silenciosa, e o jogador que ganhava um ator não via nada aparecer até recarregar.
 
@@ -31,7 +31,7 @@ async def announce_resource_tree_change(
 
     O jogador enxerga uma pasta quando ela contém algo dele, então curadoria do
     GM muda o que ele vê. Os painéis recarregam por sala, então o evento não
-    precisa carregar o id do recurso — só a sala.
+    precisa carregar o id do recurso: só a sala.
     """
     entry = _RESOURCE_EVENTS.get(resource_type)
     if entry is None or not campaign_id or transport is None:

@@ -236,9 +236,9 @@ write_summary
 echo ""
 echo "============================================================"
 if [[ "$STATUS" -eq 0 ]]; then
-  echo " PASS — Gate WS-R1 completed successfully."
+  echo " PASS: Gate WS-R1 completed successfully."
 else
-  echo " FAIL — Gate WS-R1 failed."
+  echo " FAIL: Gate WS-R1 failed."
 fi
 echo ""
 echo " Results:"

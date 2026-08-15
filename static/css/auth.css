@@ -26,7 +26,7 @@ body {
 }
 
 
-/* The animated PixiJS canvas is gone — markup, script tags and this rule with
+/* The animated PixiJS canvas is gone: markup, script tags and this rule with
    it. What replaces it is the one image the product is actually about: a
    battle map. A square grid at the scale a VTT rules one, a heavier line every
    fifth cell like a real map, a lamp hung over the table and darkness at the
@@ -393,7 +393,7 @@ body::after {
 }
 
 /* ===========================================================================
-   AUTH — SAME IDENTITY AS THE INSIDE PANELS
+   AUTH: SAME IDENTITY AS THE INSIDE PANELS
 
    The login shell already had the right bones (flat 4px corners, a gold
    submit, translucent surfaces over the animated background), but it predated
@@ -449,7 +449,7 @@ body::after {
 }
 
 /* The tabs are <label>s driving hidden radios, so focus lands on the radio,
-   never on the label — the ring has to be drawn from the input's state. */
+   never on the label: the ring has to be drawn from the input's state. */
 #tab-login:focus-visible ~ .auth-header .auth-tab--login,
 #tab-privacy:focus-visible ~ .auth-header .auth-tab--privacy {
     outline: 2px solid var(--focus-ring);
@@ -459,7 +459,7 @@ body::after {
 /* ---- Masthead ----------------------------------------------------------- */
 
 /* A warm wash at the top of the panel, the same one the campaign cards carry
-   on their covers — enough to keep the shell from reading as a plain box. */
+   on their covers: enough to keep the shell from reading as a plain box. */
 .auth-panel--login {
     background: radial-gradient(
         120% 60% at 0% 0%,
@@ -559,7 +559,7 @@ body::after {
 
 /* ---- Error -------------------------------------------------------------- */
 
-/* A ruled aside, like the alerts on every panel inside — a tinted rounded box
+/* A ruled aside, like the alerts on every panel inside: a tinted rounded box
    read as another field in the form. */
 .auth-error {
     border: 0;
@@ -622,7 +622,7 @@ body::after {
         0 34px 90px rgba(0, 0, 0, 0.6);
 }
 
-/* Corner brackets, the way a map frames a region — eight one-pixel rules, one
+/* Corner brackets, the way a map frames a region: eight one-pixel rules, one
    pair per corner, from a single gradient repeated. */
 .auth-shell::after {
     content: "";

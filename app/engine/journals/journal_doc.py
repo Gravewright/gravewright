@@ -1,4 +1,4 @@
-"""``gw-journal-doc-v1`` — the block-document format for Journals.
+"""``gw-journal-doc-v1``: the block-document format for Journals.
 
 This is the source of truth for rich Journal content (replacing free Markdown).
 A document is untrusted input, so this module is the single place that:

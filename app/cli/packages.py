@@ -1,4 +1,4 @@
-"""``grave package`` (and per-kind sugar) — the operator package manager.
+"""``grave package`` (and per-kind sugar): the operator package manager.
 
 Install / enable / disable / remove / update packages globally, activate them per
 campaign, and run a per-package doctor. Every failure prints the reason plus an

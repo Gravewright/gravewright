@@ -2,7 +2,7 @@
  * O buffer de luz que o shader recebe.
  *
  * Ele não é a soma dos focos: é a iluminação RESULTANTE, ambiente mais focos, já
- * recortada nas paredes. A diferença importa — sem o ambiente, um mapa de dia sem
+ * recortada nas paredes. A diferença importa: sem o ambiente, um mapa de dia sem
  * foco nenhum entregava preto, e um efeito que responde à luz sumia justamente
  * onde tudo está iluminado.
  *
@@ -88,7 +88,7 @@ const state = (extra = {}) => ({
     const call = world.rendered[0];
     const fundo = call.container.children[0];
     // "Sem luz" e uma cor que o modulo DESENHA, e nao a que ele encontra: `clear`
-    // usa o fundo do renderer, e o fundo do tabuleiro nao e preto — o buffer saia
+    // usa o fundo do renderer, e o fundo do tabuleiro nao e preto, o buffer saia
     // claro de ponta a ponta e o preview virava uma folha branca sobre o mapa.
     check("o buffer comeca preto por conta propria",
         fundo.shapes[0]?.kind === "rect" && fundo.shapes[0].fill.color === 0x000000
@@ -118,13 +118,13 @@ const state = (extra = {}) => ({
 {
     // O mestre nao ve a escuridao cheia: ela e atenuada para ele nao ficar sem o
     // proprio mapa. Ler ESSA escuridao aqui dizia que uma sala preta estava quase
-    // clara, e o buffer saia branco de ponta a ponta — que foi o defeito na mesa.
+    // clara, e o buffer saia branco de ponta a ponta: que foi o defeito na mesa.
     const world = load();
     world.api.build(world.board, state({ darkness: 0.315, sceneDarkness: 0.9 }), 800, 600, CAM);
     const ambiente = world.rendered[0].container.children[0].shapes[1];
     check("sala escura entrega pouca luz, mesmo com a previa do mestre clara",
         Math.abs(ambiente.fill.alpha - 0.1) < 1e-9,
-        `${ambiente.fill.alpha} — com a previa do GM daria 0.685`);
+        `${ambiente.fill.alpha}: com a previa do GM daria 0.685`);
 
     // E a previa do mestre mudando sozinha nao pode reescrever a textura: ela nao
     // muda a iluminacao da cena, so como ela e mostrada a ele.
@@ -163,7 +163,7 @@ const state = (extra = {}) => ({
     world.api.build(world.board, state({ lights: [tocha()] }), 800, 600, CAM);
     const alvo = world.rendered[0].target;
     // Meia resolucao: nevoa e brilho nao tem detalhe fino, e o custo cai a um
-    // quarto — que e o que mantem isto honesto no PC velho.
+    // quarto: que e o que mantem isto honesto no PC velho.
     check("a textura e de meia resolucao", alvo.width === 400 && alvo.height === 300,
         `${alvo.width}x${alvo.height}`);
 

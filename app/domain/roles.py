@@ -18,7 +18,7 @@ class SystemRole(StrEnum):
 def has_full_view(member_role: str | None) -> bool:
     """Roles that read the entire table like the GM.
 
-    STREAMER is a strictly read-only *omniscient viewer* — it sees everything the
+    STREAMER is a strictly read-only *omniscient viewer*: it sees everything the
     GM sees (hidden tokens, the map under fog, GM-only sheets/journals) but holds
     no write authority. Use this only for read/visibility branches; write and
     edit checks must keep comparing against ``PlayerRole.GM`` so a streamer can

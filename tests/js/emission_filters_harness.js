@@ -3,7 +3,7 @@
  * a separação.
  *
  * Luz anima de dois jeitos e só: chama irregular (tocha) e respiração (pulso).
- * Fumaça, brasa, poeira e mote arcano viraram emissores de partícula — não
+ * Fumaça, brasa, poeira e mote arcano viraram emissores de partícula: não
  * iluminam nada, e por isso moram na camada de composição, longe do foco.
  *
  * Este harness existe porque "todas as luzes iguais" sobreviveu a várias rodadas
@@ -151,7 +151,7 @@ const profileAt = (animation, now) => lighting.emissionProfile(light(animation),
         cloudAt >= 0 && cloudAt < darknessAt,
         "emissor nao ilumina: o escuro tem de engoli-lo como engole o mapa");
 
-    // Sem máscara própria — a oclusão vem da ordem das camadas, que é mais barata
+    // Sem máscara própria: a oclusão vem da ordem das camadas, que é mais barata
     // e nunca sai de sincronia com a escuridão.
     const pixi = fs.readFileSync(LAYER, "utf8");
     const method = pixi.slice(pixi.indexOf("_renderParticleClouds(board, lighting"));

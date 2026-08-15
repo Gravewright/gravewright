@@ -1,7 +1,7 @@
 """Resolve a drag *source* into the canonical ``DropEntry`` (Canonical Drop Entry API).
 
-Every drag onto an actor sheet — a read-only Content Pack Entry or a campaign
-Item Document — is normalised by the backend to the *same* shape so the sheet's
+Every drag onto an actor sheet: a read-only Content Pack Entry or a campaign
+Item Document: is normalised by the backend to the *same* shape so the sheet's
 ``onDrop`` action only ever consumes ``@drop.entry.*`` and never has to know the
 concrete origin. The client sends only ``source``; the backend resolves it here.
 

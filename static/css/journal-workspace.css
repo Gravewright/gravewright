@@ -1,4 +1,4 @@
-/* Gravewright — Journal Workspace
+/* Gravewright: Journal Workspace
  *
  * The diary journal's surface: a page browser and the page itself, sharing one
  * geometry between the editor and the reader.
@@ -28,7 +28,7 @@
  * journal lists use (`rgba(192,154,90,.08)` over a `--border` hairline), and
  * chapter headers carry the 4% accent tint of the sheet folders.
  *
- * There is no icon rail and no title band — the window titlebar already names
+ * There is no icon rail and no title band: the window titlebar already names
  * the journal. The column's one row holds home (the opening page, which has no
  * row in the list), search, the filter, the GM area and collapse.
  */
@@ -69,7 +69,7 @@
 /* The shared editor sheet pads the form (0 22px 36px) because its other journal
  * types are a single scrolling column. Here the workspace is the form's only
  * child and owns its own gutters, so that padding is dead space around the
- * columns — a strip down the left and a band under the sidebar. */
+ * columns: a strip down the left and a band under the sidebar. */
 .journal-modal[data-journal-type="diary"] .journal-editor-form {
     height: auto;
     min-height: 0;
@@ -117,8 +117,8 @@
 
 /* ── Scrollbars ────────────────────────────────────────────────────────── */
 
-/* Same recipe the tool panels and modal bodies use — accent thumb over a
- * barely-there track — squared off like everything else in this window. */
+/* Same recipe the tool panels and modal bodies use: accent thumb over a
+ * barely-there track: squared off like everything else in this window. */
 .journal-modal .journal-diary-workspace--editorial > .journal-diary-main,
 .journal-modal .journal-diary-workspace--editorial > .journal-diary-sidebar,
 .journal-modal .journal-diary-workspace--editorial .journal-index-drawer [data-journal-index-list],
@@ -215,7 +215,7 @@
     color: var(--accent);
 }
 
-/* The column's only chrome: home, search, filter, GM, collapse — in one row,
+/* The column's only chrome: home, search, filter, GM, collapse: in one row,
  * where the journal's name used to be repeated from the titlebar. */
 
 .journal-modal .journal-editorial-browser > header {
@@ -395,7 +395,7 @@
 .journal-modal .journal-chapter-group.is-collapsed [data-chapter-pages] { display: none; }
 .journal-modal .journal-chapter-group.is-collapsed > header i { transform: rotate(-90deg); }
 
-/* Entries: a row like the actor/journal cards — transparent until hovered. */
+/* Entries: a row like the actor/journal cards: transparent until hovered. */
 
 .journal-modal .journal-diary-workspace--editorial .journal-index-entry {
     position: relative;
@@ -576,7 +576,7 @@
     white-space: nowrap;
 }
 
-/* Naming a chapter happens in place — window.prompt() breaks out of the game. */
+/* Naming a chapter happens in place: window.prompt() breaks out of the game. */
 .journal-modal .journal-chapter-composer {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 28px;
@@ -738,7 +738,7 @@
 }
 
 /* `1 0 auto`: the chain grows to fill the column, but never shrinks below its
- * own text — the page column is the scroller, not the editor. */
+ * own text: the page column is the scroller, not the editor. */
 .journal-modal .journal-diary-workspace--editorial .journal-sections-list,
 .journal-modal .journal-diary-workspace--editorial .journal-section-card:not([hidden]),
 .journal-modal .journal-diary-workspace--editorial .journal-block-field,
@@ -930,7 +930,7 @@
 /* ── GM pane ───────────────────────────────────────────────────────────── */
 
 /* The GM area replaces the page, not the whole workspace: the base sheet hides
- * the browser along with it, which strands the pane — the lock that opened it
+ * the browser along with it, which strands the pane: the lock that opened it
  * lives in that column. */
 .journal-modal .journal-diary-workspace--editorial.is-gm-active .journal-editorial-browser {
     display: flex;
@@ -987,10 +987,10 @@
 
 /* The column slides shut instead of blinking out, and the page takes the space
  * it leaves. Width is animated on the grid track, so the page grows in the same
- * motion — a `display: none` would make both happen in one frame. */
+ * motion: a `display: none` would make both happen in one frame. */
 /* Shrinking the track's own variable keeps both sides of the transition the
  * same track type (`minmax`), which is what makes the width interpolate at all
- * — going to a bare `0` would snap shut in one frame. */
+ *: going to a bare `0` would snap shut in one frame. */
 .journal-modal .journal-diary-workspace--editorial.is-browser-collapsed {
     --journal-browser: 0px;
 }

@@ -32,7 +32,7 @@ A package declares the `storage.sqlite` capability and a `storage.sqlite` block:
 
 ## Managed paths
 
-Gravewright resolves storage paths from the validated `(kind, id, scope)` — a
+Gravewright resolves storage paths from the validated `(kind, id, scope)`: a
 package never receives an absolute path:
 
 | Scope | Path |

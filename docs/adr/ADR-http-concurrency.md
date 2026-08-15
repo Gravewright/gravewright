@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-04
-- **Stage:** Maintenance Plan — Etapa 3 (Banco síncrono em handlers assíncronos)
+- **Stage:** Maintenance Plan: Etapa 3 (Banco síncrono em handlers assíncronos)
 
 ## Context
 
@@ -22,8 +22,8 @@ was used on the realtime hot paths, but not in the HTTP action handlers.
 One offload pattern, chosen per handler by its shape:
 
 1. **Purely-synchronous handlers → `def` with `sync_to_thread=True`.** Litestar
-   runs sync handlers in a worker thread. The entire handler — and therefore its
-   single database transaction — runs off the event loop and stays on one
+   runs sync handlers in a worker thread. The entire handler, and therefore its
+   single database transaction: runs off the event loop and stays on one
    thread. This is the default for CRUD-style handlers that do not `await`.
 
 2. **Mixed handlers → `async def` + `await run_blocking(sync_unit)`.** Handlers

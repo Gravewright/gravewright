@@ -43,8 +43,8 @@ def test_a_light_emits_in_a_circle_until_someone_narrows_it(db):
 def test_intensity_is_the_only_brightness_dial(db):
     """`opacity` vivia ao lado de `intensity` porque uma mexia na tinta e a outra
     no quanto o foco levantava a escuridao. Quando o recorte do foco passou a ser
-    duro nos dois modos de visao — para que a visao bonita nunca custasse area
-    revelada — sobraram duas reguas multiplicando o mesmo alfa."""
+    duro nos dois modos de visao: para que a visao bonita nunca custasse area
+    revelada: sobraram duas reguas multiplicando o mesmo alfa."""
     gm, campaign, scene, service = _gm_scene()
     made=service.create(campaign_id=campaign,scene_id=scene["id"],user_id=gm,x=0,y=0).payload["light"]
     assert "opacity" not in made and "animated_core" not in made

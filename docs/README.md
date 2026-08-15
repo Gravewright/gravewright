@@ -3,7 +3,7 @@
 This directory is the canonical documentation set for Gravewright.
 
 Current release: **Gravewright v1.0.0-beta.1**. See the
-[release notes](../RELEASE_v1.0.0-beta.1.md) and [changelog](../CHANGELOG.md).
+[release notes and complete history](../RELEASE_NOTES.md).
 
 Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
 
@@ -13,7 +13,7 @@ Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
 - [Beta status](beta.md) defines compatibility expectations for the current release.
 - [Operations](operations.md) covers backup, restore, diagnostics, and runtime storage.
 - [Performance](performance.md) defines benchmark methodology and current verified results.
-- [Core/SDK coverage audit](core-sdk-coverage.md) records missing gameplay APIs and intentional private boundaries.
+- [Core/SDK coverage audit](maintainers/sdk-coverage.md) records missing gameplay APIs and intentional private boundaries.
 - [Benchmark reports](benchmarks/README.md) preserve the realistic-scene and synthetic renderer results.
 - [SDK documentation](sdk/README.md) is the entry point for package authors.
 
@@ -24,12 +24,12 @@ Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
 - [Development](development.md)
 - [Testing](testing.md)
 - [Deployment](deployment.md)
-- [Desktop distribution](desktop-distribution.md)
+- [Desktop distribution](distribution/desktop.md)
 - [Security](security.md)
 - [Licensing](licensing.md)
 - [Storage](storage.md)
 - [Docker test layout](docker-tests.md)
-- [Publication checklist](publication-checklist.md)
+- [Publication checklist](maintainers/release-checklist.md)
 - [Dynamic lighting](features/dynamic-lighting.md)
 - [Dice tray](features/dice-tray.md)
 

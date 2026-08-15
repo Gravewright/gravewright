@@ -4,7 +4,7 @@ The schema is the authoring surface a system designer writes to declare the shap
 of an entity's Sheet Data: field types, ``default`` values, and ``readOnly`` flags.
 It is read on demand (small files) and used by :mod:`app.engine.sheets.sheet_validation`
 to seed defaults at creation and to coerce/guard writes. Mirrors
-:class:`SystemLayoutService` — same safe package-path resolution.
+:class:`SystemLayoutService`: same safe package-path resolution.
 """
 
 from __future__ import annotations

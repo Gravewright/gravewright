@@ -121,7 +121,7 @@ Requires `assets.library`.
 Lists the campaign's asset library. The server filters by member role, so a package
 never sees more than the current user is allowed to.
 
-Each entry carries `kind` — `"image"` or `"pdf"` — so packages do not have to
+Each entry carries `kind`: `"image"` or `"pdf"`: so packages do not have to
 reinterpret `content_type`. Filter with `options.kind`; `options.campaignId`
 defaults to the active campaign.
 

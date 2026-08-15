@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """HTTP-level invitation regression flow (post-maintenance plan, Etapa 1 / 5.1-5.2).
 
-Drives the real endpoints — create campaign, invite, accept, remove or ban,
-replay the accept — and asserts the realtime MEMBER_JOINED broadcast fires
+Drives the real endpoints: create campaign, invite, accept, remove or ban,
+replay the accept, and asserts the realtime MEMBER_JOINED broadcast fires
 exactly once, on the single accept that actually created the membership.
 """
 

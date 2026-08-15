@@ -10,6 +10,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+*.egg-info/
 .coverage
 .coverage.*
 coverage.xml
@@ -23,6 +24,7 @@ htmlcov/
 /temp/
 /.test-tmp/
 /diagnostics/
+/site/
 
 # ``data/`` mistura duas coisas: dados de execução (campanhas, imports) e os
 # pacotes que acompanham o projeto, que são código-fonte. Por isso o diretório em
@@ -64,10 +66,10 @@ htmlcov/
 
 # Public sanitized environment templates tracked in Git.
 !.env.example
-!.env.development
-!.env.staging
-!.env.production
-!.env.production-sqlite
+!.env.development.example
+!.env.staging.example
+!.env.production-postgresql.example
+!.env.production-sqlite.example
 
 # Virtual environments / package caches
 .venv/
@@ -87,6 +89,7 @@ venv/
 /GravewrightData/
 /*.exe
 /Gravewright*.zip
+/*.zip
 
 # Performance outputs
 tests/performance/*.txt
@@ -97,6 +100,7 @@ tests/performance/locust_output*
 tests/performance/report*
 tests/performance/**/latest/
 tests/performance/**/runs/
+tests/performance/**/results*/
 tests/performance/chunk_stream/load/
 
 # Node / frontend artifacts
@@ -119,6 +123,9 @@ AGENTS.md
 .aider/
 .roo/
 .continue/
+
+# The public website is maintained as its own Git repository.
+/site/
 
 # OS / editors
 .DS_Store

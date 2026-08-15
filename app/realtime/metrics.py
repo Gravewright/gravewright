@@ -3,20 +3,20 @@
 Bounded on both axes, because everything here is fed from request-rate code
 paths and the process is long-lived:
 
-* **Samples per histogram** — ``observe`` used to append to an unbounded list
+* **Samples per histogram**: ``observe`` used to append to an unbounded list
   that was never drained (``snapshot`` only copies, and ``reset`` is never
   called in production). Every WS command, every blocking DB call, every HTTP
   request and every chunk request appended floats that were only released on
   restart. Count/total/min/max are now kept as running scalars (exact, O(1),
   no retention) and only a recent window is retained for the percentile.
 
-* **Distinct series names** — several call sites build a metric name from
+* **Distinct series names**: several call sites build a metric name from
   request data, so an unbounded name space is remotely reachable. New names are
   refused past ``MAX_SERIES``; the number refused is reported under the fixed
   ``metrics.series.dropped`` key so the truncation is visible instead of silent.
 
 Both limits are per category and per process. Existing series keep recording
-after the cap is hit — only *new* names are refused.
+after the cap is hit: only *new* names are refused.
 """
 
 from __future__ import annotations

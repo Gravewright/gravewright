@@ -1,9 +1,9 @@
 """Database-aware health audit for installed SDK packages.
 
 The filesystem checks (`grave doctor` / package validation) only see the package
-directories on disk. This service cross-references the **database** state —
+directories on disk. This service cross-references the **database** state -
 ``installed_packages``, per-campaign activations, stored settings and recorded
-content imports — against what is actually installable on disk, surfacing drift
+content imports: against what is actually installable on disk, surfacing drift
 an operator would otherwise only discover at runtime:
 
 * a package marked ``enabled`` whose manifest no longer validates;

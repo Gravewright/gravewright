@@ -3,7 +3,7 @@
 Mirrors :class:`ActorService`: creates/updates the minimal Item Core row in
 SQLite and initialises the matching Sheet Data file in scoped-json-v1 storage.
 The item's ``type`` must be a registered itemType of the campaign's assigned
-active system. Items are standalone, permissioned, foldered entities — but never
+active system. Items are standalone, permissioned, foldered entities, but never
 placed on a scene.
 """
 

@@ -73,7 +73,7 @@
       loaded = true;
       const full = await getJSON(`/game/content/pack/${encodeURIComponent(packageInfo.id)}/${encodeURIComponent(pack.id)}`);
       (full?.entries || []).forEach((entry) => list.appendChild(renderEntry(browser, packageInfo, pack, entry)));
-      if (!full?.entries?.length) list.appendChild(el("li", "content-entry-empty", "—"));
+      if (!full?.entries?.length) list.appendChild(el("li", "content-entry-empty", "-"));
     });
     container.appendChild(details);
   }

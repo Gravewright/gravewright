@@ -7,7 +7,7 @@
   pelo controlador via sdk.i18n.t, porque o host não traduz atributos.
 
   Os campos não estão aqui: quem os cria é o controlador, a partir do mapeamento,
-  já com data-bind — é o mapeamento que decide quais campos existem.
+  já com data-bind: é o mapeamento que decide quais campos existem.
 -->
 <div class="pdf-sheet" data-pdf-sheet>
   <!-- O host liga as abas sozinho: [role=tablist] com filhos [data-tab], e os
@@ -30,7 +30,7 @@
       <button type="button" class="pdf-sheet-btn" data-action="pdf:prev-page" data-pdf-title="prevPage">
         <i class="ph ph-arrow-left" aria-hidden="true"></i>
       </button>
-      <span class="pdf-sheet-page" data-pdf-page-label>—</span>
+      <span class="pdf-sheet-page" data-pdf-page-label>-</span>
       <button type="button" class="pdf-sheet-btn" data-action="pdf:next-page" data-pdf-title="nextPage">
         <i class="ph ph-arrow-right" aria-hidden="true"></i>
       </button>
@@ -85,6 +85,15 @@
   </section>
 
   <section class="pdf-sheet-panel pdf-sheet-panel--form" data-tab-panel="token" hidden>
+    <div class="pdf-sheet-field-group">
+      <h3 data-pdf-heading="tokenName"></h3>
+      <p class="pdf-sheet-hint" data-pdf-hint="tokenName"></p>
+      <label class="pdf-sheet-bar-row">
+        <span data-pdf-heading="tokenNameLabel"></span>
+        <input type="text" class="pdf-sheet-text" data-bind="actor.name" autocomplete="off" />
+      </label>
+    </div>
+
     <div class="pdf-sheet-field-group">
       <h3 data-pdf-heading="tokenImage"></h3>
       <p class="pdf-sheet-hint" data-pdf-hint="tokenImage"></p>

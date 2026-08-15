@@ -129,12 +129,12 @@ Declared values are coerced **strictly** to the setting `type`; an unrecognised
 value is rejected with the stable code `sdk.settings.invalid_value` instead of
 silently becoming a default.
 
-- `boolean` — true: `true`, `"true"`, `"1"`, `"yes"`, `"on"`, `1`; false:
+- `boolean`: true: `true`, `"true"`, `"1"`, `"yes"`, `"on"`, `1`; false:
   `false`, `"false"`, `"0"`, `"no"`, `"off"`, `""`, `0`. Anything else is invalid
   (notably, `"false"` never becomes `true`).
-- `integer` / `number` — must parse cleanly; booleans and non-numeric strings are
+- `integer` / `number`: must parse cleanly; booleans and non-numeric strings are
   invalid.
-- `enum` — must be one of the declared `options`.
+- `enum`: must be one of the declared `options`.
 
 Scope precedence for the effective value is **default → campaign → user**.
 `user` scope is **per user, global across campaigns** (keyed by user id, not by

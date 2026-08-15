@@ -108,7 +108,7 @@ Use these identifiers to correlate WebSocket, upload, import, package, and persi
 Every HTTP request is assigned a `request_id` (`RequestIdMiddleware`): an inbound
 `X-Request-ID` is honored (sanitized) or one is generated, and it is echoed on
 the response `X-Request-ID` header. The id is stored in a context variable and
-attached automatically to every `emit_diagnostic`/audit event for that request —
+attached automatically to every `emit_diagnostic`/audit event for that request -
 including work offloaded via `run_blocking`. Correlate a user-reported failure to
 server logs by its `X-Request-ID` without touching any payload.
 
@@ -123,7 +123,7 @@ must never be passed to diagnostics; they are hashed at rest regardless.
 ### Audit events
 
 Security-relevant operations emit `audit.<action>` events via `emit_audit` with
-`actor_id`, `result`, a `request_id`, internal ids and a timestamp — never a
+`actor_id`, `result`, a `request_id`, internal ids and a timestamp: never a
 secret. Current actions include `schema.mismatch`, `membership.created`,
 `membership.removed` (extended incrementally to `login.blocked`,
 `permission.changed`, `package.activated`).

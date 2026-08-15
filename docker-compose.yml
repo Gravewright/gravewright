@@ -1,4 +1,4 @@
-# Gravewright — run the whole app with one command using Docker.
+# Gravewright: run the whole app with one command using Docker.
 #
 # Quick start:
 #   docker compose up -d --build
@@ -26,6 +26,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: gravewright:local
+    init: true
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -55,6 +56,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
+    stop_grace_period: 30s
 
 volumes:
   gravewright-storage:

@@ -2,7 +2,7 @@
 
 Existe porque os testes de servico e as assercoes estaticas passavam enquanto a
 criacao falhava na mesa: cada camada estava certa isolada. Este exercita a
-travessia inteira — rota, validacao, banco, CHECK — para cada emissao.
+travessia inteira: rota, validacao, banco, CHECK: para cada emissao.
 """
 from litestar.testing import TestClient
 from tests.conftest import TEST_SESSION_CONFIG, login, seed_campaign, seed_scene, seed_user

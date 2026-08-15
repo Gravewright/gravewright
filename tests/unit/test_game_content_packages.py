@@ -25,7 +25,7 @@ def test_active_content_package_is_exposed_to_the_game_content_browser(db, monke
         },
         {
             "id": "savage-pathfinder-private",
-            "name": "Savage Pathfinder — Núcleo Privado",
+            "name": "Savage Pathfinder: Núcleo Privado",
             "kind": "content",
             "status": "enabled",
             "capabilities": ["content.packs"],
@@ -51,7 +51,7 @@ def test_active_content_package_is_exposed_to_the_game_content_browser(db, monke
     assert room["content_packages"] == [
         {
             "id": "savage-pathfinder-private",
-            "name": "Savage Pathfinder — Núcleo Privado",
+            "name": "Savage Pathfinder: Núcleo Privado",
         }
     ]
     assert all(system["id"] != "savage-pathfinder-private" for system in room["enabled_systems"])
@@ -63,6 +63,44 @@ def test_gm_panel_has_a_content_pack_button():
     assert 'data-panel-toggle="panel-content-{{ room.id }}"' in template
     assert 't("game.gm.content_packs")' in template
     assert "t('game.content.no_active_packages')" in template
+
+
+def test_active_ruleset_directory_visibility_reaches_the_game_context(db, monkeypatch):
+    gm_id = seed_user(name="PDF GM", email="pdf-directory-gm@test.com")
+    campaign_id = seed_campaign(gm_id)
+    service = GamePageService()
+    service.campaigns.campaigns.update_system(
+        campaign_id=campaign_id,
+        changed_by_user_id=gm_id,
+        next_system_id="pdf-ruleset",
+    )
+    monkeypatch.setattr(
+        service.system_install,
+        "list_for_tab",
+        lambda: [
+            {
+                "id": "pdf-ruleset",
+                "name": "PDF Ruleset",
+                "kind": "ruleset",
+                "status": "enabled",
+                "capabilities": [],
+                "actor_types": [{"id": "character", "label": "Character"}],
+                "item_types": [],
+                "area_markers": [],
+                "directories": {"actors": True, "items": False, "journals": True},
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        service.system_install.installed,
+        "get",
+        lambda package_id: {"id": package_id} if package_id == "pdf-ruleset" else None,
+    )
+
+    context = service.build_context(user_id=gm_id)
+    room = next(room for room in context.rooms if room["id"] == campaign_id)
+
+    assert room["active_system"]["directories"]["items"] is False
 
 
 def test_content_browser_refreshes_active_packages_from_server():

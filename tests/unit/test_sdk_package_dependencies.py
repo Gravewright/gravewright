@@ -1,4 +1,4 @@
-"""Phase 8 — reverse dependencies and safe activation.
+"""Phase 8: reverse dependencies and safe activation.
 
 A package cannot be disabled, removed, or deactivated while another active
 package depends on it (unless ``force``). ``force`` is allowed but then the

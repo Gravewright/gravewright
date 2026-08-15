@@ -26,7 +26,7 @@ def test_only_declared_and_known_types_are_served():
     assert "if relative not in set(manifest.referenced_paths()):" in source
     assert "return None" in source
 
-    # e o tipo tem de estar na lista — extensão desconhecida segue barrada
+    # e o tipo tem de estar na lista: extensão desconhecida segue barrada
     assert "content_type = _CONTENT_TYPES.get(Path(relative).suffix.lower())" in source
 
     # tipos executáveis pelo servidor nunca podem entrar nessa lista

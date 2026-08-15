@@ -5,7 +5,7 @@ enforce three invariants:
 
 1. Every English SDK doc has a PT-BR counterpart.
 2. Every ``sdk.<method>`` API identifier used in an English doc also appears in its
-   PT-BR counterpart (this is what makes a translation *dangerous* when it drifts —
+   PT-BR counterpart (this is what makes a translation *dangerous* when it drifts -
    it documents methods that do not exist, or omits ones that do).
 3. The removed legacy "System API" / "Module API" surface is not reintroduced in
    either language.

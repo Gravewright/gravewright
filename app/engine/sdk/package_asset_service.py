@@ -1,7 +1,7 @@
 """Read-only access to a package's declared front-end assets.
 
 The core serves only the files a manifest *declares* (entrypoint styles/scripts
-and ``provides.assets`` paths) from the package directory — a whitelist — so a
+and ``provides.assets`` paths) from the package directory: a whitelist: so a
 package can ship its own UI without inflating the core bundle. This layer is
 descriptive: it never executes anything server-side, it only serves static
 files and composes the per-campaign client manifest list.

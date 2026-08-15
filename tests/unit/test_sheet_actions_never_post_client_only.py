@@ -3,7 +3,7 @@
 O host trata `data-action` como ação server-side do ruleset (`/game/actor/action`).
 Um controlador de pacote pode reivindicar a ação; se não reivindicar, o clique é
 encaminhado. Virar página de PDF, dar zoom ou alternar página dupla não são regras
-de sistema — encaminhá-las faz o servidor receber uma ação que o ruleset nunca
+de sistema: encaminhá-las faz o servidor receber uma ação que o ruleset nunca
 declarou e devolver 400 a cada clique.
 
 Este teste cobre os dois lados do contrato:

@@ -56,7 +56,7 @@ def _generate_tiles(scene_id: str, layer_id: str, storage_root: Path) -> list[di
     try:
         from PIL import Image, ImageDraw
     except ImportError:
-        print("[seed] Pillow not installed — skipping tile generation")
+        print("[seed] Pillow not installed: skipping tile generation")
         return []
 
     tile_dir = storage_root / "scenes" / scene_id / "assets" / "tiles" / layer_id

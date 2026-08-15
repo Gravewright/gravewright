@@ -36,7 +36,7 @@ uv run pytest tests/unit/test_cli_run.py tests/unit/test_cli_scaffold.py tests/u
 
 ## Testes E2E
 
-`tests/e2e/` sobe um servidor `uvicorn` real num subprocesso contra um banco temporário e o dirige por HTTP de verdade — sem nenhum pacote bundled e sem navegador. Ele semeia um GM e uma campanha, faz um login real de formulário protegido por CSRF, confirma que o dashboard autenticado renderiza, verifica que uma rota protegida redireciona visitantes anônimos para o login e que o script de runtime do SDK é servido como asset estático.
+`tests/e2e/` sobe um servidor `uvicorn` real num subprocesso contra um banco temporário e o dirige por HTTP de verdade: sem nenhum pacote bundled e sem navegador. Ele semeia um GM e uma campanha, faz um login real de formulário protegido por CSRF, confirma que o dashboard autenticado renderiza, verifica que uma rota protegida redireciona visitantes anônimos para o login e que o script de runtime do SDK é servido como asset estático.
 
 ```bash
 uv run pytest tests/e2e -q

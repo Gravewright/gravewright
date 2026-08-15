@@ -5,7 +5,7 @@ Revises: 0030_combat_initiative_text
 
 A token used to draw one bar, and the code that drew it looked for a key called
 ``hp``. That named the slot after one game's resource. A token now has two
-slots — ``bar_1`` below it and ``bar_2`` above it — and the active system says
+slots: ``bar_1`` below it and ``bar_2`` above it, and the active system says
 what each one reads.
 
 Unlinked tokens keep their own copy of the bar values in ``overrides_json``, so

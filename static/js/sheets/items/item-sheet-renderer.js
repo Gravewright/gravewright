@@ -136,7 +136,7 @@
       const value = el("input", "actor-input gw-modifier-row__value");
       value.dataset.modifierField = "value";
       value.disabled = !rc.canEdit || valueType === "none";
-      value.placeholder = valueType === "none" ? "—" : valueType;
+      value.placeholder = valueType === "none" ? "-" : valueType;
       value.type = valueType === "number" ? "number" : "text";
       value.value = modifier?.value ?? "";
       row.appendChild(value);
@@ -306,7 +306,7 @@
       case "readonlyField": {
         const wrap = el("div", variantClass("actor-field", node.variant, "actor-field--readonly"));
         wrap.appendChild(el("span", "actor-field-label", node.label || ""));
-        wrap.appendChild(el("span", "actor-readonly-value", getPath(ctx, node.path) ?? "—"));
+        wrap.appendChild(el("span", "actor-readonly-value", getPath(ctx, node.path) ?? "-"));
         return wrap;
       }
       case "text":
@@ -470,7 +470,10 @@
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return;
-    render(root, await res.json());
+    const bundle = await res.json();
+    const modalTitle = root.closest(".item-sheet-modal")?.querySelector(".sheet-modal-name");
+    if (modalTitle && bundle.item?.name) modalTitle.textContent = bundle.item.name;
+    render(root, bundle);
   }
 
   FI.contexts = contexts;

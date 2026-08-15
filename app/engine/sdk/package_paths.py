@@ -1,7 +1,7 @@
 """Path safety helpers for Gravewright SDK packages.
 
-Packages are untrusted content. Every relative path a manifest references — and
-every path inside an uploaded archive — must be confined to the package
+Packages are untrusted content. Every relative path a manifest references: and
+every path inside an uploaded archive: must be confined to the package
 directory. These helpers are the single source of truth for "is this path
 safe" so the loader, validator, asset server, and upload pipeline all agree.
 """

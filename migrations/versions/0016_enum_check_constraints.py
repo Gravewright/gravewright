@@ -7,7 +7,7 @@ Create Date: 2026-08-04
 Adds portable CHECK constraints so the database rejects out-of-domain values in
 priority enum columns even when a service validation is bypassed (maintenance
 plan, Etapa 6). Before applying, it audits existing rows and refuses to run if it
-finds values outside the allowed set — it never silently coerces unknown values.
+finds values outside the allowed set: it never silently coerces unknown values.
 
 The value sets are a point-in-time snapshot of the domain enums
 (``PlayerRole``, ``InvitationStatus`` in ``app.domain.campaigns``, and

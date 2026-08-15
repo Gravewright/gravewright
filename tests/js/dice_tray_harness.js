@@ -5,7 +5,7 @@
  * servidor vai avaliar, e um erro de notação só apareceria como "rolagem
  * inválida" na cara de quem joga.
  *
- * A armadilha específica: no xdice, `Ln`/`Hn` DESCARTAM os n menores/maiores —
+ * A armadilha específica: no xdice, `Ln`/`Hn` DESCARTAM os n menores/maiores -
  * não "mantêm". Vantagem em d20 é `2d20L1`. Quem vem do Foundry escreve `kh1`,
  * que aqui é sintaxe inválida. E `L` tem de vir antes de `H`.
  */
@@ -23,7 +23,7 @@ function check(label, condition, detail) {
   checks += 1;
   if (condition) return;
   failures += 1;
-  console.error(`FALHOU: ${label}${detail === undefined ? "" : ` — ${detail}`}`);
+  console.error(`FALHOU: ${label}${detail === undefined ? "" : `: ${detail}`}`);
 }
 
 // --- DOM mínimo -------------------------------------------------------------

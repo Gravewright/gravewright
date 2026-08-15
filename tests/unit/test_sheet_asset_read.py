@@ -4,7 +4,7 @@ The PDF ruleset makes the sheet *be* a library file, and reading the library
 answers to table-wide authority. Without this a player opens their own character
 sheet and is denied its contents.
 
-The rule: a file one of your own sheets points at is yours to read — and nothing
+The rule: a file one of your own sheets points at is yours to read, and nothing
 else in the library becomes reachable with it.
 """
 

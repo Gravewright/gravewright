@@ -1,4 +1,4 @@
-"""Phase 1 — SDK diagnostics contract.
+"""Phase 1: SDK diagnostics contract.
 
 These tests pin the *shape* and *machine-readability* of the common SDK
 diagnostics contract. They assert on stable ``code`` values and structured
@@ -85,8 +85,8 @@ def test_error_codes_are_machine_readable():
 
 
 def test_new_services_do_not_return_error_key_as_primary_contract():
-    # Guard rail: the diagnostics module — the contract every SDK service speaks
-    # — must not expose an ``error_key`` field on any of its structured types.
+    # Guard rail: the diagnostics module: the contract every SDK service speaks
+    #: must not expose an ``error_key`` field on any of its structured types.
     # SDK services return SdkError/SdkActionResult/DoctorFinding; ``error_key``
     # is only the HTTP-boundary mirror of the structured ``code``.
     for cls in (SdkError, SdkActionResult, DoctorFinding):

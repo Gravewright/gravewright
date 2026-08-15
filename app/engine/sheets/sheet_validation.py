@@ -8,7 +8,7 @@ away here.
 
 Everything is tolerant: a system without a schema/validation behaves exactly as
 before (writes pass through untouched). Unknown paths (e.g. into array items) are
-allowed — only explicit ``readOnly`` leaves are rejected, and only declared
+allowed: only explicit ``readOnly`` leaves are rejected, and only declared
 ``min``/``max`` bounds clamp.
 """
 

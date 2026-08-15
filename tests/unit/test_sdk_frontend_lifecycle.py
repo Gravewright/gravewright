@@ -1,4 +1,4 @@
-"""Phase 11 — frontend lifecycle and capability sync (static checks).
+"""Phase 11: frontend lifecycle and capability sync (static checks).
 
 There is no JS test runner in this project, so per the plan we pin the browser
 SDK runtime with static source assertions: the register() ownership/lifecycle

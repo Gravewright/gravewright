@@ -1,4 +1,4 @@
-# Browser runtime — `window.GravewrightSDK`
+# Browser runtime: `window.GravewrightSDK`
 
 `window.GravewrightSDK` is the single public browser entry point for package scripts.
 

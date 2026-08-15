@@ -4,12 +4,12 @@ Revision ID: 0037_scene_shaders
 Revises: 0036_scene_particles
 
 Partícula é efeito pronto: o mestre escolhe fumaça e recebe fumaça. Shader é o
-contrário — ele descreve o efeito que ninguém previu, e por isso o texto GLSL
+contrário: ele descreve o efeito que ninguém previu, e por isso o texto GLSL
 precisa de um lugar para morar junto da cena.
 
 Quem escreve é só o mestre da mesa. O texto nunca é executado no servidor; ele
 viaja até a GPU de quem está jogando. A tabela guarda o texto e os quatro botões
-que viram uniform (intensidade, escala, velocidade, cor) — o shader não escolhe
+que viram uniform (intensidade, escala, velocidade, cor), o shader não escolhe
 o que recebe, senão cada um viraria uma API diferente.
 
 Nada é migrado: a tabela nasce vazia.

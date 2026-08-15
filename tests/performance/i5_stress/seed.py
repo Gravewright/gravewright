@@ -50,7 +50,7 @@ def _generate_tiles(scene_id: str, layer_id: str, storage_root: Path) -> list[di
     try:
         from PIL import Image, ImageDraw
     except ImportError:
-        print("[seed] Pillow not installed — aborting")
+        print("[seed] Pillow not installed: aborting")
         raise
 
     tx_count = math.ceil(SCENE_WIDTH / TILE_SIZE)
@@ -286,7 +286,7 @@ def seed(db_path: str) -> None:
     expected = tx_count * ty_count
 
     if existing_db_tiles >= expected and existing_disk_tiles >= expected:
-        print(f"[seed] {existing_disk_tiles} tiles already on disk + DB — skipping generation")
+        print(f"[seed] {existing_disk_tiles} tiles already on disk + DB: skipping generation")
     else:
         print(
             f"[seed] Found {existing_disk_tiles}/{expected} tiles on disk, {existing_db_tiles}/{expected} in DB"

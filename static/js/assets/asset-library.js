@@ -199,7 +199,7 @@
           row.append(button);
           list.append(row);
         });
-        if (!available.length) list.append(node("li", "content-entry-empty", "—"));
+        if (!available.length) list.append(node("li", "content-entry-empty", "-"));
       });
       body.append(details);
     }

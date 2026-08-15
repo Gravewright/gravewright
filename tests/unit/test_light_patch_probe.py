@@ -1,7 +1,7 @@
 """Sonda: cada campo do editor de foco, um por vez, pela rota HTTP real.
 
 O painel manda um patch por campo mexido, entao e assim que a rota e exercitada
-na mesa — e nao com o objeto inteiro, que e como os testes de servico chamavam.
+na mesa, e nao com o objeto inteiro, que e como os testes de servico chamavam.
 """
 from litestar.testing import TestClient
 from tests.conftest import TEST_SESSION_CONFIG, login, seed_campaign, seed_scene, seed_user

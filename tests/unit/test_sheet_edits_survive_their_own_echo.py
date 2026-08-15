@@ -1,7 +1,7 @@
 """Editar uma ficha não pode destruir o campo que se está editando.
 
 Toda escrita transmite ``sheet.data.updated`` para a sala, e o cliente recarrega a
-ficha ao receber — inclusive o eco da própria escrita. Recarregar troca o
+ficha ao receber: inclusive o eco da própria escrita. Recarregar troca o
 ``innerHTML`` inteiro, então quem estava digitando perde foco e texto.
 
 Somado a isso, o caminho de ficha HTML do SDK notificava a cada tecla (evento
@@ -26,7 +26,7 @@ def test_the_sdk_sheet_writes_on_change_not_on_every_keystroke():
 
     assert 'node.addEventListener("change", onCommit)' in block, "gravar é no fim da edição"
 
-    # ``input`` pode continuar existindo — mas só para estado local, nunca para
+    # ``input`` pode continuar existindo, mas só para estado local, nunca para
     # notificar o host (que é quem faz o POST e dispara a transmissão).
     local = block.split("const onLocal = () =>", 1)[1].split("};", 1)[0]
     assert "ctx.onChange" not in local, "notificar a cada tecla é o bug"
@@ -58,7 +58,7 @@ def test_a_sheet_being_edited_is_not_rebuilt_underneath_the_user():
 
 def test_your_own_echo_never_rebuilds_your_sheet():
     """Toda escrita transmite para a sala, e o autor recebe de volta. Ele já
-    aplicou o valor localmente ao editar — recarregar por causa do próprio eco só
+    aplicou o valor localmente ao editar: recarregar por causa do próprio eco só
     desmonta a ficha embaixo de quem está usando. Numa ficha PDF isso reabre o
     documento inteiro, o que parece um submit a cada clique."""
     source = EVENTS.read_text(encoding="utf-8")
@@ -73,7 +73,7 @@ def test_your_own_echo_never_rebuilds_your_sheet():
         "o eco precisa ser descartado antes de procurar a ficha"
     )
 
-    # Atualização de OUTRA pessoa continua chegando — só espera o foco sair.
+    # Atualização de OUTRA pessoa continua chegando: só espera o foco sair.
     assert "refreshQuandoOcioso(root)" in ouvinte
 
 

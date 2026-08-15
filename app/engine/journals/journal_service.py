@@ -73,7 +73,7 @@ class JournalService:
     def can_view_journal(self, *, journal: dict, campaign: dict, user_id: str) -> bool:
         """Whether the user may open this journal (read-only at least).
 
-        Direct access, OR — for a quest — being shown on a board the user can
+        Direct access, OR: for a quest: being shown on a board the user can
         view directly. The board acts as a hub: the quest opens read-only from
         the board without appearing in the sidebar on its own.
         """

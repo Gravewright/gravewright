@@ -184,7 +184,7 @@ grave package install my-rpg --yes --enable
 
 Um ruleset é **exclusive**, então ele não é ativado com `grave campaign package activate`.
 Em vez disso, escolha **My RPG** como o ruleset da campanha ao criar ou editar a campanha
-no app Gravewright — ele se torna o ruleset ativo autoritativo da campanha.
+no app Gravewright: ele se torna o ruleset ativo autoritativo da campanha.
 
 ## 8. Veja funcionando
 

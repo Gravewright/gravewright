@@ -1,4 +1,4 @@
-"""The promises this ruleset makes to the engine that loads it — and to Pinnacle.
+"""The promises this ruleset makes to the engine that loads it, and to Pinnacle.
 
 A ruleset is data, so nothing about it fails loudly at runtime: a formula that
 does not parse just rolls zero, and a label with no translation renders as its
@@ -128,7 +128,7 @@ def test_no_content_ships_with_the_ruleset():
     manifest = _json("manifest.json")
     assert "contentPacks" not in manifest["provides"], "este pacote não traz conteúdo"
     assert manifest["name"] == "Savage Worlds Compatibility Package for Gravewright"
-    assert manifest["version"] == "1.1"
+    assert manifest["version"] == "1.1.1"
 
 
 def test_character_sheet_opens_at_the_reference_dimensions():
@@ -195,7 +195,7 @@ def test_every_action_formula_evaluates(action_id):
 def test_an_item_roll_reads_the_item_it_was_given():
     """``@item.x`` resolves against the stored instance, whose own fields sit
     under ``data``. Reaching one level too high returns nothing, ``acing(0)``
-    is out of bounds, and the engine rejects the whole formula — the button
+    is out of bounds, and the engine rejects the whole formula: the button
     reports no error and simply does nothing."""
     context = {"core": {}, "sheet": sheet_for("character"), "item": ITEM}
 
@@ -242,7 +242,7 @@ CARDS = _json("mappings/chat-cards.gw.json")["cards"]
 
 def test_the_face_of_the_card_shows_results_and_never_a_formula():
     """The card reads as an answer, not as a sum being worked out. Notation and
-    the assembled expression belong behind the breakdown — and two dice groups
+    the assembled expression belong behind the breakdown, and two dice groups
     joined with '+' would read as a sum when only the better of the two counts."""
     for name, card in CARDS.items():
         values = {str(line.get("value", "")) for line in card["lines"]}
@@ -271,7 +271,7 @@ def test_a_card_line_asks_for_a_value_the_renderer_reads():
 
 def test_only_the_rolls_measured_against_a_target_declare_one():
     """A trait roll is read against 4 and gains a raise every 4 over it. Damage
-    is read against the target's Toughness, which the card cannot know — giving
+    is read against the target's Toughness, which the card cannot know: giving
     it a target of 4 would print a confident lie."""
     assert CARDS["trait"]["outcome"] == {"target": 4, "step": 4}
     assert CARDS["attack"]["outcome"] == {"target": 4, "step": 4}
@@ -354,7 +354,7 @@ def _schema_has(schema: dict, dotted: str) -> bool:
 
 def test_every_field_the_html_sheet_binds_exists_in_the_schema():
     """A bind is a silent contract: a path the schema does not define reads back
-    empty and its writes are dropped by ``sanitize_write``. Nothing errors — the
+    empty and its writes are dropped by ``sanitize_write``. Nothing errors: the
     field simply never keeps what you type."""
     schema = _json("schemas/character.schema.json")
     bound = set(re.findall(r'data-(?:bind|text)="system\.([A-Za-z0-9_.]+)"', SHEET_HTML))
@@ -367,7 +367,7 @@ def test_every_field_the_html_sheet_binds_exists_in_the_schema():
 def test_the_controller_and_the_template_agree_on_their_hooks():
     """The controller draws the wound track, the penalty and the derived notes
     into placeholders the template declares. A renamed hook leaves a blank spot
-    on a working sheet — no error anywhere."""
+    on a working sheet: no error anywhere."""
     hooks = set(re.findall(r"\[(data-sw-[a-z-]+)=", SHEET_JS))
     assert hooks, "o teste precisa achar os ganchos do controlador"
 
@@ -418,7 +418,7 @@ def _drop_zones() -> list[dict]:
 def test_every_item_type_lands_in_a_list_the_sheet_draws(item_type):
     """Solto em qualquer ponto da ficha, um item vai para a lista do seu tipo.
 
-    Quem roteia é o servidor, pelo tipo, contra estas zonas — igual ao que uma
+    Quem roteia é o servidor, pelo tipo, contra estas zonas: igual ao que uma
     ficha declarativa faz com os ``dropZone`` do layout. O ponto onde a pessoa
     soltou não entra na conta: a aba de destino está quase sempre escondida
     durante o arrasto. Um tipo que ninguém reivindica cai na coleção genérica,
@@ -432,7 +432,7 @@ def test_every_item_type_lands_in_a_list_the_sheet_draws(item_type):
 
 def test_every_drop_zone_points_at_a_list_the_sheet_reads():
     """Rotear para uma coleção que o template não desenha guarda o item onde
-    ninguém o vê — o mesmo sintoma de não ter zona nenhuma."""
+    ninguém o vê, o mesmo sintoma de não ter zona nenhuma."""
     drawn = set(re.findall(r'data-item-list="system\.([A-Za-z0-9_]+)"', SHEET_HTML))
     drawn |= set(re.findall(r'data-sw-skill-rows', SHEET_HTML)) and {"skills"}
 
@@ -482,7 +482,7 @@ def _sheet_with(**flags) -> dict:
 
 def test_a_condition_that_costs_something_says_so_in_the_numbers():
     """Prone and Defending are not labels: SWADE gives each a number, and it
-    arrives the same way a dropped effect's would — as a modifier, not as a term
+    arrives the same way a dropped effect's would: as a modifier, not as a term
     welded into the derived formula."""
     clean = _sheet_with()
     assert _sheet_with(defending=True)["stats"]["parry"]["value"] == clean["stats"]["parry"]["value"] + 4
@@ -562,7 +562,7 @@ def _node_types(payload) -> set[str]:
     "layout", sorted(PACKAGE.glob("layouts/items/*.json")), ids=lambda p: p.name
 )
 def test_the_item_renderer_draws_every_node_the_layout_asks_for(layout):
-    """The renderer answers an unknown ``type`` with nothing — no error, no node,
+    """The renderer answers an unknown ``type`` with nothing: no error, no node,
     just a field that never reaches the screen. A layout built on a type it does
     not handle looks empty, and the validator would still call it valid."""
     handled = set(re.findall(r'case "([A-Za-z]+)":', ITEM_RENDERER.read_text(encoding="utf-8")))
@@ -617,7 +617,7 @@ def test_a_formula_leaves_room_for_the_dialog_to_append(action_id):
 
     The room measured here is a full dialog: two segmented penalties, a typed
     modifier and four extra dice. The engine accepts up to eight dice of up to
-    ``99d999``, so a player determined to overflow it still can — that ceiling
+    ``99d999``, so a player determined to overflow it still can: that ceiling
     belongs to the engine, which should truncate rather than refuse the roll.
     """
     budget = 200 - len(" - 4") * 2 - len(" + 999") - len(" + 2d10") * 4
@@ -627,10 +627,10 @@ def test_a_formula_leaves_room_for_the_dialog_to_append(action_id):
 @pytest.mark.parametrize("action_id", sorted(ACTIONS))
 def test_every_dialog_field_reaches_the_roll(action_id):
     """A field the roll does nothing with is collected from the player and then
-    dropped on the floor — no error, the answer just never counts.
+    dropped on the floor: no error, the answer just never counts.
 
     There are two ways an answer counts: a transform that folds it into the
-    formula, or ``actionField`` — the field that decides *which* action runs, so
+    formula, or ``actionField``: the field that decides *which* action runs, so
     that one control can offer a Spirit test and an unshake without the sheet
     needing a separate button for each.
     """
@@ -681,6 +681,21 @@ def test_html_skill_buttons_choose_the_action_for_each_actor_type():
     assert 'ctx.sheetType === "extra" ? "roll.skill.extra" : "roll.skill"' in controller
     assert 'ctx.sheetType === "extra" ? "roll.unskilled.extra" : "roll.unskilled"' in controller
     assert "ctx.onItemAction?.(item.id, actionId" in controller
+
+
+def test_unskilled_click_does_not_immediately_close_its_roll_dialog():
+    """O listener global fecha diálogos ao receber cliques fora deles. Como a
+    linha sem perícia é criada pelo controller e não possui ``data-action``, o
+    clique precisa parar nela, igual ao clique das perícias treinadas."""
+    controller = (PACKAGE / "scripts" / "character-sheet.js").read_text(encoding="utf-8")
+    unskilled = controller.split("function unskilledRow", 1)[1].split(
+        "\n  window.GravewrightSDK.register", 1
+    )[0]
+
+    assert 'addEventListener("click", (event) =>' in unskilled
+    assert "event.preventDefault();" in unskilled
+    assert "event.stopPropagation();" in unskilled
+    assert "ctx.onAction?.(actionId, { event, element: name });" in unskilled
 
 
 def _tabs(layout: dict) -> list[dict]:
@@ -751,7 +766,7 @@ def test_every_referenced_label_has_a_translation(locale):
             continue
         used |= _keys_in(json.loads(path.read_text(encoding="utf-8")))
 
-    # A ficha HTML também carrega chaves — em `data-sw-i18n` e nas ações que as
+    # A ficha HTML também carrega chaves: em `data-sw-i18n` e nas ações que as
     # linhas de item declaram. Varrer só os JSON dava por órfã uma tradução que
     # a ficha usa, e por traduzida uma chave que ela inventou.
     for path in [*PACKAGE.rglob("*.html"), *PACKAGE.rglob("*.js")]:

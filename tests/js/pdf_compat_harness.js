@@ -3,12 +3,12 @@
  *
  * O build MODERNO do pdf.js 6.x usa APIs de ponta sem checar se existem:
  *
- *   Map.prototype.getOrInsertComputed  — proposta recente; Firefox tem, Chrome não
- *   Uint8Array.prototype.toHex         — Chrome 140+
- *   Uint8Array.fromBase64 / toBase64   — Chrome 140+
+ *   Map.prototype.getOrInsertComputed : proposta recente; Firefox tem, Chrome não
+ *   Uint8Array.prototype.toHex        : Chrome 140+
+ *   Uint8Array.fromBase64 / toBase64  : Chrome 140+
  *
  * Onde isso dói: `getOrInsertComputed` está no caminho que resolve recursos de
- * FORMULÁRIO, e `toHex` no de DESCRIPTOGRAFIA — exatamente por onde passa uma
+ * FORMULÁRIO, e `toHex` no de DESCRIPTOGRAFIA: exatamente por onde passa uma
  * ficha de RPG preenchível, que ainda por cima costuma vir protegida por senha de
  * dono. Com o build moderno o documento nem abre num navegador um pouco atrás.
  *
@@ -33,7 +33,7 @@ function check(label, condition, detail) {
   checks += 1;
   if (condition) return;
   failures += 1;
-  console.error(`FALHOU: ${label}${detail === undefined ? "" : ` — ${detail}`}`);
+  console.error(`FALHOU: ${label}${detail === undefined ? "" : `: ${detail}`}`);
 }
 
 // --- ambiente mínimo de navegador -------------------------------------------
@@ -86,8 +86,8 @@ async function main() {
   // --- o visualizador só pode chamar o que a biblioteca REAL tem -------------
   // O dublê do pdf_viewer_harness é escrito por mim; se ele oferecer um método
   // que a biblioteca não tem, o harness passa a provar a minha suposição em vez
-  // do código. Foi assim que `convertToViewportRectangle` — removido no pdf.js 6
-  // — sobreviveu a uma suíte verde e só apareceu no navegador.
+  // do código. Foi assim que `convertToViewportRectangle`: removido no pdf.js 6
+  //: sobreviveu a uma suíte verde e só apareceu no navegador.
   function apisUsadas(fonte, alvo) {
     const encontrado = new Set();
     const padrao = new RegExp(String.raw`\b${alvo}\.(\w+)\(`, "g");

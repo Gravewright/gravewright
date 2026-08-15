@@ -128,7 +128,7 @@ class CampaignInvitationRepository:
         - ``pending``: create the membership and flip the invitation to accepted;
         - ``accepted``: idempotent success *only while the membership still
           exists*. Once an administrator removed or banned the member the
-          invitation is spent — it reports ``membership_removed`` and touches
+          invitation is spent: it reports ``membership_removed`` and touches
           nothing, so an old invite can never undo a removal or a ban;
         - anything else (``declined``, ``revoked``, …): ``not_pending``.
 
@@ -194,7 +194,7 @@ class CampaignInvitationRepository:
 
         Called when a member is removed or banned so a leftover pending invite
         cannot be used to walk straight back in. Already-answered invitations
-        (accepted/declined) are left untouched — they are history, and the accept
+        (accepted/declined) are left untouched: they are history, and the accept
         path no longer treats an accepted invite as a membership factory.
 
         Takes the caller's connection so the revocation commits atomically with

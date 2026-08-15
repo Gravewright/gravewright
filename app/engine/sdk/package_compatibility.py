@@ -1,9 +1,9 @@
 """Compatibility status for SDK packages against the running engine version.
 
 A package declares a ``compatibility`` window (``minimum``/``verified``/
-``maximum``). We map semver-ish strings to comparable tuples — ``1.x`` treats
+``maximum``). We map semver-ish strings to comparable tuples: ``1.x`` treats
 the minor/patch as unbounded and a pre-release sorts **below** its release, with
-``alpha < beta < rc < final`` and numeric ordering within a channel — then
+``alpha < beta < rc < final`` and numeric ordering within a channel: then
 classify the package as compatible, unverified, or incompatible.
 """
 

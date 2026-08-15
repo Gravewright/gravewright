@@ -3,11 +3,11 @@
 O Litestar aceita o token por dois caminhos, e só por esses dois:
 
   1. o cabeçalho ``x-csrftoken``;
-  2. o campo de formulário ``_csrf_token`` — e apenas quando o corpo é
+  2. o campo de formulário ``_csrf_token``, e apenas quando o corpo é
      ``application/x-www-form-urlencoded`` ou ``multipart/form-data``.
 
 Repare no underscore: ``csrf_token`` (sem ele) não é lido por ninguém. O projeto
-manda esse nome no corpo JSON de 26 chamadas, o que **não protege nada** — quem
+manda esse nome no corpo JSON de 26 chamadas, o que **não protege nada**: quem
 protege ali é o cabeçalho, posto pelo wrapper global de ``window.fetch``.
 
 O modo de falha é ruim: 403 em produção, silencioso em desenvolvimento (onde tudo
@@ -47,7 +47,7 @@ def _forms(html: str):
 
 def test_every_post_form_carries_the_token_field():
     """``csrf_input`` do Litestar gera ``name="_csrf_token"``. Um formulário sem
-    ele volta 403 — no envio nativo e também quando o JS manda ``new
+    ele volta 403: no envio nativo e também quando o JS manda ``new
     FormData(form)``, que é como os uploads deste projeto funcionam."""
     missing: list[str] = []
     total = 0
@@ -66,7 +66,7 @@ def test_every_post_form_carries_the_token_field():
 
 
 def test_the_global_fetch_wrapper_covers_unsafe_same_origin_requests():
-    """É ele que protege as dezenas de fetch espalhados pelo projeto — nenhum
+    """É ele que protege as dezenas de fetch espalhados pelo projeto: nenhum
     deles põe o cabeçalho por conta própria."""
     source = WRAPPER.read_text(encoding="utf-8")
 
@@ -142,7 +142,7 @@ def test_requests_that_bypass_fetch_carry_the_token_themselves():
 
 def test_the_json_body_token_is_not_what_protects_these_routes():
     """26 chamadas mandam ``csrf_token`` no corpo JSON e nenhum handler lê. Não é
-    bug — mas quem for mexer não pode concluir que é dali que vem a proteção, e
+    bug, mas quem for mexer não pode concluir que é dali que vem a proteção, e
     remover o cabeçalho achando que o corpo cobre."""
     read_on_server = []
     for path in sorted((ROOT / "app").rglob("*.py")):
@@ -158,7 +158,7 @@ def test_the_json_body_token_is_not_what_protects_these_routes():
 
 def test_the_roll_expression_cannot_escape_the_evaluator():
     """O xdice compila a expressão e passa por ``eval`` com ``__builtins__``
-    zerado — o que, sozinho, não é fronteira de segurança em Python. O que
+    zerado, o que, sozinho, não é fronteira de segurança em Python. O que
     segura de fato é o parser na frente (acesso a atributo não compila) mais o
     teto de comprimento. Se algum dos dois cair, isto avisa."""
     from app.engine.dice.roll_service import RollService

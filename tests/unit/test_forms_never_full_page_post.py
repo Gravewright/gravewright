@@ -6,7 +6,7 @@ JavaScript.
 
 Este teste casa cada ``<form method="post">`` dos templates contra os seletores
 realmente registrados nos ``addEventListener("submit", ...)`` do JS, para que um
-formulário novo sem dono seja acusado na hora de escrevê-lo — e não em produção.
+formulário novo sem dono seja acusado na hora de escrevê-lo, e não em produção.
 """
 
 from __future__ import annotations
@@ -93,7 +93,7 @@ def test_inside_relies_on_its_generic_handler_and_names_every_exception():
     opted_out = set(re.findall(r"\.([a-zA-Z0-9_-]+-form)", guard))
     assert opted_out, "o guard deixou de nomear exceções"
 
-    # cada opt-out tem de ser tratado por outro handler — por delegação (classe)
+    # cada opt-out tem de ser tratado por outro handler: por delegação (classe)
     # ou por um listener ligado direto no elemento (atributo data-*)
     inside_forms = {
         tag: where

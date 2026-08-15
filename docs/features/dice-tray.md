@@ -29,7 +29,7 @@ Two rules bound it:
 
 - Dropping resolves **before** any explosion. In `4d6L1!` the lowest of the four
   opening dice is dropped, and the dice that explosion adds are never candidates
-  for dropping — otherwise `L`/`H` would change meaning mid-roll.
+  for dropping: otherwise `L`/`H` would change meaning mid-roll.
 - Dice with no meaningful maximum do not explode: `dF` (which runs −1..1) and
   `d1` (which would never stop). A ceiling per roll keeps a pathological
   expression from hanging the request.
@@ -47,7 +47,7 @@ same way; the two agree.
 The name field in the tray is optional and never blocks a roll. It labels the
 roll for everyone at the table:
 
-- it appears in the **roll toast** (`{author} — {label}: {total}`);
+- it appears in the **roll toast** (`{author}: {label}: {total}`);
 - it appears in the **chat message**, above the notation, live and after a reload.
 
 The name travels as a message label after `#`, which the evaluator's notation
@@ -63,7 +63,7 @@ the expression. A `#` with nothing after it is not a label. Typing the command b
 hand in the chat works exactly the same way, and a secret roll keeps its name.
 
 The label is stored as the message's `content`, which is the same field the page
-rehydrates the chat history from — so a named roll is still named after a reload.
+rehydrates the chat history from: so a named roll is still named after a reload.
 
 ## The tray history
 
@@ -73,7 +73,7 @@ Every successful roll is remembered per table, in the browser
 - up to 30 entries, most recent first;
 - an entry keeps the name it was given, and clicking it restores both the
   expression and the name;
-- the same expression with different names are separate entries — `2d6` and
+- the same expression with different names are separate entries: `2d6` and
   `2d6` named "Damage" are different shortcuts;
 - each entry can be removed individually.
 

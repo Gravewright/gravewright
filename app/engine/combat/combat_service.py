@@ -67,7 +67,7 @@ class CombatService:
 
     An encounter is a round number, a position in the order, and a list of
     combatants. Each combatant holds one initiative value, stored as text the
-    core never interprets — the active system decides whether that value is a
+    core never interprets: the active system decides whether that value is a
     rolled number, a typed number, or a word like "ambush".
 
     Ordering follows from what the system declared. Numeric systems sort by the
@@ -419,7 +419,7 @@ class CombatService:
 
         This is how a player rolls their own initiative: they click it on their
         sheet and the tracker picks the number up. Systems whose initiative is
-        not a number ignore it — there is nothing to put the result into.
+        not a number ignore it: there is nothing to put the result into.
         """
         if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
             return

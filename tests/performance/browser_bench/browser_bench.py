@@ -6,11 +6,11 @@ Unlike the WebSocket drivers (which hammer the gateway with synthetic clients),
 this drives an actual Chromium tab through the real UI and measures what a player
 on a modest laptop would feel:
 
-    * time to map visible   — navigation -> first fully-painted viewport
-    * browser memory         — JS heap (performance.memory) + whole browser
+    * time to map visible  : navigation -> first fully-painted viewport
+    * browser memory        : JS heap (performance.memory) + whole browser
                                process-tree RSS (renderer + GPU + main)
-    * FPS / stutter          — frame cadence + long tasks while panning/zooming
-    * sustained footprint     — memory/heap sampled over the whole run
+    * FPS / stutter         : frame cadence + long tasks while panning/zooming
+    * sustained footprint    : memory/heap sampled over the whole run
 
 The "map visible" signal is exact, not a guess: the app exposes
 ``window.GravewrightMap.debugSnapshot()`` which reports manifest load, the set of
@@ -354,7 +354,7 @@ def run(args: argparse.Namespace) -> Results:
     # The unique profile dir is our RSS match marker: Playwright passes it to
     # Chromium as --user-data-dir=<...>/.gwbench-<ts>, so every process in the
     # tree carries the marker in its cmdline. (Don't add --user-data-dir to args
-    # ourselves — launch_persistent_context owns that flag and rejects a dupe.)
+    # ourselves: launch_persistent_context owns that flag and rejects a dupe.)
     marker = f"gwbench-{int(time.time())}"
     user_data_dir = output / f".{marker}"
 
@@ -470,7 +470,7 @@ def write_outputs(
             f.write(f"{s.t},{s.js_heap_mb},{s.rss_mb}\n")
 
     with (output / "summary.md").open("w", encoding="utf-8") as f:
-        f.write("# Browser Benchmark — real Chromium on the live map\n\n")
+        f.write("# Browser Benchmark: real Chromium on the live map\n\n")
         f.write("## Run\n\n```txt\n")
         f.write(f"host:           {args.host}\n")
         f.write(f"viewport:       {args.width}x{args.height}\n")
@@ -514,7 +514,7 @@ def write_outputs(
                 f"browser RSS idle / peak:   {results.rss_idle_mb} / {results.rss_peak_mb} MB\n"
             )
         else:
-            f.write("browser RSS:               (psutil not installed — JS heap only)\n")
+            f.write("browser RSS:               (psutil not installed: JS heap only)\n")
         f.write("```\n")
         if results.errors:
             f.write("\n## Errors\n\n```txt\n")

@@ -14,6 +14,9 @@ env:
   SESSION_COOKIE_SECURE: "false"
   ALLOW_METADATA_BOOTSTRAP: "true"
 
+permissions:
+  contents: read
+
 jobs:
   # --- required: fast lint gate ------------------------------------------------
   lint:
@@ -48,7 +51,7 @@ jobs:
       - name: Validate example packages
         run: uv run python -m app.cli package validate examples/packages
       - name: Unit tests
-        run: uv run pytest tests/unit --junitxml=unit-results.xml
+        run: uv run pytest tests/unit --durations=25 --junitxml=unit-results.xml
       - name: Install Playwright Chromium
         run: uv run playwright install --with-deps chromium
       - name: End-to-end tests

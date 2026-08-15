@@ -44,7 +44,7 @@ e `compatibility.verified` definidos como `"1"`; valores pre-release como
 ## Release Gates
 
 > Histórico: estes foram os gates internos do sprint de estabilidade. Seu
-> conteúdo foi entregue em conjunto como **Gravewright Alpha 2.0.0 — SDK Freeze**
+> conteúdo foi entregue em conjunto como **Gravewright Alpha 2.0.0: SDK Freeze**
 > (`v2.0.0-alpha.0`), que congelou a superfície da SDK 1. Os nomes de versão
 > abaixo são os do plano do sprint, não a tag publicada.
 

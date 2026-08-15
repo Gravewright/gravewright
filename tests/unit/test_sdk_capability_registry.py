@@ -1,4 +1,4 @@
-"""Phase 2 — canonical capability registry.
+"""Phase 2: canonical capability registry.
 
 ``app/engine/sdk/capabilities.json`` is the single source of truth. These tests
 pin its shape, that the Python validator and the doctor derive from it, that the

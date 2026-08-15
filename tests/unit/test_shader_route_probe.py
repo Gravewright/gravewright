@@ -104,8 +104,8 @@ def test_the_route_accepts_glsl_it_does_not_understand(db):
 
     Ele já foi: recusava laço sem teto para garantir que o efeito ficasse dentro
     do alcance. Só que garantir isso lendo texto obriga a mexer no texto. A
-    contenção virou geométrica — quadro do tamanho do alcance, recortado por
-    máscara — e o texto voltou a ser de quem escreve.
+    contenção virou geométrica: quadro do tamanho do alcance, recortado por
+    máscara, e o texto voltou a ser de quem escreve.
 
     O que protege quem está na mesa é outra coisa: só o mestre escreve, e cada
     jogador tem a chave de desligar os shaders da mesa na própria tela.
@@ -143,7 +143,7 @@ def test_only_the_gm_writes_shaders(db):
         # Ler pode: o shader roda na tela dele, então o cliente precisa da lista.
         assert client.get(f"/game/shaders/{scene['id']}", params={"campaign_id": campaign}).status_code == 200
         # Escrever, não. Um jogador que pudesse escrever GLSL escreveria na GPU
-        # dos outros — inclusive na do mestre.
+        # dos outros: inclusive na do mestre.
         assert _create(client, campaign, scene, source=_GOOD).status_code == 403
         assert client.post("/game/shaders/update", json={
             "campaign_id": campaign, "shader_id": shader["id"], "source": _GOOD,

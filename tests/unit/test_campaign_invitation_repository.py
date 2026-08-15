@@ -98,7 +98,7 @@ def test_repeated_accept_with_live_membership_is_idempotent(db):
     second = repo.accept_for_user(invitation_id=invitation_id, user_id=player_id)
 
     assert second.status == "accepted"
-    # No second membership and — crucially — no second join event.
+    # No second membership and: crucially: no second join event.
     assert second.membership_created is False
     assert _membership_count(campaign_id, player_id) == 1
 

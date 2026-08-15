@@ -3,7 +3,7 @@
 Revision ID: 0036_scene_particles
 Revises: 0035_smoke_replaces_beacon
 
-Vela, fogueira, arcana e fumaça nunca foram maneiras de uma luz *iluminar* —
+Vela, fogueira, arcana e fumaça nunca foram maneiras de uma luz *iluminar* -
 eram maneiras de uma cena ter vida. Estavam no foco de luz porque era o lugar que
 existia, e o resultado é um editor cheio de controles que não acendem nada.
 
@@ -215,7 +215,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # As emissões voltam a ser aceitas, mas o que virou tocha não tem como saber
-    # se era vela ou fogueira — a informação não existe mais na linha.
+    # se era vela ou fogueira: a informação não existe mais na linha.
     _rebuild_check(_in_clause(_BEFORE))
     if _columns(_PARTICLES):
         op.drop_index("idx_scene_particles_scene", table_name=_PARTICLES)

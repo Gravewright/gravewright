@@ -1,4 +1,4 @@
-"""Phase 10 — SDK v1 contract fixtures.
+"""Phase 10: SDK v1 contract fixtures.
 
 Real minimal packages for every kind (valid and invalid) under
 ``tests/fixtures/sdk_packages``. The valid fixtures must keep loading, installing

@@ -382,7 +382,7 @@ async def _player_message(campaign_id: str, player_id: str, transport) -> str:
 
 async def test_a_player_cannot_delete_even_their_own_message(db, transport):
     """O chat é o registro da mesa: uma rolagem ou uma fala não pode sumir sem o
-    GM ver. Por padrão o jogador não apaga nada — nem o que ele mesmo mandou."""
+    GM ver. Por padrão o jogador não apaga nada: nem o que ele mesmo mandou."""
     gm_id = seed_user(name="GM", email="gm-delete-own@test.com")
     player_id = seed_user(name="Player", email="player-delete-own@test.com")
     campaign_id = seed_campaign(gm_id)
@@ -498,7 +498,7 @@ async def test_gm_can_clear_all_messages(db, transport):
 async def test_a_named_roll_carries_its_label_to_the_table(db, transport):
     """O nome que a pessoa dá na bandeja de dados viaja como rótulo da mensagem
     (``content``), que é de onde o cartão do chat e o toast leem. A notação vai
-    inteira para o avaliador — se o nome vazasse para dentro dela, a rolagem
+    inteira para o avaliador: se o nome vazasse para dentro dela, a rolagem
     voltaria como inválida."""
     gm_id = seed_user(name="GM", email="gm-roll-label@test.com")
     campaign_id = seed_campaign(gm_id)

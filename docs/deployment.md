@@ -90,7 +90,7 @@ with the `postgres` extra (`psycopg`), which the default image does not include.
 
 Alembic is the authority for schema creation and evolution. In production the
 application **refuses to start against a database that is behind head** (it
-reports the current and expected revisions) unless `AUTO_MIGRATE=true` is set —
+reports the current and expected revisions) unless `AUTO_MIGRATE=true` is set -
 it will not silently `create_all`. Back up first, then upgrade as part of
 deployment:
 

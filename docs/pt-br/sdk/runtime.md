@@ -1,4 +1,4 @@
-# Runtime do navegador — `window.GravewrightSDK`
+# Runtime do navegador: `window.GravewrightSDK`
 
 `window.GravewrightSDK` é o único ponto de entrada público do navegador para scripts de pacote.
 

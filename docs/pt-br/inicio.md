@@ -10,8 +10,8 @@ SQLite é usado por padrão no desenvolvimento local.
 
 ## Instalação Fácil (Instaladores)
 
-Para usuários não técnicos, instaladores de um clique configuram tudo — incluindo
-a versão correta do Python (via `uv`) — e abrem o Gravewright no navegador. Não é
+Para usuários não técnicos, instaladores de um clique configuram tudo: incluindo
+a versão correta do Python (via `uv`), e abrem o Gravewright no navegador. Não é
 necessário ser administrador.
 
 - **Windows:** dê duplo-clique em `install-windows.bat`.

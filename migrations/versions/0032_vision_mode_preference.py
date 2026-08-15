@@ -5,8 +5,8 @@ Revises: 0031_token_bar_slots
 
 A visão dinâmica passou a ter dois modos: ``classic``, de borda dura e sem
 halo, e ``cinematic``, com penumbra, brilho e filtros. Qual deles roda não é
-propriedade da campanha — a mesma cena é desenhada no notebook fraco de um
-jogador e na máquina do mestre —, então a escolha mora ao lado do modo de
+propriedade da campanha: a mesma cena é desenhada no notebook fraco de um
+jogador e na máquina do mestre -, então a escolha mora ao lado do modo de
 interface, em ``user_preferences``.
 
 O padrão é ``cinematic`` porque é o que todo mundo já via antes desta coluna

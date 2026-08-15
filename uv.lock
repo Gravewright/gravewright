@@ -181,7 +181,7 @@ wheels = [
 [[package]]
 name = "gravewright"
 version = "1.0.0b1"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "alembic" },
     { name = "litestar", extra = ["jinja"] },

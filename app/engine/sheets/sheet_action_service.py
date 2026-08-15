@@ -3,9 +3,9 @@
 Loads the Actor Core + Sheet Data, applies the system's derived fields, then
 interprets the declarative action:
 
-* ``roll``   — evaluate the formula (rolling dice), produce a chat/roll-toast payload
-* ``patch``  — evaluate patch expressions and persist them (version bump)
-* ``append`` — resolve a value template and append it to a target list (used by drop)
+* ``roll``  : evaluate the formula (rolling dice), produce a chat/roll-toast payload
+* ``patch`` : evaluate patch expressions and persist them (version bump)
+* ``append``: resolve a value template and append it to a target list (used by drop)
 
 All formulas run through the no-eval :mod:`formula_engine`. Nothing here imports
 Litestar; the HTTP layer broadcasts chat/roll-toast and realtime events.
@@ -592,7 +592,7 @@ class SheetActionService:
         Most of what a character carries is not a die: an Edge, a Hindrance, a
         piece of armour. They still need a way onto the table, and repeating
         their text out loud is the way a table actually uses them. This produces
-        the same chat card a roll does, minus the dice — so a system describes it
+        the same chat card a roll does, minus the dice: so a system describes it
         once, in the same mapping, and it renders and localises identically.
         """
         lookup = {**context, "input": scope.get("input", {}), "drop": scope.get("drop", {})}

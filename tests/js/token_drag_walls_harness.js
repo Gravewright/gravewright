@@ -3,8 +3,8 @@
  *
  * O arrasto é o caminho pelo qual a mesa realmente anda com o token, e ele não
  * consultava as paredes: só o passo por setas consultava. Este harness carrega o
- * arquivo real sobre dependências mínimas e exercita a regra dos dois lados —
- * jogador barrado, mestre livre — inclusive no arrasto de grupo. Sai != 0 na
+ * arquivo real sobre dependências mínimas e exercita a regra dos dois lados -
+ * jogador barrado, mestre livre: inclusive no arrasto de grupo. Sai != 0 na
  * primeira falha.
  */
 const fs = require("fs");

@@ -1,6 +1,6 @@
 """A visão dinâmica tem duas qualidades, e quem escolhe é quem olha.
 
-O que estes testes protegem não é a aparência — é a fronteira entre as duas: o
+O que estes testes protegem não é a aparência: é a fronteira entre as duas: o
 modo pode mudar como a cena é pintada e nunca o que a pessoa enxerga. Se o modo
 leve revelasse um palmo a mais, ele deixaria de ser uma opção de desempenho e
 viraria uma opção de trapaça, escolhida pelo motivo errado.
@@ -73,7 +73,7 @@ def test_both_modes_reveal_exactly_the_same_area():
     assert veil_max * (1 + breath) < 1, "nem no pico da respiração o véu pode fechar"
 
     # Nenhum filtro na composição da escuridão. Um borrão ali empurra a borda de
-    # parede para fora e revela terreno que a geometria negou — foi assim que
+    # parede para fora e revela terreno que a geometria negou: foi assim que
     # vazou da primeira vez. Shader no halo é outra história: ele mora na camada,
     # é mascarado pelo polígono e não toca nesta textura.
     assert "Filter" not in compose, "filtro na escuridão volta a vazar pela parede"
@@ -86,7 +86,7 @@ def test_the_cinematic_numbers_sit_inside_the_photography_recipe():
     é o que a mesa precisa ler. A receita põe fog em 5–25% e flicker em 5–10%; o
     que existia aqui antes era véu a 50% e chama oscilando 30%.
 
-    As demais linhas da receita — luz ambiente, key, fill, accent — são autoria do
+    As demais linhas da receita: luz ambiente, key, fill, accent: são autoria do
     mestre (escurididão da cena e intensidade por foco), não constante de código.
     """
     veil_max = float(PIXI.split("VEIL_MAX = ", 1)[1].split(";", 1)[0])
@@ -97,7 +97,7 @@ def test_the_cinematic_numbers_sit_inside_the_photography_recipe():
         assert 0.05 <= amplitude <= 0.1, f"{name} fora da faixa da receita"
 
     # Saturação moderada: cor cheia num halo grande vira gelatina colorida sobre o
-    # mapa. Mas só no halo — no marcador do editor a cor é informação.
+    # mapa. Mas só no halo: no marcador do editor a cor é informação.
     keep = float(PIXI.split("HALO_SATURATION = ", 1)[1].split(";", 1)[0])
     assert 0.5 <= keep < 1, "moderada não é nem cor cheia nem cinza"
     # `light.tint` e a cor DAQUELE instante (so a arcana anda entre duas); a cor
@@ -109,13 +109,13 @@ def test_the_cinematic_numbers_sit_inside_the_photography_recipe():
 
 def test_the_veil_drifts_without_recomposing_the_darkness():
     """O véu anima; a textura de escuridão não. Dentro dela, mexer no véu
-    recomporia tudo a cada quadro — que é justamente o que aquele cache evita."""
+    recomporia tudo a cada quadro: que é justamente o que aquele cache evita."""
     assert "_acquireVeil(board, veilSlot)" in PIXI
     assert "lightingVeilPool" in RENDERER, "pool próprio, senão sobrescreve o halo"
 
     # O pool precisa nascer na própria camada. Os arquivos do tabuleiro são
     # servidos com versão fixa no template, então uma camada nova encontra um
-    # renderer velho em cache — e a iluminação inteira cai no primeiro quadro.
+    # renderer velho em cache, e a iluminação inteira cai no primeiro quadro.
     assert "if (!board.lightingVeilPool) board.lightingVeilPool = [];" in PIXI
     assert "board.lightingGlowPool || []" in PIXI
 
@@ -163,7 +163,7 @@ def test_a_token_without_range_gets_no_veil():
 
 def test_classic_drops_the_costly_passes():
     """O modo leve precisa cortar custo de verdade, não só mudar de nome."""
-    # Sem chama, o laço de animação nem começa — é a maior economia do modo.
+    # Sem chama, o laço de animação nem começa: é a maior economia do modo.
     assert "if (window.GravewrightVisionMode?.isClassic?.()) return false;" in SCRIPT
     assert 'animation: classic ? "none" : (light.animation || "none")' in SCRIPT
 
@@ -178,7 +178,7 @@ def test_classic_drops_the_costly_passes():
 def test_switching_modes_repaints_without_moving_anything():
     """A escuridão é uma textura em cache por assinatura. Se o modo não entrar na
     chave, quem trocasse a opção continuaria vendo a composição anterior até
-    mover a câmera — e leria isso como opção que não funciona."""
+    mover a câmera, e leria isso como opção que não funciona."""
     key = PIXI.split("const key = [", 1)[1].split('].join(":")', 1)[0]
     assert "lighting.mode" in key
     assert "invalidateAll" in MODE_JS and "invalidateAll:" in SCRIPT

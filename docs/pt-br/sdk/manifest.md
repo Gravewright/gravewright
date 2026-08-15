@@ -51,6 +51,24 @@
 | `authors` | recomendado | Autores/mantenedores. |
 | `license` | recomendado | Licença do pacote. |
 
+## Visibilidade dos diretórios
+
+Um ruleset pode omitir abas de diretório que não façam parte do seu modelo de dados:
+
+```json
+"display": {
+  "directories": {
+    "items": false
+  }
+}
+```
+
+`actors`, `items` e `journals` usam `true` por padrão. Definir uma delas como
+`false` oculta a aba do dock e o painel correspondente enquanto o ruleset
+estiver ativo. Essa opção altera apenas a apresentação: ela não exclui dados,
+não remove permissões e não impede que outra superfície documentada da SDK
+referencie esses registros.
+
 ## Compatibilidade
 
 ```json
@@ -67,7 +85,7 @@
 
 A compatibilidade é avaliada contra a **linha de versão da API da SDK** (a mesma
 nomeada por `sdkVersion`, congelada em `1` pela Alpha 2.0.0), não a versão de
-marketing do core — então um bump de release do core não torna pacotes da SDK 1
+marketing do core: então um bump de release do core não torna pacotes da SDK 1
 incompatíveis retroativamente.
 
 ## Ativação
@@ -194,7 +212,7 @@ rolagens, declare fórmulas/actions em `provides.rules` e chame via Sheet IR,
 
 #### `rules/combat.gw.json`
 
-O core é dono do rastreador de combate — a rodada, a ordem de turnos, o painel —
+O core é dono do rastreador de combate: a rodada, a ordem de turnos, o painel -
 mas não do que a iniciativa *é*. Ele guarda o valor como texto e nunca o
 interpreta. O ruleset decide como o valor chega lá e se ele implica uma ordem.
 
@@ -226,7 +244,7 @@ interpreta. O ruleset decide como o valor chega lá e se ele implica uma ordem.
 | `text` | Um campo de texto livre | Na mão: o mestre move as linhas para cima e para baixo |
 
 Use `text` sempre que a ordem de turnos não for um número que a engine pudesse
-comparar — cartas compradas, fases nomeadas, "quem emboscou age primeiro", ou
+comparar: cartas compradas, fases nomeadas, "quem emboscou age primeiro", ou
 uma ficha que a mesa lê no papel. O core não inventa ranking para uma string.
 
 | Campo | Significado |

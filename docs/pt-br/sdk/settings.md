@@ -71,12 +71,12 @@ Os valores são coeridos de forma **estrita** para o `type` da setting; um valor
 não reconhecido é rejeitado com o código estável `sdk.settings.invalid_value` em
 vez de virar o default silenciosamente.
 
-- `boolean` — verdadeiro: `true`, `"true"`, `"1"`, `"yes"`, `"on"`, `1`; falso:
+- `boolean`: verdadeiro: `true`, `"true"`, `"1"`, `"yes"`, `"on"`, `1`; falso:
   `false`, `"false"`, `"0"`, `"no"`, `"off"`, `""`, `0`. Qualquer outro valor é
   inválido (em especial, `"false"` nunca vira `true`).
-- `integer` / `number` — devem parsear corretamente; booleanos e strings não
+- `integer` / `number`: devem parsear corretamente; booleanos e strings não
   numéricas são inválidos.
-- `enum` — deve ser uma das `options` declaradas.
+- `enum`: deve ser uma das `options` declaradas.
 
 A precedência de escopo para o valor efetivo é **default → campaign → user**. O
 escopo `user` é **por usuário, global entre campanhas** (indexado por user id,

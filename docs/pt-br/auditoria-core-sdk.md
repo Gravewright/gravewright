@@ -34,7 +34,7 @@ servidor e os testes de contrato concordam com a superfície exposta atualmente.
 
 ## Adições implementadas
 
-### Prioridade 0 — completar cartas
+### Prioridade 0: completar cartas
 
 O core implementa revelar, descartar, jogar na cena, atualizar a colocação e
 descartar a colocação com checagens de permissão. A SDK agora expõe essas
@@ -52,7 +52,7 @@ Criação de definição, instanciação e exclusão de baralho só devem ser p�
 se jogos de cartas gerados em runtime forem um objetivo explícito. Caso
 contrário, definições continuam como conteúdo declarativo e configuração do GM.
 
-### Prioridade 1 — assimetrias de gameplay fechadas
+### Prioridade 1: assimetrias de gameplay fechadas
 
 - `sdk.items.patchData(itemId, patch)` é simétrico à escrita de atores.
 - Combate expõe rolagem de iniciativa, avanço de rodada e flags seguras.
@@ -63,7 +63,7 @@ contrário, definições continuam como conteúdo declarativo e configuração d
 - HP e condições de token são ações semânticas suportadas. Criar
   atalhos diretos apenas se pacotes precisarem deles fora dos grafos de ação.
 
-### Prioridade 2 — ferramentas de cena entregues
+### Prioridade 2: ferramentas de cena entregues
 
 - Estado do fog, enable/disable, reset e pintura limitada.
 - Colocação, atualização e remoção de imagens de cena usando assets autorizados.
@@ -72,7 +72,7 @@ contrário, definições continuam como conteúdo declarativo e configuração d
 - Upload/criação/movimento/exclusão de assets, se houver fluxo orientado por pacote.
 - Exclusão de mensagem pelo autor ou GM; limpeza em lote deve continuar administrativa.
 
-### Prioridade 3 — automação opcional do GM
+### Prioridade 3: automação opcional do GM
 
 Criação, edição, ativação e agrupamento de cenas, upload de mapas e retile são
 úteis para addons administrativos, mas aumentam riscos de storage e negação de

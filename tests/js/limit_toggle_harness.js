@@ -2,7 +2,7 @@
  * "Sem limite" como pergunta, não como zero escondido.
  *
  * Alcance de luz, de visão e de shader guardam zero para dizer "ilimitado". Como
- * armazenamento é cômodo; como botão é o contrário do que a régua promete —
+ * armazenamento é cômodo; como botão é o contrário do que a régua promete -
  * arrastar para o mínimo devia dar o MENOR alcance, e dava o maior.
  *
  * O que este harness cobra é o comportamento do par régua+checkbox, incluindo o
@@ -65,7 +65,7 @@ const limits = win.GravewrightLimits;
 
     world.check.checked = false;
     const voltou = limits.next(world.panel, "radius");
-    // O ponto inteiro da correcao: sem isto, desmarcar devolve zero — que e
+    // O ponto inteiro da correcao: sem isto, desmarcar devolve zero: que e
     // "ilimitado" de novo. O checkbox nao teria como ser desmarcado.
     check("desmarcar volta num valor util, nao em zero", voltou === 8, `${voltou}`);
     check("e a regua volta a responder", world.range.disabled === false);

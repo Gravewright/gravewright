@@ -4,9 +4,9 @@ Responsibilities are split across three modules (maintenance plan, Etapa 8) so
 this file holds only the ``BoardCommandHandler`` dispatch/authorization/handler
 layer:
 
-- ``board_validation`` — pure payload normalization/validation helpers;
-- ``board_results`` — ``BoardCommandResult`` and ack/error envelope builders;
-- this module — the handler class that authorizes and executes each command.
+- ``board_validation``: pure payload normalization/validation helpers;
+- ``board_results``: ``BoardCommandResult`` and ack/error envelope builders;
+- this module: the handler class that authorizes and executes each command.
 
 The validation/result helpers are re-imported here (and re-exported) so callers
 and tests that referenced them keep working unchanged.

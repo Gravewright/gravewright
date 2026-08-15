@@ -1,8 +1,8 @@
-# Layout de Dados da SDK — Pacotes Universais + Storage Gerenciado
+# Layout de Dados da SDK: Pacotes Universais + Storage Gerenciado
 
 > Define onde os pacotes e seu storage persistente vivem no disco. O layout
 > universal agrupado `data/packages/{kind_plural}/{id}` é o único layout
-> suportado, congelado pela Alpha 2.0.0 — SDK Freeze.
+> suportado, congelado pela Alpha 2.0.0: SDK Freeze.
 
 ## Regra arquitetural
 

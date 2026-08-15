@@ -53,7 +53,7 @@ contract is enforced by `tests/unit/test_realtime_pii.py`.
 Accepting a campaign invitation is idempotent and concurrency-safe: N concurrent
 or repeated accepts for the same user create exactly one membership (the
 `(campaign_id, user_id)` unique constraint plus `INSERT ... ON CONFLICT DO
-NOTHING` are the guard). `member.joined` is published **at most once** — only for
+NOTHING` are the guard). `member.joined` is published **at most once**: only for
 the request that actually created the membership, and only after the transaction
 commits. A re-accept by an existing member returns a stable success with no new
 row and no event. Enforced by `tests/integration/test_membership_concurrency.py`.

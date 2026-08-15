@@ -1,7 +1,7 @@
 """Serve a package's declared front-end assets.
 
 Only files whitelisted by the manifest are served, and only for enabled
-packages — see :class:`app.engine.sdk.package_asset_service.PackageAssetService`.
+packages: see :class:`app.engine.sdk.package_asset_service.PackageAssetService`.
 """
 
 from __future__ import annotations

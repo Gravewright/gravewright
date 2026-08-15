@@ -10,8 +10,8 @@ SQLite is used by default for local development.
 
 ## Easy Install (Installers)
 
-For non-technical users, one-click installers set everything up — including the
-correct Python version (via `uv`) — and then launch Gravewright in your browser.
+For non-technical users, one-click installers set everything up: including the
+correct Python version (via `uv`), and then launch Gravewright in your browser.
 No administrator rights are required.
 
 - **Windows:** double-click `install-windows.bat`.
@@ -98,7 +98,7 @@ grave db upgrade   # alembic upgrade head (back up first)
 ```
 
 Local development bootstraps the schema from metadata for convenience, but that
-is not the supported upgrade mechanism — always evolve real data with
+is not the supported upgrade mechanism: always evolve real data with
 `grave db upgrade` / `alembic upgrade head`. See
 [`database.md`](database.md) and [`adr/ADR-migration-baseline.md`](adr/ADR-migration-baseline.md).
 

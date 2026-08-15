@@ -5,15 +5,21 @@
   "kind": "ruleset",
   "id": "gravewright-pdf-system",
   "name": "Gravewright PDF System",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Use a fillable PDF as the character sheet. Field values are mapped to sheet data paths and stored in Gravewright, so rolls, token bars and combat can read them.",
   "authors": [
     "Gravewright"
   ],
   "license": "MIT",
+  "display": {
+    "directories": {
+      "items": false
+    }
+  },
   "compatibility": {
     "minimum": "1",
-    "verified": "1"
+    "verified": "1",
+    "maximum": "1.x"
   },
   "capabilities": [
     "actors.register",

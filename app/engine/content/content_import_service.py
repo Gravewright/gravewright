@@ -1,4 +1,4 @@
-"""``content.entry.import`` — copy a read-only content entry into a campaign (§2.6/§10).
+"""``content.entry.import``: copy a read-only content entry into a campaign (§2.6/§10).
 
 ``import_entry`` handles ``actor_pack`` entries: it creates an Actor Core of the
 entry's type and seeds its Sheet Data with the entry's ``data`` (a campaign-owned

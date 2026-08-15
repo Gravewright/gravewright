@@ -297,7 +297,7 @@ Token mappings tell the table which actor fields drive token UI:
 ```
 
 A token draws exactly two bars: **`bar_1` under it and `bar_2` above it**. The
-slots are positions, not meanings — point them at whatever the game tracks, be
+slots are positions, not meanings: point them at whatever the game tracks, be
 it hit points, stress, ammunition or a countdown. The core resolves the paths
 and draws the ratio; it never reads the numbers as health.
 

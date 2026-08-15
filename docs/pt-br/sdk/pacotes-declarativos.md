@@ -299,7 +299,7 @@ Token mappings dizem à mesa quais campos do actor alimentam a UI do token:
 ```
 
 Um token desenha exatamente duas barras: **`bar_1` embaixo dele e `bar_2` em
-cima**. Os slots são posições, não significados — aponte-os para o que o jogo
+cima**. Os slots são posições, não significados: aponte-os para o que o jogo
 acompanhar, seja vida, estresse, munição ou uma contagem regressiva. O core
 resolve os caminhos e desenha a proporção; ele nunca lê os números como saúde.
 

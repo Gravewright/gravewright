@@ -8,14 +8,14 @@ e nunca reexamina os dados que ele mesmo adicionou::
         results += exploded
 
 Na mesa isso está errado: um d12 que tira 12, explode e tira 12 de novo tem de
-continuar explodindo — é essa a promessa de "explodir" em Savage Worlds e em
+continuar explodindo: é essa a promessa de "explodir" em Savage Worlds e em
 qualquer sistema com dado aberto. Do jeito da biblioteca a cadeia parava em dois
 dados e o total ficava sistematicamente baixo.
 
 O ``xdice`` não expõe configuração para isso, e ele é o avaliador de toda a
 notação do projeto (``L``/``H``, ``max()``, modificadores). Trocar a biblioteca
 por causa de uma regra seria muito maior do que substituir o método que a viola,
-então ``Dice.roll`` é substituído aqui, uma vez, na importação — e as regras que
+então ``Dice.roll`` é substituído aqui, uma vez, na importação, e as regras que
 não são a explosão (ordem de rolagem, descarte, nome do grupo) continuam sendo
 as da biblioteca.
 """
@@ -49,7 +49,7 @@ def _pop_highest(values: list[int]) -> int:
 def _roll_open_ended(dice) -> xdice.Score:
     """``Dice.roll`` da biblioteca, mas com a explosão em cadeia.
 
-    A ordem é a mesma do original: rola, descarta, e só então explode — um dado
+    A ordem é a mesma do original: rola, descarta, e só então explode: um dado
     descartado não gera explosão, e os dados que a explosão traz não entram no
     descarte (senão o ``L``/``H`` mudaria de significado no meio da rolagem).
     """

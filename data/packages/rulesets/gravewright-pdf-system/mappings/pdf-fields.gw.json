@@ -36,6 +36,6 @@
   "$rules": {
     "path": "Caminho pontilhado. 'core.*' é o registro do ator (nome, retrato). 'sheet.*' é o dado do sistema, gravado por sheet.data.patch.",
     "type": "string | number | boolean. Decide a coerção antes de gravar; um campo de PDF sempre chega como texto.",
-    "unmapped": "Campo do PDF sem entrada aqui cai em sheet.fields.<nome> e continua funcionando — só não é endereçável por regra."
+    "unmapped": "Campo do PDF sem entrada aqui cai em sheet.fields.<nome> e continua funcionando: só não é endereçável por regra."
   }
 }

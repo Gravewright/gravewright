@@ -104,7 +104,7 @@ its existing finding dicts.
 ## Doctor finding codes
 
 `grave doctor` emits package findings whose `code` field is **frozen and
-Alpha-stable** as of Alpha 2.0.0 — tooling and tests may match on them. The
+Alpha-stable** as of Alpha 2.0.0: tooling and tests may match on them. The
 current set mixes two naming styles for historical reasons:
 
 Namespaced (`sdk.<area>.<detail>`):

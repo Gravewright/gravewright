@@ -1,8 +1,8 @@
-"""``grave db`` — schema/migration diagnostics and the official upgrade path.
+"""``grave db``: schema/migration diagnostics and the official upgrade path.
 
 - ``grave db status`` reports the current revision, the expected head, and
   whether the database is up to date (JSON with ``--json``).
-- ``grave db upgrade`` runs ``alembic upgrade head`` — the supported way to
+- ``grave db upgrade`` runs ``alembic upgrade head``: the supported way to
   create or evolve a database.
 - ``grave db adopt`` verifies and adopts an unversioned legacy SQLite database.
 """

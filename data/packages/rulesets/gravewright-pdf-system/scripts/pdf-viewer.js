@@ -6,7 +6,7 @@
  * campo: as coordenadas vêm do próprio arquivo, via getAnnotations().
  *
  * O runtime do pdf.js (3 MB entre módulo e worker) é declarado como asset e
- * importado sob demanda — nunca no carregamento da página de jogo. Quem não abre
+ * importado sob demanda: nunca no carregamento da página de jogo. Quem não abre
  * uma ficha PDF não paga por ele.
  */
 (() => {
@@ -15,14 +15,14 @@
 
   // Quem resolve caminho de asset é o SDK (sdk.package.assetUrl), passado no
   // open(). O visualizador carrega antes de qualquer setup() e não tem o sdk em
-  // mãos, então guardamos o resolvedor em vez de remontar a URL aqui — duas
+  // mãos, então guardamos o resolvedor em vez de remontar a URL aqui: duas
   // montagens seriam duas coisas para manter em acordo.
   let asset = (relative) => `/sdk/packages/${PACKAGE_ID}/asset/${relative}`;
 
   async function library() {
     if (pdfjs) return pdfjs;
     // Build "legacy" do pdf.js: ele traz os próprios polyfills (core-js) para as
-    // APIs novas que o build moderno assumia prontas — Map.getOrInsertComputed e
+    // APIs novas que o build moderno assumia prontas: Map.getOrInsertComputed e
     // Uint8Array.toHex, que ficam justamente nos caminhos de formulário e de
     // descriptografia. É o build certo para um parque de navegadores real.
     pdfjs = await import(asset("vendor/pdf.mjs"));
@@ -191,7 +191,7 @@
     // vêm do arquivo, então o controlador precisa abrir para saber o que criar. Só
     // que quem posiciona é o render(), e ele já rodou com a lista de inputs vazia.
     // Sem esta segunda passada os campos ficam sem left/top e empilham todos na
-    // origem — o que aparece como uma única barra no canto da ficha.
+    // origem, o que aparece como uma única barra no canto da ficha.
     refresh: () => render(),
 
     async nextPage() {
