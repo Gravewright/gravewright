@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - run: uv python install
       - run: uv sync --frozen --extra dev
       - name: Ruff lint
@@ -41,7 +41,7 @@ jobs:
       UV_PYTHON: "3.11"
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - run: uv python install 3.11
       - run: uv sync --frozen
       - name: Compile Python files
@@ -70,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - run: uv python install
       - run: uv sync --frozen
       - name: Empty DB -> alembic upgrade head -> status
@@ -111,7 +111,7 @@ jobs:
       GRAVEWRIGHT_TEST_DATABASE_URLS: postgresql+psycopg://gravewright:gravewright@localhost:5432/gravewright_test
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v7
       - run: uv python install
       - run: uv sync --frozen --extra postgres --extra dev
       - name: Full migration chain on PostgreSQL
