@@ -288,4 +288,15 @@ tests/            unit, integration, Docker, and performance tests
 
 ## Contributing
 
-See `CONTRIBUTING.md`, `SECURITY.md`, and `CODE_OF_CONDUCT.md`.
+Contributions are welcome.
+
+If you would like to help improve Gravewright:
+
+- Start with a [`good first issue`](https://github.com/Gravewright/gravewright/labels/good%20first%20issue) if you are new to the project.
+- Check [`help wanted`](https://github.com/Gravewright/gravewright/labels/help%20wanted) for areas where contributions are especially welcome.
+- Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a pull request.
+- Use [Discussions](https://github.com/Gravewright/gravewright/discussions) for questions, ideas, and proposals that are not yet ready to become issues.
+
+Please follow the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+
+Security vulnerabilities should **not** be reported through public issues or discussions. See [`SECURITY.md`](SECURITY.md) for private reporting instructions.
