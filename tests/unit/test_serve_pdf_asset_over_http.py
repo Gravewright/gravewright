@@ -102,7 +102,7 @@ def test_the_library_state_lists_the_uploaded_pdf(client):
     campaign_id = seed_campaign(gm)
     login(client, gm)
 
-    _upload_pdf(client, campaign_id, name="savage-worlds.pdf")
+    _upload_pdf(client, campaign_id, name="example.pdf")
 
     state = client.get(f"/game/assets/state/{campaign_id}")
     assert state.status_code == 200, state.text

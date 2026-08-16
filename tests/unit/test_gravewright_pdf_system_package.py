@@ -399,8 +399,8 @@ def test_fields_are_positioned_after_they_are_created():
 
 
 def test_checkboxes_are_checkboxes():
-    """Uma ficha de Savage Worlds traz 125 campos Btn. Como caixa de texto, eles
-    pedem que a pessoa digite onde deveria marcar."""
+    """Um formulário PDF pode trazer muitos campos Btn. Como caixa de texto,
+    eles pedem que a pessoa digite onde deveria marcar."""
     viewer = (PACKAGE / "scripts/pdf-viewer.js").read_text(encoding="utf-8")
     controller = (PACKAGE / "scripts/pdf-sheet.js").read_text(encoding="utf-8")
 

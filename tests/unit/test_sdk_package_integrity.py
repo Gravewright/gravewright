@@ -73,7 +73,7 @@ def test_enable_leaves_the_stored_hash_describing_the_stored_snapshot(db):
     ``enable`` revalida contra o disco e gravava só o hash novo, mantendo o
     snapshot antigo, o hash passava a descrever um manifest que ninguém mais
     tinha, e o doctor acusava ``sdk.persistence.manifest_hash_mismatch`` para
-    sempre (foi assim que o dnd5e quebrou). O par tem de andar junto.
+    sempre (foi assim que um ruleset externalizado quebrou). O par tem de andar junto.
     """
     gm = seed_user(email="integrity-pair@test.com")
     svc = PackageInstallService()

@@ -14,8 +14,8 @@ def test_active_content_package_is_exposed_to_the_game_content_browser(db, monke
     campaign_id = seed_campaign(gm_id)
     packages = [
         {
-            "id": "savage-worlds",
-            "name": "Savage Worlds",
+            "id": "example-ruleset",
+            "name": "Example Ruleset",
             "kind": "ruleset",
             "status": "enabled",
             "capabilities": [],
@@ -24,8 +24,8 @@ def test_active_content_package_is_exposed_to_the_game_content_browser(db, monke
             "area_markers": [],
         },
         {
-            "id": "savage-pathfinder-private",
-            "name": "Savage Pathfinder: Núcleo Privado",
+            "id": "example-private-content",
+            "name": "Example Private Content",
             "kind": "content",
             "status": "enabled",
             "capabilities": ["content.packs"],
@@ -39,7 +39,7 @@ def test_active_content_package_is_exposed_to_the_game_content_browser(db, monke
         lambda requested_campaign_id: [
             {
                 "campaign_id": requested_campaign_id,
-                "package_id": "savage-pathfinder-private",
+                "package_id": "example-private-content",
                 "status": "active",
             }
         ],
@@ -50,11 +50,11 @@ def test_active_content_package_is_exposed_to_the_game_content_browser(db, monke
 
     assert room["content_packages"] == [
         {
-            "id": "savage-pathfinder-private",
-            "name": "Savage Pathfinder: Núcleo Privado",
+            "id": "example-private-content",
+            "name": "Example Private Content",
         }
     ]
-    assert all(system["id"] != "savage-pathfinder-private" for system in room["enabled_systems"])
+    assert all(system["id"] != "example-private-content" for system in room["enabled_systems"])
 
 
 def test_gm_panel_has_a_content_pack_button():
