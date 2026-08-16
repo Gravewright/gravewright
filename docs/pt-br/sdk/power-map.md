@@ -60,6 +60,7 @@ Use-a quando você sabe o que quer construir mas ainda não sabe qual superfíci
 | Executar intent de rolagem/action | `sdk.rolls.intent` | `rolls.intent` | Action de Sheet IR autoritativa, targets, dano e iniciativa. |
 | Listar settings | `sdk.settings.definitions`, `sdk.settings.all` | `settings` | Valores visíveis ao pacote atual. |
 | Ler setting | `sdk.settings.get`, `sdk.setting(key)` | `settings` | Use valores de fallback. |
+| Ler dados da ficha de ator | `sdk.actors.data` | `actors.read` | Snapshot `{data, version}` filtrado por permissão. |
 | Gravar setting | `sdk.settings.set`, `sdk.setting(key, value)` | `settings` | Persiste pelo endpoint de settings da SDK. |
 | Usar helpers de ficha | `sdk.sheets.helpers` | `sheets.runtime` | Acesso a helpers de runtime. |
 | Registrar comportamento de ficha | `sdk.sheets.register` | `sheets.runtime` | Use após declarar a capability de ficha. |

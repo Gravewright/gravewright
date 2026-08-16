@@ -84,6 +84,12 @@ class TokenViewService:
 
             "vision_enabled": bool(token.get("vision_enabled", 1)),
             "vision_range": float(token.get("vision_range") or 0.0),
+            "elevation": float(token.get("elevation") or 0.0),
+            "vision": {
+                "enabled": bool(token.get("vision_enabled", 1)),
+                "range": float(token.get("vision_range") or 0.0),
+                "source": "token",
+            },
             "version": token["version"],
         }
 

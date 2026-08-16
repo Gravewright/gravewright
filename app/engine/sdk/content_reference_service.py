@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import base64
 from urllib.parse import parse_qs, quote, unquote, urlparse
 
 from app.engine.actors.actor_service import ActorService
@@ -96,7 +97,7 @@ class ContentReferenceService:
         value = self._resolve(ref, user_id=user_id)
         return {"ref": ref.public(), "value": value} if value is not None else None
 
-    def search(self, *, campaign_id: str, user_id: str, query: str = "", kinds: set[str] | None = None, limit: int = 50) -> list[dict]:
+    def search(self, *, campaign_id: str, user_id: str, query: str = "", kinds: set[str] | None = None, limit: int = 50, cursor: str | None = None) -> dict:
         wanted = (kinds or SUPPORTED_KINDS) & SUPPORTED_KINDS
         needle = query.strip().casefold()
         entries: list[dict] = []
@@ -124,7 +125,21 @@ class ContentReferenceService:
                 for row in state.payload.get("decks", []): add("deck", row)
                 for row in state.payload.get("cards", []): add("card", row)
         entries.sort(key=lambda entry: (entry["label"].casefold(), entry["kind"], entry["ref"]["id"]))
-        return entries[:max(1, min(limit, 100))]
+        start = 0
+        if cursor:
+            try:
+                marker = base64.urlsafe_b64decode(cursor.encode("ascii") + b"===").decode("utf-8")
+            except (ValueError, UnicodeError):
+                raise ValueError("invalid search cursor") from None
+            start = next((index + 1 for index, entry in enumerate(entries) if entry["ref"]["uri"] == marker), -1)
+            if start < 0:
+                raise ValueError("stale search cursor")
+        size = max(1, min(limit, 100))
+        page = entries[start:start + size]
+        next_cursor = None
+        if start + len(page) < len(entries) and page:
+            next_cursor = base64.urlsafe_b64encode(page[-1]["ref"]["uri"].encode("utf-8")).decode("ascii").rstrip("=")
+        return {"entries": page, "nextCursor": next_cursor}
 
     def _resolve(self, ref: ContentReference, *, user_id: str):
         if ref.kind == "actor":

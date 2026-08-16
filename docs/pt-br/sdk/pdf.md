@@ -27,6 +27,10 @@ await sdk.pdf.annotations.update(documentId, annotation.id, {
   text: "Nota atualizada."
 });
 await sdk.pdf.annotations.delete(documentId, annotation.id);
+
+const remover = sdk.events.on("pdf.annotations.changed", async evento => {
+  const atuais = await sdk.pdf.annotations.list(evento.resource.id);
+});
 ```
 
 Declare apenas as capabilities necessárias: `pdf.read`, `pdf.viewer`,
@@ -38,3 +42,8 @@ expor pdf.js ou detalhes do DOM. `open` também aceita um elemento em
 Regiões aceitam `{x, y, width, height}` ou `{x1, y1, x2, y2}` em coordenadas da
 página PDF. As páginas começam em 1. O texto de uma annotation aceita até 10.000
 caracteres.
+
+Create, update e delete de annotations emitem um único evento agregado
+`pdf.annotations.changed` depois do commit. O payload identifica somente o
+documento e possui schema version 1; consumers fazem um re-read autorizado.
+Somente membros da campanha que conseguem ler o documento recebem o evento.

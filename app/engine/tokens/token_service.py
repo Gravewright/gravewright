@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 
 from app.business.permissions.permission_service import PermissionService
 from app.contracts.transport import RealtimeGatewayContract
@@ -76,6 +77,7 @@ class TokenService:
         actor_ids: list[str],
         origin_x: int,
         origin_y: int,
+        elevation: float = 0.0,
         user_id: str,
         transport: RealtimeGatewayContract | None = None,
     ) -> TokenResult:
@@ -92,6 +94,8 @@ class TokenService:
 
         if not actor_ids:
             return TokenResult(success=False, error_key="tokens.errors.no_actors")
+        if not isinstance(elevation, (int, float)) or isinstance(elevation, bool) or not isfinite(float(elevation)) or abs(float(elevation)) > 1_000_000:
+            return TokenResult(success=False, error_key="tokens.errors.invalid")
 
         actors = []
         for aid in actor_ids:
@@ -174,6 +178,7 @@ class TokenService:
                     "name": name,
                     "token_asset_url": token_asset_url,
                     "overrides": overrides,
+                    "elevation": float(elevation),
                 }
             )
 
@@ -330,6 +335,18 @@ class TokenService:
         if token.get("locked"):
             return TokenResult(success=False, error_key="tokens.errors.locked")
 
+        from app.engine.scenes.geometry_semantics import movement_crosses_wall
+        from app.persistence.repositories.scene_wall_repository import SceneWallRepository
+
+        size = float(scene.get("grid_size") or scene.get("tile_size") or 70)
+        width = float(token.get("width_cells") or 1)
+        height = float(token.get("height_cells") or 1)
+        origin = ((float(token["grid_x"]) + width / 2) * size, (float(token["grid_y"]) + height / 2) * size)
+        target = ((float(grid_x) + width / 2) * size, (float(grid_y) + height / 2) * size)
+        walls = await run_blocking(SceneWallRepository().list_for_scene, scene_id)
+        if movement_crosses_wall(walls=walls, origin=origin, target=target, elevation=float(token.get("elevation") or 0.0)):
+            return TokenResult(success=False, token=token, error_key="tokens.errors.movement_blocked")
+
         updated = await run_blocking(
             self.tokens.move,
             token_id=token_id,
@@ -395,12 +412,16 @@ class TokenService:
         ):
             return TokenResult(success=False, error_key="tokens.errors.permission_denied")
 
-        updated = await run_blocking(
-            self.tokens.update_overrides,
-            token_id=token_id,
-            overrides=overrides,
-            expected_version=expected_version,
-        )
+        elevation_marker = overrides.get("elevation") if "elevation" in overrides else None
+        semantic_overrides = {key: value for key, value in overrides.items() if key != "elevation"}
+        if elevation_marker is not None:
+            try: elevation = float(elevation_marker)
+            except (TypeError, ValueError): return TokenResult(success=False,error_key="tokens.errors.invalid")
+            from math import isfinite
+            if not isfinite(elevation) or abs(elevation)>1_000_000: return TokenResult(success=False,error_key="tokens.errors.invalid")
+            updated = await run_blocking(self.tokens.update_elevation_and_overrides,token_id=token_id,elevation=elevation,overrides=semantic_overrides,expected_version=expected_version)
+        else:
+            updated = await run_blocking(self.tokens.update_overrides,token_id=token_id,overrides=semantic_overrides,expected_version=expected_version)
         if updated is None:
             return TokenResult(
                 success=False, token=token, error_key="tokens.errors.version_conflict"

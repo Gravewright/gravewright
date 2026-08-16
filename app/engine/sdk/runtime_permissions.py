@@ -10,6 +10,7 @@ from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.item_repository import ItemRepository
 from app.persistence.repositories.token_repository import TokenRepository
+from app.domain.permissions.permissions import TablePermission
 
 
 class SdkRuntimePermissionInspector:
@@ -42,8 +43,20 @@ class SdkRuntimePermissionInspector:
             if not token:
                 return True, False
             return True, TokenService().can_control_token(token=token, user_id=user_id, campaign_id=campaign_id)
-        if action in {"scene.geometry.update", "scene.effects.update", "combat.manage"}:
+        if action in {"scene.geometry.update", "walls.manage", "lighting.manage", "scene.effects.update", "effects.manage", "combat.manage"}:
             return True, context.get("member_role") == "gm"
+        if action == "fog.manage":
+            return True, self.table.can(
+                user_id=user_id, campaign_id=campaign_id, permission=TablePermission.FOG_PAINT
+            )
+        if action == "cards.manage":
+            return True, context.get("member_role") in {"gm", "assistant_gm"}
+        if action == "tools.register":
+            return True, True
+        if action == "templates.manage":
+            return True, self.table.can(
+                user_id=user_id, campaign_id=campaign_id, permission=TablePermission.BOARD_MARKER_CREATE
+            )
         permission = {
             "scene.read": "scene.view", "combat.read": "combat.view", "chat.read": "chat.view",
         }.get(action, action)

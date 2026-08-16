@@ -11,6 +11,22 @@ from app.persistence.repositories.scene_repository import SceneRepository
 KINDS = ("smoke", "ember", "dust", "arcane", "rain", "snow", "firefly",
          "leaves", "bubbles", "ash", "blood", "runes")
 
+PARTICLE_PRESETS = tuple(
+    {
+        "id": kind,
+        "label": kind.replace("_", " ").title(),
+        "parameters": {
+            "x": {"type": "number", "required": True},
+            "y": {"type": "number", "required": True},
+            "scale": {"type": "number", "minimum": 0.5, "maximum": 60.0, "default": 4.0},
+            "density": {"type": "number", "minimum": 0.0, "maximum": 1.0, "default": 0.5},
+            "color": {"type": "color", "default": "#ffffff"},
+            "enabled": {"type": "boolean", "default": True},
+        },
+    }
+    for kind in KINDS
+)
+
 MAX_SCALE_CELLS = 60.0
 MIN_SCALE_CELLS = 0.5
 HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")

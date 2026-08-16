@@ -28,8 +28,8 @@ class AuditService:
     def record(self, *, campaign_id: str, actor_user_id: str | None, event_type: str,
                subject_type: str | None = None, subject_id: str | None = None,
                action: str, result: str, metadata: dict | None = None,
-               connection=None, now: int | None = None) -> dict | None:
-        if not config.administrative_audit_enabled:
+               connection=None, now: int | None = None, required: bool = False) -> dict | None:
+        if not config.administrative_audit_enabled and not required:
             return None
         safe = safe_metadata(event_type, metadata)
         row = {

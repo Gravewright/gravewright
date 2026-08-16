@@ -21,6 +21,17 @@ EVENT_METADATA_KEYS: dict[str, frozenset[str]] = {
     "handout.revoked": frozenset({"resource_type", "audience_type"}),
     "handout.presented": frozenset({"resource_type", "audience_type"}),
     "campaign.exported": frozenset({"format_version", "selected_count"}),
+    "automation.job.created": frozenset({"package_id", "action_ref", "attempt"}),
+    "automation.job.claimed": frozenset({"package_id", "action_ref", "attempt", "lease_recovered"}),
+    "automation.job.retry_scheduled": frozenset({"package_id", "action_ref", "attempt", "semantic_reason"}),
+    "automation.job.succeeded": frozenset({"package_id", "action_ref", "attempt"}),
+    "automation.job.rejected": frozenset({"package_id", "action_ref", "attempt", "semantic_reason"}),
+    "automation.job.failed": frozenset({"package_id", "action_ref", "attempt", "semantic_reason"}),
+    "automation.job.cancelled": frozenset({"package_id", "action_ref", "attempt", "semantic_reason"}),
+    "asset.import.started": frozenset({"package_id"}),
+    "asset.import.succeeded": frozenset({"package_id"}),
+    "asset.import.failed": frozenset({"package_id", "semantic_reason"}),
+    "asset.import.cancelled": frozenset({"package_id"}),
 }
 
 

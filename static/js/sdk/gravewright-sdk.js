@@ -60,11 +60,17 @@
         "item.created", "item.updated", "item.deleted", "token.created", "token.moved",
         "token.updated", "token.deleted", "scene.changed", "scene.geometry.changed",
         "scene.effects.changed", "chat.created", "combat.started", "combat.updated",
-        "combat.turn.changed", "combat.ended", "setting.changed",
+        "combat.turn.changed", "combat.ended", "setting.changed", "actor.data.updated",
+        "journal.created", "journal.updated", "journal.deleted", "cards.state.changed",
+        "scene.fog.changed", "scene.images.changed", "scene.templates.changed",
+        "pdf.annotations.changed", "scene.shaders.changed",
+        "rules.action.completed",
+        "token.targets.changed", "scene.measurements.changed", "pdf.presentation.changed", "automation.job.changed",
     ]);
     const TRANSPORT_TO_SDK_EVENT = Object.freeze({
         "actor.created": "actor.created", "actor.updated": "actor.updated", "actor.deleted": "actor.deleted",
         "item.created": "item.created", "item.updated": "item.updated", "item.deleted": "item.deleted",
+        "sheet.data.updated": "actor.data.updated",
         "token.created": "token.created", "tokens.created": "token.created",
         "token.moved": "token.moved", "tokens.moved": "token.moved",
         "token.updated": "token.updated", "tokens.updated": "token.updated",
@@ -72,21 +78,29 @@
         "scene.activated": "scene.changed", "scene.updated": "scene.changed",
         "scene.walls.updated": "scene.geometry.changed", "scene.lights.updated": "scene.geometry.changed",
         "scene.particles.updated": "scene.effects.changed", "scene.shaders.updated": "scene.effects.changed",
+        "fog.updated": "scene.fog.changed", "scene.images.updated": "scene.images.changed",
+        "board.area_marker.upserted": "scene.templates.changed", "board.area_marker.deleted": "scene.templates.changed", "board.area_marker.cleared": "scene.templates.changed",
+        "journal.created": "journal.created", "journal.updated": "journal.updated", "journal.deleted": "journal.deleted",
+        "cards.state.updated": "cards.state.changed",
+        "pdf.annotations.changed": "pdf.annotations.changed",
+        "scene.shader_presets.updated": "scene.shaders.changed",
+        "rules.action.completed": "rules.action.completed",
+        "token.targets.changed": "token.targets.changed", "scene.measurements.changed": "scene.measurements.changed",
+        "pdf.presentation.changed": "pdf.presentation.changed", "automation.job.changed": "automation.job.changed",
         "chat.message.created": "chat.created", "combat.started": "combat.started",
         "combat.updated": "combat.updated", "combat.ended": "combat.ended",
         "setting.changed": "setting.changed", "campaign.table_settings.changed": "setting.changed",
     });
 
     function semanticEvent(type, payload) {
-        const id = payload.actor_id || payload.item_id || payload.token_id || payload.scene_id
+        const id = payload.actor_id || payload.item_id || payload.token_id || payload.journal_id || payload.template_id || payload.document_id || payload.scene_id
             || payload.combat_id || payload.message_id || "";
         const resource = { id: String(id), version: Number(payload.version || 0) };
         if (type.startsWith("token.") && Array.isArray(payload.tokens)) {
             resource.ids = payload.tokens.map((token) => String(token.token_id || token.id || "")).filter(Boolean).slice(0, 100);
         }
-        const changes = payload.changed && typeof payload.changed === "object"
-            ? Object.keys(payload.changed).slice(0, 32)
-            : [];
+        const changes = Array.isArray(payload.changed_paths) ? payload.changed_paths.slice(0, 32)
+            : payload.changed && typeof payload.changed === "object" ? Object.keys(payload.changed).slice(0, 32) : [];
         return { type, version: 1, resource, changes };
     }
 
@@ -141,6 +155,25 @@
                             await runtimeRead("items", { entity_id: payload.item_id }, "sdk.events.on");
                         }
                     }
+                    if (type.startsWith("journal.") && payload.journal_id && !type.endsWith(".deleted")) {
+                        await runtimeRead("journals", { entity_id: payload.journal_id }, "sdk.events.on");
+                    }
+                    if (type === "cards.state.changed") await runtimeRead("cards", {}, "sdk.events.on");
+                    if (type === "scene.fog.changed") await runtimeRead("fog", { scene_id: payload.scene_id }, "sdk.events.on");
+                    if (type === "scene.images.changed") await runtimeRead("scene.images", { scene_id: payload.scene_id }, "sdk.events.on");
+                    if (type === "scene.templates.changed" && payload.template_id && envelope.event !== "board.area_marker.deleted") {
+                        await runtimeRead("scene.templates", { scene_id: payload.scene_id, entity_id: payload.template_id }, "sdk.events.on");
+                    }
+                    if (type === "pdf.annotations.changed" && payload.document_id) {
+                        await runtimeRead("pdf.annotations", { document_id: payload.document_id }, "sdk.events.on");
+                    }
+                    if (type === "scene.shaders.changed" && payload.scene_id) {
+                        await runtimeRead("shader.instances", { scene_id: payload.scene_id }, "sdk.events.on");
+                    }
+                    if (type === "token.targets.changed") await runtimeRead("token.targets", { scene_id: payload.scene_id }, "sdk.events.on");
+                    if (type === "scene.measurements.changed") await runtimeRead("shared.measurements", { scene_id: payload.scene_id }, "sdk.events.on");
+                    if (type === "pdf.presentation.changed") await runtimeRead("pdf.presentation", { document_id: payload.document_id }, "sdk.events.on");
+                    if (type === "automation.job.changed") await runtimeRead("automation.jobs", { entity_id: payload.job_id }, "sdk.events.on");
                 } catch (_) {
                     return;
                 }
@@ -947,14 +980,28 @@
             }),
             events: createSdkEvents(pkg, requireCap, runtimeRead),
             permissions: Object.freeze({
+                async check(action, resource = {}) {
+                    requireCap("permissions.check");
+                    return runtimeRead(
+                        "permissions",
+                        { action, entity_id: resource.actorId || resource.itemId || resource.tokenId || resource.sceneId || resource.id },
+                        "sdk.permissions.check"
+                    );
+                },
                 async can(action, resource = {}) {
                     requireCap("permissions.can");
-                    const data = await runtimeRead(
-                        "permissions",
-                        { action, entity_id: resource.actorId || resource.itemId || resource.tokenId || resource.sceneId },
-                        "sdk.permissions.can"
-                    );
+                    const data = await this.check(action, resource);
                     return data.allowed === true;
+                },
+            }),
+            packages: Object.freeze({
+                async get(packageId) {
+                    requireCap("packages.get");
+                    return (await runtimeRead("packages", { entity_id: String(packageId || "") }, "sdk.packages.get")).package;
+                },
+                async has(packageId) {
+                    requireCap("packages.has");
+                    return Boolean(await this.get(packageId));
                 },
             }),
             actors: Object.freeze({
@@ -967,10 +1014,20 @@
                     const data = await runtimeRead("actors", { entity_type: query.type, folder_id: query.folderId, cursor: query.cursor, limit: Math.min(Number(query.limit) || 100, 100) }, "sdk.actors.list");
                     return freeze(data.actors || []);
                 },
+                async data(actorId) {
+                    requireCap("actors.data");
+                    return runtimeRead("actors.data", { entity_id: actorId }, "sdk.actors.data");
+                },
                 async create(input = {}) { requireCap("actors.create"); return runtimeCommand("actors.create", input, "sdk.actors.create"); },
                 async update(actorId, patch = {}, options = {}) { requireCap("actors.update"); return runtimeCommand("actors.update", { ...patch, id: actorId, expectedVersion: options.expectedVersion }, "sdk.actors.update"); },
                 async delete(actorId) { requireCap("actors.delete"); return runtimeCommand("actors.delete", { id: actorId }, "sdk.actors.delete"); },
                 async patchData(actorId, patch = {}) { requireCap("actors.patchData"); return runtimeCommand("actors.patchData", { actorId, patch }, "sdk.actors.patchData"); },
+                items: Object.freeze({
+                    async slots(actorId) { requireCap("actors.items.slots"); return (await runtimeRead("actor.item.slots", { entity_id: actorId }, "sdk.actors.items.slots")).slots || []; },
+                    async listCopies(actorId, options = {}) { requireCap("actors.items.listCopies"); return (await runtimeRead("actor.item.copies", { entity_id: actorId, slot: options.slot }, "sdk.actors.items.listCopies")).copies || []; },
+                    async insertCopy(actorId, sourceItemId, options = {}) { requireCap("actors.items.insertCopy"); return runtimeCommand("actorItems.insertCopy", { actorId, sourceItemId, slot: options.slot }, "sdk.actors.items.insertCopy"); },
+                    async removeCopy(actorId, localInstanceId, options = {}) { requireCap("actors.items.removeCopy"); return runtimeCommand("actorItems.removeCopy", { actorId, localInstanceId, slot: options.slot }, "sdk.actors.items.removeCopy"); },
+                }),
             }),
             items: Object.freeze({
                 async get(itemId) {
@@ -1078,6 +1135,18 @@
                     return options.kind
                         ? assets.filter((asset) => asset.kind === options.kind)
                         : assets;
+                },
+                async ingest(file) {
+                    requireCap("assets.ingest");
+                    if (!(file instanceof File)) throw new TypeError("sdk.assets.ingest requires a user-selected File");
+                    const bytes = new Uint8Array(await file.arrayBuffer());
+                    let binary = "";
+                    for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+                    return runtimeCommand("assets.ingest", { source: { kind: "browser-file", name: file.name, mime: file.type, base64: btoa(binary) } }, "sdk.assets.ingest");
+                },
+                async cancelImport(assetId) {
+                    requireCap("assets.cancelImport");
+                    return runtimeCommand("assets.cancelImport", { assetId }, "sdk.assets.cancelImport");
                 },
             }),
             ui: Object.freeze({
@@ -1315,6 +1384,13 @@
                     return window.GravewrightCombat?.renderSlot?.(pkg.id, name, payload) || [];
                 },
             }),
+            automation: Object.freeze({
+                async schedule(actionId, input = {}, options = {}) { requireCap("automation.schedule"); return (await runtimeCommand("automation.schedule", { actionId, input, version: options.version, runAtUtc: options.runAtUtc, idempotencyKey: options.idempotencyKey, originExecutionId: options.originExecutionId, originJobId: options.originJobId, causalDepth: options.causalDepth || 0 }, "sdk.automation.schedule")).job; },
+                async get(jobId) { requireCap("automation.get"); return (await runtimeRead("automation.jobs", { entity_id: jobId }, "sdk.automation.get")).job; },
+                async list() { requireCap("automation.list"); return (await runtimeRead("automation.jobs", {}, "sdk.automation.list")).jobs || []; },
+                async cancel(jobId) { requireCap("automation.cancel"); return (await runtimeCommand("automation.cancel", { jobId }, "sdk.automation.cancel")).job; },
+                async audit() { requireCap("automation.audit"); return (await runtimeRead("automation.audit", {}, "sdk.automation.audit")).events || []; },
+            }),
             tokens: Object.freeze({
                 async get(tokenId, options = {}) {
                     requireCap("tokens.get");
@@ -1332,9 +1408,19 @@
                     requireCap("tokens.centerOn");
                     return window.GravewrightMap?.centerOnToken?.(tokenId);
                 },
+                targets: Object.freeze({
+                    async list(sceneId = context.scene?.id) { requireCap("tokens.targets.list"); return (await runtimeRead("token.targets", { scene_id: sceneId }, "sdk.tokens.targets.list")).ids || []; },
+                    async set(ids, sceneId = context.scene?.id) { requireCap("tokens.targets.set"); return (await runtimeCommand("tokenTargets.set", { sceneId, ids }, "sdk.tokens.targets.set")).ids || []; },
+                    async clear(sceneId = context.scene?.id) { requireCap("tokens.targets.clear"); return (await runtimeCommand("tokenTargets.clear", { sceneId }, "sdk.tokens.targets.clear")).ids || []; },
+                }),
             }),
             cards: Object.freeze({
                 async state() { requireCap("cards.state"); return runtimeRead("cards", {}, "sdk.cards.state"); },
+                definitions: Object.freeze({
+                    async list() { requireCap("cards.state"); return (await runtimeRead("card.definitions", {}, "sdk.cards.definitions.list")).definitions || []; },
+                    async get(id, version) { requireCap("cards.state"); return (await runtimeRead("card.definitions", { entity_id: id, version }, "sdk.cards.definitions.get")).definition || null; },
+                    async instantiate(id, options = {}) { requireCap("cards.shuffle"); return runtimeCommand("cards.instantiateDefinition", { definitionId: id, version: options.version, name: options.name, artwork: options.artwork || {}, metadata: options.metadata || {} }, "sdk.cards.definitions.instantiate"); },
+                }),
                 async shuffle(deckId) { requireCap("cards.shuffle"); return runtimeCommand("cards.shuffle", { deckId }, "sdk.cards.shuffle"); },
                 async reset(deckId, options = {}) { requireCap("cards.reset"); return runtimeCommand("cards.reset", { deckId, shuffle: options.shuffle !== false }, "sdk.cards.reset"); },
                 async draw(deckId, options = {}) { requireCap("cards.draw"); return runtimeCommand("cards.draw", { deckId, count: options.count || 1, destination: options.destination || "hand", mode: options.mode || "top", targetPileId: options.targetPileId, reveal: Boolean(options.reveal) }, "sdk.cards.draw"); },
@@ -1388,6 +1474,10 @@
                     async deleteLight(lightId) { requireCap("scene.geometry.deleteLight"); return runtimeCommand("geometry.deleteLight", { id: lightId }, "sdk.scene.geometry.deleteLight"); },
                 }),
                 effects: Object.freeze({
+                    async presets() {
+                        requireCap("scene.effects.presets");
+                        return (await runtimeRead("effects.presets", {}, "sdk.scene.effects.presets")).presets || [];
+                    },
                     async list(sceneId = context.scene?.id) {
                         requireCap("scene.effects.list");
                         return runtimeRead("effects", { scene_id: sceneId }, "sdk.scene.effects.list");
@@ -1395,6 +1485,15 @@
                     async create(sceneId, kind, values = {}) { requireCap("scene.effects.create"); return runtimeCommand("effects.create", { sceneId, kind, values }, "sdk.scene.effects.create"); },
                     async update(effectId, kind, values = {}) { requireCap("scene.effects.update"); return runtimeCommand("effects.update", { id: effectId, kind, values }, "sdk.scene.effects.update"); },
                     async delete(effectId, kind) { requireCap("scene.effects.delete"); return runtimeCommand("effects.delete", { id: effectId, kind }, "sdk.scene.effects.delete"); },
+                }),
+                shaders: Object.freeze({
+                    async presets() { requireCap("scene.shaders.presets"); return (await runtimeRead("shader.presets", {}, "sdk.scene.shaders.presets")).presets || []; },
+                    async getPreset(presetId) { requireCap("scene.shaders.getPreset"); return (await runtimeRead("shader.preset", { entity_id: presetId }, "sdk.scene.shaders.getPreset")).preset; },
+                    async list(sceneId = context.scene?.id) { requireCap("scene.shaders.list"); return (await runtimeRead("shader.instances", { scene_id: sceneId }, "sdk.scene.shaders.list")).instances || []; },
+                    async apply(sceneId, input = {}) { requireCap("scene.shaders.apply"); return (await runtimeCommand("shaders.apply", { sceneId, presetId: input.presetId, schemaVersion: input.schemaVersion || 1, parameters: input.parameters || {} }, "sdk.scene.shaders.apply")).instance; },
+                    async update(id, patch = {}, options = {}) { requireCap("scene.shaders.update"); return (await runtimeCommand("shaders.update", { id, parameters: patch.parameters || patch, expectedVersion: options.expectedVersion }, "sdk.scene.shaders.update")).instance; },
+                    async enable(id, enabled, options = {}) { requireCap("scene.shaders.enable"); return (await runtimeCommand("shaders.update", { id, parameters: { enabled: Boolean(enabled) }, expectedVersion: options.expectedVersion }, "sdk.scene.shaders.enable")).instance; },
+                    async remove(id) { requireCap("scene.shaders.remove"); return runtimeCommand("shaders.remove", { id }, "sdk.scene.shaders.remove"); },
                 }),
                 fog: Object.freeze({
                     async state(sceneId = context.scene?.id) { requireCap("scene.fog.state"); return runtimeRead("fog", { scene_id: sceneId }, "sdk.scene.fog.state"); },
@@ -1406,8 +1505,40 @@
                 images: Object.freeze({
                     async list(sceneId = context.scene?.id) { requireCap("scene.images.list"); return runtimeRead("scene.images", { scene_id: sceneId }, "sdk.scene.images.list"); },
                     async place(sceneId, assetId, options = {}) { requireCap("scene.images.place"); return runtimeCommand("sceneImages.place", { sceneId, assetId, ...options }, "sdk.scene.images.place"); },
-                    async update(placementId, patch = {}) { requireCap("scene.images.update"); return runtimeCommand("sceneImages.update", { placementId, patch }, "sdk.scene.images.update"); },
+                    async update(placementId, patch = {}, options = {}) { requireCap("scene.images.update"); return runtimeCommand("sceneImages.update", { placementId, patch, expectedVersion: options.expectedVersion }, "sdk.scene.images.update"); },
                     async delete(placementId) { requireCap("scene.images.delete"); return runtimeCommand("sceneImages.delete", { placementId }, "sdk.scene.images.delete"); },
+                }),
+                templates: Object.freeze({
+                    async list(sceneId = context.scene?.id) { requireCap("scene.templates.list"); return (await runtimeRead("scene.templates", { scene_id: sceneId }, "sdk.scene.templates.list")).templates || []; },
+                    async get(sceneId, templateId) { requireCap("scene.templates.get"); return (await runtimeRead("scene.templates", { scene_id: sceneId, entity_id: templateId }, "sdk.scene.templates.get")).template; },
+                    async create(sceneId, values = {}) { requireCap("scene.templates.create"); return runtimeCommand("templates.create", { sceneId, values }, "sdk.scene.templates.create"); },
+                    async update(templateId, patch = {}, options = {}) { requireCap("scene.templates.update"); return runtimeCommand("templates.update", { templateId, values: patch, expectedVersion: options.expectedVersion }, "sdk.scene.templates.update"); },
+                    async delete(templateId, options = {}) { requireCap("scene.templates.delete"); return runtimeCommand("templates.delete", { templateId, expectedVersion: options.expectedVersion }, "sdk.scene.templates.delete"); },
+                }),
+                measurements: Object.freeze({
+                    async measure(sceneId, from, to) {
+                        requireCap("scene.measurements.measure");
+                        const points = [from, to].map((point) => ({ x: Number(point?.x), y: Number(point?.y) }));
+                        if (points.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+                            throw new TypeError("sdk.scene.measurements.measure requires finite world points");
+                        }
+                        const scene = await namespaces.scene.get(sceneId || context.scene?.id);
+                        const dx = points[1].x - points[0].x;
+                        const dy = points[1].y - points[0].y;
+                        const worldDistance = Math.hypot(dx, dy);
+                        const gridSize = Number(scene?.grid_size || 0);
+                        return freeze({
+                            sceneId: scene.id,
+                            from: points[0],
+                            to: points[1],
+                            worldDistance,
+                            gridDistance: gridSize > 0 ? worldDistance / gridSize : null,
+                            gridSize: gridSize > 0 ? gridSize : null,
+                        });
+                    },
+                    async share(sceneId, geometry, options = {}) { requireCap("scene.measurements.share"); return (await runtimeCommand("measurements.share", { sceneId, geometry, audience: options.audience || "campaign", ttlSeconds: options.ttlSeconds || 30 }, "sdk.scene.measurements.share")).measurement; },
+                    async listShared(sceneId = context.scene?.id) { requireCap("scene.measurements.listShared"); return (await runtimeRead("shared.measurements", { scene_id: sceneId }, "sdk.scene.measurements.listShared")).measurements || []; },
+                    async cancel(sceneId, measurementId) { requireCap("scene.measurements.cancel"); return runtimeCommand("measurements.cancel", { sceneId, measurementId }, "sdk.scene.measurements.cancel"); },
                 }),
             }),
             tools: Object.freeze({
@@ -1415,11 +1546,55 @@
                     requireCap("tools.activeTool");
                     return window.GravewrightTools?.activeTool || "select";
                 },
+                register(definition = {}) {
+                    requireCap("tools.register");
+                    if (!window.GravewrightTools?.registerPackageTool) {
+                        throw new Error("sdk.tools.register is not available");
+                    }
+                    const localId = String(definition.id || "");
+                    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(localId)) {
+                        throw new TypeError("sdk.tools.register id must be a package-local kebab-case id");
+                    }
+                    if (definition.capability) requireCap(String(definition.capability));
+                    const fullId = `${pkg.id}.${localId}`;
+                    const coreDispose = window.GravewrightTools.registerPackageTool({
+                        id: fullId,
+                        packageId: pkg.id,
+                        label: String(definition.label || localId),
+                        icon: String(definition.icon || "ph-cursor-click"),
+                        cursor: String(definition.cursor || "crosshair"),
+                        when: typeof definition.when === "function"
+                            ? () => definition.when(freeze(clone(context)))
+                            : null,
+                        activate: typeof definition.activate === "function"
+                            ? (toolContext) => definition.activate(freeze(clone(toolContext)))
+                            : null,
+                        deactivate: typeof definition.deactivate === "function"
+                            ? (toolContext) => definition.deactivate(freeze(clone(toolContext)))
+                            : null,
+                        pointer: typeof definition.pointer === "function"
+                            ? (pointer) => definition.pointer(freeze(clone(pointer)))
+                            : null,
+                    });
+                    let disposed = false;
+                    const dispose = () => {
+                        if (disposed) return;
+                        disposed = true;
+                        coreDispose();
+                        sdkEventDisposers.get(pkg.id)?.delete(dispose);
+                    };
+                    if (!sdkEventDisposers.has(pkg.id)) sdkEventDisposers.set(pkg.id, new Set());
+                    sdkEventDisposers.get(pkg.id).add(dispose);
+                    return dispose;
+                },
             }),
             rules: Object.freeze({
                 actions: Object.freeze({
-                    async validate(actions) { requireCap("rules.actions.validate"); return runtimeCommand("rules.validate", { actions }, "sdk.rules.actions.validate"); },
-                    async execute(actions) { requireCap("rules.actions.execute"); return runtimeCommand("rules.execute", { actions }, "sdk.rules.actions.execute"); },
+                    async list() { requireCap("rules.actions.list"); return (await runtimeRead("rules.actions", {}, "sdk.rules.actions.list")).actions || []; },
+                    async get(actionId) { requireCap("rules.actions.get"); return (await runtimeRead("rules.actions", { entity_id: actionId }, "sdk.rules.actions.get")).action; },
+                    async execute(actionId, input = {}, options = {}) { requireCap("rules.actions.execute"); return runtimeCommand("rules.action.execute", { actionId, input, version: options.version, idempotencyKey: options.idempotencyKey }, "sdk.rules.actions.execute"); },
+                    async resolve({ provider, semantic } = {}) { requireCap("rules.actions.get"); if (provider !== "active-ruleset" || !semantic) throw new TypeError("sdk.rules.actions.resolve requires active-ruleset and semantic"); return (await runtimeRead("rules.actions", { action: semantic }, "sdk.rules.actions.resolve")).action; },
+                    async executeReference(reference, input = {}, options = {}) { requireCap("rules.actions.execute"); const match = /^([^:]+):(.+)@(\d+)$/.exec(String(reference || "")); if (!match) throw new TypeError("invalid registered action reference"); return runtimeCommand("rules.action.execute", { providerPackageId: match[1], actionId: match[2], version: Number(match[3]), input, idempotencyKey: options.idempotencyKey }, "sdk.rules.actions.executeReference"); },
                 }),
             }),
             pdf: Object.freeze({
@@ -1480,6 +1655,12 @@
                     async update(documentId, annotationId, annotation = {}) { requireCap("pdf.annotations.update"); return runtimeCommand("pdf.annotations.update", { documentId, annotationId, ...annotation }, "sdk.pdf.annotations.update"); },
                     async delete(documentId, annotationId) { requireCap("pdf.annotations.delete"); return runtimeCommand("pdf.annotations.delete", { documentId, annotationId }, "sdk.pdf.annotations.delete"); },
                 }),
+                presentation: Object.freeze({
+                    async start(documentId, input = {}) { requireCap("pdf.presentation.start"); return (await runtimeCommand("pdf.presentation.start", { documentId, ...input }, "sdk.pdf.presentation.start")).presentation; },
+                    async current(documentId) { requireCap("pdf.presentation.current"); return (await runtimeRead("pdf.presentation", { document_id: documentId }, "sdk.pdf.presentation.current")).presentation; },
+                    async update(documentId, page, options = {}) { requireCap("pdf.presentation.update"); return (await runtimeCommand("pdf.presentation.update", { documentId, page, expectedVersion: options.expectedVersion }, "sdk.pdf.presentation.update")).presentation; },
+                    async end(documentId) { requireCap("pdf.presentation.end"); return runtimeCommand("pdf.presentation.end", { documentId }, "sdk.pdf.presentation.end"); },
+                }),
             }),
             content: Object.freeze({
                 ref(kind, resourceId, options = {}) {
@@ -1524,7 +1705,8 @@
                 async search(query = "", options = {}) {
                     requireCap("content.search");
                     const kinds = Array.isArray(options.kinds) ? options.kinds.join(",") : (options.kinds || "");
-                    return (await runtimeRead("content.index", { q: query, kinds, limit: Math.min(Number(options.limit) || 50, 100) }, "sdk.content.search")).entries || [];
+                    const page = await runtimeRead("content.index", { q: query, kinds, cursor: options.cursor || "", limit: Math.min(Number(options.limit) || 50, 100) }, "sdk.content.search");
+                    return freeze({ entries: page.entries || [], nextCursor: page.nextCursor || null });
                 },
                 async packs() {
                     requireCap("content.packs");

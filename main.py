@@ -26,6 +26,7 @@ from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.persistence.session_store import SQLiteStore
 from app.routes import route_handlers
 from app.observability.telemetry import configure_local_diagnostics_from_environment
+from app.engine.rules.automation_worker import start_automation_worker, stop_automation_worker
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -50,6 +51,8 @@ _session_config = ServerSideSessionConfig(
 
 
 app = Litestar(
+    on_startup=[start_automation_worker],
+    on_shutdown=[stop_automation_worker],
     route_handlers=[
         *route_handlers,
         create_static_files_router(

@@ -150,6 +150,13 @@ class SystemRulesService:
         record, manifest = pair
         return self._read_json(record["package_dir"], manifest.rules.get("combat", ""))
 
+    def get_item_insertion(self, system_id: str) -> dict:
+        pair = self._record_and_manifest(system_id)
+        if pair is None:
+            return {}
+        record, manifest = pair
+        return self._read_json(record["package_dir"], manifest.rules.get("itemInsertion", ""))
+
     def get_chat_card_mappings(self, system_id: str) -> dict:
         pair = self._record_and_manifest(system_id)
         if pair is None:

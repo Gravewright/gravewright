@@ -197,13 +197,20 @@ class AssetLibraryService:
             hash=digest,
             folder_id=folder_id,
         )
-        storage_path = self.storage.write_image(
-            campaign_id=campaign_id,
-            asset_id=asset["id"],
-            filename=safe_filename,
-            data=data,
-        )
-        self.assets.update_storage_path(asset_id=asset["id"], storage_path=storage_path)
+        storage_path = ""
+        try:
+            storage_path = self.storage.write_image(
+                campaign_id=campaign_id, asset_id=asset["id"], filename=safe_filename, data=data,
+            )
+            self.assets.update_storage_path(asset_id=asset["id"], storage_path=storage_path)
+        except Exception:
+            self.assets.delete(asset["id"])
+            if storage_path:
+                try:
+                    self.storage.delete(storage_path)
+                except (OSError, ValueError):
+                    pass
+            raise
         asset = {**asset, "storage_path": storage_path}
         return AssetResult(success=True, payload={"asset": asset, "decoded": decoded})
 
@@ -211,10 +218,11 @@ class AssetLibraryService:
         return self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id)
 
     def _present_asset(self, asset: dict) -> dict:
-
-
         kind = "pdf" if asset.get("content_type") == PDF_CONTENT_TYPE else "image"
-        return {**asset, "src": asset_src(asset["id"]), "kind": kind}
+        return {
+            key: asset.get(key)
+            for key in ("id", "campaign_id", "owner_user_id", "folder_id", "filename", "content_type", "byte_size", "width", "height", "created_at")
+        } | {"src": asset_src(asset["id"]), "kind": kind}
 
     def _is_pdf(self, *, filename: str, content_type: str) -> bool:
         return (

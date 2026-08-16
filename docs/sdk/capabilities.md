@@ -14,12 +14,15 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | Capability | Purpose |
 |---|---|
 | `actors.data.write` | Patch validated actor sheet data the current user may edit. |
+| `actors.items.read` | Discover ruleset-declared actor-local item-copy slots and snapshots. |
+| `actors.items.write` | Insert and remove validated actor-local item snapshots through declared slots. |
 | `actors.read` | Read visible actor snapshots. |
 | `actors.register` | Register actor type behavior/data through package metadata. |
 | `actors.write` | Create, update, and delete actors through semantic commands. |
 | `assets.audio` | Provide audio assets. |
 | `assets.icons` | Provide icon assets. |
 | `assets.images` | Provide image assets. |
+| `assets.import` | Ingest a user-selected file into a validated, campaign-owned asset without filesystem access. |
 | `assets.library` | Read the campaign asset library: list uploaded files (images and PDFs) the member is allowed to see. |
 | `assets.maps` | Provide map assets. |
 | `assets.pack` | Provide asset packs. |
@@ -27,6 +30,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `assets.styles` | Load package CSS. |
 | `assets.ui` | Use UI methods such as toasts and modals. |
 | `assets.video` | Provide video assets. |
+| `automation.schedule` | Schedule exact durable-safe registered actions under execution-time authority. |
 | `bus.provide` | Provide an SDK interop bus method other packages can request. |
 | `bus.publish` | Publish SDK interop bus events. |
 | `bus.request` | Request a value from an SDK interop bus provider. |
@@ -53,25 +57,32 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `journals.read` | Read journals and handouts visible to the current user. |
 | `journals.write` | Create, update, and delete validated journals. |
 | `locales` | Provide locales and use `sdk.i18n.t`. |
+| `packages.inspect` | Discover public metadata and interop declarations for packages active in the current campaign. |
 | `pdf.annotations.read` | Read annotations for visible PDF documents. |
 | `pdf.annotations.write` | Create, update, and delete validated annotations for visible PDF documents. |
+| `pdf.presentation` | Coordinate versioned PDF presentation without granting document access. |
 | `pdf.read` | Read PDF documents and metadata visible to the current user. |
 | `pdf.viewer` | Open and navigate PDF documents in the host viewer. |
 | `permissions.inspect` | Inspect the current user's effective permission decisions. |
 | `rolls.intent` | Request server-authoritative declarative roll/action intents. |
-| `rules.actions` | Execute bounded declarative action graphs authoritatively. |
+| `rules.actions` | Discover and execute versioned package-declared semantic actions authoritatively. |
 | `rules.declarative` | Provide declarative rules documents. |
 | `rules.extends` | Extend rule behavior. |
 | `scene.effects.read` | Read semantic scene effects. |
 | `scene.effects.write` | Manage semantic scene effects. |
 | `scene.fog.read` | Read logical fog state without renderer internals. |
 | `scene.fog.write` | Manage fog through bounded authoritative operations. |
-| `scene.geometry.read` | Read logical walls, doors, and lights. |
-| `scene.geometry.write` | Manage logical walls, doors, and lights. |
+| `scene.geometry.read` | Read audience-filtered walls, doors, semantic channels, and lights without renderer internals. |
+| `scene.geometry.write` | Manage logical walls, doors, closed semantic channels, discovery presentation, and lights. |
 | `scene.images.read` | Read permission-filtered scene-image placements. |
 | `scene.images.write` | Place, update, and remove authorized scene images. |
+| `scene.measurements.shared` | Share bounded expiring measurements with an explicit audience. |
 | `scene.overlays` | Provide scene overlays. |
 | `scene.read` | Read visible scene snapshots. |
+| `scene.shaders.read` | Discover semantic shader presets and read applied instances without renderer internals. |
+| `scene.shaders.write` | Apply and manage validated semantic shader presets without raw GLSL authority. |
+| `scene.templates.read` | Read permission-filtered persistent gameplay templates in world space. |
+| `scene.templates.write` | Create, update, and delete bounded persistent gameplay templates. |
 | `scene.tools` | Use scene/tool methods such as `sdk.scene.*` and `sdk.tools.*`. |
 | `settings` | Define and use package settings. |
 | `sheets.components` | Provide sheet components. |
@@ -86,6 +97,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `tokens.mappings` | Provide token mappings. |
 | `tokens.move` | Move controlled tokens authoritatively. |
 | `tokens.read` | Read visible token snapshots. |
+| `tokens.targets` | Manage the current user's private, scene-scoped target set. |
 | `ui.applications` | Render package applications incrementally through named UI parts. |
 | `ui.slots` | Mount package-owned UI in documented host slots. |
 <!-- END GENERATED -->
@@ -114,16 +126,31 @@ There is no backend plugin execution in SDK v1. Packages are declarative plus br
 | SDK method | Required capability |
 |---|---|
 | `sdk.actors.create` | `actors.write` |
+| `sdk.actors.data` | `actors.read` |
 | `sdk.actors.delete` | `actors.write` |
 | `sdk.actors.get` | `actors.read` |
+| `sdk.actors.items.insertCopy` | `actors.items.write` |
+| `sdk.actors.items.listCopies` | `actors.items.read` |
+| `sdk.actors.items.removeCopy` | `actors.items.write` |
+| `sdk.actors.items.slots` | `actors.items.read` |
 | `sdk.actors.list` | `actors.read` |
 | `sdk.actors.patchData` | `actors.data.write` |
 | `sdk.actors.update` | `actors.write` |
+| `sdk.assets.cancelImport` | `assets.import` |
+| `sdk.assets.ingest` | `assets.import` |
 | `sdk.assets.list` | `assets.library` |
+| `sdk.automation.audit` | `automation.schedule` |
+| `sdk.automation.cancel` | `automation.schedule` |
+| `sdk.automation.get` | `automation.schedule` |
+| `sdk.automation.list` | `automation.schedule` |
+| `sdk.automation.schedule` | `automation.schedule` |
 | `sdk.bus.provide` | `bus.provide` |
 | `sdk.bus.publish` | `bus.publish` |
 | `sdk.bus.request` | `bus.request` |
 | `sdk.bus.subscribe` | `bus.subscribe` |
+| `sdk.cards.definitions.get` | `cards.read` |
+| `sdk.cards.definitions.instantiate` | `cards.manage` |
+| `sdk.cards.definitions.list` | `cards.read` |
 | `sdk.cards.discard` | `cards.manage` |
 | `sdk.cards.discardPlacement` | `cards.manage` |
 | `sdk.cards.draw` | `cards.manage` |
@@ -181,26 +208,37 @@ There is no backend plugin execution in SDK v1. Packages are declarative plus br
 | `sdk.journals.get` | `journals.read` |
 | `sdk.journals.list` | `journals.read` |
 | `sdk.journals.update` | `journals.write` |
+| `sdk.packages.get` | `packages.inspect` |
+| `sdk.packages.has` | `packages.inspect` |
 | `sdk.pdf.annotations.create` | `pdf.annotations.write` |
 | `sdk.pdf.annotations.delete` | `pdf.annotations.write` |
 | `sdk.pdf.annotations.list` | `pdf.annotations.read` |
 | `sdk.pdf.annotations.update` | `pdf.annotations.write` |
 | `sdk.pdf.get` | `pdf.read` |
 | `sdk.pdf.metadata` | `pdf.read` |
+| `sdk.pdf.presentation.current` | `pdf.presentation` |
+| `sdk.pdf.presentation.end` | `pdf.presentation` |
+| `sdk.pdf.presentation.start` | `pdf.presentation` |
+| `sdk.pdf.presentation.update` | `pdf.presentation` |
 | `sdk.pdf.viewer.currentPage` | `pdf.viewer` |
 | `sdk.pdf.viewer.goToPage` | `pdf.viewer` |
 | `sdk.pdf.viewer.open` | `pdf.viewer` |
 | `sdk.pdf.viewer.search` | `pdf.viewer` |
 | `sdk.permissions.can` | `permissions.inspect` |
+| `sdk.permissions.check` | `permissions.inspect` |
 | `sdk.rolls.intent` | `rolls.intent` |
 | `sdk.rules.actions.execute` | `rules.actions` |
-| `sdk.rules.actions.validate` | `rules.actions` |
+| `sdk.rules.actions.executeReference` | `rules.actions` |
+| `sdk.rules.actions.get` | `rules.actions` |
+| `sdk.rules.actions.list` | `rules.actions` |
+| `sdk.rules.actions.resolve` | `rules.actions` |
 | `sdk.scene.active` | `scene.read` |
 | `sdk.scene.activeCameraForScene` | `scene.tools` |
 | `sdk.scene.activeCanvas` | `scene.tools` |
 | `sdk.scene.effects.create` | `scene.effects.write` |
 | `sdk.scene.effects.delete` | `scene.effects.write` |
 | `sdk.scene.effects.list` | `scene.effects.read` |
+| `sdk.scene.effects.presets` | `scene.effects.read` |
 | `sdk.scene.effects.update` | `scene.effects.write` |
 | `sdk.scene.fog.disable` | `scene.fog.write` |
 | `sdk.scene.fog.enable` | `scene.fog.write` |
@@ -226,6 +264,22 @@ There is no backend plugin execution in SDK v1. Packages are declarative plus br
 | `sdk.scene.images.place` | `scene.images.write` |
 | `sdk.scene.images.update` | `scene.images.write` |
 | `sdk.scene.list` | `scene.read` |
+| `sdk.scene.measurements.cancel` | `scene.measurements.shared` |
+| `sdk.scene.measurements.listShared` | `scene.measurements.shared` |
+| `sdk.scene.measurements.measure` | `scene.tools` |
+| `sdk.scene.measurements.share` | `scene.measurements.shared` |
+| `sdk.scene.shaders.apply` | `scene.shaders.write` |
+| `sdk.scene.shaders.enable` | `scene.shaders.write` |
+| `sdk.scene.shaders.getPreset` | `scene.shaders.read` |
+| `sdk.scene.shaders.list` | `scene.shaders.read` |
+| `sdk.scene.shaders.presets` | `scene.shaders.read` |
+| `sdk.scene.shaders.remove` | `scene.shaders.write` |
+| `sdk.scene.shaders.update` | `scene.shaders.write` |
+| `sdk.scene.templates.create` | `scene.templates.write` |
+| `sdk.scene.templates.delete` | `scene.templates.write` |
+| `sdk.scene.templates.get` | `scene.templates.read` |
+| `sdk.scene.templates.list` | `scene.templates.read` |
+| `sdk.scene.templates.update` | `scene.templates.write` |
 | `sdk.settings.all` | `settings` |
 | `sdk.settings.definitions` | `settings` |
 | `sdk.settings.get` | `settings` |
@@ -244,8 +298,12 @@ There is no backend plugin execution in SDK v1. Packages are declarative plus br
 | `sdk.tokens.get` | `tokens.read` |
 | `sdk.tokens.list` | `tokens.read` |
 | `sdk.tokens.move` | `tokens.move` |
+| `sdk.tokens.targets.clear` | `tokens.targets` |
+| `sdk.tokens.targets.list` | `tokens.targets` |
+| `sdk.tokens.targets.set` | `tokens.targets` |
 | `sdk.tokens.update` | `tokens.manage` |
 | `sdk.tools.activeTool` | `scene.tools` |
+| `sdk.tools.register` | `scene.tools` |
 | `sdk.ui.applications.close` | `ui.applications` |
 | `sdk.ui.applications.register` | `ui.applications` |
 | `sdk.ui.applications.render` | `ui.applications` |

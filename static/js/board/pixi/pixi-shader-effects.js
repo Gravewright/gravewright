@@ -294,8 +294,15 @@ void main() {
         }
     }
 
+    function semanticPresetSource(value) {
+        const match = /^gravewright-preset:\/\/([^/]+)\/v(\d+)$/.exec(String(value || ""));
+        if (!match || match[2] !== "1") return String(value || "");
+        const preset = (window.GravewrightShaderPresets || []).find(candidate => candidate.id === match[1]);
+        return String(preset?.source || "");
+    }
+
     function programFor(gl, shader) {
-        const source = String(shader.source || "");
+        const source = semanticPresetSource(shader.source);
 
 
         const key = `${shader.id}\u0000${source}`;

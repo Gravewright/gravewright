@@ -819,6 +819,11 @@
             || event.target.closest("[data-map-viewport]")?.querySelector("[data-map-canvas]");
         if (!canvas) return;
 
+        if (window.GravewrightTools?.dispatchPackagePointer?.("down", canvas, event)) {
+            event.preventDefault();
+            return;
+        }
+
 
         if (mapAddToScene.isActive() && event.button === 0) {
             updateAddToScenePreview(event.clientX, event.clientY);
@@ -1058,6 +1063,10 @@
     });
 
     document.addEventListener("pointermove", (event) => {
+        const packageCanvas = event.target.closest?.("[data-map-canvas]")
+            || event.target.closest?.("[data-map-viewport]")?.querySelector("[data-map-canvas]")
+            || window.GravewrightMap?.activeCanvas?.();
+        if (window.GravewrightTools?.dispatchPackagePointer?.("move", packageCanvas, event)) return;
         updatePendingBoardPing(event);
 
         if (mapAddToScene.isActive()) {
@@ -1084,6 +1093,8 @@
     });
 
     document.addEventListener("pointerup", (e) => {
+        const packageCanvas = window.GravewrightMap?.activeCanvas?.();
+        if (window.GravewrightTools?.dispatchPackagePointer?.("up", packageCanvas, e)) return;
         cancelPendingBoardPing(e.pointerId);
         stopFreehand(e);
         stopMeasure(e);
@@ -1092,6 +1103,8 @@
         mapMarquee.stop(e);
     });
     document.addEventListener("pointercancel", (e) => {
+        const packageCanvas = window.GravewrightMap?.activeCanvas?.();
+        if (window.GravewrightTools?.dispatchPackagePointer?.("cancel", packageCanvas, e)) return;
         cancelPendingBoardPing(e.pointerId);
         stopFreehand(e);
         stopMeasure(e);

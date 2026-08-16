@@ -34,6 +34,10 @@ htmlcov/
 /data/*
 !/data/packages/
 /data/packages/*
+!/data/packages/addons/
+/data/packages/addons/*
+!/data/packages/addons/sdk-lab-*/
+!/data/packages/addons/sdk-lab-*/**
 !/data/packages/rulesets/
 /data/packages/rulesets/*
 !/data/packages/rulesets/gravewright-pdf-system/

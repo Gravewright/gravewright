@@ -2,8 +2,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from math import isfinite
+from typing import Any
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.scene_shader_repository import SceneShaderRepository
+from app.engine.scenes.shader_preset_registry import get_preset, implementation_reference, public_registry, validate_parameters
 
 BLEND_MODES = frozenset({"normal", "add", "multiply", "screen"})
 from app.persistence.repositories.scene_repository import SceneRepository
@@ -78,6 +80,87 @@ class SceneShaderService:
         _, error = self._scene_for(campaign_id, scene_id, user_id, gm_only=False)
         if error: return ShaderResult(False, error_key=error)
         return ShaderResult(True, {"campaign_id": campaign_id, "scene_id": scene_id, "shaders": self.shaders.list_for_scene(scene_id)})
+
+    def presets(self) -> ShaderResult:
+        return ShaderResult(True, {"presets": public_registry(), "schema_version": 1})
+
+    def preset(self, preset_id: str) -> ShaderResult:
+        value = get_preset(preset_id)
+        return ShaderResult(True, {"preset": value}) if value else ShaderResult(False, error_key="sdk.shaders.preset_not_found")
+
+    def semantic_state(self, *, campaign_id: str, scene_id: str, user_id: str) -> ShaderResult:
+        result = self.state(campaign_id=campaign_id, scene_id=scene_id, user_id=user_id)
+        if not result.success:
+            return result
+        return ShaderResult(True, {"instances": [self._semantic(row) for row in result.payload["shaders"] if row.get("preset_id")]})
+
+    def apply_preset(self, *, campaign_id: str, scene_id: str, user_id: str, preset_id: str, schema_version: int, parameters: Any) -> ShaderResult:
+        preset = get_preset(preset_id)
+        if preset is None:
+            return ShaderResult(False, error_key="sdk.shaders.preset_not_found")
+        if schema_version != preset["schemaVersion"]:
+            return ShaderResult(False, error_key="sdk.shaders.schema_version_invalid")
+        normalized, error = validate_parameters(parameters, partial=False)
+        if normalized is None:
+            return ShaderResult(False, error_key=error)
+        scene, denied = self._scene_for(campaign_id, scene_id, user_id, gm_only=True)
+        if denied:
+            return ShaderResult(False, error_key=denied)
+        values = self._storage_values(normalized)
+        cleaned, problem = self._clean(values, scene)
+        if cleaned is None:
+            return ShaderResult(False, error_key=problem)
+        row = self.shaders.create(
+            campaign_id=campaign_id, scene_id=scene_id, created_by_user_id=user_id,
+            preset_id=preset_id, preset_schema_version=schema_version,
+            source=implementation_reference(preset_id), name=preset["labelKey"], version=1,
+            **cleaned,
+        )
+        return ShaderResult(True, {"instance": self._semantic(row)})
+
+    def update_preset(self, *, campaign_id: str, shader_id: str, user_id: str, parameters: Any, expected_version: int | None) -> ShaderResult:
+        if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm":
+            return ShaderResult(False, error_key="lighting.errors.denied")
+        current = self.shaders.get(shader_id)
+        if not current or current.get("campaign_id") != campaign_id or not current.get("preset_id"):
+            return ShaderResult(False, error_key="sdk.shaders.instance_not_found")
+        normalized, error = validate_parameters(parameters, partial=True)
+        if normalized is None or not normalized:
+            return ShaderResult(False, error_key=error or "sdk.shaders.parameters_invalid")
+        cleaned, problem = self._clean(self._storage_values(normalized), self.scenes.get_by_id(current["scene_id"]))
+        if cleaned is None:
+            return ShaderResult(False, error_key=problem)
+        updated = self.shaders.update(shader_id, expected_version=expected_version, **cleaned)
+        if updated is None:
+            return ShaderResult(False, error_key="sdk.shaders.stale_version" if self.shaders.get(shader_id) else "sdk.shaders.instance_not_found")
+        return ShaderResult(True, {"instance": self._semantic(updated)})
+
+    def remove_preset(self, *, campaign_id: str, shader_id: str, user_id: str) -> ShaderResult:
+        if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm":
+            return ShaderResult(False, error_key="lighting.errors.denied")
+        current = self.shaders.get(shader_id)
+        if not current or current.get("campaign_id") != campaign_id or not current.get("preset_id"):
+            return ShaderResult(False, error_key="sdk.shaders.instance_not_found")
+        self.shaders.delete(shader_id)
+        return ShaderResult(True, {"instance_id": shader_id, "scene_id": current["scene_id"]})
+
+    @staticmethod
+    def _storage_values(parameters: dict[str, Any]) -> dict[str, Any]:
+        return {("blend_mode" if key == "blendMode" else key): value for key, value in parameters.items()}
+
+    @staticmethod
+    def _semantic(row: dict) -> dict:
+        return {
+            "id": row["id"], "sceneId": row["scene_id"], "presetId": row["preset_id"],
+            "schemaVersion": int(row.get("preset_schema_version") or 1),
+            "version": int(row.get("version") or 1),
+            "parameters": {
+                "x": row["x"], "y": row["y"], "radius": row["radius"], "rotation": row["rotation"],
+                "opacity": row["opacity"], "intensity": row["intensity"], "scale": row["scale"],
+                "speed": row["speed"], "color": row["color"], "blendMode": row["blend_mode"],
+                "enabled": bool(row["enabled"]),
+            },
+        }
 
     def _clean(self, values: dict, scene: dict | None = None) -> tuple[dict | None, str | None]:
         cleaned: dict = {}

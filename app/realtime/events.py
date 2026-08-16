@@ -54,8 +54,14 @@ class TransportEvent(StrEnum):
     TOKENS_CONDITIONS_UPDATED = "tokens.conditions.updated"
 
     ROLL_CREATED = "roll.created"
+    RULES_ACTION_COMPLETED = "rules.action.completed"
 
     CARDS_STATE_UPDATED = "cards.state.updated"
+    PDF_ANNOTATIONS_CHANGED = "pdf.annotations.changed"
+    PDF_PRESENTATION_CHANGED = "pdf.presentation.changed"
+    TOKEN_TARGETS_CHANGED = "token.targets.changed"
+    SCENE_MEASUREMENTS_CHANGED = "scene.measurements.changed"
+    AUTOMATION_JOB_CHANGED = "automation.job.changed"
 
     ASSETS_LIBRARY_UPDATED = "assets.library.updated"
     SCENE_IMAGES_UPDATED = "scene.images.updated"
@@ -63,6 +69,7 @@ class TransportEvent(StrEnum):
     SCENE_LIGHTS_UPDATED = "scene.lights.updated"
     SCENE_PARTICLES_UPDATED = "scene.particles.updated"
     SCENE_SHADERS_UPDATED = "scene.shaders.updated"
+    SCENE_SHADER_PRESETS_UPDATED = "scene.shader_presets.updated"
 
     SCENE_UPLOAD_PROGRESS = "scene.upload.progress"
     SCENE_CREATED = "scene.created"

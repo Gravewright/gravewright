@@ -149,9 +149,14 @@ def initialize_database() -> None:
 
 def _ensure_initialized() -> None:
     global _initialized
-    if not _initialized:
-        initialize_database()
-        _initialized = True
+    if _initialized:
+        return
+    # Session persistence and request handlers may be the first database users
+    # on different threads. Metadata bootstrap/checks must have one winner.
+    with _SQLITE_WRITE_LOCK:
+        if not _initialized:
+            initialize_database()
+            _initialized = True
 
 
 @contextmanager

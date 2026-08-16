@@ -1,5 +1,10 @@
 # Gravewright SDK
 
+Start with the [SDK 1 quick start](quick-start.md). The final generated contract
+is available as [JSON](_data/gravewright-sdk-1.json),
+[TypeScript declarations](gravewright-sdk-1.d.ts), an exact
+[method reference](method-reference.md), and [DTO schemas](dto-reference.md).
+
 The Gravewright SDK is the only supported extension model for Gravewright.
 
 Every installable extension is a package. A package is a directory under `data/packages/{kind_plural}/{id}/` containing a `manifest.json` plus the files declared by that manifest. Package behavior is defined through a single SDK v1 contract.

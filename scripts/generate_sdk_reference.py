@@ -164,7 +164,8 @@ def _process_language(lang: str, sources: dict, *, check: bool) -> list[str]:
         if check:
             drift.append(str(rel))
         else:
-            target.write_text(updated, encoding="utf-8")
+            with target.open("w", encoding="utf-8", newline="\n") as handle:
+                handle.write(updated)
             print(f"updated {rel}")
 
     # Soft anti-drift: every gated method must be documented in reference.md.
