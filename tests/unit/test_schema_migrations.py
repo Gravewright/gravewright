@@ -85,3 +85,23 @@ def test_additive_migrations_are_reentrant():
         "migracoes aditivas sem guarda de reentrancia (ver _has_table em "
         f"0009_cards_system): {missing}"
     )
+
+
+def test_alembic_revision_ids_fit_the_version_table_limit():
+    versions = Path(__file__).resolve().parents[2] / "migrations" / "versions"
+    oversized = []
+    for path in sorted(versions.glob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in tree.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            if not any(
+                isinstance(target, ast.Name) and target.id == "revision"
+                for target in node.targets
+            ):
+                continue
+            revision = ast.literal_eval(node.value)
+            if isinstance(revision, str) and len(revision) > 32:
+                oversized.append((path.name, revision))
+
+    assert not oversized, f"Alembic revision IDs exceed varchar(32): {oversized}"
