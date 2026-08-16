@@ -13,8 +13,10 @@ generic ``*_entity`` methods, kept so existing actor callers stay unchanged.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
+from contextlib import contextmanager
 from datetime import datetime, timezone
 
 from app.engine.system_storage.atomic_write import atomic_write_text
@@ -34,6 +36,45 @@ def _safe_segment(segment: str) -> bool:
 
 
 class ScopedJsonStorage:
+    @contextmanager
+    def lock_entity(self, *, kind: str, system_id: str, campaign_id: str, entity_id: str):
+        """Serialize one envelope across threads and worker processes.
+
+        The lock file is coordination only; the JSON envelope remains the
+        authoritative state and is still committed by one atomic replacement.
+        OS locks are released automatically if a worker crashes.
+        """
+        path = entity_data_path(
+            kind=kind, system_id=system_id, campaign_id=campaign_id, entity_id=entity_id
+        )
+        if path is None:
+            raise ValueError(f"unsafe storage path for {kind} data")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lock_path = path.with_suffix(path.suffix + ".lock")
+        with lock_path.open("a+b") as handle:
+            if os.name == "nt":
+                import msvcrt
+
+                handle.seek(0)
+                if handle.read(1) == b"":
+                    handle.write(b"0")
+                    handle.flush()
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
+                try:
+                    yield
+                finally:
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+                try:
+                    yield
+                finally:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
     def read_entity(
         self, *, kind: str, system_id: str, campaign_id: str, entity_id: str
     ) -> dict | None:
@@ -57,6 +98,7 @@ class ScopedJsonStorage:
         entity_id: str,
         version: int,
         data: dict,
+        action_receipts: list[dict] | None = None,
     ) -> dict:
         path = entity_data_path(
             kind=kind, system_id=system_id, campaign_id=campaign_id, entity_id=entity_id
@@ -70,6 +112,8 @@ class ScopedJsonStorage:
             "data": data,
             "updated_at": _now_iso(),
         }
+        if action_receipts:
+            envelope["_core_action_receipts"] = action_receipts
         atomic_write_text(path, json.dumps(envelope, ensure_ascii=False, separators=(",", ":")))
         return envelope
 
@@ -108,7 +152,8 @@ class ScopedJsonStorage:
         )
 
     def write_actor(
-        self, *, system_id: str, campaign_id: str, actor_id: str, version: int, data: dict
+        self, *, system_id: str, campaign_id: str, actor_id: str, version: int, data: dict,
+        action_receipts: list[dict] | None = None,
     ) -> dict:
         return self.write_entity(
             kind="actor",
@@ -117,6 +162,7 @@ class ScopedJsonStorage:
             entity_id=actor_id,
             version=version,
             data=data,
+            action_receipts=action_receipts,
         )
 
     def delete_actor(self, *, system_id: str, campaign_id: str, actor_id: str) -> None:

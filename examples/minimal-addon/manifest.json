@@ -1,0 +1,1 @@
+{"schemaVersion":1,"sdkVersion":"1","kind":"addon","id":"minimal-addon","name":"Minimal Addon","version":"1.0.0","compatibility":{"minimum":"1","verified":"1"},"capabilities":["assets.scripts","events.subscribe","assets.ui"],"activation":{"scope":"campaign","mode":"multiple"},"entrypoints":{"game":{"scripts":["main.js"]}},"provides":{}}

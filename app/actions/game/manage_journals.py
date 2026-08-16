@@ -25,6 +25,8 @@ from app.realtime.resource_events import (
     announce_resource_tree_change,
 )
 from app.realtime.transport import RealtimeTransport
+from app.persistence.repositories.campaign_repository import CampaignRepository
+from app.persistence.repositories.journal_repository import JournalRepository
 
 
 def _wants_json(request: Any) -> bool:
@@ -126,7 +128,13 @@ def _journal_redirect(campaign_id: str) -> Redirect:
     return Redirect(path=f"/game?{query}")
 
 
-async def _emit(event: TransportEvent, result: JournalResult, *, user_id: str) -> None:
+async def _emit(
+    event: TransportEvent,
+    result: JournalResult,
+    *,
+    user_id: str,
+    journal_row: dict[str, Any] | None = None,
+) -> None:
     if not result.success or not result.campaign_id:
         return
     payload: dict[str, Any] = {
@@ -139,11 +147,17 @@ async def _emit(event: TransportEvent, result: JournalResult, *, user_id: str) -
         payload["version"] = result.version
     if result.changed_paths:
         payload["changed_paths"] = result.changed_paths
-    await RealtimeTransport().to_room(
-        room_id=result.campaign_id,
-        event=event,
-        payload=payload,
-    )
+    row = journal_row or JournalRepository().get_by_id(str(result.journal_id or ""))
+    if row is None:
+        return
+    service = JournalService()
+    audience = []
+    campaigns = CampaignRepository()
+    for member in campaigns.list_members(campaign_id=result.campaign_id):
+        campaign = campaigns.get_for_user(campaign_id=result.campaign_id, user_id=member["user_id"])
+        if campaign and service.can_view_journal(journal=dict(row), campaign=dict(campaign), user_id=member["user_id"]):
+            audience.append(member["user_id"])
+    await RealtimeTransport().to_players(player_ids=audience, event=event, payload=payload)
 
 
 async def _authenticated_form(
@@ -256,11 +270,13 @@ async def delete_journal(
         return early_response
 
     assert user is not None
+    journal_id = _str(form, "journal_id")
+    event_row = JournalRepository().get_by_id(journal_id)
     result = journal_service.delete_journal(
-        journal_id=_str(form, "journal_id"),
+        journal_id=journal_id,
         requester_user_id=user["id"],
     )
-    await _emit(TransportEvent.JOURNAL_DELETED, result, user_id=user["id"])
+    await _emit(TransportEvent.JOURNAL_DELETED, result, user_id=user["id"], journal_row=event_row)
 
     if _wants_json(request):
         if result.success:

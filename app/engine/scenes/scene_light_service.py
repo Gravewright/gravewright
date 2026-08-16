@@ -48,7 +48,7 @@ class SceneLightService:
     def _clean(self, values: dict, scene: dict) -> dict | None:
         """Normaliza os campos editaveis; devolve None se algo for insalvavel."""
         cleaned: dict = {}
-        for key in ("x", "y"):
+        for key in ("x", "y", "elevation"):
             if key not in values: continue
             try: number = float(values[key])
             except (TypeError, ValueError): return None

@@ -12,6 +12,8 @@ NODE_TOLERANCE = 1.0
 MIN_SEGMENT = 8.0
 
 DOOR_STATES = ("closed", "open", "locked")
+BEHAVIORS = {"block", "pass"}
+PRESENTATIONS = {"normal", "window", "bars", "invisible", "secret"}
 
 
 
@@ -31,16 +33,20 @@ class SceneWallService:
             return WallResult(False, error_key="lighting.errors.denied")
         scene = self.scenes.get_by_id(scene_id)
         if not scene or scene["campaign_id"] != campaign_id: return WallResult(False, error_key="lighting.errors.not_found")
-        return WallResult(True, {"campaign_id": campaign_id, "scene_id": scene_id, "walls": self.walls.list_for_scene(scene_id)})
-    def create(self, *, campaign_id: str, scene_id: str, user_id: str, kind: str, x1: float, y1: float, x2: float, y2: float) -> WallResult:
+        role = self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id)
+        rows = [self._project(row, role=role) for row in self.walls.list_for_scene(scene_id)]
+        return WallResult(True, {"campaign_id": campaign_id, "scene_id": scene_id, "walls": [row for row in rows if row is not None]})
+    def create(self, *, campaign_id: str, scene_id: str, user_id: str, kind: str, x1: float, y1: float, x2: float, y2: float, behavior: dict | None = None, presentation: str = "normal", vertical: dict | None = None) -> WallResult:
         if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm": return WallResult(False, error_key="lighting.errors.denied")
         scene = self.scenes.get_by_id(scene_id)
         if not scene or scene["campaign_id"] != campaign_id: return WallResult(False, error_key="lighting.errors.not_found")
         points = (x1,y1,x2,y2)
-        if kind not in {"wall","door"} or not all(isfinite(v) for v in points) or hypot(x2-x1,y2-y1) < 2: return WallResult(False, error_key="lighting.errors.invalid")
+        channels = self._channels(behavior)
+        bounds = self._vertical(vertical)
+        if kind not in {"wall","door"} or channels is None or bounds is None or presentation not in PRESENTATIONS or not all(isfinite(v) for v in points) or hypot(x2-x1,y2-y1) < 2: return WallResult(False, error_key="lighting.errors.invalid")
         limit = max(float(scene["width"]), float(scene["height"])) * 2
         if any(abs(v) > limit for v in points): return WallResult(False, error_key="lighting.errors.invalid")
-        wall = self.walls.create(campaign_id=campaign_id, scene_id=scene_id, created_by_user_id=user_id, kind=kind, x1=x1,y1=y1,x2=x2,y2=y2)
+        wall = self.walls.create(campaign_id=campaign_id, scene_id=scene_id, created_by_user_id=user_id, kind=kind, x1=x1,y1=y1,x2=x2,y2=y2, presentation=presentation, **channels, **bounds)
         return WallResult(True, {"wall": wall})
     def update(self, *, campaign_id: str, wall_id: str, user_id: str, **values) -> WallResult:
         if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm":
@@ -49,17 +55,67 @@ class SceneWallService:
         if not wall or wall["campaign_id"] != campaign_id:
             return WallResult(False, error_key="lighting.errors.not_found")
         allowed = {key: values[key] for key in ("x1", "y1", "x2", "y2") if key in values}
+        behavior = values.get("behavior")
+        if behavior is not None:
+            channels = self._channels(behavior)
+            if channels is None: return WallResult(False, error_key="lighting.errors.invalid")
+            allowed.update(channels)
+        if "presentation" in values:
+            if values["presentation"] not in PRESENTATIONS: return WallResult(False, error_key="lighting.errors.invalid")
+            allowed["presentation"] = values["presentation"]
+        if "discovered" in values:
+            if not isinstance(values["discovered"], bool): return WallResult(False, error_key="lighting.errors.invalid")
+            allowed["discovered"] = int(values["discovered"])
+        if "vertical" in values:
+            bounds = self._vertical(values["vertical"])
+            if bounds is None: return WallResult(False, error_key="lighting.errors.invalid")
+            allowed.update(bounds)
         try:
-            allowed = {key: float(value) for key, value in allowed.items()}
+            allowed = {key: float(value) if key in {"x1", "y1", "x2", "y2"} else value for key, value in allowed.items()}
         except (TypeError, ValueError):
             return WallResult(False, error_key="lighting.errors.invalid")
         merged = {**wall, **allowed}
         scene = self.scenes.get_by_id(wall["scene_id"])
         limit = max(float(scene["width"]), float(scene["height"])) * 2 if scene else 0
-        if (not allowed or not all(isfinite(value) and abs(value) <= limit for value in allowed.values())
+        coordinates = [value for key, value in allowed.items() if key in {"x1", "y1", "x2", "y2"}]
+        if (not allowed or not all(isfinite(value) and abs(value) <= limit for value in coordinates)
                 or hypot(merged["x2"] - merged["x1"], merged["y2"] - merged["y1"]) < 2):
             return WallResult(False, error_key="lighting.errors.invalid")
         return WallResult(True, {"wall": self.walls.update(wall_id, **allowed)})
+
+    @staticmethod
+    def _channels(behavior: dict | None) -> dict | None:
+        raw = behavior if isinstance(behavior, dict) else {}
+        if any(key not in {"movement", "vision", "light"} for key in raw): return None
+        values = {name: str(raw.get(name, "block")).lower() for name in ("movement", "vision", "light")}
+        if any(value not in BEHAVIORS for value in values.values()): return None
+        return {f"{name}_behavior": value for name, value in values.items()}
+
+    @staticmethod
+    def _vertical(vertical: dict | None) -> dict | None:
+        if vertical is None:
+            return {"vertical_bottom": None, "vertical_top": None}
+        if not isinstance(vertical, dict) or any(key not in {"bottom", "top"} for key in vertical): return None
+        bottom, top = vertical.get("bottom"), vertical.get("top")
+        if bottom is None and top is None: return {"vertical_bottom": None, "vertical_top": None}
+        if bottom is None or top is None: return None
+        try: bottom, top = float(bottom), float(top)
+        except (TypeError, ValueError): return None
+        if not isfinite(bottom) or not isfinite(top) or abs(bottom)>1_000_000 or abs(top)>1_000_000 or bottom>=top: return None
+        return {"vertical_bottom": bottom, "vertical_top": top}
+
+    @staticmethod
+    def _project(wall: dict, *, role: str | None) -> dict | None:
+        row = dict(wall)
+        presentation = str(row.get("presentation") or "normal")
+        discovered = bool(row.get("discovered"))
+        if role != "gm" and presentation == "invisible": return None
+        if role != "gm" and presentation == "secret" and not discovered:
+            row["presentation"] = "normal"
+            row["kind"] = "wall"
+            row.pop("door_state", None)
+            row.pop("discovered", None)
+        return row
     def move_node(self, *, campaign_id: str, scene_id: str, user_id: str, from_x: float, from_y: float, to_x: float, to_y: float) -> WallResult:
         """Move todas as pontas soldadas em (from_x,from_y) para (to_x,to_y) de uma vez,
         para que paredes encadeadas nao se separem ao arrastar o vertice compartilhado."""
@@ -139,6 +195,11 @@ class SceneWallService:
             campaign_id=campaign_id, scene_id=wall["scene_id"], created_by_user_id=user_id,
             kind=wall["kind"], x1=px, y1=py, x2=x2, y2=y2,
             **({"door_state": wall["door_state"]} if wall["kind"] == "door" else {}),
+            movement_behavior=wall.get("movement_behavior", "block"),
+            vision_behavior=wall.get("vision_behavior", "block"),
+            light_behavior=wall.get("light_behavior", "block"),
+            presentation=wall.get("presentation", "normal"), discovered=wall.get("discovered", 0),
+            vertical_bottom=wall.get("vertical_bottom"), vertical_top=wall.get("vertical_top"),
         )
         return WallResult(True, {"scene_id": wall["scene_id"], "walls": self.walls.list_for_scene(wall["scene_id"])})
 
@@ -150,6 +211,8 @@ class SceneWallService:
         if door_state not in DOOR_STATES: return WallResult(False, error_key="lighting.errors.invalid")
         wall = self.walls.get(wall_id)
         if not wall or wall["campaign_id"] != campaign_id or wall["kind"] != "door": return WallResult(False, error_key="lighting.errors.not_found")
+        if role != "gm" and wall.get("presentation") == "secret" and not wall.get("discovered"):
+            return WallResult(False, error_key="lighting.errors.not_found")
         if role != "gm":
 
             if door_state == "locked" or wall["door_state"] == "locked":

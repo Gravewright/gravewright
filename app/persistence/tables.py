@@ -856,12 +856,23 @@ scene_walls = Table(
     Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
     Column("kind", _STR, nullable=False, server_default=text("'wall'")),
     Column("door_state", _STR, nullable=False, server_default=text("'closed'")),
+    Column("movement_behavior", _STR, nullable=False, server_default=text("'block'")),
+    Column("vision_behavior", _STR, nullable=False, server_default=text("'block'")),
+    Column("light_behavior", _STR, nullable=False, server_default=text("'block'")),
+    Column("presentation", _STR, nullable=False, server_default=text("'normal'")),
+    Column("discovered", Integer, nullable=False, server_default=text("0")),
     Column("x1", Float, nullable=False), Column("y1", Float, nullable=False),
     Column("x2", Float, nullable=False), Column("y2", Float, nullable=False),
+    Column("vertical_bottom", Float, nullable=True),
+    Column("vertical_top", Float, nullable=True),
     Column("created_by_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
     Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
     CheckConstraint("kind IN ('wall','door')", name="kind"),
     CheckConstraint("door_state IN ('closed','open','locked')", name="door_state"),
+    CheckConstraint("movement_behavior IN ('block','pass')", name="movement_behavior"),
+    CheckConstraint("vision_behavior IN ('block','pass')", name="vision_behavior"),
+    CheckConstraint("light_behavior IN ('block','pass')", name="light_behavior"),
+    CheckConstraint("presentation IN ('normal','window','bars','invisible','secret')", name="presentation"),
     Index("idx_scene_walls_scene", "scene_id", "created_at"),
 )
 
@@ -871,6 +882,7 @@ scene_lights = Table(
     Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
     Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
     Column("x", Float, nullable=False), Column("y", Float, nullable=False),
+    Column("elevation", Float, nullable=False, server_default=text("0.0")),
 
     Column("bright_radius", Float, nullable=False, server_default=text("2.0")),
     Column("dim_radius", Float, nullable=False, server_default=text("4.0")),
@@ -927,6 +939,9 @@ scene_shaders = Table(
     Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
     Column("name", _STR, nullable=False, server_default=text("''")),
     Column("source", Text, nullable=False, server_default=text("''")),
+    Column("preset_id", _STR, nullable=True),
+    Column("preset_schema_version", Integer, nullable=True),
+    Column("version", Integer, nullable=False, server_default=text("1")),
 
 
 
@@ -1050,6 +1065,7 @@ tokens = Table(
     Column("vision_enabled", Integer, nullable=False, server_default=text("1")),
 
     Column("vision_range", Float, nullable=False, server_default=text("0.0")),
+    Column("elevation", Float, nullable=False, server_default=text("0.0")),
     Column("version", Integer, nullable=False, server_default=text("1")),
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
@@ -1277,6 +1293,7 @@ scene_image_placements = Table(
     Column("z_index", Integer, nullable=False, server_default=text("0")),
     Column("natural_width", Integer, nullable=False, server_default=text("0")),
     Column("natural_height", Integer, nullable=False, server_default=text("0")),
+    Column("version", Integer, nullable=False, server_default=text("1")),
     Column("locked", Integer, nullable=False, server_default=text("0")),
     Column("gm_only", Integer, nullable=False, server_default=text("0")),
 
@@ -1341,6 +1358,40 @@ room_event_log = Table(
     Column("expires_at", Integer, nullable=False),
     Index("idx_room_event_log_room_seq", "room_id", "seq"),
     Index("idx_room_event_log_expires_at", "expires_at"),
+)
+
+# Internal coordination primitive. Rows are mandatory-TTL operational state,
+# never campaign content and never exposed as a generic package KV surface.
+core_ephemeral_states = Table(
+    "core_ephemeral_states", metadata,
+    Column("id", _ID, primary_key=True),
+    Column("namespace", _STR, nullable=False),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("scope_id", _ID, nullable=False),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("entry_key", _STR, nullable=False),
+    Column("audience_json", Text, nullable=False),
+    Column("payload_json", Text, nullable=False),
+    Column("version", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Column("expires_at", Integer, nullable=False),
+    UniqueConstraint("namespace", "campaign_id", "scope_id", "owner_user_id", "entry_key"),
+    Index("idx_core_ephemeral_scope", "namespace", "campaign_id", "scope_id", "expires_at"),
+    Index("idx_core_ephemeral_expiry", "expires_at"),
+)
+
+automation_jobs = Table(
+    "automation_jobs", metadata,
+    Column("id", _ID, primary_key=True), Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("package_id", _ID, nullable=False), Column("action_id", _STR, nullable=False), Column("action_version", Integer, nullable=False),
+    Column("input_json", Text, nullable=False), Column("principal_user_id", _ID, ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
+    Column("run_at_utc", Integer, nullable=False), Column("idempotency_key", _STR, nullable=False), Column("status", _STR, nullable=False),
+    Column("attempts", Integer, nullable=False, server_default=text("0")), Column("lease_owner", _STR, nullable=True), Column("lease_expires_at", Integer, nullable=True),
+    Column("error_code", _STR, nullable=True), Column("origin_execution_id", _ID, nullable=True), Column("origin_job_id", _ID, nullable=True),
+    Column("causal_depth", Integer, nullable=False, server_default=text("0")), Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    CheckConstraint("status IN ('pending','running','succeeded','failed','rejected','cancelled')", name="status"),
+    UniqueConstraint("campaign_id", "package_id", "idempotency_key"), Index("idx_automation_jobs_due", "status", "run_at_utc", "lease_expires_at"),
 )
 
 

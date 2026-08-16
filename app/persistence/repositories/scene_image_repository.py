@@ -92,6 +92,7 @@ class SceneImageRepository:
                     z_index=int(z_index),
                     natural_width=max(0, int(natural_width)),
                     natural_height=max(0, int(natural_height)),
+                    version=1,
                     locked=0,
                     gm_only=1 if layer == "gm" else 0,
                     layer=_normalize_layer(layer),
@@ -116,9 +117,16 @@ class SceneImageRepository:
         z_index: int | None = None,
         locked: bool | None = None,
         layer: str | None = None,
+        asset_id: str | None = None,
+        natural_width: int | None = None,
+        natural_height: int | None = None,
+        expected_version: int | None = None,
     ) -> dict | None:
         now = int(time.time())
-        values: dict[str, Any] = {"updated_at": now}
+        values: dict[str, Any] = {
+            "updated_at": now,
+            "version": scene_image_placements.c.version + 1,
+        }
         if x is not None:
             values["x"] = float(x)
         if y is not None:
@@ -135,14 +143,23 @@ class SceneImageRepository:
             normalized = _normalize_layer(layer)
             values["layer"] = normalized
             values["gm_only"] = 1 if normalized == "gm" else 0
+        if asset_id is not None:
+            values["asset_id"] = asset_id
+        if natural_width is not None:
+            values["natural_width"] = max(0, int(natural_width))
+        if natural_height is not None:
+            values["natural_height"] = max(0, int(natural_height))
         with engine_begin() as conn:
-            if self._get(conn, placement_id) is None:
-                return None
-            conn.execute(
-                update(scene_image_placements)
-                .where(scene_image_placements.c.id == placement_id)
-                .values(**values)
+            statement = update(scene_image_placements).where(
+                scene_image_placements.c.id == placement_id
             )
+            if expected_version is not None:
+                statement = statement.where(
+                    scene_image_placements.c.version == expected_version
+                )
+            result = conn.execute(statement.values(**values))
+            if not result.rowcount:
+                return None
             row = self._get(conn, placement_id)
         return _decode(row) if row is not None else None
 

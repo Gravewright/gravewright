@@ -90,7 +90,7 @@ def test_runtime_read_requires_active_declared_package_and_user_authority(db, tm
     assert denied.json()["error"]["code"] == "PERMISSION_DENIED"
 
 
-def test_action_graph_is_bounded_at_32_steps(db, tmp_path, monkeypatch):
+def test_raw_action_graph_endpoint_is_not_exposed(db, tmp_path, monkeypatch):
     from main import app
 
     gm = seed_user(name="GM")
@@ -102,8 +102,8 @@ def test_action_graph_is_bounded_at_32_steps(db, tmp_path, monkeypatch):
             "campaign_id": campaign, "package_id": "runtime-addon",
             "payload": {"actions": [{"type": "combat.advance"}] * 33},
         })
-    assert response.status_code == 400
-    assert response.json()["error"]["code"] == "VALIDATION_FAILED"
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "NOT_FOUND"
 
 
 def test_geometry_write_has_independent_package_and_user_gates(db, tmp_path, monkeypatch):

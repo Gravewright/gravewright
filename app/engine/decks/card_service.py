@@ -22,6 +22,8 @@ from app.engine.decks.cards import should_card_front_be_visible
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.card_repository import CardRepository
 from app.persistence.repositories.scene_repository import SceneRepository
+from app.persistence.repositories.asset_repository import AssetRepository
+from app.engine.decks.declarative_card_registry import DeclaredDeck
 from app.security.card_permissions import can_create_deck
 from app.security.card_permissions import can_create_deck_instance
 from app.security.card_permissions import can_discard_card
@@ -44,6 +46,43 @@ class CardService:
         self.campaigns = CampaignRepository()
         self.cards = CardRepository()
         self.scenes = SceneRepository()
+        self.assets = AssetRepository()
+
+    def instantiate_declared_deck(
+        self, *, campaign_id: str, user_id: str, package_id: str,
+        definition: DeclaredDeck, artwork: dict[str, str], metadata: dict | None = None,
+        name: str | None = None,
+    ) -> CardServiceResult:
+        """Freeze an active package declaration into campaign-owned card rows."""
+        role = self._role(campaign_id=campaign_id, user_id=user_id)
+        if role is None or not can_create_deck_instance(actor_role=role):
+            return CardServiceResult(False, error_key="permissions.errors.denied")
+        supplied = metadata if isinstance(metadata, dict) else {}
+        properties = definition.metadata_schema.get("properties", {})
+        if not isinstance(properties, dict) or any(key not in properties for key in supplied):
+            return CardServiceResult(False, error_key="sdk.cards.metadata_invalid")
+        cards = []
+        for card in definition.cards:
+            asset_id = artwork.get(str(card["id"]))
+            asset = self.assets.get_by_id(str(asset_id or ""))
+            if asset is None or asset.get("campaign_id") != campaign_id:
+                return CardServiceResult(False, error_key="game.cards.errors.missing_front_asset")
+            cards.append({"name": card["label"], "front_asset_id": asset_id,
+                          "quantity": card["quantity"], "tags": card["tags"],
+                          "metadata": card["metadata"], "sort_key": card["id"]})
+        provenance = {"definition": definition.reference, "packageId": package_id,
+                      "definitionVersion": definition.version, "instanceMetadata": supplied}
+        frozen = self.cards.create_deck_definition(
+            campaign_id=campaign_id, package_id=package_id, owner_user_id=user_id,
+            scope=DeckScope.CAMPAIGN, name=(name or definition.label)[:191],
+            description=definition.description, editable=False, metadata=provenance, cards=cards,
+        )
+        result = self.instantiate_deck(campaign_id=campaign_id, user_id=user_id,
+                                       deck_definition_id=frozen["id"], name=name)
+        if result.success:
+            result.payload["definition"] = definition.public()
+            result.payload["provenance"] = provenance
+        return result
 
     def get_state(self, *, campaign_id: str, user_id: str) -> CardServiceResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)

@@ -27,11 +27,14 @@ def scene_snapshot(row: dict) -> dict[str, Any]:
 
 
 def wall_snapshot(row: dict) -> dict[str, Any]:
-    return _pick(row, ("id", "scene_id", "kind", "door_state", "x1", "y1", "x2", "y2", "updated_at"))
+    value = _pick(row, ("id", "scene_id", "kind", "door_state", "x1", "y1", "x2", "y2", "presentation", "discovered", "updated_at"))
+    value["behavior"] = {name: row.get(f"{name}_behavior", "block") for name in ("movement", "vision", "light")}
+    value["vertical"] = {"bottom": row.get("vertical_bottom"), "top": row.get("vertical_top")}
+    return value
 
 
 def light_snapshot(row: dict) -> dict[str, Any]:
-    return _pick(row, ("id", "scene_id", "x", "y", "bright_radius", "dim_radius", "color", "intensity", "animation", "angle", "rotation", "enabled", "updated_at"))
+    return _pick(row, ("id", "scene_id", "x", "y", "elevation", "bright_radius", "dim_radius", "color", "intensity", "animation", "angle", "rotation", "enabled", "updated_at"))
 
 
 def particle_snapshot(row: dict) -> dict[str, Any]:

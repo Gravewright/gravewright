@@ -9,6 +9,8 @@ from app.engine.assets.asset_read_service import AssetReadService
 from app.persistence.repositories.asset_repository import AssetRepository
 from app.persistence.repositories.pdf_annotation_repository import PdfAnnotationRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
+from app.persistence.repositories.journal_asset_repository import JournalAssetRepository
+from app.engine.journals.journal_asset_read_service import JournalAssetReadService
 
 
 @dataclass(frozen=True)
@@ -19,15 +21,19 @@ class PdfResult:
 
 
 class SdkPdfService:
-    def __init__(self, *, assets: AssetRepository | None = None, reader: AssetReadService | None = None, annotations: PdfAnnotationRepository | None = None) -> None:
+    def __init__(self, *, assets: AssetRepository | None = None, reader: AssetReadService | None = None, annotations: PdfAnnotationRepository | None = None, journal_assets: JournalAssetRepository | None = None, journal_reader: JournalAssetReadService | None = None) -> None:
         self.assets = assets or AssetRepository()
         self.reader = reader or AssetReadService(assets=self.assets)
         self.annotations = annotations or PdfAnnotationRepository()
+        self.journal_assets = journal_assets or JournalAssetRepository()
+        self.journal_reader = journal_reader or JournalAssetReadService(assets=self.journal_assets)
         self.campaigns = CampaignRepository()
 
     def document(self, *, campaign_id: str, document_id: str, user_id: str) -> PdfResult:
         asset = self.assets.get_by_id(document_id)
-        if not asset or asset.get("campaign_id") != campaign_id:
+        if not asset:
+            return self._journal_document(campaign_id=campaign_id, document_id=document_id, user_id=user_id)
+        if asset.get("campaign_id") != campaign_id:
             return PdfResult(False, error_key="sdk.pdf.not_found")
         access = self.reader.get_asset(asset_id=document_id, user_id=user_id)
         if not access.success:
@@ -39,6 +45,21 @@ class SdkPdfService:
             "id": asset["id"], "filename": asset["filename"], "content_type": "application/pdf",
             "byte_size": int(asset.get("byte_size") or 0), "created_at": asset.get("created_at"),
             "url": f"/game/assets/file/{asset['id']}",
+        })
+
+    def _journal_document(self, *, campaign_id: str, document_id: str, user_id: str) -> PdfResult:
+        asset = self.journal_assets.get_by_id(document_id)
+        if not asset or asset.get("campaign_id") != campaign_id:
+            return PdfResult(False, error_key="sdk.pdf.not_found")
+        access = self.journal_reader.get_asset(asset_id=document_id, user_id=user_id)
+        if not access.success:
+            return PdfResult(False, error_key="sdk.pdf.not_found" if access.error_key == "not_found" else "sdk.pdf.permission_denied")
+        if str(asset.get("content_type") or "").lower() != "application/pdf":
+            return PdfResult(False, error_key="sdk.pdf.not_pdf")
+        return PdfResult(True, {
+            "id": asset["id"], "filename": asset["filename"], "content_type": "application/pdf",
+            "byte_size": int(asset.get("byte_size") or 0), "created_at": asset.get("created_at"),
+            "url": f"/game/journal/asset/{asset['id']}",
         })
 
     def list_annotations(self, *, campaign_id: str, document_id: str, user_id: str) -> PdfResult:

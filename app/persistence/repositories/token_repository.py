@@ -49,6 +49,7 @@ class TokenRepository:
         locked: bool = False,
         vision_enabled: bool = True,
         vision_range: float = 0.0,
+        elevation: float = 0.0,
         overrides: dict | None = None,
     ) -> dict:
         now = int(time.time())
@@ -68,6 +69,7 @@ class TokenRepository:
             controlled_by_role=controlled_by_role,
             controlled_by_user_ids=controlled_by_user_ids, rotation=rotation, visible=visible,
             hidden=hidden, locked=locked, vision_enabled=vision_enabled, vision_range=vision_range,
+            elevation=elevation,
             overrides=overrides,
             now=now,
         )
@@ -114,6 +116,7 @@ class TokenRepository:
                     rotation=spec.get("rotation", 0.0), visible=spec.get("visible", True),
                     hidden=spec.get("hidden", False), locked=spec.get("locked", False),
                     vision_enabled=spec.get("vision_enabled", True), vision_range=spec.get("vision_range", 0.0),
+                    elevation=spec.get("elevation", 0.0),
                     overrides=spec.get("overrides"),
                     now=now,
                 )
@@ -219,6 +222,16 @@ class TokenRepository:
                 return None
             row = self._get_by_id(conn, token_id)
 
+        return self._hydrate(row) if row else None
+
+    def update_elevation_and_overrides(self, *, token_id: str, elevation: float, overrides: dict, expected_version: int | None = None) -> dict | None:
+        now=int(time.time())
+        with engine_begin() as conn:
+            stmt=update(tokens_table).where(tokens_table.c.id==token_id)
+            if expected_version is not None: stmt=stmt.where(tokens_table.c.version==expected_version)
+            result=conn.execute(stmt.values(elevation=elevation,overrides_json=json.dumps(overrides),version=tokens_table.c.version+1,updated_at=now))
+            if result.rowcount!=1:return None
+            row=self._get_by_id(conn,token_id)
         return self._hydrate(row) if row else None
 
     def update_link_mode_and_overrides(
@@ -338,6 +351,7 @@ class TokenRepository:
         locked: bool,
         vision_enabled: bool,
         vision_range: float,
+        elevation: float,
         overrides: dict | None,
         now: int,
     ) -> dict:
@@ -362,6 +376,7 @@ class TokenRepository:
             "controlled_by_role": controlled_by_role,
             "vision_enabled": 1 if vision_enabled else 0,
             "vision_range": vision_range,
+            "elevation": elevation,
             "version": 1,
             "created_at": now,
             "updated_at": now,

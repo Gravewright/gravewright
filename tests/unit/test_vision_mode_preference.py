@@ -33,8 +33,10 @@ def test_the_geometry_is_computed_without_asking_the_mode():
     vision = _statement(SCRIPT, "const visionPolygons = visionLimited")
     assert "classic" not in vision, "o recorte da visão não pode depender do modo"
 
-    blockers = _statement(SCRIPT, "const blockers = this.blockers(walls)")
-    assert "classic" not in blockers, "porta e parede bloqueiam igual nos dois modos"
+    vision_blockers = _statement(SCRIPT, 'const visionBlockers = this.blockers(walls, "vision")')
+    light_blockers = _statement(SCRIPT, 'const lightBlockers = this.blockers(walls, "light")')
+    assert "classic" not in vision_blockers, "porta e parede bloqueiam visão igual nos dois modos"
+    assert "classic" not in light_blockers, "porta e parede bloqueiam luz igual nos dois modos"
 
     # As mesmas listas alimentam o desenho nos dois modos.
     lit = _statement(PIXI, "const litAreas = [")

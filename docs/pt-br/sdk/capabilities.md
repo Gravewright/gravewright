@@ -14,12 +14,15 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | Capability | Finalidade |
 |---|---|
 | `actors.data.write` | Altera dados validados de fichas de ator que o usuário atual pode editar. |
+| `actors.items.read` | Descobre slots e snapshots locais de Item declarados pelo ruleset. |
+| `actors.items.write` | Insere e remove snapshots locais de Item por slots declarados. |
 | `actors.read` | Lê snapshots de atores visíveis. |
 | `actors.register` | Registra comportamento/dados de tipos de ator via metadados do pacote. |
 | `actors.write` | Cria, atualiza e exclui atores por comandos semânticos. |
 | `assets.audio` | Fornece assets de áudio. |
 | `assets.icons` | Fornece assets de ícone. |
 | `assets.images` | Fornece assets de imagem. |
+| `assets.import` | Ingere um arquivo selecionado pelo usuário como asset validado da campanha, sem acesso ao filesystem. |
 | `assets.library` | Lê a biblioteca de assets da campanha: lista os arquivos enviados (imagens e PDFs) que o membro pode ver. |
 | `assets.maps` | Fornece assets de mapa. |
 | `assets.pack` | Fornece asset packs. |
@@ -27,6 +30,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `assets.styles` | Carrega CSS do pacote. |
 | `assets.ui` | Usa métodos de UI como toasts e modais. |
 | `assets.video` | Fornece assets de vídeo. |
+| `automation.schedule` | Agenda registered actions durable-safe sob autoridade revalidada na execução. |
 | `bus.provide` | Provê um método no bus de interop da SDK que outros pacotes podem requisitar. |
 | `bus.publish` | Publica eventos no bus de interop da SDK. |
 | `bus.request` | Solicita um valor a um provider do bus de interop da SDK. |
@@ -53,25 +57,32 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `journals.read` | Lê journals e handouts visíveis ao usuário atual. |
 | `journals.write` | Cria, atualiza e exclui journals validados. |
 | `locales` | Fornece locales e usa `sdk.i18n.t`. |
+| `packages.inspect` | Descobre metadados públicos e contratos de interoperabilidade de packages ativos na campanha atual. |
 | `pdf.annotations.read` | Lê anotações de documentos PDF visíveis. |
 | `pdf.annotations.write` | Cria, atualiza e exclui anotações validadas em documentos PDF visíveis. |
+| `pdf.presentation` | Coordena apresentação PDF versionada sem conceder acesso ao documento. |
 | `pdf.read` | Lê documentos PDF visíveis ao usuário atual e seus metadados. |
 | `pdf.viewer` | Abre e navega documentos PDF no visualizador do host. |
 | `permissions.inspect` | Consulta decisões de permissão efetivas do usuário atual. |
 | `rolls.intent` | Pede intents declarativas de rolagem/action no servidor. |
-| `rules.actions` | Executa grafos declarativos limitados de forma autoritativa. |
+| `rules.actions` | Descobre e executa ações semânticas versionadas declaradas por pacotes. |
 | `rules.declarative` | Fornece documentos de regras declarativos. |
 | `rules.extends` | Estende o comportamento das regras. |
 | `scene.effects.read` | Lê efeitos semânticos de cena. |
 | `scene.effects.write` | Gerencia efeitos semânticos de cena. |
 | `scene.fog.read` | Lê o estado lógico do fog sem expor o renderer. |
 | `scene.fog.write` | Gerencia fog por operações autoritativas limitadas. |
-| `scene.geometry.read` | Lê paredes, portas e luzes lógicas. |
-| `scene.geometry.write` | Gerencia paredes, portas e luzes lógicas. |
+| `scene.geometry.read` | Lê walls, doors, canais semânticos e lights filtrados por audiência sem expor o renderer. |
+| `scene.geometry.write` | Gerencia walls, doors, canais semânticos fechados, apresentação de discovery e lights. |
 | `scene.images.read` | Lê colocações de imagens filtradas por permissão. |
 | `scene.images.write` | Coloca, atualiza e remove imagens de cena autorizadas. |
+| `scene.measurements.shared` | Compartilha measurements com TTL e audience explícita. |
 | `scene.overlays` | Fornece overlays de cena. |
 | `scene.read` | Lê snapshots de cenas visíveis. |
+| `scene.shaders.read` | Descobre presets semânticos de shader e lê instâncias sem expor o renderer. |
+| `scene.shaders.write` | Aplica e gerencia presets semânticos validados sem authority de GLSL raw. |
+| `scene.templates.read` | Lê templates persistentes de gameplay em world-space filtrados por permissão. |
+| `scene.templates.write` | Cria, atualiza e remove templates persistentes de gameplay com geometria limitada. |
 | `scene.tools` | Usa métodos de cena/ferramenta como `sdk.scene.*` e `sdk.tools.*`. |
 | `settings` | Define e usa settings do pacote. |
 | `sheets.components` | Fornece componentes de ficha. |
@@ -86,6 +97,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `tokens.mappings` | Fornece mapeamentos de token. |
 | `tokens.move` | Move tokens controlados de forma autoritativa. |
 | `tokens.read` | Lê snapshots de tokens visíveis. |
+| `tokens.targets` | Gerencia o conjunto privado de targets do usuário atual por cena. |
 | `ui.applications` | Renderiza aplicações do pacote incrementalmente por partes nomeadas. |
 | `ui.slots` | Monta UI do pacote em slots documentados do host. |
 <!-- END GENERATED -->
@@ -114,16 +126,31 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 | Método do SDK | Capability exigida |
 |---|---|
 | `sdk.actors.create` | `actors.write` |
+| `sdk.actors.data` | `actors.read` |
 | `sdk.actors.delete` | `actors.write` |
 | `sdk.actors.get` | `actors.read` |
+| `sdk.actors.items.insertCopy` | `actors.items.write` |
+| `sdk.actors.items.listCopies` | `actors.items.read` |
+| `sdk.actors.items.removeCopy` | `actors.items.write` |
+| `sdk.actors.items.slots` | `actors.items.read` |
 | `sdk.actors.list` | `actors.read` |
 | `sdk.actors.patchData` | `actors.data.write` |
 | `sdk.actors.update` | `actors.write` |
+| `sdk.assets.cancelImport` | `assets.import` |
+| `sdk.assets.ingest` | `assets.import` |
 | `sdk.assets.list` | `assets.library` |
+| `sdk.automation.audit` | `automation.schedule` |
+| `sdk.automation.cancel` | `automation.schedule` |
+| `sdk.automation.get` | `automation.schedule` |
+| `sdk.automation.list` | `automation.schedule` |
+| `sdk.automation.schedule` | `automation.schedule` |
 | `sdk.bus.provide` | `bus.provide` |
 | `sdk.bus.publish` | `bus.publish` |
 | `sdk.bus.request` | `bus.request` |
 | `sdk.bus.subscribe` | `bus.subscribe` |
+| `sdk.cards.definitions.get` | `cards.read` |
+| `sdk.cards.definitions.instantiate` | `cards.manage` |
+| `sdk.cards.definitions.list` | `cards.read` |
 | `sdk.cards.discard` | `cards.manage` |
 | `sdk.cards.discardPlacement` | `cards.manage` |
 | `sdk.cards.draw` | `cards.manage` |
@@ -181,26 +208,37 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 | `sdk.journals.get` | `journals.read` |
 | `sdk.journals.list` | `journals.read` |
 | `sdk.journals.update` | `journals.write` |
+| `sdk.packages.get` | `packages.inspect` |
+| `sdk.packages.has` | `packages.inspect` |
 | `sdk.pdf.annotations.create` | `pdf.annotations.write` |
 | `sdk.pdf.annotations.delete` | `pdf.annotations.write` |
 | `sdk.pdf.annotations.list` | `pdf.annotations.read` |
 | `sdk.pdf.annotations.update` | `pdf.annotations.write` |
 | `sdk.pdf.get` | `pdf.read` |
 | `sdk.pdf.metadata` | `pdf.read` |
+| `sdk.pdf.presentation.current` | `pdf.presentation` |
+| `sdk.pdf.presentation.end` | `pdf.presentation` |
+| `sdk.pdf.presentation.start` | `pdf.presentation` |
+| `sdk.pdf.presentation.update` | `pdf.presentation` |
 | `sdk.pdf.viewer.currentPage` | `pdf.viewer` |
 | `sdk.pdf.viewer.goToPage` | `pdf.viewer` |
 | `sdk.pdf.viewer.open` | `pdf.viewer` |
 | `sdk.pdf.viewer.search` | `pdf.viewer` |
 | `sdk.permissions.can` | `permissions.inspect` |
+| `sdk.permissions.check` | `permissions.inspect` |
 | `sdk.rolls.intent` | `rolls.intent` |
 | `sdk.rules.actions.execute` | `rules.actions` |
-| `sdk.rules.actions.validate` | `rules.actions` |
+| `sdk.rules.actions.executeReference` | `rules.actions` |
+| `sdk.rules.actions.get` | `rules.actions` |
+| `sdk.rules.actions.list` | `rules.actions` |
+| `sdk.rules.actions.resolve` | `rules.actions` |
 | `sdk.scene.active` | `scene.read` |
 | `sdk.scene.activeCameraForScene` | `scene.tools` |
 | `sdk.scene.activeCanvas` | `scene.tools` |
 | `sdk.scene.effects.create` | `scene.effects.write` |
 | `sdk.scene.effects.delete` | `scene.effects.write` |
 | `sdk.scene.effects.list` | `scene.effects.read` |
+| `sdk.scene.effects.presets` | `scene.effects.read` |
 | `sdk.scene.effects.update` | `scene.effects.write` |
 | `sdk.scene.fog.disable` | `scene.fog.write` |
 | `sdk.scene.fog.enable` | `scene.fog.write` |
@@ -226,6 +264,22 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 | `sdk.scene.images.place` | `scene.images.write` |
 | `sdk.scene.images.update` | `scene.images.write` |
 | `sdk.scene.list` | `scene.read` |
+| `sdk.scene.measurements.cancel` | `scene.measurements.shared` |
+| `sdk.scene.measurements.listShared` | `scene.measurements.shared` |
+| `sdk.scene.measurements.measure` | `scene.tools` |
+| `sdk.scene.measurements.share` | `scene.measurements.shared` |
+| `sdk.scene.shaders.apply` | `scene.shaders.write` |
+| `sdk.scene.shaders.enable` | `scene.shaders.write` |
+| `sdk.scene.shaders.getPreset` | `scene.shaders.read` |
+| `sdk.scene.shaders.list` | `scene.shaders.read` |
+| `sdk.scene.shaders.presets` | `scene.shaders.read` |
+| `sdk.scene.shaders.remove` | `scene.shaders.write` |
+| `sdk.scene.shaders.update` | `scene.shaders.write` |
+| `sdk.scene.templates.create` | `scene.templates.write` |
+| `sdk.scene.templates.delete` | `scene.templates.write` |
+| `sdk.scene.templates.get` | `scene.templates.read` |
+| `sdk.scene.templates.list` | `scene.templates.read` |
+| `sdk.scene.templates.update` | `scene.templates.write` |
 | `sdk.settings.all` | `settings` |
 | `sdk.settings.definitions` | `settings` |
 | `sdk.settings.get` | `settings` |
@@ -244,8 +298,12 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 | `sdk.tokens.get` | `tokens.read` |
 | `sdk.tokens.list` | `tokens.read` |
 | `sdk.tokens.move` | `tokens.move` |
+| `sdk.tokens.targets.clear` | `tokens.targets` |
+| `sdk.tokens.targets.list` | `tokens.targets` |
+| `sdk.tokens.targets.set` | `tokens.targets` |
 | `sdk.tokens.update` | `tokens.manage` |
 | `sdk.tools.activeTool` | `scene.tools` |
+| `sdk.tools.register` | `scene.tools` |
 | `sdk.ui.applications.close` | `ui.applications` |
 | `sdk.ui.applications.register` | `ui.applications` |
 | `sdk.ui.applications.render` | `ui.applications` |

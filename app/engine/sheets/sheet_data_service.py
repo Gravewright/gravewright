@@ -9,6 +9,8 @@ token mapping layer in a later slice) can react.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from collections.abc import Callable
+import time
 from typing import Any
 
 from app.engine.actors.actor_permissions import can_edit_actor, can_view_actor
@@ -32,6 +34,7 @@ class SheetDataResult:
     data: dict | None = None
     changed_paths: list[str] = field(default_factory=list)
     error_key: str | None = None
+    receipt: dict | None = None
 
 
 def _set_path(data: dict, dotted_path: str, value: Any) -> None:
@@ -104,20 +107,17 @@ class SheetDataService:
         if not clean:
             return SheetDataResult(success=False, error_key="game.sheet_data.errors.empty_patch")
 
-        envelope = self._read(actor)
-        data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
-        for path, value in clean.items():
-            _set_path(data, str(path), value)
-        self._sync_conditions(actor["system_id"], data)
-
-        version = int(envelope.get("version", 1)) + 1
-        self.storage.write_actor(
-            system_id=actor["system_id"],
-            campaign_id=actor["campaign_id"],
-            actor_id=actor_id,
-            version=version,
-            data=data,
-        )
+        with self.storage.lock_entity(kind="actor", system_id=actor["system_id"], campaign_id=actor["campaign_id"], entity_id=actor_id):
+            envelope = self._read(actor)
+            data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
+            for path, value in clean.items():
+                _set_path(data, str(path), value)
+            self._sync_conditions(actor["system_id"], data)
+            version = int(envelope.get("version", 1)) + 1
+            self.storage.write_actor(
+                system_id=actor["system_id"], campaign_id=actor["campaign_id"], actor_id=actor_id,
+                version=version, data=data, action_receipts=envelope.get("_core_action_receipts"),
+            )
         return SheetDataResult(
             success=True,
             actor_id=actor_id,
@@ -128,6 +128,50 @@ class SheetDataService:
             changed_paths=sorted(clean),
         )
 
+    def patch_data_idempotent(
+        self, *, actor_id: str, user_id: str, patch: dict[str, Any], receipt_identity: str,
+        payload_hash: str, execution_id: str, fault: Callable[[str], None] | None = None,
+    ) -> SheetDataResult:
+        """Commit one actor patch and its private receipt in one file replace."""
+        actor, _campaign, error = self._load(actor_id, user_id, require_edit=True)
+        if error is not None:
+            return error
+        if not isinstance(patch, dict) or not patch:
+            return SheetDataResult(success=False, error_key="game.sheet_data.errors.empty_patch")
+        schema = self.schemas.get_actor_schema(system_id=actor["system_id"], actor_type=actor["type"])
+        validation = self.rules.get_validation(actor["system_id"], actor["type"])
+        clean, _rejected = sanitize_write(schema, validation, patch)
+        if not clean:
+            return SheetDataResult(success=False, error_key="game.sheet_data.errors.empty_patch")
+        if fault:
+            fault("after_validation")
+        with self.storage.lock_entity(kind="actor", system_id=actor["system_id"], campaign_id=actor["campaign_id"], entity_id=actor_id):
+            envelope = self._read(actor)
+            receipts = envelope.get("_core_action_receipts", [])
+            receipts = receipts if isinstance(receipts, list) else []
+            now = int(time.time())
+            receipts = [item for item in receipts if isinstance(item, dict) and int(item.get("expiresAt", 0)) > now]
+            existing = next((item for item in receipts if isinstance(item, dict) and item.get("identity") == receipt_identity), None)
+            if existing:
+                if existing.get("payloadHash") != payload_hash:
+                    return SheetDataResult(success=False, error_key="sdk.rules.actions.idempotency_conflict")
+                return SheetDataResult(success=True, actor_id=actor_id, campaign_id=actor["campaign_id"], system_id=actor["system_id"], version=existing.get("version"), receipt=existing)
+            data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
+            for path, value in clean.items():
+                _set_path(data, str(path), value)
+            self._sync_conditions(actor["system_id"], data)
+            version = int(envelope.get("version", 1)) + 1
+            if len(receipts) >= 128:
+                return SheetDataResult(success=False, error_key="sdk.rules.actions.idempotency_quota")
+            receipt = {"identity": receipt_identity, "payloadHash": payload_hash, "executionId": execution_id, "version": version, "expiresAt": now + 86_400}
+            receipts = receipts + [receipt]
+            if fault:
+                fault("before_authoritative_commit")
+            self.storage.write_actor(system_id=actor["system_id"], campaign_id=actor["campaign_id"], actor_id=actor_id, version=version, data=data, action_receipts=receipts)
+            if fault:
+                fault("after_authoritative_commit")
+            return SheetDataResult(success=True, actor_id=actor_id, campaign_id=actor["campaign_id"], system_id=actor["system_id"], version=version, data=data, changed_paths=sorted(clean), receipt=receipt)
+
     def set_data(self, *, actor_id: str, user_id: str, data: dict) -> SheetDataResult:
         actor, campaign, error = self._load(actor_id, user_id, require_edit=True)
         if error is not None:
@@ -135,15 +179,10 @@ class SheetDataService:
         if not isinstance(data, dict):
             return SheetDataResult(success=False, error_key="game.sheet_data.errors.invalid_data")
 
-        envelope = self._read(actor)
-        version = int(envelope.get("version", 1)) + 1
-        self.storage.write_actor(
-            system_id=actor["system_id"],
-            campaign_id=actor["campaign_id"],
-            actor_id=actor_id,
-            version=version,
-            data=data,
-        )
+        with self.storage.lock_entity(kind="actor", system_id=actor["system_id"], campaign_id=actor["campaign_id"], entity_id=actor_id):
+            envelope = self._read(actor)
+            version = int(envelope.get("version", 1)) + 1
+            self.storage.write_actor(system_id=actor["system_id"], campaign_id=actor["campaign_id"], actor_id=actor_id, version=version, data=data, action_receipts=envelope.get("_core_action_receipts"))
         return SheetDataResult(
             success=True,
             actor_id=actor_id,

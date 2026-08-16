@@ -184,6 +184,8 @@ class SceneImageService:
         scale: float | None = None,
         z_index: int | None = None,
         layer: str | None = None,
+        asset_id: str | None = None,
+        expected_version: int | None = None,
     ) -> SceneImageResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)
         placement = self.placements.get(placement_id)
@@ -197,6 +199,13 @@ class SceneImageService:
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         if layer is not None and not self._layer_allowed(role=role, layer=layer):
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
+        replacement = None
+        if asset_id is not None:
+            replacement = self.assets.get_by_id(asset_id)
+            if replacement is None or replacement.get("campaign_id") != campaign_id:
+                return SceneImageResult(
+                    success=False, error_key="game.scene_images.errors.invalid_image"
+                )
         updated = self.placements.update(
             placement_id=placement_id,
             x=x,
@@ -205,8 +214,16 @@ class SceneImageService:
             scale=scale,
             z_index=z_index,
             layer=layer,
+            asset_id=asset_id,
+            natural_width=int(replacement.get("width") or 0) if replacement else None,
+            natural_height=int(replacement.get("height") or 0) if replacement else None,
+            expected_version=expected_version,
         )
         if updated is None:
+            if expected_version is not None and self.placements.get(placement_id) is not None:
+                return SceneImageResult(
+                    success=False, error_key="game.scene_images.errors.stale_version"
+                )
             return SceneImageResult(
                 success=False, error_key="game.scene_images.errors.placement_not_found"
             )
@@ -226,7 +243,10 @@ class SceneImageService:
         if not can_delete_scene_image(actor_user_id=user_id, actor_role=role, placement=placement):
             return SceneImageResult(success=False, error_key="permissions.errors.denied")
         self.placements.delete(placement_id)
-        return SceneImageResult(success=True, payload={"placement_id": placement_id})
+        return SceneImageResult(
+            success=True,
+            payload={"placement_id": placement_id, "scene_id": placement.get("scene_id")},
+        )
 
     def _layer_allowed(self, *, role: str | None, layer: str) -> bool:
         """The GM/composition layers are GM-authored; the default game layer is open."""

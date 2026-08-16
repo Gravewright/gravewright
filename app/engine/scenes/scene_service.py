@@ -307,6 +307,12 @@ class SceneService:
                 error_key="game.scenes.errors.not_found",
             )
 
+        if previous_scene and previous_scene["id"] != scene_id:
+            from app.persistence.repositories.core_ephemeral_state_repository import CoreEphemeralStateRepository
+            ephemeral = CoreEphemeralStateRepository()
+            for namespace in ("token-targets-v1", "shared-measurements-v1"):
+                ephemeral.delete_scope(namespace=namespace,campaign_id=campaign_id,scope_id=previous_scene["id"])
+
         if transport is not None:
             await transport.to_room(
                 room_id=campaign_id,

@@ -760,15 +760,16 @@
             return this.lights.map((light) => light.id === drag.id ? { ...light, x: drag.to.x, y: drag.to.y } : light);
         }
 
-        blockers(walls) {
-            return walls.filter((wall) => wall.kind !== "door" || wall.door_state !== "open");
+        blockers(walls, channel = "vision") {
+            return walls.filter((wall) => (wall.kind !== "door" || wall.door_state !== "open")
+                && (wall.behavior?.[channel] || "block") === "block");
         }
 
 
 
 
         blocksMovement(from, to) {
-            return this.blockers(this.walls).some((wall) => segmentsCross(
+            return this.blockers(this.walls, "movement").some((wall) => segmentsCross(
                 from.x, from.y, to.x, to.y,
                 wall.x1, wall.y1, wall.x2, wall.y2,
             ));
@@ -962,7 +963,8 @@
 
 
             const sceneDarkness = scene.darkness || 0;
-            const blockers = this.blockers(walls);
+            const visionBlockers = this.blockers(walls, "vision");
+            const lightBlockers = this.blockers(walls, "light");
             const size = scene.scaledTileSize || 50;
             const now = performance.now();
 
@@ -1016,18 +1018,18 @@
                         const shape = lobesOf(light);
                         return { lobes: shape.lobes, lobeDepth: shape.depth };
                     })()),
-                    polygon: dim > 0 ? this.cachedPolygon(`light-${light.id}`, light, blockers, scene, dim) : [],
+                    polygon: dim > 0 ? this.cachedPolygon(`light-${light.id}`, light, lightBlockers, scene, dim) : [],
                 };
             });
 
             const visionPolygons = visionLimited
-                ? sources.map((source) => this.cachedPolygon(`vision-${source.id}`, source, blockers, scene, source.radius))
+                ? sources.map((source) => this.cachedPolygon(`vision-${source.id}`, source, visionBlockers, scene, source.radius))
                 : [];
             const renderedVisionPolygons = lightingVisible ? visionPolygons : [];
 
             const doorVisionPolygons = visionLimited
                 ? visionPolygons
-                : sources.map((source) => this.cachedPolygon(`vision-${source.id}`, source, blockers, scene, source.radius));
+                : sources.map((source) => this.cachedPolygon(`vision-${source.id}`, source, visionBlockers, scene, source.radius));
 
 
 
@@ -1046,7 +1048,7 @@
                 ? this.visionSources({ all: true }).find((source) => source.id === visionPreviewTokenId)
                 : null;
             const visionPreview = preview
-                ? { ...preview, polygon: this.cachedPolygon(`preview-${preview.id}`, preview, blockers, scene, preview.radius) }
+                ? { ...preview, polygon: this.cachedPolygon(`preview-${preview.id}`, preview, visionBlockers, scene, preview.radius) }
                 : null;
 
 
@@ -1113,7 +1115,7 @@
 
                             occlusionStamp: this.geometryStamp,
                             occlusion: radiusWorld > 0
-                                ? this.cachedPolygon(`shader-${shader.id}`, { x, y }, blockers, scene, radiusWorld)
+                                ? this.cachedPolygon(`shader-${shader.id}`, { x, y }, lightBlockers, scene, radiusWorld)
                                 : null,
                         };
                     }),

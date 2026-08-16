@@ -60,6 +60,7 @@ Use it when you know what you want to build but do not yet know which SDK surfac
 | Execute roll/action intent | `sdk.rolls.intent` | `rolls.intent` | Server-authoritative Sheet IR action, targets, damage, and initiative. |
 | List settings | `sdk.settings.definitions`, `sdk.settings.all` | `settings` | Values visible to current package. |
 | Read setting | `sdk.settings.get`, `sdk.setting(key)` | `settings` | Use fallback values. |
+| Read actor sheet data | `sdk.actors.data` | `actors.read` | Permission-filtered `{data, version}` snapshot. |
 | Write setting | `sdk.settings.set`, `sdk.setting(key, value)` | `settings` | Persists through SDK settings endpoint. |
 | Use sheet helpers | `sdk.sheets.helpers` | `sheets.runtime` | Runtime helper access. |
 | Register sheet behavior | `sdk.sheets.register` | `sheets.runtime` | Use after declaring sheet capability. |

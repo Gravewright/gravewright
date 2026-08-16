@@ -16,7 +16,8 @@ class LocalJournalAssetStorage:
     """Stores journal images under ``storage/journal-assets/<campaign>/<asset>``."""
 
     def __init__(self, *, root: Path | None = None) -> None:
-        self.root = root or PROJECT_ROOT / "storage" / "journal-assets"
+        test_root = os.environ.get("GRAVEWRIGHT_TEST_TEMP_ROOT", "").strip()
+        self.root = root or ((Path(test_root) / "journal-assets") if test_root else PROJECT_ROOT / "storage" / "journal-assets")
 
     def write_image(
         self,

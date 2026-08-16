@@ -1,5 +1,10 @@
 # Gravewright SDK
 
+Comece pelo [início rápido da SDK 1](quick-start.md). O contrato final gerado
+está disponível em [JSON](../../sdk/_data/gravewright-sdk-1.json),
+[declarações TypeScript](../../sdk/gravewright-sdk-1.d.ts),
+[métodos](method-reference.md) e [DTOs](dto-reference.md).
+
 A Gravewright SDK é o único modelo suportado para extensões do Gravewright.
 
 Toda extensão instalável é um **pacote**. Um pacote é um diretório em `data/packages/{kind_plural}/{id}/` que contém um `manifest.json` e os arquivos declarados por esse manifesto. O comportamento do pacote é definido por um contrato único de SDK v1.

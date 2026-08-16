@@ -16,10 +16,16 @@ class SceneShaderRepository:
         with engine_begin() as c:
             c.execute(insert(scene_shaders).values(id=shader_id, created_at=now, updated_at=now, **values))
         return self.get(shader_id) or {}
-    def update(self, shader_id: str, **values) -> dict | None:
+    def update(self, shader_id: str, *, expected_version: int | None = None, **values) -> dict | None:
         values["updated_at"] = int(time.time())
+        values["version"] = scene_shaders.c.version + 1
         with engine_begin() as c:
-            c.execute(update(scene_shaders).where(scene_shaders.c.id == shader_id).values(**values))
+            statement = update(scene_shaders).where(scene_shaders.c.id == shader_id)
+            if expected_version is not None:
+                statement = statement.where(scene_shaders.c.version == expected_version)
+            result = c.execute(statement.values(**values))
+            if not result.rowcount:
+                return None
         return self.get(shader_id)
     def delete(self, shader_id: str) -> bool:
         with engine_begin() as c:

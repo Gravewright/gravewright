@@ -105,6 +105,33 @@ def load_package(
     for code in _validate_storage_on_disk(package_dir, raw):
         validation.add(code)
 
+    action_registry = manifest.rules.get("actionRegistry", "")
+    if action_registry:
+        from app.engine.rules.declarative_action_registry import validate_registry_file
+
+        resolved = safe_join(package_dir, action_registry)
+        if resolved is not None and resolved.is_file():
+            try:
+                action_document = json.loads(resolved.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                validation.add("sdk.rules.actions.registry_invalid")
+            else:
+                for code in validate_registry_file(manifest.id, action_document, set(manifest.capabilities)):
+                    validation.add(code)
+
+    card_registry = manifest.rules.get("cardRegistry", "")
+    if card_registry:
+        from app.engine.decks.declarative_card_registry import validate_registry_file as validate_cards
+        resolved = safe_join(package_dir, card_registry)
+        if resolved is not None and resolved.is_file():
+            try:
+                card_document = json.loads(resolved.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                validation.add("sdk.cards.registry_invalid")
+            else:
+                for code in validate_cards(manifest.id, card_document):
+                    validation.add(code)
+
 
     for relative in interop_schema_paths(raw):
         resolved = safe_join(package_dir, relative)

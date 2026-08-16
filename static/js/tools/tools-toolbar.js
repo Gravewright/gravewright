@@ -18,6 +18,100 @@
     let activeDrawColor = "#f8fafc";
     let activeLayer = "game";
     let layerState = { visibility: { game: true, gm: true, composition: true }, locked: {} };
+    const packageTools = new Map();
+    const packagePointerIds = new Set();
+    let activePackageTool = null;
+
+    function packageToolButton(definition) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tool-dock-btn";
+        button.dataset.tool = definition.id;
+        button.dataset.sdkPackageTool = definition.packageId;
+        button.setAttribute("aria-label", definition.label);
+        button.setAttribute("data-tooltip", definition.label);
+        const icon = document.createElement("i");
+        icon.className = `ph ${definition.icon}`;
+        icon.setAttribute("aria-hidden", "true");
+        button.appendChild(icon);
+        return button;
+    }
+
+    function renderPackageTools() {
+        document.querySelectorAll("[data-tool-dock]").forEach((dock) => {
+            let host = dock.querySelector("[data-sdk-scene-tools]");
+            if (!host) {
+                host = document.createElement("div");
+                host.className = "tool-dock-group";
+                host.dataset.sdkSceneTools = "";
+                dock.querySelector(".tool-dock-groups")?.appendChild(host);
+            }
+            const wanted = new Set();
+            packageTools.forEach((definition) => {
+                let available = true;
+                try { available = definition.when ? definition.when() !== false : true; } catch { available = false; }
+                if (!available) return;
+                wanted.add(definition.id);
+                if (!host.querySelector(`[data-tool="${CSS.escape(definition.id)}"]`)) {
+                    host.appendChild(packageToolButton(definition));
+                }
+            });
+            host.querySelectorAll("[data-sdk-package-tool]").forEach((button) => {
+                if (!wanted.has(button.dataset.tool)) button.remove();
+            });
+            host.hidden = wanted.size === 0;
+        });
+        syncToolsForLayer();
+    }
+
+    function registerPackageTool(definition) {
+        if (!definition || typeof definition !== "object") throw new TypeError("tool definition is required");
+        const id = String(definition.id || "");
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*(?:\.[a-z0-9]+(?:-[a-z0-9]+)*)+$/.test(id)) {
+            throw new TypeError("tool id must be a stable package-scoped id");
+        }
+        if (packageTools.has(id)) throw new Error(`sdk.tools.duplicate_id:${id}`);
+        const normalized = Object.freeze({
+            id,
+            packageId: String(definition.packageId || ""),
+            label: String(definition.label || id).slice(0, 80),
+            icon: /^ph-[a-z0-9-]+$/.test(definition.icon || "") ? definition.icon : "ph-cursor-click",
+            cursor: String(definition.cursor || "crosshair").slice(0, 40),
+            when: typeof definition.when === "function" ? definition.when : null,
+            activate: typeof definition.activate === "function" ? definition.activate : null,
+            deactivate: typeof definition.deactivate === "function" ? definition.deactivate : null,
+            pointer: typeof definition.pointer === "function" ? definition.pointer : null,
+        });
+        packageTools.set(id, normalized);
+        renderPackageTools();
+        let disposed = false;
+        return () => {
+            if (disposed) return;
+            disposed = true;
+            if (activeTool === id) setActiveTool(DEFAULT_TOOL);
+            packageTools.delete(id);
+            renderPackageTools();
+        };
+    }
+
+    function packageToolPointer(phase, canvas, event) {
+        const definition = packageTools.get(activeTool);
+        if (!definition?.pointer || !canvas) return false;
+        const pointerId = Number.isInteger(event.pointerId) ? event.pointerId : 0;
+        if (phase === "down") packagePointerIds.add(pointerId);
+        if (phase !== "down" && phase !== "cancel" && !packagePointerIds.has(pointerId)) return false;
+        const world = window.GravewrightMap?.worldFromScreen?.(canvas, event.clientX, event.clientY);
+        if (!world || !Number.isFinite(world.worldX) || !Number.isFinite(world.worldY)) return false;
+        const dto = Object.freeze({
+            phase,
+            world: Object.freeze({ x: world.worldX, y: world.worldY }),
+            button: Number.isInteger(event.button) ? event.button : 0,
+            modifiers: Object.freeze({ shift: !!event.shiftKey, ctrl: !!event.ctrlKey, alt: !!event.altKey, meta: !!event.metaKey }),
+        });
+        definition.pointer(dto);
+        if (phase === "up" || phase === "cancel") packagePointerIds.delete(pointerId);
+        return true;
+    }
 
     function layerStorageKey(roomId = activeCanvas()?.dataset.roomId || "") {
         const userId = document.body?.dataset?.currentUserId || "anonymous";
@@ -313,6 +407,7 @@
 
 
     function setActiveTool(tool) {
+        const previousPackageTool = packageTools.get(activeTool);
         if (streamerMode() && tool === "hp") {
             tool = DEFAULT_TOOL;
         }
@@ -327,6 +422,14 @@
         }
 
         activeTool = tool;
+        activePackageTool = packageTools.get(tool) || null;
+        if (previousPackageTool && previousPackageTool.id !== tool) {
+            packagePointerIds.clear();
+            previousPackageTool.deactivate?.(Object.freeze({ reason: "tool-changed" }));
+        }
+        if (activePackageTool && previousPackageTool?.id !== tool) {
+            activePackageTool.activate?.(Object.freeze({ toolId: tool }));
+        }
 
         document.querySelectorAll("[data-tool]").forEach((btn) => {
             btn.setAttribute("aria-pressed", btn.dataset.tool === tool ? "true" : "false");
@@ -570,6 +673,16 @@
 
     document.addEventListener("vtt:game-ready", () => setActiveLayer(activeLayer), { once: true });
 
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !packageTools.has(activeTool)) return;
+        const canvas = activeCanvas();
+        const definition = packageTools.get(activeTool);
+        definition?.pointer?.(Object.freeze({ phase: "cancel" }));
+        setActiveTool(DEFAULT_TOOL);
+    });
+
+    new MutationObserver(() => renderPackageTools()).observe(document.body, { childList: true, subtree: true });
+
 
     document.addEventListener("vision:changed", (event) => {
         const playerView = Boolean(event.detail?.playerView);
@@ -639,5 +752,7 @@
         },
         setActiveTool,
         clearTool,
+        registerPackageTool,
+        dispatchPackagePointer: packageToolPointer,
     };
 })();

@@ -539,6 +539,7 @@ def _normalize_board_area_marker(raw: dict[str, Any]) -> dict[str, Any]:
         "shape": shape,
         "start": _normalize_board_area_marker_point(start),
         "end": _normalize_board_area_marker_point(end),
+        **_normalize_board_owner(raw.get("owner_id")),
         **_normalize_board_area_marker_preset_id(raw.get("preset_id")),
         **_normalize_board_area_marker_style(raw.get("style")),
         **_normalize_board_layer(raw.get("layer")),

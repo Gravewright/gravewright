@@ -6,6 +6,7 @@ import io
 import json
 import time
 import zipfile
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -17,9 +18,11 @@ from app.persistence.tables import (
     campaign_permission_overrides, campaigns, item_folders, items_core,
     journal_folders, journals, quest_board_entries, scene_groups, scene_layers, scenes,
 )
+from app.business.campaigns.portable_asset_archive import PortableAssetError, PortableAssetGraph
 
 FORMAT = "gravewright.campaign-export"
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
+LEGACY_FORMAT_VERSION = 1
 FORBIDDEN_KEY_PARTS = (
     "email", "password", "token", "secret", "cookie", "session", "code_hash", "csrf",
     "user_id", "owner_user", "created_by", "enabled_by", "imported_by",
@@ -106,23 +109,47 @@ class CampaignExportService:
                 ]
                 counts["quest_board_entries"] = len(payload["content"]["quest_board_entries"])
 
+        asset_manifest, asset_blobs = {"version":1,"assets":[]}, {}
+        expanded = deepcopy(payload["content"])
+        try:
+            with engine_connect() as connection:
+                asset_manifest, asset_blobs = PortableAssetGraph().collect(connection,campaign_id=campaign_id,content=expanded)
+        except (OSError, PortableAssetError):
+            return CampaignExportResult(False,error_key="campaign.export.errors.asset_validation")
+        portable = any(asset_manifest.get(name) for name in ("assets", "journalAttachments", "rasters"))
+        if portable:
+            payload["version"] = FORMAT_VERSION
+            payload["content"] = {name:[self._clean_row(row) for row in rows] for name,rows in expanded.items()}
+            counts.update({name:len(rows) for name,rows in expanded.items()})
+            selected.append("assets")
+        else:
+            payload["version"] = LEGACY_FORMAT_VERSION
         payload_json = self._canonical(payload).encode("utf-8")
         payload_checksum = hashlib.sha256(payload_json).hexdigest()
         manifest = {
-            "format": FORMAT, "version": FORMAT_VERSION,
+            "format": FORMAT, "version": FORMAT_VERSION if portable else LEGACY_FORMAT_VERSION,
             "created_at": int(time.time()), "selected": selected, "counts": counts,
             "files": {"campaign.json": {"sha256": payload_checksum, "bytes": len(payload_json)}},
             "excluded": [
                 "users", "members", "invitations", "join_codes", "sessions", "passwords",
                 "emails", "streamer_links", "presence", "chat", "audit", "user_permissions",
-                "ownership", "handout_grants", "lobby_state", "package_settings", "physical_assets",
+                "ownership", "handout_grants", "lobby_state", "package_settings",
             ],
         }
+        if portable:
+            asset_json=self._canonical(asset_manifest).encode("utf-8")
+            manifest["assetManifestVersion"]=asset_manifest["version"]
+            manifest["files"]["assets.json"]={"sha256":hashlib.sha256(asset_json).hexdigest(),"bytes":len(asset_json)}
+            for location,data in asset_blobs.items():
+                manifest["files"][location]={"sha256":hashlib.sha256(data).hexdigest(),"bytes":len(data)}
         manifest_json = self._canonical(manifest).encode("utf-8")
         output = io.BytesIO()
         with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             archive.writestr("manifest.json", manifest_json)
             archive.writestr("campaign.json", payload_json)
+            if portable:
+                archive.writestr("assets.json", asset_json)
+                for location,data in asset_blobs.items(): archive.writestr(location,data)
         archive_bytes = output.getvalue()
         if not self.validate(archive_bytes):
             return CampaignExportResult(False, error_key="campaign.export.errors.validation")
@@ -133,15 +160,23 @@ class CampaignExportService:
     def validate(cls, archive_bytes: bytes) -> bool:
         try:
             with zipfile.ZipFile(io.BytesIO(archive_bytes), "r") as archive:
-                if set(archive.namelist()) != {"manifest.json", "campaign.json"}:
-                    return False
+                names=set(archive.namelist())
+                if not {"manifest.json","campaign.json"} <= names: return False
                 manifest = json.loads(archive.read("manifest.json"))
                 payload = archive.read("campaign.json")
                 parsed = json.loads(payload)
+                version=manifest.get("version")
+                if version==LEGACY_FORMAT_VERSION and names!={"manifest.json","campaign.json"}: return False
+                if version==FORMAT_VERSION:
+                    if set(manifest.get("files",{}))!=names-{"manifest.json"}: return False
+                    for name,expected_file in manifest["files"].items():
+                        info=archive.getinfo(name)
+                        if info.file_size!=expected_file["bytes"] or hashlib.sha256(archive.read(name)).hexdigest()!=expected_file["sha256"]: return False
+                elif version!=LEGACY_FORMAT_VERSION: return False
             expected = manifest["files"]["campaign.json"]
             return (
                 manifest["format"] == FORMAT
-                and manifest["version"] == FORMAT_VERSION
+                and parsed.get("version") == version
                 and parsed["format"] == FORMAT
                 and hashlib.sha256(payload).hexdigest() == expected["sha256"]
                 and len(payload) == expected["bytes"]
@@ -163,14 +198,14 @@ class CampaignExportService:
         return {
             key: cls._sanitize_value(key, value)
             for key, value in row.items()
-            if key not in dropped and not any(part in key.lower() for part in FORBIDDEN_KEY_PARTS)
+            if key not in dropped and (key in {"token_asset_url","token_asset_id"} or not any(part in key.lower() for part in FORBIDDEN_KEY_PARTS))
         }
 
     @classmethod
     def _contains_forbidden_key(cls, value: Any) -> bool:
         if isinstance(value, dict):
             return any(
-                any(part in str(key).lower() for part in FORBIDDEN_KEY_PARTS)
+                (str(key) not in {"token_asset_url", "token_asset_id", "tokens"} and any(part in str(key).lower() for part in FORBIDDEN_KEY_PARTS))
                 or cls._contains_forbidden_key(child)
                 for key, child in value.items()
             )

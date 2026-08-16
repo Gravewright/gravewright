@@ -134,6 +134,13 @@ const fichas = await sdk.assets.list({ kind: "pdf" });
 anexo, então renderize um PDF por um renderizador em canvas em vez de embutir a
 URL direto.
 
+### `sdk.assets.ingest(file)` / `sdk.assets.cancelImport(assetId)`
+
+Requer `assets.import`. `ingest` aceita um `File` realmente selecionado pelo
+usuário; o core valida e cria um asset da campanha. Não aceita path do servidor
+nem retorna path de storage ou digest. O pipeline síncrono e limitado da SDK 1
+retorna `ready`; cancelar uma importação concluída não remove o asset.
+
 ## `sdk.ui`
 
 Requer `assets.ui`.
@@ -502,23 +509,27 @@ Procura uma chave de locale no catálogo de locales do pacote. Retorna `fallback
 const label = sdk.i18n.t("my-rpg.action.attack", "Attack");
 ```
 
-## Expansão semântica do runtime SDK 1 (experimental)
+## Runtime semântico da SDK 1
 
 Estes métodos SDK 1 aplicam gates de capability do pacote e permissão do usuário atual e retornam snapshots públicos congelados. Leituras são limitadas a 100 registros; escritas permanecem autoritativas no servidor.
 
 - `sdk.events.on`, `sdk.events.once`, `sdk.events.available`; `sdk.permissions.can`.
-- `sdk.actors.get`, `sdk.actors.list`, `sdk.actors.create`, `sdk.actors.update`, `sdk.actors.delete`.
+  Mutations de annotations PDF emitem o evento agregado e filtrado por visibility
+  `pdf.annotations.changed` para re-read autorizado.
+- `sdk.actors.get`, `sdk.actors.list`, `sdk.actors.data`, `sdk.actors.create`, `sdk.actors.update`, `sdk.actors.delete`.
 - `sdk.items.get`, `sdk.items.list`, `sdk.items.create`, `sdk.items.update`, `sdk.items.delete`.
-- `sdk.tokens.get`, `sdk.tokens.list`, `sdk.tokens.move`, `sdk.tokens.create`, `sdk.tokens.update`, `sdk.tokens.delete`.
+- `sdk.tokens.get`, `sdk.tokens.list`, `sdk.tokens.move`, `sdk.tokens.create`, `sdk.tokens.update`, `sdk.tokens.delete`; targets privados usam `sdk.tokens.targets.list`, `sdk.tokens.targets.set` e `sdk.tokens.targets.clear`.
 - `sdk.scene.get`, `sdk.scene.list`, `sdk.scene.active`.
 - `sdk.scene.geometry.walls`, `sdk.scene.geometry.lights`, `sdk.scene.geometry.createWall`, `sdk.scene.geometry.updateWall`, `sdk.scene.geometry.deleteWall`, `sdk.scene.geometry.createLight`, `sdk.scene.geometry.updateLight`, `sdk.scene.geometry.deleteLight`, `sdk.scene.geometry.setDoorState`.
 - `sdk.scene.effects.list`, `sdk.scene.effects.create`, `sdk.scene.effects.update`, `sdk.scene.effects.delete`.
 - `sdk.ui.slots.available`, `sdk.ui.slots.register`; `sdk.chat.list`, `sdk.chat.get`.
 - `sdk.combat.current`, `sdk.combat.combatants`, `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`.
-- `sdk.rules.actions.validate`, `sdk.rules.actions.execute`.
+- `sdk.rules.actions.list`, `sdk.rules.actions.get`, `sdk.rules.actions.resolve`, `sdk.rules.actions.execute`, `sdk.rules.actions.executeReference`.
+- `sdk.automation.schedule`, `sdk.automation.get`, `sdk.automation.list`, `sdk.automation.cancel` aceitam somente registered actions durable-safe; `sdk.automation.audit` retorna transições limitadas, pertencentes ao pacote e sem payload.
 - `sdk.pdf.get`, `sdk.pdf.metadata`; `sdk.pdf.viewer.open`, `sdk.pdf.viewer.goToPage`, `sdk.pdf.viewer.search`, `sdk.pdf.viewer.currentPage`.
-- `sdk.pdf.annotations.list`, `sdk.pdf.annotations.create`. Veja [API de PDF](pdf.md).
-- `sdk.cards.state`, `sdk.cards.shuffle`, `sdk.cards.reset`, `sdk.cards.draw`,
+- `sdk.pdf.annotations.list`, `sdk.pdf.annotations.create`; presentation usa `sdk.pdf.presentation.start`, `sdk.pdf.presentation.current`, `sdk.pdf.presentation.update` e `sdk.pdf.presentation.end`. Veja [API de PDF](pdf.md).
+- `sdk.cards.state`, `sdk.cards.definitions.list`, `sdk.cards.definitions.get`,
+  `sdk.cards.definitions.instantiate`, `sdk.cards.shuffle`, `sdk.cards.reset`, `sdk.cards.draw`,
   `sdk.cards.reveal`, `sdk.cards.discard`, `sdk.cards.play`,
   `sdk.cards.updatePlacement`, `sdk.cards.discardPlacement`.
 
@@ -533,11 +544,31 @@ As ferramentas de cena incluem `sdk.scene.fog.state`, `sdk.scene.fog.enable`,
 `sdk.scene.geometry.moveWallNode`, `sdk.scene.geometry.moveWalls` e
 `sdk.scene.geometry.deleteWalls`.
 
+Ferramentas espaciais usam `sdk.tools.register` para registrar uma tool de
+package com descarte automático e DTO estável de pointer em world-space.
+Consultas puras de distância usam `sdk.scene.measurements.measure`. Measurements compartilhadas com TTL usam `sdk.scene.measurements.share`, `sdk.scene.measurements.listShared` e `sdk.scene.measurements.cancel`. Templates
+compartilhados persistentes usam `sdk.scene.templates.list`,
+`sdk.scene.templates.get`, `sdk.scene.templates.create`,
+`sdk.scene.templates.update` e `sdk.scene.templates.delete`. Controles de
+partículas descobrem schemas públicos com `sdk.scene.effects.presets`.
+
+Shaders semânticos usam `sdk.scene.shaders.presets`,
+`sdk.scene.shaders.getPreset`, `sdk.scene.shaders.list`,
+`sdk.scene.shaders.apply`, `sdk.scene.shaders.update`,
+`sdk.scene.shaders.enable` e `sdk.scene.shaders.remove`. Esses métodos expõem
+somente metadata estável, parâmetros tipados e instances versionadas; GLSL e o
+lifecycle do renderer permanecem privados.
+
+UI orientada por permissão diferencia negação de ação desconhecida com
+`sdk.permissions.check`; `sdk.permissions.can` continua como atalho booleano.
+Integrações opcionais descobrem apenas metadados públicos de packages ativos
+com `sdk.packages.get` e `sdk.packages.has`.
+
 Annotations suportam `sdk.pdf.annotations.update` e
 `sdk.pdf.annotations.delete`, além de list/create.
-- `sdk.actors.patchData`; `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`.
+- `sdk.actors.patchData`; `sdk.actors.items.slots`, `sdk.actors.items.listCopies`, `sdk.actors.items.insertCopy`, `sdk.actors.items.removeCopy`; `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`.
 
-Updates aceitam `expectedVersion` onde documentado; divergência retorna `STALE_VERSION`. Grafos aceitam no máximo 32 passos. Nenhum acesso bruto a banco, transporte, renderer, filesystem ou DOM do core é exposto.
+Updates aceitam `expectedVersion` onde documentado; divergência retorna `STALE_VERSION`. Actions registradas contêm no máximo 16 operações semânticas allow-listed; callers não enviam grafos. Nenhum acesso bruto a banco, transporte, renderer, filesystem ou DOM do core é exposto.
 
 Dados de ficha de item são atualizados com `sdk.items.patchData`. O gerenciamento
 de combate também fornece `sdk.combat.advanceRound`, `sdk.combat.setFlags` e
@@ -551,6 +582,18 @@ resolvem com `sdk.content.resolve`, obtêm o valor público autorizado com
 solicita ao host a abertura do alvo e `sdk.content.link` cria um link portável.
 A resolução ocorre no servidor e não atravessa a campanha ativa.
 `sdk.content.search` pesquisa o índice autorizado da campanha por texto e tipo.
+Retorna `{ entries, nextCursor }`; passe `nextCursor` como `options.cursor` para
+continuar. O cursor é opaco, os resultados continuam filtrados por permissão e
+cada página é limitada a 100 entradas.
+
+`sdk.actors.data(actorId)` retorna `{ actor_id, version, data }` depois das
+mesmas verificações de visibilidade da ficha. Atores ocultos e inexistentes
+retornam `NOT_FOUND`. Alterações da ficha emitem `actor.data.updated`.
+
+Os eventos públicos incluem `journal.created`, `journal.updated`,
+`journal.deleted`, `cards.state.changed`, `scene.fog.changed` e
+`scene.images.changed`. A audiência de journals respeita sua visibilidade,
+inclusive na exclusão.
 
 ## Aplicações parciais e configurações por escopo
 

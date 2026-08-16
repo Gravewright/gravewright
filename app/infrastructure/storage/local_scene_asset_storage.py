@@ -27,7 +27,8 @@ class LocalSceneAssetStorage:
         *,
         root: Path | None = None,
     ) -> None:
-        self.root = root or PROJECT_ROOT / "storage" / "scenes"
+        test_root = os.environ.get("GRAVEWRIGHT_TEST_TEMP_ROOT", "").strip()
+        self.root = root or ((Path(test_root) / "scenes") if test_root else PROJECT_ROOT / "storage" / "scenes")
 
     def write_original(
         self,
