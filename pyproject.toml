@@ -18,7 +18,7 @@ dependencies = [
 dev = [
     "questionary>=2.1.1",
     "rich>=15.0.0",
-    "ruff==0.15.14",
+    "ruff==0.16.2",
 ]
 postgres = ["psycopg[binary]==3.3.4"]
 
