@@ -96,6 +96,12 @@ class UserPreferenceService:
         self.preferences.set_ping_color(user_id=user_id, ping_color=normalized)
         return PingColorResult(success=True, ping_color=normalized)
 
+    def has_seen_package_onboarding(self, user_id: str) -> bool:
+        return self.preferences.has_seen_package_onboarding(user_id)
+
+    def mark_package_onboarding_seen(self, user_id: str) -> None:
+        self.preferences.mark_package_onboarding_seen(user_id)
+
     @staticmethod
     def _valid_ping_color(value: str) -> bool:
         return len(value) == 7 and value.startswith("#") and all(

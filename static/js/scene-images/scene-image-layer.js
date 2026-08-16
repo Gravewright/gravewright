@@ -386,9 +386,28 @@
         window.GravewrightMap?.history?.push?.({ undo: () => apply("from"), redo: () => apply("to") });
       };
 
+      this._onPointerCancel = () => {
+        const drag = this.drag;
+        if (!drag) return;
+        this.drag = null;
+        if (drag.mode === "resize" || drag.mode === "rotate") {
+          const placement = this.placementById(drag.placementId);
+          if (!placement) return;
+          if (drag.mode === "resize") placement.scale = drag.baseScale;
+          else placement.rotation = drag.startRotation;
+          this.positionNode(drag.node, placement);
+          return;
+        }
+        drag.items.forEach((item) => {
+          item.placement.x = item.startX;
+          item.placement.y = item.startY;
+          this.positionNode(item.node, item.placement);
+        });
+      };
+
       document.addEventListener("pointermove", this._onPointerMove);
       document.addEventListener("pointerup", this._onPointerUp);
-      document.addEventListener("pointercancel", this._onPointerUp);
+      document.addEventListener("pointercancel", this._onPointerCancel);
     }
 
 
@@ -771,7 +790,10 @@
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
-        controllers.forEach((controller) => controller.deselect());
+        controllers.forEach((controller) => {
+          if (controller.drag) controller._onPointerCancel();
+          else controller.deselect();
+        });
         return;
       }
       if (!isEditableTarget(event.target) && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "c") {

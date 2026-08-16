@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import io
+import json
 import shutil
 import time
 import zipfile
@@ -12,13 +13,16 @@ from app.business.campaigns.campaign_export_service import CampaignExportOptions
 from app.business.campaigns.campaign_import_service import CampaignImportService
 from app.business.campaigns.portable_asset_archive import PortableAssetError, validate_asset_manifest
 from app.engine.assets.asset_library_service import AssetLibraryService
+from app.engine.journals.journal_asset_service import JournalAssetService
+from app.engine.journals.journal_service import JournalService
 from app.infrastructure.storage.local_asset_storage import LocalAssetStorage
+from app.infrastructure.storage.local_journal_asset_storage import LocalJournalAssetStorage
 from app.persistence.database import engine_begin, engine_connect
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.item_repository import ItemRepository
 from app.persistence.repositories.scene_image_repository import SceneImageRepository
 from app.persistence.repositories.token_repository import TokenRepository
-from app.persistence.tables import actors_core, campaigns, items_core, library_assets, scene_image_placements, tokens, card_deck_definitions, card_definitions
+from app.persistence.tables import actors_core, campaigns, items_core, journal_assets, journals, library_assets, scene_image_placements, tokens, card_deck_definitions, card_definitions
 from tests.conftest import seed_campaign, seed_scene, seed_user
 
 
@@ -66,6 +70,53 @@ def test_physical_asset_archive_roundtrip_owns_new_ids_and_paths(db):
     assert {imported_deck["default_back_asset_id"], imported_card["front_asset_id"], imported_card["back_asset_id"]} == {assets[0]["id"]}
     assert imported_token["token_asset_url"].endswith(assets[0]["id"])
     assert __import__("pathlib").Path(assets[0]["storage_path"]).is_file()
+
+
+def test_journal_pdf_roundtrip_rewrites_semantic_identity_and_managed_route(db):
+    gm = seed_user(name="GM")
+    source = seed_campaign(gm, title="Portable PDF journal")
+    created = JournalService().create_journal(
+        campaign_id=source, user_id=gm, journal_type="diary", title="Notebook", visibility="private",
+    )
+    assert created.success and created.journal_id
+    uploaded = JournalAssetService().upload_image(
+        journal_id=created.journal_id, user_id=gm, filename="handout.pdf",
+        content_type="application/pdf", data=b"%PDF-1.7\n%%EOF", purpose="journal_pdf",
+    )
+    assert uploaded.success and uploaded.asset_id
+    updated = JournalService().update_journal(
+        journal_id=created.journal_id, user_id=gm, title="Notebook", visibility="private",
+        data={"sections": [{"id": "pdf-page", "kind": "pdf", "title": "Handout",
+                            "assetId": uploaded.asset_id, "src": uploaded.src}]},
+    )
+    assert updated.success
+
+    exported = CampaignExportService().export(
+        campaign_id=source, user_id=gm, options=CampaignExportOptions(),
+    )
+    assert exported.success and exported.archive
+    old_path = LocalJournalAssetStorage().root / source
+    with engine_begin() as conn:
+        conn.execute(delete(campaigns).where(campaigns.c.id == source))
+    shutil.rmtree(old_path, ignore_errors=True)
+
+    imported = CampaignImportService().import_archive(
+        archive=exported.archive, user_id=gm, title="Restored PDF journal",
+    )
+    assert imported.success and imported.campaign_id != source
+    with engine_connect() as conn:
+        imported_asset = conn.execute(
+            select(journal_assets).where(journal_assets.c.campaign_id == imported.campaign_id)
+        ).mappings().one()
+        imported_journal = conn.execute(
+            select(journals).where(journals.c.campaign_id == imported.campaign_id)
+        ).mappings().one()
+    section = json.loads(imported_journal["data_json"])["sections"][0]
+    assert imported_asset["id"] != uploaded.asset_id
+    assert section["assetId"] == imported_asset["id"]
+    assert section["src"] == f"/game/journal/asset/{imported_asset['id']}"
+    assert uploaded.asset_id not in imported_journal["data_json"]
+    assert __import__("pathlib").Path(imported_asset["storage_path"]).is_file()
 
 
 def _manifest(data=PNG, *, media="image/png", location="assets/asset-000001.payload"):

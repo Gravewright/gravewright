@@ -191,6 +191,8 @@ async def show_game(
             dynamic_lighting_enabled=config.dynamic_lighting_enabled,
             gm_guided_prefetch_enabled=config.gm_guided_prefetch_enabled,
             gm_hint_max_queued_bytes=config.gm_hint_max_queued_bytes,
+            journal_image_max_bytes=config.journal_image_max_bytes,
+            journal_pdf_max_bytes=config.journal_pdf_max_bytes,
             gm_hint_idle_only=config.gm_hint_idle_only,
             gm_hint_cancel_on_visible_backlog=config.gm_hint_cancel_on_visible_backlog,
             gm_hint_policy=config.gm_hint_policy,

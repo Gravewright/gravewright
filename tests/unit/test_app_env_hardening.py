@@ -192,3 +192,10 @@ def test_config_rejects_non_positive_limits() -> None:
 
     assert result.returncode != 0
     assert "WS_MAX_MESSAGE_BYTES must be greater than zero" in result.stderr
+
+
+def test_config_rejects_non_positive_journal_upload_limits() -> None:
+    result = _import_config_with_env({"JOURNAL_PDF_MAX_BYTES": "0"})
+
+    assert result.returncode != 0
+    assert "JOURNAL_PDF_MAX_BYTES must be greater than zero" in result.stderr

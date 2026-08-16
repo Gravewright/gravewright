@@ -10,7 +10,7 @@
     <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
     <link rel="stylesheet" href="/static/css/tokens.css" />
     <link rel="stylesheet" href="/static/css/dialog.css" />
-    <link rel="stylesheet" href="/static/css/inside.css" />
+    <link rel="stylesheet" href="/static/css/inside.css?v={{ asset_version }}" />
     <script defer src="/static/js/csrf.js"></script>
     <script defer src="/static/js/core/csrf.js"></script>
     <script defer src="/static/js/core/http.js"></script>
@@ -24,6 +24,7 @@
     {% if campaign_snapshots_enabled %}<script defer src="/static/js/inside/campaign-snapshots.js?v={{ asset_version }}"></script>{% endif %}
     {% if campaign_export_enabled %}<script defer src="/static/js/inside/campaign-transfer.js?v={{ asset_version }}"></script>{% endif %}
     <script defer src="/static/js/inside/package-upload.js"></script>
+    <script defer src="/static/js/inside/marketplace.js?v=1"></script>
 </head>
 
 <body data-csrf-token="{{ csrf_token() }}" data-invitation-accepted="{{ t('inside.invitations.accepted') }}"
@@ -57,6 +58,7 @@
             <input class="nav-control" type="radio" name="inside-section" id="section-campaigns" checked />
             <input class="nav-control" type="radio" name="inside-section" id="section-systems" />
             <input class="nav-control" type="radio" name="inside-section" id="section-modules" />
+            <input class="nav-control" type="radio" name="inside-section" id="section-marketplace" />
 
             {% if user.is_owner %}
             <input class="nav-control" type="radio" name="inside-section" id="section-settings" />
@@ -80,6 +82,41 @@
                         {% if campaign_message_key %}
                         <div class="notice" role="status">
                             {{ t(campaign_message_key) }}
+                        </div>
+                        {% endif %}
+
+                        {% if show_package_onboarding %}
+                        <div class="modal-backdrop inside-modal-backdrop campaign-package-onboarding-backdrop"
+                            data-inside-modal="campaign-package-onboarding" role="presentation">
+                            <section class="delete-modal campaign-package-onboarding-modal" role="alertdialog"
+                                aria-modal="true" aria-labelledby="campaign-package-onboarding-title"
+                                aria-describedby="campaign-package-onboarding-description">
+                                <div class="delete-modal-header">
+                                    <div>
+                                        <p class="panel-eyebrow">{{ t("inside.campaigns.packages") }}</p>
+                                        <h2 id="campaign-package-onboarding-title">{{ t("inside.campaigns.packages_inactive_title") }}</h2>
+                                    </div>
+                                    <form method="post" action="/inside/package-onboarding/dismiss">
+                                        {{ csrf_input | safe }}
+                                        <button class="modal-close" type="submit"
+                                            aria-label="{{ t('inside.campaigns.cancel') }}">&times;</button>
+                                    </form>
+                                </div>
+                                <p class="delete-modal-copy" id="campaign-package-onboarding-description">
+                                    {{ t("inside.campaigns.packages_inactive_notice") }}
+                                </p>
+                                <div class="campaign-package-onboarding-path" aria-hidden="true">
+                                    <strong>{{ t("inside.campaigns.manage") }}</strong>
+                                    <span>&rarr;</span>
+                                    <strong>{{ t("inside.campaigns.packages") }}</strong>
+                                </div>
+                                <form method="post" action="/inside/package-onboarding/dismiss">
+                                    {{ csrf_input | safe }}
+                                    <button class="primary-action" type="submit">
+                                        {{ t("inside.campaigns.packages_inactive_dismiss") }}
+                                    </button>
+                                </form>
+                            </section>
                         </div>
                         {% endif %}
 
@@ -332,7 +369,7 @@
 
                                         {% if campaign.member_role == "gm" or user.is_owner %}
                                             <div class="campaign-card-footer">
-                                                <details class="campaign-manage">
+                                                <details class="campaign-manage{% if show_package_onboarding and campaign.has_inactive_packages %} campaign-manage--needs-attention{% endif %}">
                                                     <summary>{{ t("inside.campaigns.manage") }}</summary>
                                                     <div class="campaign-manage-menu">
                                                         {% if campaign.member_role == "gm" %}
@@ -350,7 +387,7 @@
                                                         <button class="manage-tool" type="button" data-inside-modal-open="campaign-audit-{{ campaign.id }}">{{ t("audit.title") }}</button>
                                                         {% endif %}
                                                         {% set active_package_count = campaign.available_packages | selectattr("active") | list | length %}
-                                                        <button class="manage-tool" type="button" data-inside-modal-open="campaign-packages-{{ campaign.id }}">
+                                                        <button class="manage-tool{% if show_package_onboarding and campaign.has_inactive_packages %} manage-tool--needs-attention{% endif %}" type="button" data-inside-modal-open="campaign-packages-{{ campaign.id }}">
                                                             {{ t("inside.campaigns.packages") }} <small>{{ active_package_count }}/{{ campaign.available_packages | length }}</small>
                                                         </button>
                                                         {% endif %}
@@ -1169,6 +1206,67 @@
                     </div>
                 </article>
 
+                <article class="editor-panel editor-panel--marketplace" data-marketplace>
+                    <div class="editor-panel-inner">
+                        <section class="section-head marketplace-head">
+                            <div>
+                                <p class="panel-eyebrow">Community Packages</p>
+                                <h1>Marketplace</h1>
+                                <p class="panel-description">Catálogo curado de packages aprovados para descoberta e instalação.</p>
+                            </div>
+                            {% if user.is_owner %}
+                            <form method="post" action="/sdk/marketplace/refresh" data-marketplace-refresh>
+                                {{ csrf_input | safe }}
+                                <button class="system-action" type="submit">Refresh</button>
+                            </form>
+                            {% endif %}
+                        </section>
+                        <div class="marketplace-status" data-marketplace-status>
+                            {% if marketplace.refreshStatus == 'failed' %}Refresh failed · {% endif %}
+                            {% if marketplace.lastRefresh %}Last updated <time data-marketplace-time="{{ marketplace.lastRefresh }}">{{ marketplace.lastRefresh }}</time>{% else %}Not refreshed yet{% endif %}
+                        </div>
+                        <div class="marketplace-filters">
+                            <input type="search" placeholder="Search packages" aria-label="Search packages" data-marketplace-search />
+                            <select aria-label="Filter by kind" data-marketplace-kind>
+                                <option value="">All kinds</option>
+                                {% for kind in ('ruleset', 'addon', 'library', 'content', 'theme', 'assets') %}
+                                <option value="{{ kind }}">{{ t("inside.packages.kind." ~ kind) }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div data-marketplace-bands>
+                            {% for kind, entries in marketplace_bands.items() %}{% if entries %}
+                            <section class="marketplace-band" data-marketplace-band="{{ kind }}">
+                                <h2>{{ t("inside.packages.kind." ~ kind) }}</h2>
+                                <div class="marketplace-grid">
+                                    {% for package in entries %}
+                                    <article class="marketplace-card" data-marketplace-package data-kind="{{ package.kind }}"
+                                             data-search="{{ package.name }} {{ package.publisher }} {{ package.description }} {{ package.tags | join(' ') }}">
+                                        <header><h3>{{ package.name }}</h3><span class="package-kind-badge package-kind-badge--{{ package.kind }}">{{ package.kind }}</span></header>
+                                        <p>{{ package.description }}</p>
+                                        <div class="marketplace-card-meta"><span>{{ package.publisher }}</span><span>v{{ package.version or '?' }}</span>{% if package.category %}<span>{{ package.category }}</span>{% endif %}</div>
+                                        <details class="marketplace-card-details"><summary>Details</summary>
+                                            <dl><div><dt>Channel</dt><dd>{{ package.channel }}</dd></div><div><dt>SDK</dt><dd>{{ package.sdkVersion or '?' }}</dd></div>{% if package.tags %}<div><dt>Tags</dt><dd>{{ package.tags | join(', ') }}</dd></div>{% endif %}</dl>
+                                        </details>
+                                        <footer>
+                                            <span class="marketplace-package-status" data-marketplace-package-status>{{ package.installState | capitalize }}</span>
+                                            {% if user.is_owner and package.installState in ('install', 'update') %}
+                                            <form method="post" action="/sdk/marketplace/install" data-marketplace-install>
+                                                {{ csrf_input | safe }}<input type="hidden" name="package_id" value="{{ package.id }}" />
+                                                <button class="system-action system-action--primary" type="submit">{{ package.installState | capitalize }}</button>
+                                            </form>
+                                            {% else %}<button class="system-action" type="button" disabled>{{ package.installState | capitalize }}</button>{% endif %}
+                                        </footer>
+                                    </article>
+                                    {% endfor %}
+                                </div>
+                            </section>
+                            {% endif %}{% endfor %}
+                            {% if not marketplace.packages %}<div class="empty-state"><p>No curated packages available.</p></div>{% endif %}
+                        </div>
+                    </div>
+                </article>
+
                 {% if user.is_owner %}
                 <article class="editor-panel editor-panel--settings">
                     <div class="editor-panel-inner">
@@ -1349,6 +1447,11 @@
                     <label class="nav-item nav-item--modules" for="section-modules">
                         <span class="nav-icon"></span>
                         <span>{{ t("inside.tabs.addons") }}</span>
+                    </label>
+
+                    <label class="nav-item nav-item--marketplace" for="section-marketplace">
+                        <span class="nav-icon"></span>
+                        <span>Marketplace</span>
                     </label>
 
                     {% if user.is_owner %}

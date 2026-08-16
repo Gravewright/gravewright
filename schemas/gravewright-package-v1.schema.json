@@ -62,6 +62,14 @@
     "repository": {
       "type": "string"
     },
+    "download": {
+      "type": "string",
+      "format": "uri"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[A-Fa-f0-9]{64}$"
+    },
     "compatibility": {
       "type": "object",
       "additionalProperties": true,
@@ -208,8 +216,8 @@
           "type": "string",
           "enum": ["zip", "git", "directory"]
         },
-        "url": { "type": "string" },
-        "sha256": { "type": "string" }
+        "url": { "type": "string", "format": "uri" },
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" }
       }
     },
     "dependencies": {

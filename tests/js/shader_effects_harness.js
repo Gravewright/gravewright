@@ -65,12 +65,13 @@ class El {
     }
 }
 
-function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, layer = "game", tool = "select", shaders = SHADERS, emitters = [] } = {}) {
+function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, layer = "game", tool = "select", shaders = SHADERS, emitters = [], lights = [], shaderPreset = null } = {}) {
     let visionMode = mode;
     const listeners = [];
     const posts = [];
     const invalidated = [];
     const live = shaders.map((s) => ({ ...s }));
+    const liveLights = lights.map((light) => ({ ...light }));
 
     const root = new El("body");
     const surface = new El("div", root);
@@ -80,7 +81,7 @@ function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, la
     canvas.dataset.mapCanvas = "";
     canvas.dataset.roomId = "campaign-1";
 
-    const tools = { activeTool: tool, activeLayer: layer, activeSubTool: "", isLayerVisible: () => true };
+    const tools = { activeTool: tool, activeLayer: layer, activeSubTool: "", selectedShaderPreset: shaderPreset, isLayerVisible: () => true };
     const sandbox = {
         window: {
             GravewrightTools: tools,
@@ -115,7 +116,10 @@ function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, la
                 if (url.includes("/game/shaders/")) {
                     return { ok: true, json: async () => ({ shaders: live.map((s) => ({ ...s })) }) };
                 }
-                return { ok: true, json: async () => ({ walls: [], lights: [], emitters: emitters.map((e) => ({ ...e })) }) };
+                if (url.includes("/game/lights/")) {
+                    return { ok: true, json: async () => ({ lights: liveLights.map((light) => ({ ...light })) }) };
+                }
+                return { ok: true, json: async () => ({ walls: [], emitters: emitters.map((e) => ({ ...e })) }) };
             }
             const body = JSON.parse(options.body);
             posts.push({ url, body });
@@ -132,6 +136,29 @@ function buildWorld({ shadersEnabled = true, mode = "cinematic", isGm = true, la
                 const shader = live.find((s) => s.id === body.shader_id);
                 if (shader) Object.assign(shader, body);
                 return { ok: true, json: async () => ({ shader: { ...shader, scene_id: "scene-1" } }) };
+            }
+            if (url.endsWith("/game/shaders/apply-preset")) {
+                const shader = {
+                    id: `P${live.length + 1}`, name: body.preset_id,
+                    source: `gravewright-preset://${body.preset_id}/v${body.schema_version}`,
+                    preset_id: body.preset_id, x: body.x, y: body.y, radius: 8,
+                    rotation: 0, intensity: 0.8, opacity: 1, scale: 1, speed: 1,
+                    color: "#8fb6ff", blend_mode: "normal", enabled: 1,
+                };
+                live.push(shader);
+                return { ok: true, json: async () => ({ instance: { id: shader.id, presetId: body.preset_id } }) };
+            }
+            if (url.endsWith("/game/shaders/delete-many")) {
+                body.shader_ids.forEach((id) => {
+                    const index = live.findIndex((shader) => shader.id === id);
+                    if (index >= 0) live.splice(index, 1);
+                });
+                return { ok: true, json: async () => ({}) };
+            }
+            if (url.endsWith("/game/lights/update")) {
+                const light = liveLights.find((item) => item.id === body.light_id);
+                if (light) Object.assign(light, body);
+                return { ok: true, json: async () => ({ light: { ...light } }) };
             }
             return { ok: true, json: async () => ({}) };
         },
@@ -362,9 +389,8 @@ async function originChecks() {
 
 // --- o fluxo da ferramenta ---------------------------------------------------
 //
-// Escolhe na barra, pinga no mapa, o editor abre naquele shader, cola o codigo,
-// salva. O caminho anterior: criar pelo editor, achar na lista, so entao
-// escrever: cobrava tres passos antes da primeira linha de GLSL.
+// Escolhe na barra e pinga no mapa. Um clique cria/seleciona; propriedades sao
+// intencionais e abrem somente no duplo clique.
 
 async function toolFlowChecks() {
     {
@@ -380,22 +406,54 @@ async function toolFlowChecks() {
         check("sem pedir nome", !("name" in (criado?.body || {})));
 
         const abriu = world.emitted.find((e) => e.type === "lighting:edit-shader");
-        check("e o editor abre ja naquele shader", Boolean(abriu?.detail?.shaderId),
-            "o clique ja disse qual e: obrigar a acha-lo numa lista e refazer o trabalho");
+        check("um clique de criacao nao abre propriedades", !abriu);
         check("o shader entra no estado", world.state().shaders.length === 1);
     }
 
     {
-        // Clicar de novo em cima de um que existe abre aquele. Empilhar dois no
-        // mesmo ponto seria pagar dois passes de tela pelo mesmo desenho.
+        const world = buildWorld({ layer: "effects", tool: "shader", shaders: [], shaderPreset: "orb-1" });
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 360, clientY: 240 });
+        await world.settle();
+        const applied = world.posts.find((post) => post.url.endsWith("/game/shaders/apply-preset"));
+        check("preset selecionado cria pela fronteira semantica", applied?.body.preset_id === "orb-1");
+        check("criacao semantica nao envia GLSL", applied && !("source" in applied.body));
+        check("instancia semantica nasce selecionada", world.state().picked.shader.has("P1"));
+    }
+
+    {
+        // Um clique seleciona; somente o duplo clique abre propriedades.
         const world = buildWorld({ layer: "effects", tool: "shader" });
         await world.settle();
         world.dispatch("pointerdown", { clientX: 400, clientY: 300 });
         await world.settle();
         check("clicar sobre um que existe nao cria outro",
             !world.posts.some((p) => p.url.endsWith("/game/shaders")));
+        check("um clique no existente nao abre propriedades",
+            !world.emitted.some((e) => e.type === "lighting:edit-shader"));
+        world.dispatch("dblclick", { clientX: 400, clientY: 300 });
         const abriu = world.emitted.filter((e) => e.type === "lighting:edit-shader").pop();
-        check("abre o que ja estava ali", abriu?.detail?.shaderId === "s1");
+        check("duplo clique abre o shader existente", abriu?.detail?.shaderId === "s1");
+    }
+
+    {
+        const light = { id: "L1", x: 400, y: 300, bright_radius: 2, dim_radius: 4, enabled: 1 };
+        const world = buildWorld({ layer: "effects", tool: "shader", lights: [light] });
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 400, clientY: 300 });
+        world.dispatch("pointermove", { clientX: 470, clientY: 350 });
+        world.dispatch("pointerup", { clientX: 470, clientY: 350 });
+        await world.settle();
+        check("Shader tool move somente o shader sobreposto",
+            world.state().shaderMarkers.find((item) => item.id === "s1").x === 470);
+        check("a Light sobreposta permanece independente",
+            world.posts.every((post) => !post.url.endsWith("/game/lights/update")));
+        world.dispatch("keydown", { key: "Delete" });
+        await world.settle();
+        check("Delete com Shader tool remove somente o shader",
+            world.posts.some((post) => post.url.endsWith("/game/shaders/delete-many"))
+            && world.posts.every((post) => !post.url.endsWith("/game/lights/delete-many")));
+        check("nenhuma ativacao da Selection foi necessaria", world.tools.activeTool === "shader");
     }
 
     {

@@ -118,12 +118,22 @@ def _normalize_section(raw: object, fallback_order: int) -> dict:
         kind = "text"
     level = 1
     audience = str(raw.get("audience") or "public").strip()
+    src = _short(raw.get("src"), 1024)
+    asset_id = _short(raw.get("assetId") or raw.get("asset_id"), 120)
+    prefix = "/game/journal/asset/"
+    if not asset_id and src.startswith(prefix):
+        asset_id = src[len(prefix):].split("?", 1)[0].split("#", 1)[0]
+    if asset_id and not all(ch.isalnum() or ch in {"_", "-"} for ch in asset_id):
+        asset_id = ""
+    if kind == "pdf" and asset_id:
+        src = f"{prefix}{asset_id}"
     return {
         "id": _short(raw.get("id"), 40) or _gen_id("section"),
         "title": _short(raw.get("title"), 120) or "Untitled",
         "category": _short(raw.get("category"), 80),
         "kind": kind,
-        "src": _short(raw.get("src"), 1024),
+        "assetId": asset_id,
+        "src": src,
         "level": level,
         "audience": audience if audience in {"public", "gm"} else "public",
         "sortOrder": _int(raw.get("sortOrder"), fallback_order),

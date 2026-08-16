@@ -356,7 +356,7 @@ class CardService:
         )
         face_state = (
             CardFaceState.FACE_UP
-            if reveal or destination == DrawDestination.CHAT
+            if reveal
             else CardFaceState.FACE_DOWN
         )
         try:
@@ -404,6 +404,26 @@ class CardService:
                 "target_pile_id": target["id"],
             },
         )
+
+    def project_cards_for_room(self, *, campaign_id: str, card_ids: list[str]) -> list[dict]:
+        """Return the non-privileged room projection used by shared presentations."""
+        cards = [card for card_id in card_ids if (card := self.cards.get_card(card_id))]
+        cards = [card for card in cards if card.get("campaign_id") == campaign_id]
+        definitions = self.cards.definitions_by_id(
+            [card["card_definition_id"] for card in cards]
+        )
+        return [
+            redact_card_for_viewer(
+                self._card_dataclass(card),
+                self._definition_dataclass(definitions[card["card_definition_id"]])
+                if card["card_definition_id"] in definitions
+                else None,
+                viewer_user_id="",
+                viewer_role="player",
+                gm_can_peek=False,
+            )
+            for card in cards
+        ]
 
     def reveal(self, *, campaign_id: str, user_id: str, card_ids: list[str]) -> CardServiceResult:
         role = self._role(campaign_id=campaign_id, user_id=user_id)

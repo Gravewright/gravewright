@@ -225,8 +225,12 @@ async def draw_cards(
     )
     if result.success:
         if destination == DrawDestination.CHAT:
-            cards = (
+            caller_cards = (
                 result.payload.get("cards") if isinstance(result.payload.get("cards"), list) else []
+            )
+            cards = card_service.project_cards_for_room(
+                campaign_id=campaign_id,
+                card_ids=[str(card.get("id") or "") for card in caller_cards if isinstance(card, dict)],
             )
             count_label = len(cards) if cards else int(body.get("count") or 1)
             content = f"{current_user.get('name') or 'Player'} revealed {count_label} card"

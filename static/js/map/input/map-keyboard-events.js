@@ -90,11 +90,9 @@
             if (event.key === "Delete" || event.key === "Backspace") {
                 if (componentLayer || sceneImageSelection) return;
                 const tool = window.GravewrightTools?.activeTool ?? "select";
-                const sub = window.GravewrightTools?.activeSubTool ?? "";
                 if (
                     (tool === "shape" || tool === "draw")
-                    && sub === "select"
-                    && deleteSelectedMeasure(canvas)
+                    && deleteSelectedMeasure(canvas, { domain: tool })
                 ) {
                     event.preventDefault();
                     return;

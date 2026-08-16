@@ -43,6 +43,16 @@ async def move_wall_node(request: Request, current_user: dict, scene_wall_servic
     result=await run_blocking(scene_wall_service.move_node,campaign_id=cid,scene_id=sid,user_id=current_user["id"],**coords)
     if result.success: await broadcast(cid,sid)
     return response(result)
+@post("/game/walls/move-endpoint")
+async def move_wall_endpoint(request: Request, current_user: dict, scene_wall_service: SceneWallService) -> Response[dict[str, Any]]:
+    if off := disabled(): return off
+    d=await body(request); cid=str(d.get("campaign_id") or ""); sid=str(d.get("scene_id") or "")
+    try: endpoint=int(d.get("endpoint")); to_x=float(d.get("to_x")); to_y=float(d.get("to_y"))
+    except (TypeError,ValueError): endpoint=0; to_x=to_y=float("nan")
+    result=await run_blocking(scene_wall_service.move_endpoint,campaign_id=cid,scene_id=sid,
+        wall_id=str(d.get("wall_id") or ""),endpoint=endpoint,user_id=current_user["id"],to_x=to_x,to_y=to_y)
+    if result.success: await broadcast(cid,sid)
+    return response(result)
 @post("/game/walls/move-many")
 async def move_walls(request: Request, current_user: dict, scene_wall_service: SceneWallService) -> Response[dict[str, Any]]:
     if off := disabled(): return off

@@ -688,6 +688,11 @@
 
                         wallsGfx.circle(centre.x, centre.y, shader.radiusWorld * this.camera.zoom)
                             .stroke({ color: tint, width: 1, alpha: shader.selected ? 0.55 : 0.28 });
+                        if (shader.resizeHandle) {
+                            wallsGfx.circle(centre.x + shader.radiusWorld * this.camera.zoom, centre.y, 6)
+                                .fill({ color: 0x0b0f19, alpha: 0.9 })
+                                .stroke({ color: tint, width: 2, alpha: 0.9 });
+                        }
                     }
                     wallsGfx.circle(centre.x, centre.y, shader.selected ? 9 : 7)
                         .fill({ color: tint, alpha: shader.enabled ? 0.85 : 0.25 })

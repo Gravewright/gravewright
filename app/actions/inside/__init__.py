@@ -16,6 +16,7 @@ from app.actions.inside.diagnostics import show_diagnostics
 from app.actions.inside.request_delete_campaign import request_delete_campaign
 from app.actions.inside.show_inside import show_inside
 from app.actions.inside.update_campaign import update_campaign
+from app.actions.inside.package_onboarding import dismiss_package_onboarding
 
 
 route_handlers = [
@@ -36,4 +37,5 @@ route_handlers = [
     update_inside_settings,
     update_privacy_settings,
     show_diagnostics,
+    dismiss_package_onboarding,
 ]

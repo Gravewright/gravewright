@@ -175,6 +175,8 @@ def _validate_config(cfg: "AppConfig") -> None:
         "TOKEN_CREATE_MANY_MAX": cfg.token_create_many_max,
         "BOARD_MARKERS_MAX_PER_SCENE": cfg.board_markers_max_per_scene,
         "BOARD_MEASUREMENTS_MAX_PER_USER": cfg.board_measurements_max_per_user,
+        "JOURNAL_IMAGE_MAX_BYTES": cfg.journal_image_max_bytes,
+        "JOURNAL_PDF_MAX_BYTES": cfg.journal_pdf_max_bytes,
         "MAP_UPLOAD_MAX_BYTES": cfg.map_upload_max_bytes,
         "MAP_IMAGE_MAX_WIDTH": cfg.map_image_max_width,
         "MAP_IMAGE_MAX_HEIGHT": cfg.map_image_max_height,
@@ -353,6 +355,9 @@ class AppConfig:
     board_markers_max_per_scene: int
     board_measurements_max_per_user: int
 
+    journal_image_max_bytes: int
+    journal_pdf_max_bytes: int
+
     map_upload_max_bytes: int
     map_image_max_width: int
     map_image_max_height: int
@@ -448,6 +453,8 @@ config = AppConfig(
     token_create_many_max=env_int("TOKEN_CREATE_MANY_MAX", 50),
     board_markers_max_per_scene=env_int("BOARD_MARKERS_MAX_PER_SCENE", 500),
     board_measurements_max_per_user=env_int("BOARD_MEASUREMENTS_MAX_PER_USER", 50),
+    journal_image_max_bytes=env_int("JOURNAL_IMAGE_MAX_BYTES", 10 * 1024 * 1024),
+    journal_pdf_max_bytes=env_int("JOURNAL_PDF_MAX_BYTES", 25 * 1024 * 1024),
     map_upload_max_bytes=env_int("MAP_UPLOAD_MAX_BYTES", 50 * 1024 * 1024 * 1024),
     map_image_max_width=env_int("MAP_IMAGE_MAX_WIDTH", 500_000),
     map_image_max_height=env_int("MAP_IMAGE_MAX_HEIGHT", 500_000),

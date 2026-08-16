@@ -139,6 +139,27 @@ class SceneWallService:
         for wall_id, changes in pending: self.walls.update(wall_id, **changes)
         return WallResult(True, {"scene_id": scene_id, "walls": self.walls.list_for_scene(scene_id)})
 
+    def move_endpoint(self, *, campaign_id: str, scene_id: str, wall_id: str, endpoint: int,
+                      user_id: str, to_x: float, to_y: float) -> WallResult:
+        """Move one wall endpoint, intentionally detaching it from a welded node."""
+        if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm":
+            return WallResult(False, error_key="lighting.errors.denied")
+        scene = self.scenes.get_by_id(scene_id)
+        wall = self.walls.get(wall_id)
+        if not scene or scene["campaign_id"] != campaign_id or not wall or wall["scene_id"] != scene_id:
+            return WallResult(False, error_key="lighting.errors.not_found")
+        if endpoint not in {1, 2} or not all(isfinite(value) for value in (to_x, to_y)):
+            return WallResult(False, error_key="lighting.errors.invalid")
+        limit = max(float(scene["width"]), float(scene["height"])) * 2
+        if abs(to_x) > limit or abs(to_y) > limit:
+            return WallResult(False, error_key="lighting.errors.invalid")
+        other_x, other_y = (wall["x2"], wall["y2"]) if endpoint == 1 else (wall["x1"], wall["y1"])
+        if hypot(to_x - other_x, to_y - other_y) < 2:
+            return WallResult(False, error_key="lighting.errors.invalid")
+        updated = self.walls.update(wall_id, **{f"x{endpoint}": to_x, f"y{endpoint}": to_y})
+        return WallResult(True, {"scene_id": scene_id, "wall": updated,
+                                "walls": self.walls.list_for_scene(scene_id)})
+
     def move_many(self, *, campaign_id: str, scene_id: str, wall_ids: list[str], user_id: str, dx: float, dy: float) -> WallResult:
         if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm":
             return WallResult(False, error_key="lighting.errors.denied")

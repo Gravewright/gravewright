@@ -126,6 +126,11 @@ class PackageAssetService:
                 continue
             version = manifest.version or "0"
             base = package_registry.PACKAGES_DIR / record["package_dir"]
+            if isinstance(manifest, PackageManifest):
+                styles = [path for path in styles if self.resolve(manifest.id, path) is not None]
+                scripts = [path for path in scripts if self.resolve(manifest.id, path) is not None]
+                if not styles and not scripts:
+                    continue
             out.append(
                 {
                     "package_id": manifest.id,

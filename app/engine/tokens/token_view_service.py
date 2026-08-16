@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.engine.rules.token_mapping_resolver import BAR_SLOTS, DEFAULT_BAR_COLORS
+from app.engine.actors.actor_asset_urls import actor_image_file_exists
 
 
 class TokenViewService:
@@ -43,6 +44,10 @@ class TokenViewService:
             or overrides.get("token_asset_url")
             or projection.get("token_asset_url")
         )
+        if asset_url and actor and str(asset_url).startswith(f"/game/actor/{actor.get('id')}/image/"):
+            kind = "token" if "/image/token" in str(asset_url) else "portrait"
+            if not actor_image_file_exists(actor, kind):
+                asset_url = None
 
         bars = self._resolve_bars(projection=projection, overrides=overrides)
 

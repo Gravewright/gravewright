@@ -14,10 +14,6 @@
 
 
 
-    const COMMIT_DELAY_MS = 200;
-
-
-
     const LIVE_FIELDS = new Set(["intensity", "opacity", "radius", "rotation", "scale", "speed", "color", "blend_mode", "enabled"]);
 
 
@@ -42,8 +38,9 @@
     };
 
 
-    let pending = null;
     let target = null;
+    let previewPatch = {};
+    let sourcePreviewTimer = null;
     const presetChoice = new WeakMap();
 
     const modals = () => window.GravewrightModals;
@@ -52,19 +49,6 @@
         document.querySelector(`[data-shader-editor-panel][data-room-id="${CSS.escape(roomId)}"]`);
     const canvasFor = (roomId) =>
         document.querySelector(`[data-map-canvas][data-room-id="${CSS.escape(roomId)}"]`);
-
-    function flush() {
-        if (!pending) return;
-        window.clearTimeout(pending.timer);
-        const { run } = pending;
-        pending = null;
-        run();
-    }
-
-    function queue(run) {
-        if (pending) window.clearTimeout(pending.timer);
-        pending = { run, timer: window.setTimeout(flush, COMMIT_DELAY_MS) };
-    }
 
     function say(panel, message, bad) {
         const status = panel?.querySelector("[data-shader-status]");
@@ -175,6 +159,7 @@
         if (!panel) return;
         const shader = shadersOf(roomId).find((candidate) => candidate.id === shaderId) || null;
         target = { roomId, shaderId: shader?.id || "" };
+        previewPatch = {};
         fillFields(panel, shader || {});
         renderPresets(panel);
         window.GravewrightLimits?.paint?.(panel, "radius");
@@ -189,6 +174,48 @@
         return lighting()?.patchShader?.(canvas, target.shaderId, patchValues);
     }
 
+    function valueOf(input) {
+        if (input.type === "checkbox") return input.checked;
+        if (["color", "text"].includes(input.type) || input.tagName === "SELECT") return input.value;
+        const value = Number(input.value);
+        if (!Number.isFinite(value)) return null;
+        const min = input.min === "" ? -Infinity : Number(input.min);
+        const max = input.max === "" ? Infinity : Number(input.max);
+        return value < min || value > max ? null : value;
+    }
+
+    function preview(input, panel) {
+        const key = input.dataset.shaderField;
+        const value = valueOf(input);
+        if (value === null) { say(panel, PROBLEMS["lighting.errors.invalid"], true); return false; }
+        previewPatch[key] = value;
+        const canvas = canvasFor(target.roomId);
+        lighting()?.previewShader?.(canvas, target.shaderId, { [key]: value });
+        say(panel, "", false);
+        return true;
+    }
+
+    async function commitPreview(panel) {
+        if (!target?.shaderId || !Object.keys(previewPatch).length) return;
+        const values = previewPatch;
+        previewPatch = {};
+        try {
+            await lighting()?.commitShaderPreview?.(canvasFor(target.roomId), target.shaderId, values);
+            say(panel, "Salvo.", false);
+        } catch (error) {
+            say(panel, describe(error), true);
+            const shader = shadersOf(target.roomId).find((candidate) => candidate.id === target.shaderId);
+            fillFields(panel, shader || {});
+        }
+    }
+
+    function cancelPreview() {
+        if (!target?.shaderId) return;
+        window.clearTimeout(sourcePreviewTimer);
+        lighting()?.restoreShaderPreview?.(canvasFor(target.roomId), target.shaderId);
+        previewPatch = {};
+    }
+
     function describe(error) {
         const key = String(error?.message || error || "");
         return PROBLEMS[key] || `Não foi possível salvar (${key}).`;
@@ -201,17 +228,25 @@
         const panel = input.closest("[data-shader-editor-panel]");
         paint(panel, key, input, input.value);
         if (!LIVE_FIELDS.has(key)) return;
-        const value = input.type === "checkbox" ? input.checked : input.value;
-        queue(() => { patch({ [key]: value })?.catch?.((error) => say(panel, describe(error), true)); });
+        preview(input, panel);
     }
 
     document.addEventListener("input", (event) => {
         if (event.target?.tagName !== "SELECT") updateField(event);
+        const source = event.target.closest?.('[data-shader-field="source"]');
+        if (!source || !target?.shaderId) return;
+        window.clearTimeout(sourcePreviewTimer);
+        sourcePreviewTimer = window.setTimeout(() => {
+            lighting()?.previewShader?.(canvasFor(target.roomId), target.shaderId, { source: source.value });
+            window.GravewrightMap?.redraw?.();
+        }, 350);
     });
 
 
     document.addEventListener("change", (event) => {
         if (event.target?.tagName === "SELECT") updateField(event);
+        const input = event.target.closest?.("[data-shader-field]");
+        if (input && LIVE_FIELDS.has(input.dataset.shaderField)) void commitPreview(input.closest("[data-shader-editor-panel]"));
     });
     document.addEventListener("input", (event) => {
         const library = event.target.closest?.("[data-shader-preset-library]");
@@ -235,7 +270,8 @@
         const value = window.GravewrightLimits?.next?.(panel, "radius");
         if (value === null || value === undefined) return;
         paint(panel, "radius", panel.querySelector('[data-shader-field="radius"]'), value);
-        queue(() => { patch({ radius: value })?.catch?.((error) => say(panel, describe(error), true)); });
+        preview(panel.querySelector('[data-shader-field="radius"]'), panel);
+        void commitPreview(panel);
     });
 
     document.addEventListener("click", async (event) => {
@@ -254,7 +290,7 @@
             const library = panel.querySelector("[data-shader-preset-library]");
             const preset = presetChoice.get(library);
             if (!preset) return;
-            flush();
+            await commitPreview(panel);
             const keys = ["source", "opacity", "intensity", "scale", "speed", "rotation",
                 "radius", "color", "blend_mode", "enabled"];
             const values = Object.fromEntries(keys.map((key) => [key, preset[key]]));
@@ -272,7 +308,7 @@
         }
 
         if (event.target.closest("[data-shader-save]")) {
-            flush();
+            await commitPreview(panel);
             const source = panel.querySelector('[data-shader-field="source"]')?.value || "";
             try {
                 await patch({ source });
@@ -286,7 +322,7 @@
         }
 
         if (event.target.closest("[data-shader-delete]")) {
-            flush();
+            await commitPreview(panel);
             const removed = target.shaderId;
             if (!removed) return;
             await lighting()?.deleteShader?.(canvasFor(roomId), removed);
@@ -330,6 +366,18 @@
     document.addEventListener("vtt:shader-error", (event) => {
         if (!target || event.detail?.shaderId !== target.shaderId) return;
         say(panelFor(target.roomId), event.detail.error || "", true);
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !target?.shaderId) return;
+        cancelPreview();
+        const panel = panelFor(target.roomId);
+        const shader = shadersOf(target.roomId).find((candidate) => candidate.id === target.shaderId);
+        fillFields(panel, shader || {});
+    }, true);
+    document.addEventListener("vtt:modal-closed", (event) => {
+        const modalId = event.detail?.modal?.dataset?.modalId || event.detail?.modal?.id || "";
+        if (target?.roomId && modalId === `shader-editor-${target.roomId}`) cancelPreview();
     });
 
 

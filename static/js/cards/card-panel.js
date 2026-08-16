@@ -23,6 +23,94 @@
     return String(template || "").replace(/\{(\w+)\}/g, (_, key) => String(values?.[key] ?? `{${key}}`));
   }
 
+  function drawLabel(name, fallback) {
+    return label(`cardDraw${name}`, fallback);
+  }
+
+  function openDrawDialog({ deckName, maximum }) {
+    if (document.querySelector("dialog.card-draw-dialog[open]")) return Promise.resolve(null);
+    const max = Math.max(0, Number(maximum) || 0);
+    if (!max) return Promise.resolve(null);
+    let destination = "hand";
+    let face = "face_up";
+    try {
+      destination = sessionStorage.getItem("gravewright.cards.draw.destination") || destination;
+      face = sessionStorage.getItem("gravewright.cards.draw.face") || face;
+    } catch { }
+    if (!["hand", "table", "chat"].includes(destination)) destination = "hand";
+    if (!["face_up", "face_down"].includes(face)) face = "face_up";
+
+    return new Promise((resolve) => {
+      const dialog = document.createElement("dialog");
+      dialog.className = "card-draw-dialog";
+      dialog.innerHTML = `<form method="dialog" data-card-draw-form>
+        <header><strong>${esc(drawLabel("Title", "Draw cards"))}</strong><small>${esc(deckName || "")}</small></header>
+        <div class="card-draw-choices">
+          <fieldset><legend>${esc(drawLabel("Destination", "Destination"))}</legend>
+            <label><input type="radio" name="destination" value="hand"${destination === "hand" ? " checked" : ""}> ${esc(drawLabel("Hand", "Hand"))}</label>
+            <label><input type="radio" name="destination" value="table"${destination === "table" ? " checked" : ""}> ${esc(drawLabel("Table", "Table"))}</label>
+            <label><input type="radio" name="destination" value="chat"${destination === "chat" ? " checked" : ""}> ${esc(drawLabel("Chat", "Chat"))}</label>
+          </fieldset>
+          <fieldset><legend>${esc(drawLabel("State", "State"))}</legend>
+            <label><input type="radio" name="face" value="face_up"${face === "face_up" ? " checked" : ""}> ${esc(drawLabel("FaceUp", "Face up"))}</label>
+            <label><input type="radio" name="face" value="face_down"${face === "face_down" ? " checked" : ""}> ${esc(drawLabel("FaceDown", "Face down"))}</label>
+          </fieldset>
+        </div>
+        <label class="card-draw-quantity"><span>${esc(drawLabel("Quantity", "Quantity"))}</span>
+          <span><button type="button" data-card-draw-step="-1" aria-label="-">−</button><input type="number" min="1" max="${max}" value="1" data-card-draw-count><button type="button" data-card-draw-step="1" aria-label="+">+</button></span>
+          <small>${esc(format(drawLabel("Available", "{count} available"), { count: max }))}</small>
+        </label>
+        <footer><button type="button" data-card-draw-cancel>${esc(drawLabel("Cancel", "Cancel"))}</button><button type="submit" class="primary" data-card-draw-submit>${esc(drawLabel("Submit", "Draw"))}</button></footer>
+      </form>`;
+      const input = dialog.querySelector("[data-card-draw-count]");
+      const submit = dialog.querySelector("[data-card-draw-submit]");
+      let settled = false;
+      const finish = (result) => {
+        if (settled) return;
+        settled = true;
+        if (dialog.open) dialog.close();
+        dialog.remove();
+        resolve(result);
+      };
+      const validate = () => {
+        const value = Number(input.value);
+        const valid = Number.isInteger(value) && value >= 1 && value <= max;
+        submit.disabled = !valid;
+        return valid ? value : null;
+      };
+      dialog.addEventListener("click", (event) => {
+        const step = event.target.closest("[data-card-draw-step]");
+        if (step) {
+          input.value = String(Math.max(1, Math.min(max, (Number(input.value) || 1) + Number(step.dataset.cardDrawStep))));
+          validate();
+        }
+      });
+      dialog.querySelector("[data-card-draw-cancel]").addEventListener("click", () => finish(null));
+      dialog.addEventListener("cancel", (event) => { event.preventDefault(); finish(null); });
+      input.addEventListener("input", validate);
+      dialog.querySelector("form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const count = validate();
+        if (!count) return;
+        const result = {
+          destination: dialog.querySelector('[name="destination"]:checked').value,
+          face: dialog.querySelector('[name="face"]:checked').value,
+          count,
+        };
+        try {
+          sessionStorage.setItem("gravewright.cards.draw.destination", result.destination);
+          sessionStorage.setItem("gravewright.cards.draw.face", result.face);
+        } catch { }
+        finish(result);
+      });
+      document.body.appendChild(dialog);
+      validate();
+      dialog.showModal();
+      input.focus();
+      input.select();
+    });
+  }
+
 
   function isEditableTarget(target) {
     const el = target instanceof Element ? target : null;
@@ -537,8 +625,7 @@
         if (action === "refresh") this.refresh();
         if (action === "shuffle") this.shuffle(button.dataset.deckId);
         if (action === "delete-deck") this.removeDeck(button.dataset.deckId, button.dataset.deckName);
-        if (action === "draw-selected") this.drawSelected("hand");
-        if (action === "draw-chat-selected") this.drawSelected("chat");
+        if (action === "open-draw") this.openDraw(button.dataset.deckId);
         if (action === "flip-hand") this.toggleHandFlip(button.dataset.cardId);
         if (action === "discard") this.discard(button.dataset.cardId);
         if (action === "flip") this.flipPlacement(button.dataset.placementId, button.dataset.faceState);
@@ -654,15 +741,38 @@
       }
     }
 
-    async draw(deckId, destination) {
-      await this.run(() => Cards.api.drawCards(this.roomId, { deck_instance_id: deckId, count: 1, destination }));
-    }
-
-    async drawSelected(destination = "hand") {
+    async openDraw(explicitDeckId = "") {
       const select = this.root.querySelector("[data-hand-deck]");
-      const deckId = select?.value || this.selectedDeckId;
+      const deckId = explicitDeckId || select?.value || this.selectedDeckId;
       if (!deckId) return;
-      await this.draw(deckId, destination);
+      const deck = (this.store.state?.decks || []).find((item) => item.id === deckId);
+      const choice = await openDrawDialog({ deckName: deck?.name, maximum: deck?.draw_count });
+      if (!choice) return;
+      if (choice.destination === "table") {
+        const canvas = window.GravewrightMap?.activeCanvas?.()
+          || document.querySelector(`.room-workspace.is-active [data-map-canvas][data-room-id="${CSS.escape(this.roomId)}"]`);
+        if (!canvas?.dataset.sceneId) {
+          this.notice(drawLabel("NoScene", "Open a scene before placing cards."), true);
+          return;
+        }
+        try {
+          const result = await Cards.api.drawCards(this.roomId, {
+            deck_instance_id: deckId, count: choice.count, destination: "hand",
+            reveal: choice.face === "face_up",
+          });
+          await this.refresh();
+          Cards.beginTablePlacement(canvas, result.cards || [], choice.face === "face_up", this.roomId);
+        } catch (error) {
+          this.notice(error.message || label("cardLabelRequestFailed", "Cards request failed."), true);
+        }
+        return;
+      }
+      await this.run(() => Cards.api.drawCards(this.roomId, {
+        deck_instance_id: deckId,
+        count: choice.count,
+        destination: choice.destination,
+        reveal: choice.face === "face_up",
+      }));
     }
 
 
@@ -749,6 +859,7 @@
             <small>${esc(countLabel)}</small>
           </div>
           <div class="cards-deck-actions">
+            <button type="button" data-card-action="open-draw" data-deck-id="${esc(deck.id)}"${drawCount === 0 ? " disabled" : ""} title="${esc(label("cardLabelDraw", "Draw"))}"><i class="ph ph-plus"></i><span>${esc(label("cardLabelDraw", "Draw"))}</span></button>
             <button type="button" data-card-action="shuffle" data-deck-id="${esc(deck.id)}" title="${esc(label("cardLabelShuffle", "Shuffle"))}"><i class="ph ph-shuffle"></i><span>${esc(label("cardLabelShuffle", "Shuffle"))}</span></button>
             <button type="button" data-card-action="reset" data-deck-id="${esc(deck.id)}" title="${esc(label("cardLabelReset", "Reset"))}"><i class="ph ph-arrow-clockwise"></i><span>${esc(label("cardLabelReset", "Reset"))}</span></button>
             ${this.isGm ? `<button type="button" class="is-danger" data-card-action="delete-deck" data-deck-id="${esc(deck.id)}" data-deck-name="${esc(deck.name)}" title="${esc(label("cardLabelRemoveDeck", "Remove deck"))}"><i class="ph ph-trash"></i><span>${esc(label("cardLabelRemoveDeck", "Remove"))}</span></button>` : ""}
@@ -821,11 +932,8 @@
           <i class="ph ph-cards" aria-hidden="true"></i>
           <select data-hand-deck aria-label="${esc(label("cardLabelDeckSelect", "Deck"))}"${decks.length ? "" : " disabled"}>${options}</select>
         </div>
-        <button type="button" class="hand-draw-btn" data-card-action="draw-selected"${drawDisabled ? ' disabled aria-disabled="true"' : ""}>
+        <button type="button" class="hand-draw-btn" data-card-action="open-draw" data-deck-id="${esc(selectedId)}"${drawDisabled ? ' disabled aria-disabled="true"' : ""}>
           <i class="ph ph-plus" aria-hidden="true"></i><span>${esc(label("cardLabelDraw", "Draw"))}</span>
-        </button>
-        <button type="button" class="hand-draw-btn hand-draw-btn--chat" data-card-action="draw-chat-selected" title="${esc(label("cardLabelDrawChat", "Draw and reveal in chat"))}"${drawDisabled ? ' disabled aria-disabled="true"' : ""}>
-          <i class="ph ph-chats" aria-hidden="true"></i><span>${esc(label("cardLabelToChat", "To chat"))}</span>
         </button>
         <small class="hand-draw-count">${esc(count)}</small>
       </div>`;
@@ -937,6 +1045,85 @@
     } catch {
       return false;
     }
+  };
+
+  Cards.beginTablePlacement = function beginTablePlacement(canvas, cards, reveal, roomId) {
+    const list = Array.isArray(cards) ? cards.filter((card) => card?.id) : [];
+    const sceneId = canvas?.dataset.sceneId || "";
+    const layer = canvas?.closest("[data-map-viewport]")?.querySelector("[data-card-scene-layer]");
+    if (!canvas || !layer || !sceneId || !list.length) return false;
+    Cards.cancelTablePlacement?.();
+    const preview = document.createElement("div");
+    preview.className = "card-placement-preview";
+    preview.innerHTML = list.map((card, index) => `<article class="table-card is-preview" style="--preview-index:${index}">
+      <div class="table-card__image">${tableCardFace(card, { face_state: reveal ? "face_up" : "face_down" })}</div>
+    </article>`).join("");
+    layer.appendChild(preview);
+    let point = null;
+    let done = false;
+
+    const inside = (event) => {
+      const rect = layer.getBoundingClientRect();
+      return event.clientX >= rect.left && event.clientX <= rect.right
+        && event.clientY >= rect.top && event.clientY <= rect.bottom;
+    };
+    const move = (event) => {
+      if (!inside(event)) { preview.hidden = true; return; }
+      preview.hidden = false;
+      const rect = layer.getBoundingClientRect();
+      point = { clientX: event.clientX, clientY: event.clientY };
+      preview.style.left = `${event.clientX - rect.left}px`;
+      preview.style.top = `${event.clientY - rect.top}px`;
+    };
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      preview.remove();
+      document.removeEventListener("pointermove", move, true);
+      document.removeEventListener("pointerdown", confirm, true);
+      document.removeEventListener("contextmenu", cancel, true);
+      document.removeEventListener("keydown", keydown, true);
+      Cards.cancelTablePlacement = null;
+    };
+    const cancel = (event) => {
+      if (event?.type === "contextmenu" && inside(event)) event.preventDefault();
+      cleanup();
+    };
+    const keydown = (event) => {
+      if (event.key === "Escape") { event.preventDefault(); cancel(event); }
+    };
+    const confirm = async (event) => {
+      if (event.button !== 0 || !inside(event)) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      point = point || event;
+      const mapState = window.GravewrightMap?.stateFor?.(canvas);
+      const rect = layer.getBoundingClientRect();
+      const zoom = Number(mapState?.zoom || 1) || 1;
+      const x = (point.clientX - rect.left - Number(mapState?.offsetX || 0)) / zoom;
+      const y = (point.clientY - rect.top - Number(mapState?.offsetY || 0)) / zoom;
+      cleanup();
+      try {
+        for (let index = 0; index < list.length; index += 1) {
+          await Cards.api.playCardToScene(roomId, {
+            card_id: list[index].id, scene_id: sceneId,
+            x: Math.round(x + index * 22), y: Math.round(y + index * 16),
+            reveal,
+          });
+        }
+        refreshRoom(roomId);
+      } catch {
+        refreshRoom(roomId);
+      }
+    };
+    Cards.cancelTablePlacement = cleanup;
+    requestAnimationFrame(() => {
+      document.addEventListener("pointermove", move, true);
+      document.addEventListener("pointerdown", confirm, true);
+      document.addEventListener("contextmenu", cancel, true);
+      document.addEventListener("keydown", keydown, true);
+    });
+    return true;
   };
 
 

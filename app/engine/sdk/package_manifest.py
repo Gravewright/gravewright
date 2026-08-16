@@ -277,6 +277,16 @@ class PackageDistribution:
             sha256=_str(raw.get("sha256")),
         )
 
+    @classmethod
+    def from_manifest(cls, raw: dict) -> PackageDistribution | None:
+        """Resolve additive v1 distribution metadata without changing SDK version."""
+        nested = cls.from_dict(raw.get("distribution"))
+        if nested is not None:
+            return nested
+        download = _str(raw.get("download"))
+        sha256 = _str(raw.get("sha256"))
+        return cls(type="zip", url=download, sha256=sha256) if download or sha256 else None
+
 
 @dataclass(frozen=True)
 class PackageRequirement:
@@ -410,7 +420,7 @@ class PackageManifest:
             entrypoints=entrypoints,
             provides=PackageProvides.from_dict(raw.get("provides")),
             settings=[PackageSetting.from_dict(s) for s in _list(raw.get("settings"))],
-            distribution=PackageDistribution.from_dict(raw.get("distribution")),
+            distribution=PackageDistribution.from_manifest(raw),
             dependencies=[PackageDependency.from_dict(d) for d in _list(raw.get("dependencies"))],
             conflicts=[PackageConflict.from_dict(c) for c in _list(raw.get("conflicts"))],
         )
