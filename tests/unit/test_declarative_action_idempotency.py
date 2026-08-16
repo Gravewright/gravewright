@@ -2,10 +2,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from app.engine.rules.declarative_action_registry import ActionContractError, _validate_definition
+from app.engine.rules.declarative_action_registry import _validate_definition
 from app.engine.sheets.sheet_data_service import SheetDataService
 from app.persistence.repositories.actor_repository import ActorRepository
-from tests.conftest import seed_campaign, seed_member, seed_user
+from tests.conftest import seed_campaign, seed_user
 
 
 def _actor():

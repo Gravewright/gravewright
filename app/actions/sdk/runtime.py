@@ -46,7 +46,6 @@ from app.engine.rules.automation_service import AutomationService
 from app.engine.assets.asset_ingestion_service import AssetIngestionService
 from app.engine.chat.chat_service import ChatService
 from app.engine.tokens.token_service import TokenService
-from app.engine.tokens.token_hp_service import TokenHpService
 from app.persistence.repositories.scene_repository import SceneRepository
 from app.persistence.repositories.chat_message_repository import ChatMessageRepository
 from app.persistence.rows import Row

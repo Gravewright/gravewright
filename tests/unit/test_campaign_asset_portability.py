@@ -1,7 +1,6 @@
 import base64
 import hashlib
 import io
-import json
 import shutil
 import time
 import zipfile
@@ -32,8 +31,8 @@ def test_physical_asset_archive_roundtrip_owns_new_ids_and_paths(db):
     assert uploaded.success; asset_id = uploaded.payload["asset"]["id"]
     actor = ActorRepository().create(campaign_id=source, system_id="core", actor_type="character", name="Hero", created_by_user_id=gm)
     item = ItemRepository().create(campaign_id=source, system_id="core", item_type="gear", name="Relic", created_by_user_id=gm)
-    token = TokenRepository().create(scene_id=scene["id"], actor_id=actor, grid_x=1, grid_y=1, token_asset_url=f"/game/assets/file/{asset_id}")
-    image = SceneImageRepository().create(campaign_id=source, scene_id=scene["id"], asset_id=asset_id, owner_user_id=gm,
+    TokenRepository().create(scene_id=scene["id"], actor_id=actor, grid_x=1, grid_y=1, token_asset_url=f"/game/assets/file/{asset_id}")
+    SceneImageRepository().create(campaign_id=source, scene_id=scene["id"], asset_id=asset_id, owner_user_id=gm,
         x=10, y=20, natural_width=1, natural_height=1)
     now = int(time.time()); deck_id, card_id = "portable-deck", "portable-card"
     with engine_begin() as conn:

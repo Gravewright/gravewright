@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from typing import Any
-
 from app.engine.sdk import package_registry
 from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.sdk.package_paths import safe_join

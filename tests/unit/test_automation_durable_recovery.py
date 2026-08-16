@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.engine.rules.automation_service import AutomationResult, AutomationService
+from app.engine.rules.automation_service import AutomationService
 from app.engine.rules.declarative_action_service import DeclarativeActionResult
 from app.persistence.repositories.automation_job_repository import AutomationJobRepository
 from tests.conftest import seed_campaign, seed_user

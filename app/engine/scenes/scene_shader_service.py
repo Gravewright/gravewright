@@ -2,6 +2,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from math import isfinite
+from typing import Any
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.scene_shader_repository import SceneShaderRepository
 from app.engine.scenes.shader_preset_registry import get_preset, implementation_reference, public_registry, validate_parameters
