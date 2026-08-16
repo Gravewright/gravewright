@@ -58,7 +58,7 @@ jobs:
         run: uv run pytest tests/e2e --junitxml=e2e-results.xml
       - name: Upload test results on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pytest-results
           path: "*-results.xml"   # test names/timings only — no secrets/payloads
