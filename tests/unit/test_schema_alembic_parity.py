@@ -99,7 +99,7 @@ def _build_metadata_reference(path: Path):
     return engine
 
 
-def _run_alembic_upgrade_head(db_path: Path, monkeypatch) -> None:
+def _run_alembic_upgrade(db_path: Path, monkeypatch, revision: str = "head") -> None:
     from alembic import command
     from alembic.config import Config
 
@@ -112,8 +112,12 @@ def _run_alembic_upgrade_head(db_path: Path, monkeypatch) -> None:
     project_root = Path(__file__).resolve().parents[2]
     cfg = Config(str(project_root / "alembic.ini"))
     cfg.set_main_option("script_location", str(project_root / "migrations"))
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, revision)
     engine_module.reset_engine()
+
+
+def _run_alembic_upgrade_head(db_path: Path, monkeypatch) -> None:
+    _run_alembic_upgrade(db_path, monkeypatch)
 
 
 def test_alembic_head_matches_metadata_schema(tmp_path, monkeypatch):
@@ -145,6 +149,71 @@ def test_alembic_head_matches_metadata_schema(tmp_path, monkeypatch):
     finally:
         alembic_engine.dispose()
         reference_engine.dispose()
+
+
+def test_alembic_creates_a_missing_sqlite_parent_directory(tmp_path, monkeypatch):
+    from app.persistence.schema import current_revision, head_revision
+
+    alembic_db = tmp_path / "missing" / "nested" / "gravewright.sqlite3"
+    assert not alembic_db.parent.exists()
+
+    _run_alembic_upgrade_head(alembic_db, monkeypatch)
+
+    assert alembic_db.parent.is_dir()
+    assert alembic_db.is_file()
+    engine = create_engine(f"sqlite:///{alembic_db.as_posix()}")
+    try:
+        assert current_revision(engine) == head_revision()
+    finally:
+        engine.dispose()
+
+
+def test_upgrade_normalizes_the_legacy_0047_revision_before_migrating(tmp_path, monkeypatch):
+    from app.persistence.schema import current_revision, head_revision
+
+    alembic_db = tmp_path / "legacy-0047.sqlite3"
+    _run_alembic_upgrade(
+        alembic_db,
+        monkeypatch,
+        revision="0047_remove_quest_board_desc",
+    )
+
+    engine = create_engine(f"sqlite:///{alembic_db.as_posix()}")
+    try:
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "UPDATE alembic_version "
+                    "SET version_num = '0047_remove_quest_board_description'"
+                )
+            )
+        assert current_revision(engine) == "0047_remove_quest_board_description"
+    finally:
+        engine.dispose()
+
+    _run_alembic_upgrade_head(alembic_db, monkeypatch)
+
+    upgraded = create_engine(f"sqlite:///{alembic_db.as_posix()}")
+    try:
+        assert current_revision(upgraded) == head_revision()
+    finally:
+        upgraded.dispose()
+
+
+def test_revision_normalization_leaves_newer_markers_unchanged(tmp_path, monkeypatch):
+    from app.persistence.schema import current_revision
+
+    revisions = ("0048_remove_quest_board_filters", "0049_campaign_player_onboarding")
+    for revision in revisions:
+        alembic_db = tmp_path / f"{revision}.sqlite3"
+        _run_alembic_upgrade(alembic_db, monkeypatch, revision=revision)
+        _run_alembic_upgrade(alembic_db, monkeypatch, revision=revision)
+
+        engine = create_engine(f"sqlite:///{alembic_db.as_posix()}")
+        try:
+            assert current_revision(engine) == revision
+        finally:
+            engine.dispose()
 
 
 def test_alembic_head_creates_partial_active_scene_index(tmp_path, monkeypatch):

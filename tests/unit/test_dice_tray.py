@@ -25,7 +25,6 @@ from app.engine.dice.roll_service import RollService
 ROOT = Path(__file__).resolve().parents[2]
 HARNESS = ROOT / "tests/js/dice_tray_harness.js"
 SCRIPT = ROOT / "static/js/dice/dice-tray.js"
-SAVAGE_SCRIPT = ROOT / "data/packages/rulesets/savage-worlds/scripts/dice-tray.js"
 TEMPLATE = ROOT / "templates/pages/game/index.html"
 
 
@@ -73,26 +72,6 @@ def test_the_tray_rolls_through_the_chat_command():
     assert '"/gmroll" : "/roll"' in envio, "os dois modos são comandos de chat"
     assert '"/game/chat"' in envio, "não pode existir uma segunda rota de rolagem"
     assert "csrf_token" in envio
-
-
-def test_the_bonus_die_keeps_the_better_of_two_exploding_dice():
-    """Rola o conjunto E um d6 extra, e fica com o melhor. Os dois explodem. Como
-    o xdice aceita ``max``, isso vira ``max(1d8!,1d6!)``, e o cartão mostra os
-    dois dados."""
-    from app.engine.dice.roll_service import RollService
-
-    resultado = RollService().evaluate("max(1d8!,1d6!)")
-    assert resultado is not None
-    notacoes = [g["notation"] for g in resultado.groups]
-    assert len(notacoes) == 2, f"os dois dados precisam aparecer: {notacoes}"
-
-    source = SAVAGE_SCRIPT.read_text(encoding="utf-8")
-    montagem = source.split("transform(expression, tray)", 1)[1].split(chr(10) + "    }", 1)[0]
-    assert "max(" in montagem, "é max(), não uma comparação feita no cliente"
-    assert "explode: true" in montagem, "ligar o dadoExtra faz o dado de atributo explodir"
-
-    # O modificador soma FORA do max: dentro, ele inflaria só um dos lados.
-    assert montagem.index("max(") < montagem.index("modificador > 0")
 
 
 def test_the_tray_opens_from_the_chat_composer():

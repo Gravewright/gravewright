@@ -227,7 +227,7 @@ def test_action_locale_key_becomes_the_specific_card_title(monkeypatch):
     context = service._context(
         metadata={"actionId": "roll.trait.strength"},
         actor_name="Conan",
-        label="savage-worlds.ui.teste.de.forca",
+        label="example.ui.strength_check",
         expression="1d8",
         groups=[{"results": [6]}],
         modifier=0,
@@ -237,8 +237,8 @@ def test_action_locale_key_becomes_the_specific_card_title(monkeypatch):
         system_id="sw",
         card_id="trait",
         context=context,
-        catalog={"savage-worlds.ui.teste.de.forca": "Teste de Força"},
+        catalog={"example.ui.strength_check": "Teste de Força"},
     )
 
     assert card["title"] == "Teste de Força"
-    assert card["titleKey"] == "savage-worlds.ui.teste.de.forca"
+    assert card["titleKey"] == "example.ui.strength_check"

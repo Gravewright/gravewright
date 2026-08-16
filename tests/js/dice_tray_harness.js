@@ -14,7 +14,6 @@ const path = require("path");
 
 const ROOT = path.resolve(__dirname, "../..");
 const SCRIPT = path.join(ROOT, "static/js/dice/dice-tray.js");
-const SAVAGE_SCRIPT = path.join(ROOT, "data/packages/rulesets/savage-worlds/scripts/dice-tray.js");
 
 let checks = 0;
 let failures = 0;
@@ -97,7 +96,6 @@ global.window.csrfToken = () => "token-de-teste";
 
 (0, eval)(fs.readFileSync(SCRIPT, "utf8"));
 const api = global.window.GravewrightDiceTray;
-(0, eval)(fs.readFileSync(SAVAGE_SCRIPT, "utf8"));
 check("a bandeja se publica em window.GravewrightDiceTray", Boolean(api));
 
 const tray = api.trays.get("sala-1");
@@ -172,33 +170,6 @@ async function main() {
   tray.adicionar("F");
   check("dF para fudge", expressao() === "1dF", expressao());
   
-  // --- dado dadoExtra (Savage Worlds) -------------------------------------------
-  // Rola o dado de atributo E um d6 dadoExtra, e vale o MELHOR. Os dois explodem.
-  tray.limpar();
-  tray.adicionar("8");
-  root.__slots["data-dice-bonus"].checked = true;
-  check("dadoExtra vira max(atributo, d6)", expressao() === "max(1d8!,1d6!)", expressao());
-  check("o d6 dadoExtra explode", expressao().includes("1d6!"));
-  check("o dado de atributo também explode", expressao().includes("1d8!"), expressao());
-
-  tray.modificador = 2;
-  check(
-    "o modificador soma FORA do max, não dentro de um dos lados",
-    expressao() === "max(1d8!,1d6!)+2",
-    expressao(),
-  );
-
-  root.__slots["data-dice-bonus"].checked = false;
-  check("desligar volta ao normal, sem explosão forçada", expressao() === "1d8+2", expressao());
-
-  // Limpar a bandeja também desliga o dadoExtra: senão a próxima rolagem sai
-  // dadoExtra sem ninguém ter pedido.
-  root.__slots["data-dice-bonus"].checked = true;
-  tray.limpar();
-  tray.adicionar("20");
-  check("limpar desliga o dadoExtra", expressao() === "1d20", expressao());
-
-  // --- fórmula escrita à mão ---------------------------------------------------
   
   tray.limpar();
   tray.adicionar("20");

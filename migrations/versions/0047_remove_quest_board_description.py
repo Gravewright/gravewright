@@ -1,6 +1,6 @@
 """Remove legacy quest-board description and cover data.
 
-Revision ID: 0047_remove_quest_board_description
+Revision ID: 0047_remove_quest_board_desc
 Revises: 0046_pdf_annotations
 """
 
@@ -11,7 +11,7 @@ import json
 from alembic import op
 import sqlalchemy as sa
 
-revision = "0047_remove_quest_board_description"
+revision = "0047_remove_quest_board_desc"
 down_revision = "0046_pdf_annotations"
 branch_labels = None
 depends_on = None
