@@ -91,6 +91,22 @@ def database_storage_root() -> Path:
     return Path(DATABASE_PATH).resolve().parent
 
 
+def ensure_sqlite_database_parent() -> None:
+    """Create the configured SQLite file's parent directory when required.
+
+    Alembic opens its own engine and therefore does not pass through
+    :func:`initialize_database`.  Keeping this preparation beside the existing
+    URL/path resolution makes both startup and migration entry points follow
+    the same filesystem policy without affecting other database backends or
+    in-memory SQLite databases.
+    """
+    if _backend() != "sqlite":
+        return
+    path = effective_sqlite_path()
+    if path != ":memory:":
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+
 def _use_metadata_bootstrap() -> bool:
     """Allow metadata bootstrap only for explicitly disposable test databases."""
     if _backend() != "sqlite":
@@ -119,10 +135,7 @@ def initialize_database() -> None:
     - disposable test DBs: bootstrap directly from metadata;
     - persistent DBs: require Alembic head, optionally auto-migrating.
     """
-    if _backend() == "sqlite":
-        sqlite_path = effective_sqlite_path()
-        if sqlite_path != ":memory:":
-            Path(sqlite_path).parent.mkdir(parents=True, exist_ok=True)
+    ensure_sqlite_database_parent()
 
     from app.persistence import schema as schema_module
     from app.persistence.engine import get_engine

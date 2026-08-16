@@ -1,7 +1,7 @@
 """Remove persisted quest-board status filters.
 
 Revision ID: 0048_remove_quest_board_filters
-Revises: 0047_remove_quest_board_description
+Revises: 0047_remove_quest_board_desc
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision = "0048_remove_quest_board_filters"
-down_revision = "0047_remove_quest_board_description"
+down_revision = "0047_remove_quest_board_desc"
 branch_labels = None
 depends_on = None
 
