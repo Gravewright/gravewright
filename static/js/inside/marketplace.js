@@ -1,7 +1,16 @@
 (() => {
   const root = document.querySelector("[data-marketplace]");
   if (!root) return;
-  if (location.hash === "#marketplace") document.querySelector("#section-marketplace")?.click();
+  const navigate = window.GravewrightMarketplaceNavigate || ((hash) => {
+    location.hash = hash;
+    location.reload();
+  });
+  const sectionForHash = {
+    "#marketplace": "section-marketplace",
+    "#rulesets": "section-systems",
+    "#modules": "section-modules",
+  }[location.hash];
+  if (sectionForHash) document.querySelector(`#${sectionForHash}`)?.click();
 
   const search = root.querySelector("[data-marketplace-search]");
   const kind = root.querySelector("[data-marketplace-kind]");
@@ -44,9 +53,8 @@
         location.hash = "marketplace";
         location.reload();
       } else {
-        if (status) status.textContent = "Installed";
-        if (button) { button.textContent = "Installed"; button.disabled = true; }
-        form.dataset.marketplaceInstallComplete = "true";
+        const installedKind = form.closest("[data-marketplace-package]")?.dataset.kind;
+        navigate(installedKind === "ruleset" ? "rulesets" : "modules");
       }
     } catch (error) {
       if (status) status.textContent = String(error?.message || error);

@@ -642,6 +642,7 @@
             this.canvas = canvas;
             this.roomId = canvas.dataset.roomId;
             this.isGm = canvas.closest("[data-map-viewport]")?.dataset.lightingGm === "true";
+            this.showDoorIcons = canvas.closest("[data-map-viewport]")?.dataset.doorIconsGm === "true";
             this.isStreamer = document.body?.dataset?.streamerMode === "true";
             this.walls = [];
             this.lights = [];
@@ -982,7 +983,7 @@
             const editing = this.isGm && activeLayer === EDIT_LAYERS.wall && wallsVisible;
             const editingLights = this.isGm && activeLayer === EDIT_LAYERS.light && lightingVisible;
             if (!scene) {
-                return { mode, visible, editing, editingLights, editingParticles: false, editingShaders: false, shaders: [], shaderMarkers: [], darkness: 0, sceneDarkness: 0, geometryStamp: this.geometryStamp, particleClouds: [], walls, lights: [], visionPolygons: [], visionRims: [], visionPreview: null, doors: [], selected: this.selected, selectedLight: this.selectedLight, picked: this.picks, marquee: null, start: this.start, preview: this.preview, nodesGrabbable: false, draggingNode: null };
+                return { mode, visible, editing, editingLights, showDoorIcons: this.showDoorIcons, editingParticles: false, editingShaders: false, shaders: [], shaderMarkers: [], darkness: 0, sceneDarkness: 0, geometryStamp: this.geometryStamp, particleClouds: [], walls, lights: [], visionPolygons: [], visionRims: [], visionPreview: null, doors: [], selected: this.selected, selectedLight: this.selectedLight, picked: this.picks, marquee: null, start: this.start, preview: this.preview, nodesGrabbable: false, draggingNode: null };
             }
 
             const playerView = Boolean(window.GravewrightMap?.isPlayerView?.());
@@ -1102,6 +1103,7 @@
                 mode,
                 visible,
                 editing,
+                showDoorIcons: this.showDoorIcons,
                 darkness,
                 sceneDarkness: lightingVisible ? sceneDarkness : 0,
 
@@ -1305,6 +1307,7 @@
                 build: BUILD,
                 roomId: this.roomId,
                 isGm: this.isGm,
+                showDoorIcons: this.showDoorIcons,
                 activeLayer,
                 activeTool: window.GravewrightTools?.activeTool,
                 sceneId: this.scene()?.id || null,

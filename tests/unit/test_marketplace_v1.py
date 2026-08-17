@@ -70,6 +70,21 @@ def test_registry_parses_valid_toml_and_canonical_kind() -> None:
     assert len(entries) == 1 and entries[0].kind == "addon" and entries[0].channel == "stable"
 
 
+def test_catalog_refreshes_automatically_before_its_first_render(tmp_path: Path, db) -> None:
+    path, cache = tmp_path / "marketplace.toml", tmp_path / "cache.json"
+    write_registry(path)
+    service = MarketplaceService(
+        registry_path=path,
+        cache_path=cache,
+        fetcher=lambda *_: json.dumps(manifest()).encode(),
+    )
+
+    catalog = service.catalog_with_automatic_refresh()
+
+    assert catalog["refreshStatus"] == "ok"
+    assert [item["id"] for item in catalog["packages"]] == ["curated-addon"]
+
+
 @pytest.mark.parametrize("document, code", [
     ("not toml = [", "MARKETPLACE_TOML_INVALID"),
     (registry() + registry().replace("version = 1\n", "", 1), "MARKETPLACE_DUPLICATE_ID"),
