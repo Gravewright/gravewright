@@ -225,7 +225,9 @@ def test_doors_are_operable_in_play_on_any_layer():
     # uma porta fora da visao nao vazar pelo desenho nem pela interacao.
     assert "if (!lighting.editing) {" in pixi and "lighting.doors.forEach" in pixi
     assert "const doors = walls.filter" in script
-    assert "editing || doorVisionPolygons.some" in script
+    assert "const showAllDoorIcons = this.isGm && !previewingToken" in script
+    assert "showAllDoorIcons || editing" in script
+    assert "doorVisionPolygons.some" in script
     assert "pointInPolygon(midpoint(wall), polygon)" in script
     door_at=script.split("doorAt(point) {",1)[1].split("lightAt(point)",1)[0]
     assert "this.visibleDoorIds.has(wall.id)" in door_at
@@ -363,7 +365,8 @@ def test_alpha3_visual_layers_toggle_independently_for_streamer():
     assert "const darkness = lightingVisible" in script
     assert "particleClouds: (effectsVisible" in script
     assert "shaders: (effectsVisible && !classic" in script
-    assert "wallsVisible && wall.kind === \"door\"" in script
+    assert "const showAllDoorIcons = this.isGm && !previewingToken" in script
+    assert "doorVisionPolygons.some" in script
     for layer in ("effects", "walls", "lighting"):
         assert f"{layer}: true" in toolbar
 
@@ -655,14 +658,15 @@ def test_lights_fall_off_instead_of_ending_in_a_flat_disc():
     assert "sprite.mask = mask" in pixi
 
 
-def test_door_icons_are_rendered_only_for_the_campaign_gm():
+def test_door_icons_follow_privileged_and_token_vision_rules():
     template=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
     pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
 
-    assert "data-door-icons-gm=\"{{ 'true' if room.member_role == 'gm' else 'false' }}\"" in template
-    assert 'dataset.doorIconsGm === "true"' in script
-    assert "if (!lighting.showDoorIcons) return;" in pixi
+    assert "data-lighting-gm=\"{{ 'true' if room.member_role == 'gm' or room.is_streamer else 'false' }}\"" in template
+    assert "const showAllDoorIcons = this.isGm && !previewingToken" in script
+    assert "doorVisionPolygons.some" in script
+    assert "if (!lighting.showDoorIcons) return;" not in pixi
 
 def test_one_dial_for_brightness_and_the_mode_decides_the_effect():
     """Duas reguas que multiplicam o mesmo alfa sao uma regua a mais, e um botao

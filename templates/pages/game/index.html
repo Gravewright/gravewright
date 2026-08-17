@@ -57,7 +57,7 @@
     <script defer src="/static/js/board/pixi/pixi-fog-layer.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/board/pixi/pixi-light-buffer.js?v=20260809-preview2"></script>
     <script defer src="/static/js/board/pixi/pixi-shader-effects.js?v=20260811-animation1"></script>
-    <script defer src="/static/js/board/pixi/pixi-lighting-layer.js?v=20260816-gm-door-icons1"></script>
+    <script defer src="/static/js/board/pixi/pixi-lighting-layer.js?v=20260816-gm-door-icons2"></script>
     <script defer src="/static/js/board/pixi/pixi-debug.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/map/api/map-api.js?v=20260605-token-hp"></script>
     <script defer src="/static/js/map/scene/map-scene.js?v=20260805-lights-vision"></script>
@@ -101,7 +101,7 @@
     <script defer src="/static/js/lighting/shader-preference.js?v=20260809-preview2"></script>
     <script defer src="/static/js/lighting/shader-presets.js?v=20260809-library3"></script>
     <script defer src="/static/js/lighting/shader-editor.js?v=20260809-library2"></script>
-    <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260816-gm-door-icons1"></script>
+    <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260816-gm-door-icons2"></script>
     <script defer src="/static/js/lighting/light-editor.js?v=20260809-preview2"></script>{% endif %}
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
@@ -431,8 +431,7 @@
                         aria-label="Monster status zone" aria-live="polite"></div>
                     <div data-sdk-slot="board.overlay" data-room-id="{{ room.id }}"></div>
                     <div class="table-surface" data-map-viewport
-                        data-lighting-gm="{{ 'true' if room.member_role == 'gm' or room.is_streamer else 'false' }}"
-                        data-door-icons-gm="{{ 'true' if room.member_role == 'gm' else 'false' }}">
+                        data-lighting-gm="{{ 'true' if room.member_role == 'gm' or room.is_streamer else 'false' }}">
                         <canvas class="map-canvas" data-map-canvas data-room-id="{{ room.id }}"
                             data-loaded-scene-id="{{ room.loaded_scene.id if room.loaded_scene else '' }}"
                             data-local-scene-navigation="{{ 'true' if room.loaded_scene and room.active_scene and room.loaded_scene.id != room.active_scene.id else 'false' }}"
