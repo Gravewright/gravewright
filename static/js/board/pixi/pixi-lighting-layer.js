@@ -734,7 +734,6 @@
             }
 
             if (!lighting.editing) {
-                if (!lighting.showDoorIcons) return;
                 lighting.doors.forEach((door, index) => {
                     const a = screen(door.x1, door.y1);
                     const b = screen(door.x2, door.y2);
