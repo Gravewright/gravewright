@@ -20,6 +20,7 @@
 
 
         particles: { options: ["smoke", "ember", "dust", "arcane"], default: "smoke" },
+        shader: { options: ["custom"], default: "custom" },
     };
 
 

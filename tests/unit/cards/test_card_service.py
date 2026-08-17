@@ -7,8 +7,10 @@ from app.engine.decks.cards import CardFaceState
 from app.engine.decks.cards import DrawDestination
 from app.engine.decks.cards import DrawMode
 from app.engine.decks.cards import PileKind
+from app.domain.roles import PlayerRole
 from app.persistence.repositories.card_repository import CardRepository
 from tests.conftest import seed_campaign
+from tests.conftest import seed_member
 from tests.conftest import seed_scene
 from tests.conftest import seed_user
 
@@ -212,3 +214,73 @@ def test_play_card_to_scene_update_flip_and_discard(db):
     assert discard is not None
     assert CardRepository().get_pile_order(discard["id"]) == [card_id]
     assert CardRepository().get_scene_card_placement(placement["id"]) is None
+
+
+def test_face_down_room_projection_never_contains_front_definition_data(db):
+    gm_id = seed_user(name="GM", email="cards-private-gm@test.com")
+    player_id = seed_user(name="Player", email="cards-private-player@test.com")
+    campaign_id = seed_campaign(gm_id)
+    seed_member(campaign_id, player_id, PlayerRole.PLAYER.value)
+    scene = seed_scene(campaign_id)
+    service = CardService()
+    created = service.create_deck_definition(
+        campaign_id=campaign_id, user_id=gm_id, name="Secret Deck", description=None,
+        default_back_asset_id="back-shared",
+        cards=[{"name": "Secret Dragon", "description": "private text",
+                "front_asset_id": "front-secret", "back_asset_id": "back-shared",
+                "metadata": {"private": "value"}, "quantity": 2}],
+    )
+    deck = service.instantiate_deck(
+        campaign_id=campaign_id, user_id=gm_id,
+        deck_definition_id=created.payload["deck"]["id"],
+    ).payload["deck"]
+    drawn = service.draw(
+        campaign_id=campaign_id, user_id=gm_id, deck_instance_id=deck["id"], count=2,
+        destination=DrawDestination.HAND, reveal=False,
+    )
+    placements = [
+        service.play_to_scene(
+            campaign_id=campaign_id, user_id=gm_id, card_id=card["id"], scene_id=scene["id"],
+            x=100 + index * 20, y=120 + index * 15, reveal=False,
+        ).payload["placement"]
+        for index, card in enumerate(drawn.payload["cards"])
+    ]
+
+    player_state = service.get_state(campaign_id=campaign_id, user_id=player_id).payload
+    assert len(player_state["scene_placements"]) == 2
+    assert len({placement["id"] for placement in placements}) == 2
+    for card in player_state["cards"]:
+        assert card["face_state"] == "face_down"
+        assert card["name"] == "Hidden card"
+        assert card["front_asset_id"] is None
+        assert card["description"] is None
+        assert card["metadata"] == {}
+        assert card["definition_id"] is None
+        assert card["back_asset_id"] == "back-shared"
+
+    assert service.update_scene_placement(
+        campaign_id=campaign_id, user_id=gm_id, placement_id=placements[0]["id"],
+        face_state=CardFaceState.FACE_UP,
+    ).success
+    visible = service.get_state(campaign_id=campaign_id, user_id=player_id).payload["cards"]
+    assert sum(card["front_asset_id"] == "front-secret" for card in visible) == 1
+    assert sum(card["front_asset_id"] is None for card in visible) == 1
+
+
+def test_face_down_chat_projection_is_safe_even_when_gm_draws(db):
+    gm_id = seed_user(name="GM", email="cards-chat-private@test.com")
+    campaign_id = seed_campaign(gm_id)
+    deck_id = _create_instantiated_deck(campaign_id, gm_id, quantity=1)
+    service = CardService()
+    drawn = service.draw(
+        campaign_id=campaign_id, user_id=gm_id, deck_instance_id=deck_id,
+        count=1, destination=DrawDestination.CHAT, reveal=False,
+    )
+
+    projected = service.project_cards_for_room(
+        campaign_id=campaign_id, card_ids=[drawn.payload["cards"][0]["id"]],
+    )[0]
+    assert projected["face_state"] == "face_down"
+    assert projected["front_asset_id"] is None
+    assert projected["definition_id"] is None
+    assert projected["metadata"] == {}

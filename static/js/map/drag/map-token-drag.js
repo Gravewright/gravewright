@@ -301,8 +301,18 @@
             return true;
         }
 
+        function cancel(event) {
+            if (!activeDrag || activeDrag.pointerId !== event.pointerId) return false;
+            const canvas = activeDrag.canvas;
+            activeDrag = null;
+            try { canvas.releasePointerCapture(event.pointerId); } catch {}
+            markDirty(canvas);
+            return true;
+        }
+
         return {
             active: () => activeDrag,
+            cancel,
             start,
             stop,
             update,

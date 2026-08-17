@@ -304,6 +304,7 @@ def test_kindle_goto_inserts_only_text_image_and_pdf_pages() -> None:
     assert "data-section-kind" in modal
     assert 'entry.dataset.pageKind = page.kind || "text"' in script
     assert "data-page-asset-upload" in modal
+    assert "window.GravewrightJournalPdfViewer?.mount" in script
     assert ".journal-modal .journal-page-asset" in css
 
 

@@ -68,9 +68,10 @@
       </div>
       <div class="journal-page-asset" data-page-asset>
         <input type="hidden" data-page-src>
+        <input type="hidden" data-page-asset-id>
         <button type="button" data-page-asset-upload><i class="ph ph-upload-simple"></i> Enviar arquivo</button>
         <img data-page-image-preview alt="">
-        <iframe data-page-pdf-preview title="Documento PDF"></iframe>
+        <div data-journal-pdf-inline data-page-pdf-inline hidden></div>
       </div>`;
     return card;
   }
@@ -91,6 +92,7 @@
         category: card.querySelector("[data-section-category]")?.value.trim() || "",
         kind,
         src: card.querySelector("[data-page-src]")?.value || "",
+        assetId: card.querySelector("[data-page-asset-id]")?.value || "",
         level: 1,
         audience: card.querySelector("[data-section-audience]")?.value || "public",
         sortOrder: (index + 1) * 10,
@@ -535,11 +537,20 @@
           const result = await FI.uploadJournalImage?.(modal.dataset.journalId || "", file);
           if (!result?.src) return;
           card.querySelector("[data-page-src]").value = result.src;
+          card.querySelector("[data-page-asset-id]").value = result.asset_id || "";
+          const upload = card.querySelector("[data-page-asset-upload]");
           const image = card.querySelector("[data-page-image-preview]");
-          const pdf = card.querySelector("[data-page-pdf-preview]");
+          const pdf = card.querySelector("[data-page-pdf-inline]");
           if (image) image.src = result.src;
-          if (pdf) pdf.src = result.src;
+          if (pdf) pdf.hidden = !result.asset_id;
+          if (upload && file.type === "application/pdf" && result.asset_id) upload.hidden = true;
           scheduleAutosave(form, true);
+          if (file.type === "application/pdf" && result.asset_id && pdf) {
+            const mountPdf = window.GravewrightJournalPdfViewer?.mount;
+            if (typeof mountPdf === "function") void mountPdf(pdf, result.asset_id).catch((error) => {
+              window.GravewrightToasts?.showToast?.(String(error?.message || error));
+            });
+          }
         });
         picker.click();
       }

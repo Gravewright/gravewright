@@ -182,6 +182,7 @@ void main() {
 
 
     const bank = new Map();
+    const lastGood = new Map();
     const stage = new Map();
     const broken = new Map();
 
@@ -252,12 +253,13 @@ void main() {
     }
 
     function build(gl, source) {
-
-
-
+        const compileStarted = performance.now();
         const fragment = PREAMBLE + USER_PREFIX + source + USER_SUFFIX;
         const problem = compileProblem(gl, fragment);
-        if (problem) return { shader: null, error: problem };
+        if (problem) {
+            performance.measure?.("shader_pipeline_compile_ms", { start: compileStarted, end: performance.now() });
+            return { shader: null, error: problem };
+        }
         try {
             const uniforms = new PIXI.UniformGroup({
                 gwUTime: { value: 0, type: "f32" },
@@ -286,10 +288,10 @@ void main() {
                     gwULightBuffer: darkPixel().source,
                 },
             });
+            performance.measure?.("shader_pipeline_compile_ms", { start: compileStarted, end: performance.now() });
             return { shader: shaderProgram, uniforms, error: null };
         } catch (error) {
-
-
+            performance.measure?.("shader_pipeline_compile_ms", { start: compileStarted, end: performance.now() });
             return { shader: null, error: String(error?.message || error) };
         }
     }
@@ -302,13 +304,20 @@ void main() {
     }
 
     function programFor(gl, shader) {
+        const switchStarted = performance.now();
         const source = semanticPresetSource(shader.source);
 
 
         const key = `${shader.id}\u0000${source}`;
 
-        if (bank.has(key)) return bank.get(key);
+        if (bank.has(key)) {
+            const cached = bank.get(key);
+            return cached.error ? (lastGood.get(shader.id) || cached) : cached;
+        }
         const built = build(gl, source);
+        if (shader.transient) performance.measure?.("preset_preview_switch_ms", {
+            start: switchStarted, end: performance.now(),
+        });
         bank.set(key, built);
         if (built.error && broken.get(shader.id) !== built.error) {
             broken.set(shader.id, built.error);
@@ -318,13 +327,16 @@ void main() {
                 detail: { shaderId: shader.id, name: shader.name || "", error: built.error },
             }));
         }
-        if (!built.error) broken.delete(shader.id);
+        if (!built.error) {
+            broken.delete(shader.id);
+            lastGood.set(shader.id, built);
+        }
         if (bank.size > 24) {
             const oldest = bank.keys().next().value;
             try { bank.get(oldest)?.shader?.destroy?.(); } catch (_err) {                    }
             bank.delete(oldest);
         }
-        return built;
+        return built.error ? (lastGood.get(shader.id) || built) : built;
     }
 
     function meshFor(board, id, shaderProgram) {
@@ -392,16 +404,22 @@ void main() {
     function render(board, shaders, now, cssW, cssH, camera, lightTexture) {
         const layer = board?.effectsLayer;
         if (!layer) return 0;
-        const active = (shaders || []).slice(0, MAX_ACTIVE);
+        const zoom = camera?.zoom || 1;
+        const offsetX = camera?.offsetX || 0;
+        const offsetY = camera?.offsetY || 0;
+        const active = (shaders || []).filter((shader) => {
+            const radius = Number(shader.radiusWorld || 0) * zoom;
+            if (radius <= 0) return true;
+            const x = Number(shader.x || 0) * zoom + offsetX;
+            const y = Number(shader.y || 0) * zoom + offsetY;
+            return x + radius >= 0 && y + radius >= 0 && x - radius <= cssW && y - radius <= cssH;
+        }).slice(0, MAX_ACTIVE);
         const alive = new Set(active.map((shader) => shader.id));
 
         [...stage.keys()].forEach((id) => { if (!alive.has(id)) drop(id); });
         if (!active.length) return 0;
 
         const gl = board?.app?.renderer?.gl || null;
-        const zoom = camera?.zoom || 1;
-        const offsetX = camera?.offsetX || 0;
-        const offsetY = camera?.offsetY || 0;
         let drawn = 0;
 
         active.forEach((shader) => {
@@ -503,6 +521,7 @@ void main() {
             bank.delete(key);
         });
         broken.delete(id);
+        lastGood.delete(id);
     }
 
     window.GravewrightShaderEffects = {

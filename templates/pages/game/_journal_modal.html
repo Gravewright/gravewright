@@ -111,7 +111,8 @@
                         {% if section.kind in ("image", "pdf") and not section.src %}
                         <p class="journal-page-missing">{{ t("game.journal.assets.empty") }}</p>
                         {% elif section.kind == "image" %}<img class="journal-page-media" src="{{ section.src }}" alt="{{ section.title }}" />
-                        {% elif section.kind == "pdf" %}<iframe class="journal-page-pdf" src="{{ section.src }}" title="{{ section.title }}"></iframe>
+                        {% elif section.kind == "pdf" %}<div class="journal-page-pdf" data-journal-pdf-inline
+                            data-document-id="{{ section.assetId }}"></div>
                         {% else %}{{ blockfield.reader(section.content) }}{% endif %}
                     </section>
                     {% endfor %}
@@ -334,9 +335,12 @@
                         {{ blockfield.editor("section_doc_" ~ section.id, section.content) }}
                         <div class="journal-page-asset" data-page-asset>
                             <input type="hidden" data-page-src value="{{ section.src }}" />
-                            <button type="button" data-page-asset-upload><i class="ph ph-upload-simple"></i> Enviar arquivo</button>
+                            <input type="hidden" data-page-asset-id value="{{ section.assetId }}" />
+                            <button type="button" data-page-asset-upload
+                                    {% if section.kind == 'pdf' and section.assetId %}hidden{% endif %}><i class="ph ph-upload-simple"></i> Enviar arquivo</button>
                             <img data-page-image-preview {% if section.src %}src="{{ section.src }}"{% endif %} alt="" />
-                            <iframe data-page-pdf-preview {% if section.src %}src="{{ section.src }}"{% endif %} title="{{ section.title }}"></iframe>
+                            <div data-journal-pdf-inline data-page-pdf-inline data-document-id="{{ section.assetId }}"
+                                 {% if not section.assetId %}hidden{% endif %}></div>
                         </div>
                     </article>
                     {% endfor %}

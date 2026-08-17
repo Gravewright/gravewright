@@ -77,6 +77,63 @@ def test_upload_valid_pdf_page(db, tmp_path):
     assert result.width is None and result.height is None
 
 
+def test_journal_pdf_cap_is_larger_than_image_cap(db, tmp_path):
+    from app.engine.journals.journal_asset_service import MAX_PDF_BYTES, MAX_UPLOAD_BYTES
+
+    gm = seed_user(name="GM", email="gm-large-journal-pdf@test.com")
+    campaign_id = seed_campaign(gm)
+    journal_id = _journal(campaign_id, gm)
+    service = JournalAssetService(storage=LocalJournalAssetStorage(root=tmp_path / "ja"))
+    data = b"%PDF-1.7\n" + b"0" * (MAX_UPLOAD_BYTES + 1)
+
+    result = service.upload_image(
+        journal_id=journal_id, user_id=gm, filename="large.pdf",
+        content_type="application/pdf", data=data, purpose="journal_pdf",
+    )
+
+    assert MAX_PDF_BYTES > MAX_UPLOAD_BYTES
+    assert result.success
+
+
+def test_journal_upload_route_has_multipart_headroom_above_pdf_cap():
+    import main
+    from app.engine.journals.journal_asset_service import MAX_PDF_BYTES
+
+    limits = [
+        handler.request_max_body_size
+        for route in main.app.routes
+        if route.path == "/game/journal/asset"
+        for handler in route.route_handlers
+        if isinstance(getattr(handler, "request_max_body_size", None), int)
+    ]
+    assert limits and max(limits) > MAX_PDF_BYTES
+
+
+def test_journal_client_checks_file_size_and_reports_413():
+    from pathlib import Path
+
+    script = (Path(__file__).resolve().parents[2] / "static/js/journals/journal-editor.js").read_text(
+        encoding="utf-8"
+    )
+    assert "dataset?.journalPdfMaxBytes" in script
+    assert "dataset?.journalImageMaxBytes" in script
+    assert "file.size > cap" in script
+    assert "res.status === 413" in script
+
+
+def test_diary_pdf_section_keeps_semantic_document_identity():
+    from app.engine.journals.journal_data import normalize_diary_data
+
+    normalized = normalize_diary_data({"sections": [{
+        "kind": "pdf", "title": "Handout", "src": "/game/journal/asset/document_123",
+    }]})
+
+    section = normalized["sections"][0]
+    assert section["assetId"] == "document_123"
+    assert section["src"] == "/game/journal/asset/document_123"
+    assert "storage" not in section["src"]
+
+
 def test_upload_rejects_unsupported_type(db, tmp_path):
     gm = seed_user(name="GM", email="gm-asset2@test.com")
     campaign_id = seed_campaign(gm)
@@ -155,6 +212,46 @@ def test_upload_and_serve_route_is_membership_gated(db, tmp_path, monkeypatch):
         assert client.get(src).status_code in (401, 403)
         client.set_session_data({"user_id": gm})
         assert client.get("/game/journal/asset/does-not-exist").status_code == 404
+
+
+def test_pdf_document_resolution_uses_existing_visibility_policy(db, tmp_path, monkeypatch):
+    import app.actions.game.manage_journals as mj
+    import app.infrastructure.storage.local_journal_asset_storage as stormod
+
+    monkeypatch.setattr(stormod, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(mj, "PROJECT_ROOT", tmp_path)
+    from main import app
+
+    gm = seed_user(name="GM", email="gm-pdf-viewer@test.com")
+    reader = seed_user(name="Reader", email="reader-pdf-viewer@test.com")
+    outsider = seed_user(name="Out", email="out-pdf-viewer@test.com")
+    campaign_id = seed_campaign(gm)
+    seed_member(campaign_id, reader, PlayerRole.PLAYER.value)
+    journal_id = _journal(campaign_id, gm)
+    assert JournalService().set_member_access(
+        journal_id=journal_id, target_user_id=reader, access_level="read", requester_user_id=gm,
+    ).success
+
+    with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
+        login(client, gm)
+        uploaded = client.post(
+            "/game/journal/asset",
+            files={"file": ("handout.pdf", b"%PDF-1.7\n%%EOF", "application/pdf")},
+            data={"journal_id": journal_id, "purpose": "journal_pdf"},
+        )
+        assert uploaded.status_code == 201
+        asset_id = uploaded.json()["asset_id"]
+        endpoint = f"/game/journal/pdf/{asset_id}"
+        document = client.get(endpoint)
+        assert document.status_code == 200
+        assert document.json()["document"]["id"] == asset_id
+        assert document.json()["document"]["url"] == f"/game/journal/asset/{asset_id}"
+
+        client.set_session_data({"user_id": reader})
+        assert client.get(endpoint).status_code == 200
+        client.set_session_data({"user_id": outsider})
+        assert client.get(endpoint).status_code in (401, 403)
+        assert client.get(f"/game/journal/asset/{asset_id}").status_code in (401, 403)
 
 
 def test_owner_can_upload_but_read_user_cannot(db, tmp_path):

@@ -10,6 +10,7 @@ from app.business.inside_settings_service import InsideSettingsService
 from app.config import config
 from app.domain.roles import SystemRole
 from app.engine.sdk.package_install_service import PackageInstallService
+from app.engine.sdk.marketplace_service import MarketplaceService
 from app.helpers.view import view_context
 
 
@@ -36,6 +37,11 @@ def render_inside(
 
     packages = package_install_service.list_for_tab()
     rulesets, modules = split_packages(packages)
+    marketplace = MarketplaceService().catalog()
+    marketplace_bands = {
+        kind: [item for item in marketplace.get("packages", []) if item.get("kind") == kind]
+        for kind in ("ruleset", "addon", "library", "content", "theme", "assets")
+    }
     inside_settings = InsideSettingsService().read()
     ruleset_name_by_id = {p["id"]: p["name"] for p in rulesets}
 
@@ -79,6 +85,8 @@ def render_inside(
             packages=packages,
             rulesets=rulesets,
             modules=modules,
+            marketplace=marketplace,
+            marketplace_bands=marketplace_bands,
             all_users=all_users,
             inside_settings=inside_settings["app"],
             privacy_settings=inside_settings["privacy"],

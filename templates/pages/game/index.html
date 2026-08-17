@@ -15,7 +15,7 @@
     
     <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version }}" />
     <link rel="stylesheet" href="/static/css/dialog.css" />
-    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-journal-editorial-workspace-3" />
+    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-journal-editorial-workspace-3-shader-picker-1" />
     <link rel="stylesheet" href="/static/css/journal-workspace.css?v={{ asset_version }}-2" />
     <link rel="stylesheet" href="/static/css/journal-quest.css?v={{ asset_version }}-1" />
     
@@ -35,8 +35,8 @@
     <script defer src="/static/js/core/bootstrap.js"></script>
     
     <script defer src="/static/js/ui/slider-nudge.js?v=20260809-preview2"></script>
-    <script defer src="/static/js/tools/tools-registry.js?v=20260810-streamer-sandbox"></script>
-    <script defer src="/static/js/tools/tools-toolbar.js?v=20260810-streamer-sandbox"></script>
+    <script defer src="/static/js/tools/tools-registry.js?v=20260816-tool-picker-click1"></script>
+    <script defer src="/static/js/tools/tools-toolbar.js?v=20260816-tool-picker-click1"></script>
     
     <script defer src="/static/js/realtime/realtime-client.js?v=20260604-realtime-split"></script>
     <script defer src="/static/js/realtime/realtime-events.js?v=20260604-realtime-split"></script>
@@ -101,7 +101,7 @@
     <script defer src="/static/js/lighting/shader-preference.js?v=20260809-preview2"></script>
     <script defer src="/static/js/lighting/shader-presets.js?v=20260809-library3"></script>
     <script defer src="/static/js/lighting/shader-editor.js?v=20260809-library2"></script>
-    <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260811-shader-hot-update1"></script>
+    <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260816-shader-picker1"></script>
     <script defer src="/static/js/lighting/light-editor.js?v=20260809-preview2"></script>{% endif %}
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
@@ -125,7 +125,7 @@
     <script defer src="/static/js/chat/chat-controller.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/cards/card-api.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/cards/card-state.js?v={{ asset_version }}"></script>
-    <script defer src="/static/js/cards/card-panel.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/cards/card-panel.js?v={{ asset_version }}-draw-modal-table1"></script>
     <script defer src="/static/js/ui/context-menu.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/assets/asset-library.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/dice/dice-tray.js?v={{ asset_version }}"></script>
@@ -141,10 +141,11 @@
     <script defer src="/static/js/ui/directory-drag.js?v=20260814-directory-drag"></script>
     <script defer src="/static/js/journals/journal-api.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journals-tree.js?v=20260604-journals-split"></script>
-    <script defer src="/static/js/journals/journal-editor.js?v=20260814-journal-page-types"></script>
+    <script defer src="/static/js/journals/journal-editor.js?v=20260816-journal-pdf-limit1"></script>
     <script defer src="/static/js/journals/journal-preview.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journals-panel.js?v=20260814-journal-autosave"></script>
-    <script defer src="/static/js/journals/journal-modal.js?v=20260814-journal-workspace-2"></script>
+    <script defer src="/static/js/journals/journal-modal.js?v=20260816-pdf-inline-upload1"></script>
+    <script defer src="/static/js/journals/journal-pdf-viewer.js?v=20260816-inline-viewer1"></script>
     
     <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sheets/actors/actor-sheet-actions.js?v={{ asset_version }}"></script>
@@ -207,6 +208,8 @@
 <body data-current-user-id="{{ user.id }}" data-current-member-role="{{ active_room.member_role if active_room else '' }}"
     data-gm-guided-prefetch="{{ 'true' if gm_guided_prefetch_enabled else 'false' }}"
     data-gm-hint-max-queued-bytes="{{ gm_hint_max_queued_bytes }}"
+    data-journal-image-max-bytes="{{ journal_image_max_bytes }}"
+    data-journal-pdf-max-bytes="{{ journal_pdf_max_bytes }}"
     data-gm-hint-idle-only="{{ 'true' if gm_hint_idle_only else 'false' }}"
     data-gm-hint-cancel-visible="{{ 'true' if gm_hint_cancel_on_visible_backlog else 'false' }}"
     data-gm-hint-policy="{{ gm_hint_policy }}"
@@ -366,6 +369,19 @@
     data-card-label-remaining="{{ t('game.cards.remaining') }}"
     data-card-label-deck-select="{{ t('game.cards.deck_select') }}"
     data-card-label-draw="{{ t('game.cards.draw') }}"
+    data-card-draw-title="{{ t('game.cards.draw_modal.title') }}"
+    data-card-draw-destination="{{ t('game.cards.draw_modal.destination') }}"
+    data-card-draw-hand="{{ t('game.cards.draw_modal.hand') }}"
+    data-card-draw-table="{{ t('game.cards.draw_modal.table') }}"
+    data-card-draw-chat="{{ t('game.cards.draw_modal.chat') }}"
+    data-card-draw-state="{{ t('game.cards.draw_modal.state') }}"
+    data-card-draw-face-up="{{ t('game.cards.draw_modal.face_up') }}"
+    data-card-draw-face-down="{{ t('game.cards.draw_modal.face_down') }}"
+    data-card-draw-quantity="{{ t('game.cards.draw_modal.quantity') }}"
+    data-card-draw-available="{{ t('game.cards.draw_modal.available') }}"
+    data-card-draw-cancel="{{ t('game.cards.draw_modal.cancel') }}"
+    data-card-draw-submit="{{ t('game.cards.draw_modal.submit') }}"
+    data-card-draw-no-scene="{{ t('game.cards.draw_modal.no_scene') }}"
     data-card-label-draw-chat="{{ t('game.cards.draw_chat') }}"
     data-card-label-to-chat="{{ t('game.cards.to_chat') }}"
     data-card-label-hand-empty="{{ t('game.cards.hand_empty') }}"
@@ -2506,6 +2522,21 @@
                 <button class="tool-sub-btn" data-subtool="runes" aria-pressed="false">
                     <i class="ph ph-pentagram" aria-hidden="true"></i>
                     <span>{{ t('lighting.particles.runes') }}</span>
+                </button>
+            </div>
+            <div class="tool-sub-panel shader-tool-picker" data-tool-sub-panel="shader"
+                data-loading="{{ t('lighting.shaders.picker.loading') }}"
+                data-error="{{ t('lighting.shaders.picker.error') }}" hidden>
+                <div class="tool-sub-head">
+                    <i class="ph ph-code" aria-hidden="true"></i>
+                    <span>{{ t('lighting.shaders.picker.title') }}</span>
+                </div>
+                <div class="shader-tool-preset-list" data-shader-tool-presets role="listbox"
+                    aria-label="{{ t('lighting.shaders.picker.title') }}"></div>
+                <div class="tool-sub-sep"></div>
+                <button class="tool-sub-btn shader-tool-custom" type="button" data-shader-tool-custom>
+                    <i class="ph ph-code-block" aria-hidden="true"></i>
+                    <span>{{ t('lighting.shaders.picker.custom') }}</span>
                 </button>
             </div>
             <div class="tool-sub-panel" data-tool-sub-panel="light" hidden>

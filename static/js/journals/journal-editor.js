@@ -103,10 +103,20 @@
   }
 
   async function uploadJournalImage(journalId, file, errorMessage) {
+    const MAX_PDF_BYTES = Number(document.body?.dataset?.journalPdfMaxBytes) || Number.POSITIVE_INFINITY;
+    const MAX_IMAGE_BYTES = Number(document.body?.dataset?.journalImageMaxBytes) || Number.POSITIVE_INFINITY;
+    const cap = file?.type === "application/pdf" ? MAX_PDF_BYTES : MAX_IMAGE_BYTES;
+    if (!file || file.size > cap) {
+      const limit = Number.isFinite(cap) ? `${Math.ceil(cap / (1024 * 1024))} MiB` : "configurado";
+      const message = `${file?.type === "application/pdf" ? "O PDF" : "A imagem"} excede o limite de ${limit}.`;
+      window.GravewrightToasts?.showToast?.(message);
+      throw new Error(message);
+    }
     const body = new FormData();
     body.append("csrf_token", csrfToken());
     body.append("journal_id", journalId);
     body.append("file", file);
+    body.append("purpose", file?.type === "application/pdf" ? "journal_pdf" : "journal_image");
     const res = await fetch("/game/journal/asset", {
       method: "POST",
       body,
@@ -114,8 +124,12 @@
       headers: { Accept: "application/json" },
     });
     if (!res.ok) {
-      if (errorMessage) window.GravewrightToasts?.showToast(errorMessage);
-      throw new Error("upload failed");
+      const payload = await res.json().catch(() => ({}));
+      const message = res.status === 413
+        ? "O arquivo excede o limite permitido."
+        : String(payload.error_key || errorMessage || `upload failed (${res.status})`);
+      window.GravewrightToasts?.showToast?.(message);
+      throw new Error(message);
     }
     return res.json();
   }

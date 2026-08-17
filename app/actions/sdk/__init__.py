@@ -28,6 +28,7 @@ from app.actions.sdk.packages import (
     upload_package,
 )
 from app.actions.sdk.runtime import sdk_runtime_command, sdk_runtime_read
+from app.actions.sdk.marketplace import marketplace_catalog, marketplace_install, marketplace_refresh
 
 route_handlers = [
     list_packages,
@@ -51,4 +52,7 @@ route_handlers = [
     storage_sqlite_status,
     sdk_runtime_read,
     sdk_runtime_command,
+    marketplace_catalog,
+    marketplace_refresh,
+    marketplace_install,
 ]

@@ -226,6 +226,14 @@ function buildWorld({
                 });
                 return { ok: true, json: async () => ({ walls: snapshot(body.scene_id) }) };
             }
+            if (url.endsWith("/move-endpoint")) {
+                const wall = wallsOf(body.scene_id).find((candidate) => candidate.id === body.wall_id);
+                if (wall) {
+                    wall[`x${body.endpoint}`] = body.to_x;
+                    wall[`y${body.endpoint}`] = body.to_y;
+                }
+                return { ok: true, json: async () => ({ wall: { ...wall }, walls: snapshot(body.scene_id) }) };
+            }
             const wall = {
                 id: `w${posts.length}`, kind: body.kind, door_state: "closed",
                 x1: body.x1, y1: body.y1, x2: body.x2, y2: body.y2,
@@ -470,6 +478,34 @@ async function clickAt(world, x, y, props = {}) {
     }
 
     {
+        const world = buildWorld();
+        await world.settle();
+        await clickAt(world, 100, 100);
+        await clickAt(world, 300, 100);
+        await clickAt(world, 300, 300, { altKey: true });
+        world.setTool("select");
+        world.dispatch("pointerdown", { clientX: 300, clientY: 100, shiftKey: true });
+        world.dispatch("pointermove", { clientX: 360, clientY: 160, shiftKey: true });
+        const preview = world.state().walls;
+        check("Shift separa somente uma ponta no preview",
+            preview[0].x2 === 300 && preview[0].y2 === 100
+            && (preview[1].x1 !== 300 || preview[1].y1 !== 100),
+            JSON.stringify(preview));
+        world.dispatch("pointerup", { clientX: 360, clientY: 160, shiftKey: true });
+        await world.settle();
+        const detach = world.posts[world.posts.length - 1];
+        check("Shift persiste a separacao por endpoint",
+            detach.url.endsWith("/game/walls/move-endpoint")
+            && detach.body.wall_id === "w2" && detach.body.endpoint === 1,
+            JSON.stringify(detach));
+        const walls = world.state().walls;
+        check("o outro endpoint da antiga juncao permanece parado",
+            walls[0].x2 === 300 && walls[0].y2 === 100
+            && (walls[1].x1 !== 300 || walls[1].y1 !== 100),
+            JSON.stringify(walls));
+    }
+
+    {
         // porta selecionada percorre fechada -> aberta -> trancada -> fechada
         const world = buildWorld({ activeTool: "door" });
         await world.settle();
@@ -506,6 +542,31 @@ async function clickAt(world, x, y, props = {}) {
         check("select no corpo da parede seleciona o segmento",
             world.state().selected === "w1" && world.posts.length === 1,
             JSON.stringify({ selected: world.state().selected, posts: world.posts.length }));
+    }
+
+    {
+        const world = buildWorld({ activeTool: "wall", walls: [
+            { x1: 100, y1: 100, x2: 300, y2: 100 },
+        ] });
+        await world.settle();
+        world.dispatch("pointerdown", { clientX: 200, clientY: 100 });
+        world.dispatch("pointermove", { clientX: 240, clientY: 130 });
+        world.dispatch("pointerup", { clientX: 240, clientY: 130 });
+        await world.settle();
+        check("Wall tool seleciona e move seu segmento sem Selection",
+            world.posts.some((post) => post.url.endsWith("/game/walls/move-many"))
+            && world.state().selected === "seed1");
+    }
+
+    {
+        const world = buildWorld({ activeTool: "door", activeLayer: "walls", walls: [
+            { kind: "door", door_state: "closed", x1: 100, y1: 100, x2: 300, y2: 100 },
+        ] });
+        await world.settle();
+        world.dispatch("dblclick", { clientX: 200, clientY: 100 });
+        await world.settle();
+        check("Door tool opera a porta por duplo clique sem Selection",
+            world.posts.some((post) => post.url.endsWith("/game/walls/door-state")));
     }
 
     {

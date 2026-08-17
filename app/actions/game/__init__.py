@@ -119,14 +119,15 @@ from app.actions.game.manage_journals import toggle_journal_owner
 from app.actions.game.manage_journals import toggle_quest_objective
 from app.actions.game.manage_journals import update_journal
 from app.actions.game.manage_journals import upload_journal_asset
+from app.actions.game.manage_journals import get_journal_pdf_document
 from app.actions.game.manage_handouts import get_handout_presentation
 from app.actions.game.manage_handouts import present_handout
 from app.actions.game.manage_lobby import get_lobby
 from app.actions.game.manage_lobby import update_lobby_state
 from app.actions.game.manage_particles import create_particle, delete_particle, delete_particles, get_particles, update_particle
-from app.actions.game.manage_shaders import create_shader, delete_shader, delete_shaders, get_shaders, update_shader
+from app.actions.game.manage_shaders import apply_shader_preset, create_shader, delete_shader, delete_shaders, get_shader_presets, get_shaders, update_shader, update_shader_preset
 from app.actions.game.manage_lights import create_light, delete_light, delete_lights, get_lights, update_light
-from app.actions.game.manage_walls import create_wall, delete_wall, delete_walls, get_walls, move_wall_node, move_walls, set_door_state, split_wall
+from app.actions.game.manage_walls import create_wall, delete_wall, delete_walls, get_walls, move_wall_endpoint, move_wall_node, move_walls, set_door_state, split_wall
 from app.actions.game.manage_onboarding import get_gm_onboarding
 from app.actions.game.manage_onboarding import update_gm_onboarding_preference
 from app.actions.game.player_onboarding import claim_player_onboarding
@@ -248,6 +249,7 @@ _protected_handlers = [
     show_journal_create_modal,
     toggle_journal_owner,
     upload_journal_asset,
+    get_journal_pdf_document,
     serve_journal_asset,
     move_journal,
     move_journal_folder,
@@ -258,6 +260,7 @@ _protected_handlers = [
     get_walls,
     create_wall,
     move_wall_node,
+    move_wall_endpoint,
     move_walls,
     set_door_state,
     delete_wall,
@@ -270,9 +273,12 @@ _protected_handlers = [
     update_particle,
     delete_particle,
     delete_particles,
+    get_shader_presets,
     get_shaders,
     create_shader,
+    apply_shader_preset,
     update_shader,
+    update_shader_preset,
     delete_shader,
     delete_shaders,
     update_light,

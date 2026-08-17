@@ -24,6 +24,12 @@ async def broadcast(campaign_id: str, scene_id: str):
 def fields(data: dict) -> dict[str, Any]:
     return {key: data[key] for key in EDITABLE if key in data}
 
+@get("/game/shader-presets")
+async def get_shader_presets(current_user: dict, scene_shader_service: SceneShaderService) -> Response[dict[str, Any]]:
+    if off := disabled(): return off
+    del current_user
+    return response(await run_blocking(scene_shader_service.presets))
+
 @get("/game/shaders/{scene_id:str}")
 async def get_shaders(scene_id: FromPath[str], campaign_id: FromQuery[str], current_user: dict, scene_shader_service: SceneShaderService) -> Response[dict[str, Any]]:
     if off := disabled(): return off
@@ -37,12 +43,49 @@ async def create_shader(request: Request, current_user: dict, scene_shader_servi
     if result.success: await broadcast(cid,sid)
     return response(result,True)
 
+@post("/game/shaders/apply-preset")
+async def apply_shader_preset(request: Request, current_user: dict, scene_shader_service: SceneShaderService) -> Response[dict[str, Any]]:
+    if off := disabled(): return off
+    d = await body(request); cid = str(d.get("campaign_id") or ""); sid = str(d.get("scene_id") or "")
+    raw_schema = d.get("schema_version", 1)
+    schema_version = raw_schema if isinstance(raw_schema, int) and not isinstance(raw_schema, bool) else 0
+    result = await run_blocking(
+        scene_shader_service.apply_preset,
+        campaign_id=cid,
+        scene_id=sid,
+        user_id=current_user["id"],
+        preset_id=str(d.get("preset_id") or ""),
+        schema_version=schema_version,
+        parameters={"x": d.get("x"), "y": d.get("y")},
+    )
+    if result.success: await broadcast(cid, sid)
+    return response(result, True)
+
 @post("/game/shaders/update")
 async def update_shader(request: Request, current_user: dict, scene_shader_service: SceneShaderService) -> Response[dict[str, Any]]:
     if off := disabled(): return off
     d=await body(request); cid=str(d.get("campaign_id") or "")
     result=await run_blocking(scene_shader_service.update,campaign_id=cid,shader_id=str(d.get("shader_id") or ""),user_id=current_user["id"],**fields(d))
     if result.success: await broadcast(cid,result.payload["shader"]["scene_id"])
+    return response(result)
+
+@post("/game/shaders/update-preset")
+async def update_shader_preset(request: Request, current_user: dict, scene_shader_service: SceneShaderService) -> Response[dict[str, Any]]:
+    """Commit one semantic preview transaction using optimistic concurrency."""
+    if off := disabled(): return off
+    d = await body(request); cid = str(d.get("campaign_id") or "")
+    raw_version = d.get("expected_version")
+    expected_version = raw_version if isinstance(raw_version, int) and not isinstance(raw_version, bool) else None
+    result = await run_blocking(
+        scene_shader_service.update_preset,
+        campaign_id=cid,
+        shader_id=str(d.get("shader_id") or ""),
+        user_id=current_user["id"],
+        parameters=d.get("parameters"),
+        expected_version=expected_version,
+    )
+    if result.success:
+        await broadcast(cid, result.payload["instance"]["sceneId"])
     return response(result)
 
 @post("/game/shaders/delete")

@@ -264,6 +264,25 @@ A engine não tem dado próprio: um sistema que declara `input: "roll"` sem
 botões de rolagem dizem isso. Todo o resto do painel é comportamento do core ou
 a capability `combat.runtime`.
 
+## Distribuicao
+
+Packages publicados no Marketplace devem usar os campos aditivos do SDK v1 no
+nivel raiz do manifest:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "download": "https://github.com/example/package/archive/refs/tags/v1.2.0.zip",
+  "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+}
+```
+
+`$schema` identifica somente o JSON Schema que valida o documento. `download`
+e a URL imutavel e versionada do artifact. `sha256` e o digest SHA-256 esperado
+dos bytes baixados. `$schema` nunca e usado para localizar ou baixar artifacts.
+A representacao existente `distribution.type/url/sha256` continua compativel no
+SDK v1.
+
 Nem todo kind deve usar todos os campos. Por exemplo, `content` normalmente declara `contentPacks`, enquanto `assets` declara `assets`.
 
 Rulesets devem declarar `provides.storage` (modelo de storage) e ao menos um tipo em `provides.actorTypes`. Os tipos de content pack permitidos são `actor_pack`, `item_pack`, `spell_pack`, `journal_pack`, `table_pack` e `condition_pack`.

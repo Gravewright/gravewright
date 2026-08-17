@@ -127,6 +127,14 @@ class PackageDoctorService:
             "findings": [f.to_dict() for f in findings],
         }
 
+    def audit_staged(self, loaded) -> list[DoctorFinding]:
+        """Audit a validated staging tree without requiring installed DB state."""
+        findings: list[DoctorFinding] = []
+        for code in loaded.validation.errors:
+            findings.append(DoctorFinding(code=code, severity=SEVERITY_ERROR, package_id=loaded.id))
+        findings.extend(self._audit_capabilities(loaded.id, loaded))
+        return findings
+
 
 
     def _audit_installed(self, installed: dict[str, dict]) -> list[DoctorFinding]:

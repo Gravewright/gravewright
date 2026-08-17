@@ -1,0 +1,17 @@
+version = 1
+
+[[packages]]
+id = "dnd5e"
+kind = "ruleset"
+manifest = "https://raw.githubusercontent.com/Gravewright/gravewright-5e-srd/main/manifest.json"
+enabled = true
+channel = "stable"
+update_policy = "publisher"
+
+[[packages]]
+id = "savage-worlds"
+kind = "ruleset"
+manifest = "https://raw.githubusercontent.com/Gravewright/Savage-Worlds-Compatibility-Package-for-Gravewright/main/manifest.json"
+enabled = true
+channel = "stable"
+update_policy = "publisher"

@@ -111,6 +111,19 @@ def test_asset_url_none_by_default():
     assert view["asset_url"] is None
 
 
+def test_missing_actor_image_is_not_sent_to_the_texture_loader(monkeypatch):
+    monkeypatch.setattr(
+        "app.engine.tokens.token_view_service.actor_image_file_exists",
+        lambda actor, kind: False,
+    )
+    view = TokenViewService().build_view(
+        token=_token(token_asset_url="/game/actor/actor_1/image/portrait?v=7"),
+        projection=_projection(),
+        actor={"id": "actor_1", "campaign_id": "campaign_1", "name": "Missing"},
+    )
+    assert view["asset_url"] is None
+
+
 def test_lower_bar_from_projection():
     view = TokenViewService().build_view(
         token=_token(), projection=_projection(bars={"bar_1": {"value": 7, "max": 10}})

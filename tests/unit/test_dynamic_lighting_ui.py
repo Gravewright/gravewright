@@ -131,7 +131,7 @@ def test_lighting_draws_at_free_angles_and_chains_walls_by_default():
     assert "event.ctrlKey" not in script
 
     assert "this.preview = this.target(event)" in script
-    assert "const hit = this.hit(raw)" in script
+    assert "const hit = this.hit(raw, wallKind && !this.start ? wallKind : null)" in script
 
 def test_walls_and_doors_are_colour_coded_by_kind_and_state():
     pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
@@ -184,7 +184,9 @@ def test_select_tool_drags_welded_wall_nodes():
     # dentro da selecao a ordem importa: foco, depois no, depois corpo da parede
     select=script.split('if (tool === "select") {',1)[1].split("const hit = this.hit(raw)",1)[0]
     assert select.index("this.lightAt(raw)") < select.index("this.nodeAt(raw)")
-    assert "this.nodeDrag = { from: { ...node }" in select
+    assert "event.shiftKey ? this.endpointAt(raw) : this.nodeAt(raw)" in select
+    assert "detached: Boolean(event.shiftKey)" in select
+    assert '"/game/walls/move-endpoint"' in script
 
     assert "nodesGrabbable" in script and "nodesGrabbable" in pixi
 
@@ -557,7 +559,7 @@ def test_wall_and_light_fetches_do_not_take_each_other_down():
     load=script.split("const load = async (path) => {",1)[1].split("};",1)[0]
     assert "try {" in load and "catch (error)" in load, "cada recurso trata a propria falha"
     assert "console.warn" in load, "falha silenciosa deixa o problema invisivel"
-    refresh=script.split("async refresh(sceneId",1)[1].split("hit(point)",1)[0]
+    refresh=script.split("async refresh(sceneId",1)[1].split("hit(point, kind",1)[0]
     assert "catch {}" not in refresh, "o catch mudo em volta do Promise.all sumiu"
 
 def test_walls_are_indexed_by_chunk_like_the_rest_of_the_scene():

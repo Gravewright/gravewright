@@ -1106,11 +1106,10 @@
         const packageCanvas = window.GravewrightMap?.activeCanvas?.();
         if (window.GravewrightTools?.dispatchPackagePointer?.("cancel", packageCanvas, e)) return;
         cancelPendingBoardPing(e.pointerId);
-        stopFreehand(e);
-        stopMeasure(e);
+        mapMeasureController.cancelPointer(e);
         mapPan.stop(e);
-        mapTokenDrag.stop(e);
-        mapMarquee.stop(e);
+        mapTokenDrag.cancel(e);
+        mapMarquee.cancel(e);
     });
 
     const mapTokenSteps = window.GravewrightMapTokenSteps.createTokenSteps({

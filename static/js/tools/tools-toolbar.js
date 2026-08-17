@@ -15,6 +15,9 @@
     let activeTool = DEFAULT_TOOL;
     const activeSubTool = {};
     let activeMarkerPresetId = "";
+    let selectedShaderPresetId = "";
+    let shaderPresetCatalog = null;
+    let shaderPresetRequest = null;
     let activeDrawColor = "#f8fafc";
     let activeLayer = "game";
     let layerState = { visibility: { game: true, gm: true, composition: true }, locked: {} };
@@ -188,9 +191,11 @@
     }
 
     function closeAllSubPanels() {
+        const shaderWasOpen = !document.querySelector('[data-tool-sub-panel="shader"]')?.hidden;
         document.querySelectorAll("[data-tool-sub-panel]").forEach((p) => {
             p.hidden = true;
         });
+        if (shaderWasOpen) document.dispatchEvent(new CustomEvent("tool:shader-preview", { detail: { presetId: null } }));
     }
 
     function positionSubPanel(panel, triggerBtn) {
@@ -217,17 +222,116 @@
     }
 
     function openSubPanel(tool) {
+        const openedAt = performance.now();
         closeAllSubPanels();
 
         const panel = document.querySelector(`[data-tool-sub-panel="${tool}"]`);
         if (!panel) return;
 
         if (tool === "shape") renderAreaMarkerPresets(panel);
+        if (tool === "shader") void renderShaderPresetPicker(panel);
         syncGmOnly(panel);
 
         const btn = getActiveDock()?.querySelector(`[data-tool="${tool}"]`);
         panel.hidden = false;
         positionSubPanel(panel, btn);
+        if (tool === "shader") requestAnimationFrame(() => {
+            performance.measure?.("picker_open_ms", { start: openedAt, end: performance.now() });
+            document.dispatchEvent(new CustomEvent("tool:shader-preview", {
+                detail: { presetId: selectedShaderPresetId || null },
+            }));
+        });
+    }
+
+    function shaderDisplayById(presetId) {
+        const preset = (window.GravewrightShaderPresets || []).find((item) => item.id === presetId);
+        if (!preset) return { name: presetId, description: "", category: "", color: "#8fb6ff" };
+        return {
+            name: String(preset.name || presetId),
+            description: String(preset.description || ""),
+            category: String(preset.category || ""),
+            color: /^#[0-9a-fA-F]{6}$/.test(preset.color || "") ? preset.color : "#8fb6ff",
+        };
+    }
+
+    async function loadShaderPresetCatalog() {
+        if (shaderPresetCatalog) return shaderPresetCatalog;
+        if (!shaderPresetRequest) {
+            shaderPresetRequest = fetch("/game/shader-presets", {
+                credentials: "same-origin", headers: { Accept: "application/json" },
+            }).then(async (response) => {
+                if (!response.ok) throw new Error(`shader presets ${response.status}`);
+                const payload = await response.json();
+                const values = Array.isArray(payload.presets) ? payload.presets : [];
+                shaderPresetCatalog = values.map((preset) => Object.freeze({
+                    id: String(preset.id || ""),
+                    schemaVersion: Number(preset.schemaVersion || 1),
+                    labelKey: String(preset.labelKey || ""),
+                    descriptionKey: String(preset.descriptionKey || ""),
+                    parameters: preset.parameters && typeof preset.parameters === "object" ? preset.parameters : {},
+                })).filter((preset) => preset.id);
+                return shaderPresetCatalog;
+            }).finally(() => { shaderPresetRequest = null; });
+        }
+        return shaderPresetRequest;
+    }
+
+    function syncShaderPresetSelection(panel = document.querySelector('[data-tool-sub-panel="shader"]')) {
+        panel?.querySelectorAll("[data-shader-tool-preset]").forEach((button) => {
+            const selected = button.dataset.shaderToolPreset === selectedShaderPresetId;
+            button.classList.toggle("is-selected", selected);
+            button.setAttribute("aria-selected", String(selected));
+        });
+        const custom = panel?.querySelector("[data-shader-tool-custom]");
+        custom?.classList.toggle("is-selected", !selectedShaderPresetId);
+        custom?.setAttribute("aria-pressed", String(!selectedShaderPresetId));
+    }
+
+    async function renderShaderPresetPicker(panel) {
+        const list = panel?.querySelector("[data-shader-tool-presets]");
+        if (!list) return;
+        list.textContent = panel.dataset.loading || "";
+        try {
+            const presets = await loadShaderPresetCatalog();
+            if (panel.hidden) return;
+            list.replaceChildren();
+            presets.forEach((preset) => {
+                const display = shaderDisplayById(preset.id);
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "shader-tool-preset";
+                button.dataset.shaderToolPreset = preset.id;
+                button.setAttribute("role", "option");
+                button.setAttribute("aria-selected", "false");
+                button.title = display.description;
+                const swatch = document.createElement("span");
+                swatch.className = "shader-preset-swatch";
+                swatch.style.setProperty("--preset-color", display.color);
+                const text = document.createElement("span");
+                const name = document.createElement("strong");
+                const category = document.createElement("small");
+                name.textContent = display.name;
+                category.textContent = display.category;
+                text.append(name, category);
+                button.append(swatch, text);
+                list.appendChild(button);
+            });
+            syncShaderPresetSelection(panel);
+        } catch {
+            list.textContent = panel.dataset.error || "";
+        }
+    }
+
+    function setShaderPreset(presetId) {
+        selectedShaderPresetId = String(presetId || "");
+        try { localStorage.setItem(`${STORAGE_KEY}.shader.preset`, selectedShaderPresetId); } catch {  }
+        document.querySelectorAll("[data-map-canvas]").forEach((canvas) => {
+            canvas.dataset.activeShaderPreset = selectedShaderPresetId;
+        });
+        syncShaderPresetSelection();
+        document.dispatchEvent(new CustomEvent("tool:shader-preset-changed", {
+            detail: { presetId: selectedShaderPresetId || null },
+        }));
     }
 
     function activeCanvas() {
@@ -269,6 +373,7 @@
 
         document.querySelectorAll("[data-map-canvas]").forEach((canvas) => {
             canvas.dataset.activeMarkerPreset = activeMarkerPresetId;
+            canvas.dataset.activeShaderPreset = selectedShaderPresetId;
         });
         renderAreaMarkerPresets();
 
@@ -406,7 +511,7 @@
 
 
 
-    function setActiveTool(tool) {
+    function setActiveTool(tool, { openPanel = true } = {}) {
         const previousPackageTool = packageTools.get(activeTool);
         if (streamerMode() && tool === "hp") {
             tool = DEFAULT_TOOL;
@@ -446,7 +551,7 @@
             detail: { tool },
         }));
 
-        if (SUB_TOOLS[tool]) {
+        if (SUB_TOOLS[tool] && openPanel) {
             openSubPanel(tool);
         } else {
             closeAllSubPanels();
@@ -507,7 +612,8 @@
 
         const toolBtn = event.target.closest("[data-tool]");
         if (toolBtn?.closest("[data-tool-dock]")) {
-            setActiveTool(toolBtn.dataset.tool);
+            const tool = toolBtn.dataset.tool;
+            setActiveTool(tool);
             return;
         }
 
@@ -533,6 +639,19 @@
         const presetBtn = event.target.closest("[data-area-marker-preset]");
         if (presetBtn) {
             setMarkerPreset(presetBtn.dataset.areaMarkerPreset || "");
+            return;
+        }
+
+        const shaderPresetBtn = event.target.closest("[data-shader-tool-preset]");
+        if (shaderPresetBtn) {
+            setShaderPreset(shaderPresetBtn.dataset.shaderToolPreset);
+            closeAllSubPanels();
+            return;
+        }
+
+        if (event.target.closest("[data-shader-tool-custom]")) {
+            setShaderPreset("");
+            closeAllSubPanels();
             return;
         }
 
@@ -589,6 +708,22 @@
         }
     });
 
+    const previewPresetFrom = (event) => event.target.closest?.("[data-shader-tool-preset]")?.dataset.shaderToolPreset || null;
+    document.addEventListener("pointerover", (event) => {
+        const presetId = previewPresetFrom(event);
+        if (presetId) document.dispatchEvent(new CustomEvent("tool:shader-preview", { detail: { presetId } }));
+    });
+    document.addEventListener("focusin", (event) => {
+        const presetId = previewPresetFrom(event);
+        if (presetId) document.dispatchEvent(new CustomEvent("tool:shader-preview", { detail: { presetId } }));
+    });
+    document.addEventListener("pointerleave", (event) => {
+        if (!event.target.matches?.("[data-shader-tool-presets]")) return;
+        document.dispatchEvent(new CustomEvent("tool:shader-preview", {
+            detail: { presetId: selectedShaderPresetId || null },
+        }));
+    }, true);
+
 
 
     const tooltip = document.createElement("div");
@@ -640,6 +775,15 @@
 
         const tool = SHORTCUTS[event.key.toLowerCase()];
         if (tool) setActiveTool(tool);
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        const panel = document.querySelector('[data-tool-sub-panel="shader"]');
+        if (!panel || panel.hidden) return;
+        event.preventDefault();
+        closeAllSubPanels();
+        getActiveDock()?.querySelector('[data-tool="shader"]')?.focus?.();
     });
 
     document.addEventListener("change", (event) => {
@@ -710,6 +854,7 @@
             }
             const savedPreset = localStorage.getItem(`${STORAGE_KEY}.shape.preset`);
             if (savedPreset) activeMarkerPresetId = savedPreset;
+            selectedShaderPresetId = localStorage.getItem(`${STORAGE_KEY}.shader.preset`) || "";
             const savedDrawColor = localStorage.getItem(`${STORAGE_KEY}.draw.color`);
             if (savedDrawColor) activeDrawColor = savedDrawColor;
         }
@@ -740,6 +885,16 @@
         get activeSubTool() { return activeSubTool[activeTool]; },
         get activeMarkerPresetId() { return activeMarkerPresetId; },
         get activeMarkerPreset() { return markerPresetById(activeMarkerPresetId); },
+        get selectedShaderPreset() { return selectedShaderPresetId || null; },
+        get selectedShaderPresetSchemaVersion() {
+            return shaderPresetCatalog?.find((preset) => preset.id === selectedShaderPresetId)?.schemaVersion || 1;
+        },
+        get selectedShaderPresetDefinition() {
+            return shaderPresetCatalog?.find((preset) => preset.id === selectedShaderPresetId) || null;
+        },
+        shaderPresetDefinition(presetId) {
+            return shaderPresetCatalog?.find((preset) => preset.id === presetId) || null;
+        },
         get activeDrawColor() { return activeDrawColor; },
         get activeLayer() { return activeLayer; },
         isLayerVisible(layer, roomId = activeCanvas()?.dataset.roomId || "") {

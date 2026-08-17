@@ -73,6 +73,7 @@ textarea {
 #section-campaigns:checked~.editor-area .editor-panel--campaigns,
 #section-systems:checked~.editor-area .editor-panel--systems,
 #section-modules:checked~.editor-area .editor-panel--modules,
+#section-marketplace:checked~.editor-area .editor-panel--marketplace,
 #section-settings:checked~.editor-area .editor-panel--settings,
 #section-privacy:checked~.editor-area .editor-panel--privacy {
     display: block;
@@ -711,12 +712,35 @@ textarea {
 #section-campaigns:checked~.right-nav .nav-item--campaigns,
 #section-systems:checked~.right-nav .nav-item--systems,
 #section-modules:checked~.right-nav .nav-item--modules,
+#section-marketplace:checked~.right-nav .nav-item--marketplace,
 #section-settings:checked~.right-nav .nav-item--settings,
 #section-privacy:checked~.right-nav .nav-item--privacy {
     border-color: rgba(192, 154, 90, 0.42);
     background: rgba(192, 154, 90, 0.12);
     color: var(--text);
 }
+
+.marketplace-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+.marketplace-status { margin: -8px 0 16px; color: var(--text-faint); font-size: 12px; }
+.marketplace-filters { display: grid; grid-template-columns: minmax(220px, 1fr) 180px; gap: 10px; margin-bottom: 24px; }
+.marketplace-filters input, .marketplace-filters select { min-height: 40px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0 11px; background: var(--surface-field); color: var(--text); }
+.marketplace-band { margin-bottom: 28px; }
+.marketplace-band > h2 { border-bottom: 1px solid var(--border); padding-bottom: 10px; color: var(--text); font-size: 20px; }
+.marketplace-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
+.marketplace-card { display: grid; gap: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; background: var(--surface-raised); }
+.marketplace-card[hidden], .marketplace-band[hidden] { display: none; }
+.marketplace-card header, .marketplace-card footer, .marketplace-card-meta { display: flex; align-items: center; gap: 9px; }
+.marketplace-card h3 { flex: 1; margin: 0; font-size: 16px; }
+.marketplace-card p { min-height: 42px; margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+.marketplace-card-meta { flex-wrap: wrap; color: var(--text-faint); font-size: 11px; }
+.marketplace-card-details { color: var(--text-muted); font-size: 12px; }
+.marketplace-card-details summary { cursor: pointer; color: var(--accent); }
+.marketplace-card-details dl { display: grid; gap: 5px; margin: 9px 0 0; }
+.marketplace-card-details dl > div { display: grid; grid-template-columns: 70px 1fr; gap: 8px; }
+.marketplace-card-details dt { color: var(--text-faint); }
+.marketplace-card-details dd { margin: 0; }
+.marketplace-card footer { justify-content: space-between; margin-top: auto; }
+.marketplace-package-status { color: var(--accent); font-size: 12px; font-weight: 700; }
 
 .nav-footer {
     display: grid;
@@ -3381,6 +3405,57 @@ html {
 
 .editor-panel--campaigns .campaign-manage > summary {
     padding: var(--space-3) 0;
+}
+
+.campaign-package-onboarding-modal {
+    width: min(430px, calc(100vw - 32px));
+}
+
+.campaign-package-onboarding-modal .primary-action {
+    width: 100%;
+    margin-top: var(--space-4);
+}
+
+.campaign-package-onboarding-path {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    background: color-mix(in srgb, var(--accent) 9%, transparent);
+    color: var(--accent);
+    font-size: var(--text-sm);
+}
+
+.campaign-manage--needs-attention > summary,
+.manage-tool--needs-attention {
+    animation: campaign-package-attention 1.35s ease-in-out infinite;
+}
+
+.campaign-manage--needs-attention[open] > summary {
+    animation: none;
+}
+
+@keyframes campaign-package-attention {
+    0%, 100% {
+        color: inherit;
+        filter: none;
+    }
+    50% {
+        color: var(--accent);
+        filter: drop-shadow(0 0 0.45rem color-mix(in srgb, var(--accent) 75%, transparent));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .campaign-manage--needs-attention > summary,
+    .manage-tool--needs-attention {
+        animation: none;
+        color: var(--accent);
+        outline: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+    }
 }
 
 .editor-panel--campaigns .campaign-manage-menu {

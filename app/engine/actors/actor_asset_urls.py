@@ -9,6 +9,9 @@ storage path in ``portrait_asset_id`` / ``token_asset_id`` (or NULL when unset);
 from __future__ import annotations
 
 from typing import Any
+from pathlib import Path
+
+from app.helpers.env import PROJECT_ROOT
 
 _KINDS = ("portrait", "token")
 
@@ -33,3 +36,17 @@ def actor_image_url(actor: Any, kind: str) -> str | None:
 def actor_token_image_url(actor: Any) -> str | None:
     """Token image, falling back to the portrait when no token image is set."""
     return actor_image_url(actor, "token") or actor_image_url(actor, "portrait")
+
+
+def actor_image_file_exists(actor: Any, kind: str) -> bool:
+    """Whether an actor image reference still resolves inside actor storage."""
+    if kind not in _KINDS or actor is None:
+        return False
+    relative = _field(actor, f"{kind}_asset_id")
+    actor_id = str(_field(actor, "id") or "")
+    campaign_id = str(_field(actor, "campaign_id") or "")
+    if not relative or not actor_id or not campaign_id:
+        return False
+    path = (PROJECT_ROOT / Path(str(relative))).resolve()
+    expected = (PROJECT_ROOT / "storage" / "actor-assets" / campaign_id / actor_id).resolve()
+    return path.parent == expected and path.is_file()

@@ -99,6 +99,56 @@ def test_a_shader_survives_the_round_trip(db):
         assert removed.status_code == 200
 
 
+def test_semantic_preset_catalog_and_creation_do_not_expose_glsl(db):
+    from main import app
+
+    gm = seed_user(name="GM")
+    campaign = seed_campaign(gm)
+    scene = seed_scene(campaign)
+
+    with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
+        login(client, gm)
+        catalog = client.get("/game/shader-presets")
+        assert catalog.status_code == 200
+        presets = catalog.json()["presets"]
+        assert len(presets) == 50
+        assert all("source" not in preset and "glsl" not in preset for preset in presets)
+
+        created = client.post("/game/shaders/apply-preset", json={
+            "campaign_id": campaign,
+            "scene_id": scene["id"],
+            "preset_id": "orb-1",
+            "schema_version": 1,
+            "x": 240,
+            "y": 180,
+        })
+        assert created.status_code == 201, created.text
+        instance = created.json()["instance"]
+        assert instance["presetId"] == "orb-1"
+        assert instance["parameters"]["x"] == 240
+        assert instance["parameters"]["y"] == 180
+        assert "source" not in instance
+
+        updated = client.post("/game/shaders/update-preset", json={
+            "campaign_id": campaign,
+            "shader_id": instance["id"],
+            "expected_version": instance["version"],
+            "parameters": {"intensity": 0.35, "radius": 11},
+        })
+        assert updated.status_code == 200, updated.text
+        assert updated.json()["instance"]["version"] == instance["version"] + 1
+        assert updated.json()["instance"]["parameters"]["intensity"] == 0.35
+
+        stale = client.post("/game/shaders/update-preset", json={
+            "campaign_id": campaign,
+            "shader_id": instance["id"],
+            "expected_version": instance["version"],
+            "parameters": {"intensity": 0.7},
+        })
+        assert stale.status_code == 400
+        assert stale.json()["error_key"] == "sdk.shaders.stale_version"
+
+
 def test_the_route_accepts_glsl_it_does_not_understand(db):
     """O servidor não é revisor de GLSL, e isso é deliberado.
 

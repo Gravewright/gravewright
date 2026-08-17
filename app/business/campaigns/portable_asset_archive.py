@@ -167,6 +167,12 @@ class PortableAssetGraph:
     def _rewrite_journal_documents(content: dict, id_map: dict[str, str]) -> None:
         def visit(value: object) -> None:
             if isinstance(value, dict):
+                if value.get("kind") == "pdf":
+                    old = str(value.get("assetId") or value.get("asset_id") or "")
+                    if old in id_map:
+                        value.pop("asset_id", None)
+                        value["assetId"] = id_map[old]
+                        value["src"] = f"/game/journal/asset/{id_map[old]}"
                 if value.get("type") == "gwImage" and isinstance(value.get("attrs"), dict):
                     attrs = value["attrs"]
                     old = str(attrs.get("assetId") or attrs.get("asset_id") or "")

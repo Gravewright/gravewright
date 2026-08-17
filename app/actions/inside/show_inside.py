@@ -14,10 +14,12 @@ from app.business.campaigns.campaign_snapshot_service import CampaignSnapshotSer
 from app.business.admin.admin_service import AdminService
 from app.business.audit import catalog as audit_catalog
 from app.business.inside_settings_service import InsideSettingsService
+from app.business.users import UserPreferenceService
 from app.config import config
 from app.engine.sdk.package_activation_service import PackageActivationService
 from app.engine.sdk.package_dependency_service import PackageDependencyService
 from app.engine.sdk.package_install_service import PackageInstallService
+from app.engine.sdk.marketplace_service import MarketplaceService
 from app.helpers.auth import require_user
 from app.helpers.pending_join_code import (
     PENDING_JOIN_CODE_KEY,
@@ -36,6 +38,7 @@ def show_inside(
     campaign_invitation_service: CampaignInvitationService,
     package_install_service: PackageInstallService,
     campaign_snapshot_service: CampaignSnapshotService,
+    user_preference_service: UserPreferenceService,
     campaign_error_key: FromQuery[str | None] = None,
     campaign_message_key: FromQuery[str | None] = None,
     invitation_error_key: FromQuery[str | None] = None,
@@ -56,6 +59,11 @@ def show_inside(
     pending_invitations = campaign_invitation_service.list_pending_for_user(user["id"])
     packages = package_install_service.list_for_tab()
     rulesets, modules = split_packages(packages)
+    marketplace = MarketplaceService().catalog()
+    marketplace_bands = {
+        kind: [item for item in marketplace.get("packages", []) if item.get("kind") == kind]
+        for kind in ("ruleset", "addon", "library", "content", "theme", "assets")
+    }
     inside_settings = InsideSettingsService().read()
     package_activation_service = PackageActivationService()
     dependency_service = PackageDependencyService()
@@ -107,6 +115,9 @@ def show_inside(
                 }
             )
         row["available_packages"] = available_packages
+        row["has_inactive_packages"] = row.get("member_role") == "gm" and any(
+            not package["active"] for package in available_packages
+        )
         row["snapshots"] = (
             campaign_snapshot_service.list_for_campaign(
                 campaign_id=row["id"], user_id=str(user["id"])
@@ -124,6 +135,11 @@ def show_inside(
             listed["campaign_count"] = len(campaign_service.list_for_user(listed["id"]))
             all_users.append(listed)
 
+    show_package_onboarding = (
+        any(campaign["has_inactive_packages"] for campaign in campaigns)
+        and not user_preference_service.has_seen_package_onboarding(str(user["id"]))
+    )
+
     return Template(
         template_name="pages/inside/index.html",
         context=view_context(
@@ -137,12 +153,15 @@ def show_inside(
                 "is_owner": system_role == "owner",
             },
             campaigns=campaigns,
+            show_package_onboarding=show_package_onboarding,
             audit_event_types=audit_catalog.EVENT_TYPES,
             audit_metadata_fields=audit_catalog.METADATA_FIELDS,
             available_systems=available_systems,
             packages=packages,
             rulesets=rulesets,
             modules=modules,
+            marketplace=marketplace,
+            marketplace_bands=marketplace_bands,
             all_users=all_users,
             inside_settings=inside_settings["app"],
             privacy_settings=inside_settings["privacy"],

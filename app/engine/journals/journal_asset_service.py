@@ -3,13 +3,15 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
+from app.config import config
 from app.infrastructure.images.image_decoder import ImageDecoder
 from app.infrastructure.storage.local_journal_asset_storage import LocalJournalAssetStorage
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.journal_asset_repository import JournalAssetRepository
 from app.persistence.repositories.journal_repository import JournalRepository
 
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+MAX_UPLOAD_BYTES = config.journal_image_max_bytes
+MAX_PDF_BYTES = config.journal_pdf_max_bytes
 MAX_IMAGE_DIMENSION = 8_000
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
 ALLOWED_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".pdf")
@@ -126,7 +128,8 @@ class JournalAssetService:
     def _validate(self, *, filename: str, content_type: str, data: bytes) -> str | None:
         if not data:
             return "game.journal.assets.errors.empty"
-        if len(data) > MAX_UPLOAD_BYTES:
+        max_bytes = MAX_PDF_BYTES if content_type == "application/pdf" else MAX_UPLOAD_BYTES
+        if len(data) > max_bytes:
             return "game.journal.assets.errors.too_large"
         if content_type not in ALLOWED_CONTENT_TYPES:
             return "game.journal.assets.errors.unsupported_type"

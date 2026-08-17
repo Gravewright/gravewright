@@ -397,6 +397,24 @@ declare a full-match regular expression in `pattern`.
 
 ## Distribution
 
+Marketplace packages should publish the additive SDK v1 fields at the manifest
+top level:
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "download": "https://github.com/example/package/archive/refs/tags/v1.2.0.zip",
+  "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+}
+```
+
+`$schema` only identifies the JSON Schema that validates the document.
+`download` is the immutable, versioned artifact URL. `sha256` is the expected
+SHA-256 digest of the downloaded bytes. These fields have distinct meanings;
+`$schema` is never used for artifact discovery or download.
+
+The existing structured representation remains supported for SDK v1 packages:
+
 ```json
 "distribution": {
   "type": "zip",

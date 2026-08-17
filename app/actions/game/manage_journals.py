@@ -27,6 +27,8 @@ from app.realtime.resource_events import (
 from app.realtime.transport import RealtimeTransport
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.journal_repository import JournalRepository
+from app.persistence.repositories.journal_asset_repository import JournalAssetRepository
+from app.engine.sdk.pdf_service import SdkPdfService
 
 
 def _wants_json(request: Any) -> bool:
@@ -806,7 +808,7 @@ async def move_journal_folder(
     return _journal_redirect(result.campaign_id or "")
 
 
-@post("/game/journal/asset")
+@post("/game/journal/asset", request_max_body_size=config.journal_pdf_max_bytes + 1024 * 1024)
 async def upload_journal_asset(
     request: Request,
     cookies: dict[str, str],
@@ -861,3 +863,17 @@ async def serve_journal_asset(
         raise NotFoundException()
 
     return File(path=result.path, media_type=result.media_type or "image/png")
+
+
+@get("/game/journal/pdf/{document_id:str}")
+async def get_journal_pdf_document(document_id: FromPath[str], current_user: Row) -> Response[dict[str, Any]]:
+    asset = JournalAssetRepository().get_by_id(str(document_id))
+    if not asset:
+        return Response({"error_key": "sdk.pdf.not_found"}, status_code=404)
+    result = SdkPdfService().document(
+        campaign_id=asset["campaign_id"], document_id=str(document_id), user_id=current_user["id"],
+    )
+    if not result.success:
+        status = 403 if result.error_key == "sdk.pdf.permission_denied" else 404
+        return Response({"error_key": result.error_key}, status_code=status)
+    return Response({"document": result.value}, status_code=200)

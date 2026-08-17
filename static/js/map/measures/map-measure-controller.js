@@ -301,6 +301,7 @@
             const shape = window.GravewrightTools?.activeSubTool || canvas.dataset.activeSubtool || "line";
             if (activeTool === "shape" && shape === "select") return startMeasureMove(canvas, event, SHAPE_SELECT_KINDS);
             if (activeTool !== "shape" && activeTool !== "ruler") return false;
+            if (activeTool === "shape" && startMeasureMove(canvas, event, SHAPE_SELECT_KINDS)) return true;
             const start = geometry.measurePointFromEvent(canvas, event);
             if (!start) return false;
             activeMeasure = {
@@ -368,6 +369,7 @@
         function startDrawTool(canvas, event) {
             const sub = window.GravewrightTools?.activeSubTool || canvas.dataset.activeSubtool || "brush";
             if (sub === "select") return startMeasureMove(canvas, event, DRAW_SELECT_KINDS, (m) => canEditDrawing(m, canvas));
+            if (startMeasureMove(canvas, event, DRAW_SELECT_KINDS, (m) => canEditDrawing(m, canvas))) return true;
             if (sub === "text") return editors.startTextPlacement(canvas, event);
             return startFreehand(canvas, event);
         }
@@ -497,9 +499,22 @@
 
         function cancelActiveMeasure() {
             const canvas = activeMeasure?.canvas || activeMeasureMove?.canvas || activeCanvas();
+            if (activeMeasureMove?.original) upsertMeasureLocal(activeMeasureMove.canvas, activeMeasureMove.original);
             activeMeasure = null;
             activeMeasureMove = null;
             renderMeasureOverlay(canvas);
+        }
+
+        function cancelPointer(event) {
+            if (activeMeasure?.pointerId === event.pointerId || activeMeasureMove?.pointerId === event.pointerId) {
+                cancelActiveMeasure();
+                return true;
+            }
+            if (activeFreehand?.pointerId === event.pointerId) {
+                cancelActiveFreehand();
+                return true;
+            }
+            return false;
         }
 
         function cancelActiveFreehand() {
@@ -573,11 +588,13 @@
             renderMeasureOverlay(canvas);
         }
 
-        function deleteSelectedMeasure(canvas = activeCanvas(), { broadcast = true, record = true } = {}) {
+        function deleteSelectedMeasure(canvas = activeCanvas(), { broadcast = true, record = true, domain = null } = {}) {
             if (!canvas) return false;
             const measureId = selectedMeasureIdFor(canvas);
             if (!measureId) return false;
             const measure = measureStoreFor(canvas).find((item) => item.id === measureId);
+            const measureDomain = measure?.kind === "freehand" || measure?.kind === "text" ? "draw" : "shape";
+            if (!measure || (domain && measureDomain !== domain)) return false;
             deleteMeasureLocal(canvas, measureId);
             if (broadcast) broadcastAreaMarkerDelete(canvas, measureId);
             if (record && broadcast) pushMeasureDeleteHistory(canvas, measure);
@@ -785,6 +802,7 @@
             applyRemoteMeasureFlash,
             broadcastAreaMarkerUpsert,
             broadcastDrawUpsert,
+            cancelPointer,
             clearMeasures,
             copySelectedMeasure,
             deleteSelectedMeasure,

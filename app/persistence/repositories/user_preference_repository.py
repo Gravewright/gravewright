@@ -49,3 +49,15 @@ class UserPreferenceRepository:
 
     def set_ping_color(self, *, user_id: str, ping_color: str) -> None:
         self._write("ping_color", user_id=user_id, value=ping_color)
+
+    def has_seen_package_onboarding(self, user_id: str) -> bool:
+        with engine_connect() as connection:
+            value = connection.execute(
+                select(user_preferences.c.package_onboarding_seen)
+                .where(user_preferences.c.user_id == user_id)
+                .limit(1)
+            ).scalar_one_or_none()
+        return bool(value)
+
+    def mark_package_onboarding_seen(self, user_id: str) -> None:
+        self._write("package_onboarding_seen", user_id=user_id, value=1)

@@ -85,6 +85,14 @@
         if (url === "/game/walls") return { wall: { id: id("wall"), ...withoutMeta(body), door_state: "closed" } };
         if (url === "/game/walls/door-state") return { wall: update(controller.walls, body.wall_id, { door_state: body.door_state }) };
         if (url === "/game/walls/move-node") return {};
+        if (url === "/game/walls/move-endpoint") {
+            const wall = controller.walls.find((item) => item.id === body.wall_id);
+            if (wall && [1, 2].includes(Number(body.endpoint))) {
+                wall[`x${body.endpoint}`] = body.to_x;
+                wall[`y${body.endpoint}`] = body.to_y;
+            }
+            return { wall, walls: controller.walls };
+        }
         if (url === "/game/walls/move-many") {
             const wanted = new Set(body.wall_ids || []);
             controller.walls = controller.walls.map((wall) => wanted.has(wall.id) ? {
@@ -274,6 +282,12 @@
                 ...(head ? { x1: to.x, y1: to.y } : null),
                 ...(tail ? { x2: to.x, y2: to.y } : null),
             };
+        });
+    }
+
+    function moveEndpoint(walls, wallId, endpoint, to) {
+        return walls.map((wall) => wall.id !== wallId ? wall : {
+            ...wall, [`x${endpoint}`]: to.x, [`y${endpoint}`]: to.y,
         });
     }
 
@@ -638,6 +652,10 @@
 
 
             this.shaders = [];
+            this.shaderPreviewCanonical = new Map();
+            this.shaderPreviewFrame = null;
+            this.shaderPreviewPending = new Map();
+            this.transientShaderPreview = null;
 
 
 
@@ -649,6 +667,7 @@
             this.marquee = null;
             this.selectedShader = "";
             this.shaderDrag = null;
+            this.shaderResize = null;
             this.start = null;
             this.preview = null;
             this.selected = "";
@@ -716,8 +735,26 @@
 
         zoom() { return Math.max(0.001, this.state()?.zoom || 1); }
 
-        nodeAt(point) {
-            return nearestEndpoint(point, this.walls, NODE_GRAB_PX / this.zoom());
+        nodeAt(point, kind = null) {
+            const walls = kind ? this.walls.filter((wall) => wall.kind === kind) : this.walls;
+            return nearestEndpoint(point, walls, NODE_GRAB_PX / this.zoom());
+        }
+
+        endpointAt(point, kind = null) {
+            const tolerance = NODE_GRAB_PX / this.zoom();
+            const allowed = this.walls.filter((wall) => !kind || wall.kind === kind);
+            const selected = allowed.filter((wall) => this.picked("wall", wall.id));
+            const candidates = selected.length ? selected : allowed.slice().reverse();
+            let best = null, bestDistance = tolerance;
+            candidates.forEach((wall) => [1, 2].forEach((endpoint) => {
+                const x = wall[`x${endpoint}`], y = wall[`y${endpoint}`];
+                const distance = Math.hypot(point.x - x, point.y - y);
+                if (distance < bestDistance) {
+                    best = { x, y, wallId: wall.id, endpoint };
+                    bestDistance = distance;
+                }
+            }));
+            return best;
         }
 
 
@@ -751,7 +788,10 @@
 
 
         renderWalls() {
-            return this.nodeDrag ? moveNode(this.walls, this.nodeDrag.from, this.nodeDrag.to) : this.walls;
+            if (!this.nodeDrag) return this.walls;
+            return this.nodeDrag.detached
+                ? moveEndpoint(this.walls, this.nodeDrag.wallId, this.nodeDrag.endpoint, this.nodeDrag.to)
+                : moveNode(this.walls, this.nodeDrag.from, this.nodeDrag.to);
         }
 
         renderLights() {
@@ -1088,7 +1128,7 @@
 
                 shaders: (effectsVisible && !classic
                     && window.GravewrightShaderPreference?.enabled?.() !== false
-                    ? (this.shaders || []) : [])
+                    ? [...(this.shaders || []), ...(this.transientShaderPreview ? [this.transientShaderPreview] : [])] : [])
                     .filter((shader) => shader.enabled && shader.source)
                     .map((shader) => {
 
@@ -1135,6 +1175,7 @@
                             color: shader.color,
                             enabled: Boolean(shader.enabled),
                             selected: this.picked("shader", shader.id),
+                            resizeHandle: this.picked("shader", shader.id) && Number(shader.radius || 0) > 0,
                         };
                     }),
                 particleClouds: (effectsVisible ? (this.emitters || []) : []).map((emitter) => {
@@ -1171,7 +1212,7 @@
                 marquee: this.marquee,
                 start: this.start,
                 preview: this.preview,
-                nodesGrabbable: editing && window.GravewrightTools?.activeTool === "select",
+                nodesGrabbable: editing && ["select", "wall", "door"].includes(window.GravewrightTools?.activeTool),
                 draggingNode: this.nodeDrag ? this.nodeDrag.to : null,
             };
         }
@@ -1253,9 +1294,10 @@
             redraw();
         }
 
-        hit(point) {
+        hit(point, kind = null) {
             const tolerance = 10 / this.zoom();
-            return this.walls.slice().reverse().find((wall) => pointSegmentDistance(point, wall) <= tolerance) || null;
+            return this.walls.slice().reverse().find((wall) =>
+                (!kind || wall.kind === kind) && pointSegmentDistance(point, wall) <= tolerance) || null;
         }
 
         diagnostics() {
@@ -1464,6 +1506,18 @@
         pickCount() { return Object.values(this.picks).reduce((total, set) => total + set.size, 0); }
         clearPicks() { Object.values(this.picks).forEach((set) => set.clear()); }
 
+        scopePicksForTool(tool) {
+            if (tool === "select") return;
+            const ownedKind = { wall: "wall", door: "wall", light: "light", particles: "emitter", shader: "shader" }[tool];
+            Object.entries(this.picks).forEach(([kind, ids]) => {
+                if (kind !== ownedKind) ids.clear();
+            });
+            if (tool === "wall" || tool === "door") {
+                const allowed = new Set(this.walls.filter((wall) => wall.kind === tool).map((wall) => wall.id));
+                [...this.picks.wall].forEach((id) => { if (!allowed.has(id)) this.picks.wall.delete(id); });
+            }
+        }
+
 
 
 
@@ -1506,6 +1560,15 @@
             return best;
         }
 
+        shaderResizeAt(point) {
+            const size = this.scene()?.scaledTileSize || 50;
+            const tolerance = LIGHT_GRAB_PX / this.zoom();
+            return (this.shaders || []).find((shader) => {
+                if (!this.picked("shader", shader.id) || Number(shader.radius || 0) <= 0) return false;
+                return Math.hypot(point.x - (shader.x + Number(shader.radius) * size), point.y - shader.y) <= tolerance;
+            }) || null;
+        }
+
         async commitShaderDrag(drag) {
             if (!drag) return;
             const moved = Math.hypot(drag.to.x - drag.from.x, drag.to.y - drag.from.y);
@@ -1517,8 +1580,11 @@
             });
         }
 
-        beginComponentDrag(kind, id, event, surface) {
-            if (!this.picked(kind, id)) this.pick(kind, id, false);
+        beginComponentDrag(kind, id, event, surface, { owned = false } = {}) {
+            if (owned) {
+                this.clearPicks();
+                this.picks[kind].add(id);
+            } else if (!this.picked(kind, id)) this.pick(kind, id, false);
             const items = this.selectedSnapshots();
             if (!items.length) return false;
             const from = this.world(event);
@@ -1562,6 +1628,49 @@
             this.moveSelected(dx, dy);
         }
 
+        cancelTransientInteraction() {
+            if (this.componentDrag) {
+                this.componentDrag.items.forEach(({ kind, value }) => {
+                    const list = { wall: this.walls, light: this.lights, emitter: this.emitters, shader: this.shaders }[kind];
+                    const item = (list || []).find((candidate) => candidate.id === value.id);
+                    if (item) Object.assign(item, value);
+                });
+            }
+            this.componentDrag = null;
+            this.marquee = null;
+            this.start = null;
+            this.preview = null;
+            this.drawingPointerId = null;
+            this.downClient = null;
+            this.nodeDrag = null;
+            this.lightDrag = null;
+            this.shaderDrag = null;
+            this.shaderResize = null;
+            this.emitterDrag = null;
+            this.transientShaderPreview = null;
+            this.invalidateGeometry();
+            redraw();
+        }
+
+        semanticPreview(presetId, point = null, { creation = false } = {}) {
+            if (!presetId) { this.transientShaderPreview = null; redraw(); return; }
+            const definition = window.GravewrightTools?.shaderPresetDefinition?.(presetId) || null;
+            const parameters = Object.fromEntries(Object.entries(definition?.parameters || {})
+                .map(([key, spec]) => [key, spec.default]));
+            const scene = this.scene();
+            const at = point || { x: Number(scene?.width || 0) / 2, y: Number(scene?.height || 0) / 2 };
+            this.transientShaderPreview = {
+                id: "__gravewright_shader_preview__", scene_id: scene?.id || "", preset_id: presetId,
+                source: `gravewright-preset://${presetId}/v${definition?.schemaVersion || 1}`,
+                x: at.x, y: at.y, radius: parameters.radius ?? 8, rotation: parameters.rotation ?? 0,
+                opacity: creation ? 0.62 : (parameters.opacity ?? 1), intensity: parameters.intensity ?? 0.8,
+                scale: parameters.scale ?? 1, speed: parameters.speed ?? 1,
+                color: parameters.color || "#8fb6ff", blend_mode: parameters.blendMode || "normal",
+                enabled: true, transient: true, creation,
+            };
+            redraw();
+        }
+
 
 
 
@@ -1573,13 +1682,26 @@
             const scene = this.scene();
             if (!scene) return this.warnNoScene();
             try {
+                const presetId = window.GravewrightTools?.selectedShaderPreset;
+                if (presetId) {
+                    const result = await post("/game/shaders/apply-preset", {
+                        campaign_id: this.roomId,
+                        scene_id: scene.id,
+                        preset_id: presetId,
+                        schema_version: window.GravewrightTools?.selectedShaderPresetSchemaVersion || 1,
+                        x: point.x,
+                        y: point.y,
+                    });
+                    const instanceId = result.instance?.id || "";
+                    await this.refresh(scene.id);
+                    if (instanceId) this.selectedShader = instanceId;
+                    redraw();
+                    return;
+                }
                 const shader = await this.createShader({ x: point.x, y: point.y });
                 if (!shader) return;
                 this.selectedShader = shader.id;
                 redraw();
-                document.dispatchEvent(new CustomEvent("lighting:edit-shader", {
-                    detail: { canvas: this.canvas, roomId: this.roomId, shaderId: shader.id },
-                }));
             } catch (error) {
                 console.error("Scene shader creation failed", error);
                 toast("Não foi possível criar o shader.");
@@ -1612,6 +1734,7 @@
                     }
                     this.shaders[index] = result.shader;
                 }
+                this.shaderPreviewCanonical.delete(shaderId);
                 redraw();
                 return result.shader || null;
             } catch (error) {
@@ -1625,6 +1748,71 @@
                     this.shaders[index] = previous;
                 }
                 redraw();
+                throw error;
+            }
+        }
+
+        previewShader(shaderId, patch) {
+            const shader = (this.shaders || []).find((candidate) => candidate.id === shaderId);
+            if (!shader || !patch || typeof patch !== "object") return false;
+            if (!this.shaderPreviewCanonical.has(shaderId)) {
+                this.shaderPreviewCanonical.set(shaderId, { ...shader });
+            }
+            this.shaderPreviewPending.set(shaderId, { ...(this.shaderPreviewPending.get(shaderId) || {}), ...patch });
+            if (this.shaderPreviewFrame !== null) return true;
+            this.shaderPreviewFrame = requestAnimationFrame(() => {
+                const started = performance.now();
+                this.shaderPreviewFrame = null;
+                this.shaderPreviewPending.forEach((values, id) => {
+                    const live = (this.shaders || []).find((candidate) => candidate.id === id);
+                    if (live) Object.assign(live, values);
+                });
+                this.shaderPreviewPending.clear();
+                redraw();
+                performance.measure?.("preview_parameter_update_ms", { start: started, end: performance.now() });
+            });
+            return true;
+        }
+
+        restoreShaderPreview(shaderId) {
+            const canonical = this.shaderPreviewCanonical.get(shaderId);
+            if (!canonical) return false;
+            const index = this.shaders.findIndex((candidate) => candidate.id === shaderId);
+            if (index >= 0) this.shaders[index] = canonical;
+            this.shaderPreviewCanonical.delete(shaderId);
+            this.shaderPreviewPending.delete(shaderId);
+            redraw();
+            return true;
+        }
+
+        async commitShaderPreview(shaderId, patch) {
+            const shader = (this.shaders || []).find((candidate) => candidate.id === shaderId);
+            const canonical = this.shaderPreviewCanonical.get(shaderId) || (shader ? { ...shader } : null);
+            if (!shader || !canonical) return null;
+            try {
+                let result;
+                if (shader.preset_id) {
+                    const parameters = Object.fromEntries(Object.entries(patch || {}).map(([key, value]) => [
+                        key === "blend_mode" ? "blendMode" : key, value,
+                    ]));
+                    result = await post("/game/shaders/update-preset", {
+                        campaign_id: this.roomId, shader_id: shaderId,
+                        expected_version: Number(canonical.version || shader.version || 1), parameters,
+                    });
+                    await this.refresh(shader.scene_id);
+                } else {
+                    result = await post("/game/shaders/update", {
+                        campaign_id: this.roomId, shader_id: shaderId, ...(patch || {}),
+                    });
+                    const index = this.shaders.findIndex((candidate) => candidate.id === shaderId);
+                    if (index >= 0 && result.shader) this.shaders[index] = result.shader;
+                }
+                this.shaderPreviewCanonical.delete(shaderId);
+                redraw();
+                return result.instance || result.shader || null;
+            } catch (error) {
+                this.restoreShaderPreview(shaderId);
+                await this.refresh(canonical.scene_id).catch(() => {});
                 throw error;
             }
         }
@@ -1786,13 +1974,18 @@
             if (!scene) return;
             if (sameNode(drag.to.x, drag.to.y, drag.from)) { redraw(); return; }
             const previous = this.walls;
-            this.walls = moveNode(this.walls, drag.from, drag.to);
+            this.walls = drag.detached
+                ? moveEndpoint(this.walls, drag.wallId, drag.endpoint, drag.to)
+                : moveNode(this.walls, drag.from, drag.to);
             this.invalidateGeometry();
             redraw();
             try {
-                const result = await post("/game/walls/move-node", {
+                const result = await post(drag.detached ? "/game/walls/move-endpoint" : "/game/walls/move-node", {
                     campaign_id: this.roomId, scene_id: scene.id,
-                    from_x: drag.from.x, from_y: drag.from.y, to_x: drag.to.x, to_y: drag.to.y,
+                    ...(drag.detached ? { wall_id: drag.wallId, endpoint: drag.endpoint } : {
+                        from_x: drag.from.x, from_y: drag.from.y,
+                    }),
+                    to_x: drag.to.x, to_y: drag.to.y,
                 });
                 if (this.sceneId !== scene.id) return;
                 if (result.walls) this.walls = result.walls;
@@ -1809,13 +2002,7 @@
         }
 
         cancelDrawing() {
-            this.marquee = null;
-            this.start = null;
-            this.preview = null;
-            this.drawingPointerId = null;
-            this.downClient = null;
-            this.nodeDrag = null;
-            this.lightDrag = null;
+            this.cancelTransientInteraction();
         }
 
 
@@ -1851,6 +2038,20 @@
                     redraw();
                     return;
                 }
+                if (this.shaderResize) {
+                    const at = this.world(event);
+                    const shader = (this.shaders || []).find((candidate) => candidate.id === this.shaderResize.id);
+                    if (at && shader) {
+                        const size = this.scene()?.scaledTileSize || 50;
+                        const radius = Math.max(0, Math.min(120, Math.hypot(at.x - shader.x, at.y - shader.y) / size));
+                        this.shaderResize.to = radius;
+                        this.previewShader(shader.id, { radius });
+                    }
+                    return;
+                }
+                if (window.GravewrightTools?.activeTool === "shader" && window.GravewrightTools?.selectedShaderPreset) {
+                    this.semanticPreview(window.GravewrightTools.selectedShaderPreset, this.target(event), { creation: true });
+                }
                 if (this.emitterDrag) {
                     this.emitterDrag.to = this.world(event) || this.emitterDrag.to;
                     redraw();
@@ -1885,9 +2086,10 @@
                     ? Object.values(EDIT_LAYERS).includes(activeLayer)
                     : activeLayer === EDIT_LAYERS[onTool];
                 if (!layerAllows) return trace("ignorado: camada", { activeLayer, onTool });
-                if (event.button === 2 && (this.start || this.nodeDrag || this.lightDrag)) {
+                if (event.button === 2 && (this.start || this.componentDrag || this.nodeDrag || this.lightDrag
+                    || this.shaderDrag || this.shaderResize || this.emitterDrag || this.marquee || this.transientShaderPreview)) {
                     event.preventDefault(); event.stopPropagation();
-                    this.cancelDrawing(); redraw();
+                    this.cancelTransientInteraction();
                     return;
                 }
                 if (event.button !== 0) return;
@@ -1898,29 +2100,45 @@
                 if (tool === "light") {
                     event.preventDefault(); event.stopPropagation();
                     const existing = this.lightAt(raw);
-                    if (existing) { this.beginComponentDrag("light", existing.id, event, surface); return; }
+                    if (existing) { this.beginComponentDrag("light", existing.id, event, surface, { owned: true }); return; }
                     void this.placeLight(this.target(event));
                     return;
                 }
 
                 if (tool === "shader") {
                     event.preventDefault(); event.stopPropagation();
+                    const handle = this.shaderResizeAt(raw);
+                    if (handle) {
+                        this.shaderResize = { id: handle.id, from: Number(handle.radius), to: Number(handle.radius), pointerId: event.pointerId };
+                        try { surface.setPointerCapture(event.pointerId); } catch {}
+                        return;
+                    }
                     const existing = this.shaderAt(raw);
 
 
 
                     if (existing) {
-                        this.beginComponentDrag("shader", existing.id, event, surface);
-                        document.dispatchEvent(new CustomEvent("lighting:edit-shader", {
-                            detail: { canvas: this.canvas, roomId: this.roomId, shaderId: existing.id },
-                        }));
+                        this.transientShaderPreview = null;
+                        this.beginComponentDrag("shader", existing.id, event, surface, { owned: true });
                         return;
                     }
+                    this.transientShaderPreview = null;
                     void this.placeShader(this.target(event));
                     return;
                 }
 
-                if (tool === "particles" || (tool === "select" && activeLayer === EDIT_LAYERS.particles)) {
+                if (tool === "particles") {
+                    const existing = this.emitterAt(raw);
+                    event.preventDefault(); event.stopPropagation();
+                    if (existing) {
+                        this.beginComponentDrag("emitter", existing.id, event, surface, { owned: true });
+                        return;
+                    }
+                    void this.placeEmitter(this.target(event));
+                    return;
+                }
+
+                if (tool === "select" && activeLayer === EDIT_LAYERS.particles) {
 
 
 
@@ -1937,11 +2155,6 @@
                         return;
                     }
 
-                    if (tool === "particles") {
-                        event.preventDefault(); event.stopPropagation();
-                        void this.placeEmitter(this.target(event));
-                        return;
-                    }
                 }
 
 
@@ -1953,16 +2166,32 @@
                         this.beginComponentDrag("light", light.id, event, surface);
                         return;
                     }
-                    const node = activeLayer === EDIT_LAYERS.wall ? this.nodeAt(raw) : null;
+                    const node = activeLayer === EDIT_LAYERS.wall
+                        ? (event.shiftKey ? this.endpointAt(raw) : this.nodeAt(raw)) : null;
                     if (node) {
                         event.preventDefault(); event.stopPropagation();
-                        this.nodeDrag = { from: { ...node }, to: { ...node }, pointerId: event.pointerId };
+                        this.nodeDrag = { from: { x: node.x, y: node.y }, to: { x: node.x, y: node.y },
+                            pointerId: event.pointerId, detached: Boolean(event.shiftKey),
+                            wallId: node.wallId, endpoint: node.endpoint };
                         try { surface.setPointerCapture(event.pointerId); } catch {}
                         redraw();
                         return;
                     }
                 }
-                const hit = this.hit(raw);
+                const wallKind = tool === "wall" || tool === "door" ? tool : null;
+                const ownedNode = wallKind && !this.start
+                    ? (event.shiftKey ? this.endpointAt(raw, wallKind) : this.nodeAt(raw, wallKind)) : null;
+                if (ownedNode) {
+                    event.preventDefault(); event.stopPropagation();
+                    this.clearPicks();
+                    this.nodeDrag = { from: { x: ownedNode.x, y: ownedNode.y }, to: { x: ownedNode.x, y: ownedNode.y },
+                        pointerId: event.pointerId, detached: Boolean(event.shiftKey),
+                        wallId: ownedNode.wallId, endpoint: ownedNode.endpoint };
+                    try { surface.setPointerCapture(event.pointerId); } catch {}
+                    redraw();
+                    return;
+                }
+                const hit = this.hit(raw, wallKind && !this.start ? wallKind : null);
                 if (tool === "select" && activeLayer === EDIT_LAYERS.wall && hit) {
                     event.preventDefault(); event.stopPropagation();
 
@@ -1973,6 +2202,11 @@
                     } else {
                         this.beginComponentDrag("wall", hit.id, event, surface);
                     }
+                    return;
+                }
+                if (wallKind && !this.start && hit) {
+                    event.preventDefault(); event.stopPropagation();
+                    this.beginComponentDrag("wall", hit.id, event, surface, { owned: true });
                     return;
                 }
                 if (tool === "select") {
@@ -2045,6 +2279,16 @@
                     void this.commitShaderDrag(drag);
                     return;
                 }
+                if (this.shaderResize && event.pointerId === this.shaderResize.pointerId) {
+                    const resize = this.shaderResize;
+                    this.shaderResize = null;
+                    try { surface.releasePointerCapture(event.pointerId); } catch {}
+                    event.preventDefault(); event.stopPropagation();
+                    void this.commitShaderPreview(resize.id, { radius: resize.to }).catch((error) => {
+                        console.error("Scene shader resize failed", error);
+                    });
+                    return;
+                }
                 if (this.emitterDrag && event.pointerId === this.emitterDrag.pointerId) {
                     const drag = this.emitterDrag;
                     this.emitterDrag = null;
@@ -2066,6 +2310,13 @@
                     this.nodeDrag = null;
                     try { surface.releasePointerCapture(event.pointerId); } catch {}
                     event.preventDefault(); event.stopPropagation();
+                    const tool = window.GravewrightTools?.activeTool;
+                    if ((tool === "wall" || tool === "door") && sameNode(drag.to.x, drag.to.y, drag.from)) {
+                        this.start = { ...drag.from };
+                        this.preview = { ...drag.from };
+                        redraw();
+                        return;
+                    }
                     void this.commitNode(drag);
                     return;
                 }
@@ -2090,7 +2341,8 @@
                 if (!this.isGm) return;
                 if (activeLayer === EDIT_LAYERS.particles) {
                     const at = this.world(event);
-                    const shader = at ? this.shaderAt(at) : null;
+                    const activeTool = window.GravewrightTools?.activeTool || "select";
+                    const shader = activeTool === "particles" ? null : (at ? this.shaderAt(at) : null);
                     if (shader) {
                         event.preventDefault(); event.stopPropagation();
                         this.selectedShader = shader.id;
@@ -2100,7 +2352,7 @@
                         }));
                         return;
                     }
-                    const emitter = at ? this.emitterAt(at) : null;
+                    const emitter = activeTool === "shader" ? null : (at ? this.emitterAt(at) : null);
                     if (!emitter) return;
                     event.preventDefault(); event.stopPropagation();
                     this.selectedEmitter = emitter.id;
@@ -2115,10 +2367,17 @@
                     const wall = at ? this.hit(at) : null;
                     if (!wall) return;
 
-                    // Portas sao segmentos atomicos: seus extremos podem ser
-                    // movidos, mas um duplo clique nao deve transforma-las em
-                    // dois segmentos (e, consequentemente, duas portas).
-                    if (wall.kind === "door") return;
+                    // Portas sao segmentos atomicos. A tool de porta usa o
+                    // duplo clique para operar a porta selecionada; nenhuma
+                    // tool pode transforma-la implicitamente em dois segmentos.
+                    if (wall.kind === "door") {
+                        if (window.GravewrightTools?.activeTool === "door") {
+                            event.preventDefault(); event.stopPropagation();
+                            this.selected = wall.id;
+                            void this.cycleDoor(wall);
+                        }
+                        return;
+                    }
 
 
                     if (this.nodeAt(at)) return;
@@ -2138,11 +2397,19 @@
                 }));
             }, true);
             surface.addEventListener("pointercancel", (event) => {
+                if (this.componentDrag && event.pointerId === this.componentDrag.pointerId) {
+                    this.cancelTransientInteraction();
+                    return;
+                }
                 if (this.marquee && event.pointerId === this.marquee.pointerId) {
                     this.marquee = null;
                 }
                 if (this.shaderDrag && event.pointerId === this.shaderDrag.pointerId) {
                     this.shaderDrag = null;
+                }
+                if (this.shaderResize && event.pointerId === this.shaderResize.pointerId) {
+                    this.restoreShaderPreview(this.shaderResize.id);
+                    this.shaderResize = null;
                 }
                 if (this.emitterDrag && event.pointerId === this.emitterDrag.pointerId) {
                     this.emitterDrag = null;
@@ -2185,20 +2452,23 @@
             }
         }
 
-        async removeSelected() {
-            const snapshots = this.selectedSnapshots();
+        async removeSelected(kind = null, wallKind = null) {
+            const snapshots = this.selectedSnapshots().filter((snapshot) =>
+                (!kind || snapshot.kind === kind) && (!wallKind || snapshot.value.kind === wallKind));
             const lots = [
                 ["light", "/game/lights/delete-many", "light_ids"],
                 ["wall", "/game/walls/delete-many", "wall_ids"],
                 ["emitter", "/game/particles/delete-many", "emitter_ids"],
                 ["shader", "/game/shaders/delete-many", "shader_ids"],
-            ].map(([kind, url, field]) => [url, field, this.pickedIds(kind)])
-             .filter(([, , ids]) => ids.length);
+            ].map(([itemKind, url, field]) => [url, field, itemKind,
+                kind && itemKind !== kind ? [] : this.pickedIds(itemKind).filter((id) =>
+                    !wallKind || itemKind !== "wall" || this.walls.find((wall) => wall.id === id)?.kind === wallKind)])
+             .filter(([, , , ids]) => ids.length);
             if (!lots.length) return;
-            this.clearPicks();
+            if (kind) this.picks[kind].clear(); else this.clearPicks();
             redraw();
             try {
-                await Promise.all(lots.map(([url, field, ids]) =>
+                await Promise.all(lots.map(([url, field, , ids]) =>
                     post(url, { campaign_id: this.roomId, [field]: ids })));
             } catch (error) {
                 console.error("Bulk delete failed", error);
@@ -2349,7 +2619,17 @@
             controllers.forEach((controller) => controller.cancelDrawing());
             redraw();
         });
-        document.addEventListener("tool:active-tool", () => { controllers.forEach((controller) => controller.cancelDrawing()); redraw(); });
+        document.addEventListener("tool:active-tool", (event) => {
+            controllers.forEach((controller) => {
+                controller.cancelDrawing();
+                controller.transientShaderPreview = null;
+                controller.scopePicksForTool(event.detail?.tool || window.GravewrightTools?.activeTool || "select");
+            });
+            redraw();
+        });
+        document.addEventListener("tool:shader-preview", (event) => {
+            controllers.forEach((controller) => controller.semanticPreview(event.detail?.presetId || null));
+        });
         document.addEventListener("tool:layer-state", redraw);
         document.addEventListener("vtt:shaders-toggled", redraw);
         document.addEventListener("vtt:token-selection-changed", (event) => { selectedTokenId = event.detail?.tokenId || ""; redraw(); });
@@ -2370,7 +2650,7 @@
             }
         });
         document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") { controllers.forEach((controller) => { controller.cancelDrawing(); controller.selected = ""; controller.selectedLight = ""; }); redraw(); }
+            if (event.key === "Escape") controllers.forEach((controller) => controller.cancelTransientInteraction());
             const editing = Object.values(EDIT_LAYERS).includes(activeLayer)
                 && !event.target.closest("input,textarea,select,[contenteditable]");
             const commandModifier = event.metaKey || event["ctrlKey"];
@@ -2403,7 +2683,9 @@
 
 
             if (!Object.values(EDIT_LAYERS).includes(activeLayer)) return;
-            controllers.forEach((controller) => void controller.removeSelected());
+            const toolKinds = { wall: ["wall", "wall"], door: ["wall", "door"], light: ["light"], particles: ["emitter"], shader: ["shader"] };
+            const activeTool = window.GravewrightTools?.activeTool || "select";
+            controllers.forEach((controller) => void controller.removeSelected(...(toolKinds[activeTool] || [])));
         });
         startAnimationLoop();
     }
@@ -2430,6 +2712,9 @@
         shadersFor: (canvas) => controllers.get(canvas)?.shaders || [],
         createShader: (canvas, values) => controllers.get(canvas)?.createShader(values),
         patchShader: (canvas, shaderId, patch) => controllers.get(canvas)?.patchShader(shaderId, patch),
+        previewShader: (canvas, shaderId, patch) => controllers.get(canvas)?.previewShader(shaderId, patch),
+        restoreShaderPreview: (canvas, shaderId) => controllers.get(canvas)?.restoreShaderPreview(shaderId),
+        commitShaderPreview: (canvas, shaderId, patch) => controllers.get(canvas)?.commitShaderPreview(shaderId, patch),
         deleteShader: (canvas, shaderId) => controllers.get(canvas)?.deleteShader(shaderId),
         patchLight: (canvas, lightId, patch) => controllers.get(canvas)?.patchLight(lightId, patch),
         deleteLight: (canvas, lightId) => controllers.get(canvas)?.deleteLight(lightId),

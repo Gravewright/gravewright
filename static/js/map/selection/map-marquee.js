@@ -141,7 +141,17 @@
             return true;
         }
 
+        function cancel(event) {
+            if (!activeMarquee || activeMarquee.pointerId !== event.pointerId) return false;
+            const marquee = activeMarquee;
+            activeMarquee = null;
+            hideEl();
+            try { marquee.canvas.releasePointerCapture(event.pointerId); } catch {}
+            return true;
+        }
+
         return {
+            cancel,
             selectTokensInWorldRect,
             start,
             stop,
