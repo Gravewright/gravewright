@@ -59,7 +59,7 @@ def show_inside(
     pending_invitations = campaign_invitation_service.list_pending_for_user(user["id"])
     packages = package_install_service.list_for_tab()
     rulesets, modules = split_packages(packages)
-    marketplace = MarketplaceService().catalog()
+    marketplace = MarketplaceService().catalog_with_automatic_refresh()
     marketplace_bands = {
         kind: [item for item in marketplace.get("packages", []) if item.get("kind") == kind]
         for kind in ("ruleset", "addon", "library", "content", "theme", "assets")

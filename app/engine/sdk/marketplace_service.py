@@ -147,6 +147,18 @@ class MarketplaceService:
             packages.append(package)
         return {**cache, "packages": packages}
 
+    def catalog_with_automatic_refresh(self) -> dict:
+        """Refresh when the cache is absent or the local registry changed."""
+        cache = self.read_cache()
+        last_refresh = int(cache.get("lastRefresh") or 0)
+        try:
+            registry_changed = self.registry_path.stat().st_mtime > last_refresh
+        except OSError:
+            registry_changed = False
+        if last_refresh == 0 or registry_changed:
+            self.refresh()
+        return self.catalog()
+
     def get_valid(self, package_id: str) -> dict | None:
         return next((item for item in self.catalog().get("packages", [])
                      if item.get("id") == package_id and item.get("validationState") == "valid"), None)

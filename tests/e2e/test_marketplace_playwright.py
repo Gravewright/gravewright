@@ -34,6 +34,8 @@ def test_marketplace_renders_exact_catalog_and_install_status() -> None:
         """)
         page.evaluate("""() => {
           window.marketplaceRequest = null;
+          window.marketplaceDestination = null;
+          window.GravewrightMarketplaceNavigate = (hash) => { window.marketplaceDestination = hash; };
           window.fetch = async (_url, options) => {
             window.marketplaceRequest = {
               bodyType: options.body.constructor.name,
@@ -51,8 +53,9 @@ def test_marketplace_renders_exact_catalog_and_install_status() -> None:
         page.get_by_text("Details").click()
         expect(page.get_by_text("Stable · SDK 1")).to_be_visible()
         page.get_by_role("button", name="Install").click()
-        expect(page.locator("[data-marketplace-package-status]")).to_have_text("Installed")
-        expect(page.get_by_role("button", name="Installed")).to_be_disabled()
+        expect(page.locator("[data-marketplace-package-status]")).to_have_text("Installing…")
+        expect(page.get_by_role("button", name="Install")).to_be_disabled()
+        assert page.evaluate("window.marketplaceDestination") == "rulesets"
         assert page.evaluate("window.marketplaceRequest") == {
             "bodyType": "URLSearchParams",
             "packageId": "dnd5e",

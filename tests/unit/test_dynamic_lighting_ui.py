@@ -654,6 +654,16 @@ def test_lights_fall_off_instead_of_ending_in_a_flat_disc():
     # o recorte das paredes continua mandando no alcance do brilho
     assert "sprite.mask = mask" in pixi
 
+
+def test_door_icons_are_rendered_only_for_the_campaign_gm():
+    template=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
+    script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
+    pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
+
+    assert "data-door-icons-gm=\"{{ 'true' if room.member_role == 'gm' else 'false' }}\"" in template
+    assert 'dataset.doorIconsGm === "true"' in script
+    assert "if (!lighting.showDoorIcons) return;" in pixi
+
 def test_one_dial_for_brightness_and_the_mode_decides_the_effect():
     """Duas reguas que multiplicam o mesmo alfa sao uma regua a mais, e um botao
     para "melhorar a tocha" e uma escolha que o modo de visao ja fez.
