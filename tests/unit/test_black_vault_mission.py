@@ -17,7 +17,7 @@ from tests.conftest import TEST_SESSION_CONFIG, login, seed_campaign, seed_membe
 
 
 PACKAGE_ID = "black-vault"
-PACKAGE_DIR = Path(__file__).resolve().parents[2] / "data" / "packages" / "addons" / PACKAGE_ID
+PACKAGE_DIR = Path(__file__).resolve().parents[2] / "examples" / "packages" / PACKAGE_ID
 MANIFEST = json.loads((PACKAGE_DIR / "manifest.json").read_text(encoding="utf-8"))
 
 

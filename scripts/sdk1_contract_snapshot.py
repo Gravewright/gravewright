@@ -172,7 +172,8 @@ def main(argv: list[str] | None = None) -> int:
 
     current = current_fingerprint()
     if args.write:
-        SNAPSHOT.write_text(_dump(current), encoding="utf-8")
+        # An explicit LF keeps the frozen artifact byte-identical across platforms.
+        SNAPSHOT.write_text(_dump(current), encoding="utf-8", newline="\n")
         print(f"froze {SNAPSHOT.relative_to(PROJECT_ROOT)}")
         return 0
 
