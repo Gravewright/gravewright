@@ -56,10 +56,9 @@ class ScopedJsonStorage:
                 import msvcrt
 
                 handle.seek(0)
-                if handle.read(1) == b"":
-                    handle.write(b"0")
-                    handle.flush()
-                handle.seek(0)
+                # Windows permits locking a byte range beyond EOF.  Do not read
+                # or initialize that byte first: another process holding the
+                # range lock would make the read fail instead of blocking here.
                 msvcrt.locking(handle.fileno(), msvcrt.LK_LOCK, 1)
                 try:
                     yield

@@ -7,6 +7,7 @@
         let activeMeasure = null;
         let activeMeasureMove = null;
         let measureClipboard = null;
+        let wheelRotationSession = null;
 
         const {
             activeCanvas,
@@ -32,6 +33,7 @@
             normalizedAreaMarkerText,
             normalizedMarkerStyle,
             normalizedTextDrawing,
+            representationMarkerStyle,
         } = data;
 
         function measureStoreFor(canvas) {
@@ -87,13 +89,16 @@
                 renderMeasureOverlay(canvas);
                 return;
             }
+            const scene = sceneDataFor(canvas);
             const next = {
                 id: measure.id,
                 scene_id: measure.scene_id,
                 shape: measure.shape,
-                start: { worldX: measure.start.worldX, worldY: measure.start.worldY },
-                end: { worldX: measure.end.worldX, worldY: measure.end.worldY },
+                start: geometry.snapWorldToCellCenter(measure.start, scene),
+                end: geometry.snapWorldToCellCenter(measure.end, scene),
             };
+            const rotation = Number(measure.rotation || 0);
+            if (Number.isFinite(rotation) && rotation !== 0) next.rotation = rotation;
             const text = normalizedAreaMarkerText(measure);
             if (text) next.text = text;
             if (typeof measure.preset_id === "string" && measure.preset_id) next.preset_id = measure.preset_id;
@@ -302,7 +307,7 @@
             if (activeTool === "shape" && shape === "select") return startMeasureMove(canvas, event, SHAPE_SELECT_KINDS);
             if (activeTool !== "shape" && activeTool !== "ruler") return false;
             if (activeTool === "shape" && startMeasureMove(canvas, event, SHAPE_SELECT_KINDS)) return true;
-            const start = geometry.measurePointFromEvent(canvas, event);
+            const start = geometry.measureStartPointFromEvent(canvas, event);
             if (!start) return false;
             activeMeasure = {
                 canvas,
@@ -311,6 +316,7 @@
                 shape: ["line", "circle", "square", "cone"].includes(shape) ? shape : "line",
                 start,
                 end: start,
+                style: representationMarkerStyle(),
                 moved: false,
             };
             canvas.setPointerCapture(event.pointerId);
@@ -351,12 +357,17 @@
                 pointerId: event.pointerId,
                 measureId: hit.id,
                 startPoint,
+                rawStartPoint: geometry.rawMeasurePointFromEvent(canvas, event),
                 original: JSON.parse(JSON.stringify(hit)),
                 snap: !freeform,
                 moved: false,
             };
-            canvas.setPointerCapture(event.pointerId);
+            try { canvas.setPointerCapture(event.pointerId); } catch {  }
             return true;
+        }
+
+        function startShapeSelection(canvas, event) {
+            return startMeasureMove(canvas, event, SHAPE_SELECT_KINDS);
         }
 
         function measureAtPointForContext(canvas, event) {
@@ -404,15 +415,28 @@
         function updateMeasureMove(event) {
             if (!activeMeasureMove || activeMeasureMove.pointerId !== event.pointerId) return false;
             const scene = sceneDataFor(activeMeasureMove.canvas);
-            const point = activeMeasureMove.snap
-                ? geometry.measurePointFromEvent(activeMeasureMove.canvas, event)
+            const snapShapeOrigin = activeMeasureMove.snap && activeMeasureMove.original.start;
+            const point = snapShapeOrigin
+                ? geometry.rawMeasurePointFromEvent(activeMeasureMove.canvas, event)
                 : geometry.rawMeasurePointFromEvent(activeMeasureMove.canvas, event);
             if (!scene || !point) return true;
-            const rawDx = point.worldX - activeMeasureMove.startPoint.worldX;
-            const rawDy = point.worldY - activeMeasureMove.startPoint.worldY;
+            let rawDx = point.worldX - activeMeasureMove.startPoint.worldX;
+            let rawDy = point.worldY - activeMeasureMove.startPoint.worldY;
+            if (snapShapeOrigin && activeMeasureMove.rawStartPoint) {
+                const pointerDx = point.worldX - activeMeasureMove.rawStartPoint.worldX;
+                const pointerDy = point.worldY - activeMeasureMove.rawStartPoint.worldY;
+                const targetOrigin = {
+                    worldX: activeMeasureMove.original.start.worldX + pointerDx,
+                    worldY: activeMeasureMove.original.start.worldY + pointerDy,
+                };
+                const snappedOrigin = geometry.snapWorldToCellCenter(targetOrigin, scene);
+                rawDx = snappedOrigin.worldX - activeMeasureMove.original.start.worldX;
+                rawDy = snappedOrigin.worldY - activeMeasureMove.original.start.worldY;
+            }
             const { dx, dy } = geometry.clampMeasureDelta(activeMeasureMove.original, rawDx, rawDy, scene);
             activeMeasureMove.moved = Math.abs(dx) > 0 || Math.abs(dy) > 0;
-            upsertMeasureLocal(activeMeasureMove.canvas, geometry.translatedMeasure(activeMeasureMove.original, dx, dy));
+            const translated = geometry.translatedMeasure(activeMeasureMove.original, dx, dy);
+            upsertMeasureLocal(activeMeasureMove.canvas, translated);
             return true;
         }
 
@@ -435,6 +459,7 @@
                     shape: measure.shape,
                     start: measure.start,
                     end: measure.end,
+                    style: representationMarkerStyle(measure.style),
                 };
                 if (measure.sourceTool === "ruler") {
                     const ttlMs = storeApi.flashTtlMs(measure.canvas);
@@ -445,7 +470,7 @@
                     const preset = data.areaMarkerPresetFor(measure.canvas, measure.shape);
                     const style = normalizedMarkerStyle(preset?.style);
                     if (preset?.id) saved.preset_id = preset.id;
-                    if (style) saved.style = style;
+                    saved.style = representationMarkerStyle(style);
                     applyActiveLayer(saved, measure.canvas);
                     upsertMeasureLocal(measure.canvas, saved);
                     setSelectedMeasure(measure.canvas, saved.id);
@@ -547,7 +572,10 @@
                 if (editors.activeAreaMarkerCanvas() === canvas) {
                     editors.cancelAreaMarkerTextEditor({ broadcast: false });
                 }
-                measureStoreFor(canvas).length = 0;
+                const store = measureStoreFor(canvas);
+                for (let i = store.length - 1; i >= 0; i -= 1) {
+                    if (store[i].kind !== "freehand" && store[i].kind !== "text") store.splice(i, 1);
+                }
             }
             if (activeMeasure?.canvas === canvas) activeMeasure = null;
             if (activeMeasureMove?.canvas === canvas) activeMeasureMove = null;
@@ -559,7 +587,7 @@
             if (record && broadcast && tool !== "ruler") {
                 const removed = before.filter((measure) => {
                     if (tool === "draw") return measure.kind === "freehand" || measure.kind === "text";
-                    return true;
+                    return measure.kind !== "freehand" && measure.kind !== "text";
                 });
                 if (removed.length) {
                     history?.push?.({
@@ -646,6 +674,7 @@
 
         function flashMeasureLocal(canvas, measure, ttlMs = storeApi.flashTtlMs(canvas)) {
             if (!canvas || !sameMeasureScene(canvas, measure)) return;
+            const scene = sceneDataFor(canvas);
             const store = storeApi.flashStoreFor(canvas);
             const timers = storeApi.flashTimerStoreFor(canvas);
             const idx = store.findIndex((existing) => existing.id === measure.id);
@@ -653,8 +682,8 @@
                 id: measure.id,
                 scene_id: measure.scene_id,
                 shape: measure.shape,
-                start: { worldX: measure.start.worldX, worldY: measure.start.worldY },
-                end: { worldX: measure.end.worldX, worldY: measure.end.worldY },
+                start: geometry.snapWorldToCellCenter(measure.start, scene),
+                end: geometry.snapWorldToCellCenter(measure.end, scene),
             };
             const style = normalizedMarkerStyle(measure.style);
             if (style) next.style = style;
@@ -692,12 +721,10 @@
             const keepGm = payload.keep_gm_layer === true;
             canvasesForScene(payload.scene_id).forEach((canvas) => {
                 const store = measureStoreFor(canvas);
-                if (keepGm) {
-                    for (let i = store.length - 1; i >= 0; i -= 1) {
-                        if (store[i].layer !== "gm") store.splice(i, 1);
-                    }
-                } else {
-                    store.length = 0;
+                for (let i = store.length - 1; i >= 0; i -= 1) {
+                    const item = store[i];
+                    if (item.kind === "freehand" || item.kind === "text") continue;
+                    if (!keepGm || item.layer !== "gm") store.splice(i, 1);
                 }
                 storeApi.clearSelectedId(canvas);
                 renderMeasureOverlay(canvas);
@@ -768,6 +795,64 @@
             pushMeasureChangeHistory(canvas, before, next);
         }
 
+        function rotateSelectedMeasureByWheel(canvas = activeCanvas(), deltaY = 0) {
+            if (!canvas || !deltaY) return false;
+            const measureId = selectedMeasureIdFor(canvas);
+            const measure = measureStoreFor(canvas).find((item) => item.id === measureId);
+            if (!measure || measure.kind === "freehand" || measure.kind === "text") return false;
+
+            if (!wheelRotationSession || wheelRotationSession.canvas !== canvas || wheelRotationSession.measureId !== measure.id) {
+                if (wheelRotationSession?.timer) window.clearTimeout(wheelRotationSession.timer);
+                wheelRotationSession = {
+                    canvas,
+                    measureId: measure.id,
+                    original: cloneMeasure(measure),
+                    timer: null,
+                };
+            }
+
+            let rotation = (
+                geometry.normalizedRotation(measure) + (deltaY > 0 ? 5 : -5) + 360
+            ) % 360;
+            if (measure.shape === "line") {
+                const scene = sceneDataFor(canvas);
+                const gridSize = scene?.scaledTileSize || defaultGridSize;
+                const rotatedEnd = geometry.rotatePoint(measure.end, measure.start, rotation);
+                const snappedEnd = geometry.snapWorldToCellCenter(rotatedEnd, scene);
+                const snapDistance = Math.hypot(
+                    rotatedEnd.worldX - snappedEnd.worldX,
+                    rotatedEnd.worldY - snappedEnd.worldY,
+                );
+                const snappedLength = Math.hypot(
+                    snappedEnd.worldX - measure.start.worldX,
+                    snappedEnd.worldY - measure.start.worldY,
+                );
+                if (snapDistance <= gridSize * 0.2 && snappedLength > 0) {
+                    const baseAngle = Math.atan2(
+                        measure.end.worldY - measure.start.worldY,
+                        measure.end.worldX - measure.start.worldX,
+                    );
+                    const snappedAngle = Math.atan2(
+                        snappedEnd.worldY - measure.start.worldY,
+                        snappedEnd.worldX - measure.start.worldX,
+                    );
+                    rotation = ((snappedAngle - baseAngle) * 180 / Math.PI + 360) % 360;
+                }
+            }
+            upsertMeasureLocal(canvas, { ...measure, rotation });
+            if (wheelRotationSession.timer) window.clearTimeout(wheelRotationSession.timer);
+            wheelRotationSession.timer = window.setTimeout(() => {
+                const session = wheelRotationSession;
+                if (!session) return;
+                wheelRotationSession = null;
+                const current = measureStoreFor(session.canvas).find((item) => item.id === session.measureId);
+                if (!current) return;
+                broadcastMeasureUpsert(session.canvas, current);
+                pushMeasureChangeHistory(session.canvas, session.original, current);
+            }, 140);
+            return true;
+        }
+
         function handleEscape() {
             if (activeMeasure || activeMeasureMove) cancelActiveMeasure();
             if (activeFreehand) cancelActiveFreehand();
@@ -810,12 +895,14 @@
             handleSubtoolChanged,
             measureAtPointForContext,
             moveSelectedMeasureToLayer,
+            rotateSelectedMeasureByWheel,
             pasteMeasure,
             renderMeasureOverlay,
             selectedMeasureIdFor,
             setSelectedMeasure,
             startDrawTool,
             startMeasure,
+            startShapeSelection,
             stopFreehand,
             stopMeasure,
             textFontSizeFor,

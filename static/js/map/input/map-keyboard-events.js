@@ -97,6 +97,10 @@
                     event.preventDefault();
                     return;
                 }
+                if (tool === "select" && deleteSelectedMeasure(canvas, { domain: "shape" })) {
+                    event.preventDefault();
+                    return;
+                }
                 if (!selectedSet(canvas).size) return;
                 event.preventDefault();
                 tokenDelete.deleteSelected(canvas);

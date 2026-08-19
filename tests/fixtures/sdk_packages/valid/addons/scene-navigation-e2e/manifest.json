@@ -1,0 +1,1 @@
+{"schemaVersion":1,"sdkVersion":"1","kind":"addon","id":"scene-navigation-e2e","name":"Scene Navigation E2E","version":"1.0.0","compatibility":{"minimum":"1","verified":"1","maximum":"1.x"},"capabilities":["assets.scripts","ui.slots","ui.presentations","navigation.scene"],"activation":{"scope":"campaign","mode":"multiple"},"entrypoints":{"game":{"scripts":["main.js"]}}}

@@ -1,0 +1,16 @@
+{
+  "decks": [
+    {
+      "id": "infiltration-kit",
+      "version": 1,
+      "label": "Black Vault Infiltration Kit",
+      "description": "Access credentials and the recovered artifact.",
+      "tags": ["black-vault"],
+      "metadataSchema": {"type": "object", "properties": {"missionId": {"type": "string"}}},
+      "cards": [
+        {"id": "access-card", "label": "Access Card", "quantity": 1, "tags": ["credential"], "metadata": {"clearance": "vault"}},
+        {"id": "artifact", "label": "The Artifact", "quantity": 1, "tags": ["objective"], "metadata": {"weight": "anomalous"}}
+      ]
+    }
+  ]
+}

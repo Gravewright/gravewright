@@ -10,7 +10,6 @@ para o painel de GM como "Assets".
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -71,8 +70,19 @@ def test_the_modal_offers_folders_search_and_a_type_filter():
     assert "data-scene-asset-folder-list" in corpo, "pastas em coluna, não em barra"
     assert "data-asset-summary" in corpo, "quantos itens e quanto pesam"
 
-    kinds = re.findall(r'data-asset-kind="(\w*)"', corpo)
-    assert kinds == ["", "image", "pdf"], f"filtro por tipo: {kinds}"
+    assert 'class="asset-kinds"' in corpo
+    assert 'data-asset-kind="image"' not in corpo, "tipos ausentes não devem produzir filtro vazio"
+    script = SCRIPT.read_text(encoding="utf-8")
+    assert "renderKinds()" in script and "counts.has(kind)" in script
+
+
+def test_package_import_starts_hidden_and_uses_active_asset_packages():
+    html = _template()
+    button = html.split("data-asset-package-open", 1)[0].rsplit("<button", 1)[1] + html.split("data-asset-package-open", 1)[1].split(">", 1)[0]
+    assert "hidden" in button, "não pode piscar para campanhas sem addon de assets"
+    script = SCRIPT.read_text(encoding="utf-8")
+    assert "/game/assets/packages/" in script
+    assert "button.hidden = this.assetPackages.length === 0" in script
 
 
 def test_the_three_filters_narrow_the_same_set():

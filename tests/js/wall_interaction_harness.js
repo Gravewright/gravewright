@@ -284,6 +284,8 @@ function buildWorld({
         dropToken: () => { currentDrag = null; },
         blocksMovement: (from, to) =>
             sandbox.window.GravewrightLighting.blocksMovement(canvas, from, to),
+        soundPropagation: (emitter) =>
+            sandbox.window.GravewrightLighting.soundPropagationFor(canvas, emitter),
         state: () => sandbox.window.GravewrightLighting.stateForCanvas(canvas),
         settle: async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); },
     };
@@ -847,6 +849,48 @@ async function clickAt(world, x, y, props = {}) {
                 blocks ? beyond.length === 0 : beyond.length > 0,
                 `${state}: ${beyond.length} pontos alem`);
         }
+    }
+
+    {
+        const emitter = { id: "sound-1", x: 300, y: 300, radius: 280, constrained_by_walls: true };
+        const sealed = buildWorld({ walls: [
+            { x1: 400, y1: 0, x2: 400, y2: 299.7, sound_behavior: "block" },
+            { x1: 400, y1: 300.3, x2: 400, y2: 600, sound_behavior: "block" },
+        ] });
+        await sealed.settle();
+        const blocked = sealed.soundPropagation(emitter);
+        check("juncao numericamente proxima nao deixa fresta no som",
+            blocked.every((point) => point.x <= 401), JSON.stringify(blocked.filter((point) => point.x > 401).slice(0, 3)));
+
+        const passing = buildWorld({ walls: [
+            { x1: 400, y1: 0, x2: 400, y2: 600, sound_behavior: "pass" },
+        ] });
+        await passing.settle();
+        check("canal de parede configurado para passagem nao recorta o som",
+            passing.soundPropagation(emitter).some((point) => point.x > 500));
+        check("emissor sem restricao por paredes mantem o circulo",
+            passing.soundPropagation({ ...emitter, constrained_by_walls: false }) === null);
+    }
+
+    {
+        const walls = [
+            { x1: 334.288, y1: 505.248, x2: 215.021, y2: 257.542 },
+            { x1: 215.021, y1: 257.542, x2: 623.934, y2: 119.927 },
+            { x1: 623.934, y1: 119.927, x2: 916.228, y2: 324.19 },
+            { x1: 334.288, y1: 505.248, x2: 827.597, y2: 629.475 },
+            { x1: 827.597, y1: 629.475, x2: 916.228, y2: 324.19 },
+        ];
+        const world = buildWorld({ isGm: false, userId: "p1", darkness: 0.9, walls,
+            tokens: [{ token_id: "t1", grid_x: 2, grid_y: 7, width_cells: 1, height_cells: 1,
+                controlled_by_user_ids: ["p1"], vision_enabled: true, vision_range: 0 }] });
+        await world.settle();
+        const polygon = world.state().visionPolygons[0];
+        const distances = polygon.map((point, index) => {
+            const next = polygon[(index + 1) % polygon.length];
+            return Math.hypot(point.x - next.x, point.y - next.y);
+        });
+        check("poligono de visao compacta vertices duplicados da juncao real",
+            distances.every((distance) => distance > 0.099), JSON.stringify(distances.filter((distance) => distance <= 0.099)));
     }
 
     // --- escuridao e visao por jogador --------------------------------------

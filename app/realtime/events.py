@@ -42,6 +42,17 @@ class TransportEvent(StrEnum):
 
     TOKEN_CREATED = "token.created"
     TOKEN_MOVED = "token.moved"
+    SCENE_ZONES_CHANGED = "scene.zones.changed"
+    ZONE_ENTERED = "zone.entered"
+    ZONE_LEFT = "zone.left"
+    ZONE_CROSSED = "zone.crossed"
+    INTERACTION_CHANGED = "interaction.changed"
+    SCENE_OBJECTS_CHANGED = "scene.objects.changed"
+    SCENE_OBJECT_INTERACTED = "scene.object.interacted"
+    UI_PRESENTATION_CHANGED = "ui.presentation.changed"
+    AUDIO_CHANGED = "audio.changed"
+    NAVIGATION_SCENE_CHANGED = "navigation.scene.changed"
+    INPUT_BINDING_CHANGED = "input.binding.changed"
     TOKEN_UPDATED = "token.updated"
     TOKEN_DELETED = "token.deleted"
 
@@ -62,6 +73,10 @@ class TransportEvent(StrEnum):
     TOKEN_TARGETS_CHANGED = "token.targets.changed"
     SCENE_MEASUREMENTS_CHANGED = "scene.measurements.changed"
     AUTOMATION_JOB_CHANGED = "automation.job.changed"
+    WORKFLOW_CHANGED = "workflow.changed"
+    GAMEPLAY_FLOW_CHANGED = "gameplay.flow.changed"
+    TIMELINE_CHANGED = "timeline.changed"
+    TOKENS_TRANSFERRED = "tokens.transferred"
 
     ASSETS_LIBRARY_UPDATED = "assets.library.updated"
     SCENE_IMAGES_UPDATED = "scene.images.updated"

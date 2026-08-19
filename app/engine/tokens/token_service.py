@@ -215,7 +215,6 @@ class TokenService:
                 token_views=token_views,
                 transport=transport,
             )
-
         return TokenResult(success=True, tokens=token_views)
 
     async def duplicate_many(
@@ -314,6 +313,10 @@ class TokenService:
         grid_y: int,
         user_id: str,
         expected_version: int | None = None,
+        movement_path: list[dict] | None = None,
+        origin_execution_id: str | None = None,
+        origin_job_id: str | None = None,
+        causal_depth: int = 0,
         transport: RealtimeGatewayContract | None = None,
     ) -> TokenResult:
         scene, token = await run_blocking(
@@ -338,14 +341,27 @@ class TokenService:
         from app.engine.scenes.geometry_semantics import movement_crosses_wall
         from app.persistence.repositories.scene_wall_repository import SceneWallRepository
 
-        size = float(scene.get("grid_size") or scene.get("tile_size") or 70)
+        # Wall geometry and the browser map both use scaled world pixels.
+        # Token grid coordinates therefore need the same scene image scale.
+        size = float(scene.get("grid_size") or scene.get("tile_size") or 70) * float(scene.get("image_scale") or 1)
         width = float(token.get("width_cells") or 1)
         height = float(token.get("height_cells") or 1)
         origin = ((float(token["grid_x"]) + width / 2) * size, (float(token["grid_y"]) + height / 2) * size)
         target = ((float(grid_x) + width / 2) * size, (float(grid_y) + height / 2) * size)
+        member_role = await run_blocking(
+            self.campaigns.get_member_role, campaign_id=campaign_id, user_id=user_id
+        )
         walls = await run_blocking(SceneWallRepository().list_for_scene, scene_id)
-        if movement_crosses_wall(walls=walls, origin=origin, target=target, elevation=float(token.get("elevation") or 0.0)):
-            return TokenResult(success=False, token=token, error_key="tokens.errors.movement_blocked")
+        if member_role != PlayerRole.GM.value:
+            route=[(float(token["grid_x"]),float(token["grid_y"]))]
+            if movement_path:
+                try:route.extend((float(point["grid_x"]),float(point["grid_y"])) for point in movement_path)
+                except (KeyError,TypeError,ValueError):return TokenResult(success=False,error_key="tokens.errors.invalid")
+            if route[-1]!=(float(grid_x),float(grid_y)):route.append((float(grid_x),float(grid_y)))
+            elevation=float(token.get("elevation") or 0.0)
+            centres=[((gx+width/2)*size,(gy+height/2)*size) for gx,gy in route]
+            if any(movement_crosses_wall(walls=walls,origin=start,target=end,elevation=elevation) for start,end in zip(centres,centres[1:])):
+                return TokenResult(success=False, token=token, error_key="tokens.errors.movement_blocked")
 
         updated = await run_blocking(
             self.tokens.move,
@@ -378,6 +394,8 @@ class TokenService:
                 token=updated,
                 transport=transport,
             )
+            from app.engine.scenes.scene_zone_service import SceneZoneService
+            await SceneZoneService().process_move(campaign_id=campaign_id,scene_id=scene_id,token_before=token,token_after=updated,origin=origin,target=target,transport=transport,origin_execution_id=origin_execution_id,origin_job_id=origin_job_id,causal_depth=causal_depth)
 
         return TokenResult(success=True, token=updated)
 
@@ -885,6 +903,36 @@ class TokenService:
     def can_control_token(self, *, token: dict, user_id: str, campaign_id: str) -> bool:
         """Public semantic permission check used by the SDK inspector."""
         return self._can_control_token(token=token, user_id=user_id, campaign_id=campaign_id)
+
+    def controllers_for_tokens(self, *, campaign_id: str, tokens: list[dict]) -> dict[str, list[str]]:
+        """Canonical control relationships for a page of tokens, batched.
+
+        This is the same rule as :meth:`_can_control_token`, evaluated for every
+        campaign member without re-querying roles and actors per pair; the
+        equivalence is asserted by test. Returns members in stable roster order,
+        so a module reading it sees a deterministic list.
+        """
+        members = self.campaigns.list_members(campaign_id=campaign_id)
+        actors: dict[str, dict | None] = {}
+        controllers: dict[str, list[str]] = {}
+        for token in tokens:
+            token_id = str(token.get("id") or token.get("token_id") or "")
+            actor_id = token.get("actor_id")
+            if actor_id and actor_id not in actors:
+                actors[actor_id] = self.actors.get(actor_id)
+            actor = actors.get(actor_id) if actor_id else None
+            allowed: list[str] = []
+            for member in members:
+                role = member["role"]
+                if role == PlayerRole.GM.value:
+                    allowed.append(member["user_id"])
+                    continue
+                if actor is None or actor["status"] != "active":
+                    continue
+                if can_edit_actor(actor=actor, campaign={"member_role": role}, user_id=member["user_id"]):
+                    allowed.append(member["user_id"])
+            controllers[token_id] = allowed
+        return controllers
 
     def _get_scene_in_campaign(self, *, campaign_id: str, scene_id: str) -> dict | None:
         scene = self.scenes.get_by_id(scene_id)

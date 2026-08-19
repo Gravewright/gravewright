@@ -50,6 +50,11 @@ class CoreEphemeralStateRepository:
                 table.c.campaign_id == campaign_id, table.c.scope_id == scope_id).order_by(table.c.created_at)))
         return [self._hydrate(row) for row in rows]
 
+    def list_namespace(self, *, namespace: str) -> list[dict]:
+        with engine_begin() as conn:
+            rows=all_dicts(conn.execute(select(table).where(table.c.namespace==namespace).order_by(table.c.created_at)))
+        return [self._hydrate(row) for row in rows]
+
     def delete(self, *, namespace: str, campaign_id: str, scope_id: str, owner_user_id: str,
                entry_key: str, expected_version: int | None = None) -> bool:
         with engine_begin() as conn:

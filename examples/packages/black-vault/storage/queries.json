@@ -1,0 +1,14 @@
+{
+  "queries": {
+    "recordBeat": {
+      "type": "write",
+      "params": {"missionId": "string", "beat": "string", "detail": "string", "at": "integer"},
+      "sql": "INSERT INTO objective_log (mission_id, beat, detail, at) VALUES (:missionId, :beat, :detail, :at)"
+    },
+    "missionLog": {
+      "type": "read",
+      "params": {"missionId": "string"},
+      "sql": "SELECT beat, detail, at FROM objective_log WHERE mission_id = :missionId ORDER BY id"
+    }
+  }
+}

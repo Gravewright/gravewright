@@ -557,6 +557,13 @@ Semantic shaders use `sdk.scene.shaders.presets`,
 only stable preset metadata, typed parameters and versioned instances; bundled
 GLSL and renderer lifecycle remain private.
 
+Trusted custom libraries use `sdk.scene.shaders.customLibrary.registerProvider`,
+`sdk.scene.shaders.customLibrary.openEditor`, and
+`sdk.scene.shaders.customLibrary.preview`, `sdk.scene.shaders.customLibrary.clearPreview`, and
+`sdk.scene.shaders.customLibrary.use`. They connect package-owned storage and UI
+to the core-owned editor and placement flow without exposing compilation,
+renderer access, or automatic raw application.
+
 Permission-aware UI can distinguish denial from an unsupported action with
 `sdk.permissions.check`; `sdk.permissions.can` remains the boolean shortcut.
 Optional integrations discover only active public package metadata with
@@ -608,6 +615,85 @@ only changed parts, preserving unrelated DOM, focus, and scroll state.
 Settings expose `sdk.settings.scope` and `sdk.settings.onChange`. Supported
 scopes are `client`, `user`, `campaign`, and `package`; legacy `global` is an
 alias for `package`.
+
+## Scene zones and directed interactions
+
+Semantic regions use `sdk.scene.zones.list`, `sdk.scene.zones.get`, `sdk.scene.zones.members`, `sdk.scene.zones.create`, `sdk.scene.zones.update`, and `sdk.scene.zones.delete`. Directed decisions use `sdk.interactions.request`, `sdk.interactions.get`, `sdk.interactions.list`, `sdk.interactions.respond`, and `sdk.interactions.cancel`.
+
+## Scene world objects and semantic presentations
+
+Packages register bounded types with `sdk.scene.objectTypes.register`. Authoritative instances use `sdk.scene.objects.list`, `sdk.scene.objects.get`, `sdk.scene.objects.hitTest`, `sdk.scene.objects.create`, `sdk.scene.objects.update`, `sdk.scene.objects.delete`, and `sdk.scene.objects.interact`. Temporary core-owned projections use `sdk.ui.presentations.show`, `sdk.ui.presentations.get`, `sdk.ui.presentations.list`, `sdk.ui.presentations.wait`, `sdk.ui.presentations.update`, and `sdk.ui.presentations.close`.
+
+## Pointer, audio, navigation and input
+
+Typed drag/drop uses `sdk.ui.dragDrop.registerSource`, `sdk.ui.dragDrop.registerTarget`, `sdk.ui.dragDrop.sources`, `sdk.ui.dragDrop.targets`, and `sdk.ui.dragDrop.drop`. Core audio uses `sdk.audio.play`, `sdk.audio.get`, `sdk.audio.list`, `sdk.audio.update`, and `sdk.audio.stop`. Persisted view navigation uses `sdk.navigation.scene.go` and `sdk.navigation.scene.getState`. Declarative input uses `sdk.input.commands.register`, `sdk.input.commands.list`, `sdk.input.commands.execute`, `sdk.input.bindings.get`, `sdk.input.bindings.set`, and `sdk.input.gestures.register`.
+
+## Durable composition
+
+Multi-step authoritative processes use `sdk.workflows.register`, `sdk.workflows.start`,
+`sdk.workflows.get`, `sdk.workflows.list`, and `sdk.workflows.cancel`. Ruleset-independent turn and phase state uses `sdk.gameplay.flows.register`,
+`sdk.gameplay.flows.start`, `sdk.gameplay.flows.get`,
+`sdk.gameplay.flows.list`, `sdk.gameplay.flows.advance`, and
+`sdk.gameplay.flows.submit`. Stable token identities move between Scenes with
+`sdk.tokens.transfer` or the atomic party operation `sdk.tokens.transferMany`;
+view navigation remains separate. Scheduled semantic sequencing uses
+`sdk.timelines.register`, `sdk.timelines.start`, `sdk.timelines.get`,
+`sdk.timelines.list`, and `sdk.timelines.cancel`. All four domains remain
+server-authoritative and reject executable callbacks, raw renderer operations,
+and package-owned timing authority.
+
+An `INTERACTION` step may declare an optional `resultKey`. When the interaction
+completes, core writes the single recipient's resolved response *value* — never the
+interaction object — into `context[resultKey]`, which the existing `BRANCH` step
+consumes unchanged. The key must be a workflow-local identifier and may not claim the
+runtime slots `input`, `lastResult`, or `interaction`. Because a scalar branch cannot
+represent disagreement, a `resultKey` is only valid on a request with exactly one
+recipient. Cancellation, expiry, and provider failure leave the key unset rather than
+inventing an answer, so a definition that must handle refusal branches on an absent
+key. The value is always derived from server-owned interaction state; a package
+cannot supply or override it.
+
+## Campaign roster and token control
+
+`sdk.campaign.members()` returns the campaign roster as `{ userId, role, name }`,
+the same membership the native table already shows the caller. It carries no account
+metadata, is scoped to the active campaign, and answers only for a caller who is
+themselves a member. It is a roster, not a presence feed: membership is not online
+status.
+
+`TokenDTO.controllers` reports the users who may control that token, derived from the
+same authority that decides whether a move is allowed, so a token with several owners
+lists all of them rather than collapsing to one. The projection is filtered: a caller
+sees controllers only for tokens they could control themselves, which keeps a shared
+board from becoming a roster side-channel. Knowing a controller id grants nothing —
+every operation still derives its principal from the authenticated session.
+
+Together these let a module react to `zone.entered`: read the token, take the
+authorized controllers, and address a Directed Interaction at a real participant.
+
+## Native Sounds and Spatial Sounds
+
+Reusable semantic audio content is a first-class campaign resource, distinct
+from runtime playback. The Sound library uses `sdk.sounds.list`,
+`sdk.sounds.get`, `sdk.sounds.create`, `sdk.sounds.update`, and
+`sdk.sounds.delete`; creation references an authorized canonical `audio` Asset
+(`{ kind: "library-asset", id }`) or a package-shipped audio resource
+(`{ kind: "package-asset", id }`), which the server canonicalizes through the
+same safe ingestion pipeline before the Sound exists. Deleting a Sound that a
+Playlist, Soundscape, or Spatial Sound still references fails with the native
+dependency policy instead of leaving a broken reference.
+
+Persistent Scene emitters use `sdk.scene.spatialSounds.list`,
+`sdk.scene.spatialSounds.get`, `sdk.scene.spatialSounds.create`,
+`sdk.scene.spatialSounds.update`, and `sdk.scene.spatialSounds.delete`. An
+emitter references a Sound by `soundId`; raw Asset URLs and filesystem paths are
+never accepted as emitter identity. With `constrainedByWalls`, Wall and Door
+geometry attenuates the emitter as a projection, so opening or closing a Door
+changes what listeners hear without restarting the stream.
+
+The boundary is deliberate: `sdk.sounds.*` owns reusable persistent content,
+`sdk.audio.*` owns runtime playback and control, and `sdk.scene.spatialSounds.*`
+owns persistent spatial Scene emitters.
 
 ## Shortcuts
 

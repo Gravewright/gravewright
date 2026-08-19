@@ -806,7 +806,9 @@
       if (!isEditableTarget(event.target) && arrows[event.key]) {
         const [x, y] = arrows[event.key];
         for (const controller of controllers.values()) {
-          const tile = Number(window.GravewrightMap?.sceneDataFor?.(controller.canvas)?.scaledTileSize || 32);
+          const canvas = controller.canvas();
+          if (!canvas) continue;
+          const tile = Number(window.GravewrightMap?.sceneDataFor?.(canvas)?.scaledTileSize || 32);
           const step = event.shiftKey ? 1 : tile / 2;
           if (controller.moveSelectedBy(x * step, y * step)) { event.preventDefault(); return; }
         }

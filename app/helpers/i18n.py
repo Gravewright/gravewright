@@ -8,6 +8,7 @@ from typing import Any
 from app.config import config
 from app.i18n.en import CATALOG as EN_CATALOG
 from app.i18n.pt_br import CATALOG as PT_BR_CATALOG
+from app.i18n.es import CATALOG as ES_CATALOG
 
 
 CatalogValue = str | dict[str, Any]
@@ -16,6 +17,7 @@ CatalogValue = str | dict[str, Any]
 CATALOGS: dict[str, Mapping[str, CatalogValue]] = {
     "en": EN_CATALOG,
     "pt-BR": PT_BR_CATALOG,
+    "es": ES_CATALOG,
 }
 
 

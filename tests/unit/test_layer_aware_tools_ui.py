@@ -7,17 +7,22 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_tool_registry_declares_layer_compatibility():
     registry = (ROOT / "static/js/tools/tools-registry.js").read_text(encoding="utf-8")
     toolbar = (ROOT / "static/js/tools/tools-toolbar.js").read_text(encoding="utf-8")
+    template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
     # A lista de camadas vive num lugar so: quando estava copiada em quatro
     # arquivos, acrescentar Efeitos e Paredes deixava metade do dock sem saber
     # que elas existiam.
     assert 'const LAYERS = ["game", "gm", "composition", "effects", "walls", "lighting"]' in registry
     assert "select: LAYERS" in registry
-    for tool in ("ruler", "hp", "draw", "shape"):
+    for tool in ("ruler", "draw", "shape"):
         assert f'{tool}: ["game", "gm"]' in registry
+    assert 'data-tool="hp"' not in template
+    assert 'data-tool-sub-panel="hp"' not in template
+    assert 'h: "hp"' not in registry and 'hp: ["game", "gm"]' not in registry
     assert "syncToolsForLayer" in toolbar
     assert "if (!toolSupportsLayer(activeTool)) setActiveTool(DEFAULT_TOOL)" in toolbar
-    template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
-    assert template.count('data-active-layer="composition"') >= 2
+    assert template.count('data-active-layer="composition"') >= 1
+    hand = template.split("tool-dock-btn--hand", 1)[0].rsplit('class="tool-dock-group', 1)[1]
+    assert 'data-tool-layer-scope="game"' in hand
 
 
 def test_selection_is_scoped_to_the_active_layer():

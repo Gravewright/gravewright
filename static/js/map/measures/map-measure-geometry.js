@@ -49,6 +49,10 @@
             );
         }
 
+        function measureStartPointFromEvent(canvas, event) {
+            return measurePointFromEvent(canvas, event);
+        }
+
         function rawMeasurePointFromEvent(canvas, event) {
             const scene = sceneDataFor(canvas);
             if (!scene) return null;
@@ -72,13 +76,54 @@
         }
 
         function measureLabelFor(measure, scene) {
+            const s = scene.scaledTileSize || defaultGridSize;
             if (measure.shape === "square") {
-                const s = scene.scaledTileSize || defaultGridSize;
-                const cols = Math.abs(measure.end.worldX - measure.start.worldX) / s;
-                const rows = Math.abs(measure.end.worldY - measure.start.worldY) / s;
+                const cols = Math.abs(
+                    Math.floor(measure.end.worldX / s) - Math.floor(measure.start.worldX / s),
+                ) + 1;
+                const rows = Math.abs(
+                    Math.floor(measure.end.worldY / s) - Math.floor(measure.start.worldY / s),
+                ) + 1;
                 return `${formatCells(cols)} x ${formatCells(rows)}`;
             }
+            if (measure.shape === "line") {
+                const cols = Math.abs(
+                    Math.floor(measure.end.worldX / s) - Math.floor(measure.start.worldX / s),
+                );
+                const rows = Math.abs(
+                    Math.floor(measure.end.worldY / s) - Math.floor(measure.start.worldY / s),
+                );
+                return formatCells(Math.max(cols, rows) + 1);
+            }
             return formatCells(cellsBetween(measure.start, measure.end, scene));
+        }
+
+        function gridCellsForMeasure(measure, scene) {
+            if (!measure?.start || !measure?.end || !scene) return [];
+            const size = scene.scaledTileSize || defaultGridSize;
+            const bounds = measureBounds(measure);
+            const minCol = Math.max(0, Math.floor(bounds.minX / size) - 1);
+            const maxCol = Math.min(Math.ceil(scene.width / size) - 1, Math.floor(bounds.maxX / size) + 1);
+            const minRow = Math.max(0, Math.floor(bounds.minY / size) - 1);
+            const maxRow = Math.min(Math.ceil(scene.height / size) - 1, Math.floor(bounds.maxY / size) + 1);
+            const cells = [];
+            const originCol = Math.floor(measure.start.worldX / size);
+            const originRow = Math.floor(measure.start.worldY / size);
+            for (let row = minRow; row <= maxRow; row += 1) {
+                for (let col = minCol; col <= maxCol; col += 1) {
+                    const center = {
+                        worldX: (col + 0.5) * size,
+                        worldY: (row + 0.5) * size,
+                    };
+                    const covered = measure.shape === "line"
+                        ? measureContainsPoint(measure, center, size * 0.45)
+                        : measureContainsPoint(measure, center, 0.0001);
+                    if (covered || (col === originCol && row === originRow)) {
+                        cells.push({ col, row, worldX: col * size, worldY: row * size, size });
+                    }
+                }
+            }
+            return cells;
         }
 
         function areaMarkerTextAnchor(measure) {
@@ -87,6 +132,32 @@
                 worldX: (measure.start.worldX + measure.end.worldX) / 2,
                 worldY: (measure.start.worldY + measure.end.worldY) / 2,
             };
+        }
+
+        function normalizedRotation(measure) {
+            const value = Number(measure?.rotation || 0);
+            return Number.isFinite(value) ? value : 0;
+        }
+
+        function rotationPivot(measure) {
+            return { ...measure.start };
+        }
+
+        function rotatePoint(point, pivot, degrees) {
+            if (!degrees) return { ...point };
+            const radians = degrees * Math.PI / 180;
+            const cos = Math.cos(radians);
+            const sin = Math.sin(radians);
+            const dx = point.worldX - pivot.worldX;
+            const dy = point.worldY - pivot.worldY;
+            return {
+                worldX: pivot.worldX + dx * cos - dy * sin,
+                worldY: pivot.worldY + dx * sin + dy * cos,
+            };
+        }
+
+        function unrotatePoint(point, measure) {
+            return rotatePoint(point, rotationPivot(measure), -normalizedRotation(measure));
         }
 
         function distancePointToSegment(px, py, ax, ay, bx, by) {
@@ -156,10 +227,12 @@
                     && point.worldY >= b.minY - toleranceWorld && point.worldY <= b.maxY + toleranceWorld;
             }
 
+            const localPoint = unrotatePoint(point, measure);
+
             if (measure.shape === "line") {
                 return distancePointToSegment(
-                    point.worldX,
-                    point.worldY,
+                    localPoint.worldX,
+                    localPoint.worldY,
                     measure.start.worldX,
                     measure.start.worldY,
                     measure.end.worldX,
@@ -169,7 +242,7 @@
 
             if (measure.shape === "circle") {
                 const radius = Math.sqrt((measure.end.worldX - measure.start.worldX) ** 2 + (measure.end.worldY - measure.start.worldY) ** 2);
-                const dist = Math.sqrt((point.worldX - measure.start.worldX) ** 2 + (point.worldY - measure.start.worldY) ** 2);
+                const dist = Math.sqrt((localPoint.worldX - measure.start.worldX) ** 2 + (localPoint.worldY - measure.start.worldY) ** 2);
                 return dist <= radius + toleranceWorld;
             }
 
@@ -178,10 +251,10 @@
                 const maxX = Math.max(measure.start.worldX, measure.end.worldX) + toleranceWorld;
                 const minY = Math.min(measure.start.worldY, measure.end.worldY) - toleranceWorld;
                 const maxY = Math.max(measure.start.worldY, measure.end.worldY) + toleranceWorld;
-                return point.worldX >= minX && point.worldX <= maxX && point.worldY >= minY && point.worldY <= maxY;
+                return localPoint.worldX >= minX && localPoint.worldX <= maxX && localPoint.worldY >= minY && localPoint.worldY <= maxY;
             }
 
-            if (measure.shape === "cone") return isPointInCone(point, measure);
+            if (measure.shape === "cone") return isPointInCone(localPoint, measure);
             return false;
         }
 
@@ -220,11 +293,60 @@
                     maxY: measure.position.worldY,
                 };
             }
+            if (measure.shape === "circle") {
+                const radius = Math.hypot(
+                    measure.end.worldX - measure.start.worldX,
+                    measure.end.worldY - measure.start.worldY,
+                );
+                return {
+                    minX: measure.start.worldX - radius,
+                    maxX: measure.start.worldX + radius,
+                    minY: measure.start.worldY - radius,
+                    maxY: measure.start.worldY + radius,
+                };
+            }
+            if (measure.shape === "cone") {
+                const radius = Math.hypot(
+                    measure.end.worldX - measure.start.worldX,
+                    measure.end.worldY - measure.start.worldY,
+                );
+                const direction = Math.atan2(
+                    measure.end.worldY - measure.start.worldY,
+                    measure.end.worldX - measure.start.worldX,
+                ) + normalizedRotation(measure) * Math.PI / 180;
+                const halfAngle = Math.PI / 6;
+                const signedAngleDelta = (angle, reference) =>
+                    Math.atan2(Math.sin(angle - reference), Math.cos(angle - reference));
+                const angles = [direction - halfAngle, direction + halfAngle];
+                [0, Math.PI / 2, Math.PI, Math.PI * 1.5].forEach((angle) => {
+                    if (Math.abs(signedAngleDelta(angle, direction)) <= halfAngle) angles.push(angle);
+                });
+                const points = [measure.start, ...angles.map((angle) => ({
+                    worldX: measure.start.worldX + Math.cos(angle) * radius,
+                    worldY: measure.start.worldY + Math.sin(angle) * radius,
+                }))];
+                return {
+                    minX: Math.min(...points.map((point) => point.worldX)),
+                    maxX: Math.max(...points.map((point) => point.worldX)),
+                    minY: Math.min(...points.map((point) => point.worldY)),
+                    maxY: Math.max(...points.map((point) => point.worldY)),
+                };
+            }
+            const minX = Math.min(measure.start.worldX, measure.end.worldX);
+            const maxX = Math.max(measure.start.worldX, measure.end.worldX);
+            const minY = Math.min(measure.start.worldY, measure.end.worldY);
+            const maxY = Math.max(measure.start.worldY, measure.end.worldY);
+            if (!normalizedRotation(measure)) return { minX, maxX, minY, maxY };
+            const pivot = rotationPivot(measure);
+            const points = [
+                { worldX: minX, worldY: minY }, { worldX: maxX, worldY: minY },
+                { worldX: maxX, worldY: maxY }, { worldX: minX, worldY: maxY },
+            ].map((point) => rotatePoint(point, pivot, normalizedRotation(measure)));
             return {
-                minX: Math.min(measure.start.worldX, measure.end.worldX),
-                maxX: Math.max(measure.start.worldX, measure.end.worldX),
-                minY: Math.min(measure.start.worldY, measure.end.worldY),
-                maxY: Math.max(measure.start.worldY, measure.end.worldY),
+                minX: Math.min(...points.map((point) => point.worldX)),
+                maxX: Math.max(...points.map((point) => point.worldX)),
+                minY: Math.min(...points.map((point) => point.worldY)),
+                maxY: Math.max(...points.map((point) => point.worldY)),
             };
         }
 
@@ -275,6 +397,7 @@
             clampMeasureWorld,
             distancePointToSegment,
             formatCells,
+            gridCellsForMeasure,
             isPointInCone,
             measureAtPoint,
             measureBounds,
@@ -282,7 +405,11 @@
             measureKind,
             measureLabelFor,
             measurePointFromEvent,
+            measureStartPointFromEvent,
+            normalizedRotation,
             rawMeasurePointFromEvent,
+            rotatePoint,
+            rotationPivot,
             snapWorldToCellCenter,
             textBounds,
             translatedMeasure,

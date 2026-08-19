@@ -47,3 +47,37 @@ def shader_metadata_snapshot(row: dict) -> dict[str, Any]:
 
 def chat_snapshot(row: dict) -> dict[str, Any]:
     return _pick(row, ("id", "campaign_id", "author_user_id", "author_name", "author_role", "kind", "content", "expression", "groups", "modifier", "total", "visibility", "metadata", "created_at"))
+
+
+def token_snapshot(row: dict, *, controllers: list[str]) -> dict[str, Any]:
+    """Project a core token view onto the declared public TokenDTO.
+
+    The core view carries board-rendering and ownership fields the native UI
+    needs; a package receives only the contracted shape, with `controllers`
+    already filtered by the caller's authority to inspect control.
+    """
+    value = {
+        "id": str(row.get("id") or row.get("token_id") or ""),
+        "scene_id": row.get("scene_id"),
+        "actor_id": row.get("actor_id"),
+        "grid_x": row.get("grid_x"),
+        "grid_y": row.get("grid_y"),
+        "elevation": row.get("elevation"),
+        "width_cells": row.get("width_cells"),
+        "height_cells": row.get("height_cells"),
+        "rotation": row.get("rotation"),
+        "name": row.get("name"),
+        "token_asset_url": row.get("token_asset_url"),
+        "visible": bool(row.get("visible", True)),
+        "hidden": bool(row.get("hidden", False)),
+        "locked": bool(row.get("locked", False)),
+        "disposition": row.get("disposition"),
+        "vision": row.get("vision") or {
+            "enabled": bool(row.get("vision_enabled", True)),
+            "range": row.get("vision_range"),
+            "source": "token",
+        },
+        "controllers": list(controllers),
+        "updated_at": row.get("updated_at"),
+    }
+    return value

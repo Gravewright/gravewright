@@ -102,6 +102,21 @@
         return raw.text.replace(/\r\n?/g, "\n").trim().slice(0, 220);
     }
 
+    function representationMarkerStyle(baseStyle = null) {
+        const base = normalizedMarkerStyle(baseStyle) || {};
+        const candidate = globalThis.document?.body?.dataset?.pingColor || "#f2c679";
+        const color = /^#[0-9a-f]{6}$/i.test(candidate) ? candidate.toLowerCase() : "#f2c679";
+        const red = parseInt(color.slice(1, 3), 16);
+        const green = parseInt(color.slice(3, 5), 16);
+        const blue = parseInt(color.slice(5, 7), 16);
+        return {
+            ...base,
+            stroke: color,
+            fill: `rgba(${red},${green},${blue},0.18)`,
+            strokeWidth: base.strokeWidth || 2,
+        };
+    }
+
     function applyOwnerLayer(next, raw) {
         if (typeof raw?.owner_id === "string" && raw.owner_id) next.owner_id = raw.owner_id;
         if (raw?.layer === "gm") next.layer = "gm";
@@ -127,17 +142,6 @@
         return applyOwnerLayer(next, raw);
     }
 
-    function svgStyleFor(measure) {
-        const style = normalizedMarkerStyle(measure?.style);
-        if (!style) return {};
-        const parts = [];
-        if (style.stroke) parts.push(`stroke:${style.stroke}`);
-        if (style.fill) parts.push(`fill:${style.fill}`);
-        if (style.strokeWidth) parts.push(`stroke-width:${style.strokeWidth}`);
-        if (style.strokeDasharray) parts.push(`stroke-dasharray:${style.strokeDasharray}`);
-        return parts.length ? { style: parts.join(";") } : {};
-    }
-
     function activeDrawStyle(canvas) {
         const color = window.GravewrightTools?.activeDrawColor || canvas?.dataset.activeDrawColor || "#f8fafc";
         return {
@@ -156,6 +160,6 @@
         normalizedAreaMarkerText,
         normalizedMarkerStyle,
         normalizedTextDrawing,
-        svgStyleFor,
+        representationMarkerStyle,
     };
 })();

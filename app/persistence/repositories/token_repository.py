@@ -199,6 +199,37 @@ class TokenRepository:
 
         return self._hydrate(row) if row else None
 
+    def transfer_many(self, transfers: list[dict]) -> list[dict] | None:
+        """Move stable token identities across Scenes in one transaction.
+
+        Any stale token aborts the transaction before a write is issued.
+        """
+        if not transfers:
+            return []
+        ids = [str(item["token_id"]) for item in transfers]
+        if len(ids) != len(set(ids)):
+            return None
+        now = int(time.time())
+        with engine_begin() as conn:
+            rows = all_dicts(conn.execute(select(tokens_table).where(tokens_table.c.id.in_(ids))))
+            by_id = {row["id"]: row for row in rows}
+            if len(by_id) != len(ids):
+                return None
+            for item in transfers:
+                row = by_id[item["token_id"]]
+                expected = item.get("expected_version")
+                if expected is not None and row["version"] != expected:
+                    return None
+            for item in transfers:
+                conn.execute(update(tokens_table).where(tokens_table.c.id == item["token_id"]).values(
+                    scene_id=item["scene_id"], grid_x=item["grid_x"], grid_y=item["grid_y"],
+                    elevation=item.get("elevation", by_id[item["token_id"]]["elevation"]),
+                    version=tokens_table.c.version + 1, updated_at=now,
+                ))
+            updated = all_dicts(conn.execute(select(tokens_table).where(tokens_table.c.id.in_(ids))))
+        hydrated = {row["id"]: self._hydrate(row) for row in updated}
+        return [hydrated[token_id] for token_id in ids]
+
     def update_overrides(
         self,
         *,

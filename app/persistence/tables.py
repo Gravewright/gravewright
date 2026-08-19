@@ -844,6 +844,8 @@ scenes = Table(
     Column("fog_version", Integer, nullable=False, server_default=text("0")),
     Column("board_area_markers_json", Text, nullable=False, default="[]"),
     Column("board_version", Integer, nullable=False, server_default=text("1")),
+    Column("soundscape_id", _ID, nullable=True),
+    Column("sound_version", Integer, nullable=False, server_default=text("1")),
     Column("created_at", Integer, nullable=False),
     Column("updated_at", Integer, nullable=False),
     Index("idx_scenes_campaign_id", "campaign_id", "created_at"),
@@ -860,6 +862,7 @@ scene_walls = Table(
     Column("movement_behavior", _STR, nullable=False, server_default=text("'block'")),
     Column("vision_behavior", _STR, nullable=False, server_default=text("'block'")),
     Column("light_behavior", _STR, nullable=False, server_default=text("'block'")),
+    Column("sound_behavior", _STR, nullable=False, server_default=text("'block'")),
     Column("presentation", _STR, nullable=False, server_default=text("'normal'")),
     Column("discovered", Integer, nullable=False, server_default=text("0")),
     Column("x1", Float, nullable=False), Column("y1", Float, nullable=False),
@@ -873,6 +876,7 @@ scene_walls = Table(
     CheckConstraint("movement_behavior IN ('block','pass')", name="movement_behavior"),
     CheckConstraint("vision_behavior IN ('block','pass')", name="vision_behavior"),
     CheckConstraint("light_behavior IN ('block','pass')", name="light_behavior"),
+    CheckConstraint("sound_behavior IN ('block','attenuate','pass')", name="sound_behavior"),
     CheckConstraint("presentation IN ('normal','window','bars','invisible','secret')", name="presentation"),
     Index("idx_scene_walls_scene", "scene_id", "created_at"),
 )
@@ -1073,6 +1077,165 @@ tokens = Table(
     Index("idx_tokens_scene_id", "scene_id", "created_at"),
     Index("idx_tokens_actor_id", "actor_id"),
     Index("idx_tokens_scene_grid", "scene_id", "grid_x", "grid_y"),
+)
+
+scene_zones = Table(
+    "scene_zones",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("zone_type", _STR, nullable=False, server_default=text("'standard'")),
+    Column("geometry_json", Text, nullable=False),
+    Column("vertical_bottom", Float, nullable=True),
+    Column("vertical_top", Float, nullable=True),
+    Column("audience_json", Text, nullable=False),
+    Column("enabled", Integer, nullable=False, server_default=text("1")),
+    Column("tags_json", Text, nullable=False, server_default=text("'[]'")),
+    Column("package_id", _STR, nullable=False),
+    Column("provider_id", _STR, nullable=True),
+    Column("min_x", Float, nullable=False),
+    Column("min_y", Float, nullable=False),
+    Column("max_x", Float, nullable=False),
+    Column("max_y", Float, nullable=False),
+    Column("version", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    Index("idx_scene_zones_scene_bounds", "scene_id", "enabled", "min_x", "max_x", "min_y", "max_y"),
+    Index("idx_scene_zones_package", "package_id"),
+)
+
+scene_object_types = Table(
+    "scene_object_types", metadata,
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), primary_key=True),
+    Column("package_id", _STR, primary_key=True),
+    Column("type_id", _STR, primary_key=True),
+    Column("definition_json", Text, nullable=False),
+    Column("schema_version", Integer, nullable=False),
+    Column("active", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    Index("idx_scene_object_types_type", "campaign_id", "type_id", "active"),
+)
+
+scene_objects = Table(
+    "scene_objects", metadata,
+    Column("id", _ID, primary_key=True),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("type_id", _STR, nullable=False), Column("provider_package_id", _STR, nullable=False),
+    Column("schema_version", Integer, nullable=False),
+    Column("geometry_json", Text, nullable=False), Column("transform_json", Text, nullable=False),
+    Column("presentation_json", Text, nullable=False), Column("data_json", Text, nullable=False),
+    Column("audience_json", Text, nullable=False), Column("enabled", Integer, nullable=False, server_default=text("1")),
+    Column("min_x", Float, nullable=False), Column("min_y", Float, nullable=False),
+    Column("max_x", Float, nullable=False), Column("max_y", Float, nullable=False),
+    Column("search_text", Text, nullable=False, server_default=text("''")),
+    Column("version", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    Index("idx_scene_objects_scene_bounds", "scene_id", "enabled", "min_x", "max_x", "min_y", "max_y"),
+    Index("idx_scene_objects_provider", "provider_package_id", "type_id"),
+)
+
+sdk_semantic_registrations = Table(
+    "sdk_semantic_registrations", metadata,
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), primary_key=True),
+    Column("package_id", _STR, primary_key=True), Column("registry", _STR, primary_key=True), Column("entry_id", _STR, primary_key=True),
+    Column("definition_json", Text, nullable=False), Column("active", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    Index("idx_sdk_semantic_registry", "campaign_id", "registry", "active"),
+)
+
+audio_playbacks = Table(
+    "audio_playbacks", metadata, Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False), Column("package_id", _STR, nullable=False),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False), Column("asset_json", Text, nullable=False),
+    Column("channel", _STR, nullable=False), Column("state", _STR, nullable=False), Column("loop", Integer, nullable=False), Column("gain", Float, nullable=False),
+    Column("audience_json", Text, nullable=False), Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=True), Column("anchor_json", Text, nullable=True),
+    Column("idempotency_key", _STR, nullable=True), Column("started_at", Integer, nullable=False), Column("expires_at", Integer, nullable=True),
+    Column("fade_json", Text, nullable=True), Column("version", Integer, nullable=False, server_default=text("1")), Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    UniqueConstraint("campaign_id", "package_id", "idempotency_key"), Index("idx_audio_projection", "campaign_id", "scene_id", "state"),
+)
+
+sounds = Table(
+    "sounds", metadata, Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("name", _STR, nullable=False), Column("asset_id", _ID, ForeignKey("library_assets.id", ondelete="RESTRICT"), nullable=False),
+    Column("kind", _STR, nullable=False), Column("tags_json", Text, nullable=False, server_default=text("'[]'")),
+    Column("default_gain", Float, nullable=False, server_default=text("1")), Column("default_loop", Integer, nullable=False, server_default=text("0")),
+    Column("metadata_json", Text, nullable=False, server_default=text("'{}'")), Column("version", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False), Index("idx_sounds_campaign_kind_name", "campaign_id", "kind", "name"),
+)
+
+sound_playlists = Table(
+    "sound_playlists", metadata, Column("id", _ID, primary_key=True), Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("name", _STR, nullable=False), Column("entries_json", Text, nullable=False), Column("playback_mode", _STR, nullable=False),
+    Column("default_gain", Float, nullable=True), Column("crossfade_ms", Integer, nullable=False, server_default=text("0")),
+    Column("version", Integer, nullable=False, server_default=text("1")), Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    Index("idx_sound_playlists_campaign_name", "campaign_id", "name"),
+)
+
+soundscapes = Table(
+    "soundscapes", metadata, Column("id", _ID, primary_key=True), Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("name", _STR, nullable=False), Column("layers_json", Text, nullable=False), Column("random_pools_json", Text, nullable=False, server_default=text("'[]'")),
+    Column("fade_in_ms", Integer, nullable=False, server_default=text("0")), Column("fade_out_ms", Integer, nullable=False, server_default=text("0")),
+    Column("version", Integer, nullable=False, server_default=text("1")), Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    Index("idx_soundscapes_campaign_name", "campaign_id", "name"),
+)
+
+scene_spatial_sounds = Table(
+    "scene_spatial_sounds", metadata, Column("id", _ID, primary_key=True), Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
+    Column("sound_id", _ID, ForeignKey("sounds.id", ondelete="RESTRICT"), nullable=False), Column("x", Float, nullable=False), Column("y", Float, nullable=False),
+    Column("radius", Float, nullable=False), Column("gain", Float, nullable=False), Column("falloff", _STR, nullable=False), Column("loop", Integer, nullable=False),
+    Column("audience_json", Text, nullable=False), Column("constrained_by_walls", Integer, nullable=False, server_default=text("1")),
+    Column("enabled", Integer, nullable=False, server_default=text("1")),
+    Column("version", Integer, nullable=False, server_default=text("1")), Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    Index("idx_spatial_sounds_scene", "scene_id", "enabled"),
+)
+
+user_scene_navigation = Table(
+    "user_scene_navigation", metadata,
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), primary_key=True), Column("user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False), Column("reason", Text, nullable=False, server_default=text("''")),
+    Column("idempotency_key", _STR, nullable=True), Column("version", Integer, nullable=False, server_default=text("1")), Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+)
+
+input_bindings = Table(
+    "input_bindings", metadata, Column("user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    Column("package_id", _STR, primary_key=True), Column("command_id", _STR, primary_key=True), Column("binding", _STR, nullable=False),
+    Column("version", Integer, nullable=False, server_default=text("1")), Column("created_at", Integer, nullable=False), Column("updated_at", Integer, nullable=False),
+    UniqueConstraint("user_id", "binding"),
+)
+
+# Durable, core-owned SDK semantic instances: workflows, gameplay flows and
+# timelines. Definitions remain in sdk_semantic_registrations; this table holds only
+# the suspension and recovery state core must own, and never stores executable
+# callbacks or source code — a package describes intent, it does not ship behaviour.
+sdk_semantic_instances = Table(
+    "sdk_semantic_instances", metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("package_id", _STR, nullable=False),
+    Column("domain", _STR, nullable=False),
+    Column("definition_id", _STR, nullable=False),
+    Column("schema_version", Integer, nullable=False),
+    Column("owner_user_id", _ID, ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="SET NULL"), nullable=True),
+    Column("status", _STR, nullable=False),
+    Column("payload_json", Text, nullable=False),
+    Column("waiting_on", _STR, nullable=True),
+    Column("wake_at", Integer, nullable=True),
+    Column("idempotency_key", _STR, nullable=True),
+    Column("version", Integer, nullable=False, server_default=text("1")),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    UniqueConstraint("campaign_id", "package_id", "domain", "idempotency_key"),
+    Index("idx_sdk_semantic_instances_campaign_domain", "campaign_id", "domain", "status"),
+    Index("idx_sdk_semantic_instances_due", "domain", "status", "wake_at"),
+)
+
+declarative_operation_receipts = Table(
+    "declarative_operation_receipts", metadata,
+    Column("identity", _STR, primary_key=True), Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("package_id", _STR, nullable=False), Column("payload_hash", _STR, nullable=False), Column("result_json", Text, nullable=False),
+    Column("created_at", Integer, nullable=False), Index("idx_declarative_receipts_campaign", "campaign_id", "package_id"),
 )
 
 token_conditions = Table(

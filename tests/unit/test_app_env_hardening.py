@@ -23,6 +23,7 @@ def _import_config_with_env(extra_env: dict[str, str]) -> subprocess.CompletedPr
             "SESSION_COOKIE_SECURE": "true",
             "PUBLIC_BASE_URL": "https://gravewright.test",
             "ALLOWED_HOSTS": "gravewright.test",
+            "TUNNEL_ALLOWED_HOSTS": "",
             "DATABASE_URL": "postgresql+psycopg://user:pass@localhost/gravewright",
         }
     )
@@ -45,6 +46,15 @@ def test_production_requires_public_base_url() -> None:
 
 
 def test_production_requires_allowed_hosts() -> None:
+    result = _import_config_with_env({"ALLOWED_HOSTS": ""})
+
+    assert result.returncode != 0
+    assert "ALLOWED_HOSTS must be set in production" in result.stderr
+
+
+def test_production_config_fixture_ignores_local_tunnel_host_override(monkeypatch) -> None:
+    monkeypatch.setenv("TUNNEL_ALLOWED_HOSTS", "*.gravewright.test")
+
     result = _import_config_with_env({"ALLOWED_HOSTS": ""})
 
     assert result.returncode != 0

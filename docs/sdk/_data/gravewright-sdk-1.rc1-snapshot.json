@@ -1,0 +1,8062 @@
+{
+  "capabilities": [
+    "actors.data.write",
+    "actors.items.read",
+    "actors.items.write",
+    "actors.read",
+    "actors.register",
+    "actors.write",
+    "assets.audio",
+    "assets.icons",
+    "assets.images",
+    "assets.import",
+    "assets.library",
+    "assets.maps",
+    "assets.pack",
+    "assets.scripts",
+    "assets.styles",
+    "assets.ui",
+    "assets.video",
+    "audio.playback",
+    "automation.schedule",
+    "bus.provide",
+    "bus.publish",
+    "bus.request",
+    "bus.subscribe",
+    "campaign.members.read",
+    "cards.manage",
+    "cards.read",
+    "chat.cards",
+    "chat.read",
+    "combat.config",
+    "combat.manage",
+    "combat.read",
+    "combat.runtime",
+    "commands.register",
+    "content.index",
+    "content.packs",
+    "content.references",
+    "dice.roll",
+    "events.subscribe",
+    "gameplay.flows.manage",
+    "gameplay.flows.participate",
+    "gameplay.flows.read",
+    "handouts.present",
+    "input.commands",
+    "interactions.request",
+    "interactions.respond",
+    "items.data.write",
+    "items.read",
+    "items.register",
+    "items.write",
+    "journals.read",
+    "journals.write",
+    "locales",
+    "navigation.scene",
+    "packages.inspect",
+    "pdf.annotations.read",
+    "pdf.annotations.write",
+    "pdf.presentation",
+    "pdf.read",
+    "pdf.viewer",
+    "permissions.inspect",
+    "rolls.intent",
+    "rules.actions",
+    "rules.declarative",
+    "rules.extends",
+    "scene.effects.read",
+    "scene.effects.write",
+    "scene.fog.read",
+    "scene.fog.write",
+    "scene.geometry.read",
+    "scene.geometry.write",
+    "scene.images.read",
+    "scene.images.write",
+    "scene.measurements.shared",
+    "scene.objectTypes.register",
+    "scene.objects.interact",
+    "scene.objects.read",
+    "scene.objects.write",
+    "scene.overlays",
+    "scene.read",
+    "scene.shaders.customLibrary",
+    "scene.shaders.read",
+    "scene.shaders.write",
+    "scene.spatialSounds.read",
+    "scene.spatialSounds.write",
+    "scene.templates.read",
+    "scene.templates.write",
+    "scene.tools",
+    "scene.zones.read",
+    "scene.zones.write",
+    "settings",
+    "sheets.components",
+    "sheets.controller",
+    "sheets.declarative",
+    "sheets.html",
+    "sheets.richText",
+    "sheets.runtime",
+    "sounds.read",
+    "sounds.write",
+    "storage.sqlite",
+    "timelines.control",
+    "timelines.read",
+    "timelines.start",
+    "tokens.extends",
+    "tokens.manage",
+    "tokens.mappings",
+    "tokens.move",
+    "tokens.read",
+    "tokens.targets",
+    "tokens.transfer",
+    "ui.applications",
+    "ui.dragDrop",
+    "ui.presentations",
+    "ui.slots",
+    "workflows.control",
+    "workflows.read",
+    "workflows.start"
+  ],
+  "dtos": {
+    "ActionDefinitionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "durability": "'supported' | 'unsupported'",
+        "id": "string",
+        "idempotency": "'IDEMPOTENT' | 'REQUIRES_IDEMPOTENCY_KEY' | 'NOT_DURABLE'",
+        "inputs": "ActionInputSchema",
+        "limits": "ActionLimitsDTO",
+        "packageId": "string",
+        "reference": "string",
+        "requiredCapabilities": "string[]",
+        "semantics": "string[]",
+        "version": "number"
+      },
+      "required": [
+        "durability",
+        "id",
+        "idempotency",
+        "inputs",
+        "limits",
+        "packageId",
+        "reference",
+        "requiredCapabilities",
+        "semantics",
+        "version"
+      ]
+    },
+    "ActionExecuteOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "idempotencyKey": "string",
+        "version": "number"
+      },
+      "required": []
+    },
+    "ActionExecutionResult": {
+      "additionalProperties": false,
+      "fields": {
+        "action": "string",
+        "changedResources": "ChangedResourceDTO[]",
+        "executionId": "string",
+        "reference": "string",
+        "result": "ActionSuccessDTO",
+        "version": "number"
+      },
+      "required": [
+        "action",
+        "changedResources",
+        "executionId",
+        "reference",
+        "result",
+        "version"
+      ]
+    },
+    "ActionLimitsDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "maxSteps": "number"
+      },
+      "required": [
+        "maxSteps"
+      ]
+    },
+    "ActionReferenceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "provider": "string",
+        "version": "number"
+      },
+      "required": [
+        "id",
+        "provider",
+        "version"
+      ]
+    },
+    "ActionReferenceExecuteOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "idempotencyKey": "string"
+      },
+      "required": []
+    },
+    "ActionResolveInput": {
+      "additionalProperties": false,
+      "fields": {
+        "provider": "'active-ruleset'",
+        "semantic": "string"
+      },
+      "required": [
+        "provider",
+        "semantic"
+      ]
+    },
+    "ActionSuccessDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "ok": "true"
+      },
+      "required": [
+        "ok"
+      ]
+    },
+    "ActorCreateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "folderId": "string",
+        "name": "string",
+        "systemId": "string",
+        "type": "string"
+      },
+      "required": [
+        "name",
+        "systemId",
+        "type"
+      ]
+    },
+    "ActorDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign_id": "string",
+        "created_at": "number",
+        "folder_id": "string | null",
+        "id": "string",
+        "name": "string",
+        "portrait_asset_id": "string | null",
+        "system_id": "string",
+        "token_asset_id": "string | null",
+        "type": "string",
+        "updated_at": "number",
+        "version": "number"
+      },
+      "required": [
+        "campaign_id",
+        "created_at",
+        "folder_id",
+        "id",
+        "name",
+        "portrait_asset_id",
+        "system_id",
+        "token_asset_id",
+        "type",
+        "updated_at",
+        "version"
+      ]
+    },
+    "ActorDataDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actor_id": "string",
+        "data": "RulesetSheetData",
+        "version": "number"
+      },
+      "required": [
+        "actor_id",
+        "data",
+        "version"
+      ]
+    },
+    "ActorItemInsertResult": {
+      "additionalProperties": false,
+      "fields": {
+        "actorId": "string",
+        "copy": "ActorItemCopyDTO",
+        "slot": "string",
+        "version": "number"
+      },
+      "required": [
+        "actorId",
+        "copy",
+        "slot",
+        "version"
+      ]
+    },
+    "ActorItemRemoveResult": {
+      "additionalProperties": false,
+      "fields": {
+        "actorId": "string",
+        "removed": "true",
+        "slot": "string",
+        "version": "number"
+      },
+      "required": [
+        "actorId",
+        "removed",
+        "slot",
+        "version"
+      ]
+    },
+    "ActorItemSlotDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "accepts": "string[]",
+        "duplicatePolicy": "'allow' | 'rejectSource'",
+        "id": "string"
+      },
+      "required": [
+        "accepts",
+        "duplicatePolicy",
+        "id"
+      ]
+    },
+    "ActorItemSlotOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "slot": "string"
+      },
+      "required": [
+        "slot"
+      ]
+    },
+    "ActorMutationResult": {
+      "additionalProperties": false,
+      "fields": {
+        "actor_id": "string",
+        "version": "number"
+      },
+      "required": [
+        "actor_id",
+        "version"
+      ]
+    },
+    "ActorUpdateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "folderId": "string",
+        "name": "string",
+        "portraitAssetId": "string",
+        "tokenAssetId": "string"
+      },
+      "required": []
+    },
+    "ApplicationDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "close": "(context: ApplicationContext) => void",
+        "parts": "ApplicationParts",
+        "rendered": "(root: HTMLElement, context: ApplicationContext, parts: string[]) => void"
+      },
+      "required": [
+        "parts"
+      ]
+    },
+    "ApplicationInstance": {
+      "additionalProperties": false,
+      "fields": {
+        "close": "() => void",
+        "root": "HTMLElement",
+        "update": "(next: ApplicationContext, parts?: string[]) => Promise<ApplicationInstance | null>"
+      },
+      "required": [
+        "close",
+        "root",
+        "update"
+      ]
+    },
+    "ApplicationRenderOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "parts": "string[]"
+      },
+      "required": []
+    },
+    "AssetCancelResult": {
+      "additionalProperties": false,
+      "fields": {
+        "assetId": "string",
+        "operation": "AssetOperationDTO"
+      },
+      "required": [
+        "assetId",
+        "operation"
+      ]
+    },
+    "AssetDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "byte_size": "number",
+        "campaign_id": "string",
+        "content_type": "string",
+        "created_at": "number",
+        "filename": "string",
+        "folder_id": "string | null",
+        "height": "number | null",
+        "id": "string",
+        "kind": "'image' | 'pdf' | 'audio'",
+        "owner_user_id": "string",
+        "src": "string",
+        "width": "number | null"
+      },
+      "required": [
+        "byte_size",
+        "campaign_id",
+        "content_type",
+        "created_at",
+        "filename",
+        "folder_id",
+        "height",
+        "id",
+        "kind",
+        "owner_user_id",
+        "src",
+        "width"
+      ]
+    },
+    "AssetIngestResult": {
+      "additionalProperties": false,
+      "fields": {
+        "asset": "AssetDTO",
+        "deduplicated": "boolean",
+        "operation": "AssetOperationDTO"
+      },
+      "required": [
+        "asset",
+        "deduplicated",
+        "operation"
+      ]
+    },
+    "AssetListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "campaignId": "string",
+        "kind": "'image' | 'pdf' | 'audio'"
+      },
+      "required": []
+    },
+    "AssetOperationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "cancelled": "boolean",
+        "progress": "'ready'",
+        "status": "'ready'"
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "AssetReferenceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "kind": "'library-asset' | 'package-asset'"
+      },
+      "required": [
+        "id",
+        "kind"
+      ]
+    },
+    "AudienceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "ids": "string[]",
+        "kind": "'self' | 'users' | 'campaign' | 'gm'"
+      },
+      "required": [
+        "ids",
+        "kind"
+      ]
+    },
+    "AudioAssetReferenceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "kind": "'library-asset' | 'package-asset'"
+      },
+      "required": [
+        "id",
+        "kind"
+      ]
+    },
+    "AudioListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "sceneId": "string"
+      },
+      "required": []
+    },
+    "AudioMutationOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number",
+        "fade": "FadeDTO"
+      },
+      "required": []
+    },
+    "AudioPlayInput": {
+      "additionalProperties": false,
+      "fields": {
+        "asset": "AudioAssetReferenceDTO",
+        "audience": "AudienceDTO",
+        "channel": "'music' | 'ambience' | 'sfx' | 'cinematic'",
+        "fade": "FadeDTO",
+        "gain": "number",
+        "idempotencyKey": "string",
+        "loop": "boolean",
+        "sceneId": "string",
+        "worldAnchor": "SemanticAnchorDTO"
+      },
+      "required": [
+        "asset"
+      ]
+    },
+    "AudioPlaybackDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "asset": "AudioAssetReferenceDTO",
+        "audience": "AudienceDTO",
+        "channel": "'music' | 'ambience' | 'sfx' | 'cinematic'",
+        "expiresAt": "number | null",
+        "fade": "FadeDTO | null",
+        "gain": "number",
+        "id": "string",
+        "loop": "boolean",
+        "ownerPackageId": "string",
+        "sceneId": "string | null",
+        "startedAt": "number",
+        "state": "'pending-user-unlock' | 'playing' | 'paused' | 'stopped' | 'failed'",
+        "version": "number",
+        "worldAnchor": "SemanticAnchorDTO | null"
+      },
+      "required": [
+        "asset",
+        "audience",
+        "channel",
+        "expiresAt",
+        "fade",
+        "gain",
+        "id",
+        "loop",
+        "ownerPackageId",
+        "sceneId",
+        "startedAt",
+        "state",
+        "version",
+        "worldAnchor"
+      ]
+    },
+    "AudioPlaybackPatch": {
+      "additionalProperties": false,
+      "fields": {
+        "fade": "FadeDTO",
+        "gain": "number",
+        "loop": "boolean",
+        "state": "'playing' | 'paused'"
+      },
+      "required": []
+    },
+    "AutomationAuditDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actionRef": "string",
+        "attempt": "number",
+        "campaignId": "string",
+        "jobId": "string | null",
+        "packageId": "string",
+        "schemaVersion": "1",
+        "semanticReason": "string",
+        "timestamp": "number",
+        "transition": "string"
+      },
+      "required": [
+        "actionRef",
+        "attempt",
+        "campaignId",
+        "jobId",
+        "packageId",
+        "schemaVersion",
+        "timestamp",
+        "transition"
+      ]
+    },
+    "AutomationCancelResult": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "status": "'cancelled'"
+      },
+      "required": [
+        "id",
+        "status"
+      ]
+    },
+    "AutomationJobDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "action_id": "string",
+        "action_version": "number",
+        "attempts": "number",
+        "causal_depth": "number",
+        "created_at": "number",
+        "error_code": "string | null",
+        "id": "string",
+        "package_id": "string",
+        "run_at_utc": "number",
+        "status": "'pending' | 'running' | 'succeeded' | 'failed' | 'rejected' | 'cancelled'",
+        "updated_at": "number"
+      },
+      "required": [
+        "action_id",
+        "action_version",
+        "attempts",
+        "causal_depth",
+        "created_at",
+        "error_code",
+        "id",
+        "package_id",
+        "run_at_utc",
+        "status",
+        "updated_at"
+      ]
+    },
+    "AutomationScheduleOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "causalDepth": "number",
+        "idempotencyKey": "string",
+        "originExecutionId": "string",
+        "originJobId": "string",
+        "runAtUtc": "number",
+        "version": "number"
+      },
+      "required": [
+        "idempotencyKey",
+        "runAtUtc",
+        "version"
+      ]
+    },
+    "BlendModeParameterSchemaDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "default": "'normal'",
+        "options": "('normal' | 'add' | 'multiply' | 'screen')[]",
+        "type": "'enum'"
+      },
+      "required": [
+        "default",
+        "options",
+        "type"
+      ]
+    },
+    "BooleanParameterSchemaDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "default": "boolean",
+        "type": "'boolean'"
+      },
+      "required": [
+        "default",
+        "type"
+      ]
+    },
+    "BusRequestOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "timeout": "number",
+        "timeoutMs": "number"
+      },
+      "required": []
+    },
+    "CameraDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "worldX": "number",
+        "worldY": "number",
+        "zoom": "number"
+      },
+      "required": [
+        "worldX",
+        "worldY",
+        "zoom"
+      ]
+    },
+    "CampaignMemberDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "name": "string",
+        "role": "string",
+        "userId": "string"
+      },
+      "required": [
+        "name",
+        "role",
+        "userId"
+      ]
+    },
+    "CardDeckMutationResult": {
+      "additionalProperties": false,
+      "fields": {
+        "deck_instance_id": "string",
+        "draw_count": "number"
+      },
+      "required": [
+        "deck_instance_id"
+      ]
+    },
+    "CardDefinitionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "cards": "DeclaredCardDTO[]",
+        "description": "string",
+        "id": "string",
+        "label": "string",
+        "metadataSchema": "CardMetadataSchema",
+        "packageId": "string",
+        "reference": "string",
+        "tags": "string[]",
+        "version": "number"
+      },
+      "required": [
+        "cards",
+        "description",
+        "id",
+        "label",
+        "metadataSchema",
+        "packageId",
+        "reference",
+        "tags",
+        "version"
+      ]
+    },
+    "CardDefinitionInstantiateOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "artwork": "CardArtworkMap",
+        "metadata": "CardMetadata",
+        "name": "string",
+        "version": "number"
+      },
+      "required": [
+        "artwork"
+      ]
+    },
+    "CardDefinitionInstantiateResult": {
+      "additionalProperties": false,
+      "fields": {
+        "deck": "DeckRuntimeDTO",
+        "definition": "CardDefinitionDTO",
+        "provenance": "CardProvenanceDTO"
+      },
+      "required": [
+        "deck",
+        "definition",
+        "provenance"
+      ]
+    },
+    "CardDrawOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "count": "number",
+        "destination": "'hand' | 'pile' | 'chat' | 'scene' | 'discard' | 'removed'",
+        "mode": "'top' | 'bottom' | 'random' | 'choose'",
+        "reveal": "boolean",
+        "targetPileId": "string"
+      },
+      "required": []
+    },
+    "CardDrawResult": {
+      "additionalProperties": false,
+      "fields": {
+        "cards": "CardRuntimeDTO[]",
+        "event": "CardEventDTO",
+        "target_pile_id": "string"
+      },
+      "required": [
+        "cards",
+        "event",
+        "target_pile_id"
+      ]
+    },
+    "CardEventDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign_id": "string",
+        "created_at": "number",
+        "event_type": "string",
+        "id": "string"
+      },
+      "required": [
+        "campaign_id",
+        "created_at",
+        "event_type",
+        "id"
+      ]
+    },
+    "CardIdsResult": {
+      "additionalProperties": false,
+      "fields": {
+        "card_ids": "string[]"
+      },
+      "required": [
+        "card_ids"
+      ]
+    },
+    "CardPileDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign_id": "string",
+        "deck_instance_id": "string",
+        "id": "string",
+        "kind": "string",
+        "owner_user_id": "string | null",
+        "visibility": "string"
+      },
+      "required": [
+        "campaign_id",
+        "deck_instance_id",
+        "id",
+        "kind",
+        "owner_user_id",
+        "visibility"
+      ]
+    },
+    "CardPlacementDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign_id": "string",
+        "card_instance_id": "string",
+        "face_state": "'face_up' | 'face_down'",
+        "id": "string",
+        "locked": "boolean",
+        "owner_user_id": "string | null",
+        "rotation": "number",
+        "scale": "number",
+        "scene_id": "string",
+        "visibility": "string",
+        "x": "number",
+        "y": "number",
+        "z_index": "number"
+      },
+      "required": [
+        "campaign_id",
+        "card_instance_id",
+        "face_state",
+        "id",
+        "locked",
+        "owner_user_id",
+        "rotation",
+        "scale",
+        "scene_id",
+        "visibility",
+        "x",
+        "y",
+        "z_index"
+      ]
+    },
+    "CardPlacementDiscardResult": {
+      "additionalProperties": false,
+      "fields": {
+        "card_ids": "string[]",
+        "event": "CardEventDTO"
+      },
+      "required": [
+        "card_ids",
+        "event"
+      ]
+    },
+    "CardPlacementPatch": {
+      "additionalProperties": false,
+      "fields": {
+        "faceState": "'face_up' | 'face_down'",
+        "rotation": "number",
+        "scale": "number",
+        "x": "number",
+        "y": "number",
+        "zIndex": "number"
+      },
+      "required": []
+    },
+    "CardPlacementResult": {
+      "additionalProperties": false,
+      "fields": {
+        "event": "CardEventDTO",
+        "placement": "CardPlacementDTO"
+      },
+      "required": [
+        "event",
+        "placement"
+      ]
+    },
+    "CardPlayOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "faceUp": "boolean",
+        "rotation": "number",
+        "scale": "number",
+        "sceneId": "string",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "CardPlayResult": {
+      "additionalProperties": false,
+      "fields": {
+        "card": "CardRuntimeDTO | null",
+        "event": "CardEventDTO",
+        "placement": "CardPlacementDTO"
+      },
+      "required": [
+        "card",
+        "event",
+        "placement"
+      ]
+    },
+    "CardProvenanceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "definition": "string",
+        "definitionVersion": "number",
+        "instanceMetadata": "CardMetadata",
+        "packageId": "string"
+      },
+      "required": [
+        "definition",
+        "definitionVersion",
+        "instanceMetadata",
+        "packageId"
+      ]
+    },
+    "CardResetOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "shuffle": "boolean"
+      },
+      "required": []
+    },
+    "CardStateDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign_id": "string",
+        "cards": "CardRuntimeDTO[]",
+        "decks": "DeckRuntimeDTO[]",
+        "piles": "CardPileDTO[]",
+        "scene_placements": "CardPlacementDTO[]"
+      },
+      "required": [
+        "campaign_id",
+        "cards",
+        "decks",
+        "piles",
+        "scene_placements"
+      ]
+    },
+    "ChangedResourceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "type": "'actor'",
+        "version": "number"
+      },
+      "required": [
+        "id",
+        "type",
+        "version"
+      ]
+    },
+    "ChatListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "limit": "number"
+      },
+      "required": []
+    },
+    "ChatMessageDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "author_name": "string",
+        "author_role": "string",
+        "author_user_id": "string",
+        "campaign_id": "string",
+        "content": "string",
+        "created_at": "number",
+        "expression": "string | null",
+        "groups": "RollGroupDTO[] | null",
+        "id": "string",
+        "kind": "string",
+        "metadata": "ChatMetadata",
+        "modifier": "number | null",
+        "total": "number | null",
+        "visibility": "string"
+      },
+      "required": [
+        "author_name",
+        "author_role",
+        "author_user_id",
+        "campaign_id",
+        "content",
+        "created_at",
+        "expression",
+        "groups",
+        "id",
+        "kind",
+        "metadata",
+        "modifier",
+        "total",
+        "visibility"
+      ]
+    },
+    "ChatSendMessage": {
+      "additionalProperties": false,
+      "fields": {
+        "content": "string",
+        "kind": "string",
+        "visibility": "string"
+      },
+      "required": [
+        "content"
+      ]
+    },
+    "ColorParameterSchemaDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "default": "string",
+        "pattern": "'^#[0-9a-fA-F]{6}$'",
+        "type": "'color'"
+      },
+      "required": [
+        "default",
+        "pattern",
+        "type"
+      ]
+    },
+    "CombatAddInput": {
+      "additionalProperties": false,
+      "fields": {
+        "actorIds": "string[]",
+        "tokenIds": "string[]"
+      },
+      "required": []
+    },
+    "CombatBarDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "max": "number",
+        "percent": "number | null",
+        "value": "number",
+        "visibility": "string"
+      },
+      "required": [
+        "max",
+        "percent",
+        "value",
+        "visibility"
+      ]
+    },
+    "CombatConfigDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "accent": "string",
+        "icon": "string",
+        "input": "'roll' | 'number' | 'text'",
+        "label": "string",
+        "manual_order": "boolean",
+        "resources": "RulesetCombatResources",
+        "sort": "'desc' | 'asc'",
+        "system_id": "string"
+      },
+      "required": [
+        "accent",
+        "icon",
+        "input",
+        "label",
+        "manual_order",
+        "resources",
+        "sort",
+        "system_id"
+      ]
+    },
+    "CombatFlagsPatch": {
+      "additionalProperties": false,
+      "fields": {
+        "defeated": "boolean",
+        "hidden": "boolean"
+      },
+      "required": []
+    },
+    "CombatInitiativeOrderEntry": {
+      "additionalProperties": false,
+      "fields": {
+        "combatantId": "string",
+        "value": "string"
+      },
+      "required": [
+        "combatantId"
+      ]
+    },
+    "CombatRollInitiativeOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "combatantId": "string",
+        "scope": "'all' | 'one'"
+      },
+      "required": []
+    },
+    "CombatStartInput": {
+      "additionalProperties": false,
+      "fields": {
+        "sceneId": "string"
+      },
+      "required": []
+    },
+    "CombatStateDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "active": "boolean",
+        "campaign_id": "string",
+        "combat_id": "string",
+        "combatants": "CombatantDTO[]",
+        "config": "CombatConfigDTO",
+        "current_id": "string",
+        "current_name": "string",
+        "effect_ticks": "RulesetEffectMutation[]",
+        "expired_effects": "RulesetEffectMutation[]",
+        "next_id": "string",
+        "next_name": "string",
+        "round": "number",
+        "turn": "number",
+        "updated_actors": "RulesetEffectMutation[]"
+      },
+      "required": [
+        "active",
+        "campaign_id",
+        "combat_id",
+        "combatants",
+        "config",
+        "current_id",
+        "current_name",
+        "effect_ticks",
+        "expired_effects",
+        "next_id",
+        "next_name",
+        "round",
+        "turn",
+        "updated_actors"
+      ]
+    },
+    "CombatantDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actor_id": "string",
+        "bar": "CombatBarDTO | null",
+        "can_move_down": "boolean",
+        "can_move_up": "boolean",
+        "conditions_count": "number",
+        "defeated": "boolean",
+        "effects_count": "number",
+        "has_acted": "boolean",
+        "hidden": "boolean",
+        "id": "string",
+        "initiative": "string | null",
+        "is_current": "boolean",
+        "is_next": "boolean",
+        "name": "string",
+        "portrait_url": "string",
+        "position": "number",
+        "token_id": "string"
+      },
+      "required": [
+        "actor_id",
+        "bar",
+        "can_move_down",
+        "can_move_up",
+        "conditions_count",
+        "defeated",
+        "effects_count",
+        "has_acted",
+        "hidden",
+        "id",
+        "initiative",
+        "is_current",
+        "is_next",
+        "name",
+        "portrait_url",
+        "position",
+        "token_id"
+      ]
+    },
+    "ContentLinkDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "icon": "string",
+        "label": "string",
+        "ref": "string",
+        "type": "'grave-reference'"
+      },
+      "required": [
+        "icon",
+        "label",
+        "ref",
+        "type"
+      ]
+    },
+    "ContentLinkOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "icon": "string",
+        "label": "string"
+      },
+      "required": []
+    },
+    "ContentOpenOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "source": "string"
+      },
+      "required": []
+    },
+    "ContentPackDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "entries": "ContentPackEntryDTO[]",
+        "id": "string",
+        "label": "string",
+        "type": "string"
+      },
+      "required": [
+        "entries",
+        "id",
+        "label",
+        "type"
+      ]
+    },
+    "ContentPackEntryDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "data": "ContentPackEntryData",
+        "id": "string",
+        "label": "string",
+        "name": "string"
+      },
+      "required": [
+        "data",
+        "id"
+      ]
+    },
+    "ContentPackSummaryDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "label": "string",
+        "type": "string"
+      },
+      "required": [
+        "id",
+        "label",
+        "type"
+      ]
+    },
+    "ContentRefOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "anchor": "string",
+        "campaignId": "string",
+        "page": "number",
+        "parentId": "string",
+        "parentKind": "string"
+      },
+      "required": []
+    },
+    "ContentReferenceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "anchor": "string | null",
+        "campaignId": "string",
+        "id": "string",
+        "kind": "'actor' | 'item' | 'journal' | 'pdf' | 'deck' | 'card' | 'scene' | 'token'",
+        "page": "number | null",
+        "parentId": "string | null",
+        "parentKind": "string | null",
+        "uri": "string"
+      },
+      "required": [
+        "anchor",
+        "campaignId",
+        "id",
+        "kind",
+        "page",
+        "parentId",
+        "parentKind",
+        "uri"
+      ]
+    },
+    "ContentReferenceInput": {
+      "additionalProperties": false,
+      "fields": {
+        "anchor": "string",
+        "campaignId": "string",
+        "documentId": "string",
+        "id": "string",
+        "kind": "ContentReferenceDTO['kind']",
+        "page": "number",
+        "parentId": "string",
+        "parentKind": "string"
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "ContentResolutionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "ref": "ContentReferenceDTO",
+        "value": "ContentResolvedValue"
+      },
+      "required": [
+        "ref",
+        "value"
+      ]
+    },
+    "ContentSearchEntryDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "kind": "ContentReferenceDTO['kind']",
+        "label": "string",
+        "ref": "ContentReferenceDTO"
+      },
+      "required": [
+        "kind",
+        "label",
+        "ref"
+      ]
+    },
+    "ContentSearchOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "cursor": "string",
+        "kinds": "ContentReferenceDTO['kind'][]",
+        "limit": "number"
+      },
+      "required": []
+    },
+    "ContentSearchPageDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "entries": "ContentSearchEntryDTO[]",
+        "nextCursor": "string | null"
+      },
+      "required": [
+        "entries",
+        "nextCursor"
+      ]
+    },
+    "CustomShaderDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "definition": "CustomShaderValues",
+        "format": "'gravewright-custom-shader'",
+        "version": "1"
+      },
+      "required": [
+        "definition",
+        "format",
+        "version"
+      ]
+    },
+    "CustomShaderPreviewResult": {
+      "additionalProperties": false,
+      "fields": {
+        "active": "boolean"
+      },
+      "required": [
+        "active"
+      ]
+    },
+    "CustomShaderProviderDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "description": "string",
+        "id": "string",
+        "label": "string",
+        "open": "(context: SdkContextDTO) => void | Promise<void>"
+      },
+      "required": [
+        "id",
+        "label",
+        "open"
+      ]
+    },
+    "CustomShaderUseResult": {
+      "additionalProperties": false,
+      "fields": {
+        "accepted": "true"
+      },
+      "required": [
+        "accepted"
+      ]
+    },
+    "CustomShaderValues": {
+      "additionalProperties": false,
+      "fields": {
+        "blend_mode": "'normal' | 'add' | 'multiply' | 'screen'",
+        "color": "string",
+        "enabled": "boolean",
+        "intensity": "number",
+        "opacity": "number",
+        "radius": "number",
+        "rotation": "number",
+        "scale": "number",
+        "source": "string",
+        "speed": "number"
+      },
+      "required": [
+        "blend_mode",
+        "color",
+        "enabled",
+        "intensity",
+        "opacity",
+        "radius",
+        "rotation",
+        "scale",
+        "source",
+        "speed"
+      ]
+    },
+    "DeclaredCardArtworkDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "kind": "'campaign-asset-slot'"
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "DeclaredCardDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "artwork": "DeclaredCardArtworkDTO",
+        "id": "string",
+        "label": "string",
+        "metadata": "CardMetadata",
+        "quantity": "number",
+        "tags": "string[]"
+      },
+      "required": [
+        "artwork",
+        "id",
+        "label",
+        "metadata",
+        "quantity",
+        "tags"
+      ]
+    },
+    "DiceRollInput": {
+      "additionalProperties": false,
+      "fields": {
+        "actorId": "string",
+        "formula": "string",
+        "label": "string"
+      },
+      "required": [
+        "formula"
+      ]
+    },
+    "DragSourceDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "operations": "string[]",
+        "referenceKinds": "string[]",
+        "schemaVersion": "1"
+      },
+      "required": [
+        "id",
+        "operations",
+        "referenceKinds",
+        "schemaVersion"
+      ]
+    },
+    "DropTargetDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "actionReference": "string",
+        "id": "string",
+        "operations": "string[]",
+        "schemaVersion": "1",
+        "surface": "string",
+        "targetKinds": "DropTargetKind[]",
+        "worldObjectTypeId": "string"
+      },
+      "required": [
+        "actionReference",
+        "id",
+        "operations",
+        "schemaVersion",
+        "surface",
+        "targetKinds"
+      ]
+    },
+    "DropTargetResource": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "sceneId": "string",
+        "typeId": "string"
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "EffectStateDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "particles": "ParticleDTO[]",
+        "shaders": "ShaderMetadataDTO[]"
+      },
+      "required": [
+        "particles",
+        "shaders"
+      ]
+    },
+    "EntityListQuery": {
+      "additionalProperties": false,
+      "fields": {
+        "cursor": "string",
+        "folderId": "string",
+        "limit": "number",
+        "type": "string"
+      },
+      "required": []
+    },
+    "ExpectedVersionOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number"
+      },
+      "required": []
+    },
+    "FadeDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "curve": "'linear' | 'ease-in' | 'ease-out'",
+        "durationMs": "number"
+      },
+      "required": [
+        "curve",
+        "durationMs"
+      ]
+    },
+    "FogMutationResult": {
+      "additionalProperties": false,
+      "fields": {
+        "baseline": "'hide_all' | 'reveal_all'",
+        "enabled": "boolean",
+        "new_ops": "FogOp[]",
+        "ops": "FogOp[]",
+        "scene_id": "string",
+        "version": "number"
+      },
+      "required": [
+        "baseline",
+        "enabled",
+        "new_ops",
+        "ops",
+        "scene_id",
+        "version"
+      ]
+    },
+    "FogPaintOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number"
+      },
+      "required": []
+    },
+    "FogStateDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "baseline": "'hide_all' | 'reveal_all'",
+        "enabled": "boolean",
+        "ops": "FogOp[]",
+        "scene_id": "string",
+        "version": "number"
+      },
+      "required": [
+        "baseline",
+        "enabled",
+        "ops",
+        "scene_id",
+        "version"
+      ]
+    },
+    "GameplayFlowDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "activeParticipants": "string[]",
+        "campaignId": "string",
+        "cycle": "number",
+        "definitionId": "string",
+        "id": "string",
+        "participants": "string[]",
+        "phaseId": "string | null",
+        "providerPackageId": "string",
+        "revealed": "boolean",
+        "round": "number",
+        "sceneId": "string | null",
+        "status": "'ACTIVE' | 'COMPLETED' | 'CANCELLED'",
+        "submissions": "GameplaySubmissions",
+        "version": "number"
+      },
+      "required": [
+        "activeParticipants",
+        "campaignId",
+        "cycle",
+        "definitionId",
+        "id",
+        "participants",
+        "phaseId",
+        "providerPackageId",
+        "revealed",
+        "round",
+        "sceneId",
+        "status",
+        "submissions",
+        "version"
+      ]
+    },
+    "GameplayFlowDefinitionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "packageId": "string",
+        "phases": "GameplayPhaseDTO[]",
+        "schemaVersion": "1",
+        "turnModel": "GameplayTurnModel"
+      },
+      "required": [
+        "id",
+        "phases",
+        "schemaVersion",
+        "turnModel"
+      ]
+    },
+    "GameplayFlowMutationOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number"
+      },
+      "required": []
+    },
+    "GameplayFlowStartInput": {
+      "additionalProperties": false,
+      "fields": {
+        "definitionId": "string",
+        "idempotencyKey": "string",
+        "participants": "string[]",
+        "sceneId": "string"
+      },
+      "required": [
+        "definitionId",
+        "idempotencyKey",
+        "participants"
+      ]
+    },
+    "GameplayPhaseDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "deadlineSeconds": "number",
+        "id": "string",
+        "label": "string",
+        "submissionPolicy": "'all'"
+      },
+      "required": [
+        "id",
+        "label",
+        "submissionPolicy"
+      ]
+    },
+    "GeometryBehaviorDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "light": "'block' | 'pass'",
+        "movement": "'block' | 'pass'",
+        "vision": "'block' | 'pass'"
+      },
+      "required": [
+        "light",
+        "movement",
+        "vision"
+      ]
+    },
+    "HandoutAudience": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "type": "'all' | 'user' | 'role'"
+      },
+      "required": []
+    },
+    "HandoutPresentResult": {
+      "additionalProperties": false,
+      "fields": {
+        "presented": "true"
+      },
+      "required": [
+        "presented"
+      ]
+    },
+    "InputBindingDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "binding": "string",
+        "command_id": "string",
+        "package_id": "string",
+        "user_id": "string",
+        "version": "number"
+      },
+      "required": [
+        "binding",
+        "command_id",
+        "package_id",
+        "user_id",
+        "version"
+      ]
+    },
+    "InputBindingOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number"
+      },
+      "required": []
+    },
+    "InputCommandDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actionInput": "ActionInput",
+        "contexts": "string[]",
+        "id": "string",
+        "label": "string",
+        "packageId": "string",
+        "registeredAction": "string"
+      },
+      "required": [
+        "contexts",
+        "id",
+        "label",
+        "packageId"
+      ]
+    },
+    "InputCommandDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "actionInput": "ActionInput",
+        "contexts": "string[]",
+        "defaultBindings": "string[]",
+        "description": "string",
+        "id": "string",
+        "label": "string",
+        "registeredAction": "string"
+      },
+      "required": [
+        "contexts",
+        "id",
+        "label"
+      ]
+    },
+    "InputCommandInvocationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "binding": "string | null",
+        "commandId": "string",
+        "context": "string",
+        "packageId": "string",
+        "source": "'binding' | 'gesture'"
+      },
+      "required": [
+        "binding",
+        "commandId",
+        "context",
+        "packageId",
+        "source"
+      ]
+    },
+    "InputGestureDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "commandId": "string",
+        "gesture": "'tap' | 'double-tap' | 'long-press' | 'drag' | 'pan' | 'cancel'",
+        "id": "string"
+      },
+      "required": [
+        "commandId",
+        "gesture",
+        "id"
+      ]
+    },
+    "InteractionChoiceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "label": "string"
+      },
+      "required": [
+        "id",
+        "label"
+      ]
+    },
+    "InteractionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "createdAt": "number",
+        "deadline": "number",
+        "expiresAt": "number",
+        "id": "string",
+        "kind": "string",
+        "origin": "InteractionOriginDTO",
+        "packageProvenance": "PackageProvenanceDTO",
+        "prompt": "InteractionPromptDTO",
+        "recipients": "string[]",
+        "requester": "string",
+        "responseSchema": "InteractionResponseSchema",
+        "responses": "{ [userId: string]: InteractionResponseDTO }",
+        "schemaVersion": "1",
+        "status": "'open' | 'completed' | 'expired' | 'cancelled'",
+        "version": "number",
+        "visibility": "'requester' | 'participants' | 'public-after-close'"
+      },
+      "required": [
+        "createdAt",
+        "deadline",
+        "expiresAt",
+        "id",
+        "kind",
+        "origin",
+        "packageProvenance",
+        "prompt",
+        "recipients",
+        "requester",
+        "responseSchema",
+        "responses",
+        "schemaVersion",
+        "status",
+        "version",
+        "visibility"
+      ]
+    },
+    "InteractionListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "recipient": "'me'",
+        "status": "'open' | 'completed' | 'expired' | 'cancelled'"
+      },
+      "required": []
+    },
+    "InteractionMutationOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number",
+        "idempotencyKey": "string"
+      },
+      "required": []
+    },
+    "InteractionOriginDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "causalDepth": "number",
+        "originExecutionId": "string",
+        "originJobId": "string",
+        "resourceRef": "string"
+      },
+      "required": []
+    },
+    "InteractionPromptDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "text": "string",
+        "title": "string"
+      },
+      "required": [
+        "text",
+        "title"
+      ]
+    },
+    "InteractionRequestInput": {
+      "additionalProperties": false,
+      "fields": {
+        "deadline": "number",
+        "kind": "string",
+        "origin": "InteractionOriginDTO",
+        "recipients": "string[]",
+        "responsePolicy": "'immutable' | 'replace'",
+        "responseSchema": "InteractionResponseSchema",
+        "text": "string",
+        "title": "string",
+        "visibility": "'requester' | 'participants' | 'public-after-close'"
+      },
+      "required": [
+        "deadline",
+        "recipients",
+        "responseSchema",
+        "text",
+        "title"
+      ]
+    },
+    "InteractionResponseDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "idempotencyKey": "string",
+        "respondedAt": "number",
+        "value": "InteractionResponseValue"
+      },
+      "required": [
+        "idempotencyKey",
+        "respondedAt",
+        "value"
+      ]
+    },
+    "InteractionResponseSchema": {
+      "additionalProperties": false,
+      "fields": {
+        "choices": "InteractionChoiceDTO[]",
+        "maxLength": "number",
+        "maxSelections": "number",
+        "maximum": "number",
+        "minimum": "number",
+        "type": "'boolean' | 'single-choice' | 'multi-choice' | 'number' | 'string'"
+      },
+      "required": [
+        "type"
+      ]
+    },
+    "InteropProviderContext": {
+      "additionalProperties": false,
+      "fields": {
+        "callerPackageId": "string",
+        "campaignId": "string | undefined",
+        "permissions": "PermissionContext | null",
+        "providerPackageId": "string",
+        "userId": "string | undefined"
+      },
+      "required": [
+        "callerPackageId",
+        "campaignId",
+        "permissions",
+        "providerPackageId",
+        "userId"
+      ]
+    },
+    "ItemCreateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "folderId": "string",
+        "name": "string",
+        "systemId": "string",
+        "type": "string"
+      },
+      "required": [
+        "name",
+        "systemId",
+        "type"
+      ]
+    },
+    "ItemDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign_id": "string",
+        "created_at": "number",
+        "folder_id": "string | null",
+        "id": "string",
+        "name": "string",
+        "portrait_asset_id": "string | null",
+        "system_id": "string",
+        "type": "string",
+        "updated_at": "number",
+        "version": "number"
+      },
+      "required": [
+        "campaign_id",
+        "created_at",
+        "folder_id",
+        "id",
+        "name",
+        "portrait_asset_id",
+        "system_id",
+        "type",
+        "updated_at",
+        "version"
+      ]
+    },
+    "ItemDataPatchResult": {
+      "additionalProperties": false,
+      "fields": {
+        "changed_paths": "string[]",
+        "item_id": "string",
+        "version": "number"
+      },
+      "required": [
+        "changed_paths",
+        "item_id",
+        "version"
+      ]
+    },
+    "ItemMutationResult": {
+      "additionalProperties": false,
+      "fields": {
+        "item_id": "string",
+        "version": "number"
+      },
+      "required": [
+        "item_id",
+        "version"
+      ]
+    },
+    "ItemUpdateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "folderId": "string",
+        "name": "string",
+        "portraitAssetId": "string"
+      },
+      "required": []
+    },
+    "JournalCreateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "contentMarkdown": "string",
+        "data": "JournalDataInput",
+        "folderId": "string",
+        "ownerUserIds": "string[]",
+        "title": "string",
+        "type": "string",
+        "visibility": "string"
+      },
+      "required": [
+        "title"
+      ]
+    },
+    "JournalDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "folder_id": "string | null",
+        "id": "string",
+        "title": "string",
+        "type": "string",
+        "version": "number",
+        "view": "JournalView",
+        "visibility": "string"
+      },
+      "required": [
+        "folder_id",
+        "id",
+        "title",
+        "type",
+        "version",
+        "view",
+        "visibility"
+      ]
+    },
+    "JournalListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "folderId": "string",
+        "limit": "number",
+        "type": "string"
+      },
+      "required": []
+    },
+    "JournalListResult": {
+      "additionalProperties": false,
+      "fields": {
+        "journals": "JournalDTO[]"
+      },
+      "required": [
+        "journals"
+      ]
+    },
+    "JournalMutationResult": {
+      "additionalProperties": false,
+      "fields": {
+        "journal_id": "string",
+        "version": "number | null"
+      },
+      "required": [
+        "journal_id",
+        "version"
+      ]
+    },
+    "JournalUpdatePatch": {
+      "additionalProperties": false,
+      "fields": {
+        "contentMarkdown": "string",
+        "data": "JournalDataInput",
+        "folderId": "string",
+        "ownerUserIds": "string[]",
+        "title": "string",
+        "visibility": "string"
+      },
+      "required": []
+    },
+    "LightCreateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "angle": "number",
+        "animation": "string",
+        "bright_radius": "number",
+        "color": "string",
+        "dim_radius": "number",
+        "elevation": "number",
+        "enabled": "boolean",
+        "intensity": "number",
+        "rotation": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "LightDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "angle": "number",
+        "animation": "string",
+        "bright_radius": "number",
+        "color": "string",
+        "dim_radius": "number",
+        "elevation": "number",
+        "enabled": "boolean",
+        "id": "string",
+        "intensity": "number",
+        "rotation": "number",
+        "scene_id": "string",
+        "updated_at": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "angle",
+        "animation",
+        "bright_radius",
+        "color",
+        "dim_radius",
+        "elevation",
+        "enabled",
+        "id",
+        "intensity",
+        "rotation",
+        "scene_id",
+        "updated_at",
+        "x",
+        "y"
+      ]
+    },
+    "LightDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "light_id": "string",
+        "scene_id": "string"
+      },
+      "required": [
+        "light_id",
+        "scene_id"
+      ]
+    },
+    "LightResult": {
+      "additionalProperties": false,
+      "fields": {
+        "light": "LightDTO"
+      },
+      "required": [
+        "light"
+      ]
+    },
+    "LightUpdatePatch": {
+      "additionalProperties": false,
+      "fields": {
+        "angle": "number",
+        "animation": "string",
+        "bright_radius": "number",
+        "color": "string",
+        "dim_radius": "number",
+        "elevation": "number",
+        "enabled": "boolean",
+        "intensity": "number",
+        "rotation": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "MeasurementResultDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "from": "WorldPointDTO",
+        "gridDistance": "number | null",
+        "gridSize": "number | null",
+        "sceneId": "string",
+        "to": "WorldPointDTO",
+        "worldDistance": "number"
+      },
+      "required": [
+        "from",
+        "gridDistance",
+        "gridSize",
+        "sceneId",
+        "to",
+        "worldDistance"
+      ]
+    },
+    "NumberParameterSchemaDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "default": "number",
+        "max": "number",
+        "min": "number",
+        "type": "'number'"
+      },
+      "required": [
+        "default",
+        "max",
+        "min",
+        "type"
+      ]
+    },
+    "PDFPresentationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "string[]",
+        "documentId": "string",
+        "expiresAt": "number",
+        "id": "string",
+        "page": "number",
+        "presenter": "string",
+        "status": "string",
+        "version": "number"
+      },
+      "required": [
+        "audience",
+        "documentId",
+        "expiresAt",
+        "id",
+        "page",
+        "presenter",
+        "status",
+        "version"
+      ]
+    },
+    "PackageDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "active": "true",
+        "id": "string",
+        "interop": "PackageInteropDTO",
+        "kind": "string",
+        "version": "string"
+      },
+      "required": [
+        "active",
+        "id",
+        "interop",
+        "kind",
+        "version"
+      ]
+    },
+    "PackageInteropDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "emits": "string[]",
+        "listens": "string[]",
+        "provides": "string[]",
+        "requires": "string[]"
+      },
+      "required": []
+    },
+    "PackageProvenanceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "packageId": "string",
+        "providerId": "string | null"
+      },
+      "required": [
+        "packageId",
+        "providerId"
+      ]
+    },
+    "ParticleDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "color": "string",
+        "density": "number",
+        "enabled": "boolean",
+        "id": "string",
+        "kind": "string",
+        "scale": "number",
+        "scene_id": "string",
+        "updated_at": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "color",
+        "density",
+        "enabled",
+        "id",
+        "kind",
+        "scale",
+        "scene_id",
+        "updated_at",
+        "x",
+        "y"
+      ]
+    },
+    "ParticleDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "emitter_id": "string",
+        "scene_id": "string"
+      },
+      "required": [
+        "emitter_id",
+        "scene_id"
+      ]
+    },
+    "ParticlePresetDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "label": "string",
+        "parameters": "ParticleParameterSchemas"
+      },
+      "required": [
+        "id",
+        "label",
+        "parameters"
+      ]
+    },
+    "ParticleResultDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "emitter": "ParticleDTO"
+      },
+      "required": [
+        "emitter"
+      ]
+    },
+    "ParticleValues": {
+      "additionalProperties": false,
+      "fields": {
+        "color": "string",
+        "density": "number",
+        "enabled": "boolean",
+        "kind": "string",
+        "scale": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "PdfAnnotationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "author_user_id": "string",
+        "created_at": "number",
+        "document_id": "string",
+        "id": "string",
+        "page": "number",
+        "region": "PdfRegionDTO",
+        "text": "string",
+        "updated_at": "number"
+      },
+      "required": [
+        "author_user_id",
+        "created_at",
+        "document_id",
+        "id",
+        "page",
+        "region",
+        "text",
+        "updated_at"
+      ]
+    },
+    "PdfAnnotationDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "annotation_id": "string"
+      },
+      "required": [
+        "annotation_id"
+      ]
+    },
+    "PdfAnnotationInput": {
+      "additionalProperties": false,
+      "fields": {
+        "page": "number",
+        "region": "PdfRegionDTO",
+        "text": "string"
+      },
+      "required": [
+        "page",
+        "region",
+        "text"
+      ]
+    },
+    "PdfAnnotationResult": {
+      "additionalProperties": false,
+      "fields": {
+        "annotation": "PdfAnnotationDTO"
+      },
+      "required": [
+        "annotation"
+      ]
+    },
+    "PdfDocumentDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "byte_size": "number",
+        "content_type": "'application/pdf'",
+        "created_at": "number",
+        "filename": "string",
+        "id": "string",
+        "url": "string"
+      },
+      "required": [
+        "byte_size",
+        "content_type",
+        "created_at",
+        "filename",
+        "id",
+        "url"
+      ]
+    },
+    "PdfMetadataDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "byte_size": "number",
+        "content_type": "'application/pdf'",
+        "created_at": "number",
+        "filename": "string",
+        "id": "string"
+      },
+      "required": [
+        "byte_size",
+        "content_type",
+        "created_at",
+        "filename",
+        "id"
+      ]
+    },
+    "PdfPresentationStartInput": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "string[]",
+        "page": "number",
+        "ttlSeconds": "number"
+      },
+      "required": [
+        "audience",
+        "page"
+      ]
+    },
+    "PdfRegionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "height": "number",
+        "width": "number",
+        "x": "number",
+        "x1": "number",
+        "x2": "number",
+        "y": "number",
+        "y1": "number",
+        "y2": "number"
+      },
+      "required": []
+    },
+    "PdfViewerOpenOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "anchor": "string",
+        "assetUrl": "string",
+        "host": "HTMLElement",
+        "onPageChange": "(page: number) => void",
+        "page": "number",
+        "spread": "boolean",
+        "zoom": "number"
+      },
+      "required": []
+    },
+    "PermissionCheckDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "action": "string",
+        "allowed": "boolean",
+        "reason": "'ALLOWED' | 'DENIED' | 'UNKNOWN_ACTION'",
+        "supported": "boolean"
+      },
+      "required": [
+        "action",
+        "allowed",
+        "reason",
+        "supported"
+      ]
+    },
+    "PermissionResource": {
+      "additionalProperties": false,
+      "fields": {
+        "actorId": "string",
+        "id": "string",
+        "itemId": "string",
+        "sceneId": "string",
+        "tokenId": "string"
+      },
+      "required": []
+    },
+    "PresentationAnchor": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "kind": "'token' | 'scene-object'",
+        "sceneId": "string"
+      },
+      "required": [
+        "id",
+        "kind"
+      ]
+    },
+    "PresentationAudience": {
+      "additionalProperties": false,
+      "fields": {
+        "ids": "string[]",
+        "kind": "'self' | 'campaign' | 'gm' | 'users'"
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "PresentationButton": {
+      "additionalProperties": false,
+      "fields": {
+        "actionReference": "string",
+        "id": "string",
+        "label": "string"
+      },
+      "required": [
+        "actionReference",
+        "id",
+        "label"
+      ]
+    },
+    "PresentationCloseResult": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "status": "'closed'"
+      },
+      "required": [
+        "id",
+        "status"
+      ]
+    },
+    "PresentationCompletionPolicy": {
+      "additionalProperties": false,
+      "fields": {
+        "policy": "'server-time' | 'all-connected-recipients'",
+        "timeoutMs": "number"
+      },
+      "required": [
+        "policy"
+      ]
+    },
+    "PresentationContent": {
+      "additionalProperties": false,
+      "fields": {
+        "asset": "AssetReferenceDTO",
+        "buttons": "PresentationButton[]",
+        "icon": "string",
+        "label": "string",
+        "preset": "string",
+        "progress": "number",
+        "subtitle": "string",
+        "text": "string",
+        "title": "string",
+        "value": "number"
+      },
+      "required": []
+    },
+    "PresentationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "anchor": "PresentationAnchor | null",
+        "audience": "PresentationAudience",
+        "campaignId": "string",
+        "completedAt": "number | null",
+        "completionPolicy": "PresentationCompletionPolicy",
+        "completionReason": "'server-time' | 'recipients' | 'timeout' | 'closed' | 'package-unload' | null",
+        "content": "PresentationContent",
+        "createdAt": "number",
+        "deadline": "number | null",
+        "endsAt": "number",
+        "expiresAt": "number",
+        "id": "string",
+        "mode": "'world-anchor' | 'screen-overlay' | 'title-card' | 'countdown' | 'fade'",
+        "ownerUserId": "string",
+        "packageId": "string",
+        "recipientSummary": "PresentationRecipientSummary",
+        "sceneId": "string | null",
+        "startedAt": "number",
+        "status": "'active' | 'completed' | 'closed' | 'cancelled'",
+        "updatedAt": "number",
+        "version": "number"
+      },
+      "required": [
+        "anchor",
+        "audience",
+        "campaignId",
+        "completedAt",
+        "completionPolicy",
+        "completionReason",
+        "content",
+        "createdAt",
+        "deadline",
+        "endsAt",
+        "expiresAt",
+        "id",
+        "mode",
+        "ownerUserId",
+        "packageId",
+        "recipientSummary",
+        "sceneId",
+        "startedAt",
+        "status",
+        "updatedAt",
+        "version"
+      ]
+    },
+    "PresentationInput": {
+      "additionalProperties": false,
+      "fields": {
+        "anchor": "PresentationAnchor",
+        "audience": "PresentationAudience",
+        "completion": "PresentationCompletionPolicy",
+        "content": "PresentationContent",
+        "deadline": "number",
+        "duration": "number",
+        "mode": "'world-anchor' | 'screen-overlay' | 'title-card' | 'countdown' | 'fade'",
+        "sceneId": "string"
+      },
+      "required": [
+        "content",
+        "mode"
+      ]
+    },
+    "PresentationListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "sceneId": "string"
+      },
+      "required": []
+    },
+    "PresentationPatch": {
+      "additionalProperties": false,
+      "fields": {
+        "anchor": "PresentationAnchor",
+        "content": "PresentationContent"
+      },
+      "required": []
+    },
+    "PresentationRecipientSummary": {
+      "additionalProperties": false,
+      "fields": {
+        "completed": "number",
+        "expected": "number"
+      },
+      "required": [
+        "completed",
+        "expected"
+      ]
+    },
+    "PresentationWaitOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "timeoutMs": "number"
+      },
+      "required": []
+    },
+    "RollGroupDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "faces": "number",
+        "results": "number[]",
+        "subtotal": "number"
+      },
+      "required": [
+        "faces",
+        "results",
+        "subtotal"
+      ]
+    },
+    "RollIntentInput": {
+      "additionalProperties": false,
+      "fields": {
+        "actionId": "string",
+        "actorId": "string",
+        "inputs": "ActionInput",
+        "rollOptions": "RollOptions",
+        "target": "RollTarget",
+        "targetActorId": "string",
+        "targetTokenId": "string"
+      },
+      "required": [
+        "actionId",
+        "actorId"
+      ]
+    },
+    "RollResultDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actor_id": "string",
+        "applied": "RollAppliedMutation[]",
+        "expression": "string",
+        "groups": "RollGroupDTO[]",
+        "label": "string",
+        "metadata": "RollMetadata",
+        "modifier": "number",
+        "total": "number",
+        "type": "string",
+        "visibility": "string"
+      },
+      "required": [
+        "actor_id",
+        "applied",
+        "expression",
+        "groups",
+        "label",
+        "metadata",
+        "modifier",
+        "total",
+        "type",
+        "visibility"
+      ]
+    },
+    "RollTarget": {
+      "additionalProperties": false,
+      "fields": {
+        "actorId": "string",
+        "tokenId": "string"
+      },
+      "required": []
+    },
+    "SceneDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign_id": "string",
+        "chunk_span": "number",
+        "darkness": "number",
+        "grid_color": "string",
+        "grid_opacity": "number",
+        "grid_size": "number",
+        "grid_visible": "boolean",
+        "height": "number",
+        "id": "string",
+        "name": "string",
+        "raster_tile_size": "number",
+        "scene_epoch": "number",
+        "start_world_x": "number",
+        "start_world_y": "number",
+        "start_zoom": "number",
+        "tile_table_version": "number",
+        "version": "number",
+        "width": "number"
+      },
+      "required": [
+        "campaign_id",
+        "chunk_span",
+        "darkness",
+        "grid_color",
+        "grid_opacity",
+        "grid_size",
+        "grid_visible",
+        "height",
+        "id",
+        "name",
+        "raster_tile_size",
+        "scene_epoch",
+        "start_world_x",
+        "start_world_y",
+        "start_zoom",
+        "tile_table_version",
+        "version",
+        "width"
+      ]
+    },
+    "SceneImageDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "asset_id": "string",
+        "campaign_id": "string",
+        "created_at": "number",
+        "gm_only": "boolean",
+        "id": "string",
+        "layer": "string",
+        "locked": "boolean",
+        "metadata": "SceneImageMetadata",
+        "natural_height": "number",
+        "natural_width": "number",
+        "owner_user_id": "string | null",
+        "rotation": "number",
+        "scale": "number",
+        "scene_id": "string",
+        "src": "string",
+        "updated_at": "number",
+        "version": "number",
+        "x": "number",
+        "y": "number",
+        "z_index": "number"
+      },
+      "required": [
+        "asset_id",
+        "campaign_id",
+        "created_at",
+        "gm_only",
+        "id",
+        "layer",
+        "locked",
+        "metadata",
+        "natural_height",
+        "natural_width",
+        "owner_user_id",
+        "rotation",
+        "scale",
+        "scene_id",
+        "src",
+        "updated_at",
+        "version",
+        "x",
+        "y",
+        "z_index"
+      ]
+    },
+    "SceneImageDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "placement_id": "string",
+        "scene_id": "string"
+      },
+      "required": [
+        "placement_id",
+        "scene_id"
+      ]
+    },
+    "SceneImageListResult": {
+      "additionalProperties": false,
+      "fields": {
+        "placements": "SceneImageDTO[]"
+      },
+      "required": [
+        "placements"
+      ]
+    },
+    "SceneImagePlaceOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "layer": "string",
+        "rotation": "number",
+        "scale": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "SceneImageResult": {
+      "additionalProperties": false,
+      "fields": {
+        "placement": "SceneImageDTO"
+      },
+      "required": [
+        "placement"
+      ]
+    },
+    "SceneImageUpdatePatch": {
+      "additionalProperties": false,
+      "fields": {
+        "assetId": "string",
+        "layer": "string",
+        "rotation": "number",
+        "scale": "number",
+        "x": "number",
+        "y": "number",
+        "zIndex": "number"
+      },
+      "required": []
+    },
+    "SceneNavigationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "recipientIds": "string[]",
+        "sceneId": "string",
+        "states": "SceneNavigationStateDTO[]"
+      },
+      "required": [
+        "recipientIds",
+        "sceneId",
+        "states"
+      ]
+    },
+    "SceneNavigationInput": {
+      "additionalProperties": false,
+      "fields": {
+        "idempotencyKey": "string",
+        "reason": "string",
+        "recipients": "AudienceDTO",
+        "sceneId": "string"
+      },
+      "required": [
+        "sceneId"
+      ]
+    },
+    "SceneNavigationRecipients": {
+      "additionalProperties": false,
+      "fields": {
+        "ids": "string[]",
+        "kind": "'self' | 'users' | 'gm' | 'campaign'"
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "SceneNavigationStateDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaignId": "string",
+        "reason": "string",
+        "sceneId": "string",
+        "updatedAt": "number",
+        "userId": "string",
+        "version": "number"
+      },
+      "required": [
+        "campaignId",
+        "reason",
+        "sceneId",
+        "updatedAt",
+        "userId",
+        "version"
+      ]
+    },
+    "SceneObjectAudience": {
+      "additionalProperties": false,
+      "fields": {
+        "ids": "string[]",
+        "kind": "'campaign' | 'gm' | 'users'"
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "SceneObjectDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "SceneObjectAudience",
+        "createdAt": "number",
+        "data": "JsonObject",
+        "dataSchema": "ActionInputSchema",
+        "editor": "JsonObject",
+        "enabled": "boolean",
+        "geometry": "SceneObjectGeometry",
+        "id": "string",
+        "interactions": "SceneObjectInteractionDefinition[]",
+        "presentation": "JsonObject",
+        "providerAvailable": "boolean",
+        "providerPackageId": "string",
+        "providerStatus": "'available' | 'unavailable' | 'outdated'",
+        "sceneId": "string",
+        "schemaVersion": "number",
+        "transform": "SceneObjectTransform",
+        "typeId": "string",
+        "updatedAt": "number",
+        "version": "number"
+      },
+      "required": [
+        "audience",
+        "createdAt",
+        "data",
+        "dataSchema",
+        "editor",
+        "enabled",
+        "geometry",
+        "id",
+        "interactions",
+        "presentation",
+        "providerAvailable",
+        "providerPackageId",
+        "providerStatus",
+        "sceneId",
+        "schemaVersion",
+        "transform",
+        "typeId",
+        "updatedAt",
+        "version"
+      ]
+    },
+    "SceneObjectDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "deleted": "true",
+        "id": "string"
+      },
+      "required": [
+        "deleted",
+        "id"
+      ]
+    },
+    "SceneObjectGeometry": {
+      "additionalProperties": false,
+      "fields": {
+        "height": "number",
+        "kind": "'point' | 'rect' | 'circle' | 'polygon' | 'polyline'",
+        "points": "WorldPointDTO[]",
+        "radius": "number",
+        "width": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "SceneObjectHitTestOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "tolerance": "number"
+      },
+      "required": []
+    },
+    "SceneObjectInput": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "SceneObjectAudience",
+        "data": "JsonObject",
+        "enabled": "boolean",
+        "geometry": "SceneObjectGeometry",
+        "presentation": "JsonObject",
+        "transform": "Partial<SceneObjectTransform>",
+        "typeId": "string"
+      },
+      "required": [
+        "geometry",
+        "typeId"
+      ]
+    },
+    "SceneObjectInteractionDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "actionReference": "ActionReferenceDTO",
+        "id": "string",
+        "label": "string"
+      },
+      "required": [
+        "id",
+        "label"
+      ]
+    },
+    "SceneObjectInteractionIntentDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actionReference": "ActionReferenceDTO | null",
+        "interactionId": "string",
+        "object": "SceneObjectDTO",
+        "principal": "{ userId: string }"
+      },
+      "required": [
+        "actionReference",
+        "interactionId",
+        "object",
+        "principal"
+      ]
+    },
+    "SceneObjectListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "query": "string"
+      },
+      "required": []
+    },
+    "SceneObjectPatch": {
+      "additionalProperties": false,
+      "fields": {
+        "data": "JsonObject",
+        "enabled": "boolean",
+        "geometry": "SceneObjectGeometry",
+        "presentation": "JsonObject",
+        "transform": "Partial<SceneObjectTransform>"
+      },
+      "required": []
+    },
+    "SceneObjectTransform": {
+      "additionalProperties": false,
+      "fields": {
+        "rotation": "number",
+        "scale": "number"
+      },
+      "required": [
+        "rotation",
+        "scale"
+      ]
+    },
+    "SceneObjectTypeDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "dataSchema": "ActionInputSchema",
+        "displayName": "string",
+        "editorDefinition": "JsonObject",
+        "geometryKinds": "Array<'point' | 'rect' | 'circle' | 'polygon' | 'polyline'>",
+        "interactionDefinitions": "SceneObjectInteractionDefinition[]",
+        "schemaVersion": "number",
+        "searchableFields": "string[]",
+        "typeId": "string",
+        "visualDefinition": "JsonObject[]"
+      },
+      "required": [
+        "dataSchema",
+        "displayName",
+        "geometryKinds",
+        "interactionDefinitions",
+        "schemaVersion",
+        "typeId",
+        "visualDefinition"
+      ]
+    },
+    "SceneTemplateDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "'campaign' | 'gm'",
+        "creatorId": "string",
+        "id": "string",
+        "origin": "WorldPointDTO",
+        "persistence": "'persistent'",
+        "sceneId": "string",
+        "shape": "'circle' | 'cone' | 'line' | 'rectangle'",
+        "target": "WorldPointDTO",
+        "version": "number"
+      },
+      "required": [
+        "audience",
+        "creatorId",
+        "id",
+        "origin",
+        "persistence",
+        "sceneId",
+        "shape",
+        "target",
+        "version"
+      ]
+    },
+    "SceneTemplateDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "'campaign' | 'gm'",
+        "scene_id": "string",
+        "template_id": "string",
+        "version": "number"
+      },
+      "required": [
+        "audience",
+        "scene_id",
+        "template_id",
+        "version"
+      ]
+    },
+    "SceneTemplateListResult": {
+      "additionalProperties": false,
+      "fields": {
+        "templates": "SceneTemplateDTO[]",
+        "version": "number"
+      },
+      "required": [
+        "templates",
+        "version"
+      ]
+    },
+    "SceneTemplateResult": {
+      "additionalProperties": false,
+      "fields": {
+        "template": "SceneTemplateDTO"
+      },
+      "required": [
+        "template"
+      ]
+    },
+    "SceneTemplateValues": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "'campaign' | 'gm'",
+        "origin": "WorldPointDTO",
+        "shape": "'circle' | 'cone' | 'line' | 'rectangle'",
+        "target": "WorldPointDTO"
+      },
+      "required": [
+        "origin",
+        "shape",
+        "target"
+      ]
+    },
+    "SceneZoneAudience": {
+      "additionalProperties": false,
+      "fields": {
+        "ids": "string[]",
+        "kind": "'campaign' | 'gm' | 'users'"
+      },
+      "required": [
+        "kind"
+      ]
+    },
+    "SceneZoneDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "SceneZoneAudience",
+        "enabled": "boolean",
+        "geometry": "SceneZoneGeometry",
+        "id": "string",
+        "packageProvenance": "PackageProvenanceDTO",
+        "sceneId": "string",
+        "tags": "string[]",
+        "type": "string",
+        "version": "number",
+        "vertical": "VerticalBoundsDTO"
+      },
+      "required": [
+        "audience",
+        "enabled",
+        "geometry",
+        "id",
+        "packageProvenance",
+        "sceneId",
+        "tags",
+        "type",
+        "version",
+        "vertical"
+      ]
+    },
+    "SceneZoneDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "deleted": "true",
+        "id": "string"
+      },
+      "required": [
+        "deleted",
+        "id"
+      ]
+    },
+    "SceneZoneGeometry": {
+      "additionalProperties": false,
+      "fields": {
+        "height": "number",
+        "points": "WorldPointDTO[]",
+        "radius": "number",
+        "shape": "'circle' | 'rect' | 'polygon'",
+        "width": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "shape"
+      ]
+    },
+    "SceneZoneInput": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "SceneZoneAudience",
+        "enabled": "boolean",
+        "geometry": "SceneZoneGeometry",
+        "providerId": "string",
+        "tags": "string[]",
+        "type": "string",
+        "vertical": "VerticalBoundsDTO"
+      },
+      "required": [
+        "geometry"
+      ]
+    },
+    "SceneZonePatch": {
+      "additionalProperties": false,
+      "fields": {
+        "enabled": "boolean",
+        "geometry": "SceneZoneGeometry",
+        "tags": "string[]"
+      },
+      "required": []
+    },
+    "SdkContextDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaign": "CampaignContext | null",
+        "permissions": "PermissionContext | null",
+        "scene": "SceneContext | null",
+        "user": "UserContext | null"
+      },
+      "required": [
+        "campaign",
+        "permissions",
+        "scene",
+        "user"
+      ]
+    },
+    "SemanticAnchorDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "kind": "'token' | 'scene-object'",
+        "sceneId": "string"
+      },
+      "required": [
+        "id",
+        "kind"
+      ]
+    },
+    "SemanticDragPayload": {
+      "additionalProperties": false,
+      "fields": {
+        "kind": "string",
+        "metadata": "JsonObject",
+        "reference": "string",
+        "schemaVersion": "1",
+        "sourceContext": "string"
+      },
+      "required": [
+        "kind",
+        "reference",
+        "schemaVersion"
+      ]
+    },
+    "SemanticDropDestination": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number",
+        "kind": "DropTargetKind",
+        "resource": "DropTargetResource",
+        "sceneContext": "string",
+        "targetDefinitionId": "string",
+        "worldPosition": "WorldPointDTO"
+      },
+      "required": [
+        "kind",
+        "resource",
+        "targetDefinitionId"
+      ]
+    },
+    "SemanticDropInput": {
+      "additionalProperties": false,
+      "fields": {
+        "destination": "SemanticDropDestination",
+        "idempotencyKey": "string",
+        "operation": "string",
+        "payload": "SemanticDragPayload"
+      },
+      "required": [
+        "destination",
+        "operation",
+        "payload"
+      ]
+    },
+    "SemanticDropResultDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actionResult": "ActionExecutionResult",
+        "operation": "string",
+        "source": "ContentResolutionDTO",
+        "targetId": "string"
+      },
+      "required": [
+        "actionResult",
+        "operation",
+        "source",
+        "targetId"
+      ]
+    },
+    "SemanticOriginDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "executionId": "string",
+        "resourceId": "string",
+        "source": "string"
+      },
+      "required": []
+    },
+    "SemanticRegistrationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "operations": "string[]",
+        "packageId": "string",
+        "schemaVersion": "1"
+      },
+      "required": [
+        "id",
+        "operations",
+        "packageId",
+        "schemaVersion"
+      ]
+    },
+    "SettingChangeDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "key": "string",
+        "packageId": "string",
+        "previous": "SettingValue | undefined",
+        "scope": "SettingScope",
+        "value": "SettingValue"
+      },
+      "required": [
+        "key",
+        "packageId",
+        "previous",
+        "scope",
+        "value"
+      ]
+    },
+    "SettingDefinitionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "default": "SettingValue",
+        "key": "string",
+        "label": "string",
+        "maximum": "number | null",
+        "minimum": "number | null",
+        "options": "SettingValue[]",
+        "pattern": "string",
+        "scope": "SettingScope",
+        "type": "string"
+      },
+      "required": [
+        "default",
+        "key",
+        "label",
+        "maximum",
+        "minimum",
+        "options",
+        "pattern",
+        "scope",
+        "type"
+      ]
+    },
+    "SettingSetOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "campaignId": "string"
+      },
+      "required": []
+    },
+    "SettingSetResult": {
+      "additionalProperties": false,
+      "fields": {
+        "key": "string",
+        "package_id": "string",
+        "scope": "SettingScope",
+        "success": "true",
+        "value": "SettingValue"
+      },
+      "required": [
+        "key",
+        "package_id",
+        "success",
+        "value"
+      ]
+    },
+    "ShaderApplyInput": {
+      "additionalProperties": false,
+      "fields": {
+        "parameters": "ShaderParameterValues",
+        "presetId": "string",
+        "schemaVersion": "number"
+      },
+      "required": [
+        "presetId"
+      ]
+    },
+    "ShaderInstanceDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "parameters": "ShaderParameterValues",
+        "presetId": "string",
+        "sceneId": "string",
+        "schemaVersion": "number",
+        "version": "number"
+      },
+      "required": [
+        "id",
+        "parameters",
+        "presetId",
+        "sceneId",
+        "schemaVersion",
+        "version"
+      ]
+    },
+    "ShaderMetadataDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "blend_mode": "string",
+        "color": "string",
+        "enabled": "boolean",
+        "id": "string",
+        "intensity": "number",
+        "name": "string",
+        "opacity": "number",
+        "radius": "number",
+        "rotation": "number",
+        "scale": "number",
+        "scene_id": "string",
+        "speed": "number",
+        "updated_at": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "blend_mode",
+        "color",
+        "enabled",
+        "id",
+        "intensity",
+        "name",
+        "opacity",
+        "radius",
+        "rotation",
+        "scale",
+        "scene_id",
+        "speed",
+        "updated_at",
+        "x",
+        "y"
+      ]
+    },
+    "ShaderParameterValues": {
+      "additionalProperties": false,
+      "fields": {
+        "blendMode": "'normal' | 'add' | 'multiply' | 'screen'",
+        "color": "string",
+        "enabled": "boolean",
+        "intensity": "number",
+        "opacity": "number",
+        "radius": "number",
+        "rotation": "number",
+        "scale": "number",
+        "speed": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "ShaderPresetDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "descriptionKey": "string",
+        "id": "string",
+        "labelKey": "string",
+        "parameters": "ShaderPresetParametersDTO",
+        "schemaVersion": "number"
+      },
+      "required": [
+        "descriptionKey",
+        "id",
+        "labelKey",
+        "parameters",
+        "schemaVersion"
+      ]
+    },
+    "ShaderPresetParametersDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "blendMode": "BlendModeParameterSchemaDTO",
+        "color": "ColorParameterSchemaDTO",
+        "enabled": "BooleanParameterSchemaDTO",
+        "intensity": "NumberParameterSchemaDTO",
+        "opacity": "NumberParameterSchemaDTO",
+        "radius": "NumberParameterSchemaDTO",
+        "rotation": "NumberParameterSchemaDTO",
+        "scale": "NumberParameterSchemaDTO",
+        "speed": "NumberParameterSchemaDTO",
+        "x": "NumberParameterSchemaDTO",
+        "y": "NumberParameterSchemaDTO"
+      },
+      "required": [
+        "blendMode",
+        "color",
+        "enabled",
+        "intensity",
+        "opacity",
+        "radius",
+        "rotation",
+        "scale",
+        "speed",
+        "x",
+        "y"
+      ]
+    },
+    "ShaderRemovalResult": {
+      "additionalProperties": false,
+      "fields": {
+        "instance_id": "string",
+        "scene_id": "string"
+      },
+      "required": [
+        "instance_id",
+        "scene_id"
+      ]
+    },
+    "ShaderUpdateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "blendMode": "'normal' | 'add' | 'multiply' | 'screen'",
+        "color": "string",
+        "enabled": "boolean",
+        "intensity": "number",
+        "opacity": "number",
+        "parameters": "ShaderParameterValues",
+        "radius": "number",
+        "rotation": "number",
+        "scale": "number",
+        "speed": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": []
+    },
+    "SharedMeasurementDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "'self' | 'campaign' | 'gm'",
+        "creator": "string",
+        "expiresAt": "number",
+        "geometry": "SharedMeasurementGeometry",
+        "id": "string",
+        "sceneId": "string",
+        "version": "number"
+      },
+      "required": [
+        "audience",
+        "creator",
+        "expiresAt",
+        "geometry",
+        "id",
+        "sceneId",
+        "version"
+      ]
+    },
+    "SharedMeasurementGeometry": {
+      "additionalProperties": false,
+      "fields": {
+        "points": "WorldPointDTO[]"
+      },
+      "required": [
+        "points"
+      ]
+    },
+    "SharedMeasurementOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "'self' | 'campaign' | 'gm'",
+        "ttlSeconds": "number"
+      },
+      "required": []
+    },
+    "SheetActionEvent": {
+      "additionalProperties": false,
+      "fields": {
+        "element": "HTMLElement",
+        "event": "Event",
+        "name": "string"
+      },
+      "required": [
+        "element",
+        "event",
+        "name"
+      ]
+    },
+    "SheetController": {
+      "additionalProperties": false,
+      "fields": {
+        "mount": "(context: SheetControllerContext) => void",
+        "onAction": "(action: SheetActionEvent, context: SheetControllerContext) => boolean | void",
+        "setup": "(context: SheetControllerContext) => void",
+        "unmount": "(context: SheetControllerContext) => void",
+        "update": "(context: SheetControllerContext) => void"
+      },
+      "required": []
+    },
+    "SheetDataPatchResult": {
+      "additionalProperties": false,
+      "fields": {
+        "actor_id": "string",
+        "changed_paths": "string[]",
+        "version": "number"
+      },
+      "required": [
+        "actor_id",
+        "changed_paths",
+        "version"
+      ]
+    },
+    "SoundCreateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "asset": "AudioAssetReferenceDTO",
+        "defaultGain": "number",
+        "defaultLoop": "boolean",
+        "kind": "'sound-effect' | 'music' | 'ambience'",
+        "metadata": "JsonObject",
+        "name": "string",
+        "tags": "string[]"
+      },
+      "required": [
+        "asset",
+        "kind",
+        "name"
+      ]
+    },
+    "SoundDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "asset": "AudioAssetReferenceDTO",
+        "campaignId": "string",
+        "defaultGain": "number",
+        "defaultLoop": "boolean",
+        "id": "string",
+        "kind": "'sound-effect' | 'music' | 'ambience'",
+        "metadata": "JsonObject",
+        "name": "string",
+        "tags": "string[]",
+        "version": "number"
+      },
+      "required": [
+        "asset",
+        "campaignId",
+        "defaultGain",
+        "defaultLoop",
+        "id",
+        "kind",
+        "metadata",
+        "name",
+        "tags",
+        "version"
+      ]
+    },
+    "SoundDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "deleted": "true",
+        "id": "string"
+      },
+      "required": [
+        "deleted",
+        "id"
+      ]
+    },
+    "SoundListOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "cursor": "number",
+        "kind": "'sound-effect' | 'music' | 'ambience'",
+        "limit": "number",
+        "query": "string"
+      },
+      "required": []
+    },
+    "SoundPatch": {
+      "additionalProperties": false,
+      "fields": {
+        "defaultGain": "number",
+        "defaultLoop": "boolean",
+        "kind": "'sound-effect' | 'music' | 'ambience'",
+        "metadata": "JsonObject",
+        "name": "string",
+        "tags": "string[]"
+      },
+      "required": []
+    },
+    "SpatialSoundDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "AudienceDTO",
+        "constrainedByWalls": "boolean",
+        "enabled": "boolean",
+        "falloff": "'linear' | 'smooth'",
+        "gain": "number",
+        "id": "string",
+        "loop": "boolean",
+        "position": "SpatialSoundPositionDTO",
+        "radius": "number",
+        "sceneId": "string",
+        "soundId": "string",
+        "version": "number"
+      },
+      "required": [
+        "audience",
+        "constrainedByWalls",
+        "enabled",
+        "falloff",
+        "gain",
+        "id",
+        "loop",
+        "position",
+        "radius",
+        "sceneId",
+        "soundId",
+        "version"
+      ]
+    },
+    "SpatialSoundDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "deleted": "true",
+        "id": "string"
+      },
+      "required": [
+        "deleted",
+        "id"
+      ]
+    },
+    "SpatialSoundInput": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "AudienceDTO",
+        "constrainedByWalls": "boolean",
+        "enabled": "boolean",
+        "falloff": "'linear' | 'smooth'",
+        "gain": "number",
+        "loop": "boolean",
+        "position": "SpatialSoundPositionDTO",
+        "radius": "number",
+        "soundId": "string"
+      },
+      "required": [
+        "position",
+        "radius",
+        "soundId"
+      ]
+    },
+    "SpatialSoundPatch": {
+      "additionalProperties": false,
+      "fields": {
+        "constrainedByWalls": "boolean",
+        "enabled": "boolean",
+        "falloff": "'linear' | 'smooth'",
+        "gain": "number",
+        "loop": "boolean",
+        "position": "SpatialSoundPositionDTO",
+        "radius": "number"
+      },
+      "required": []
+    },
+    "SpatialSoundPositionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "StorageExecuteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "rowcount": "number",
+        "success": "true"
+      },
+      "required": [
+        "rowcount",
+        "success"
+      ]
+    },
+    "StorageQueryResult": {
+      "additionalProperties": false,
+      "fields": {
+        "rows": "StorageRow[]",
+        "success": "true"
+      },
+      "required": [
+        "rows",
+        "success"
+      ]
+    },
+    "StorageStatusDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "ready": "boolean",
+        "scope": "'campaign' | 'global'",
+        "size_bytes": "number",
+        "success": "true"
+      },
+      "required": [
+        "ready",
+        "scope",
+        "size_bytes",
+        "success"
+      ]
+    },
+    "TimelineCueDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "action": "string",
+        "cleanupAction": "string",
+        "cleanupInput": "ActionInput",
+        "cueId": "string",
+        "offsetMs": "number",
+        "parameters": "TimelineParameters",
+        "type": "TimelineCueType"
+      },
+      "required": [
+        "cueId",
+        "offsetMs",
+        "type"
+      ]
+    },
+    "TimelineDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "AudienceDTO",
+        "campaignId": "string",
+        "completionReason": "string | null",
+        "definitionId": "string",
+        "executedCueIds": "string[]",
+        "id": "string",
+        "origin": "SemanticOriginDTO",
+        "providerPackageId": "string",
+        "sceneId": "string | null",
+        "startedAt": "number",
+        "status": "'RUNNING' | 'COMPLETED' | 'CANCELLED' | 'FAILED'",
+        "version": "number"
+      },
+      "required": [
+        "audience",
+        "campaignId",
+        "completionReason",
+        "definitionId",
+        "executedCueIds",
+        "id",
+        "origin",
+        "providerPackageId",
+        "sceneId",
+        "startedAt",
+        "status",
+        "version"
+      ]
+    },
+    "TimelineDefinitionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "cues": "TimelineCueDTO[]",
+        "durationMs": "number",
+        "id": "string",
+        "packageId": "string",
+        "schemaVersion": "1"
+      },
+      "required": [
+        "cues",
+        "durationMs",
+        "id",
+        "schemaVersion"
+      ]
+    },
+    "TimelineStartInput": {
+      "additionalProperties": false,
+      "fields": {
+        "audience": "AudienceDTO",
+        "definitionId": "string",
+        "idempotencyKey": "string",
+        "origin": "SemanticOriginDTO",
+        "sceneId": "string",
+        "startedAt": "number"
+      },
+      "required": [
+        "definitionId",
+        "idempotencyKey"
+      ]
+    },
+    "ToastHandle": {
+      "additionalProperties": false,
+      "fields": {
+        "dismiss": "() => void"
+      },
+      "required": [
+        "dismiss"
+      ]
+    },
+    "ToastOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "duration": "number",
+        "id": "string | null",
+        "onClick": "(toast: HTMLElement) => void"
+      },
+      "required": []
+    },
+    "TokenCreateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "actorId": "string",
+        "elevation": "number",
+        "sceneId": "string",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "actorId",
+        "sceneId",
+        "x",
+        "y"
+      ]
+    },
+    "TokenDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actor_id": "string | null",
+        "controllers": "string[]",
+        "disposition": "string",
+        "elevation": "number",
+        "grid_x": "number",
+        "grid_y": "number",
+        "height_cells": "number",
+        "hidden": "boolean",
+        "id": "string",
+        "locked": "boolean",
+        "name": "string | null",
+        "rotation": "number",
+        "scene_id": "string",
+        "token_asset_url": "string | null",
+        "updated_at": "number",
+        "visible": "boolean",
+        "vision": "TokenVisionDTO",
+        "width_cells": "number"
+      },
+      "required": [
+        "actor_id",
+        "controllers",
+        "disposition",
+        "elevation",
+        "grid_x",
+        "grid_y",
+        "height_cells",
+        "hidden",
+        "id",
+        "locked",
+        "name",
+        "rotation",
+        "scene_id",
+        "token_asset_url",
+        "updated_at",
+        "visible",
+        "vision",
+        "width_cells"
+      ]
+    },
+    "TokenMoveInput": {
+      "additionalProperties": false,
+      "fields": {
+        "sceneId": "string",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    },
+    "TokenMutationResult": {
+      "additionalProperties": false,
+      "fields": {
+        "token": "TokenDTO | null",
+        "tokens": "TokenDTO[]"
+      },
+      "required": [
+        "token",
+        "tokens"
+      ]
+    },
+    "TokenOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "causalDepth": "number",
+        "expectedVersion": "number",
+        "originExecutionId": "string",
+        "originJobId": "string",
+        "sceneId": "string"
+      },
+      "required": []
+    },
+    "TokenReadOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "limit": "number",
+        "sceneId": "string"
+      },
+      "required": []
+    },
+    "TokenTransferDestination": {
+      "additionalProperties": false,
+      "fields": {
+        "elevation": "number",
+        "sceneId": "string",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "sceneId",
+        "x",
+        "y"
+      ]
+    },
+    "TokenTransferManyOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "navigateAudience": "SceneNavigationRecipients"
+      },
+      "required": []
+    },
+    "TokenTransferOptions": {
+      "additionalProperties": false,
+      "fields": {
+        "expectedVersion": "number",
+        "navigateAudience": "SceneNavigationRecipients"
+      },
+      "required": []
+    },
+    "TokenTransferResultDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "atomic": "true",
+        "navigation": "SceneNavigationDTO | null",
+        "tokens": "TransferredTokenDTO[]"
+      },
+      "required": [
+        "atomic",
+        "navigation",
+        "tokens"
+      ]
+    },
+    "TokenTransferSpec": {
+      "additionalProperties": false,
+      "fields": {
+        "elevation": "number",
+        "expectedVersion": "number",
+        "sceneId": "string",
+        "tokenId": "string",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "sceneId",
+        "tokenId",
+        "x",
+        "y"
+      ]
+    },
+    "TokenVisionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "enabled": "boolean",
+        "range": "number | null",
+        "source": "'token'"
+      },
+      "required": [
+        "enabled",
+        "range",
+        "source"
+      ]
+    },
+    "ToolContextDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "packageId": "string"
+      },
+      "required": [
+        "id",
+        "packageId"
+      ]
+    },
+    "ToolDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "activate": "(context: ToolContextDTO) => void",
+        "capability": "string",
+        "cursor": "string",
+        "deactivate": "(context: ToolContextDTO) => void",
+        "icon": "string",
+        "id": "string",
+        "label": "string",
+        "pointer": "(event: ToolPointerEventDTO) => void",
+        "when": "(context: SdkContextDTO) => boolean"
+      },
+      "required": [
+        "id"
+      ]
+    },
+    "ToolModifiersDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "alt": "boolean",
+        "ctrl": "boolean",
+        "meta": "boolean",
+        "shift": "boolean"
+      },
+      "required": [
+        "alt",
+        "ctrl",
+        "meta",
+        "shift"
+      ]
+    },
+    "ToolPointerEventDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "button": "number",
+        "modifiers": "ToolModifiersDTO",
+        "phase": "'down' | 'move' | 'up' | 'cancel'",
+        "world": "WorldPointDTO"
+      },
+      "required": [
+        "button",
+        "modifiers",
+        "phase",
+        "world"
+      ]
+    },
+    "TransferredTokenDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "actorId": "string | null",
+        "elevation": "number",
+        "id": "string",
+        "sceneId": "string",
+        "version": "number",
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "actorId",
+        "elevation",
+        "id",
+        "sceneId",
+        "version",
+        "x",
+        "y"
+      ]
+    },
+    "VerticalBoundsDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "bottom": "number | null",
+        "top": "number | null"
+      },
+      "required": [
+        "bottom",
+        "top"
+      ]
+    },
+    "WallCreateInput": {
+      "additionalProperties": false,
+      "fields": {
+        "behavior": "GeometryBehaviorDTO",
+        "kind": "'wall' | 'door'",
+        "presentation": "string",
+        "vertical": "VerticalBoundsDTO",
+        "x1": "number",
+        "x2": "number",
+        "y1": "number",
+        "y2": "number"
+      },
+      "required": [
+        "x1",
+        "x2",
+        "y1",
+        "y2"
+      ]
+    },
+    "WallDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "behavior": "GeometryBehaviorDTO",
+        "discovered": "boolean",
+        "door_state": "string | null",
+        "id": "string",
+        "kind": "string",
+        "presentation": "string | null",
+        "scene_id": "string",
+        "updated_at": "number",
+        "vertical": "VerticalBoundsDTO",
+        "x1": "number",
+        "x2": "number",
+        "y1": "number",
+        "y2": "number"
+      },
+      "required": [
+        "behavior",
+        "discovered",
+        "door_state",
+        "id",
+        "kind",
+        "presentation",
+        "scene_id",
+        "updated_at",
+        "vertical",
+        "x1",
+        "x2",
+        "y1",
+        "y2"
+      ]
+    },
+    "WallDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "scene_id": "string",
+        "wall_id": "string"
+      },
+      "required": [
+        "scene_id",
+        "wall_id"
+      ]
+    },
+    "WallResult": {
+      "additionalProperties": false,
+      "fields": {
+        "wall": "WallDTO"
+      },
+      "required": [
+        "wall"
+      ]
+    },
+    "WallUpdatePatch": {
+      "additionalProperties": false,
+      "fields": {
+        "behavior": "GeometryBehaviorDTO",
+        "discovered": "boolean",
+        "door_state": "string | null",
+        "kind": "'wall' | 'door'",
+        "presentation": "string",
+        "vertical": "VerticalBoundsDTO",
+        "x1": "number",
+        "x2": "number",
+        "y1": "number",
+        "y2": "number"
+      },
+      "required": []
+    },
+    "WallsDeleteResult": {
+      "additionalProperties": false,
+      "fields": {
+        "scene_id": "string | null",
+        "wall_ids": "string[]"
+      },
+      "required": [
+        "scene_id",
+        "wall_ids"
+      ]
+    },
+    "WallsResult": {
+      "additionalProperties": false,
+      "fields": {
+        "scene_id": "string",
+        "walls": "WallDTO[]"
+      },
+      "required": [
+        "scene_id",
+        "walls"
+      ]
+    },
+    "WorkflowDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "campaignId": "string",
+        "completionReason": "string | null",
+        "context": "WorkflowContext",
+        "createdBy": "string",
+        "currentStep": "number",
+        "definitionId": "string",
+        "id": "string",
+        "origin": "SemanticOriginDTO",
+        "providerPackageId": "string",
+        "sceneId": "string | null",
+        "startedAt": "number",
+        "status": "WorkflowStatus",
+        "version": "number",
+        "waitingOn": "string | null",
+        "wakeAt": "number | null"
+      },
+      "required": [
+        "campaignId",
+        "completionReason",
+        "context",
+        "createdBy",
+        "currentStep",
+        "definitionId",
+        "id",
+        "origin",
+        "providerPackageId",
+        "sceneId",
+        "startedAt",
+        "status",
+        "version",
+        "waitingOn",
+        "wakeAt"
+      ]
+    },
+    "WorkflowDefinitionDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "id": "string",
+        "maxDuration": "number",
+        "maxSteps": "number",
+        "packageId": "string",
+        "schemaVersion": "1",
+        "steps": "WorkflowStepDTO[]"
+      },
+      "required": [
+        "id",
+        "maxDuration",
+        "maxSteps",
+        "schemaVersion",
+        "steps"
+      ]
+    },
+    "WorkflowStartInput": {
+      "additionalProperties": false,
+      "fields": {
+        "definitionId": "string",
+        "idempotencyKey": "string",
+        "input": "WorkflowContext",
+        "origin": "SemanticOriginDTO",
+        "sceneId": "string"
+      },
+      "required": [
+        "definitionId",
+        "idempotencyKey"
+      ]
+    },
+    "WorldPointDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "x": "number",
+        "y": "number"
+      },
+      "required": [
+        "x",
+        "y"
+      ]
+    }
+  },
+  "errors": [
+    "ALREADY_RESPONDED",
+    "ALREADY_SUBMITTED",
+    "ANCHOR_NOT_VISIBLE",
+    "CAPABILITY_REQUIRED",
+    "IDEMPOTENCY_CONFLICT",
+    "INTERACTION_CANCELLED",
+    "INTERACTION_EXPIRED",
+    "INVALID_ANCHOR",
+    "INVALID_GEOMETRY",
+    "INVALID_OBJECT_DATA",
+    "INVALID_PRESENTATION",
+    "LIMIT_EXCEEDED",
+    "NOT_ACTIVE_PARTICIPANT",
+    "NOT_AUTHORIZED",
+    "NOT_FOUND",
+    "PACKAGE_INACTIVE",
+    "PERMISSION_DENIED",
+    "PROVIDER_UNAVAILABLE",
+    "RESOURCE_IN_USE",
+    "STALE_VERSION",
+    "UNKNOWN_ACTION",
+    "UNKNOWN_INTERACTION",
+    "UNKNOWN_OBJECT_TYPE",
+    "UNSUPPORTED_PRESENTATION_MODE",
+    "VALIDATION_FAILED"
+  ],
+  "events": [
+    "actor.created",
+    "actor.data.updated",
+    "actor.deleted",
+    "actor.updated",
+    "audio.changed",
+    "automation.job.changed",
+    "cards.state.changed",
+    "chat.created",
+    "combat.ended",
+    "combat.started",
+    "combat.turn.changed",
+    "combat.updated",
+    "game.ready",
+    "gameplay.flow.changed",
+    "input.binding.changed",
+    "interaction.changed",
+    "item.created",
+    "item.deleted",
+    "item.updated",
+    "journal.created",
+    "journal.deleted",
+    "journal.updated",
+    "navigation.scene.changed",
+    "pdf.annotations.changed",
+    "pdf.presentation.changed",
+    "rules.action.completed",
+    "scene.changed",
+    "scene.effects.changed",
+    "scene.fog.changed",
+    "scene.geometry.changed",
+    "scene.images.changed",
+    "scene.measurements.changed",
+    "scene.object.interacted",
+    "scene.object.selected",
+    "scene.objects.changed",
+    "scene.shaders.changed",
+    "scene.templates.changed",
+    "scene.zones.changed",
+    "setting.changed",
+    "timeline.changed",
+    "token.created",
+    "token.deleted",
+    "token.moved",
+    "token.targets.changed",
+    "token.updated",
+    "tokens.transferred",
+    "ui.presentation.changed",
+    "workflow.changed",
+    "zone.crossed",
+    "zone.entered",
+    "zone.left"
+  ],
+  "methods": {
+    "actors.create": {
+      "asynchronous": true,
+      "capability": "actors.write",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "ActorMutationResult",
+      "types": {
+        "input": "ActorCreateInput"
+      }
+    },
+    "actors.data": {
+      "asynchronous": true,
+      "capability": "actors.read",
+      "optional": [],
+      "required": [
+        "actorId"
+      ],
+      "returns": "ActorDataDTO",
+      "types": {
+        "actorId": "string"
+      }
+    },
+    "actors.delete": {
+      "asynchronous": true,
+      "capability": "actors.write",
+      "optional": [],
+      "required": [
+        "actorId"
+      ],
+      "returns": "ActorMutationResult",
+      "types": {
+        "actorId": "string"
+      }
+    },
+    "actors.get": {
+      "asynchronous": true,
+      "capability": "actors.read",
+      "optional": [],
+      "required": [
+        "actorId"
+      ],
+      "returns": "ActorDTO | null",
+      "types": {
+        "actorId": "string"
+      }
+    },
+    "actors.items.insertCopy": {
+      "asynchronous": true,
+      "capability": "actors.items.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "actorId",
+        "sourceItemId"
+      ],
+      "returns": "ActorItemInsertResult",
+      "types": {
+        "actorId": "string",
+        "options": "ActorItemSlotOptions",
+        "sourceItemId": "string"
+      }
+    },
+    "actors.items.listCopies": {
+      "asynchronous": true,
+      "capability": "actors.items.read",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "actorId"
+      ],
+      "returns": "ActorItemCopyDTO[]",
+      "types": {
+        "actorId": "string",
+        "options": "ActorItemSlotOptions"
+      }
+    },
+    "actors.items.removeCopy": {
+      "asynchronous": true,
+      "capability": "actors.items.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "actorId",
+        "localInstanceId"
+      ],
+      "returns": "ActorItemRemoveResult",
+      "types": {
+        "actorId": "string",
+        "localInstanceId": "string",
+        "options": "ActorItemSlotOptions"
+      }
+    },
+    "actors.items.slots": {
+      "asynchronous": true,
+      "capability": "actors.items.read",
+      "optional": [],
+      "required": [
+        "actorId"
+      ],
+      "returns": "ActorItemSlotDTO[]",
+      "types": {
+        "actorId": "string"
+      }
+    },
+    "actors.list": {
+      "asynchronous": true,
+      "capability": "actors.read",
+      "optional": [
+        "query"
+      ],
+      "required": [],
+      "returns": "ActorDTO[]",
+      "types": {
+        "query": "EntityListQuery"
+      }
+    },
+    "actors.patchData": {
+      "asynchronous": true,
+      "capability": "actors.data.write",
+      "optional": [
+        "patch"
+      ],
+      "required": [
+        "actorId"
+      ],
+      "returns": "SheetDataPatchResult",
+      "types": {
+        "actorId": "string",
+        "patch": "RulesetSheetData"
+      }
+    },
+    "actors.update": {
+      "asynchronous": true,
+      "capability": "actors.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "actorId"
+      ],
+      "returns": "ActorMutationResult",
+      "types": {
+        "actorId": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "ActorUpdateInput"
+      }
+    },
+    "assets.cancelImport": {
+      "asynchronous": true,
+      "capability": "assets.import",
+      "optional": [],
+      "required": [
+        "assetId"
+      ],
+      "returns": "AssetCancelResult",
+      "types": {
+        "assetId": "string"
+      }
+    },
+    "assets.ingest": {
+      "asynchronous": true,
+      "capability": "assets.import",
+      "optional": [],
+      "required": [
+        "file"
+      ],
+      "returns": "AssetIngestResult",
+      "types": {
+        "file": "File"
+      }
+    },
+    "assets.list": {
+      "asynchronous": true,
+      "capability": "assets.library",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "AssetDTO[]",
+      "types": {
+        "options": "AssetListOptions"
+      }
+    },
+    "audio.get": {
+      "asynchronous": true,
+      "capability": "audio.playback",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "AudioPlaybackDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "audio.list": {
+      "asynchronous": true,
+      "capability": "audio.playback",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "AudioPlaybackDTO[]",
+      "types": {
+        "options": "AudioListOptions"
+      }
+    },
+    "audio.play": {
+      "asynchronous": true,
+      "capability": "audio.playback",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "AudioPlaybackDTO",
+      "types": {
+        "input": "AudioPlayInput"
+      }
+    },
+    "audio.stop": {
+      "asynchronous": true,
+      "capability": "audio.playback",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "AudioPlaybackDTO",
+      "types": {
+        "id": "string",
+        "options": "AudioMutationOptions"
+      }
+    },
+    "audio.update": {
+      "asynchronous": true,
+      "capability": "audio.playback",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "AudioPlaybackDTO",
+      "types": {
+        "id": "string",
+        "options": "AudioMutationOptions",
+        "patch": "AudioPlaybackPatch"
+      }
+    },
+    "automation.audit": {
+      "asynchronous": true,
+      "capability": "automation.schedule",
+      "optional": [],
+      "required": [],
+      "returns": "AutomationAuditDTO[]",
+      "types": {}
+    },
+    "automation.cancel": {
+      "asynchronous": true,
+      "capability": "automation.schedule",
+      "optional": [],
+      "required": [
+        "jobId"
+      ],
+      "returns": "AutomationCancelResult",
+      "types": {
+        "jobId": "string"
+      }
+    },
+    "automation.get": {
+      "asynchronous": true,
+      "capability": "automation.schedule",
+      "optional": [],
+      "required": [
+        "jobId"
+      ],
+      "returns": "AutomationJobDTO | null",
+      "types": {
+        "jobId": "string"
+      }
+    },
+    "automation.list": {
+      "asynchronous": true,
+      "capability": "automation.schedule",
+      "optional": [],
+      "required": [],
+      "returns": "AutomationJobDTO[]",
+      "types": {}
+    },
+    "automation.schedule": {
+      "asynchronous": true,
+      "capability": "automation.schedule",
+      "optional": [
+        "input",
+        "options"
+      ],
+      "required": [
+        "actionId"
+      ],
+      "returns": "AutomationJobDTO",
+      "types": {
+        "actionId": "string",
+        "input": "ActionInput",
+        "options": "AutomationScheduleOptions"
+      }
+    },
+    "bus.provide": {
+      "asynchronous": false,
+      "capability": "bus.provide",
+      "optional": [],
+      "required": [
+        "method",
+        "handler"
+      ],
+      "returns": "Disposer",
+      "types": {
+        "handler": "InteropHandler",
+        "method": "string"
+      }
+    },
+    "bus.publish": {
+      "asynchronous": false,
+      "capability": "bus.publish",
+      "optional": [],
+      "required": [
+        "name",
+        "payload"
+      ],
+      "returns": "void",
+      "types": {
+        "name": "string",
+        "payload": "InteropPayload"
+      }
+    },
+    "bus.request": {
+      "asynchronous": false,
+      "capability": "bus.request",
+      "optional": [],
+      "required": [
+        "method",
+        "payload",
+        "options"
+      ],
+      "returns": "Promise<BusResponse>",
+      "types": {
+        "method": "string",
+        "options": "BusRequestOptions",
+        "payload": "InteropPayload"
+      }
+    },
+    "bus.subscribe": {
+      "asynchronous": false,
+      "capability": "bus.subscribe",
+      "optional": [],
+      "required": [
+        "name",
+        "fn"
+      ],
+      "returns": "Disposer",
+      "types": {
+        "fn": "InteropSubscriber",
+        "name": "string"
+      }
+    },
+    "campaign.members": {
+      "asynchronous": true,
+      "capability": "campaign.members.read",
+      "optional": [],
+      "required": [],
+      "returns": "CampaignMemberDTO[]",
+      "types": {}
+    },
+    "cards.definitions.get": {
+      "asynchronous": true,
+      "capability": "cards.read",
+      "optional": [],
+      "required": [
+        "id",
+        "version"
+      ],
+      "returns": "CardDefinitionDTO | null",
+      "types": {
+        "id": "string",
+        "version": "number"
+      }
+    },
+    "cards.definitions.instantiate": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "CardDefinitionInstantiateResult",
+      "types": {
+        "id": "string",
+        "options": "CardDefinitionInstantiateOptions"
+      }
+    },
+    "cards.definitions.list": {
+      "asynchronous": true,
+      "capability": "cards.read",
+      "optional": [],
+      "required": [],
+      "returns": "CardDefinitionDTO[]",
+      "types": {}
+    },
+    "cards.discard": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [],
+      "required": [
+        "cardIds"
+      ],
+      "returns": "CardIdsResult",
+      "types": {
+        "cardIds": "string[]"
+      }
+    },
+    "cards.discardPlacement": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [],
+      "required": [
+        "placementId"
+      ],
+      "returns": "CardPlacementDiscardResult",
+      "types": {
+        "placementId": "string"
+      }
+    },
+    "cards.draw": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "deckId"
+      ],
+      "returns": "CardDrawResult",
+      "types": {
+        "deckId": "string",
+        "options": "CardDrawOptions"
+      }
+    },
+    "cards.play": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "cardId"
+      ],
+      "returns": "CardPlayResult",
+      "types": {
+        "cardId": "string",
+        "options": "CardPlayOptions"
+      }
+    },
+    "cards.reset": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "deckId"
+      ],
+      "returns": "CardDeckMutationResult",
+      "types": {
+        "deckId": "string",
+        "options": "CardResetOptions"
+      }
+    },
+    "cards.reveal": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [],
+      "required": [
+        "cardIds"
+      ],
+      "returns": "CardIdsResult",
+      "types": {
+        "cardIds": "string[]"
+      }
+    },
+    "cards.shuffle": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [],
+      "required": [
+        "deckId"
+      ],
+      "returns": "CardDeckMutationResult",
+      "types": {
+        "deckId": "string"
+      }
+    },
+    "cards.state": {
+      "asynchronous": true,
+      "capability": "cards.read",
+      "optional": [],
+      "required": [],
+      "returns": "CardStateDTO",
+      "types": {}
+    },
+    "cards.updatePlacement": {
+      "asynchronous": true,
+      "capability": "cards.manage",
+      "optional": [
+        "patch"
+      ],
+      "required": [
+        "placementId"
+      ],
+      "returns": "CardPlacementResult",
+      "types": {
+        "patch": "CardPlacementPatch",
+        "placementId": "string"
+      }
+    },
+    "chat.get": {
+      "asynchronous": true,
+      "capability": "chat.read",
+      "optional": [],
+      "required": [
+        "messageId"
+      ],
+      "returns": "ChatMessageDTO | null",
+      "types": {
+        "messageId": "string"
+      }
+    },
+    "chat.list": {
+      "asynchronous": true,
+      "capability": "chat.read",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "ChatMessageDTO[]",
+      "types": {
+        "options": "ChatListOptions"
+      }
+    },
+    "chat.send": {
+      "asynchronous": false,
+      "capability": "chat.cards",
+      "optional": [],
+      "required": [
+        "message"
+      ],
+      "returns": "void",
+      "types": {
+        "message": "string | ChatSendMessage"
+      }
+    },
+    "combat.add": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "CombatStateDTO",
+      "types": {
+        "input": "CombatAddInput"
+      }
+    },
+    "combat.advance": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [
+        "delta"
+      ],
+      "required": [],
+      "returns": "CombatStateDTO",
+      "types": {
+        "delta": "number"
+      }
+    },
+    "combat.advanceRound": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [
+        "delta"
+      ],
+      "required": [],
+      "returns": "CombatStateDTO",
+      "types": {
+        "delta": "number"
+      }
+    },
+    "combat.combatants": {
+      "asynchronous": true,
+      "capability": "combat.read",
+      "optional": [],
+      "required": [],
+      "returns": "CombatantDTO[]",
+      "types": {}
+    },
+    "combat.current": {
+      "asynchronous": true,
+      "capability": "combat.read",
+      "optional": [],
+      "required": [],
+      "returns": "CombatStateDTO",
+      "types": {}
+    },
+    "combat.dispatch": {
+      "asynchronous": false,
+      "capability": "combat.runtime",
+      "optional": [],
+      "required": [
+        "name",
+        "payload"
+      ],
+      "returns": "CombatProtocolPayload | undefined",
+      "types": {
+        "name": "string",
+        "payload": "CombatProtocolPayload"
+      }
+    },
+    "combat.end": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [],
+      "required": [],
+      "returns": "CombatStateDTO",
+      "types": {}
+    },
+    "combat.moveCombatant": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [],
+      "required": [
+        "combatantId",
+        "delta"
+      ],
+      "returns": "CombatStateDTO",
+      "types": {
+        "combatantId": "string",
+        "delta": "number"
+      }
+    },
+    "combat.register": {
+      "asynchronous": false,
+      "capability": "combat.runtime",
+      "optional": [],
+      "required": [
+        "plugin"
+      ],
+      "returns": "boolean",
+      "types": {
+        "plugin": "CombatPlugin"
+      }
+    },
+    "combat.registerPanel": {
+      "asynchronous": false,
+      "capability": "combat.runtime",
+      "optional": [],
+      "required": [
+        "panel"
+      ],
+      "returns": "boolean",
+      "types": {
+        "panel": "CombatPanelDefinition"
+      }
+    },
+    "combat.remove": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [],
+      "required": [
+        "combatantId"
+      ],
+      "returns": "CombatStateDTO",
+      "types": {
+        "combatantId": "string"
+      }
+    },
+    "combat.renderSlot": {
+      "asynchronous": false,
+      "capability": "combat.runtime",
+      "optional": [],
+      "required": [
+        "name",
+        "payload"
+      ],
+      "returns": "Node[]",
+      "types": {
+        "name": "string",
+        "payload": "CombatProtocolPayload"
+      }
+    },
+    "combat.rollInitiative": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "CombatStateDTO",
+      "types": {
+        "options": "CombatRollInitiativeOptions"
+      }
+    },
+    "combat.setFlags": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [
+        "flags"
+      ],
+      "required": [
+        "combatantId"
+      ],
+      "returns": "CombatStateDTO",
+      "types": {
+        "combatantId": "string",
+        "flags": "CombatFlagsPatch"
+      }
+    },
+    "combat.setInitiative": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [],
+      "required": [
+        "combatantId",
+        "value"
+      ],
+      "returns": "CombatStateDTO",
+      "types": {
+        "combatantId": "string",
+        "value": "number"
+      }
+    },
+    "combat.setInitiativeOrder": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [],
+      "required": [
+        "entries"
+      ],
+      "returns": "CombatStateDTO",
+      "types": {
+        "entries": "CombatInitiativeOrderEntry[]"
+      }
+    },
+    "combat.setTurn": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [],
+      "required": [
+        "combatantId"
+      ],
+      "returns": "CombatStateDTO",
+      "types": {
+        "combatantId": "string"
+      }
+    },
+    "combat.start": {
+      "asynchronous": true,
+      "capability": "combat.manage",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "CombatStateDTO",
+      "types": {
+        "input": "CombatStartInput"
+      }
+    },
+    "commands.register": {
+      "asynchronous": false,
+      "capability": "commands.register",
+      "optional": [],
+      "required": [
+        "name",
+        "handler"
+      ],
+      "returns": "void",
+      "types": {
+        "handler": "CommandHandler",
+        "name": "string"
+      }
+    },
+    "content.can": {
+      "asynchronous": true,
+      "capability": "content.references",
+      "optional": [
+        "action"
+      ],
+      "required": [
+        "reference"
+      ],
+      "returns": "boolean",
+      "types": {
+        "action": "string",
+        "reference": "string | ContentReferenceInput"
+      }
+    },
+    "content.get": {
+      "asynchronous": true,
+      "capability": "content.references",
+      "optional": [],
+      "required": [
+        "reference"
+      ],
+      "returns": "ContentResolvedValue",
+      "types": {
+        "reference": "string | ContentReferenceInput"
+      }
+    },
+    "content.link": {
+      "asynchronous": false,
+      "capability": "content.references",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "reference"
+      ],
+      "returns": "ContentLinkDTO",
+      "types": {
+        "options": "ContentLinkOptions",
+        "reference": "string | ContentReferenceInput"
+      }
+    },
+    "content.open": {
+      "asynchronous": true,
+      "capability": "content.references",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "reference"
+      ],
+      "returns": "ContentResolutionDTO",
+      "types": {
+        "options": "ContentOpenOptions",
+        "reference": "string | ContentReferenceInput"
+      }
+    },
+    "content.pack": {
+      "asynchronous": true,
+      "capability": "content.packs",
+      "optional": [],
+      "required": [
+        "packId"
+      ],
+      "returns": "ContentPackDTO | null",
+      "types": {
+        "packId": "string"
+      }
+    },
+    "content.packs": {
+      "asynchronous": true,
+      "capability": "content.packs",
+      "optional": [],
+      "required": [],
+      "returns": "ContentPackSummaryDTO[]",
+      "types": {}
+    },
+    "content.ref": {
+      "asynchronous": false,
+      "capability": "content.references",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "kind",
+        "resourceId"
+      ],
+      "returns": "string",
+      "types": {
+        "kind": "string",
+        "options": "ContentRefOptions",
+        "resourceId": "string"
+      }
+    },
+    "content.resolve": {
+      "asynchronous": true,
+      "capability": "content.references",
+      "optional": [],
+      "required": [
+        "reference"
+      ],
+      "returns": "ContentResolutionDTO",
+      "types": {
+        "reference": "string | ContentReferenceInput"
+      }
+    },
+    "content.search": {
+      "asynchronous": true,
+      "capability": "content.index",
+      "optional": [
+        "options",
+        "query"
+      ],
+      "required": [],
+      "returns": "ContentSearchPageDTO",
+      "types": {
+        "options": "ContentSearchOptions",
+        "query": "string"
+      }
+    },
+    "dice.roll": {
+      "asynchronous": false,
+      "capability": "dice.roll",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "Promise<RollResultDTO>",
+      "types": {
+        "input": "DiceRollInput"
+      }
+    },
+    "events.available": {
+      "asynchronous": false,
+      "capability": "events.subscribe",
+      "optional": [],
+      "required": [],
+      "returns": "SdkEventName[]",
+      "types": {}
+    },
+    "events.on": {
+      "asynchronous": false,
+      "capability": "events.subscribe",
+      "optional": [],
+      "required": [
+        "event",
+        "handler"
+      ],
+      "returns": "Disposer",
+      "types": {
+        "event": "string",
+        "handler": "SdkEventHandler"
+      }
+    },
+    "events.once": {
+      "asynchronous": false,
+      "capability": "events.subscribe",
+      "optional": [],
+      "required": [
+        "event",
+        "handler"
+      ],
+      "returns": "Disposer",
+      "types": {
+        "event": "string",
+        "handler": "SdkEventHandler"
+      }
+    },
+    "gameplay.flows.advance": {
+      "asynchronous": true,
+      "capability": "gameplay.flows.manage",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "GameplayFlowDTO",
+      "types": {
+        "id": "string",
+        "options": "GameplayFlowMutationOptions"
+      }
+    },
+    "gameplay.flows.get": {
+      "asynchronous": true,
+      "capability": "gameplay.flows.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "GameplayFlowDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "gameplay.flows.list": {
+      "asynchronous": true,
+      "capability": "gameplay.flows.read",
+      "optional": [],
+      "required": [],
+      "returns": "GameplayFlowDTO[]",
+      "types": {}
+    },
+    "gameplay.flows.register": {
+      "asynchronous": true,
+      "capability": "gameplay.flows.manage",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "GameplayFlowDefinitionDTO",
+      "types": {
+        "definition": "GameplayFlowDefinitionDTO"
+      }
+    },
+    "gameplay.flows.start": {
+      "asynchronous": true,
+      "capability": "gameplay.flows.manage",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "GameplayFlowDTO",
+      "types": {
+        "input": "GameplayFlowStartInput"
+      }
+    },
+    "gameplay.flows.submit": {
+      "asynchronous": true,
+      "capability": "gameplay.flows.participate",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id",
+        "value"
+      ],
+      "returns": "GameplayFlowDTO",
+      "types": {
+        "id": "string",
+        "options": "GameplayFlowMutationOptions",
+        "value": "GameplaySubmissionValue"
+      }
+    },
+    "handouts.present": {
+      "asynchronous": true,
+      "capability": "handouts.present",
+      "optional": [
+        "audience"
+      ],
+      "required": [
+        "resourceType",
+        "resourceId"
+      ],
+      "returns": "HandoutPresentResult",
+      "types": {
+        "audience": "HandoutAudience",
+        "resourceId": "string",
+        "resourceType": "string"
+      }
+    },
+    "i18n.t": {
+      "asynchronous": false,
+      "capability": "locales",
+      "optional": [],
+      "required": [
+        "key",
+        "fallback"
+      ],
+      "returns": "string",
+      "types": {
+        "fallback": "string",
+        "key": "string"
+      }
+    },
+    "input.bindings.get": {
+      "asynchronous": true,
+      "capability": "input.commands",
+      "optional": [],
+      "required": [],
+      "returns": "InputBindingDTO[]",
+      "types": {}
+    },
+    "input.bindings.set": {
+      "asynchronous": true,
+      "capability": "input.commands",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "commandId",
+        "binding"
+      ],
+      "returns": "InputBindingDTO",
+      "types": {
+        "binding": "string",
+        "commandId": "string",
+        "options": "InputBindingOptions"
+      }
+    },
+    "input.commands.execute": {
+      "asynchronous": true,
+      "capability": "input.commands",
+      "optional": [
+        "inputs"
+      ],
+      "required": [
+        "commandId"
+      ],
+      "returns": "ActionExecutionResult",
+      "types": {
+        "commandId": "string",
+        "inputs": "ActionInput"
+      }
+    },
+    "input.commands.list": {
+      "asynchronous": true,
+      "capability": "input.commands",
+      "optional": [],
+      "required": [],
+      "returns": "InputCommandDTO[]",
+      "types": {}
+    },
+    "input.commands.register": {
+      "asynchronous": true,
+      "capability": "input.commands",
+      "optional": [
+        "definition",
+        "handler"
+      ],
+      "required": [],
+      "returns": "Promise<Disposer>",
+      "types": {
+        "definition": "InputCommandDefinition",
+        "handler": "InputCommandHandler"
+      }
+    },
+    "input.gestures.register": {
+      "asynchronous": true,
+      "capability": "input.commands",
+      "optional": [
+        "definition",
+        "handler"
+      ],
+      "required": [],
+      "returns": "Promise<Disposer>",
+      "types": {
+        "definition": "InputGestureDefinition",
+        "handler": "InputCommandHandler"
+      }
+    },
+    "interactions.cancel": {
+      "asynchronous": true,
+      "capability": "interactions.request",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "InteractionDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "interactions.get": {
+      "asynchronous": true,
+      "capability": "interactions.respond",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "InteractionDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "interactions.list": {
+      "asynchronous": true,
+      "capability": "interactions.respond",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "InteractionDTO[]",
+      "types": {
+        "options": "InteractionListOptions"
+      }
+    },
+    "interactions.request": {
+      "asynchronous": true,
+      "capability": "interactions.request",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "InteractionDTO",
+      "types": {
+        "input": "InteractionRequestInput"
+      }
+    },
+    "interactions.respond": {
+      "asynchronous": true,
+      "capability": "interactions.respond",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id",
+        "response"
+      ],
+      "returns": "InteractionDTO",
+      "types": {
+        "id": "string",
+        "options": "InteractionMutationOptions",
+        "response": "InteractionResponseValue"
+      }
+    },
+    "items.create": {
+      "asynchronous": true,
+      "capability": "items.write",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "ItemMutationResult",
+      "types": {
+        "input": "ItemCreateInput"
+      }
+    },
+    "items.delete": {
+      "asynchronous": true,
+      "capability": "items.write",
+      "optional": [],
+      "required": [
+        "itemId"
+      ],
+      "returns": "ItemMutationResult",
+      "types": {
+        "itemId": "string"
+      }
+    },
+    "items.get": {
+      "asynchronous": true,
+      "capability": "items.read",
+      "optional": [],
+      "required": [
+        "itemId"
+      ],
+      "returns": "ItemDTO | null",
+      "types": {
+        "itemId": "string"
+      }
+    },
+    "items.list": {
+      "asynchronous": true,
+      "capability": "items.read",
+      "optional": [
+        "query"
+      ],
+      "required": [],
+      "returns": "ItemDTO[]",
+      "types": {
+        "query": "EntityListQuery"
+      }
+    },
+    "items.patchData": {
+      "asynchronous": true,
+      "capability": "items.data.write",
+      "optional": [
+        "patch"
+      ],
+      "required": [
+        "itemId"
+      ],
+      "returns": "ItemDataPatchResult",
+      "types": {
+        "itemId": "string",
+        "patch": "RulesetSheetData"
+      }
+    },
+    "items.update": {
+      "asynchronous": true,
+      "capability": "items.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "itemId"
+      ],
+      "returns": "ItemMutationResult",
+      "types": {
+        "itemId": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "ItemUpdateInput"
+      }
+    },
+    "journals.create": {
+      "asynchronous": true,
+      "capability": "journals.write",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "JournalMutationResult",
+      "types": {
+        "input": "JournalCreateInput"
+      }
+    },
+    "journals.delete": {
+      "asynchronous": true,
+      "capability": "journals.write",
+      "optional": [],
+      "required": [
+        "journalId"
+      ],
+      "returns": "JournalMutationResult",
+      "types": {
+        "journalId": "string"
+      }
+    },
+    "journals.get": {
+      "asynchronous": true,
+      "capability": "journals.read",
+      "optional": [],
+      "required": [
+        "journalId"
+      ],
+      "returns": "JournalDTO | null",
+      "types": {
+        "journalId": "string"
+      }
+    },
+    "journals.list": {
+      "asynchronous": true,
+      "capability": "journals.read",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "JournalListResult",
+      "types": {
+        "options": "JournalListOptions"
+      }
+    },
+    "journals.update": {
+      "asynchronous": true,
+      "capability": "journals.write",
+      "optional": [
+        "patch"
+      ],
+      "required": [
+        "journalId"
+      ],
+      "returns": "JournalMutationResult",
+      "types": {
+        "journalId": "string",
+        "patch": "JournalUpdatePatch"
+      }
+    },
+    "navigation.scene.getState": {
+      "asynchronous": true,
+      "capability": "navigation.scene",
+      "optional": [],
+      "required": [],
+      "returns": "SceneNavigationStateDTO | null",
+      "types": {}
+    },
+    "navigation.scene.go": {
+      "asynchronous": true,
+      "capability": "navigation.scene",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "SceneNavigationDTO",
+      "types": {
+        "input": "SceneNavigationInput"
+      }
+    },
+    "packages.get": {
+      "asynchronous": true,
+      "capability": "packages.inspect",
+      "optional": [],
+      "required": [
+        "packageId"
+      ],
+      "returns": "PackageDTO | null",
+      "types": {
+        "packageId": "string"
+      }
+    },
+    "packages.has": {
+      "asynchronous": true,
+      "capability": "packages.inspect",
+      "optional": [],
+      "required": [
+        "packageId"
+      ],
+      "returns": "boolean",
+      "types": {
+        "packageId": "string"
+      }
+    },
+    "pdf.annotations.create": {
+      "asynchronous": true,
+      "capability": "pdf.annotations.write",
+      "optional": [
+        "annotation"
+      ],
+      "required": [
+        "documentId"
+      ],
+      "returns": "PdfAnnotationResult",
+      "types": {
+        "annotation": "PdfAnnotationInput",
+        "documentId": "string"
+      }
+    },
+    "pdf.annotations.delete": {
+      "asynchronous": true,
+      "capability": "pdf.annotations.write",
+      "optional": [],
+      "required": [
+        "documentId",
+        "annotationId"
+      ],
+      "returns": "PdfAnnotationDeleteResult",
+      "types": {
+        "annotationId": "string",
+        "documentId": "string"
+      }
+    },
+    "pdf.annotations.list": {
+      "asynchronous": true,
+      "capability": "pdf.annotations.read",
+      "optional": [],
+      "required": [
+        "documentId"
+      ],
+      "returns": "PdfAnnotationDTO[]",
+      "types": {
+        "documentId": "string"
+      }
+    },
+    "pdf.annotations.update": {
+      "asynchronous": true,
+      "capability": "pdf.annotations.write",
+      "optional": [
+        "annotation"
+      ],
+      "required": [
+        "documentId",
+        "annotationId"
+      ],
+      "returns": "PdfAnnotationResult",
+      "types": {
+        "annotation": "PdfAnnotationInput",
+        "annotationId": "string",
+        "documentId": "string"
+      }
+    },
+    "pdf.get": {
+      "asynchronous": true,
+      "capability": "pdf.read",
+      "optional": [],
+      "required": [
+        "documentId"
+      ],
+      "returns": "PdfDocumentDTO",
+      "types": {
+        "documentId": "string"
+      }
+    },
+    "pdf.metadata": {
+      "asynchronous": true,
+      "capability": "pdf.read",
+      "optional": [],
+      "required": [
+        "documentId"
+      ],
+      "returns": "PdfMetadataDTO",
+      "types": {
+        "documentId": "string"
+      }
+    },
+    "pdf.presentation.current": {
+      "asynchronous": true,
+      "capability": "pdf.presentation",
+      "optional": [],
+      "required": [
+        "documentId"
+      ],
+      "returns": "PDFPresentationDTO | null",
+      "types": {
+        "documentId": "string"
+      }
+    },
+    "pdf.presentation.end": {
+      "asynchronous": true,
+      "capability": "pdf.presentation",
+      "optional": [],
+      "required": [
+        "documentId"
+      ],
+      "returns": "PDFPresentationDTO",
+      "types": {
+        "documentId": "string"
+      }
+    },
+    "pdf.presentation.start": {
+      "asynchronous": true,
+      "capability": "pdf.presentation",
+      "optional": [
+        "input"
+      ],
+      "required": [
+        "documentId"
+      ],
+      "returns": "PDFPresentationDTO",
+      "types": {
+        "documentId": "string",
+        "input": "PdfPresentationStartInput"
+      }
+    },
+    "pdf.presentation.update": {
+      "asynchronous": true,
+      "capability": "pdf.presentation",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "documentId",
+        "page"
+      ],
+      "returns": "PDFPresentationDTO",
+      "types": {
+        "documentId": "string",
+        "options": "ExpectedVersionOptions",
+        "page": "number"
+      }
+    },
+    "pdf.viewer.currentPage": {
+      "asynchronous": false,
+      "capability": "pdf.viewer",
+      "optional": [],
+      "required": [
+        "documentId"
+      ],
+      "returns": "number | null",
+      "types": {
+        "documentId": "string"
+      }
+    },
+    "pdf.viewer.goToPage": {
+      "asynchronous": true,
+      "capability": "pdf.viewer",
+      "optional": [],
+      "required": [
+        "documentId",
+        "page"
+      ],
+      "returns": "number",
+      "types": {
+        "documentId": "string",
+        "page": "number"
+      }
+    },
+    "pdf.viewer.open": {
+      "asynchronous": true,
+      "capability": "pdf.viewer",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "reference"
+      ],
+      "returns": "PdfViewerOpenResult",
+      "types": {
+        "options": "PdfViewerOpenOptions",
+        "reference": "string"
+      }
+    },
+    "pdf.viewer.search": {
+      "asynchronous": true,
+      "capability": "pdf.viewer",
+      "optional": [],
+      "required": [
+        "documentId",
+        "query"
+      ],
+      "returns": "PdfSearchMatch[]",
+      "types": {
+        "documentId": "string",
+        "query": "string"
+      }
+    },
+    "permissions.can": {
+      "asynchronous": true,
+      "capability": "permissions.inspect",
+      "optional": [
+        "resource"
+      ],
+      "required": [
+        "action"
+      ],
+      "returns": "boolean",
+      "types": {
+        "action": "string",
+        "resource": "PermissionResource"
+      }
+    },
+    "permissions.check": {
+      "asynchronous": true,
+      "capability": "permissions.inspect",
+      "optional": [
+        "resource"
+      ],
+      "required": [
+        "action"
+      ],
+      "returns": "PermissionCheckDTO",
+      "types": {
+        "action": "string",
+        "resource": "PermissionResource"
+      }
+    },
+    "rolls.intent": {
+      "asynchronous": false,
+      "capability": "rolls.intent",
+      "optional": [
+        "payload"
+      ],
+      "required": [],
+      "returns": "Promise<RollResultDTO | SheetDataPatchResult>",
+      "types": {
+        "payload": "RollIntentInput"
+      }
+    },
+    "rules.actions.execute": {
+      "asynchronous": true,
+      "capability": "rules.actions",
+      "optional": [
+        "input",
+        "options"
+      ],
+      "required": [
+        "actionId"
+      ],
+      "returns": "ActionExecutionResult",
+      "types": {
+        "actionId": "string",
+        "input": "ActionInput",
+        "options": "ActionExecuteOptions"
+      }
+    },
+    "rules.actions.executeReference": {
+      "asynchronous": true,
+      "capability": "rules.actions",
+      "optional": [
+        "input",
+        "options"
+      ],
+      "required": [
+        "reference"
+      ],
+      "returns": "ActionExecutionResult",
+      "types": {
+        "input": "ActionInput",
+        "options": "ActionReferenceExecuteOptions",
+        "reference": "string"
+      }
+    },
+    "rules.actions.get": {
+      "asynchronous": true,
+      "capability": "rules.actions",
+      "optional": [],
+      "required": [
+        "actionId"
+      ],
+      "returns": "ActionDefinitionDTO",
+      "types": {
+        "actionId": "string"
+      }
+    },
+    "rules.actions.list": {
+      "asynchronous": true,
+      "capability": "rules.actions",
+      "optional": [],
+      "required": [],
+      "returns": "ActionDefinitionDTO[]",
+      "types": {}
+    },
+    "rules.actions.resolve": {
+      "asynchronous": true,
+      "capability": "rules.actions",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "ActionDefinitionDTO",
+      "types": {
+        "input": "ActionResolveInput"
+      }
+    },
+    "scene.active": {
+      "asynchronous": true,
+      "capability": "scene.read",
+      "optional": [],
+      "required": [],
+      "returns": "SceneDTO | null",
+      "types": {}
+    },
+    "scene.activeCameraForScene": {
+      "asynchronous": false,
+      "capability": "scene.tools",
+      "optional": [],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "CameraDTO | null",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.activeCanvas": {
+      "asynchronous": false,
+      "capability": "scene.tools",
+      "optional": [],
+      "required": [],
+      "returns": "HTMLElement | null",
+      "types": {}
+    },
+    "scene.effects.create": {
+      "asynchronous": true,
+      "capability": "scene.effects.write",
+      "optional": [
+        "values"
+      ],
+      "required": [
+        "sceneId",
+        "kind"
+      ],
+      "returns": "ParticleResultDTO",
+      "types": {
+        "kind": "string",
+        "sceneId": "string",
+        "values": "ParticleValues"
+      }
+    },
+    "scene.effects.delete": {
+      "asynchronous": true,
+      "capability": "scene.effects.write",
+      "optional": [],
+      "required": [
+        "effectId",
+        "kind"
+      ],
+      "returns": "ParticleDeleteResult",
+      "types": {
+        "effectId": "string",
+        "kind": "string"
+      }
+    },
+    "scene.effects.list": {
+      "asynchronous": true,
+      "capability": "scene.effects.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "EffectStateDTO",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.effects.presets": {
+      "asynchronous": true,
+      "capability": "scene.effects.read",
+      "optional": [],
+      "required": [],
+      "returns": "ParticlePresetDTO[]",
+      "types": {}
+    },
+    "scene.effects.update": {
+      "asynchronous": true,
+      "capability": "scene.effects.write",
+      "optional": [
+        "values"
+      ],
+      "required": [
+        "effectId",
+        "kind"
+      ],
+      "returns": "ParticleResultDTO",
+      "types": {
+        "effectId": "string",
+        "kind": "string",
+        "values": "ParticleValues"
+      }
+    },
+    "scene.fog.disable": {
+      "asynchronous": true,
+      "capability": "scene.fog.write",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "FogMutationResult",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.fog.enable": {
+      "asynchronous": true,
+      "capability": "scene.fog.write",
+      "optional": [
+        "initial",
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "FogMutationResult",
+      "types": {
+        "initial": "string",
+        "sceneId": "string"
+      }
+    },
+    "scene.fog.paint": {
+      "asynchronous": true,
+      "capability": "scene.fog.write",
+      "optional": [
+        "ops",
+        "options",
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "FogMutationResult",
+      "types": {
+        "ops": "FogOp[]",
+        "options": "FogPaintOptions",
+        "sceneId": "string"
+      }
+    },
+    "scene.fog.reset": {
+      "asynchronous": true,
+      "capability": "scene.fog.write",
+      "optional": [
+        "sceneId",
+        "to"
+      ],
+      "required": [],
+      "returns": "FogMutationResult",
+      "types": {
+        "sceneId": "string",
+        "to": "string"
+      }
+    },
+    "scene.fog.state": {
+      "asynchronous": true,
+      "capability": "scene.fog.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "FogStateDTO",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.geometry.createLight": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [
+        "input"
+      ],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "LightResult",
+      "types": {
+        "input": "LightCreateInput",
+        "sceneId": "string"
+      }
+    },
+    "scene.geometry.createWall": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [
+        "input"
+      ],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "WallResult",
+      "types": {
+        "input": "WallCreateInput",
+        "sceneId": "string"
+      }
+    },
+    "scene.geometry.deleteLight": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [],
+      "required": [
+        "lightId"
+      ],
+      "returns": "LightDeleteResult",
+      "types": {
+        "lightId": "string"
+      }
+    },
+    "scene.geometry.deleteWall": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [],
+      "required": [
+        "wallId"
+      ],
+      "returns": "WallDeleteResult",
+      "types": {
+        "wallId": "string"
+      }
+    },
+    "scene.geometry.deleteWalls": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [],
+      "required": [
+        "wallIds"
+      ],
+      "returns": "WallsDeleteResult",
+      "types": {
+        "wallIds": "string[]"
+      }
+    },
+    "scene.geometry.lights": {
+      "asynchronous": true,
+      "capability": "scene.geometry.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "LightDTO[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.geometry.moveWallNode": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [],
+      "required": [
+        "sceneId",
+        "from",
+        "to"
+      ],
+      "returns": "WallsResult",
+      "types": {
+        "from": "WorldPointDTO",
+        "sceneId": "string",
+        "to": "WorldPointDTO"
+      }
+    },
+    "scene.geometry.moveWalls": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [],
+      "required": [
+        "sceneId",
+        "wallIds",
+        "delta"
+      ],
+      "returns": "WallsResult",
+      "types": {
+        "delta": "WorldPointDTO",
+        "sceneId": "string",
+        "wallIds": "string[]"
+      }
+    },
+    "scene.geometry.setDoorState": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [],
+      "required": [
+        "wallId",
+        "state"
+      ],
+      "returns": "WallResult",
+      "types": {
+        "state": "string",
+        "wallId": "string"
+      }
+    },
+    "scene.geometry.splitWall": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [],
+      "required": [
+        "wallId",
+        "x",
+        "y"
+      ],
+      "returns": "WallsResult",
+      "types": {
+        "wallId": "string",
+        "x": "number",
+        "y": "number"
+      }
+    },
+    "scene.geometry.updateLight": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [
+        "patch"
+      ],
+      "required": [
+        "lightId"
+      ],
+      "returns": "LightResult",
+      "types": {
+        "lightId": "string",
+        "patch": "LightUpdatePatch"
+      }
+    },
+    "scene.geometry.updateWall": {
+      "asynchronous": true,
+      "capability": "scene.geometry.write",
+      "optional": [
+        "patch"
+      ],
+      "required": [
+        "wallId"
+      ],
+      "returns": "WallResult",
+      "types": {
+        "patch": "WallUpdatePatch",
+        "wallId": "string"
+      }
+    },
+    "scene.geometry.walls": {
+      "asynchronous": true,
+      "capability": "scene.geometry.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "WallDTO[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.get": {
+      "asynchronous": true,
+      "capability": "scene.read",
+      "optional": [],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "SceneDTO | null",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.images.delete": {
+      "asynchronous": true,
+      "capability": "scene.images.write",
+      "optional": [],
+      "required": [
+        "placementId"
+      ],
+      "returns": "SceneImageDeleteResult",
+      "types": {
+        "placementId": "string"
+      }
+    },
+    "scene.images.list": {
+      "asynchronous": true,
+      "capability": "scene.images.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "SceneImageListResult",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.images.place": {
+      "asynchronous": true,
+      "capability": "scene.images.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "sceneId",
+        "assetId"
+      ],
+      "returns": "SceneImageResult",
+      "types": {
+        "assetId": "string",
+        "options": "SceneImagePlaceOptions",
+        "sceneId": "string"
+      }
+    },
+    "scene.images.update": {
+      "asynchronous": true,
+      "capability": "scene.images.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "placementId"
+      ],
+      "returns": "SceneImageResult",
+      "types": {
+        "options": "ExpectedVersionOptions",
+        "patch": "SceneImageUpdatePatch",
+        "placementId": "string"
+      }
+    },
+    "scene.list": {
+      "asynchronous": true,
+      "capability": "scene.read",
+      "optional": [],
+      "required": [],
+      "returns": "SceneDTO[]",
+      "types": {}
+    },
+    "scene.measurements.cancel": {
+      "asynchronous": true,
+      "capability": "scene.measurements.shared",
+      "optional": [],
+      "required": [
+        "sceneId",
+        "measurementId"
+      ],
+      "returns": "SharedMeasurementDTO",
+      "types": {
+        "measurementId": "string",
+        "sceneId": "string"
+      }
+    },
+    "scene.measurements.listShared": {
+      "asynchronous": true,
+      "capability": "scene.measurements.shared",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "SharedMeasurementDTO[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.measurements.measure": {
+      "asynchronous": true,
+      "capability": "scene.tools",
+      "optional": [],
+      "required": [
+        "sceneId",
+        "from",
+        "to"
+      ],
+      "returns": "MeasurementResultDTO",
+      "types": {
+        "from": "WorldPointDTO",
+        "sceneId": "string",
+        "to": "WorldPointDTO"
+      }
+    },
+    "scene.measurements.share": {
+      "asynchronous": true,
+      "capability": "scene.measurements.shared",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "sceneId",
+        "geometry"
+      ],
+      "returns": "SharedMeasurementDTO",
+      "types": {
+        "geometry": "SharedMeasurementGeometry",
+        "options": "SharedMeasurementOptions",
+        "sceneId": "string"
+      }
+    },
+    "scene.objectTypes.register": {
+      "asynchronous": true,
+      "capability": "scene.objectTypes.register",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "Promise<Disposer>",
+      "types": {
+        "definition": "SceneObjectTypeDefinition"
+      }
+    },
+    "scene.objects.create": {
+      "asynchronous": true,
+      "capability": "scene.objects.write",
+      "optional": [
+        "input"
+      ],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "SceneObjectDTO",
+      "types": {
+        "input": "SceneObjectInput",
+        "sceneId": "string"
+      }
+    },
+    "scene.objects.delete": {
+      "asynchronous": true,
+      "capability": "scene.objects.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SceneObjectDeleteResult",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "scene.objects.get": {
+      "asynchronous": true,
+      "capability": "scene.objects.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "SceneObjectDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "scene.objects.hitTest": {
+      "asynchronous": true,
+      "capability": "scene.objects.read",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "sceneId",
+        "point"
+      ],
+      "returns": "SceneObjectDTO[]",
+      "types": {
+        "options": "SceneObjectHitTestOptions",
+        "point": "WorldPointDTO",
+        "sceneId": "string"
+      }
+    },
+    "scene.objects.interact": {
+      "asynchronous": true,
+      "capability": "scene.objects.interact",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id",
+        "interactionId"
+      ],
+      "returns": "SceneObjectInteractionIntentDTO",
+      "types": {
+        "id": "string",
+        "interactionId": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "scene.objects.list": {
+      "asynchronous": true,
+      "capability": "scene.objects.read",
+      "optional": [
+        "options",
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "SceneObjectDTO[]",
+      "types": {
+        "options": "SceneObjectListOptions",
+        "sceneId": "string"
+      }
+    },
+    "scene.objects.update": {
+      "asynchronous": true,
+      "capability": "scene.objects.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SceneObjectDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "SceneObjectPatch"
+      }
+    },
+    "scene.shaders.apply": {
+      "asynchronous": true,
+      "capability": "scene.shaders.write",
+      "optional": [
+        "input"
+      ],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "ShaderInstanceDTO",
+      "types": {
+        "input": "ShaderApplyInput",
+        "sceneId": "string"
+      }
+    },
+    "scene.shaders.customLibrary.clearPreview": {
+      "asynchronous": false,
+      "capability": "scene.shaders.customLibrary",
+      "optional": [],
+      "required": [],
+      "returns": "CustomShaderPreviewResult",
+      "types": {}
+    },
+    "scene.shaders.customLibrary.openEditor": {
+      "asynchronous": true,
+      "capability": "scene.shaders.customLibrary",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "CustomShaderDefinition | null",
+      "types": {
+        "definition": "CustomShaderDefinition | null"
+      }
+    },
+    "scene.shaders.customLibrary.preview": {
+      "asynchronous": false,
+      "capability": "scene.shaders.customLibrary",
+      "optional": [],
+      "required": [
+        "definition"
+      ],
+      "returns": "CustomShaderPreviewResult",
+      "types": {
+        "definition": "CustomShaderDefinition"
+      }
+    },
+    "scene.shaders.customLibrary.registerProvider": {
+      "asynchronous": false,
+      "capability": "scene.shaders.customLibrary",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "Disposer",
+      "types": {
+        "definition": "CustomShaderProviderDefinition"
+      }
+    },
+    "scene.shaders.customLibrary.use": {
+      "asynchronous": true,
+      "capability": "scene.shaders.customLibrary",
+      "optional": [],
+      "required": [
+        "definition"
+      ],
+      "returns": "CustomShaderUseResult",
+      "types": {
+        "definition": "CustomShaderDefinition"
+      }
+    },
+    "scene.shaders.enable": {
+      "asynchronous": true,
+      "capability": "scene.shaders.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id",
+        "enabled"
+      ],
+      "returns": "ShaderInstanceDTO",
+      "types": {
+        "enabled": "boolean",
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "scene.shaders.getPreset": {
+      "asynchronous": true,
+      "capability": "scene.shaders.read",
+      "optional": [],
+      "required": [
+        "presetId"
+      ],
+      "returns": "ShaderPresetDTO | null",
+      "types": {
+        "presetId": "string"
+      }
+    },
+    "scene.shaders.list": {
+      "asynchronous": true,
+      "capability": "scene.shaders.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "ShaderInstanceDTO[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.shaders.presets": {
+      "asynchronous": true,
+      "capability": "scene.shaders.read",
+      "optional": [],
+      "required": [],
+      "returns": "ShaderPresetDTO[]",
+      "types": {}
+    },
+    "scene.shaders.remove": {
+      "asynchronous": true,
+      "capability": "scene.shaders.write",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "ShaderRemovalResult",
+      "types": {
+        "id": "string"
+      }
+    },
+    "scene.shaders.update": {
+      "asynchronous": true,
+      "capability": "scene.shaders.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "ShaderInstanceDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "ShaderUpdateInput"
+      }
+    },
+    "scene.spatialSounds.create": {
+      "asynchronous": true,
+      "capability": "scene.spatialSounds.write",
+      "optional": [
+        "input"
+      ],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "SpatialSoundDTO",
+      "types": {
+        "input": "SpatialSoundInput",
+        "sceneId": "string"
+      }
+    },
+    "scene.spatialSounds.delete": {
+      "asynchronous": true,
+      "capability": "scene.spatialSounds.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SpatialSoundDeleteResult",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "scene.spatialSounds.get": {
+      "asynchronous": true,
+      "capability": "scene.spatialSounds.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "SpatialSoundDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "scene.spatialSounds.list": {
+      "asynchronous": true,
+      "capability": "scene.spatialSounds.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "SpatialSoundDTO[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.spatialSounds.update": {
+      "asynchronous": true,
+      "capability": "scene.spatialSounds.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SpatialSoundDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "SpatialSoundPatch"
+      }
+    },
+    "scene.templates.create": {
+      "asynchronous": true,
+      "capability": "scene.templates.write",
+      "optional": [
+        "values"
+      ],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "SceneTemplateResult",
+      "types": {
+        "sceneId": "string",
+        "values": "SceneTemplateValues"
+      }
+    },
+    "scene.templates.delete": {
+      "asynchronous": true,
+      "capability": "scene.templates.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "templateId"
+      ],
+      "returns": "SceneTemplateDeleteResult",
+      "types": {
+        "options": "ExpectedVersionOptions",
+        "templateId": "string"
+      }
+    },
+    "scene.templates.get": {
+      "asynchronous": true,
+      "capability": "scene.templates.read",
+      "optional": [],
+      "required": [
+        "sceneId",
+        "templateId"
+      ],
+      "returns": "SceneTemplateDTO | null",
+      "types": {
+        "sceneId": "string",
+        "templateId": "string"
+      }
+    },
+    "scene.templates.list": {
+      "asynchronous": true,
+      "capability": "scene.templates.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "SceneTemplateListResult",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.templates.update": {
+      "asynchronous": true,
+      "capability": "scene.templates.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "templateId"
+      ],
+      "returns": "SceneTemplateResult",
+      "types": {
+        "options": "ExpectedVersionOptions",
+        "patch": "Partial<SceneTemplateValues>",
+        "templateId": "string"
+      }
+    },
+    "scene.zones.create": {
+      "asynchronous": true,
+      "capability": "scene.zones.write",
+      "optional": [
+        "input"
+      ],
+      "required": [
+        "sceneId"
+      ],
+      "returns": "SceneZoneDTO",
+      "types": {
+        "input": "SceneZoneInput",
+        "sceneId": "string"
+      }
+    },
+    "scene.zones.delete": {
+      "asynchronous": true,
+      "capability": "scene.zones.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SceneZoneDeleteResult",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "scene.zones.get": {
+      "asynchronous": true,
+      "capability": "scene.zones.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "SceneZoneDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "scene.zones.list": {
+      "asynchronous": true,
+      "capability": "scene.zones.read",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "SceneZoneDTO[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "scene.zones.members": {
+      "asynchronous": true,
+      "capability": "scene.zones.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "string[]",
+      "types": {
+        "id": "string"
+      }
+    },
+    "scene.zones.update": {
+      "asynchronous": true,
+      "capability": "scene.zones.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SceneZoneDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "SceneZonePatch"
+      }
+    },
+    "settings.all": {
+      "asynchronous": false,
+      "capability": "settings",
+      "optional": [],
+      "required": [],
+      "returns": "SettingValues",
+      "types": {}
+    },
+    "settings.definitions": {
+      "asynchronous": false,
+      "capability": "settings",
+      "optional": [],
+      "required": [],
+      "returns": "SettingDefinitionDTO[]",
+      "types": {}
+    },
+    "settings.get": {
+      "asynchronous": false,
+      "capability": "settings",
+      "optional": [
+        "fallback"
+      ],
+      "required": [
+        "key"
+      ],
+      "returns": "SettingValue | undefined",
+      "types": {
+        "fallback": "string",
+        "key": "string"
+      }
+    },
+    "settings.onChange": {
+      "asynchronous": false,
+      "capability": "settings",
+      "optional": [],
+      "required": [
+        "key",
+        "handler"
+      ],
+      "returns": "Disposer",
+      "types": {
+        "handler": "SettingChangeHandler",
+        "key": "string"
+      }
+    },
+    "settings.scope": {
+      "asynchronous": false,
+      "capability": "settings",
+      "optional": [],
+      "required": [
+        "key"
+      ],
+      "returns": "SettingScope | null",
+      "types": {
+        "key": "string"
+      }
+    },
+    "settings.set": {
+      "asynchronous": true,
+      "capability": "settings",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "key",
+        "value"
+      ],
+      "returns": "SettingSetResult",
+      "types": {
+        "key": "string",
+        "options": "SettingSetOptions",
+        "value": "number"
+      }
+    },
+    "sheets.helpers": {
+      "asynchronous": false,
+      "capability": "sheets.runtime",
+      "optional": [],
+      "required": [],
+      "returns": "SheetHelpers",
+      "types": {}
+    },
+    "sheets.register": {
+      "asynchronous": false,
+      "capability": "sheets.runtime",
+      "optional": [],
+      "required": [
+        "plugin"
+      ],
+      "returns": "void",
+      "types": {
+        "plugin": "SheetPlugin"
+      }
+    },
+    "sheets.registerController": {
+      "asynchronous": false,
+      "capability": "sheets.controller",
+      "optional": [],
+      "required": [
+        "sheetType",
+        "controller"
+      ],
+      "returns": "boolean",
+      "types": {
+        "controller": "SheetController",
+        "sheetType": "string"
+      }
+    },
+    "sounds.create": {
+      "asynchronous": true,
+      "capability": "sounds.write",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "SoundDTO",
+      "types": {
+        "input": "SoundCreateInput"
+      }
+    },
+    "sounds.delete": {
+      "asynchronous": true,
+      "capability": "sounds.write",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SoundDeleteResult",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "sounds.get": {
+      "asynchronous": true,
+      "capability": "sounds.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "SoundDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "sounds.list": {
+      "asynchronous": true,
+      "capability": "sounds.read",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "SoundDTO[]",
+      "types": {
+        "options": "SoundListOptions"
+      }
+    },
+    "sounds.update": {
+      "asynchronous": true,
+      "capability": "sounds.write",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "SoundDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "SoundPatch"
+      }
+    },
+    "storage.sqlite.execute": {
+      "asynchronous": true,
+      "capability": "storage.sqlite",
+      "optional": [
+        "params"
+      ],
+      "required": [
+        "scope",
+        "name"
+      ],
+      "returns": "StorageExecuteResult",
+      "types": {
+        "name": "string",
+        "params": "StorageParams",
+        "scope": "string"
+      }
+    },
+    "storage.sqlite.query": {
+      "asynchronous": true,
+      "capability": "storage.sqlite",
+      "optional": [
+        "params"
+      ],
+      "required": [
+        "scope",
+        "name"
+      ],
+      "returns": "StorageQueryResult",
+      "types": {
+        "name": "string",
+        "params": "StorageParams",
+        "scope": "string"
+      }
+    },
+    "storage.sqlite.status": {
+      "asynchronous": true,
+      "capability": "storage.sqlite",
+      "optional": [],
+      "required": [
+        "scope"
+      ],
+      "returns": "StorageStatusDTO",
+      "types": {
+        "scope": "string"
+      }
+    },
+    "timelines.cancel": {
+      "asynchronous": true,
+      "capability": "timelines.control",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "TimelineDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "timelines.get": {
+      "asynchronous": true,
+      "capability": "timelines.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "TimelineDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "timelines.list": {
+      "asynchronous": true,
+      "capability": "timelines.read",
+      "optional": [],
+      "required": [],
+      "returns": "TimelineDTO[]",
+      "types": {}
+    },
+    "timelines.register": {
+      "asynchronous": true,
+      "capability": "timelines.start",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "TimelineDefinitionDTO",
+      "types": {
+        "definition": "TimelineDefinitionDTO"
+      }
+    },
+    "timelines.start": {
+      "asynchronous": true,
+      "capability": "timelines.start",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "TimelineDTO",
+      "types": {
+        "input": "TimelineStartInput"
+      }
+    },
+    "tokens.centerOn": {
+      "asynchronous": false,
+      "capability": "tokens.extends",
+      "optional": [],
+      "required": [
+        "tokenId"
+      ],
+      "returns": "void",
+      "types": {
+        "tokenId": "string"
+      }
+    },
+    "tokens.create": {
+      "asynchronous": true,
+      "capability": "tokens.manage",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "TokenMutationResult",
+      "types": {
+        "input": "TokenCreateInput"
+      }
+    },
+    "tokens.delete": {
+      "asynchronous": true,
+      "capability": "tokens.manage",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "tokenId"
+      ],
+      "returns": "TokenMutationResult",
+      "types": {
+        "options": "TokenOptions",
+        "tokenId": "string"
+      }
+    },
+    "tokens.get": {
+      "asynchronous": true,
+      "capability": "tokens.read",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "tokenId"
+      ],
+      "returns": "TokenDTO | null",
+      "types": {
+        "options": "TokenReadOptions",
+        "tokenId": "string"
+      }
+    },
+    "tokens.list": {
+      "asynchronous": true,
+      "capability": "tokens.read",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "TokenDTO[]",
+      "types": {
+        "options": "TokenReadOptions"
+      }
+    },
+    "tokens.move": {
+      "asynchronous": true,
+      "capability": "tokens.move",
+      "optional": [
+        "options",
+        "position"
+      ],
+      "required": [
+        "tokenId"
+      ],
+      "returns": "TokenMutationResult",
+      "types": {
+        "options": "TokenOptions",
+        "position": "TokenMoveInput",
+        "tokenId": "string"
+      }
+    },
+    "tokens.targets.clear": {
+      "asynchronous": true,
+      "capability": "tokens.targets",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "string[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "tokens.targets.list": {
+      "asynchronous": true,
+      "capability": "tokens.targets",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [],
+      "returns": "string[]",
+      "types": {
+        "sceneId": "string"
+      }
+    },
+    "tokens.targets.set": {
+      "asynchronous": true,
+      "capability": "tokens.targets",
+      "optional": [
+        "sceneId"
+      ],
+      "required": [
+        "ids"
+      ],
+      "returns": "string[]",
+      "types": {
+        "ids": "string[]",
+        "sceneId": "string"
+      }
+    },
+    "tokens.transfer": {
+      "asynchronous": true,
+      "capability": "tokens.transfer",
+      "optional": [
+        "destination",
+        "options"
+      ],
+      "required": [
+        "tokenId"
+      ],
+      "returns": "TokenTransferResultDTO",
+      "types": {
+        "destination": "TokenTransferDestination",
+        "options": "TokenTransferOptions",
+        "tokenId": "string"
+      }
+    },
+    "tokens.transferMany": {
+      "asynchronous": true,
+      "capability": "tokens.transfer",
+      "optional": [
+        "options",
+        "transfers"
+      ],
+      "required": [],
+      "returns": "TokenTransferResultDTO",
+      "types": {
+        "options": "TokenTransferManyOptions",
+        "transfers": "TokenTransferSpec[]"
+      }
+    },
+    "tokens.update": {
+      "asynchronous": true,
+      "capability": "tokens.manage",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "tokenId"
+      ],
+      "returns": "TokenMutationResult",
+      "types": {
+        "options": "TokenOptions",
+        "patch": "TokenOverrides",
+        "tokenId": "string"
+      }
+    },
+    "tools.activeTool": {
+      "asynchronous": false,
+      "capability": "scene.tools",
+      "optional": [],
+      "required": [],
+      "returns": "string",
+      "types": {}
+    },
+    "tools.register": {
+      "asynchronous": false,
+      "capability": "scene.tools",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "Disposer",
+      "types": {
+        "definition": "ToolDefinition"
+      }
+    },
+    "ui.applications.close": {
+      "asynchronous": false,
+      "capability": "ui.applications",
+      "optional": [],
+      "required": [
+        "applicationId"
+      ],
+      "returns": "void",
+      "types": {
+        "applicationId": "string"
+      }
+    },
+    "ui.applications.register": {
+      "asynchronous": false,
+      "capability": "ui.applications",
+      "optional": [],
+      "required": [
+        "applicationId",
+        "definition"
+      ],
+      "returns": "Disposer",
+      "types": {
+        "applicationId": "string",
+        "definition": "ApplicationDefinition"
+      }
+    },
+    "ui.applications.render": {
+      "asynchronous": false,
+      "capability": "ui.applications",
+      "optional": [
+        "appContext",
+        "options"
+      ],
+      "required": [
+        "applicationId",
+        "host"
+      ],
+      "returns": "Promise<ApplicationInstance | null>",
+      "types": {
+        "appContext": "ApplicationContext",
+        "applicationId": "string",
+        "host": "HTMLElement",
+        "options": "ApplicationRenderOptions"
+      }
+    },
+    "ui.closeModal": {
+      "asynchronous": false,
+      "capability": "assets.ui",
+      "optional": [],
+      "required": [
+        "modalOrId"
+      ],
+      "returns": "void",
+      "types": {
+        "modalOrId": "string"
+      }
+    },
+    "ui.dragDrop.drop": {
+      "asynchronous": true,
+      "capability": "ui.dragDrop",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "SemanticDropResultDTO",
+      "types": {
+        "input": "SemanticDropInput"
+      }
+    },
+    "ui.dragDrop.registerSource": {
+      "asynchronous": true,
+      "capability": "ui.dragDrop",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "Promise<Disposer>",
+      "types": {
+        "definition": "DragSourceDefinition"
+      }
+    },
+    "ui.dragDrop.registerTarget": {
+      "asynchronous": true,
+      "capability": "ui.dragDrop",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "Promise<Disposer>",
+      "types": {
+        "definition": "DropTargetDefinition"
+      }
+    },
+    "ui.dragDrop.sources": {
+      "asynchronous": true,
+      "capability": "ui.dragDrop",
+      "optional": [],
+      "required": [],
+      "returns": "SemanticRegistrationDTO[]",
+      "types": {}
+    },
+    "ui.dragDrop.targets": {
+      "asynchronous": true,
+      "capability": "ui.dragDrop",
+      "optional": [],
+      "required": [],
+      "returns": "SemanticRegistrationDTO[]",
+      "types": {}
+    },
+    "ui.openModal": {
+      "asynchronous": false,
+      "capability": "assets.ui",
+      "optional": [],
+      "required": [
+        "modalId"
+      ],
+      "returns": "void",
+      "types": {
+        "modalId": "string"
+      }
+    },
+    "ui.presentations.close": {
+      "asynchronous": true,
+      "capability": "ui.presentations",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "PresentationCloseResult",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "ui.presentations.get": {
+      "asynchronous": true,
+      "capability": "ui.presentations",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "PresentationDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "ui.presentations.list": {
+      "asynchronous": true,
+      "capability": "ui.presentations",
+      "optional": [
+        "options"
+      ],
+      "required": [],
+      "returns": "PresentationDTO[]",
+      "types": {
+        "options": "PresentationListOptions"
+      }
+    },
+    "ui.presentations.show": {
+      "asynchronous": true,
+      "capability": "ui.presentations",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "PresentationDTO",
+      "types": {
+        "input": "PresentationInput"
+      }
+    },
+    "ui.presentations.update": {
+      "asynchronous": true,
+      "capability": "ui.presentations",
+      "optional": [
+        "options",
+        "patch"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "PresentationDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions",
+        "patch": "PresentationPatch"
+      }
+    },
+    "ui.presentations.wait": {
+      "asynchronous": true,
+      "capability": "ui.presentations",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "PresentationDTO | null",
+      "types": {
+        "id": "string",
+        "options": "PresentationWaitOptions"
+      }
+    },
+    "ui.slots.available": {
+      "asynchronous": false,
+      "capability": "ui.slots",
+      "optional": [],
+      "required": [],
+      "returns": "string[]",
+      "types": {}
+    },
+    "ui.slots.register": {
+      "asynchronous": false,
+      "capability": "ui.slots",
+      "optional": [],
+      "required": [
+        "slotId",
+        "render"
+      ],
+      "returns": "Disposer",
+      "types": {
+        "render": "SlotRenderCallback",
+        "slotId": "string"
+      }
+    },
+    "ui.toast": {
+      "asynchronous": false,
+      "capability": "assets.ui",
+      "optional": [],
+      "required": [
+        "message",
+        "options"
+      ],
+      "returns": "ToastHandle | undefined",
+      "types": {
+        "message": "string",
+        "options": "ToastOptions"
+      }
+    },
+    "workflows.cancel": {
+      "asynchronous": true,
+      "capability": "workflows.control",
+      "optional": [
+        "options"
+      ],
+      "required": [
+        "id"
+      ],
+      "returns": "WorkflowDTO",
+      "types": {
+        "id": "string",
+        "options": "ExpectedVersionOptions"
+      }
+    },
+    "workflows.get": {
+      "asynchronous": true,
+      "capability": "workflows.read",
+      "optional": [],
+      "required": [
+        "id"
+      ],
+      "returns": "WorkflowDTO | null",
+      "types": {
+        "id": "string"
+      }
+    },
+    "workflows.list": {
+      "asynchronous": true,
+      "capability": "workflows.read",
+      "optional": [],
+      "required": [],
+      "returns": "WorkflowDTO[]",
+      "types": {}
+    },
+    "workflows.register": {
+      "asynchronous": true,
+      "capability": "workflows.start",
+      "optional": [
+        "definition"
+      ],
+      "required": [],
+      "returns": "WorkflowDefinitionDTO",
+      "types": {
+        "definition": "WorkflowDefinitionDTO"
+      }
+    },
+    "workflows.start": {
+      "asynchronous": true,
+      "capability": "workflows.start",
+      "optional": [
+        "input"
+      ],
+      "required": [],
+      "returns": "WorkflowDTO",
+      "types": {
+        "input": "WorkflowStartInput"
+      }
+    }
+  },
+  "sdkVersion": "1",
+  "typeAliases": {
+    "ActionInput": "JsonObject",
+    "ActionInputSchema": "JsonObject",
+    "ActorItemCopyDTO": "{ id: string; sourceItemId: string } & RulesetItemCopyFields",
+    "ApplicationContext": "JsonObject",
+    "ApplicationParts": "{ [partId: string]: ((context: ApplicationContext, root: HTMLElement) => Node | string | void | Promise<Node | string | void>) | { render: (context: ApplicationContext, root: HTMLElement) => Node | string | void | Promise<Node | string | void>; activate?: (root: HTMLElement, context: ApplicationContext) => Disposer | void } }",
+    "BusResponse": "{ ok: true; value: InteropPayload } | { ok: false; error: { code: string; message: string } }",
+    "CampaignContext": "JsonObject",
+    "CardArtworkMap": "{ [cardId: string]: string }",
+    "CardRuntimeDTO": "JsonObject",
+    "ChatMetadata": "JsonObject",
+    "CombatPanelDefinition": "JsonObject",
+    "CombatPlugin": "JsonObject",
+    "CombatProtocolPayload": "JsonObject",
+    "CommandHandler": "(payload: CommandPayload) => void | Promise<void>",
+    "CommandPayload": "JsonValue",
+    "ContentPackEntryData": "JsonObject",
+    "ContentResolvedValue": "ActorDTO | ItemDTO | SceneDTO | TokenDTO | JournalDTO | PdfDocumentDTO | CardRuntimeDTO | DeckRuntimeDTO",
+    "DeckRuntimeDTO": "JsonObject",
+    "Disposer": "() => void",
+    "FogOp": "{ mode: 'reveal' | 'hide'; shape: 'circle'; geom: { center_x_cells: number; center_y_cells: number; radius_cells: number } } | { mode: 'reveal' | 'hide'; shape: 'square'; geom: { center_x_cells: number; center_y_cells: number; size_cells: number } } | { mode: 'reveal' | 'hide'; shape: 'polygon'; geom: { points_cells: [number, number][] } }",
+    "GameplaySubmissionValue": "boolean | string | number | null | JsonObject | JsonValue[]",
+    "GameplayTurnModel": "'SEQUENTIAL' | 'SIMULTANEOUS' | 'PHASED'",
+    "InputCommandHandler": "(invocation: InputCommandInvocationDTO) => void | Promise<void>",
+    "InteractionResponseValue": "boolean | string | number | string[]",
+    "InteropHandler": "(payload: InteropPayload, context: InteropProviderContext) => InteropPayload | Promise<InteropPayload>",
+    "InteropPayload": "JsonValue",
+    "InteropSubscriber": "(payload: InteropPayload) => void",
+    "JournalDataInput": "JsonObject",
+    "JournalView": "JsonObject",
+    "PackageLifecyclePayload": "JsonObject",
+    "ParticleParameterSchemas": "JsonObject",
+    "PdfSearchMatch": "JsonObject",
+    "PdfViewerHostState": "JsonObject",
+    "PdfViewerOpenResult": "PdfDocumentDTO & PdfViewerHostState & { page: number }",
+    "PermissionContext": "JsonObject",
+    "RollAppliedMutation": "JsonObject",
+    "RollMetadata": "JsonObject",
+    "RollOptions": "JsonObject",
+    "RulesetCombatResources": "JsonObject",
+    "RulesetEffectMutation": "JsonObject",
+    "RulesetItemCopyFields": "JsonObject",
+    "RulesetSheetData": "JsonObject",
+    "SceneContext": "JsonObject",
+    "SceneImageMetadata": "JsonObject",
+    "SdkEvent": "Readonly<{ type: SdkEventName; version: number; resourceId?: string; sceneId?: string }>",
+    "SdkEventHandler": "(event: SdkEvent) => void",
+    "SdkEventName": "string",
+    "SettingChangeHandler": "(change: SettingChangeDTO) => void",
+    "SettingScope": "'client' | 'campaign' | 'package'",
+    "SettingValue": "string | number | boolean | null | string[]",
+    "SettingValues": "{ [key: string]: SettingValue }",
+    "SheetControllerContext": "JsonObject",
+    "SheetHelpers": "{ el: (tag: string, attributes?: JsonObject, ...children: (Node | string)[]) => HTMLElement; phIcon: (name: string) => HTMLElement; getPath: (value: JsonObject, path: string) => SheetValue | undefined; formatMod: (value: number) => string; cssIdent: (value: string) => string; nonEmptyParts: (...parts: string[]) => string[]; closeFloatingSheetMenus: () => void; postJSON: (url: string, payload: JsonObject) => Promise<SheetHttpResult>; refresh: (root: HTMLElement) => Promise<void>; getContext: (root: HTMLElement) => SheetControllerContext | undefined; getLabels: (systemId: string) => JsonObject }",
+    "SheetHttpResult": "JsonValue",
+    "SheetPlugin": "JsonObject",
+    "SheetValue": "JsonValue",
+    "SlotRenderCallback": "(host: HTMLElement, context: SdkContextDTO) => void",
+    "StorageParams": "JsonObject",
+    "StorageRow": "JsonObject",
+    "TimelineCueType": "'ACTION' | 'AUDIO_PLAY' | 'PRESENTATION_SHOW' | 'LIGHT_CREATE' | 'SHADER_PRESET' | 'PARTICLE_CREATE' | 'NAVIGATION'",
+    "TokenOverrides": "JsonObject",
+    "UserContext": "JsonObject",
+    "WorkflowStatus": "'RUNNING' | 'WAITING_INTERACTION' | 'WAITING_TIME' | 'COMPLETED' | 'CANCELLED' | 'FAILED'",
+    "WorkflowStepDTO": "{ type: 'ACTION'; action: string; input?: ActionInput } | { type: 'INTERACTION'; request: InteractionRequestInput; resultKey?: string } | { type: 'WAIT_UNTIL'; at?: number; delaySeconds?: number } | { type: 'BRANCH'; key: string; equals: JsonValue; then: number; else: number } | { type: 'SET'; key: string; value: JsonValue } | { type: 'COMPLETE'; output?: JsonValue } | { type: 'FAIL'; reason: string }"
+  }
+}

@@ -34,6 +34,7 @@
     <div class="actor-sheet-body"
          data-actor-sheet-root
          data-actor-id="{{ actor.actor_id }}"
+         data-actor-version="{{ actor_core_version }}"
          {% if actor.token_id %}data-token-id="{{ actor.token_id }}"{% endif %}
          data-csrf="{{ csrf_token() }}">
         <div class="actor-sheet-loading">…</div>

@@ -13,7 +13,7 @@ SAFE_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 
-SAFE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf"}
+SAFE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".pdf", ".ogg", ".opus", ".mp3", ".m4a", ".wav"}
 
 
 class LocalAssetStorage:

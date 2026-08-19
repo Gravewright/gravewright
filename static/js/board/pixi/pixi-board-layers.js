@@ -17,6 +17,9 @@
             board.tokenLabelLayer = new PIXI.Container();
             board.ghostWorldLayer = new PIXI.Container();
             board.originWorldLayer = new PIXI.Container();
+            board.spatialSoundLayer = new PIXI.Container();
+            board.spatialSoundGfx = new PIXI.Graphics();
+            board.spatialSoundLayer.addChild(board.spatialSoundGfx);
 
             board.gridLayer = new PIXI.Container();
             board.gridGfx = new PIXI.Graphics();
@@ -34,6 +37,11 @@
             board.pingLayer = new PIXI.Container();
             board.pingGfx = new PIXI.Graphics();
             board.pingLayer.addChild(board.pingGfx);
+
+            board.measureLayer = new PIXI.Container();
+            board.measureGfx = new PIXI.Graphics();
+            board.measureLabelLayer = new PIXI.Container();
+            board.measureLayer.addChild(board.measureGfx, board.measureLabelLayer);
 
             board.lightingLayer = new PIXI.Container();
 
@@ -86,9 +94,11 @@
                 board.worldLayer,
                 board.gridLayer,
                 board.tokenLabelLayer,
+                board.spatialSoundLayer,
                 board.effectsLayer,
                 board.lightingLayer,
                 board.fogLayer,
+                board.measureLayer,
                 board.pingLayer,
             );
         },

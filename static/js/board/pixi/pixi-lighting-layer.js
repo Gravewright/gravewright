@@ -453,6 +453,10 @@
                 return centre.x + radius >= 0 && centre.y + radius >= 0
                     && centre.x - radius <= cssW && centre.y - radius <= cssH;
             });
+            const visibleLightMarkers = (lighting.lightMarkers || visibleLights).filter((light) => {
+                const centre = screen(light.x, light.y);
+                return centre.x >= -24 && centre.y >= -24 && centre.x <= cssW + 24 && centre.y <= cssH + 24;
+            });
             board.visibleLightingSources = visibleLights.length;
 
 
@@ -499,7 +503,7 @@
                         l.id, Math.round(l.x), Math.round(l.y), Math.round(l.dim),
                         l.intensity.toFixed(2), l.angle, l.rotation,
                     ].join("/")).join("|"),
-                    (lighting.visionRims || []).map((rim) => Math.round(rim.radius)).join("|"),
+                    (lighting.visionRims || []).map((rim) => `${Math.round(rim.x * 10)}/${Math.round(rim.y * 10)}/${Math.round(rim.radius)}`).join("|"),
 
 
                     litAreas.length,
@@ -656,7 +660,7 @@
 
 
 
-            if (lighting.editingParticles) {
+            if (lighting.showParticleMarkers ?? lighting.editingParticles) {
                 (lighting.particleClouds || []).forEach((cloud) => {
                     const at = screen(cloud.x, cloud.y);
                     const tint = EMITTER_COLORS[cloud.kind] ?? 0xffffff;
@@ -679,7 +683,7 @@
 
 
 
-            if (lighting.editingShaders) {
+            if (lighting.showShaderMarkers ?? lighting.editingShaders) {
                 (lighting.shaderMarkers || []).forEach((shader) => {
                     const centre = screen(shader.x, shader.y);
                     const tint = hexToInt(shader.color);
@@ -707,10 +711,10 @@
                 });
             }
 
-            if (lighting.editingLights) {
-                visibleLights.forEach((light) => {
+            if (lighting.showLightMarkers ?? lighting.editingLights) {
+                visibleLightMarkers.forEach((light) => {
                     const centre = screen(light.x, light.y);
-                    const selected = lighting.picked?.light?.has(light.id);
+                    const selected = !lighting.wallReferenceMode && lighting.picked?.light?.has(light.id);
                     wallsGfx.circle(centre.x, centre.y, selected ? 9 : 7)
                         .fill({ color: hexToInt(light.color), alpha: 0.85 })
                         .stroke({ color: selected ? 0xffffff : LIGHT_MARKER, width: selected ? 3 : 2, alpha: 1 });

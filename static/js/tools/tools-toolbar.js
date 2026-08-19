@@ -16,6 +16,7 @@
     const activeSubTool = {};
     let activeMarkerPresetId = "";
     let selectedShaderPresetId = "";
+    let selectedCustomShaderDefinition = null;
     let shaderPresetCatalog = null;
     let shaderPresetRequest = null;
     let activeDrawColor = "#f8fafc";
@@ -182,10 +183,6 @@
         return Boolean(document.querySelector("[data-tool-dock]"));
     }
 
-    function streamerMode() {
-        return document.body?.dataset?.streamerMode === "true";
-    }
-
     function getActiveDock() {
         return document.querySelector("[data-tool-dock]:not([hidden])");
     }
@@ -324,6 +321,7 @@
 
     function setShaderPreset(presetId) {
         selectedShaderPresetId = String(presetId || "");
+        if (selectedShaderPresetId) selectedCustomShaderDefinition = null;
         try { localStorage.setItem(`${STORAGE_KEY}.shader.preset`, selectedShaderPresetId); } catch {  }
         document.querySelectorAll("[data-map-canvas]").forEach((canvas) => {
             canvas.dataset.activeShaderPreset = selectedShaderPresetId;
@@ -364,6 +362,12 @@
         return SUB_TOOLS.shape.options.includes(preset?.shape) && preset.shape !== "select"
             ? preset.shape
             : "square";
+    }
+
+    function markerPresetLabel(preset) {
+        const shape = markerPresetShape(preset);
+        const key = `areaMarkerLabel${shape[0].toUpperCase()}${shape.slice(1)}`;
+        return preset?.label || document.body?.dataset?.[key] || preset?.id || "Preset";
     }
 
     function setMarkerPreset(presetId) {
@@ -427,23 +431,10 @@
             button.appendChild(icon);
 
             const label = document.createElement("span");
-            label.textContent = preset.label || preset.id || "Preset";
+            label.textContent = markerPresetLabel(preset);
             button.appendChild(label);
             list.appendChild(button);
         });
-    }
-
-
-
-    function toggleLayersPanel(triggerBtn) {
-        const panel = document.querySelector('[data-tool-sub-panel="layers"]');
-        if (!panel) return;
-        const isOpen = !panel.hidden;
-        closeAllSubPanels();
-        if (!isOpen) {
-            panel.hidden = false;
-            positionSubPanel(panel, triggerBtn);
-        }
     }
 
     function setActiveLayer(layer) {
@@ -513,9 +504,6 @@
 
     function setActiveTool(tool, { openPanel = true } = {}) {
         const previousPackageTool = packageTools.get(activeTool);
-        if (streamerMode() && tool === "hp") {
-            tool = DEFAULT_TOOL;
-        }
         if (!toolsEnabled()) {
             tool = DEFAULT_TOOL;
         }
@@ -650,6 +638,10 @@
         }
 
         if (event.target.closest("[data-shader-tool-custom]")) {
+            if (window.GravewrightCustomShaderLibraries?.openProviderPicker?.()) {
+                closeAllSubPanels();
+                return;
+            }
             setShaderPreset("");
             closeAllSubPanels();
             return;
@@ -664,12 +656,6 @@
         const visionBtn = event.target.closest("[data-vision-toggle]");
         if (visionBtn) {
             document.dispatchEvent(new CustomEvent("tool:vision-toggle"));
-            return;
-        }
-
-        const layersBtn = event.target.closest("[data-layers-toggle]");
-        if (layersBtn) {
-            toggleLayersPanel(layersBtn);
             return;
         }
 
@@ -886,6 +872,7 @@
         get activeMarkerPresetId() { return activeMarkerPresetId; },
         get activeMarkerPreset() { return markerPresetById(activeMarkerPresetId); },
         get selectedShaderPreset() { return selectedShaderPresetId || null; },
+        get selectedCustomShaderDefinition() { return selectedCustomShaderDefinition; },
         get selectedShaderPresetSchemaVersion() {
             return shaderPresetCatalog?.find((preset) => preset.id === selectedShaderPresetId)?.schemaVersion || 1;
         },
@@ -906,6 +893,13 @@
             return Boolean(layerState.locked[layer]);
         },
         setActiveTool,
+        selectCustomShaderDefinition(definition) {
+            selectedShaderPresetId = "";
+            selectedCustomShaderDefinition = definition;
+            syncShaderPresetSelection();
+            setActiveTool("shader", { openPanel: false });
+            document.dispatchEvent(new CustomEvent("tool:custom-shader-selected"));
+        },
         clearTool,
         registerPackageTool,
         dispatchPackagePointer: packageToolPointer,

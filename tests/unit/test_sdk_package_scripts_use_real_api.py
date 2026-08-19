@@ -102,7 +102,18 @@ def _sdk_surface() -> dict[str, set[str]]:
         methods.update(re.findall(r"^            (\w+): ", factory_source, re.MULTILINE))
         surface.setdefault(namespace, set()).update(methods)
 
+    # Deep namespaces are part of the public runtime surface too.  Derive their
+    # parent/child links from the runtime capability map instead of limiting the
+    # source parser to one nested level (for example
+    # ``scene.shaders.customLibrary``).
+    for api_path in _capability_requirements():
+        parts = api_path.split(".")
+        for index in range(len(parts) - 1):
+            parent = ".".join(parts[: index + 1])
+            surface.setdefault(parent, set()).add(parts[index + 1])
+
     assert "sheets" in surface and "registerController" in surface["sheets"], surface.get("sheets")
+    assert "customLibrary" in surface["scene.shaders"]
     return surface
 
 
@@ -133,12 +144,7 @@ def _declared_scripts(manifest: dict) -> list[str]:
 USES = re.compile(r"\bsdk\.(\w+)(?:\.(\w+))?(?:\.(\w+))?")
 
 
-@pytest.mark.parametrize(
-    "script_path, manifest",
-    _package_scripts(),
-    ids=lambda value: value.name if isinstance(value, Path) else "",
-)
-def test_package_script_calls_only_real_sdk_apis(script_path: Path, manifest: dict):
+def _assert_script_uses_real_sdk_apis(script_path: Path) -> None:
     surface = _sdk_surface()
     source = script_path.read_text(encoding="utf-8")
 
@@ -159,6 +165,23 @@ def test_package_script_calls_only_real_sdk_apis(script_path: Path, manifest: di
                 f"{script_path.name}: sdk.{nested_key}.{deep} não existe "
                 f"(disponíveis: {sorted(surface[nested_key])})"
             )
+
+
+@pytest.mark.parametrize(
+    "script_path, manifest",
+    _package_scripts(),
+    ids=lambda value: value.name if isinstance(value, Path) else "",
+)
+def test_package_script_calls_only_real_sdk_apis(script_path: Path, manifest: dict):
+    _assert_script_uses_real_sdk_apis(script_path)
+
+
+def test_deep_namespace_verifier_rejects_nonexistent_member(tmp_path: Path) -> None:
+    script = tmp_path / "invalid-deep-api.js"
+    script.write_text("sdk.scene.shaders.notARealLibrary.open();\n", encoding="utf-8")
+
+    with pytest.raises(AssertionError, match=r"sdk\.scene\.shaders\.notARealLibrary não existe"):
+        _assert_script_uses_real_sdk_apis(script)
 
 
 @pytest.mark.parametrize(

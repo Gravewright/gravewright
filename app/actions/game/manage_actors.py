@@ -228,6 +228,7 @@ async def show_actor_sheet_modal(
     context = {
         **base_context,
         "actor": bundle,
+        "actor_core_version": (ActorRepository().get(bundle.actor_id) or {}).get("version", 0),
         "bundle_json": json.dumps(actor_sheet_service.to_dict(bundle), separators=(",", ":")),
         "room_id": bundle.campaign_id,
         "is_gm": member_role == "gm",

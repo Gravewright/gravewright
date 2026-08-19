@@ -292,7 +292,22 @@ class PackageStorageRuntime:
             value = provided[key]
             if declared_type not in PARAM_TYPES or not _value_matches(declared_type, value):
                 raise StorageError("sdk.storage.sqlite.param_invalid", reason="type", param=key)
-            bound[key] = value
+            if declared_type == "json":
+                import json
+
+                try:
+                    bound[key] = json.dumps(
+                        value,
+                        ensure_ascii=False,
+                        separators=(",", ":"),
+                        allow_nan=False,
+                    )
+                except (TypeError, ValueError):
+                    raise StorageError(
+                        "sdk.storage.sqlite.param_invalid", reason="type", param=key
+                    ) from None
+            else:
+                bound[key] = value
         return bound
 
     def _apply_migrations(self, connection: sqlite3.Connection, package_id: str) -> None:

@@ -521,7 +521,9 @@
   }
 
   function renderSceneLayer(state) {
-    document.querySelectorAll("[data-card-scene-layer]").forEach((layer) => {
+    const campaignId = String(state?.campaign_id || "");
+    if (!campaignId) return;
+    document.querySelectorAll(`[data-card-scene-layer][data-room-id="${CSS.escape(campaignId)}"]`).forEach((layer) => {
       const controller = layer.__cardTable || new CardTableController(layer);
       controller.update(state);
     });

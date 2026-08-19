@@ -81,10 +81,15 @@ def test_wall_layer_has_wall_and_door_tools():
     assert "const lightingVisible = shown(EDIT_LAYERS.light)" in script
     assert "activeLayer === EDIT_LAYERS.wall && wallsVisible" in script
 
-    # E o marcador de foco vive na camada de Iluminacao: enquanto dividia o `return`
-    # antecipado com a parede, editar luz obrigava a ver o emaranhado de linhas.
-    assert "if (lighting.editingLights) {" in pixi
-    assert pixi.index("if (lighting.editingLights) {") < pixi.index("if (!lighting.editing) {")
+    # A camada de paredes mostra referencias nao-interativas de todos os focos,
+    # para o GM desenhar bloqueios vendo o resultado tecnico completo.
+    assert "const wallReferenceMode = this.isGm && activeLayer === EDIT_LAYERS.wall" in script
+    assert "const lightingVisible = shown(EDIT_LAYERS.light) || wallReferenceMode" in script
+    assert "const effectsVisible = shown(EDIT_LAYERS.particles) || wallReferenceMode" in script
+    for flag in ("showLightMarkers", "showParticleMarkers", "showShaderMarkers"):
+        assert flag in script and flag in pixi
+    assert "lightMarkers: showLightMarkers ? lights.map" in script
+    assert "activeLayer === EDIT_LAYERS.particles || wallReferenceMode" in script
 
 def test_lighting_uses_server_walls_and_no_eval_geometry():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
@@ -353,7 +358,8 @@ def test_streamer_composition_tracks_alpha3_vision_and_effect_layers():
 
     for layer in ("effects", "walls", "lighting"):
         assert f'data-active-layer="{layer}"' in template
-        assert 'data-layer-visibility="{{ layer }}"' in template or f'data-layer-visibility="{layer}"' in template
+    assert 'data-tool-sub-panel="layers"' not in template
+    assert "data-layers-toggle" not in template
 
 def test_alpha3_visual_layers_toggle_independently_for_streamer():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
@@ -1060,7 +1066,7 @@ def test_a_light_can_emit_in_a_cone():
     # E a cunha precisa do vertice da origem, senao o poligono liga as duas pontas
     # do arco e o facho vira uma fatia solta, acesa longe da propria lampada.
     assert "apex = { x: origin.x, y: origin.y" in script
-    assert "return apex ? [apex, ...points] : points;" in script
+    assert "return compactPolygon(apex ? [apex, ...points] : points);" in script
 
     # Abertura e direcao entram na chave do cache do poligono: mudar o facho sem
     # mover o foco devolveria a forma antiga ate alguem arrastar a luz.

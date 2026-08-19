@@ -16,6 +16,8 @@ from app.engine.assets.asset_read_service import AssetReadService
 from app.engine.sdk.package_asset_import_service import PackageAssetImportService
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
+from app.engine.sheets.pdf_system_policy import is_pdf_sheet_system
+from app.persistence.repositories.campaign_repository import CampaignRepository
 
 
 async def _json_body(request: Request) -> dict[str, Any]:
@@ -38,7 +40,7 @@ async def _read_upload_file(upload: object) -> bytes:
 
 def _response(result, *, status_code: int = 200) -> Response[dict[str, Any]]:
     if not result.success:
-        code = 403 if result.error_key == "permissions.errors.denied" else 400
+        code = 403 if result.error_key == "permissions.errors.denied" else 409 if result.error_key == "game.assets.errors.asset_in_use" else 400
         return Response({"error_key": result.error_key}, status_code=code)
     return Response(result.payload, status_code=status_code)
 
@@ -197,6 +199,11 @@ async def upload_asset_library_image(
     upload = form.get("file")
     campaign_id = str(form.get("campaign_id") or "")
     folder_id = str(form.get("folder_id") or "") or None
+    purpose = str(form.get("purpose") or "")
+    if purpose == "pdf-sheet":
+        campaign = CampaignRepository().get(campaign_id)
+        if not campaign or not is_pdf_sheet_system(campaign.get("active_system_id")):
+            return Response({"error_key":"game.assets.errors.pdf_system_required"},status_code=403)
     result = asset_library_service.upload_asset(
         campaign_id=campaign_id,
         user_id=current_user["id"],
@@ -206,6 +213,10 @@ async def upload_asset_library_image(
         folder_id=folder_id,
     )
     if result.success:
+        if purpose in {"ambient", "effect"} and isinstance(result.payload.get("asset"), dict):
+            from app.engine.audio.sound_domain_service import SoundDomainService
+            asset=result.payload["asset"];filename=str(asset.get("filename") or getattr(upload,"filename","") or "Sound")
+            SoundDomainService().create_sound(campaign_id=campaign_id,user_id=current_user["id"],values={"name":filename.rsplit(".",1)[0],"assetId":asset.get("id"),"kind":"ambience" if purpose=="ambient" else "sound-effect","defaultLoop":purpose=="ambient"})
         await _broadcast_library(campaign_id, current_user["id"])
     return _response(result, status_code=201)
 

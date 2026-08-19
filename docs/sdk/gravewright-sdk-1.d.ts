@@ -6,6 +6,12 @@ export type JsonObject = { [key: string]: JsonValue };
 export type CardMetadata = JsonObject;
 export type CardMetadataSchema = JsonObject;
 
+export type WorkflowStatus = 'RUNNING' | 'WAITING_INTERACTION' | 'WAITING_TIME' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
+export type WorkflowStepDTO = { type: 'ACTION'; action: string; input?: ActionInput } | { type: 'INTERACTION'; request: InteractionRequestInput; resultKey?: string } | { type: 'WAIT_UNTIL'; at?: number; delaySeconds?: number } | { type: 'BRANCH'; key: string; equals: JsonValue; then: number; else: number } | { type: 'SET'; key: string; value: JsonValue } | { type: 'COMPLETE'; output?: JsonValue } | { type: 'FAIL'; reason: string };
+export type GameplayTurnModel = 'SEQUENTIAL' | 'SIMULTANEOUS' | 'PHASED';
+export type GameplaySubmissionValue = boolean | string | number | null | JsonObject | JsonValue[];
+export type TimelineCueType = 'ACTION' | 'AUDIO_PLAY' | 'PRESENTATION_SHOW' | 'LIGHT_CREATE' | 'SHADER_PRESET' | 'PARTICLE_CREATE' | 'NAVIGATION';
+export type InteractionResponseValue = boolean | string | number | string[];
 export type Disposer = () => void;
 export type SdkEventName = string;
 export type SdkEvent = Readonly<{ type: SdkEventName; version: number; resourceId?: string; sceneId?: string }>;
@@ -19,6 +25,7 @@ export type SettingValue = string | number | boolean | null | string[];
 export type SettingScope = 'client' | 'campaign' | 'package';
 export type SettingChangeHandler = (change: SettingChangeDTO) => void;
 export type SlotRenderCallback = (host: HTMLElement, context: SdkContextDTO) => void;
+export type InputCommandHandler = (invocation: InputCommandInvocationDTO) => void | Promise<void>;
 export type CampaignContext = JsonObject;
 export type SceneContext = JsonObject;
 export type UserContext = JsonObject;
@@ -63,6 +70,291 @@ export type SheetValue = JsonValue;
 export type SheetHttpResult = JsonValue;
 export type SheetHelpers = { el: (tag: string, attributes?: JsonObject, ...children: (Node | string)[]) => HTMLElement; phIcon: (name: string) => HTMLElement; getPath: (value: JsonObject, path: string) => SheetValue | undefined; formatMod: (value: number) => string; cssIdent: (value: string) => string; nonEmptyParts: (...parts: string[]) => string[]; closeFloatingSheetMenus: () => void; postJSON: (url: string, payload: JsonObject) => Promise<SheetHttpResult>; refresh: (root: HTMLElement) => Promise<void>; getContext: (root: HTMLElement) => SheetControllerContext | undefined; getLabels: (systemId: string) => JsonObject };
 export type ActorItemCopyDTO = { id: string; sourceItemId: string } & RulesetItemCopyFields;
+
+export interface AudioAssetReferenceDTO {
+  kind: 'library-asset' | 'package-asset';
+  id: string;
+}
+
+export interface AudienceDTO {
+  kind: 'self' | 'users' | 'campaign' | 'gm';
+  ids: string[];
+}
+
+export interface SemanticAnchorDTO {
+  kind: 'token' | 'scene-object';
+  id: string;
+  sceneId?: string;
+}
+
+export interface FadeDTO {
+  durationMs: number;
+  curve: 'linear' | 'ease-in' | 'ease-out';
+}
+
+export interface AudioPlaybackDTO {
+  id: string;
+  asset: AudioAssetReferenceDTO;
+  channel: 'music' | 'ambience' | 'sfx' | 'cinematic';
+  state: 'pending-user-unlock' | 'playing' | 'paused' | 'stopped' | 'failed';
+  loop: boolean;
+  gain: number;
+  audience: AudienceDTO;
+  sceneId: string | null;
+  worldAnchor: SemanticAnchorDTO | null;
+  startedAt: number;
+  expiresAt: number | null;
+  fade: FadeDTO | null;
+  version: number;
+  ownerPackageId: string;
+}
+
+export interface SceneNavigationDTO {
+  sceneId: string;
+  recipientIds: string[];
+  states: SceneNavigationStateDTO[];
+}
+
+export interface SceneNavigationStateDTO {
+  campaignId: string;
+  userId: string;
+  sceneId: string;
+  reason: string;
+  version: number;
+  updatedAt: number;
+}
+
+export interface SemanticRegistrationDTO {
+  id: string;
+  packageId: string;
+  schemaVersion: 1;
+  operations: string[];
+}
+
+export interface SemanticDropResultDTO {
+  operation: string;
+  targetId: string;
+  source: ContentResolutionDTO;
+  actionResult: ActionExecutionResult;
+}
+
+export interface InputCommandDTO {
+  id: string;
+  packageId: string;
+  label: string;
+  contexts: string[];
+  registeredAction?: string;
+  actionInput?: ActionInput;
+}
+
+export interface InputBindingDTO {
+  user_id: string;
+  package_id: string;
+  command_id: string;
+  binding: string;
+  version: number;
+}
+
+export interface AudioPlayInput {
+  asset: AudioAssetReferenceDTO;
+  channel?: 'music' | 'ambience' | 'sfx' | 'cinematic';
+  loop?: boolean;
+  gain?: number;
+  audience?: AudienceDTO;
+  sceneId?: string;
+  worldAnchor?: SemanticAnchorDTO;
+  fade?: FadeDTO;
+  idempotencyKey?: string;
+}
+
+export interface AudioListOptions {
+  sceneId?: string;
+}
+
+export interface AudioPlaybackPatch {
+  gain?: number;
+  state?: 'playing' | 'paused';
+  loop?: boolean;
+  fade?: FadeDTO;
+}
+
+export interface AudioMutationOptions {
+  expectedVersion?: number;
+  fade?: FadeDTO;
+}
+
+export interface SpatialSoundPositionDTO {
+  x: number;
+  y: number;
+}
+
+export interface SpatialSoundDTO {
+  id: string;
+  sceneId: string;
+  soundId: string;
+  position: SpatialSoundPositionDTO;
+  radius: number;
+  gain: number;
+  falloff: 'linear' | 'smooth';
+  loop: boolean;
+  enabled: boolean;
+  audience: AudienceDTO;
+  constrainedByWalls: boolean;
+  version: number;
+}
+
+export interface SpatialSoundInput {
+  soundId: string;
+  position: SpatialSoundPositionDTO;
+  radius: number;
+  gain?: number;
+  falloff?: 'linear' | 'smooth';
+  loop?: boolean;
+  enabled?: boolean;
+  audience?: AudienceDTO;
+  constrainedByWalls?: boolean;
+}
+
+export interface SpatialSoundPatch {
+  position?: SpatialSoundPositionDTO;
+  radius?: number;
+  gain?: number;
+  falloff?: 'linear' | 'smooth';
+  loop?: boolean;
+  enabled?: boolean;
+  constrainedByWalls?: boolean;
+}
+
+export interface SpatialSoundDeleteResult {
+  id: string;
+  deleted: true;
+}
+
+export interface SoundDTO {
+  id: string;
+  campaignId: string;
+  name: string;
+  asset: AudioAssetReferenceDTO;
+  kind: 'sound-effect' | 'music' | 'ambience';
+  tags: string[];
+  defaultGain: number;
+  defaultLoop: boolean;
+  metadata: JsonObject;
+  version: number;
+}
+
+export interface SoundCreateInput {
+  name: string;
+  asset: AudioAssetReferenceDTO;
+  kind: 'sound-effect' | 'music' | 'ambience';
+  tags?: string[];
+  defaultGain?: number;
+  defaultLoop?: boolean;
+  metadata?: JsonObject;
+}
+
+export interface SoundPatch {
+  name?: string;
+  kind?: 'sound-effect' | 'music' | 'ambience';
+  tags?: string[];
+  defaultGain?: number;
+  defaultLoop?: boolean;
+  metadata?: JsonObject;
+}
+
+export interface SoundListOptions {
+  kind?: 'sound-effect' | 'music' | 'ambience';
+  query?: string;
+  cursor?: number;
+  limit?: number;
+}
+
+export interface SoundDeleteResult {
+  id: string;
+  deleted: true;
+}
+
+export interface SceneNavigationInput {
+  sceneId: string;
+  recipients?: AudienceDTO;
+  reason?: string;
+  idempotencyKey?: string;
+}
+
+export interface DragSourceDefinition {
+  id: string;
+  referenceKinds: string[];
+  operations: string[];
+  schemaVersion: 1;
+}
+
+export interface DropTargetDefinition {
+  id: string;
+  surface: string;
+  targetKinds: DropTargetKind[];
+  worldObjectTypeId?: string;
+  operations: string[];
+  actionReference: string;
+  schemaVersion: 1;
+}
+
+export interface SemanticDropInput {
+  payload: SemanticDragPayload;
+  destination: SemanticDropDestination;
+  operation: string;
+  idempotencyKey?: string;
+}
+
+export interface SemanticDropDestination {
+  targetDefinitionId: string;
+  kind: DropTargetKind;
+  resource: DropTargetResource;
+  expectedVersion?: number;
+  worldPosition?: WorldPointDTO;
+  sceneContext?: string;
+}
+
+export interface DropTargetResource {
+  id: string;
+  sceneId?: string;
+  typeId?: string;
+}
+
+export interface SemanticDragPayload {
+  kind: string;
+  reference: string;
+  sourceContext?: string;
+  metadata?: JsonObject;
+  schemaVersion: 1;
+}
+
+export interface InputCommandDefinition {
+  id: string;
+  label: string;
+  description?: string;
+  contexts: string[];
+  registeredAction?: string;
+  actionInput?: ActionInput;
+  defaultBindings?: string[];
+}
+
+export interface InputCommandInvocationDTO {
+  commandId: string;
+  packageId: string;
+  source: 'binding' | 'gesture';
+  binding: string | null;
+  context: string;
+}
+
+export interface InputGestureDefinition {
+  id: string;
+  gesture: 'tap' | 'double-tap' | 'long-press' | 'drag' | 'pan' | 'cancel';
+  commandId: string;
+}
+
+export interface InputBindingOptions {
+  expectedVersion?: number;
+}
 
 export interface ActorDTO {
   id: string;
@@ -145,6 +437,12 @@ export interface LightDTO {
   updated_at: number;
 }
 
+export interface CampaignMemberDTO {
+  userId: string;
+  role: string;
+  name: string;
+}
+
 export interface TokenDTO {
   id: string;
   scene_id: string;
@@ -162,6 +460,7 @@ export interface TokenDTO {
   locked: boolean;
   disposition: string;
   vision: TokenVisionDTO;
+  controllers: string[];
   updated_at: number;
 }
 
@@ -197,6 +496,40 @@ export interface ShaderInstanceDTO {
   schemaVersion: number;
   version: number;
   parameters: ShaderParameterValues;
+}
+
+export interface CustomShaderDefinition {
+  format: 'gravewright-custom-shader';
+  version: 1;
+  definition: CustomShaderValues;
+}
+
+export interface CustomShaderValues {
+  source: string;
+  opacity: number;
+  intensity: number;
+  scale: number;
+  speed: number;
+  rotation: number;
+  radius: number;
+  color: string;
+  blend_mode: 'normal' | 'add' | 'multiply' | 'screen';
+  enabled: boolean;
+}
+
+export interface CustomShaderProviderDefinition {
+  id: string;
+  label: string;
+  description?: string;
+  open: (context: SdkContextDTO) => void | Promise<void>;
+}
+
+export interface CustomShaderUseResult {
+  accepted: true;
+}
+
+export interface CustomShaderPreviewResult {
+  active: boolean;
 }
 
 export interface DeclaredCardArtworkDTO {
@@ -276,12 +609,12 @@ export interface AssetDTO {
   height: number | null;
   created_at: number;
   src: string;
-  kind: 'image' | 'pdf';
+  kind: 'image' | 'pdf' | 'audio';
 }
 
 export interface AssetListOptions {
   campaignId?: string;
-  kind?: 'image' | 'pdf';
+  kind?: 'image' | 'pdf' | 'audio';
 }
 
 export interface AssetOperationDTO {
@@ -499,6 +832,9 @@ export interface TokenMoveInput {
 export interface TokenOptions {
   sceneId?: string;
   expectedVersion?: number;
+  originExecutionId?: string;
+  originJobId?: string;
+  causalDepth?: number;
 }
 
 export interface CombatBarDTO {
@@ -974,6 +1310,335 @@ export interface SceneTemplateDeleteResult {
   scene_id: string;
   version: number;
   audience: 'campaign' | 'gm';
+}
+
+export interface SceneZoneGeometry {
+  shape: 'circle' | 'rect' | 'polygon';
+  x?: number;
+  y?: number;
+  radius?: number;
+  width?: number;
+  height?: number;
+  points?: WorldPointDTO[];
+}
+
+export interface SceneZoneAudience {
+  kind: 'campaign' | 'gm' | 'users';
+  ids?: string[];
+}
+
+export interface SceneZoneDTO {
+  id: string;
+  sceneId: string;
+  type: string;
+  geometry: SceneZoneGeometry;
+  vertical: VerticalBoundsDTO;
+  audience: SceneZoneAudience;
+  enabled: boolean;
+  tags: string[];
+  packageProvenance: PackageProvenanceDTO;
+  version: number;
+}
+
+export interface PackageProvenanceDTO {
+  packageId: string;
+  providerId: string | null;
+}
+
+export interface SceneZoneInput {
+  type?: string;
+  geometry: SceneZoneGeometry;
+  vertical?: VerticalBoundsDTO;
+  audience?: SceneZoneAudience;
+  enabled?: boolean;
+  tags?: string[];
+  providerId?: string;
+}
+
+export interface SceneZonePatch {
+  geometry?: SceneZoneGeometry;
+  enabled?: boolean;
+  tags?: string[];
+}
+
+export interface SceneZoneDeleteResult {
+  id: string;
+  deleted: true;
+}
+
+export interface SceneObjectGeometry {
+  kind: 'point' | 'rect' | 'circle' | 'polygon' | 'polyline';
+  x?: number;
+  y?: number;
+  radius?: number;
+  width?: number;
+  height?: number;
+  points?: WorldPointDTO[];
+}
+
+export interface SceneObjectAudience {
+  kind: 'campaign' | 'gm' | 'users';
+  ids?: string[];
+}
+
+export interface ActionReferenceDTO {
+  provider: string;
+  id: string;
+  version: number;
+}
+
+export interface AssetReferenceDTO {
+  kind: 'library-asset' | 'package-asset';
+  id: string;
+}
+
+export interface SceneObjectInteractionDefinition {
+  id: string;
+  label: string;
+  actionReference?: ActionReferenceDTO;
+}
+
+export interface SceneObjectTypeDefinition {
+  typeId: string;
+  schemaVersion: number;
+  displayName: string;
+  dataSchema: ActionInputSchema;
+  geometryKinds: Array<'point' | 'rect' | 'circle' | 'polygon' | 'polyline'>;
+  visualDefinition: JsonObject[];
+  interactionDefinitions: SceneObjectInteractionDefinition[];
+  editorDefinition?: JsonObject;
+  searchableFields?: string[];
+}
+
+export interface SceneObjectDTO {
+  id: string;
+  sceneId: string;
+  typeId: string;
+  providerPackageId: string;
+  schemaVersion: number;
+  geometry: SceneObjectGeometry;
+  transform: SceneObjectTransform;
+  presentation: JsonObject;
+  interactions: SceneObjectInteractionDefinition[];
+  editor: JsonObject;
+  dataSchema: ActionInputSchema;
+  data: JsonObject;
+  audience: SceneObjectAudience;
+  enabled: boolean;
+  providerAvailable: boolean;
+  providerStatus: 'available' | 'unavailable' | 'outdated';
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SceneObjectTransform {
+  rotation: number;
+  scale: number;
+}
+
+export interface SceneObjectInput {
+  typeId: string;
+  geometry: SceneObjectGeometry;
+  transform?: Partial<SceneObjectTransform>;
+  presentation?: JsonObject;
+  data?: JsonObject;
+  audience?: SceneObjectAudience;
+  enabled?: boolean;
+}
+
+export interface SceneObjectPatch {
+  geometry?: SceneObjectGeometry;
+  transform?: Partial<SceneObjectTransform>;
+  presentation?: JsonObject;
+  data?: JsonObject;
+  enabled?: boolean;
+}
+
+export interface SceneObjectListOptions {
+  query?: string;
+}
+
+export interface SceneObjectHitTestOptions {
+  tolerance?: number;
+}
+
+export interface SceneObjectInteractionIntentDTO {
+  object: SceneObjectDTO;
+  interactionId: string;
+  actionReference: ActionReferenceDTO | null;
+  principal: { userId: string };
+}
+
+export interface SceneObjectDeleteResult {
+  id: string;
+  deleted: true;
+}
+
+export interface PresentationAudience {
+  kind: 'self' | 'campaign' | 'gm' | 'users';
+  ids?: string[];
+}
+
+export interface PresentationAnchor {
+  kind: 'token' | 'scene-object';
+  id: string;
+  sceneId?: string;
+}
+
+export interface PresentationContent {
+  title?: string;
+  subtitle?: string;
+  text?: string;
+  label?: string;
+  icon?: string;
+  asset?: AssetReferenceDTO;
+  progress?: number;
+  value?: number;
+  preset?: string;
+  buttons?: PresentationButton[];
+}
+
+export interface PresentationButton {
+  id: string;
+  label: string;
+  actionReference: string;
+}
+
+export interface PresentationCompletionPolicy {
+  policy: 'server-time' | 'all-connected-recipients';
+  timeoutMs?: number;
+}
+
+export interface PresentationRecipientSummary {
+  expected: number;
+  completed: number;
+}
+
+export interface PresentationWaitOptions {
+  timeoutMs?: number;
+}
+
+export interface PresentationInput {
+  mode: 'world-anchor' | 'screen-overlay' | 'title-card' | 'countdown' | 'fade';
+  content: PresentationContent;
+  audience?: PresentationAudience;
+  anchor?: PresentationAnchor;
+  sceneId?: string;
+  duration?: number;
+  deadline?: number;
+  completion?: PresentationCompletionPolicy;
+}
+
+export interface PresentationPatch {
+  content?: PresentationContent;
+  anchor?: PresentationAnchor;
+}
+
+export interface PresentationListOptions {
+  sceneId?: string;
+}
+
+export interface PresentationDTO {
+  id: string;
+  campaignId: string;
+  packageId: string;
+  ownerUserId: string;
+  sceneId: string | null;
+  mode: 'world-anchor' | 'screen-overlay' | 'title-card' | 'countdown' | 'fade';
+  content: PresentationContent;
+  audience: PresentationAudience;
+  anchor: PresentationAnchor | null;
+  deadline: number | null;
+  status: 'active' | 'completed' | 'closed' | 'cancelled';
+  startedAt: number;
+  endsAt: number;
+  completedAt: number | null;
+  completionReason: 'server-time' | 'recipients' | 'timeout' | 'closed' | 'package-unload' | null;
+  completionPolicy: PresentationCompletionPolicy;
+  recipientSummary: PresentationRecipientSummary;
+  version: number;
+  createdAt: number;
+  updatedAt: number;
+  expiresAt: number;
+}
+
+export interface PresentationCloseResult {
+  id: string;
+  status: 'closed';
+}
+
+export interface InteractionPromptDTO {
+  title: string;
+  text: string;
+}
+
+export interface InteractionChoiceDTO {
+  id: string;
+  label: string;
+}
+
+export interface InteractionResponseSchema {
+  type: 'boolean' | 'single-choice' | 'multi-choice' | 'number' | 'string';
+  choices?: InteractionChoiceDTO[];
+  maxSelections?: number;
+  minimum?: number;
+  maximum?: number;
+  maxLength?: number;
+}
+
+export interface InteractionOriginDTO {
+  originExecutionId?: string;
+  originJobId?: string;
+  causalDepth?: number;
+  resourceRef?: string;
+}
+
+export interface InteractionRequestInput {
+  kind?: string;
+  recipients: string[];
+  title: string;
+  text: string;
+  responseSchema: InteractionResponseSchema;
+  visibility?: 'requester' | 'participants' | 'public-after-close';
+  deadline: number;
+  responsePolicy?: 'immutable' | 'replace';
+  origin?: InteractionOriginDTO;
+}
+
+export interface InteractionResponseDTO {
+  value: InteractionResponseValue;
+  respondedAt: number;
+  idempotencyKey: string;
+}
+
+export interface InteractionDTO {
+  id: string;
+  kind: string;
+  schemaVersion: 1;
+  requester: string;
+  recipients: string[];
+  prompt: InteractionPromptDTO;
+  responseSchema: InteractionResponseSchema;
+  visibility: 'requester' | 'participants' | 'public-after-close';
+  deadline: number;
+  status: 'open' | 'completed' | 'expired' | 'cancelled';
+  responses: { [userId: string]: InteractionResponseDTO };
+  version: number;
+  origin: InteractionOriginDTO;
+  packageProvenance: PackageProvenanceDTO;
+  createdAt: number;
+  expiresAt: number;
+}
+
+export interface InteractionListOptions {
+  status?: 'open' | 'completed' | 'expired' | 'cancelled';
+  recipient?: 'me';
+}
+
+export interface InteractionMutationOptions {
+  expectedVersion?: number;
+  idempotencyKey?: string;
 }
 
 export interface BusRequestOptions {
@@ -1496,6 +2161,178 @@ export interface ActorItemSlotOptions {
   slot: string;
 }
 
+export interface WorkflowDefinitionDTO {
+  id: string;
+  schemaVersion: 1;
+  steps: WorkflowStepDTO[];
+  maxDuration: number;
+  maxSteps: number;
+  packageId?: string;
+}
+
+export interface WorkflowStartInput {
+  definitionId: string;
+  input?: WorkflowContext;
+  sceneId?: string;
+  idempotencyKey: string;
+  origin?: SemanticOriginDTO;
+}
+
+export interface WorkflowDTO {
+  id: string;
+  definitionId: string;
+  providerPackageId: string;
+  campaignId: string;
+  sceneId: string | null;
+  status: WorkflowStatus;
+  currentStep: number;
+  context: WorkflowContext;
+  origin: SemanticOriginDTO;
+  createdBy: string;
+  startedAt: number;
+  wakeAt: number | null;
+  waitingOn: string | null;
+  completionReason: string | null;
+  version: number;
+}
+
+export interface GameplayFlowDefinitionDTO {
+  id: string;
+  schemaVersion: 1;
+  turnModel: GameplayTurnModel;
+  phases: GameplayPhaseDTO[];
+  packageId?: string;
+}
+
+export interface GameplayPhaseDTO {
+  id: string;
+  label: string;
+  submissionPolicy: 'all';
+  deadlineSeconds?: number;
+}
+
+export interface GameplayFlowStartInput {
+  definitionId: string;
+  participants: string[];
+  sceneId?: string;
+  idempotencyKey: string;
+}
+
+export interface GameplayFlowDTO {
+  id: string;
+  campaignId: string;
+  sceneId: string | null;
+  definitionId: string;
+  providerPackageId: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  phaseId: string | null;
+  round: number;
+  cycle: number;
+  participants: string[];
+  activeParticipants: string[];
+  submissions: GameplaySubmissions;
+  revealed: boolean;
+  version: number;
+}
+
+export interface GameplayFlowMutationOptions {
+  expectedVersion?: number;
+}
+
+export interface TokenTransferDestination {
+  sceneId: string;
+  x: number;
+  y: number;
+  elevation?: number;
+}
+
+export interface TokenTransferSpec {
+  tokenId: string;
+  sceneId: string;
+  x: number;
+  y: number;
+  elevation?: number;
+  expectedVersion?: number;
+}
+
+export interface TokenTransferOptions {
+  expectedVersion?: number;
+  navigateAudience?: SceneNavigationRecipients;
+}
+
+export interface TokenTransferManyOptions {
+  navigateAudience?: SceneNavigationRecipients;
+}
+
+export interface TransferredTokenDTO {
+  id: string;
+  sceneId: string;
+  actorId: string | null;
+  x: number;
+  y: number;
+  elevation: number;
+  version: number;
+}
+
+export interface TokenTransferResultDTO {
+  tokens: TransferredTokenDTO[];
+  atomic: true;
+  navigation: SceneNavigationDTO | null;
+}
+
+export interface TimelineDefinitionDTO {
+  id: string;
+  schemaVersion: 1;
+  cues: TimelineCueDTO[];
+  durationMs: number;
+  packageId?: string;
+}
+
+export interface TimelineCueDTO {
+  cueId: string;
+  offsetMs: number;
+  type: TimelineCueType;
+  action?: string;
+  parameters?: TimelineParameters;
+  cleanupAction?: string;
+  cleanupInput?: ActionInput;
+}
+
+export interface TimelineStartInput {
+  definitionId: string;
+  sceneId?: string;
+  audience?: AudienceDTO;
+  origin?: SemanticOriginDTO;
+  startedAt?: number;
+  idempotencyKey: string;
+}
+
+export interface TimelineDTO {
+  id: string;
+  definitionId: string;
+  providerPackageId: string;
+  campaignId: string;
+  sceneId: string | null;
+  status: 'RUNNING' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
+  startedAt: number;
+  audience: AudienceDTO;
+  origin: SemanticOriginDTO;
+  executedCueIds: string[];
+  completionReason: string | null;
+  version: number;
+}
+
+export interface SemanticOriginDTO {
+  source?: string;
+  resourceId?: string;
+  executionId?: string;
+}
+
+export interface SceneNavigationRecipients {
+  kind: 'self' | 'users' | 'gm' | 'campaign';
+  ids?: string[];
+}
+
 export interface GravewrightSDK {
   readonly version: '1';
   readonly package: Readonly<{ id: string; kind: string; version: string }>;
@@ -1522,6 +2359,13 @@ export interface GravewrightSDK {
     ingest(file: File): Promise<AssetIngestResult>;
     list(options?: AssetListOptions): Promise<AssetDTO[]>;
   };
+  readonly audio: {
+    get(id: string): Promise<AudioPlaybackDTO | null>;
+    list(options?: AudioListOptions): Promise<AudioPlaybackDTO[]>;
+    play(input?: AudioPlayInput): Promise<AudioPlaybackDTO>;
+    stop(id: string, options?: AudioMutationOptions): Promise<AudioPlaybackDTO>;
+    update(id: string, patch?: AudioPlaybackPatch, options?: AudioMutationOptions): Promise<AudioPlaybackDTO>;
+  };
   readonly automation: {
     audit(): Promise<AutomationAuditDTO[]>;
     cancel(jobId: string): Promise<AutomationCancelResult>;
@@ -1534,6 +2378,9 @@ export interface GravewrightSDK {
     publish(name: string, payload: InteropPayload): void;
     request(method: string, payload: InteropPayload, options: BusRequestOptions): Promise<BusResponse>;
     subscribe(name: string, fn: InteropSubscriber): Disposer;
+  };
+  readonly campaign: {
+    members(): Promise<CampaignMemberDTO[]>;
   };
   readonly cards: {
     readonly definitions: {
@@ -1598,11 +2445,42 @@ export interface GravewrightSDK {
     on(event: string, handler: SdkEventHandler): Disposer;
     once(event: string, handler: SdkEventHandler): Disposer;
   };
+  readonly gameplay: {
+    readonly flows: {
+      advance(id: string, options?: GameplayFlowMutationOptions): Promise<GameplayFlowDTO>;
+      get(id: string): Promise<GameplayFlowDTO | null>;
+      list(): Promise<GameplayFlowDTO[]>;
+      register(definition?: GameplayFlowDefinitionDTO): Promise<GameplayFlowDefinitionDTO>;
+      start(input?: GameplayFlowStartInput): Promise<GameplayFlowDTO>;
+      submit(id: string, value: GameplaySubmissionValue, options?: GameplayFlowMutationOptions): Promise<GameplayFlowDTO>;
+    };
+  };
   readonly handouts: {
     present(resourceType: string, resourceId: string, audience?: HandoutAudience): Promise<HandoutPresentResult>;
   };
   readonly i18n: {
     t(key: string, fallback: string): string;
+  };
+  readonly input: {
+    readonly bindings: {
+      get(): Promise<InputBindingDTO[]>;
+      set(commandId: string, binding: string, options?: InputBindingOptions): Promise<InputBindingDTO>;
+    };
+    readonly commands: {
+      execute(commandId: string, inputs?: ActionInput): Promise<ActionExecutionResult>;
+      list(): Promise<InputCommandDTO[]>;
+      register(definition?: InputCommandDefinition, handler?: InputCommandHandler): Promise<Promise<Disposer>>;
+    };
+    readonly gestures: {
+      register(definition?: InputGestureDefinition, handler?: InputCommandHandler): Promise<Promise<Disposer>>;
+    };
+  };
+  readonly interactions: {
+    cancel(id: string, options?: ExpectedVersionOptions): Promise<InteractionDTO>;
+    get(id: string): Promise<InteractionDTO | null>;
+    list(options?: InteractionListOptions): Promise<InteractionDTO[]>;
+    request(input?: InteractionRequestInput): Promise<InteractionDTO>;
+    respond(id: string, response: InteractionResponseValue, options?: InteractionMutationOptions): Promise<InteractionDTO>;
   };
   readonly items: {
     create(input?: ItemCreateInput): Promise<ItemMutationResult>;
@@ -1618,6 +2496,12 @@ export interface GravewrightSDK {
     get(journalId: string): Promise<JournalDTO | null>;
     list(options?: JournalListOptions): Promise<JournalListResult>;
     update(journalId: string, patch?: JournalUpdatePatch): Promise<JournalMutationResult>;
+  };
+  readonly navigation: {
+    readonly scene: {
+      getState(): Promise<SceneNavigationStateDTO | null>;
+      go(input?: SceneNavigationInput): Promise<SceneNavigationDTO>;
+    };
   };
   readonly packages: {
     get(packageId: string): Promise<PackageDTO | null>;
@@ -1708,8 +2592,27 @@ export interface GravewrightSDK {
       measure(sceneId: string, from: WorldPointDTO, to: WorldPointDTO): Promise<MeasurementResultDTO>;
       share(sceneId: string, geometry: SharedMeasurementGeometry, options?: SharedMeasurementOptions): Promise<SharedMeasurementDTO>;
     };
+    readonly objectTypes: {
+      register(definition?: SceneObjectTypeDefinition): Promise<Promise<Disposer>>;
+    };
+    readonly objects: {
+      create(sceneId: string, input?: SceneObjectInput): Promise<SceneObjectDTO>;
+      delete(id: string, options?: ExpectedVersionOptions): Promise<SceneObjectDeleteResult>;
+      get(id: string): Promise<SceneObjectDTO | null>;
+      hitTest(sceneId: string, point: WorldPointDTO, options?: SceneObjectHitTestOptions): Promise<SceneObjectDTO[]>;
+      interact(id: string, interactionId: string, options?: ExpectedVersionOptions): Promise<SceneObjectInteractionIntentDTO>;
+      list(sceneId?: string, options?: SceneObjectListOptions): Promise<SceneObjectDTO[]>;
+      update(id: string, patch?: SceneObjectPatch, options?: ExpectedVersionOptions): Promise<SceneObjectDTO>;
+    };
     readonly shaders: {
       apply(sceneId: string, input?: ShaderApplyInput): Promise<ShaderInstanceDTO>;
+      readonly customLibrary: {
+        clearPreview(): CustomShaderPreviewResult;
+        openEditor(definition?: CustomShaderDefinition | null): Promise<CustomShaderDefinition | null>;
+        preview(definition: CustomShaderDefinition): CustomShaderPreviewResult;
+        registerProvider(definition?: CustomShaderProviderDefinition): Disposer;
+        use(definition: CustomShaderDefinition): Promise<CustomShaderUseResult>;
+      };
       enable(id: string, enabled: boolean, options?: ExpectedVersionOptions): Promise<ShaderInstanceDTO>;
       getPreset(presetId: string): Promise<ShaderPresetDTO | null>;
       list(sceneId?: string): Promise<ShaderInstanceDTO[]>;
@@ -1717,12 +2620,27 @@ export interface GravewrightSDK {
       remove(id: string): Promise<ShaderRemovalResult>;
       update(id: string, patch?: ShaderUpdateInput, options?: ExpectedVersionOptions): Promise<ShaderInstanceDTO>;
     };
+    readonly spatialSounds: {
+      create(sceneId: string, input?: SpatialSoundInput): Promise<SpatialSoundDTO>;
+      delete(id: string, options?: ExpectedVersionOptions): Promise<SpatialSoundDeleteResult>;
+      get(id: string): Promise<SpatialSoundDTO | null>;
+      list(sceneId?: string): Promise<SpatialSoundDTO[]>;
+      update(id: string, patch?: SpatialSoundPatch, options?: ExpectedVersionOptions): Promise<SpatialSoundDTO>;
+    };
     readonly templates: {
       create(sceneId: string, values?: SceneTemplateValues): Promise<SceneTemplateResult>;
       delete(templateId: string, options?: ExpectedVersionOptions): Promise<SceneTemplateDeleteResult>;
       get(sceneId: string, templateId: string): Promise<SceneTemplateDTO | null>;
       list(sceneId?: string): Promise<SceneTemplateListResult>;
       update(templateId: string, patch?: Partial<SceneTemplateValues>, options?: ExpectedVersionOptions): Promise<SceneTemplateResult>;
+    };
+    readonly zones: {
+      create(sceneId: string, input?: SceneZoneInput): Promise<SceneZoneDTO>;
+      delete(id: string, options?: ExpectedVersionOptions): Promise<SceneZoneDeleteResult>;
+      get(id: string): Promise<SceneZoneDTO | null>;
+      list(sceneId?: string): Promise<SceneZoneDTO[]>;
+      members(id: string): Promise<string[]>;
+      update(id: string, patch?: SceneZonePatch, options?: ExpectedVersionOptions): Promise<SceneZoneDTO>;
     };
   };
   readonly settings: {
@@ -1738,12 +2656,26 @@ export interface GravewrightSDK {
     register(plugin: SheetPlugin): void;
     registerController(sheetType: string, controller: SheetController): boolean;
   };
+  readonly sounds: {
+    create(input?: SoundCreateInput): Promise<SoundDTO>;
+    delete(id: string, options?: ExpectedVersionOptions): Promise<SoundDeleteResult>;
+    get(id: string): Promise<SoundDTO | null>;
+    list(options?: SoundListOptions): Promise<SoundDTO[]>;
+    update(id: string, patch?: SoundPatch, options?: ExpectedVersionOptions): Promise<SoundDTO>;
+  };
   readonly storage: {
     readonly sqlite: {
       execute(scope: string, name: string, params?: StorageParams): Promise<StorageExecuteResult>;
       query(scope: string, name: string, params?: StorageParams): Promise<StorageQueryResult>;
       status(scope: string): Promise<StorageStatusDTO>;
     };
+  };
+  readonly timelines: {
+    cancel(id: string, options?: ExpectedVersionOptions): Promise<TimelineDTO>;
+    get(id: string): Promise<TimelineDTO | null>;
+    list(): Promise<TimelineDTO[]>;
+    register(definition?: TimelineDefinitionDTO): Promise<TimelineDefinitionDTO>;
+    start(input?: TimelineStartInput): Promise<TimelineDTO>;
   };
   readonly tokens: {
     centerOn(tokenId: string): void;
@@ -1757,6 +2689,8 @@ export interface GravewrightSDK {
       list(sceneId?: string): Promise<string[]>;
       set(ids: string[], sceneId?: string): Promise<string[]>;
     };
+    transfer(tokenId: string, destination?: TokenTransferDestination, options?: TokenTransferOptions): Promise<TokenTransferResultDTO>;
+    transferMany(transfers?: TokenTransferSpec[], options?: TokenTransferManyOptions): Promise<TokenTransferResultDTO>;
     update(tokenId: string, patch?: TokenOverrides, options?: TokenOptions): Promise<TokenMutationResult>;
   };
   readonly tools: {
@@ -1770,12 +2704,34 @@ export interface GravewrightSDK {
       render(applicationId: string, host: HTMLElement, appContext?: ApplicationContext, options?: ApplicationRenderOptions): Promise<ApplicationInstance | null>;
     };
     closeModal(modalOrId: string): void;
+    readonly dragDrop: {
+      drop(input?: SemanticDropInput): Promise<SemanticDropResultDTO>;
+      registerSource(definition?: DragSourceDefinition): Promise<Promise<Disposer>>;
+      registerTarget(definition?: DropTargetDefinition): Promise<Promise<Disposer>>;
+      sources(): Promise<SemanticRegistrationDTO[]>;
+      targets(): Promise<SemanticRegistrationDTO[]>;
+    };
     openModal(modalId: string): void;
+    readonly presentations: {
+      close(id: string, options?: ExpectedVersionOptions): Promise<PresentationCloseResult>;
+      get(id: string): Promise<PresentationDTO | null>;
+      list(options?: PresentationListOptions): Promise<PresentationDTO[]>;
+      show(input?: PresentationInput): Promise<PresentationDTO>;
+      update(id: string, patch?: PresentationPatch, options?: ExpectedVersionOptions): Promise<PresentationDTO>;
+      wait(id: string, options?: PresentationWaitOptions): Promise<PresentationDTO | null>;
+    };
     readonly slots: {
       available(): string[];
       register(slotId: string, render: SlotRenderCallback): Disposer;
     };
     toast(message: string, options: ToastOptions): ToastHandle | undefined;
+  };
+  readonly workflows: {
+    cancel(id: string, options?: ExpectedVersionOptions): Promise<WorkflowDTO>;
+    get(id: string): Promise<WorkflowDTO | null>;
+    list(): Promise<WorkflowDTO[]>;
+    register(definition?: WorkflowDefinitionDTO): Promise<WorkflowDefinitionDTO>;
+    start(input?: WorkflowStartInput): Promise<WorkflowDTO>;
   };
 }
 

@@ -442,6 +442,58 @@
             return `gravewright.sceneInfo.${sceneId}.${sceneEpoch}`;
         }
 
+        function invalidateSceneInfo(sceneId) {
+            if (!sceneId) return;
+            const prefix = `gravewright.sceneInfo.${sceneId}.`;
+            try {
+                for (let index = localStorage.length - 1; index >= 0; index -= 1) {
+                    const key = localStorage.key(index);
+                    if (key?.startsWith(prefix)) localStorage.removeItem(key);
+                }
+            } catch {  }
+            document.querySelectorAll(`[data-map-canvas][data-scene-id="${CSS.escape(sceneId)}"]`)
+                .forEach((canvas) => { runtimeFor(canvas).cachedInfoEpoch = null; });
+        }
+
+        function updateSceneInfoCache(eventName, payload) {
+            const sceneId = payload?.scene_id;
+            if (!sceneId) return;
+            const prefix = `gravewright.sceneInfo.${sceneId}.`;
+            let updated = 0;
+            try {
+                for (let index = 0; index < localStorage.length; index += 1) {
+                    const key = localStorage.key(index);
+                    if (!key?.startsWith(prefix)) continue;
+                    const cached = JSON.parse(localStorage.getItem(key) || "null");
+                    if (!cached || !Array.isArray(cached.board_area_markers)) continue;
+                    const markers = cached.board_area_markers;
+                    if (eventName === "board.area_marker.upserted" && payload.marker) {
+                        const at = markers.findIndex((item) => item.id === payload.marker.id);
+                        if (at >= 0) markers[at] = payload.marker;
+                        else markers.push(payload.marker);
+                    } else if (eventName === "board.area_marker.deleted") {
+                        cached.board_area_markers = markers.filter((item) => item.id !== payload.marker_id);
+                    } else if (eventName === "board.area_marker.cleared") {
+                        cached.board_area_markers = markers.filter((item) =>
+                            item.kind === "freehand" || item.kind === "text" || (payload.keep_gm_layer === true && item.layer === "gm")
+                        );
+                    } else if (eventName === "board.draw.upserted" && payload.drawing) {
+                        const at = markers.findIndex((item) => item.id === payload.drawing.id);
+                        if (at >= 0) markers[at] = payload.drawing;
+                        else markers.push(payload.drawing);
+                    } else if (eventName === "board.draw.cleared") {
+                        cached.board_area_markers = markers.filter((item) => {
+                            if (item.kind !== "freehand" && item.kind !== "text") return true;
+                            return Boolean(payload.owner_id && item.owner_id !== payload.owner_id);
+                        });
+                    }
+                    localStorage.setItem(key, JSON.stringify(cached));
+                    updated += 1;
+                }
+            } catch {  }
+            if (!updated) invalidateSceneInfo(sceneId);
+        }
+
         function readChunkCacheIndex(sceneId, tileVersion) {
             try {
                 const raw = localStorage.getItem(chunkCacheIndexKey(sceneId, tileVersion));
@@ -1270,6 +1322,8 @@
             handleSceneUpdated,
             handleSessionResumed,
             handleViewportReady,
+            invalidateSceneInfo,
+            updateSceneInfoCache,
             knownChunksObject,
             layerIdsFor,
             missingVisibleChunkKeys,

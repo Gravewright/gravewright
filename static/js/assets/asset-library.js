@@ -5,6 +5,7 @@
   const IMAGE_MIME_PREFIX = "image/";
 
   const PDF_MIME = "application/pdf";
+  const AUDIO_MIME_PREFIX = "audio/";
 
   const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
   const MAX_PDF_BYTES = 25 * 1024 * 1024;
@@ -57,6 +58,15 @@
       if (!response.ok) throw new Error(data.error_key || "game.assets.errors.request_failed");
       return data;
     },
+    async fetchPackages(roomId) {
+      const response = await fetch(`/game/assets/packages/${encodeURIComponent(roomId)}`, {
+        headers: { Accept: "application/json" },
+        credentials: "same-origin",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error_key || "game.assets.errors.request_failed");
+      return Array.isArray(data.packages) ? data.packages : [];
+    },
     createFolder(roomId, payload) {
       return jsonRequest("/game/assets/folders", { ...(payload || {}), campaign_id: roomId });
     },
@@ -66,11 +76,13 @@
     deleteAsset(roomId, assetId) {
       return jsonRequest("/game/assets/delete", { campaign_id: roomId, asset_id: assetId });
     },
-    async upload(roomId, file, folderId) {
+    async upload(roomId, file, folderId, purpose="") {
       const form = new FormData();
       form.append("campaign_id", roomId);
       if (folderId) form.append("folder_id", folderId);
       form.append("file", file);
+      if (file.type === PDF_MIME) form.append("purpose", "pdf-sheet");
+      else if (purpose) form.append("purpose", purpose);
       const response = await fetch("/game/assets/upload", {
         method: "POST",
         headers: { Accept: "application/json", "x-csrftoken": csrf() },
@@ -247,10 +259,12 @@
       this.roomId = workspace.dataset.roomId || "";
       this.panel = workspace.querySelector("[data-scene-assets-panel]");
       this.assets = [];
+      this.assetPackages = [];
       this.folders = [];
       this.selectedFolderId = "";
       this.kind = "";
       this.search = "";
+      this.artisticMode = false;
       controllers.set(this.roomId, this);
       this.refresh();
     }
@@ -258,8 +272,12 @@
     async refresh() {
       if (!this.roomId) return;
       try {
-        const state = await api.fetchLibrary(this.roomId);
+        const [state, packages] = await Promise.all([
+          api.fetchLibrary(this.roomId),
+          api.fetchPackages(this.roomId).catch(() => []),
+        ]);
         this.assets = Array.isArray(state.assets) ? state.assets : [];
+        this.assetPackages = packages;
         this.folders = Array.isArray(state.folders) ? state.folders : [];
         if (this.selectedFolderId && !this.folders.some((folder) => folder.id === this.selectedFolderId)) {
           this.selectedFolderId = "";
@@ -277,10 +295,57 @@
       const termo = (this.search || "").trim().toLowerCase();
       return (this.assets || []).filter((asset) => {
         if ((asset.folder_id || "") !== this.selectedFolderId) return false;
-        if (this.kind && (asset.kind || "image") !== this.kind) return false;
+        if (this.kind && !this.filterKinds(asset).includes(this.kind)) return false;
         if (!termo) return true;
-        return String(asset.filename || "").toLowerCase().includes(termo);
+        const folder=(this.folders||[]).find(item=>item.id===asset.folder_id)?.name||"";
+        return `${asset.filename||""} ${asset.content_type||""} ${folder}`.toLowerCase().includes(termo);
       });
+    }
+
+    filterKinds(asset) {
+      if ((asset.kind || "image") !== "audio") return [asset.kind || "image"];
+      const semanticKinds = Array.isArray(asset.audio_kinds)
+        ? asset.audio_kinds
+        : asset.audio_kind ? [asset.audio_kind] : [];
+      const kinds = semanticKinds.map((kind) => (
+        kind === "ambience" || kind === "music" ? "ambient-audio"
+          : kind === "sound-effect" ? "effect-audio" : "audio"
+      ));
+      return kinds.length ? Array.from(new Set(kinds)) : ["audio"];
+    }
+
+    renderKinds() {
+      const host = this.workspace.querySelector(".asset-kinds");
+      if (!host) return;
+      const definitions = [
+        ["", label("assetKindAll", "All")],
+        ["image", label("assetKindImage", "Images")],
+        ["ambient-audio", label("soundLabelAmbient", "Ambient Sound")],
+        ["effect-audio", label("soundLabelEffect", "Sound Effect")],
+        ["audio", label("assetKindAudio", "Audio")],
+        ["pdf", label("assetKindPdf", "PDFs")],
+      ];
+      const counts = new Map();
+      for (const asset of this.assets) {
+        for (const kind of this.filterKinds(asset)) {
+          counts.set(kind, (counts.get(kind) || 0) + 1);
+        }
+      }
+      const available = definitions.filter(([kind]) => !kind || counts.has(kind));
+      if (this.kind && !counts.has(this.kind)) this.kind = "";
+      host.innerHTML = available.map(([kind, text]) => {
+        const active = this.kind === kind;
+        const count = kind ? counts.get(kind) || 0 : this.assets.length;
+        return `<button type="button" class="asset-kind ${active ? "is-active" : ""}"
+          data-asset-kind="${esc(kind)}" aria-pressed="${active}">
+          <span>${esc(text)}</span><small>${count}</small>
+        </button>`;
+      }).join("");
+    }
+
+    renderPackageAction() {
+      const button = this.workspace.querySelector("[data-asset-package-open]");
+      if (button) button.hidden = this.assetPackages.length === 0;
     }
 
     renderFolders() {
@@ -311,11 +376,12 @@
             const kind = asset.kind || "image";
 
 
-            const isPdf = kind === "pdf";
+            const isPdf = kind === "pdf", isAudio=kind === "audio";
             const preview = isPdf
               ? `<span class="asset-card__icon" aria-hidden="true"><i class="ph ph-file-pdf"></i></span>`
+              : isAudio ? `<span class="asset-card__icon asset-card__icon--audio" aria-hidden="true"><i class="ph ph-waveform"></i></span>`
               : `<img class="asset-card__img" src="${esc(asset.src || "")}" alt="" loading="lazy">`;
-            const detail = isPdf
+            const detail = isPdf || isAudio
               ? esc(formatBytes(asset.byte_size))
               : `${Number(asset.width || 0)} × ${Number(asset.height || 0)}`;
 
@@ -331,10 +397,11 @@
                 <small>${detail}</small>
               </div>
               <div class="asset-card__actions">
+                ${this.artisticMode && kind==="image" ? `<button type="button" data-asset-place-scene="${id}" title="${esc(label("assetLabelPlaceScene","Place in Scene"))}" aria-label="${esc(label("assetLabelPlaceScene","Place in Scene"))}"><i class="ph ph-map-pin-plus"></i></button>`:""}
                 ${podeApresentar ? `<button type="button" data-handout-resource="asset" data-resource-id="${id}" data-campaign-id="${esc(this.roomId)}" title="${esc(label("assetLabelShow", "Show to players"))}" aria-label="${esc(label("assetLabelShow", "Show to players"))}"><i class="ph ph-hand-pointing" aria-hidden="true"></i></button>` : ""}
                 <button type="button" class="asset-card__delete" data-asset-delete="${id}"
-                        title="${esc(label("assetLabelDeleteImage", "Delete"))}"
-                        aria-label="${esc(label("assetLabelDeleteImage", "Delete"))}"><i class="ph ph-trash" aria-hidden="true"></i></button>
+                        title="${esc(label("assetLabelDelete", "Delete"))}"
+                        aria-label="${esc(label("assetLabelDelete", "Delete"))}"><i class="ph ph-trash" aria-hidden="true"></i></button>
               </div>
             </article>`;
           }).join("")
@@ -360,6 +427,8 @@
 
     render() {
       if (!this.panel) return;
+      this.renderKinds();
+      this.renderPackageAction();
       this.renderFolders();
       this.renderGrid();
       this.renderSummary();
@@ -383,9 +452,9 @@
       await api.deleteAsset(this.roomId, assetId).catch(() => this.refresh());
     }
 
-    async uploadFiles(files) {
+    async uploadFiles(files, purpose="") {
       const accepted = Array.from(files || []).filter(
-        (file) => file.type.startsWith(IMAGE_MIME_PREFIX) || file.type === PDF_MIME,
+        (file) => file.type.startsWith(IMAGE_MIME_PREFIX) || file.type.startsWith(AUDIO_MIME_PREFIX) || file.type === PDF_MIME,
       );
       if (!accepted.length) return false;
       for (const file of accepted) {
@@ -400,7 +469,7 @@
 
 
 
-        await api.upload(this.roomId, file, this.selectedFolderId).catch((error) => {
+        await api.upload(this.roomId, file, this.selectedFolderId, purpose).catch((error) => {
           reportUploadFailure(file, error);
         });
       }
@@ -415,12 +484,23 @@
   }
 
   document.addEventListener("click", (event) => {
+    const libraryOpener = event.target.closest('[data-modal-open^="library-images-"]');
+    if (libraryOpener) {
+      const workspace = document.querySelector(
+        `[data-scene-assets-workspace][data-room-id="${CSS.escape(libraryOpener.dataset.modalOpen.replace("library-images-", ""))}"]`,
+      );
+      const controller = workspace ? controllers.get(workspace.dataset.roomId || "") : null;
+      if (controller) void controller.refresh();
+    }
+
     const deleteButton = event.target.closest("[data-asset-delete]");
     if (deleteButton) {
       const controller = controllerFromElement(deleteButton);
       if (controller) controller.deleteAsset(deleteButton.dataset.assetDelete);
       return;
     }
+    const placeButton=event.target.closest("[data-asset-place-scene]");
+    if(placeButton){const controller=controllerFromElement(placeButton);const canvas=document.querySelector(`.room-workspace.is-active [data-map-canvas][data-room-id="${CSS.escape(controller?.roomId||"")}"]`);if(controller&&canvas){const rect=canvas.getBoundingClientRect();window.GravewrightSceneImages?.placeLibraryAssetAt?.(canvas,JSON.stringify({asset_id:placeButton.dataset.assetPlaceScene}),rect.left+rect.width/2,rect.top+rect.height/2).then(()=>window.GravewrightModals?.close?.(`library-images-${controller.roomId}`));}return;}
 
     const folderButton = event.target.closest("[data-asset-folder]");
     if (folderButton) {
@@ -497,7 +577,7 @@
     const workspace = input.closest("[data-scene-assets-workspace]");
     const controller = workspace ? controllers.get(workspace.dataset.roomId || "") : null;
     if (!controller) return;
-    controller.uploadFiles(input.files).finally(() => {
+    controller.uploadFiles(input.files, input.dataset.audioPurpose || "").finally(() => {
       input.value = "";
     });
   });
@@ -567,6 +647,13 @@
     });
     document.addEventListener("vtt:ws-open", () => {
       controllers.forEach((controller) => controller.refresh());
+    });
+    document.addEventListener("artistic:asset-library",event=>{
+      const roomId=event.detail?.roomId||document.querySelector(".room-workspace.is-active [data-map-canvas]")?.dataset.roomId||"";
+      const controller=controllers.get(roomId);if(!controller)return;
+      controller.kind=event.detail?.kind||"";controller.artisticMode=Boolean(event.detail?.artistic);controller.render();
+      controller.workspace.querySelectorAll("[data-asset-kind]").forEach(button=>{const active=(button.dataset.assetKind||"")===controller.kind;button.classList.toggle("is-active",active);button.setAttribute("aria-pressed",String(active));});
+      if(window.GravewrightModals?.open)window.GravewrightModals.open(`library-images-${roomId}`);else document.querySelector(`[data-modal-id="library-images-${CSS.escape(roomId)}"]`)?.removeAttribute("hidden");
     });
   }
 

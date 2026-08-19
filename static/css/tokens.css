@@ -25,9 +25,14 @@
     --surface-raised-2: #252c34;
     --surface-field: #151a20;
 
+    /* Semantic aliases used by authored resource surfaces. Keep these mapped
+     * to the canonical VTT palette instead of introducing a second theme. */
+    --surface-base: var(--surface);
+
     --border: #303842;
     --border-strong: #46505c;
     --border-control: #637183;
+    --border-soft: var(--border);
     --border-accent: rgba(192, 154, 90, 0.36);
     --border-accent-strong: rgba(192, 154, 90, 0.6);
 
@@ -35,6 +40,7 @@
     --text: #d8d2c3;
     --text-muted: #a9a193;
     --text-faint: #7f8994;
+    --text-main: var(--text);
 
     --accent: #c09a5a;
     --accent-hover: #d2ac6b;

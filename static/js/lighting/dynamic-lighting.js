@@ -8,6 +8,8 @@
     const ENDPOINT_SNAP_PX = 12;
     const NODE_GRAB_PX = 10;
     const NODE_EPSILON = 1;
+    const RAY_INTERSECTION_EPSILON = 1e-7;
+    const POLYGON_POINT_EPSILON = 0.1;
     const DOOR_GRAB_PX = 14;
     const LIGHT_GRAB_PX = 12;
 
@@ -137,9 +139,44 @@
         if (Math.abs(den) < 1e-9) return null;
         const qx = segment.x1 - origin.x, qy = segment.y1 - origin.y;
         const t = (qx * sy - qy * sx) / den, u = (qx * dy - qy * dx) / den;
-        return t >= 0 && t <= max && u >= 0 && u <= 1
+        return t >= -RAY_INTERSECTION_EPSILON && t <= max
+            && u >= -RAY_INTERSECTION_EPSILON && u <= 1 + RAY_INTERSECTION_EPSILON
             ? { x: origin.x + dx * t, y: origin.y + dy * t, distance: t }
             : null;
+    }
+
+    function weldedSegments(segments, tolerance = NODE_EPSILON) {
+        if (!(tolerance > 0) || segments.length < 2) return segments;
+        const buckets = new Map(), cell = tolerance;
+        const key = (x, y) => `${Math.floor(x / cell)}:${Math.floor(y / cell)}`;
+        const canonical = (x, y) => {
+            const cx = Math.floor(x / cell), cy = Math.floor(y / cell);
+            for (let ox = -1; ox <= 1; ox += 1) for (let oy = -1; oy <= 1; oy += 1) {
+                const candidates = buckets.get(`${cx + ox}:${cy + oy}`) || [];
+                const found = candidates.find((point) => Math.hypot(point.x - x, point.y - y) <= tolerance);
+                if (found) return found;
+            }
+            const point = { x, y }, bucketKey = key(x, y);
+            if (!buckets.has(bucketKey)) buckets.set(bucketKey, []);
+            buckets.get(bucketKey).push(point);
+            return point;
+        };
+        return segments.map((segment) => {
+            const a = canonical(Number(segment.x1), Number(segment.y1));
+            const b = canonical(Number(segment.x2), Number(segment.y2));
+            return { ...segment, x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+        });
+    }
+
+    function compactPolygon(points, tolerance = POLYGON_POINT_EPSILON) {
+        const compact = [];
+        points.forEach((point) => {
+            const previous = compact[compact.length - 1];
+            if (previous && Math.hypot(previous.x - point.x, previous.y - point.y) <= tolerance) return;
+            compact.push(point);
+        });
+        if (compact.length > 2 && Math.hypot(compact[0].x - compact.at(-1).x, compact[0].y - compact.at(-1).y) <= tolerance) compact.pop();
+        return compact;
     }
 
 
@@ -176,7 +213,7 @@
             { x1: 0, y1: 0, x2: width, y2: 0 }, { x1: width, y1: 0, x2: width, y2: height },
             { x1: width, y1: height, x2: 0, y2: height }, { x1: 0, y1: height, x2: 0, y2: 0 },
         ];
-        const all = [...segments, ...bounds], angles = [], epsilon = 0.00001;
+        const all = [...weldedSegments(segments), ...bounds], angles = [], epsilon = 0.00001;
         all.forEach((segment) => [
             { x: segment.x1, y: segment.y1 }, { x: segment.x2, y: segment.y2 },
         ].forEach((point) => {
@@ -219,7 +256,7 @@
 
 
 
-        return apex ? [apex, ...points] : points;
+        return compactPolygon(apex ? [apex, ...points] : points);
     }
 
     function pointInPolygon(point, polygon) {
@@ -802,7 +839,14 @@
 
         blockers(walls, channel = "vision") {
             return walls.filter((wall) => (wall.kind !== "door" || wall.door_state !== "open")
-                && (wall.behavior?.[channel] || "block") === "block");
+                && (wall.behavior?.[channel] ?? wall[`${channel}_behavior`] ?? "block") === "block");
+        }
+
+        soundPropagationPolygon(origin, radius) {
+            const scene = this.scene();
+            if (!scene || !(Number(radius) > 0)) return [];
+            const blockers = this.blockers(this.renderWalls(), "sound");
+            return this.cachedPolygon(`sound-${origin.id || "preview"}`, origin, blockers, scene, Number(radius));
         }
 
 
@@ -818,7 +862,8 @@
 
 
         wallIndexFor(blockers, scene) {
-            if (this.wallIndex && this.wallIndex.stamp === this.geometryStamp) return this.wallIndex;
+            const signature = blockers.map((wall) => wall.id || `${wall.x1},${wall.y1},${wall.x2},${wall.y2}`).join("|");
+            if (this.wallIndex && this.wallIndex.stamp === this.geometryStamp && this.wallIndex.signature === signature) return this.wallIndex;
             const size = Math.max(1, (scene.scaledTileSize || 50) * WALL_CHUNK_TILES);
             const buckets = new Map();
             blockers.forEach((wall) => {
@@ -835,7 +880,7 @@
                     }
                 }
             });
-            this.wallIndex = { stamp: this.geometryStamp, size, buckets, total: blockers.length };
+            this.wallIndex = { stamp: this.geometryStamp, signature, size, buckets, total: blockers.length };
             return this.wallIndex;
         }
 
@@ -972,8 +1017,9 @@
 
 
 
-            const lightingVisible = shown(EDIT_LAYERS.light);
-            const effectsVisible = shown(EDIT_LAYERS.particles);
+            const wallReferenceMode = this.isGm && activeLayer === EDIT_LAYERS.wall;
+            const lightingVisible = shown(EDIT_LAYERS.light) || wallReferenceMode;
+            const effectsVisible = shown(EDIT_LAYERS.particles) || wallReferenceMode;
             const wallsVisible = shown(EDIT_LAYERS.wall);
             const visible = lightingVisible || effectsVisible || wallsVisible;
             const walls = this.renderWalls();
@@ -981,8 +1027,13 @@
 
             const editing = this.isGm && activeLayer === EDIT_LAYERS.wall && wallsVisible;
             const editingLights = this.isGm && activeLayer === EDIT_LAYERS.light && lightingVisible;
+            const editingParticles = this.isGm && activeLayer === EDIT_LAYERS.particles && effectsVisible;
+            const editingShaders = this.isGm && activeLayer === EDIT_LAYERS.shader && effectsVisible;
+            const showLightMarkers = editingLights || wallReferenceMode;
+            const showParticleMarkers = editingParticles || wallReferenceMode;
+            const showShaderMarkers = editingShaders || wallReferenceMode;
             if (!scene) {
-                return { mode, visible, editing, editingLights, editingParticles: false, editingShaders: false, shaders: [], shaderMarkers: [], darkness: 0, sceneDarkness: 0, geometryStamp: this.geometryStamp, particleClouds: [], walls, lights: [], visionPolygons: [], visionRims: [], visionPreview: null, doors: [], selected: this.selected, selectedLight: this.selectedLight, picked: this.picks, marquee: null, start: this.start, preview: this.preview, nodesGrabbable: false, draggingNode: null };
+                return { mode, visible, editing, editingLights, editingParticles: false, editingShaders: false, wallReferenceMode, showLightMarkers, showParticleMarkers, showShaderMarkers, shaders: [], shaderMarkers: [], lightMarkers: [], darkness: 0, sceneDarkness: 0, geometryStamp: this.geometryStamp, particleClouds: [], walls, lights: [], visionPolygons: [], visionRims: [], visionPreview: null, doors: [], selected: this.selected, selectedLight: this.selectedLight, picked: this.picks, marquee: null, start: this.start, preview: this.preview, nodesGrabbable: false, draggingNode: null };
             }
 
             const playerView = Boolean(window.GravewrightMap?.isPlayerView?.());
@@ -1118,9 +1169,16 @@
 
 
 
-                editingParticles: this.isGm && activeLayer === EDIT_LAYERS.particles
-                    && effectsVisible,
+                editingParticles,
                 editingLights,
+                wallReferenceMode,
+                showLightMarkers,
+                showParticleMarkers,
+                showShaderMarkers,
+                lightMarkers: showLightMarkers ? lights.map((light) => ({
+                    ...light,
+                    alpha: animationFactor(light, now),
+                })) : [],
 
 
 
@@ -1163,9 +1221,8 @@
                     }),
 
 
-                editingShaders: this.isGm && activeLayer === EDIT_LAYERS.particles
-                    && shown(EDIT_LAYERS.particles),
-                shaderMarkers: (this.isGm && activeLayer === EDIT_LAYERS.particles
+                editingShaders,
+                shaderMarkers: (this.isGm && (activeLayer === EDIT_LAYERS.particles || wallReferenceMode)
                     ? (this.shaders || []) : []).map((shader) => {
                         const dragging = this.shaderDrag?.id === shader.id ? this.shaderDrag.to : null;
                         return {
@@ -1176,8 +1233,8 @@
                             radiusWorld: Number(shader.radius || 0) * size,
                             color: shader.color,
                             enabled: Boolean(shader.enabled),
-                            selected: this.picked("shader", shader.id),
-                            resizeHandle: this.picked("shader", shader.id) && Number(shader.radius || 0) > 0,
+                            selected: !wallReferenceMode && this.picked("shader", shader.id),
+                            resizeHandle: !wallReferenceMode && this.picked("shader", shader.id) && Number(shader.radius || 0) > 0,
                         };
                     }),
                 particleClouds: (effectsVisible ? (this.emitters || []) : []).map((emitter) => {
@@ -1188,7 +1245,7 @@
                     const live = { ...emitter, x: dragging?.x ?? emitter.x, y: dragging?.y ?? emitter.y };
                     return {
                     id: emitter.id,
-                    selected: this.picked("emitter", emitter.id),
+                    selected: !wallReferenceMode && this.picked("emitter", emitter.id),
                     x: live.x,
                     y: live.y,
                     kind: emitter.kind,
@@ -1655,7 +1712,17 @@
         }
 
         semanticPreview(presetId, point = null, { creation = false } = {}) {
-            if (!presetId) { this.transientShaderPreview = null; redraw(); return; }
+            if (!presetId) {
+                const custom = window.GravewrightTools?.selectedCustomShaderDefinition?.definition;
+                if (custom && creation) {
+                    this.previewCustomDefinition({ ...custom, x: point?.x, y: point?.y });
+                    if (this.transientShaderPreview && point) {
+                        this.transientShaderPreview.x = point.x; this.transientShaderPreview.y = point.y;
+                    }
+                    return;
+                }
+                this.transientShaderPreview = null; redraw(); return;
+            }
             const definition = window.GravewrightTools?.shaderPresetDefinition?.(presetId) || null;
             const parameters = Object.fromEntries(Object.entries(definition?.parameters || {})
                 .map(([key, spec]) => [key, spec.default]));
@@ -1700,7 +1767,10 @@
                     redraw();
                     return;
                 }
-                const shader = await this.createShader({ x: point.x, y: point.y });
+                const custom = window.GravewrightTools?.selectedCustomShaderDefinition;
+                const customValues = custom?.format === "gravewright-custom-shader" && custom?.version === 1
+                    ? custom.definition : {};
+                const shader = await this.createShader({ ...customValues, x: point.x, y: point.y });
                 if (!shader) return;
                 this.selectedShader = shader.id;
                 redraw();
@@ -1775,6 +1845,24 @@
             });
             return true;
         }
+
+        previewCustomDefinition(definition = {}) {
+            const scene = this.scene();
+            if (!scene) return false;
+            this.transientShaderPreview = {
+                id: "__gravewright_custom_shader_preview__", scene_id: scene.id,
+                source: String(definition.source || ""), x: Number(scene.width || 0) / 2,
+                y: Number(scene.height || 0) / 2, radius: Number(definition.radius ?? 8),
+                rotation: Number(definition.rotation ?? 0), opacity: Number(definition.opacity ?? 1),
+                intensity: Number(definition.intensity ?? .6), scale: Number(definition.scale ?? 1),
+                speed: Number(definition.speed ?? 1), color: String(definition.color || "#8fb6ff"),
+                blend_mode: String(definition.blend_mode || "normal"), enabled: definition.enabled !== false,
+                transient: true, creation: false,
+            };
+            redraw(); return true;
+        }
+
+        clearCustomDefinitionPreview() { this.transientShaderPreview = null; redraw(); }
 
         restoreShaderPreview(shaderId) {
             const canonical = this.shaderPreviewCanonical.get(shaderId);
@@ -2051,7 +2139,8 @@
                     }
                     return;
                 }
-                if (window.GravewrightTools?.activeTool === "shader" && window.GravewrightTools?.selectedShaderPreset) {
+                if (window.GravewrightTools?.activeTool === "shader"
+                    && (window.GravewrightTools?.selectedShaderPreset || window.GravewrightTools?.selectedCustomShaderDefinition)) {
                     this.semanticPreview(window.GravewrightTools.selectedShaderPreset, this.target(event), { creation: true });
                 }
                 if (this.emitterDrag) {
@@ -2696,6 +2785,9 @@
         build: BUILD,
         stateForCanvas: (canvas) => controllers.get(canvas)?.pixiState() || null,
 
+        soundPropagationFor: (canvas, emitter) => emitter?.constrained_by_walls === false
+            ? null : controllers.get(canvas)?.soundPropagationPolygon(emitter, emitter?.radius) || [],
+
 
         blocksMovement: (canvas, from, to) =>
             controllers.get(canvas)?.blocksMovement(from, to) ?? false,
@@ -2718,6 +2810,8 @@
         restoreShaderPreview: (canvas, shaderId) => controllers.get(canvas)?.restoreShaderPreview(shaderId),
         commitShaderPreview: (canvas, shaderId, patch) => controllers.get(canvas)?.commitShaderPreview(shaderId, patch),
         deleteShader: (canvas, shaderId) => controllers.get(canvas)?.deleteShader(shaderId),
+        previewCustomDefinition: (canvas, definition) => controllers.get(canvas)?.previewCustomDefinition(definition),
+        clearCustomDefinitionPreview: (canvas) => controllers.get(canvas)?.clearCustomDefinitionPreview(),
         patchLight: (canvas, lightId, patch) => controllers.get(canvas)?.patchLight(lightId, patch),
         deleteLight: (canvas, lightId) => controllers.get(canvas)?.deleteLight(lightId),
 

@@ -117,6 +117,50 @@ grave package doctor my-rpg
 
 ## Documentation map
 
+### Concepts
+
+- [`authority-model.md`](authority-model.md): how intent, capability, principal and projection fit together.
+- [`semantic-runtime-boundaries.md`](semantic-runtime-boundaries.md): where each runtime domain stops, and why.
+- [`campaign-and-tokens.md`](campaign-and-tokens.md): the campaign roster and token control projection.
+- [`terminology.md`](terminology.md): canonical product terms and their translations.
+
+### Scene and content
+
+- [`scene-zones.md`](scene-zones.md): authoritative regions and membership.
+- [`scene-world-objects.md`](scene-world-objects.md): package-owned semantic objects.
+- [`geometry-semantics.md`](geometry-semantics.md): walls, doors, and what geometry means.
+- [`content-and-assets.md`](content-and-assets.md): content packs, asset packs, and safe paths.
+- [`pdf.md`](pdf.md): PDF documents, viewer, and annotations.
+
+### Gameplay
+
+- [`declarative-actions.md`](declarative-actions.md): registered actions and their bounded operations.
+- [`input-commands.md`](input-commands.md): semantic commands, bindings, and typing rules.
+- [`directed-interactions.md`](directed-interactions.md): asking a user to decide.
+- [`durable-workflows.md`](durable-workflows.md): multi-step processes that wait and resume.
+- [`gameplay-flow.md`](gameplay-flow.md): phases, participants, and secret commitment.
+- [`semantic-timelines.md`](semantic-timelines.md): scheduled composition of semantic effects.
+- [`token-transfer.md`](token-transfer.md): moving tokens between scenes.
+
+### Audio and presentation
+
+- [`native-sounds.md`](native-sounds.md): audio assets, sounds, and playback.
+- [`spatial-sounds.md`](spatial-sounds.md): persistent scene emitters and acoustics.
+- [`semantic-presentations.md`](semantic-presentations.md): temporary core-owned projections.
+- [`shader-presets.md`](shader-presets.md): shader presets and instances.
+- [`custom-shader-libraries.md`](custom-shader-libraries.md): package-provided shader libraries.
+
+### Release
+
+- [`rc1-compatibility-policy.md`](rc1-compatibility-policy.md): what is public, and what may change.
+- [`rc1-certification.md`](rc1-certification.md): the certified RC 1 contract and known observations.
+- [`stability-policy.md`](stability-policy.md): capability status levels.
+
+### Reference
+
+
+### Guides
+
 - [`tutorial-addon.md`](tutorial-addon.md): end-to-end: from zero to a working addon.
 - [`tutorial-ruleset.md`](tutorial-ruleset.md): end-to-end: from zero to a minimal working ruleset.
 - [`declarative-model.md`](declarative-model.md): declarative-first package model, examples, and author decision rules.

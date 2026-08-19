@@ -70,6 +70,9 @@
                 drag: getActiveDrag()?.canvas === canvas ? getActiveDrag() : null,
                 ghosts: scene ? getGhostsForScene(scene.id) : null,
                 viewerIsGm: effectiveIsGm(canvas),
+                spatialSounds: scene
+                    ? (window.GravewrightSpatialSounds?.snapshotFor?.(canvas) || null)
+                    : null,
             });
             if (flags.has("fog")) boardRenderer.setFog(scene ? (window.GravewrightFog?.fogViewFor?.(canvas, scene) ?? null) : null);
             boardRenderer.render();

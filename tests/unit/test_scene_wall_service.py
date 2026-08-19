@@ -64,6 +64,16 @@ def test_moving_a_node_drags_every_wall_welded_to_it(db):
     assert (a["x1"],a["y1"]) == (0,0) and (b["x2"],b["y2"]) == (100,100), "as outras pontas ficam paradas"
     assert (c["x1"],c["y1"],c["x2"],c["y2"]) == (300,300,400,300), "parede distante nao e tocada"
 
+def test_creating_near_an_existing_node_persists_one_canonical_junction(db):
+    gm=seed_user(name="GM");campaign=seed_campaign(gm);scene=seed_scene(campaign);service=SceneWallService()
+    first=service.create(campaign_id=campaign,scene_id=scene["id"],user_id=gm,kind="wall",x1=0,y1=0,x2=100,y2=100).payload["wall"]
+    second=service.create(campaign_id=campaign,scene_id=scene["id"],user_id=gm,kind="wall",x1=100.7,y1=99.6,x2=200,y2=100).payload["wall"]
+    assert (second["x1"],second["y1"])==(first["x2"],first["y2"])==(100,100)
+    moved=service.move_node(campaign_id=campaign,scene_id=scene["id"],user_id=gm,from_x=100,from_y=100,to_x=120,to_y=130)
+    walls={wall["id"]:wall for wall in moved.payload["walls"]}
+    assert (walls[first["id"]]["x2"],walls[first["id"]]["y2"])==(120,130)
+    assert (walls[second["id"]]["x1"],walls[second["id"]]["y1"])==(120,130)
+
 def test_move_node_rejects_collapsing_and_non_gm(db):
     gm=seed_user(name="GM"); player=seed_user(name="Player"); campaign=seed_campaign(gm); seed_member(campaign,player,"player")
     scene=seed_scene(campaign); service=SceneWallService()

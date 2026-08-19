@@ -37,16 +37,5 @@
         loadActorSheetBundle(actorId) {
             return jsonFetch(`/game/actor/${encodeURIComponent(actorId)}/sheet-bundle`);
         },
-        async updateTokenHp(payload) {
-            const http = window.GravewrightCore?.http;
-            if (!http?.postJson) throw new Error("HTTP API unavailable");
-            const result = await http.postJson("/game/token/hp", payload);
-            if (!result.ok) {
-                const err = new Error(result.details?.error_key || result.message || "token hp update failed");
-                err.details = result.details;
-                throw err;
-            }
-            return result.data || {};
-        },
     };
 })();
