@@ -8,6 +8,7 @@ message ``str``. Behavior is unchanged from the original module.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 
@@ -55,7 +56,20 @@ def _normalize_board_shape(raw: dict[str, Any], label: str) -> dict[str, Any] | 
         **preset,
         **_normalize_marker_text(raw.get("text")),
         **_normalize_shape_style(raw.get("style")),
+        **_normalize_shape_rotation(raw.get("rotation")),
+        **_normalize_anchor_mode(raw.get("anchor_mode")),
     }
+
+
+def _normalize_shape_rotation(raw: Any) -> dict[str, float]:
+    if isinstance(raw, bool) or not isinstance(raw, int | float) or not math.isfinite(raw):
+        return {}
+    rotation = float(raw) % 360.0
+    return {"rotation": rotation} if rotation else {}
+
+
+def _normalize_anchor_mode(raw: Any) -> dict[str, str]:
+    return {"anchor_mode": raw} if raw in {"center", "vertex"} else {}
 
 
 def _normalize_freehand(raw: dict[str, Any], label: str) -> dict[str, Any] | str:

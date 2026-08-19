@@ -13,6 +13,7 @@ MIN_SEGMENT = 8.0
 
 DOOR_STATES = ("closed", "open", "locked")
 BEHAVIORS = {"block", "pass"}
+SOUND_BEHAVIORS = {"block", "attenuate", "pass"}
 PRESENTATIONS = {"normal", "window", "bars", "invisible", "secret"}
 
 
@@ -36,6 +37,15 @@ class SceneWallService:
         role = self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id)
         rows = [self._project(row, role=role) for row in self.walls.list_for_scene(scene_id)]
         return WallResult(True, {"campaign_id": campaign_id, "scene_id": scene_id, "walls": [row for row in rows if row is not None]})
+    def _linked_endpoint(self, scene_id: str, x: float, y: float) -> tuple[float, float]:
+        """Canonicalize a near endpoint so a visual junction is also a geometric junction."""
+        best = None; best_distance = NODE_TOLERANCE
+        for wall in self.walls.list_for_scene(scene_id):
+            for px, py in ((wall["x1"], wall["y1"]), (wall["x2"], wall["y2"])):
+                distance = hypot(px-x, py-y)
+                if distance <= best_distance:
+                    best = (float(px), float(py)); best_distance = distance
+        return best or (x, y)
     def create(self, *, campaign_id: str, scene_id: str, user_id: str, kind: str, x1: float, y1: float, x2: float, y2: float, behavior: dict | None = None, presentation: str = "normal", vertical: dict | None = None) -> WallResult:
         if self.campaigns.get_member_role(campaign_id=campaign_id, user_id=user_id) != "gm": return WallResult(False, error_key="lighting.errors.denied")
         scene = self.scenes.get_by_id(scene_id)
@@ -43,9 +53,11 @@ class SceneWallService:
         points = (x1,y1,x2,y2)
         channels = self._channels(behavior)
         bounds = self._vertical(vertical)
-        if kind not in {"wall","door"} or channels is None or bounds is None or presentation not in PRESENTATIONS or not all(isfinite(v) for v in points) or hypot(x2-x1,y2-y1) < 2: return WallResult(False, error_key="lighting.errors.invalid")
+        if kind not in {"wall","door"} or channels is None or bounds is None or presentation not in PRESENTATIONS or not all(isfinite(v) for v in points): return WallResult(False, error_key="lighting.errors.invalid")
         limit = max(float(scene["width"]), float(scene["height"])) * 2
         if any(abs(v) > limit for v in points): return WallResult(False, error_key="lighting.errors.invalid")
+        x1,y1=self._linked_endpoint(scene_id,x1,y1);x2,y2=self._linked_endpoint(scene_id,x2,y2)
+        if hypot(x2-x1,y2-y1) < 2:return WallResult(False,error_key="lighting.errors.invalid")
         wall = self.walls.create(campaign_id=campaign_id, scene_id=scene_id, created_by_user_id=user_id, kind=kind, x1=x1,y1=y1,x2=x2,y2=y2, presentation=presentation, **channels, **bounds)
         return WallResult(True, {"wall": wall})
     def update(self, *, campaign_id: str, wall_id: str, user_id: str, **values) -> WallResult:
@@ -86,10 +98,12 @@ class SceneWallService:
     @staticmethod
     def _channels(behavior: dict | None) -> dict | None:
         raw = behavior if isinstance(behavior, dict) else {}
-        if any(key not in {"movement", "vision", "light"} for key in raw): return None
+        if any(key not in {"movement", "vision", "light", "sound"} for key in raw): return None
         values = {name: str(raw.get(name, "block")).lower() for name in ("movement", "vision", "light")}
         if any(value not in BEHAVIORS for value in values.values()): return None
-        return {f"{name}_behavior": value for name, value in values.items()}
+        sound = str(raw.get("sound", "block")).lower()
+        if sound not in SOUND_BEHAVIORS: return None
+        return {**{f"{name}_behavior": value for name, value in values.items()}, "sound_behavior": sound}
 
     @staticmethod
     def _vertical(vertical: dict | None) -> dict | None:
@@ -219,6 +233,7 @@ class SceneWallService:
             movement_behavior=wall.get("movement_behavior", "block"),
             vision_behavior=wall.get("vision_behavior", "block"),
             light_behavior=wall.get("light_behavior", "block"),
+            sound_behavior=wall.get("sound_behavior", "block"),
             presentation=wall.get("presentation", "normal"), discovered=wall.get("discovered", 0),
             vertical_bottom=wall.get("vertical_bottom"), vertical_top=wall.get("vertical_top"),
         )

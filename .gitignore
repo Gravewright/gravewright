@@ -36,6 +36,8 @@ htmlcov/
 /data/packages/*
 !/data/packages/addons/
 /data/packages/addons/*
+!/data/packages/addons/my-custom-shader/
+!/data/packages/addons/my-custom-shader/**
 !/data/packages/addons/sdk-lab-*/
 !/data/packages/addons/sdk-lab-*/**
 !/data/packages/rulesets/

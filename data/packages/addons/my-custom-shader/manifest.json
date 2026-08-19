@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "addon",
+  "id": "my-custom-shader",
+  "name": "My Custom Shader",
+  "version": "0.1.0",
+  "description": "A reusable GM library for trusted custom shader definitions.",
+  "authors": ["Gravewright"],
+  "license": "MIT",
+  "compatibility": {"minimum": "1", "verified": "1"},
+  "capabilities": ["assets.scripts", "assets.styles", "assets.ui", "ui.slots", "ui.applications", "storage.sqlite", "scene.shaders.customLibrary"],
+  "activation": {"scope": "campaign", "mode": "multiple"},
+  "entrypoints": {"game": {"scripts": ["assets/my-custom-shader.js"], "styles": ["styles/my-custom-shader.css"]}},
+  "provides": {},
+  "storage": {"sqlite": {"location": "gravewright-managed", "scopes": ["global"], "migrations": "storage/sqlite/migrations", "queries": "storage/sqlite/queries.json", "maxSizeMB": 10, "backup": true}}
+}

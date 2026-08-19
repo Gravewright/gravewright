@@ -6,7 +6,7 @@ Generated from the frozen registries. Parameter names and defaults are exact Jav
 
 Capability: `actors.write`
 Returns: `Promise<ActorMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -23,7 +23,7 @@ Parameters:
 
 Capability: `actors.read`
 Returns: `Promise<ActorDataDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -40,7 +40,7 @@ Parameters:
 
 Capability: `actors.write`
 Returns: `Promise<ActorMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -57,7 +57,7 @@ Parameters:
 
 Capability: `actors.read`
 Returns: `Promise<ActorDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -74,7 +74,7 @@ Parameters:
 
 Capability: `actors.items.write`
 Returns: `Promise<ActorItemInsertResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -93,7 +93,7 @@ Parameters:
 
 Capability: `actors.items.read`
 Returns: `Promise<ActorItemCopyDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -111,7 +111,7 @@ Parameters:
 
 Capability: `actors.items.write`
 Returns: `Promise<ActorItemRemoveResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -130,7 +130,7 @@ Parameters:
 
 Capability: `actors.items.read`
 Returns: `Promise<ActorItemSlotDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -147,7 +147,7 @@ Parameters:
 
 Capability: `actors.read`
 Returns: `Promise<ActorDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -164,7 +164,7 @@ Parameters:
 
 Capability: `actors.data.write`
 Returns: `Promise<SheetDataPatchResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -182,7 +182,7 @@ Parameters:
 
 Capability: `actors.write`
 Returns: `Promise<ActorMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -201,7 +201,7 @@ Parameters:
 
 Capability: `assets.import`
 Returns: `Promise<AssetCancelResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -218,7 +218,7 @@ Parameters:
 
 Capability: `assets.import`
 Returns: `Promise<AssetIngestResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -235,7 +235,7 @@ Parameters:
 
 Capability: `assets.library`
 Returns: `Promise<AssetDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -248,11 +248,99 @@ Parameters:
 |---|---|:---:|---|
 | `options` | `AssetListOptions` | No | `{}` |
 
+## `sdk.audio.get(id)`
+
+Capability: `audio.playback`
+Returns: `Promise<AudioPlaybackDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.audio.list(options = {})`
+
+Capability: `audio.playback`
+Returns: `Promise<AudioPlaybackDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `options` | `AudioListOptions` | No | `{}` |
+
+## `sdk.audio.play(input = {})`
+
+Capability: `audio.playback`
+Returns: `Promise<AudioPlaybackDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `AudioPlayInput` | No | `{}` |
+
+## `sdk.audio.stop(id, options = {})`
+
+Capability: `audio.playback`
+Returns: `Promise<AudioPlaybackDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `AudioMutationOptions` | No | `{}` |
+
+## `sdk.audio.update(id, patch = {}, options = {})`
+
+Capability: `audio.playback`
+Returns: `Promise<AudioPlaybackDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `patch` | `AudioPlaybackPatch` | No | `{}` |
+| `options` | `AudioMutationOptions` | No | `{}` |
+
 ## `sdk.automation.audit()`
 
 Capability: `automation.schedule`
 Returns: `Promise<AutomationAuditDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -263,7 +351,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `automation.schedule`
 Returns: `Promise<AutomationCancelResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -280,7 +368,7 @@ Parameters:
 
 Capability: `automation.schedule`
 Returns: `Promise<AutomationJobDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -297,7 +385,7 @@ Parameters:
 
 Capability: `automation.schedule`
 Returns: `Promise<AutomationJobDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -308,7 +396,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `automation.schedule`
 Returns: `Promise<AutomationJobDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -327,7 +415,7 @@ Parameters:
 
 Capability: `bus.provide`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -345,7 +433,7 @@ Parameters:
 
 Capability: `bus.publish`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -363,7 +451,7 @@ Parameters:
 
 Capability: `bus.request`
 Returns: `Promise<BusResponse>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -382,7 +470,7 @@ Parameters:
 
 Capability: `bus.subscribe`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -396,11 +484,22 @@ Parameters:
 | `name` | `string` | Yes | `None` |
 | `fn` | `InteropSubscriber` | Yes | `None` |
 
+## `sdk.campaign.members()`
+
+Capability: `campaign.members.read`
+Returns: `Promise<CampaignMemberDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
 ## `sdk.cards.definitions.get(id, version)`
 
 Capability: `cards.read`
 Returns: `Promise<CardDefinitionDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -418,7 +517,7 @@ Parameters:
 
 Capability: `cards.manage`
 Returns: `Promise<CardDefinitionInstantiateResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -436,7 +535,7 @@ Parameters:
 
 Capability: `cards.read`
 Returns: `Promise<CardDefinitionDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -447,7 +546,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `cards.manage`
 Returns: `Promise<CardIdsResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -464,7 +563,7 @@ Parameters:
 
 Capability: `cards.manage`
 Returns: `Promise<CardPlacementDiscardResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -481,7 +580,7 @@ Parameters:
 
 Capability: `cards.manage`
 Returns: `Promise<CardDrawResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -499,7 +598,7 @@ Parameters:
 
 Capability: `cards.manage`
 Returns: `Promise<CardPlayResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -517,7 +616,7 @@ Parameters:
 
 Capability: `cards.manage`
 Returns: `Promise<CardDeckMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -535,7 +634,7 @@ Parameters:
 
 Capability: `cards.manage`
 Returns: `Promise<CardIdsResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -552,7 +651,7 @@ Parameters:
 
 Capability: `cards.manage`
 Returns: `Promise<CardDeckMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -569,7 +668,7 @@ Parameters:
 
 Capability: `cards.read`
 Returns: `Promise<CardStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -580,7 +679,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `cards.manage`
 Returns: `Promise<CardPlacementResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -598,7 +697,7 @@ Parameters:
 
 Capability: `chat.read`
 Returns: `Promise<ChatMessageDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -615,7 +714,7 @@ Parameters:
 
 Capability: `chat.read`
 Returns: `Promise<ChatMessageDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -632,7 +731,7 @@ Parameters:
 
 Capability: `chat.cards`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -649,7 +748,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -666,7 +765,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -683,7 +782,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -700,7 +799,7 @@ Parameters:
 
 Capability: `combat.read`
 Returns: `Promise<CombatantDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -711,7 +810,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `combat.read`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -722,7 +821,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `combat.runtime`
 Returns: `CombatProtocolPayload | undefined`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -740,7 +839,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -751,7 +850,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -769,7 +868,7 @@ Parameters:
 
 Capability: `combat.runtime`
 Returns: `boolean`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -786,7 +885,7 @@ Parameters:
 
 Capability: `combat.runtime`
 Returns: `boolean`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -803,7 +902,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -820,7 +919,7 @@ Parameters:
 
 Capability: `combat.runtime`
 Returns: `Node[]`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -838,7 +937,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -855,7 +954,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -873,7 +972,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -891,7 +990,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -908,7 +1007,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -925,7 +1024,7 @@ Parameters:
 
 Capability: `combat.manage`
 Returns: `Promise<CombatStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -942,7 +1041,7 @@ Parameters:
 
 Capability: `commands.register`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -960,7 +1059,7 @@ Parameters:
 
 Capability: `content.references`
 Returns: `Promise<boolean>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -978,7 +1077,7 @@ Parameters:
 
 Capability: `content.references`
 Returns: `Promise<ContentResolvedValue>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -995,7 +1094,7 @@ Parameters:
 
 Capability: `content.references`
 Returns: `ContentLinkDTO`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1013,7 +1112,7 @@ Parameters:
 
 Capability: `content.references`
 Returns: `Promise<ContentResolutionDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1031,7 +1130,7 @@ Parameters:
 
 Capability: `content.packs`
 Returns: `Promise<ContentPackDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1048,7 +1147,7 @@ Parameters:
 
 Capability: `content.packs`
 Returns: `Promise<ContentPackSummaryDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1059,7 +1158,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `content.references`
 Returns: `string`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1078,7 +1177,7 @@ Parameters:
 
 Capability: `content.references`
 Returns: `Promise<ContentResolutionDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1095,7 +1194,7 @@ Parameters:
 
 Capability: `content.index`
 Returns: `Promise<ContentSearchPageDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1113,7 +1212,7 @@ Parameters:
 
 Capability: `dice.roll`
 Returns: `Promise<RollResultDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1130,7 +1229,7 @@ Parameters:
 
 Capability: `events.subscribe`
 Returns: `SdkEventName[]`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1141,7 +1240,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `events.subscribe`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1159,7 +1258,7 @@ Parameters:
 
 Capability: `events.subscribe`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1173,11 +1272,110 @@ Parameters:
 | `event` | `string` | Yes | `None` |
 | `handler` | `SdkEventHandler` | Yes | `None` |
 
+## `sdk.gameplay.flows.advance(id, options = {})`
+
+Capability: `gameplay.flows.manage`
+Returns: `Promise<GameplayFlowDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `GameplayFlowMutationOptions` | No | `{}` |
+
+## `sdk.gameplay.flows.get(id)`
+
+Capability: `gameplay.flows.read`
+Returns: `Promise<GameplayFlowDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.gameplay.flows.list()`
+
+Capability: `gameplay.flows.read`
+Returns: `Promise<GameplayFlowDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.gameplay.flows.register(definition = {})`
+
+Capability: `gameplay.flows.manage`
+Returns: `Promise<GameplayFlowDefinitionDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `GameplayFlowDefinitionDTO` | No | `{}` |
+
+## `sdk.gameplay.flows.start(input = {})`
+
+Capability: `gameplay.flows.manage`
+Returns: `Promise<GameplayFlowDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `GameplayFlowStartInput` | No | `{}` |
+
+## `sdk.gameplay.flows.submit(id, value, options = {})`
+
+Capability: `gameplay.flows.participate`
+Returns: `Promise<GameplayFlowDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `value` | `GameplaySubmissionValue` | Yes | `None` |
+| `options` | `GameplayFlowMutationOptions` | No | `{}` |
+
 ## `sdk.handouts.present(resourceType, resourceId, audience = {})`
 
 Capability: `handouts.present`
 Returns: `Promise<HandoutPresentResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1196,7 +1394,7 @@ Parameters:
 
 Capability: `locales`
 Returns: `string`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1210,11 +1408,194 @@ Parameters:
 | `key` | `string` | Yes | `None` |
 | `fallback` | `string` | Yes | `None` |
 
+## `sdk.input.bindings.get()`
+
+Capability: `input.commands`
+Returns: `Promise<InputBindingDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.input.bindings.set(commandId, binding, options = {})`
+
+Capability: `input.commands`
+Returns: `Promise<InputBindingDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `commandId` | `string` | Yes | `None` |
+| `binding` | `string` | Yes | `None` |
+| `options` | `InputBindingOptions` | No | `{}` |
+
+## `sdk.input.commands.execute(commandId, inputs = {})`
+
+Capability: `input.commands`
+Returns: `Promise<ActionExecutionResult>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `commandId` | `string` | Yes | `None` |
+| `inputs` | `ActionInput` | No | `{}` |
+
+## `sdk.input.commands.list()`
+
+Capability: `input.commands`
+Returns: `Promise<InputCommandDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.input.commands.register(definition = {}, handler = null)`
+
+Capability: `input.commands`
+Returns: `Promise<Promise<Disposer>>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `InputCommandDefinition` | No | `{}` |
+| `handler` | `InputCommandHandler` | No | `null` |
+
+## `sdk.input.gestures.register(definition = {}, handler = null)`
+
+Capability: `input.commands`
+Returns: `Promise<Promise<Disposer>>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `InputGestureDefinition` | No | `{}` |
+| `handler` | `InputCommandHandler` | No | `null` |
+
+## `sdk.interactions.cancel(id, options = {})`
+
+Capability: `interactions.request`
+Returns: `Promise<InteractionDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.interactions.get(id)`
+
+Capability: `interactions.respond`
+Returns: `Promise<InteractionDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.interactions.list(options = {})`
+
+Capability: `interactions.respond`
+Returns: `Promise<InteractionDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `options` | `InteractionListOptions` | No | `{}` |
+
+## `sdk.interactions.request(input = {})`
+
+Capability: `interactions.request`
+Returns: `Promise<InteractionDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `InteractionRequestInput` | No | `{}` |
+
+## `sdk.interactions.respond(id, response, options = {})`
+
+Capability: `interactions.respond`
+Returns: `Promise<InteractionDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `response` | `InteractionResponseValue` | Yes | `None` |
+| `options` | `InteractionMutationOptions` | No | `{}` |
+
 ## `sdk.items.create(input = {})`
 
 Capability: `items.write`
 Returns: `Promise<ItemMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1231,7 +1612,7 @@ Parameters:
 
 Capability: `items.write`
 Returns: `Promise<ItemMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1248,7 +1629,7 @@ Parameters:
 
 Capability: `items.read`
 Returns: `Promise<ItemDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1265,7 +1646,7 @@ Parameters:
 
 Capability: `items.read`
 Returns: `Promise<ItemDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1282,7 +1663,7 @@ Parameters:
 
 Capability: `items.data.write`
 Returns: `Promise<ItemDataPatchResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1300,7 +1681,7 @@ Parameters:
 
 Capability: `items.write`
 Returns: `Promise<ItemMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1319,7 +1700,7 @@ Parameters:
 
 Capability: `journals.write`
 Returns: `Promise<JournalMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1336,7 +1717,7 @@ Parameters:
 
 Capability: `journals.write`
 Returns: `Promise<JournalMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1353,7 +1734,7 @@ Parameters:
 
 Capability: `journals.read`
 Returns: `Promise<JournalDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1370,7 +1751,7 @@ Parameters:
 
 Capability: `journals.read`
 Returns: `Promise<JournalListResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1387,7 +1768,7 @@ Parameters:
 
 Capability: `journals.write`
 Returns: `Promise<JournalMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1401,11 +1782,39 @@ Parameters:
 | `journalId` | `string` | Yes | `None` |
 | `patch` | `JournalUpdatePatch` | No | `{}` |
 
+## `sdk.navigation.scene.getState()`
+
+Capability: `navigation.scene`
+Returns: `Promise<SceneNavigationStateDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.navigation.scene.go(input = {})`
+
+Capability: `navigation.scene`
+Returns: `Promise<SceneNavigationDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `SceneNavigationInput` | No | `{}` |
+
 ## `sdk.packages.get(packageId)`
 
 Capability: `packages.inspect`
 Returns: `Promise<PackageDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1422,7 +1831,7 @@ Parameters:
 
 Capability: `packages.inspect`
 Returns: `Promise<boolean>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1439,7 +1848,7 @@ Parameters:
 
 Capability: `pdf.annotations.write`
 Returns: `Promise<PdfAnnotationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1457,7 +1866,7 @@ Parameters:
 
 Capability: `pdf.annotations.write`
 Returns: `Promise<PdfAnnotationDeleteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1475,7 +1884,7 @@ Parameters:
 
 Capability: `pdf.annotations.read`
 Returns: `Promise<PdfAnnotationDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1492,7 +1901,7 @@ Parameters:
 
 Capability: `pdf.annotations.write`
 Returns: `Promise<PdfAnnotationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1511,7 +1920,7 @@ Parameters:
 
 Capability: `pdf.read`
 Returns: `Promise<PdfDocumentDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1528,7 +1937,7 @@ Parameters:
 
 Capability: `pdf.read`
 Returns: `Promise<PdfMetadataDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1545,7 +1954,7 @@ Parameters:
 
 Capability: `pdf.presentation`
 Returns: `Promise<PDFPresentationDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1562,7 +1971,7 @@ Parameters:
 
 Capability: `pdf.presentation`
 Returns: `Promise<PDFPresentationDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1579,7 +1988,7 @@ Parameters:
 
 Capability: `pdf.presentation`
 Returns: `Promise<PDFPresentationDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1597,7 +2006,7 @@ Parameters:
 
 Capability: `pdf.presentation`
 Returns: `Promise<PDFPresentationDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1616,7 +2025,7 @@ Parameters:
 
 Capability: `pdf.viewer`
 Returns: `number | null`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1633,7 +2042,7 @@ Parameters:
 
 Capability: `pdf.viewer`
 Returns: `Promise<number>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1651,7 +2060,7 @@ Parameters:
 
 Capability: `pdf.viewer`
 Returns: `Promise<PdfViewerOpenResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1669,7 +2078,7 @@ Parameters:
 
 Capability: `pdf.viewer`
 Returns: `Promise<PdfSearchMatch[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1687,7 +2096,7 @@ Parameters:
 
 Capability: `permissions.inspect`
 Returns: `Promise<boolean>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1705,7 +2114,7 @@ Parameters:
 
 Capability: `permissions.inspect`
 Returns: `Promise<PermissionCheckDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1723,7 +2132,7 @@ Parameters:
 
 Capability: `rolls.intent`
 Returns: `Promise<RollResultDTO | SheetDataPatchResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1740,7 +2149,7 @@ Parameters:
 
 Capability: `rules.actions`
 Returns: `Promise<ActionExecutionResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1759,7 +2168,7 @@ Parameters:
 
 Capability: `rules.actions`
 Returns: `Promise<ActionExecutionResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1778,7 +2187,7 @@ Parameters:
 
 Capability: `rules.actions`
 Returns: `Promise<ActionDefinitionDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1795,7 +2204,7 @@ Parameters:
 
 Capability: `rules.actions`
 Returns: `Promise<ActionDefinitionDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1806,7 +2215,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `rules.actions`
 Returns: `Promise<ActionDefinitionDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1823,7 +2232,7 @@ Parameters:
 
 Capability: `scene.read`
 Returns: `Promise<SceneDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1834,7 +2243,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `scene.tools`
 Returns: `CameraDTO | null`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1851,7 +2260,7 @@ Parameters:
 
 Capability: `scene.tools`
 Returns: `HTMLElement | null`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1862,7 +2271,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `scene.effects.write`
 Returns: `Promise<ParticleResultDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1881,7 +2290,7 @@ Parameters:
 
 Capability: `scene.effects.write`
 Returns: `Promise<ParticleDeleteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1899,7 +2308,7 @@ Parameters:
 
 Capability: `scene.effects.read`
 Returns: `Promise<EffectStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1916,7 +2325,7 @@ Parameters:
 
 Capability: `scene.effects.read`
 Returns: `Promise<ParticlePresetDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1927,7 +2336,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `scene.effects.write`
 Returns: `Promise<ParticleResultDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1946,7 +2355,7 @@ Parameters:
 
 Capability: `scene.fog.write`
 Returns: `Promise<FogMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1963,7 +2372,7 @@ Parameters:
 
 Capability: `scene.fog.write`
 Returns: `Promise<FogMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -1981,7 +2390,7 @@ Parameters:
 
 Capability: `scene.fog.write`
 Returns: `Promise<FogMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2000,7 +2409,7 @@ Parameters:
 
 Capability: `scene.fog.write`
 Returns: `Promise<FogMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2018,7 +2427,7 @@ Parameters:
 
 Capability: `scene.fog.read`
 Returns: `Promise<FogStateDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2035,7 +2444,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<LightResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2053,7 +2462,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2071,7 +2480,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<LightDeleteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2088,7 +2497,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallDeleteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2105,7 +2514,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallsDeleteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2122,7 +2531,7 @@ Parameters:
 
 Capability: `scene.geometry.read`
 Returns: `Promise<LightDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2139,7 +2548,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallsResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2158,7 +2567,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallsResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2177,7 +2586,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2195,7 +2604,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallsResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2214,7 +2623,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<LightResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2232,7 +2641,7 @@ Parameters:
 
 Capability: `scene.geometry.write`
 Returns: `Promise<WallResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2250,7 +2659,7 @@ Parameters:
 
 Capability: `scene.geometry.read`
 Returns: `Promise<WallDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2267,7 +2676,7 @@ Parameters:
 
 Capability: `scene.read`
 Returns: `Promise<SceneDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2284,7 +2693,7 @@ Parameters:
 
 Capability: `scene.images.write`
 Returns: `Promise<SceneImageDeleteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2301,7 +2710,7 @@ Parameters:
 
 Capability: `scene.images.read`
 Returns: `Promise<SceneImageListResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2318,7 +2727,7 @@ Parameters:
 
 Capability: `scene.images.write`
 Returns: `Promise<SceneImageResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2337,7 +2746,7 @@ Parameters:
 
 Capability: `scene.images.write`
 Returns: `Promise<SceneImageResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2356,7 +2765,7 @@ Parameters:
 
 Capability: `scene.read`
 Returns: `Promise<SceneDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2367,7 +2776,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `scene.measurements.shared`
 Returns: `Promise<SharedMeasurementDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2385,7 +2794,7 @@ Parameters:
 
 Capability: `scene.measurements.shared`
 Returns: `Promise<SharedMeasurementDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2402,7 +2811,7 @@ Parameters:
 
 Capability: `scene.tools`
 Returns: `Promise<MeasurementResultDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2421,7 +2830,7 @@ Parameters:
 
 Capability: `scene.measurements.shared`
 Returns: `Promise<SharedMeasurementDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2436,11 +2845,156 @@ Parameters:
 | `geometry` | `SharedMeasurementGeometry` | Yes | `None` |
 | `options` | `SharedMeasurementOptions` | No | `{}` |
 
+## `sdk.scene.objectTypes.register(definition = {})`
+
+Capability: `scene.objectTypes.register`
+Returns: `Promise<Promise<Disposer>>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `SceneObjectTypeDefinition` | No | `{}` |
+
+## `sdk.scene.objects.create(sceneId, input = {})`
+
+Capability: `scene.objects.write`
+Returns: `Promise<SceneObjectDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `sceneId` | `string` | Yes | `None` |
+| `input` | `SceneObjectInput` | No | `{}` |
+
+## `sdk.scene.objects.delete(id, options = {})`
+
+Capability: `scene.objects.write`
+Returns: `Promise<SceneObjectDeleteResult>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.scene.objects.get(id)`
+
+Capability: `scene.objects.read`
+Returns: `Promise<SceneObjectDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.scene.objects.hitTest(sceneId, point, options = {})`
+
+Capability: `scene.objects.read`
+Returns: `Promise<SceneObjectDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `sceneId` | `string` | Yes | `None` |
+| `point` | `WorldPointDTO` | Yes | `None` |
+| `options` | `SceneObjectHitTestOptions` | No | `{}` |
+
+## `sdk.scene.objects.interact(id, interactionId, options = {})`
+
+Capability: `scene.objects.interact`
+Returns: `Promise<SceneObjectInteractionIntentDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `interactionId` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.scene.objects.list(sceneId = context.scene?.id, options = {})`
+
+Capability: `scene.objects.read`
+Returns: `Promise<SceneObjectDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `sceneId` | `string` | No | `context.scene?.id` |
+| `options` | `SceneObjectListOptions` | No | `{}` |
+
+## `sdk.scene.objects.update(id, patch = {}, options = {})`
+
+Capability: `scene.objects.write`
+Returns: `Promise<SceneObjectDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `patch` | `SceneObjectPatch` | No | `{}` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
 ## `sdk.scene.shaders.apply(sceneId, input = {})`
 
 Capability: `scene.shaders.write`
 Returns: `Promise<ShaderInstanceDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2454,11 +3008,90 @@ Parameters:
 | `sceneId` | `string` | Yes | `None` |
 | `input` | `ShaderApplyInput` | No | `{}` |
 
+## `sdk.scene.shaders.customLibrary.clearPreview()`
+
+Capability: `scene.shaders.customLibrary`
+Returns: `CustomShaderPreviewResult`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.scene.shaders.customLibrary.openEditor(definition = null)`
+
+Capability: `scene.shaders.customLibrary`
+Returns: `Promise<CustomShaderDefinition | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `CustomShaderDefinition | null` | No | `null` |
+
+## `sdk.scene.shaders.customLibrary.preview(definition)`
+
+Capability: `scene.shaders.customLibrary`
+Returns: `CustomShaderPreviewResult`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `CustomShaderDefinition` | Yes | `None` |
+
+## `sdk.scene.shaders.customLibrary.registerProvider(definition = {})`
+
+Capability: `scene.shaders.customLibrary`
+Returns: `Disposer`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `CustomShaderProviderDefinition` | No | `{}` |
+
+## `sdk.scene.shaders.customLibrary.use(definition)`
+
+Capability: `scene.shaders.customLibrary`
+Returns: `Promise<CustomShaderUseResult>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `CustomShaderDefinition` | Yes | `None` |
+
 ## `sdk.scene.shaders.enable(id, enabled, options = {})`
 
 Capability: `scene.shaders.write`
 Returns: `Promise<ShaderInstanceDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2477,7 +3110,7 @@ Parameters:
 
 Capability: `scene.shaders.read`
 Returns: `Promise<ShaderPresetDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2494,7 +3127,7 @@ Parameters:
 
 Capability: `scene.shaders.read`
 Returns: `Promise<ShaderInstanceDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2511,7 +3144,7 @@ Parameters:
 
 Capability: `scene.shaders.read`
 Returns: `Promise<ShaderPresetDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2522,7 +3155,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `scene.shaders.write`
 Returns: `Promise<ShaderRemovalResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2539,7 +3172,7 @@ Parameters:
 
 Capability: `scene.shaders.write`
 Returns: `Promise<ShaderInstanceDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2554,11 +3187,100 @@ Parameters:
 | `patch` | `ShaderUpdateInput` | No | `{}` |
 | `options` | `ExpectedVersionOptions` | No | `{}` |
 
+## `sdk.scene.spatialSounds.create(sceneId, input = {})`
+
+Capability: `scene.spatialSounds.write`
+Returns: `Promise<SpatialSoundDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `sceneId` | `string` | Yes | `None` |
+| `input` | `SpatialSoundInput` | No | `{}` |
+
+## `sdk.scene.spatialSounds.delete(id, options = {})`
+
+Capability: `scene.spatialSounds.write`
+Returns: `Promise<SpatialSoundDeleteResult>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.scene.spatialSounds.get(id)`
+
+Capability: `scene.spatialSounds.read`
+Returns: `Promise<SpatialSoundDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.scene.spatialSounds.list(sceneId = context.scene?.id)`
+
+Capability: `scene.spatialSounds.read`
+Returns: `Promise<SpatialSoundDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `sceneId` | `string` | No | `context.scene?.id` |
+
+## `sdk.scene.spatialSounds.update(id, patch = {}, options = {})`
+
+Capability: `scene.spatialSounds.write`
+Returns: `Promise<SpatialSoundDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `patch` | `SpatialSoundPatch` | No | `{}` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
 ## `sdk.scene.templates.create(sceneId, values = {})`
 
 Capability: `scene.templates.write`
 Returns: `Promise<SceneTemplateResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2576,7 +3298,7 @@ Parameters:
 
 Capability: `scene.templates.write`
 Returns: `Promise<SceneTemplateDeleteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2594,7 +3316,7 @@ Parameters:
 
 Capability: `scene.templates.read`
 Returns: `Promise<SceneTemplateDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2612,7 +3334,7 @@ Parameters:
 
 Capability: `scene.templates.read`
 Returns: `Promise<SceneTemplateListResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2629,7 +3351,7 @@ Parameters:
 
 Capability: `scene.templates.write`
 Returns: `Promise<SceneTemplateResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2644,11 +3366,117 @@ Parameters:
 | `patch` | `Partial<SceneTemplateValues>` | No | `{}` |
 | `options` | `ExpectedVersionOptions` | No | `{}` |
 
+## `sdk.scene.zones.create(sceneId, input = {})`
+
+Capability: `scene.zones.write`
+Returns: `Promise<SceneZoneDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `sceneId` | `string` | Yes | `None` |
+| `input` | `SceneZoneInput` | No | `{}` |
+
+## `sdk.scene.zones.delete(id, options = {})`
+
+Capability: `scene.zones.write`
+Returns: `Promise<SceneZoneDeleteResult>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.scene.zones.get(id)`
+
+Capability: `scene.zones.read`
+Returns: `Promise<SceneZoneDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.scene.zones.list(sceneId = context.scene?.id)`
+
+Capability: `scene.zones.read`
+Returns: `Promise<SceneZoneDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `sceneId` | `string` | No | `context.scene?.id` |
+
+## `sdk.scene.zones.members(id)`
+
+Capability: `scene.zones.read`
+Returns: `Promise<string[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.scene.zones.update(id, patch = {}, options = {})`
+
+Capability: `scene.zones.write`
+Returns: `Promise<SceneZoneDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `patch` | `SceneZonePatch` | No | `{}` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
 ## `sdk.settings.all()`
 
 Capability: `settings`
 Returns: `SettingValues`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2659,7 +3487,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `settings`
 Returns: `SettingDefinitionDTO[]`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2670,7 +3498,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `settings`
 Returns: `SettingValue | undefined`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2688,7 +3516,7 @@ Parameters:
 
 Capability: `settings`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2706,7 +3534,7 @@ Parameters:
 
 Capability: `settings`
 Returns: `SettingScope | null`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2723,7 +3551,7 @@ Parameters:
 
 Capability: `settings`
 Returns: `Promise<SettingSetResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2742,7 +3570,7 @@ Parameters:
 
 Capability: `sheets.runtime`
 Returns: `SheetHelpers`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2753,7 +3581,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `sheets.runtime`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2770,7 +3598,7 @@ Parameters:
 
 Capability: `sheets.controller`
 Returns: `boolean`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2784,11 +3612,99 @@ Parameters:
 | `sheetType` | `string` | Yes | `None` |
 | `controller` | `SheetController` | Yes | `None` |
 
+## `sdk.sounds.create(input = {})`
+
+Capability: `sounds.write`
+Returns: `Promise<SoundDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `SoundCreateInput` | No | `{}` |
+
+## `sdk.sounds.delete(id, options = {})`
+
+Capability: `sounds.write`
+Returns: `Promise<SoundDeleteResult>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.sounds.get(id)`
+
+Capability: `sounds.read`
+Returns: `Promise<SoundDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.sounds.list(options = {})`
+
+Capability: `sounds.read`
+Returns: `Promise<SoundDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `options` | `SoundListOptions` | No | `{}` |
+
+## `sdk.sounds.update(id, patch = {}, options = {})`
+
+Capability: `sounds.write`
+Returns: `Promise<SoundDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `patch` | `SoundPatch` | No | `{}` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
 ## `sdk.storage.sqlite.execute(scope, name, params = {})`
 
 Capability: `storage.sqlite`
 Returns: `Promise<StorageExecuteResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2807,7 +3723,7 @@ Parameters:
 
 Capability: `storage.sqlite`
 Returns: `Promise<StorageQueryResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2826,7 +3742,7 @@ Parameters:
 
 Capability: `storage.sqlite`
 Returns: `Promise<StorageStatusDTO>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2839,11 +3755,91 @@ Parameters:
 |---|---|:---:|---|
 | `scope` | `string` | Yes | `None` |
 
+## `sdk.timelines.cancel(id, options = {})`
+
+Capability: `timelines.control`
+Returns: `Promise<TimelineDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.timelines.get(id)`
+
+Capability: `timelines.read`
+Returns: `Promise<TimelineDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.timelines.list()`
+
+Capability: `timelines.read`
+Returns: `Promise<TimelineDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.timelines.register(definition = {})`
+
+Capability: `timelines.start`
+Returns: `Promise<TimelineDefinitionDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `TimelineDefinitionDTO` | No | `{}` |
+
+## `sdk.timelines.start(input = {})`
+
+Capability: `timelines.start`
+Returns: `Promise<TimelineDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `TimelineStartInput` | No | `{}` |
+
 ## `sdk.tokens.centerOn(tokenId)`
 
 Capability: `tokens.extends`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2860,7 +3856,7 @@ Parameters:
 
 Capability: `tokens.manage`
 Returns: `Promise<TokenMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2877,7 +3873,7 @@ Parameters:
 
 Capability: `tokens.manage`
 Returns: `Promise<TokenMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2895,7 +3891,7 @@ Parameters:
 
 Capability: `tokens.read`
 Returns: `Promise<TokenDTO | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2913,7 +3909,7 @@ Parameters:
 
 Capability: `tokens.read`
 Returns: `Promise<TokenDTO[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2930,7 +3926,7 @@ Parameters:
 
 Capability: `tokens.move`
 Returns: `Promise<TokenMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2949,7 +3945,7 @@ Parameters:
 
 Capability: `tokens.targets`
 Returns: `Promise<string[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2966,7 +3962,7 @@ Parameters:
 
 Capability: `tokens.targets`
 Returns: `Promise<string[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2983,7 +3979,7 @@ Parameters:
 
 Capability: `tokens.targets`
 Returns: `Promise<string[]>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -2997,11 +3993,48 @@ Parameters:
 | `ids` | `string[]` | Yes | `None` |
 | `sceneId` | `string` | No | `context.scene?.id` |
 
+## `sdk.tokens.transfer(tokenId, destination = {}, options = {})`
+
+Capability: `tokens.transfer`
+Returns: `Promise<TokenTransferResultDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `tokenId` | `string` | Yes | `None` |
+| `destination` | `TokenTransferDestination` | No | `{}` |
+| `options` | `TokenTransferOptions` | No | `{}` |
+
+## `sdk.tokens.transferMany(transfers = [], options = {})`
+
+Capability: `tokens.transfer`
+Returns: `Promise<TokenTransferResultDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `transfers` | `TokenTransferSpec[]` | No | `[]` |
+| `options` | `TokenTransferManyOptions` | No | `{}` |
+
 ## `sdk.tokens.update(tokenId, patch = {}, options = {})`
 
 Capability: `tokens.manage`
 Returns: `Promise<TokenMutationResult>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3020,7 +4053,7 @@ Parameters:
 
 Capability: `scene.tools`
 Returns: `string`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3031,7 +4064,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `scene.tools`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3048,7 +4081,7 @@ Parameters:
 
 Capability: `ui.applications`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3065,7 +4098,7 @@ Parameters:
 
 Capability: `ui.applications`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3083,7 +4116,7 @@ Parameters:
 
 Capability: `ui.applications`
 Returns: `Promise<ApplicationInstance | null>`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3103,7 +4136,7 @@ Parameters:
 
 Capability: `assets.ui`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3116,11 +4149,84 @@ Parameters:
 |---|---|:---:|---|
 | `modalOrId` | `string` | Yes | `None` |
 
+## `sdk.ui.dragDrop.drop(input = {})`
+
+Capability: `ui.dragDrop`
+Returns: `Promise<SemanticDropResultDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `SemanticDropInput` | No | `{}` |
+
+## `sdk.ui.dragDrop.registerSource(definition = {})`
+
+Capability: `ui.dragDrop`
+Returns: `Promise<Promise<Disposer>>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `DragSourceDefinition` | No | `{}` |
+
+## `sdk.ui.dragDrop.registerTarget(definition = {})`
+
+Capability: `ui.dragDrop`
+Returns: `Promise<Promise<Disposer>>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `DropTargetDefinition` | No | `{}` |
+
+## `sdk.ui.dragDrop.sources()`
+
+Capability: `ui.dragDrop`
+Returns: `Promise<SemanticRegistrationDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.ui.dragDrop.targets()`
+
+Capability: `ui.dragDrop`
+Returns: `Promise<SemanticRegistrationDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
 ## `sdk.ui.openModal(modalId)`
 
 Capability: `assets.ui`
 Returns: `void`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3133,11 +4239,117 @@ Parameters:
 |---|---|:---:|---|
 | `modalId` | `string` | Yes | `None` |
 
+## `sdk.ui.presentations.close(id, options = {})`
+
+Capability: `ui.presentations`
+Returns: `Promise<PresentationCloseResult>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.ui.presentations.get(id)`
+
+Capability: `ui.presentations`
+Returns: `Promise<PresentationDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.ui.presentations.list(options = {})`
+
+Capability: `ui.presentations`
+Returns: `Promise<PresentationDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `options` | `PresentationListOptions` | No | `{}` |
+
+## `sdk.ui.presentations.show(input = {})`
+
+Capability: `ui.presentations`
+Returns: `Promise<PresentationDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `PresentationInput` | No | `{}` |
+
+## `sdk.ui.presentations.update(id, patch = {}, options = {})`
+
+Capability: `ui.presentations`
+Returns: `Promise<PresentationDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `patch` | `PresentationPatch` | No | `{}` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.ui.presentations.wait(id, options = {})`
+
+Capability: `ui.presentations`
+Returns: `Promise<PresentationDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `PresentationWaitOptions` | No | `{}` |
+
 ## `sdk.ui.slots.available()`
 
 Capability: `ui.slots`
 Returns: `string[]`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3148,7 +4360,7 @@ Lifecycle: The package must be installed, enabled, and active; registrations ret
 
 Capability: `ui.slots`
 Returns: `Disposer`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3166,7 +4378,7 @@ Parameters:
 
 Capability: `assets.ui`
 Returns: `ToastHandle | undefined`
-Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `UNKNOWN_ACTION`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
 Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
 Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
@@ -3179,3 +4391,83 @@ Parameters:
 |---|---|:---:|---|
 | `message` | `string` | Yes | `None` |
 | `options` | `ToastOptions` | Yes | `None` |
+
+## `sdk.workflows.cancel(id, options = {})`
+
+Capability: `workflows.control`
+Returns: `Promise<WorkflowDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+| `options` | `ExpectedVersionOptions` | No | `{}` |
+
+## `sdk.workflows.get(id)`
+
+Capability: `workflows.read`
+Returns: `Promise<WorkflowDTO | null>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `id` | `string` | Yes | `None` |
+
+## `sdk.workflows.list()`
+
+Capability: `workflows.read`
+Returns: `Promise<WorkflowDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+## `sdk.workflows.register(definition = {})`
+
+Capability: `workflows.start`
+Returns: `Promise<WorkflowDefinitionDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `WorkflowDefinitionDTO` | No | `{}` |
+
+## `sdk.workflows.start(input = {})`
+
+Capability: `workflows.start`
+Returns: `Promise<WorkflowDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `input` | `WorkflowStartInput` | No | `{}` |

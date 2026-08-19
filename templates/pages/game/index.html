@@ -13,9 +13,9 @@
     <link rel="stylesheet" href="/static/vendor/phosphor/bold.css?v={{ asset_version }}" />
     <link rel="stylesheet" href="/static/vendor/easymde/easymde.min.css?v={{ asset_version }}" />
     
-    <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version }}" />
+    <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version }}-sound-theme-1" />
     <link rel="stylesheet" href="/static/css/dialog.css" />
-    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-journal-editorial-workspace-3-shader-picker-1" />
+    <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-journal-editorial-workspace-3-shader-picker-1-tool-layers-cleanup-1-pixi-measures-1" />
     <link rel="stylesheet" href="/static/css/journal-workspace.css?v={{ asset_version }}-2" />
     <link rel="stylesheet" href="/static/css/journal-quest.css?v={{ asset_version }}-1" />
     
@@ -35,8 +35,8 @@
     <script defer src="/static/js/core/bootstrap.js"></script>
     
     <script defer src="/static/js/ui/slider-nudge.js?v=20260809-preview2"></script>
-    <script defer src="/static/js/tools/tools-registry.js?v=20260816-tool-picker-click1"></script>
-    <script defer src="/static/js/tools/tools-toolbar.js?v=20260816-tool-picker-click1"></script>
+    <script defer src="/static/js/tools/tools-registry.js?v=20260818-core-tools-cleanup2"></script>
+    <script defer src="/static/js/tools/tools-toolbar.js?v=20260818-core-tools-cleanup2"></script>
     
     <script defer src="/static/js/realtime/realtime-client.js?v=20260604-realtime-split"></script>
     <script defer src="/static/js/realtime/realtime-events.js?v=20260604-realtime-split"></script>
@@ -47,29 +47,31 @@
     <script defer src="/static/vendor/pixi-filters.min.js?v=6.1.5"></script>
     <script defer src="/static/js/board/board-renderer.js"></script>
     
-    <script defer src="/static/js/board/pixi/pixi-board-renderer.js?v=20260810-pixi-ping"></script>
-    <script defer src="/static/js/board/pixi/pixi-board-layers.js?v=20260810-pixi-ping"></script>
+    <script defer src="/static/js/board/pixi/pixi-board-renderer.js?v=20260818-pixi-measures-1"></script>
+    <script defer src="/static/js/board/pixi/pixi-board-layers.js?v=20260818-pixi-measures-1"></script>
+    <script defer src="/static/js/board/pixi/pixi-measure-layer.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/board/pixi/pixi-tile-layer.js?v=20260605-scene-runtime-cache"></script>
     <script defer src="/static/js/board/pixi/pixi-grid-layer.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/board/pixi/pixi-token-layer.js?v=20260605-crisp-labels"></script>
     <script defer src="/static/js/board/pixi/pixi-ghost-layer.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/board/pixi/pixi-origin-layer.js?v=20260604-pixi-layers"></script>
+    <script defer src="/static/js/board/pixi/pixi-spatial-sound-layer.js?v={{ asset_version }}-artistic-all-sounds-1"></script>
     <script defer src="/static/js/board/pixi/pixi-fog-layer.js?v=20260604-pixi-layers"></script>
     <script defer src="/static/js/board/pixi/pixi-light-buffer.js?v=20260809-preview2"></script>
     <script defer src="/static/js/board/pixi/pixi-shader-effects.js?v=20260811-animation1"></script>
-    <script defer src="/static/js/board/pixi/pixi-lighting-layer.js?v=20260816-gm-door-icons2"></script>
+    <script defer src="/static/js/board/pixi/pixi-lighting-layer.js?v=20260818-junction-seal1"></script>
     <script defer src="/static/js/board/pixi/pixi-debug.js?v=20260604-pixi-layers"></script>
-    <script defer src="/static/js/map/api/map-api.js?v=20260605-token-hp"></script>
+    <script defer src="/static/js/map/api/map-api.js?v=20260818-core-tools-cleanup2"></script>
     <script defer src="/static/js/map/scene/map-scene.js?v=20260805-lights-vision"></script>
     <script defer src="/static/js/map/camera/map-camera.js"></script>
     <script defer src="/static/js/map/camera/map-pan.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/camera/map-zoom.js?v=20260805-lighting-input"></script>
-    <script defer src="/static/js/map/streaming/map-streaming.js?v=20260810-local-navigation"></script>
+    <script defer src="/static/js/map/camera/map-zoom.js?v=20260818-marker-shift-wheel"></script>
+    <script defer src="/static/js/map/streaming/map-streaming.js?v=20260818-board-cache-delta"></script>
     <script defer src="/static/js/map/board-history.js?v=20260605-board-history"></script>
     <script defer src="/static/js/map/selection/map-selection.js"></script>
     <script defer src="/static/js/map/selection/map-marquee.js?v=20260624-marquee-overlay-select"></script>
     <script defer src="/static/js/map/drag/map-drag.js"></script>
-    <script defer src="/static/js/map/drag/map-token-drag.js?v=20260604-map-controller"></script>
+    <script defer src="/static/js/map/drag/map-token-drag.js?v=20260818-wall-route-1"></script>
     <script defer src="/static/js/map/tokens/map-tokens.js"></script>
     <script defer src="/static/js/map/tokens/map-token-events.js"></script>
     <script defer src="/static/js/map/tokens/map-token-delete.js?v=20260604-map-controller"></script>
@@ -79,17 +81,17 @@
     <script defer src="/static/js/map/add-to-scene/map-add-to-scene.js"></script>
     <script defer src="/static/js/map/layers/map-layer-mode.js?v=20260809-preview2"></script>
     <script defer src="/static/js/map/input/map-token-steps.js?v=20260806-token-steps"></script>
-    <script defer src="/static/js/map/input/map-keyboard-events.js?v=20260806-token-steps"></script>
-    <script defer src="/static/js/map/events/map-realtime-events.js?v=20260810-pixi-ping-direct"></script>
+    <script defer src="/static/js/map/input/map-keyboard-events.js?v=20260818-area-marker-transform"></script>
+    <script defer src="/static/js/map/events/map-realtime-events.js?v=20260818-board-cache-delta"></script>
     <script defer src="/static/js/map/render-loop/map-render-loop.js"></script>
-    <script defer src="/static/js/map/measures/map-measure-store.js"></script>
-    <script defer src="/static/js/map/measures/map-measure-geometry.js"></script>
-    <script defer src="/static/js/map/measures/map-measure-renderer.js"></script>
+    <script defer src="/static/js/map/measures/map-measure-store.js?v=20260818-identification-color-1"></script>
+    <script defer src="/static/js/map/measures/map-measure-geometry.js?v=20260818-grid-footprint-1"></script>
+    <script defer src="/static/js/map/measures/map-measure-renderer.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/map/measures/map-measure-editors.js"></script>
-    <script defer src="/static/js/map/measures/map-measures.js"></script>
-    <script defer src="/static/js/map/measures/map-measure-controller.js"></script>
+    <script defer src="/static/js/map/measures/map-measures.js?v=20260818-pixi-measures-1"></script>
+    <script defer src="/static/js/map/measures/map-measure-controller.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/map/map-debug.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/map-controller.js?v=20260810-pixi-ping-direct"></script>
+    <script defer src="/static/js/map/map-controller.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/ui/status-zones.js?v=20260603-effects-board3"></script>
     <script defer src="/static/js/ui/invitations.js"></script>
     {% if command_palette_enabled %}<script defer src="/static/js/ui/command-palette.js?v={{ asset_version }}"></script>{% endif %}
@@ -101,7 +103,7 @@
     <script defer src="/static/js/lighting/shader-preference.js?v=20260809-preview2"></script>
     <script defer src="/static/js/lighting/shader-presets.js?v=20260809-library3"></script>
     <script defer src="/static/js/lighting/shader-editor.js?v=20260809-library2"></script>
-    <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260816-gm-door-icons2"></script>
+    <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260818-junction-seal1"></script>
     <script defer src="/static/js/lighting/light-editor.js?v=20260809-preview2"></script>{% endif %}
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
@@ -117,6 +119,12 @@
     <script defer src="/static/js/sdk/sdk-capabilities.js?v=20260614-sdk"></script>
     <script defer src="/static/js/ui/partial-applications.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sdk/gravewright-sdk.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/audio/core-audio-runtime.js?v={{ asset_version }}-mixer-limit-1"></script>
+    <script defer src="/static/js/audio/native-sound-ui.js?v={{ asset_version }}-ambient-empty-copy-1"></script>
+    <script defer src="/static/js/audio/spatial-sound-layer.js?v={{ asset_version }}-artistic-all-sounds-1"></script>
+    <script defer src="/static/js/input/core-input-runtime.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/input/core-semantic-pointer-host.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/navigation/core-scene-navigation.js?v={{ asset_version }}"></script>
 
     <script defer src="/static/js/chat/chat-renderer.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/chat/chat-roll-cards.js?v=20260604-chat-split"></script>
@@ -127,7 +135,7 @@
     <script defer src="/static/js/cards/card-state.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/cards/card-panel.js?v={{ asset_version }}-draw-modal-table1"></script>
     <script defer src="/static/js/ui/context-menu.js?v={{ asset_version }}"></script>
-    <script defer src="/static/js/assets/asset-library.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/assets/asset-library.js?v={{ asset_version }}-dynamic-asset-filters-1"></script>
     <script defer src="/static/js/dice/dice-tray.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/scene-images/scene-image-layer.js?v={{ asset_version }}"></script>
     <script defer src="/static/vendor/easymde/easymde.min.js?v={{ asset_version }}"></script>
@@ -145,6 +153,7 @@
     <script defer src="/static/js/journals/journal-preview.js?v=20260604-journals-split"></script>
     <script defer src="/static/js/journals/journals-panel.js?v=20260814-journal-autosave"></script>
     <script defer src="/static/js/journals/journal-modal.js?v=20260816-pdf-inline-upload1"></script>
+    <script defer src="/static/js/content/core-content-open.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/journals/journal-pdf-viewer.js?v=20260816-inline-viewer1"></script>
     
     <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v={{ asset_version }}"></script>
@@ -312,6 +321,13 @@
     data-fog-status-disabled="{{ t('game.fog.status_disabled') }}"
     data-asset-label-root="{{ t('game.assets.root') }}"
     data-asset-label-image="{{ t('game.assets.image') }}"
+    data-asset-label-audio="{{ t('game.assets.audio') }}"
+    data-asset-kind-all="{{ t('game.assets.kind_all') }}"
+    data-asset-kind-image="{{ t('game.assets.kind_image') }}"
+    data-asset-kind-audio="{{ t('game.assets.kind_audio') }}"
+    data-asset-kind-pdf="{{ t('game.assets.kind_pdf') }}"
+    data-asset-label-delete="{{ t('game.assets.delete') }}"
+    data-asset-label-place-scene="{{ t('game.assets.place_scene') }}"
     data-asset-label-drag-title="{{ t('game.assets.drag_title') }}"
     data-asset-label-delete-image="{{ t('game.assets.delete_image') }}"
     data-asset-label-empty-folder="{{ t('game.assets.empty_folder') }}"
@@ -336,6 +352,64 @@
     data-asset-label-imported="{{ t('game.assets.imported') }}"
     data-asset-label-import-all="{{ t('game.assets.import_all') }}"
     data-asset-label-imported-count="{{ t('game.assets.imported_count') }}"
+    data-sound-label-no-soundscape="{{ t('game.sound.no_soundscape') }}"
+    data-sound-label-empty="{{ t('game.sound.empty') }}"
+    data-sound-label-empty-spatial="{{ t('game.sound.empty_spatial') }}"
+    data-sound-label-empty-ambient="{{ t('game.sound.empty_ambient') }}"
+    data-sound-label-empty-library="{{ t('game.sound.empty_library') }}"
+    data-sound-label-search-ambient="{{ t('game.sound.search_ambient') }}"
+    data-sound-label-no-ambient-match="{{ t('game.sound.no_ambient_match') }}"
+    data-sound-label-disable="{{ t('game.sound.disable') }}"
+    data-sound-label-enable="{{ t('game.sound.enable') }}"
+    data-sound-label-delete="{{ t('game.sound.delete') }}"
+    data-sound-label-spatial="{{ t('game.sound.spatial_one') }}"
+    data-sound-label-new="{{ t('game.sound.new') }}"
+    data-sound-label-new-effect="{{ t('game.sound.new_effect') }}"
+    data-sound-label-placement-hint="{{ t('game.sound.placement_hint') }}"
+    data-sound-label-audio-asset="{{ t('game.sound.audio_asset') }}"
+    data-sound-label-name="{{ t('game.sound.name') }}"
+    data-sound-label-kind="{{ t('game.sound.kind') }}"
+    data-sound-label-gain="{{ t('game.sound.gain') }}"
+    data-sound-label-cancel="{{ t('game.sound.cancel') }}"
+    data-sound-label-save="{{ t('game.sound.save') }}"
+    data-sound-label-effects="{{ t('game.sound.effects') }}"
+    data-sound-label-music="{{ t('game.sound.music') }}"
+    data-sound-label-ambience="{{ t('game.sound.ambience') }}"
+    data-sound-label-ambient="{{ t('game.sound.ambient_sound') }}"
+    data-sound-label-effect="{{ t('game.sound.sound_effect') }}"
+    data-sound-label-place="{{ t('game.sound.place') }}"
+    data-sound-label-mixer="{{ t('game.sound.mixer') }}"
+    data-sound-label-master="{{ t('game.sound.master') }}"
+    data-sound-label-mute="{{ t('game.sound.mute') }}"
+    data-sound-label-source="{{ t('game.sound.source') }}"
+    data-sound-label-placement="{{ t('game.sound.placement') }}"
+    data-sound-label-radius="{{ t('game.sound.radius') }}"
+    data-sound-label-playback="{{ t('game.sound.playback') }}"
+    data-sound-label-falloff="{{ t('game.sound.falloff') }}"
+    data-sound-label-loop="{{ t('game.sound.loop') }}"
+    data-sound-label-acoustics="{{ t('game.sound.acoustics') }}"
+    data-sound-label-acoustics-help="{{ t('game.sound.acoustics_help') }}"
+    data-sound-label-radius-help="{{ t('game.sound.radius_help') }}"
+    data-sound-label-max-volume="{{ t('game.sound.max_volume') }}"
+    data-sound-label-volume-help="{{ t('game.sound.volume_help') }}"
+    data-sound-label-activation="{{ t('game.sound.activation') }}"
+    data-sound-label-enabled-help="{{ t('game.sound.enabled_help') }}"
+    data-sound-label-constrained-walls="{{ t('game.sound.constrained_walls') }}"
+    data-sound-label-state="{{ t('game.sound.state') }}"
+    data-sound-label-enabled="{{ t('game.sound.enabled') }}"
+    data-sound-label-constant="{{ t('game.sound.constant') }}"
+    data-sound-label-linear="{{ t('game.sound.linear') }}"
+    data-sound-label-smooth="{{ t('game.sound.smooth') }}"
+    data-sound-label-select="{{ t('game.sound.select') }}"
+    data-sound-label-preview="{{ t('game.sound.preview') }}"
+    data-sound-label-search="{{ t('game.assets.search') }}"
+    data-sound-label-play="{{ t('game.sound.play') }}"
+    data-sound-label-edit="{{ t('game.sound.edit') }}"
+    data-sound-label-one-shot="{{ t('game.sound.one_shot') }}"
+    data-area-marker-label-line="{{ t('game.tool_dock.shape.line') }}"
+    data-area-marker-label-circle="{{ t('game.tool_dock.shape.circle') }}"
+    data-area-marker-label-square="{{ t('game.tool_dock.shape.square') }}"
+    data-area-marker-label-cone="{{ t('game.tool_dock.shape.cone') }}"
     data-scene-image-label-resize="{{ t('game.scene_images.resize') }}"
     data-scene-image-label-upload-failed="{{ t('game.scene_images.errors.upload_failed') }}"
     data-scene-image-label-bring-front="{{ t('game.scene_images.bring_front') }}"
@@ -435,7 +509,8 @@
                         <canvas class="map-canvas" data-map-canvas data-room-id="{{ room.id }}"
                             data-loaded-scene-id="{{ room.loaded_scene.id if room.loaded_scene else '' }}"
                             data-local-scene-navigation="{{ 'true' if room.loaded_scene and room.active_scene and room.loaded_scene.id != room.active_scene.id else 'false' }}"
-                            data-area-marker-presets="{{ room.area_marker_presets_json | default('[]') | e }}" {% if room.active_scene
+                            data-area-marker-presets="{{ room.area_marker_presets_json | default('[]') | e }}"
+                            data-board-area-markers="{{ room.board_area_markers_json | default('[]') | e }}" {% if room.active_scene
                             %} data-scene-id="{{ room.active_scene['id'] }}"
                             data-scene-width="{{ room.active_scene['width'] }}"
                             data-scene-height="{{ room.active_scene['height'] }}"
@@ -1381,13 +1456,27 @@
                                 </button>
                                 <input type="file" accept="image/png,image/jpeg,image/webp" multiple hidden
                                     data-scene-asset-upload-input="image">
+                                <button type="button" class="asset-upload" data-scene-asset-upload="ambient-audio">
+                                    <i class="ph ph-music-notes" aria-hidden="true"></i>
+                                    <span>{{ t("game.sound.ambient_sound") }}</span>
+                                </button>
+                                <input type="file" accept="audio/ogg,audio/opus,audio/mpeg,audio/mp4,audio/wav" multiple hidden
+                                    data-scene-asset-upload-input="ambient-audio" data-audio-purpose="ambient">
+                                <button type="button" class="asset-upload" data-scene-asset-upload="effect-audio">
+                                    <i class="ph ph-waveform" aria-hidden="true"></i>
+                                    <span>{{ t("game.sound.sound_effect") }}</span>
+                                </button>
+                                <input type="file" accept="audio/ogg,audio/opus,audio/mpeg,audio/mp4,audio/wav" multiple hidden
+                                    data-scene-asset-upload-input="effect-audio" data-audio-purpose="effect">
+                                {% if room.uses_pdf_sheet_system %}
                                 <button type="button" class="asset-upload" data-scene-asset-upload="pdf">
                                     <i class="ph ph-file-pdf" aria-hidden="true"></i>
                                     <span>{{ t("game.assets.upload_pdf") }}</span>
                                 </button>
                                 <input type="file" accept="application/pdf" multiple hidden
                                     data-scene-asset-upload-input="pdf">
-                                <button type="button" class="asset-upload" data-asset-package-open>
+                                {% endif %}
+                                <button type="button" class="asset-upload asset-upload--package" data-asset-package-open hidden>
                                     <i class="ph ph-package" aria-hidden="true"></i>
                                     <span>{{ t("game.assets.import_package") }}</span>
                                 </button>
@@ -1402,14 +1491,7 @@
 
                             <!-- Filtro por tipo: com imagem e ficha na mesma pasta, achar
                                  uma no meio da outra é o que mais custa. -->
-                            <div class="asset-kinds" role="group" aria-label="{{ t('game.assets.filter_kind') }}">
-                                <button type="button" class="asset-kind is-active" data-asset-kind=""
-                                        aria-pressed="true">{{ t("game.assets.kind_all") }}</button>
-                                <button type="button" class="asset-kind" data-asset-kind="image"
-                                        aria-pressed="false">{{ t("game.assets.kind_image") }}</button>
-                                <button type="button" class="asset-kind" data-asset-kind="pdf"
-                                        aria-pressed="false">{{ t("game.assets.kind_pdf") }}</button>
-                            </div>
+                            <div class="asset-kinds" role="group" aria-label="{{ t('game.assets.filter_kind') }}"></div>
                         </header>
 
                         <div class="asset-body">
@@ -2299,14 +2381,13 @@
                             data-tooltip="{{ t('game.tool_dock.ruler') }}" aria-label="{{ t('game.tool_dock.ruler') }}">
                             <i class="ph ph-ruler" aria-hidden="true"></i>
                         </button>
-                        {% if not room.is_streamer %}
-                        <button class="tool-dock-btn" data-tool="hp" aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.hp') }}" aria-label="{{ t('game.tool_dock.hp') }}">
-                            <i class="ph ph-heartbeat" aria-hidden="true"></i>
-                        </button>
-                        {% endif %}
                     </div>
                     <div class="tool-dock-sep" data-tool-layer-scope="game gm"></div>
+                    <div class="tool-dock-sep" data-tool-layer-scope="composition"></div>
+                    <div class="tool-dock-group artistic-layer-tools" data-tool-layer-scope="composition" aria-label="{{ t('game.tool_dock.layers.composition') }}">
+                        <button class="tool-dock-btn" type="button" data-artistic-domain="images" data-tooltip="{{ t('game.sound.images') }}" aria-label="{{ t('game.sound.images') }}" aria-pressed="false"><i class="ph ph-images"></i></button>
+                        <button class="tool-dock-btn" type="button" data-tool="sound" data-artistic-domain="sounds" data-tooltip="{{ t('game.sound.sounds') }}" aria-label="{{ t('game.sound.sounds') }}" aria-pressed="false"><i class="ph ph-speaker-high"></i></button>
+                    </div>
                     <div class="tool-dock-group" data-tool-layer-scope="game gm">
                         <button class="tool-dock-btn" data-tool="draw" aria-pressed="false"
                             data-tooltip="{{ t('game.tool_dock.draw') }}" aria-label="{{ t('game.tool_dock.draw') }}">
@@ -2335,8 +2416,8 @@
                             aria-label="{{ t('lighting.shaders.tool') }}"><i class="ph ph-code"></i></button>
                     </div>{% endif %}
                     {% if not room.is_streamer %}
-                    <div class="tool-dock-sep"></div>
-                    <div class="tool-dock-group">
+                    <div class="tool-dock-sep" data-tool-layer-scope="game"></div>
+                    <div class="tool-dock-group" data-tool-layer-scope="game">
                         <button class="tool-dock-btn tool-dock-btn--hand" type="button"
                             data-modal-open="panel-hand-{{ room.id }}" data-tooltip="{{ t('game.cards.your_hand') }}" aria-label="{{ t('game.cards.your_hand') }}">
                             <i class="ph ph-cards" aria-hidden="true"></i>
@@ -2350,10 +2431,6 @@
                             data-tooltip="{{ t('game.tool_dock.vision') }}" aria-label="{{ t('game.tool_dock.vision') }}"
                             data-player-view-banner="{{ t('game.tool_dock.vision.player_view_indicator') }}">
                             <i class="ph ph-eye" aria-hidden="true"></i>
-                        </button>
-                        <button class="tool-dock-btn" data-layers-toggle aria-pressed="false"
-                            data-tooltip="{{ t('game.tool_dock.layers') }}" aria-label="{{ t('game.tool_dock.layers') }}">
-                            <i class="ph ph-stack" aria-hidden="true"></i>
                         </button>
                     </div>
                     {% endif %}
@@ -2420,32 +2497,12 @@
                 </button>
             </div>
 
+            <section class="tool-sub-panel sound-authoring-panel" data-tool-sub-panel="sound" data-sound-panel hidden aria-label="{{ t('game.sound.sounds') }}">
+                <div class="tool-sub-head"><i class="ph ph-speaker-high"></i><strong>{{ t('game.sound.sounds') }}</strong></div>
+                <button class="tool-sub-btn" type="button" data-open-sound-modal="ambient"><i class="ph ph-music-notes"></i><span>{{ t('game.sound.ambient_sound') }}</span></button>
+                <button class="tool-sub-btn" type="button" data-open-sound-modal="effect"><i class="ph ph-waveform"></i><span>{{ t('game.sound.sound_effect') }}</span></button>
+            </section>
 
-            <div class="tool-sub-panel" data-tool-sub-panel="hp" hidden>
-                <div class="tool-sub-head">
-                    <i class="ph ph-heartbeat" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.hp') }}</span>
-                </div>
-                <div class="tool-sub-heading">{{ t('game.tool_dock.hp.mode') }}</div>
-                <button class="tool-sub-btn" data-subtool="damage" aria-pressed="true">
-                    <i class="ph ph-minus-circle" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.hp.damage') }}</span>
-                </button>
-                <button class="tool-sub-btn" data-subtool="heal" aria-pressed="false">
-                    <i class="ph ph-plus-circle" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.hp.heal') }}</span>
-                </button>
-                <button class="tool-sub-btn" data-subtool="set" aria-pressed="false">
-                    <i class="ph ph-equals" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.hp.set') }}</span>
-                </button>
-                <div class="tool-sub-sep"></div>
-                <label class="tool-field-label">
-                    <span>{{ t('game.tool_dock.hp.amount') }}</span>
-                    <input class="tool-field-input" type="number" min="0" step="1" value="1" data-hp-amount>
-                </label>
-                <p class="tool-sub-help">{{ t('game.tool_dock.hp.help') }}</p>
-            </div>
 
             <div class="tool-sub-panel" data-tool-sub-panel="ruler" hidden>
                 <button class="tool-sub-btn" data-subtool="line" aria-pressed="false">
@@ -2587,67 +2644,6 @@
                 </button>
             </div>
 
-            <div class="tool-sub-panel" data-tool-sub-panel="layers"
-                data-gm-layer-banner="{{ t('game.tool_dock.layers.gm_indicator') }}" hidden>
-                <div class="tool-sub-head">
-                    <i class="ph ph-stack" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.layers') }}</span>
-                </div>
-                <div class="tool-sub-heading">{{ t('game.tool_dock.layers.active') }}</div>
-                <button class="tool-sub-btn" data-active-layer="game" aria-pressed="true">
-                    <i class="ph ph-game-controller" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.layers.game') }}</span>
-                </button>
-                <button class="tool-sub-btn" data-active-layer="gm" aria-pressed="false">
-                    <i class="ph ph-eye-slash" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.layers.gm') }}</span>
-                </button>
-                <button class="tool-sub-btn" data-active-layer="composition" aria-pressed="false"
-                    title="{{ t('game.tool_dock.layers.composition_hint') }}">
-                    <i class="ph ph-images" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.layers.composition') }}</span>
-                </button>
-                {% if dynamic_lighting_enabled %}
-                <button class="tool-sub-btn" data-active-layer="effects" aria-pressed="false">
-                    <i class="ph ph-sparkle"></i><span>{{ t('game.tool_dock.layers.effects') }}</span></button>
-                <button class="tool-sub-btn" data-active-layer="walls" aria-pressed="false">
-                    <i class="ph ph-line-segment"></i><span>{{ t('game.tool_dock.layers.walls') }}</span></button>
-                <button class="tool-sub-btn" data-active-layer="lighting" aria-pressed="false">
-                    <i class="ph ph-lightbulb"></i><span>{{ t('game.tool_dock.layers.lighting') }}</span></button>
-                {% endif %}
-                <div class="tool-sub-sep"></div>
-                <div class="tool-sub-heading">{{ t('game.tool_dock.layers.manage') }}</div>
-                {% for layer, icon in [('game', 'game-controller'), ('gm', 'eye-slash'), ('composition', 'images')] %}
-                <div class="tool-layer-row">
-                    <span><i class="ph ph-{{ icon }}" aria-hidden="true"></i>{{ t('game.tool_dock.layers.' ~ layer) }}</span>
-                    <button type="button" data-layer-visibility="{{ layer }}" aria-pressed="true"
-                        title="{{ t('game.tool_dock.layers.visibility') }}"><i class="ph ph-eye"></i></button>
-                    <button type="button" data-layer-lock="{{ layer }}" aria-pressed="false"
-                        title="{{ t('game.tool_dock.layers.lock') }}"><i class="ph ph-lock-open"></i></button>
-                </div>
-                {% endfor %}
-                {% if dynamic_lighting_enabled %}
-                {% for layer, icon in [('effects', 'sparkle'), ('walls', 'line-segment'), ('lighting', 'lightbulb')] %}
-                <div class="tool-layer-row">
-                    <span><i class="ph ph-{{ icon }}"></i>{{ t('game.tool_dock.layers.' ~ layer) }}</span>
-                    <button type="button" data-layer-visibility="{{ layer }}" aria-pressed="true"
-                        title="{{ t('game.tool_dock.layers.visibility') }}"><i class="ph ph-eye"></i></button>
-                    <button type="button" data-layer-lock="{{ layer }}" aria-pressed="false"
-                        title="{{ t('game.tool_dock.layers.lock') }}"><i class="ph ph-lock-open"></i></button>
-                </div>
-                {% endfor %}
-                {% endif %}
-                <div class="tool-sub-sep"></div>
-                <div class="tool-sub-heading">{{ t('game.tool_dock.layers.move') }}</div>
-                <button class="tool-sub-btn" data-move-layer="game">
-                    <i class="ph ph-arrow-line-down" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.layers.game') }}</span>
-                </button>
-                <button class="tool-sub-btn" data-move-layer="gm">
-                    <i class="ph ph-arrow-line-up" aria-hidden="true"></i>
-                    <span>{{ t('game.tool_dock.layers.gm') }}</span>
-                </button>
-            </div>
             {% endif %}
 
             <nav class="game-dock" aria-label="{{ t('game.tools.title') }}">
@@ -2727,6 +2723,23 @@
                 {% endif %}
             </nav>
         </section>
+        <div class="personal-audio-control" data-personal-audio>
+            <button class="personal-audio-toggle" type="button" data-personal-audio-toggle
+                aria-expanded="false" aria-controls="personal-audio-mixer"
+                aria-label="{{ t('game.sound.mixer') }}" title="{{ t('game.sound.mixer') }}">
+                <i class="ph ph-speaker-high" aria-hidden="true"></i>
+            </button>
+            <section class="personal-audio-popover" id="personal-audio-mixer" data-personal-audio-popover hidden>
+                <header>
+                    <span><i class="ph ph-speaker-high" aria-hidden="true"></i><strong>{{ t('game.sound.mixer') }}</strong></span>
+                    <button type="button" data-personal-audio-close aria-label="{{ t('game.sound.cancel') }}"><i class="ph ph-x"></i></button>
+                </header>
+                <label><span>{{ t('game.sound.master') }} <output data-mixer-output="master">100%</output></span><input type="range" min="0" max="1" step=".05" data-mixer-channel="master"></label>
+                <label><span>{{ t('game.sound.ambience') }} <output data-mixer-output="ambience">100%</output></span><input type="range" min="0" max="1" step=".05" data-mixer-channel="ambience" data-mixer-linked-channel="music"></label>
+                <label><span>{{ t('game.sound.effects') }} <output data-mixer-output="sfx">100%</output></span><input type="range" min="0" max="1" step=".05" data-mixer-channel="sfx"></label>
+                <label class="personal-audio-mute"><span><i class="ph ph-speaker-slash"></i>{{ t('game.sound.mute') }}</span><input type="checkbox" data-mixer-muted></label>
+            </section>
+        </div>
         {% else %}
         <section class="game-empty-page">
             <div class="game-empty-panel">
@@ -2745,6 +2758,10 @@
             </div>
         </section>
         {% endif %}
+        <div class="spatial-placement-hint" data-spatial-placement-hint role="status" aria-live="polite" hidden>
+            <i class="ph ph-cursor-click" aria-hidden="true"></i>
+            <span>{{ t('game.sound.placement_hint') }}</span>
+        </div>
     </main>
 </body>
 

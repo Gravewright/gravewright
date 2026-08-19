@@ -559,6 +559,13 @@ Shaders semânticos usam `sdk.scene.shaders.presets`,
 somente metadata estável, parâmetros tipados e instances versionadas; GLSL e o
 lifecycle do renderer permanecem privados.
 
+Bibliotecas trusted usam `sdk.scene.shaders.customLibrary.registerProvider`,
+`sdk.scene.shaders.customLibrary.openEditor` e
+`sdk.scene.shaders.customLibrary.preview`, `sdk.scene.shaders.customLibrary.clearPreview` e
+`sdk.scene.shaders.customLibrary.use`. Elas conectam storage e UI do pacote ao
+editor e placement controlados pelo core sem expor compilação, renderer ou
+aplicação raw automática.
+
 UI orientada por permissão diferencia negação de ação desconhecida com
 `sdk.permissions.check`; `sdk.permissions.can` continua como atalho booleano.
 Integrações opcionais descobrem apenas metadados públicos de packages ativos
@@ -604,6 +611,84 @@ nomear apenas as partes alteradas e preservar DOM, foco e scroll não afetados.
 As configurações expõem `sdk.settings.scope` e `sdk.settings.onChange`. Os
 escopos são `client`, `user`, `campaign` e `package`; `global` permanece como
 alias legado de `package`.
+
+## Zonas de cena e interações direcionadas
+
+Regiões semânticas usam `sdk.scene.zones.list`, `sdk.scene.zones.get`, `sdk.scene.zones.members`, `sdk.scene.zones.create`, `sdk.scene.zones.update` e `sdk.scene.zones.delete`. Decisões direcionadas usam `sdk.interactions.request`, `sdk.interactions.get`, `sdk.interactions.list`, `sdk.interactions.respond` e `sdk.interactions.cancel`.
+
+## Scene world objects e semantic presentations
+
+Packages registram tipos limitados com `sdk.scene.objectTypes.register`. Instances autoritativas usam `sdk.scene.objects.list`, `sdk.scene.objects.get`, `sdk.scene.objects.hitTest`, `sdk.scene.objects.create`, `sdk.scene.objects.update`, `sdk.scene.objects.delete` e `sdk.scene.objects.interact`. Projeções temporárias core-owned usam `sdk.ui.presentations.show`, `sdk.ui.presentations.get`, `sdk.ui.presentations.list`, `sdk.ui.presentations.wait`, `sdk.ui.presentations.update` e `sdk.ui.presentations.close`.
+
+## Ponteiro, áudio, navegação e input
+
+Use `sdk.ui.dragDrop.registerSource`, `sdk.ui.dragDrop.registerTarget`, `sdk.ui.dragDrop.sources`, `sdk.ui.dragDrop.targets`, `sdk.ui.dragDrop.drop`, `sdk.audio.play`, `sdk.audio.get`, `sdk.audio.list`, `sdk.audio.update`, `sdk.audio.stop`, `sdk.navigation.scene.go`, `sdk.navigation.scene.getState`, `sdk.input.commands.register`, `sdk.input.commands.list`, `sdk.input.commands.execute`, `sdk.input.bindings.get`, `sdk.input.bindings.set` e `sdk.input.gestures.register`.
+
+## Composição durável
+
+Workflows limitados usam `sdk.workflows.register`, `sdk.workflows.start`,
+`sdk.workflows.get`, `sdk.workflows.list` e `sdk.workflows.cancel`. Turnos e fases
+autoritativos usam `sdk.gameplay.flows.register`, `sdk.gameplay.flows.start`,
+`sdk.gameplay.flows.get`, `sdk.gameplay.flows.list`,
+`sdk.gameplay.flows.advance` e `sdk.gameplay.flows.submit`. Tokens mantêm a
+identidade entre Scenes com `sdk.tokens.transfer` ou com a operação atômica
+`sdk.tokens.transferMany`; navegação continua separada. Timelines semânticas
+usam `sdk.timelines.register`, `sdk.timelines.start`, `sdk.timelines.get`,
+`sdk.timelines.list` e `sdk.timelines.cancel`.
+
+Um passo `INTERACTION` pode declarar um `resultKey` opcional. Quando a interação
+termina, o core grava o *valor* da resposta do único destinatário — nunca o objeto da
+interação — em `context[resultKey]`, que o passo `BRANCH` já existente consome sem
+mudança. A chave deve ser um identificador local do workflow e não pode ocupar os
+slots do runtime `input`, `lastResult` ou `interaction`. Como um branch escalar não
+representa divergência, `resultKey` só é válido em requisições com exatamente um
+destinatário. Cancelamento, expiração e falha do provider deixam a chave ausente em
+vez de inventar uma resposta, então uma definição que precisa tratar recusa faz o
+branch sobre a chave ausente. O valor vem sempre do estado autoritativo do servidor;
+o pacote não pode fornecê-lo nem sobrescrevê-lo.
+
+## Quadro de membros e controle de Token
+
+`sdk.campaign.members()` retorna o quadro de membros da campanha como
+`{ userId, role, name }`, a mesma associação que a mesa nativa já mostra a quem
+chama. Não traz metadados de conta, é restrito à campanha ativa e só responde a quem
+já é membro. É um quadro de membros, não um feed de presença: associação não é status
+online.
+
+`TokenDTO.controllers` informa os usuários que podem controlar aquele Token, derivado
+da mesma autoridade que decide se um movimento é permitido, então um Token com vários
+donos lista todos em vez de reduzir a um. A projeção é filtrada: quem chama vê
+controladores apenas dos Tokens que ele próprio poderia controlar, o que impede que um
+tabuleiro compartilhado vire um canal lateral de enumeração. Conhecer o id de um
+controlador não concede nada — toda operação continua derivando o principal da sessão
+autenticada.
+
+Juntos, permitem reagir a `zone.entered`: ler o Token, pegar os controladores
+autorizados e endereçar uma Interação Dirigida a um participante real.
+
+## Sons nativos e Sons espaciais
+
+Conteúdo sonoro semântico reutilizável é um recurso de campanha de primeira
+classe, distinto da reprodução em runtime. A biblioteca de Sons usa
+`sdk.sounds.list`, `sdk.sounds.get`, `sdk.sounds.create`, `sdk.sounds.update` e
+`sdk.sounds.delete`; a criação referencia um Asset canônico `audio` autorizado
+(`{ kind: "library-asset", id }`) ou um recurso de áudio distribuído pelo pacote
+(`{ kind: "package-asset", id }`), que o servidor canoniza pelo mesmo pipeline
+seguro de ingestão antes de o Som existir. Excluir um Som ainda referenciado por
+Playlist, Soundscape ou Som espacial falha pela política nativa de dependência,
+em vez de deixar uma referência quebrada.
+
+Emissores persistentes de Scene usam `sdk.scene.spatialSounds.list`,
+`sdk.scene.spatialSounds.get`, `sdk.scene.spatialSounds.create`,
+`sdk.scene.spatialSounds.update` e `sdk.scene.spatialSounds.delete`. O emissor
+referencia o Som por `soundId`; URLs de Asset e caminhos de arquivo nunca são
+aceitos como identidade do emissor. Com `constrainedByWalls`, a geometria de
+Paredes e Portas atenua o emissor como projeção, então abrir ou fechar uma Porta
+muda o que os ouvintes escutam sem reiniciar a reprodução.
+
+A fronteira é deliberada: `sdk.sounds.*` cuida do conteúdo persistente
+reutilizável, `sdk.audio.*` cuida da reprodução e do controle em runtime, e
+`sdk.scene.spatialSounds.*` cuida dos emissores espaciais persistentes da Scene.
 
 ## Shortcuts
 

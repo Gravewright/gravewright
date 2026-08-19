@@ -66,6 +66,10 @@
         "pdf.annotations.changed", "scene.shaders.changed",
         "rules.action.completed",
         "token.targets.changed", "scene.measurements.changed", "pdf.presentation.changed", "automation.job.changed",
+        "scene.zones.changed", "zone.entered", "zone.left", "zone.crossed", "interaction.changed",
+        "scene.objects.changed", "scene.object.interacted", "scene.object.selected", "ui.presentation.changed",
+        "audio.changed", "navigation.scene.changed", "input.binding.changed",
+        "workflow.changed", "gameplay.flow.changed", "timeline.changed", "tokens.transferred",
     ]);
     const TRANSPORT_TO_SDK_EVENT = Object.freeze({
         "actor.created": "actor.created", "actor.updated": "actor.updated", "actor.deleted": "actor.deleted",
@@ -87,13 +91,18 @@
         "rules.action.completed": "rules.action.completed",
         "token.targets.changed": "token.targets.changed", "scene.measurements.changed": "scene.measurements.changed",
         "pdf.presentation.changed": "pdf.presentation.changed", "automation.job.changed": "automation.job.changed",
+        "scene.zones.changed": "scene.zones.changed", "zone.entered": "zone.entered", "zone.left": "zone.left", "zone.crossed": "zone.crossed",
+        "interaction.changed": "interaction.changed",
+        "scene.objects.changed": "scene.objects.changed", "scene.object.interacted": "scene.object.interacted", "ui.presentation.changed": "ui.presentation.changed",
+        "audio.changed": "audio.changed", "navigation.scene.changed": "navigation.scene.changed", "input.binding.changed": "input.binding.changed",
+        "workflow.changed": "workflow.changed", "gameplay.flow.changed": "gameplay.flow.changed", "timeline.changed": "timeline.changed", "tokens.transferred": "tokens.transferred",
         "chat.message.created": "chat.created", "combat.started": "combat.started",
         "combat.updated": "combat.updated", "combat.ended": "combat.ended",
         "setting.changed": "setting.changed", "campaign.table_settings.changed": "setting.changed",
     });
 
     function semanticEvent(type, payload) {
-        const id = payload.actor_id || payload.item_id || payload.token_id || payload.journal_id || payload.template_id || payload.document_id || payload.scene_id
+        const id = payload.actor_id || payload.item_id || payload.token_id || payload.object_id || payload.zone_id || payload.interaction_id || payload.journal_id || payload.template_id || payload.document_id || payload.scene_id
             || payload.combat_id || payload.message_id || "";
         const resource = { id: String(id), version: Number(payload.version || 0) };
         if (type.startsWith("token.") && Array.isArray(payload.tokens)) {
@@ -116,6 +125,7 @@
                 disposed = true;
                 document.removeEventListener("vtt:transport-event", transportListener);
                 document.removeEventListener("vtt:game-ready", readyListener);
+                document.removeEventListener("vtt:scene-object-selected", selectionListener);
                 sdkEventDisposers.get(pkg.id)?.delete(dispose);
             };
             const deliver = (payload) => {
@@ -174,14 +184,20 @@
                     if (type === "scene.measurements.changed") await runtimeRead("shared.measurements", { scene_id: payload.scene_id }, "sdk.events.on");
                     if (type === "pdf.presentation.changed") await runtimeRead("pdf.presentation", { document_id: payload.document_id }, "sdk.events.on");
                     if (type === "automation.job.changed") await runtimeRead("automation.jobs", { entity_id: payload.job_id }, "sdk.events.on");
+                    if (type === "scene.zones.changed" && payload.zone_id && !payload.deleted) await runtimeRead("scene.zones", { entity_id: payload.zone_id }, "sdk.events.on");
+                    if (type === "interaction.changed" && payload.interaction_id) await runtimeRead("interactions", { entity_id: payload.interaction_id }, "sdk.events.on");
+                    if (type === "scene.objects.changed" && payload.object_id && !payload.deleted) await runtimeRead("scene.objects", { entity_id: payload.object_id }, "sdk.events.on");
+                    if (type === "ui.presentation.changed" && payload.presentation_id && !payload.closed) await runtimeRead("ui.presentations", { entity_id: payload.presentation_id }, "sdk.events.on");
                 } catch (_) {
                     return;
                 }
                 deliver(semanticEvent(type, payload));
             };
             const readyListener = () => type === "game.ready" && deliver({ type, version: 1 });
+            const selectionListener = event => type === "scene.object.selected" && deliver({ type, version: 1, resource: { id: String(event.detail?.id || ""), typeId: String(event.detail?.typeId || "") }, changes: [] });
             document.addEventListener("vtt:transport-event", transportListener);
             document.addEventListener("vtt:game-ready", readyListener);
+            document.addEventListener("vtt:scene-object-selected", selectionListener);
             if (!sdkEventDisposers.has(pkg.id)) sdkEventDisposers.set(pkg.id, new Set());
             sdkEventDisposers.get(pkg.id).add(dispose);
             return dispose;
@@ -915,6 +931,31 @@
         return result.data;
     }
 
+    /**
+     * One semantic invocation of a registered Input command.
+     *
+     * The core Input Runtime owns every physical listener, so what arrives here is
+     * already resolved metadata — never a KeyboardEvent, DOM node or renderer event.
+     * A package-owned handler runs locally with no server authority of its own; the
+     * registered action, when the command declares one, is executed by the server
+     * from its own canonical pre-bound input. No invocation metadata is ever sent as
+     * action input.
+     */
+    async function dispatchInputCommand(packageId, commandId, serverBound, handler, invocation, runtimeCommand) {
+        const detail = freeze({
+            commandId, packageId,
+            source: String(invocation?.source || "binding"),
+            binding: invocation?.binding ? String(invocation.binding) : null,
+            context: String(invocation?.context || "global"),
+        });
+        if (typeof handler === "function") {
+            try { await handler(detail); }
+            catch (err) { console.error(`GravewrightSDK input command "${commandId}" handler failed`, err); }
+        }
+        if (!serverBound) return;
+        return runtimeCommand("input.execute", { commandId }, "sdk.input.commands.execute");
+    }
+
     function buildScopedSdk(pkg) {
         const requireCap = (apiName) => caps.requireApiCapability(pkg, apiName);
         const http = () => window.GravewrightCore && window.GravewrightCore.http;
@@ -1116,6 +1157,53 @@
                     );
                 },
             }),
+            input: Object.freeze({
+                commands: Object.freeze({
+                    async register(definition = {}, handler = null) { requireCap("input.commands.register"); await runtimeCommand("input.register", { kind: "command", definition }, "sdk.input.commands.register"); return window.GravewrightInputRuntime?.registerCommand(pkg.id, definition, invocation => dispatchInputCommand(pkg.id, definition.id, Boolean(definition.registeredAction), handler, invocation, runtimeCommand)) || (() => {}); },
+                    async list() { requireCap("input.commands.list"); return (await runtimeRead("input.commands", {}, "sdk.input.commands.list")).commands || []; },
+                    async execute(commandId, inputs = {}) { requireCap("input.commands.execute"); return (await runtimeCommand("input.execute", { commandId, inputs }, "sdk.input.commands.execute")).result; },
+                }),
+                bindings: Object.freeze({
+                    async get() { requireCap("input.bindings.get"); return (await runtimeRead("input.bindings", {}, "sdk.input.bindings.get")).bindings || []; },
+                    async set(commandId, binding, options = {}) { requireCap("input.bindings.set"); const result=(await runtimeCommand("input.bindings.set", { commandId, binding, expectedVersion: options.expectedVersion }, "sdk.input.bindings.set")).result; window.GravewrightInputRuntime?.updateBinding(pkg.id, commandId, result.binding); return result; },
+                }),
+                gestures: Object.freeze({
+                    async register(definition = {}, handler = null) { requireCap("input.gestures.register"); await runtimeCommand("input.register", { kind: "gesture", definition }, "sdk.input.gestures.register"); return window.GravewrightInputRuntime?.registerGesture(pkg.id, definition, invocation => dispatchInputCommand(pkg.id, definition.commandId, true, handler, invocation, runtimeCommand)) || (() => {}); },
+                }),
+            }),
+            campaign: Object.freeze({
+                async members() { requireCap("campaign.members"); return (await runtimeRead("campaign.members", {}, "sdk.campaign.members")).members || []; },
+            }),
+            navigation: Object.freeze({
+                scene: Object.freeze({
+                    async go(input = {}) { requireCap("navigation.scene.go"); return (await runtimeCommand("navigation.scene.go", { input }, "sdk.navigation.scene.go")).navigation; },
+                    async getState() { requireCap("navigation.scene.getState"); return (await runtimeRead("navigation.scene", {}, "sdk.navigation.scene.getState")).navigation; },
+                }),
+            }),
+            workflows: Object.freeze({
+                async register(definition = {}) { requireCap("workflows.register"); return (await runtimeCommand("workflows.register", { definition }, "sdk.workflows.register")).definition; },
+                async start(input = {}) { requireCap("workflows.start"); return (await runtimeCommand("workflows.start", { input }, "sdk.workflows.start")).workflow; },
+                async get(id) { requireCap("workflows.get"); return (await runtimeRead("workflows", { entity_id: id }, "sdk.workflows.get")).workflow; },
+                async list() { requireCap("workflows.list"); return (await runtimeRead("workflows", {}, "sdk.workflows.list")).workflows || []; },
+                async cancel(id, options = {}) { requireCap("workflows.cancel"); return (await runtimeCommand("workflows.cancel", { id, expectedVersion: options.expectedVersion }, "sdk.workflows.cancel")).workflow; },
+            }),
+            gameplay: Object.freeze({
+                flows: Object.freeze({
+                    async register(definition = {}) { requireCap("gameplay.flows.register"); return (await runtimeCommand("gameplay.flows.register", { definition }, "sdk.gameplay.flows.register")).definition; },
+                    async start(input = {}) { requireCap("gameplay.flows.start"); return (await runtimeCommand("gameplay.flows.start", { input }, "sdk.gameplay.flows.start")).flow; },
+                    async get(id) { requireCap("gameplay.flows.get"); return (await runtimeRead("gameplay.flows", { entity_id: id }, "sdk.gameplay.flows.get")).flow; },
+                    async list() { requireCap("gameplay.flows.list"); return (await runtimeRead("gameplay.flows", {}, "sdk.gameplay.flows.list")).flows || []; },
+                    async advance(id, options = {}) { requireCap("gameplay.flows.advance"); return (await runtimeCommand("gameplay.flows.advance", { id, expectedVersion: options.expectedVersion }, "sdk.gameplay.flows.advance")).flow; },
+                    async submit(id, value, options = {}) { requireCap("gameplay.flows.submit"); return (await runtimeCommand("gameplay.flows.submit", { id, value, expectedVersion: options.expectedVersion }, "sdk.gameplay.flows.submit")).flow; },
+                }),
+            }),
+            timelines: Object.freeze({
+                async register(definition = {}) { requireCap("timelines.register"); return (await runtimeCommand("timelines.register", { definition }, "sdk.timelines.register")).definition; },
+                async start(input = {}) { requireCap("timelines.start"); return (await runtimeCommand("timelines.start", { input }, "sdk.timelines.start")).timeline; },
+                async get(id) { requireCap("timelines.get"); return (await runtimeRead("timelines", { entity_id: id }, "sdk.timelines.get")).timeline; },
+                async list() { requireCap("timelines.list"); return (await runtimeRead("timelines", {}, "sdk.timelines.list")).timelines || []; },
+                async cancel(id, options = {}) { requireCap("timelines.cancel"); return (await runtimeCommand("timelines.cancel", { id, expectedVersion: options.expectedVersion }, "sdk.timelines.cancel")).timeline; },
+            }),
             assets: Object.freeze({
 
 
@@ -1148,6 +1236,20 @@
                     requireCap("assets.cancelImport");
                     return runtimeCommand("assets.cancelImport", { assetId }, "sdk.assets.cancelImport");
                 },
+            }),
+            audio: Object.freeze({
+                async play(input = {}) { requireCap("audio.play"); return (await runtimeCommand("audio.play", { input }, "sdk.audio.play")).playback; },
+                async get(id) { requireCap("audio.get"); return (await runtimeRead("audio.playbacks", { entity_id: id }, "sdk.audio.get")).playback; },
+                async list(options = {}) { requireCap("audio.list"); return (await runtimeRead("audio.playbacks", { scene_id: options.sceneId }, "sdk.audio.list")).playbacks || []; },
+                async update(id, patch = {}, options = {}) { requireCap("audio.update"); return (await runtimeCommand("audio.update", { id, patch, expectedVersion: options.expectedVersion }, "sdk.audio.update")).playback; },
+                async stop(id, options = {}) { requireCap("audio.stop"); return (await runtimeCommand("audio.stop", { id, fade: options.fade, expectedVersion: options.expectedVersion }, "sdk.audio.stop")).playback; },
+            }),
+            sounds: Object.freeze({
+                async list(options = {}) { requireCap("sounds.list"); return (await runtimeRead("sounds", { q: options.query, kinds: options.kind, cursor: options.cursor, limit: options.limit }, "sdk.sounds.list")).sounds || []; },
+                async get(id) { requireCap("sounds.get"); return (await runtimeRead("sounds", { entity_id: id }, "sdk.sounds.get")).sound; },
+                async create(input = {}) { requireCap("sounds.create"); return (await runtimeCommand("sounds.create", { input }, "sdk.sounds.create")).sound; },
+                async update(id, patch = {}, options = {}) { requireCap("sounds.update"); return (await runtimeCommand("sounds.update", { id, patch, expectedVersion: options.expectedVersion }, "sdk.sounds.update")).sound; },
+                async delete(id, options = {}) { requireCap("sounds.delete"); return runtimeCommand("sounds.delete", { id, expectedVersion: options.expectedVersion }, "sdk.sounds.delete"); },
             }),
             ui: Object.freeze({
                 toast(message, options) {
@@ -1205,6 +1307,65 @@
                         sdkEventDisposers.get(pkg.id).add(dispose);
                         return dispose;
                     },
+                }),
+                presentations: Object.freeze({
+                    async show(input = {}) { requireCap("ui.presentations.show"); return (await runtimeCommand("presentations.show", { input }, "sdk.ui.presentations.show")).presentation; },
+                    async get(id) { requireCap("ui.presentations.get"); return (await runtimeRead("ui.presentations", { entity_id: id }, "sdk.ui.presentations.get")).presentation; },
+                    async list(options = {}) { requireCap("ui.presentations.list"); return (await runtimeRead("ui.presentations", { scene_id: options.sceneId || context.scene?.id }, "sdk.ui.presentations.list")).presentations || []; },
+                    async wait(id, options = {}) {
+                        requireCap("ui.presentations.get");
+                        const timeout = Math.max(100, Math.min(60000, Number(options.timeoutMs) || 60000));
+                        const started = Date.now();
+                        return new Promise((resolve, reject) => {
+                            let busy = false;
+                            let settled = false;
+                            let timer = null;
+                            const cleanup = () => {
+                                if (timer !== null) window.clearInterval(timer);
+                                document.removeEventListener("vtt:transport-event", changed);
+                            };
+                            const finish = value => {
+                                if (settled) return;
+                                settled = true;
+                                cleanup();
+                                resolve(value);
+                            };
+                            const fail = error => {
+                                if (settled) return;
+                                settled = true;
+                                cleanup();
+                                reject(error);
+                            };
+                            const check = async () => {
+                                if (busy || settled) return;
+                                busy = true;
+                                try {
+                                    const value = (await runtimeRead("ui.presentations", { entity_id: id }, "sdk.ui.presentations.wait")).presentation;
+                                    if (!value || value.status !== "active") return finish(value);
+                                    if (Date.now() - started >= timeout) fail(new Error("sdk.ui.presentations.wait_timeout"));
+                                } catch (error) { fail(error); }
+                                finally { busy = false; }
+                            };
+                            const changed = event => {
+                                if (event.detail?.event !== "ui.presentation.changed" || event.detail?.payload?.presentation_id !== id) return;
+                                const value = event.detail.payload.presentation;
+                                if (value && value.status !== "active") finish(value);
+                                else void check();
+                            };
+                            document.addEventListener("vtt:transport-event", changed);
+                            timer = window.setInterval(check, 250);
+                            void check();
+                        });
+                    },
+                    async update(id, patch = {}, options = {}) { requireCap("ui.presentations.update"); return (await runtimeCommand("presentations.update", { id, patch, expectedVersion: options.expectedVersion }, "sdk.ui.presentations.update")).presentation; },
+                    async close(id, options = {}) { requireCap("ui.presentations.close"); return (await runtimeCommand("presentations.close", { id, expectedVersion: options.expectedVersion }, "sdk.ui.presentations.close")).presentation; },
+                }),
+                dragDrop: Object.freeze({
+                    async registerSource(definition = {}) { requireCap("ui.dragDrop.registerSource"); await runtimeCommand("dragDrop.register", { kind: "source", definition }, "sdk.ui.dragDrop.registerSource"); const local=window.GravewrightSemanticPointerHost?.registerSource(pkg.id,definition,input=>runtimeCommand("dragDrop.drop",{input},"sdk.ui.dragDrop.drop"),campaignId()); return () => { local?.(); return runtimeCommand("dragDrop.unregister", { kind: "source", id: definition.id }, "sdk.ui.dragDrop.unregisterSource"); }; },
+                    async registerTarget(definition = {}) { requireCap("ui.dragDrop.registerTarget"); await runtimeCommand("dragDrop.register", { kind: "target", definition }, "sdk.ui.dragDrop.registerTarget"); const local=window.GravewrightSemanticPointerHost?.registerTarget(pkg.id,definition); return () => { local?.(); return runtimeCommand("dragDrop.unregister", { kind: "target", id: definition.id }, "sdk.ui.dragDrop.unregisterTarget"); }; },
+                    async sources() { requireCap("ui.dragDrop.sources"); return (await runtimeRead("ui.dragDrop", { action: "sources" }, "sdk.ui.dragDrop.sources")).sources || []; },
+                    async targets() { requireCap("ui.dragDrop.targets"); return (await runtimeRead("ui.dragDrop", { action: "targets" }, "sdk.ui.dragDrop.targets")).targets || []; },
+                    async drop(input = {}) { requireCap("ui.dragDrop.drop"); return (await runtimeCommand("dragDrop.drop", { input }, "sdk.ui.dragDrop.drop")).result; },
                 }),
             }),
             chat: Object.freeze({
@@ -1391,6 +1552,13 @@
                 async cancel(jobId) { requireCap("automation.cancel"); return (await runtimeCommand("automation.cancel", { jobId }, "sdk.automation.cancel")).job; },
                 async audit() { requireCap("automation.audit"); return (await runtimeRead("automation.audit", {}, "sdk.automation.audit")).events || []; },
             }),
+            interactions: Object.freeze({
+                async request(input = {}) { requireCap("interactions.request"); return (await runtimeCommand("interactions.request", { input }, "sdk.interactions.request")).interaction; },
+                async get(id) { requireCap("interactions.get"); return (await runtimeRead("interactions", { entity_id: id }, "sdk.interactions.get")).interaction; },
+                async list(options = {}) { requireCap("interactions.list"); return (await runtimeRead("interactions", { status: options.status, recipient: options.recipient }, "sdk.interactions.list")).interactions || []; },
+                async respond(id, response, options = {}) { requireCap("interactions.respond"); return (await runtimeCommand("interactions.respond", { id, response, expectedVersion: options.expectedVersion, idempotencyKey: options.idempotencyKey }, "sdk.interactions.respond")).interaction; },
+                async cancel(id, options = {}) { requireCap("interactions.cancel"); return (await runtimeCommand("interactions.cancel", { id, expectedVersion: options.expectedVersion }, "sdk.interactions.cancel")).interaction; },
+            }),
             tokens: Object.freeze({
                 async get(tokenId, options = {}) {
                     requireCap("tokens.get");
@@ -1400,7 +1568,9 @@
                     requireCap("tokens.list");
                     return (await runtimeRead("tokens", { scene_id: options.sceneId || context.scene?.id, limit: Math.min(Number(options.limit) || 100, 500) }, "sdk.tokens.list")).tokens || [];
                 },
-                async move(tokenId, position = {}, options = {}) { requireCap("tokens.move"); return runtimeCommand("tokens.move", { id: tokenId, sceneId: position.sceneId || context.scene?.id, x: position.x, y: position.y, expectedVersion: options.expectedVersion }, "sdk.tokens.move"); },
+                async move(tokenId, position = {}, options = {}) { requireCap("tokens.move"); return runtimeCommand("tokens.move", { id: tokenId, sceneId: position.sceneId || context.scene?.id, x: position.x, y: position.y, expectedVersion: options.expectedVersion, originExecutionId: options.originExecutionId, originJobId: options.originJobId, causalDepth: options.causalDepth || 0 }, "sdk.tokens.move"); },
+                async transfer(tokenId, destination = {}, options = {}) { requireCap("tokens.transfer"); return (await runtimeCommand("tokens.transfer", { input: { tokenId, sceneId: destination.sceneId, x: destination.x, y: destination.y, elevation: destination.elevation, expectedVersion: options.expectedVersion, navigateAudience: options.navigateAudience } }, "sdk.tokens.transfer")).transfer; },
+                async transferMany(transfers = [], options = {}) { requireCap("tokens.transferMany"); return (await runtimeCommand("tokens.transferMany", { input: { transfers, navigateAudience: options.navigateAudience } }, "sdk.tokens.transferMany")).transfer; },
                 async create(input = {}) { requireCap("tokens.create"); return runtimeCommand("tokens.create", input, "sdk.tokens.create"); },
                 async update(tokenId, patch = {}, options = {}) { requireCap("tokens.update"); return runtimeCommand("tokens.update", { id: tokenId, sceneId: options.sceneId || context.scene?.id, patch, expectedVersion: options.expectedVersion }, "sdk.tokens.update"); },
                 async delete(tokenId, options = {}) { requireCap("tokens.delete"); return runtimeCommand("tokens.delete", { id: tokenId, sceneId: options.sceneId || context.scene?.id }, "sdk.tokens.delete"); },
@@ -1494,6 +1664,42 @@
                     async update(id, patch = {}, options = {}) { requireCap("scene.shaders.update"); return (await runtimeCommand("shaders.update", { id, parameters: patch.parameters || patch, expectedVersion: options.expectedVersion }, "sdk.scene.shaders.update")).instance; },
                     async enable(id, enabled, options = {}) { requireCap("scene.shaders.enable"); return (await runtimeCommand("shaders.update", { id, parameters: { enabled: Boolean(enabled) }, expectedVersion: options.expectedVersion }, "sdk.scene.shaders.enable")).instance; },
                     async remove(id) { requireCap("scene.shaders.remove"); return runtimeCommand("shaders.remove", { id }, "sdk.scene.shaders.remove"); },
+                    customLibrary: Object.freeze({
+                        registerProvider(definition = {}) {
+                            requireCap("scene.shaders.customLibrary.registerProvider");
+                            const host = window.GravewrightCustomShaderLibraries;
+                            if (!host?.registerProvider) throw new Error("CUSTOM_SHADER_UNAVAILABLE");
+                            const disposeCore = host.registerProvider(pkg.id, {
+                                id: definition.id, label: definition.label, description: definition.description,
+                                open: typeof definition.open === "function" ? () => definition.open(freeze(clone(context))) : null,
+                            });
+                            let disposed = false;
+                            const dispose = () => {
+                                if (disposed) return; disposed = true; disposeCore();
+                                sdkEventDisposers.get(pkg.id)?.delete(dispose);
+                            };
+                            if (!sdkEventDisposers.has(pkg.id)) sdkEventDisposers.set(pkg.id, new Set());
+                            sdkEventDisposers.get(pkg.id).add(dispose);
+                            return dispose;
+                        },
+                        async openEditor(definition = null) {
+                            requireCap("scene.shaders.customLibrary.openEditor");
+                            const result = await window.GravewrightCustomShaderLibraries?.openEditor?.(definition ? clone(definition) : null);
+                            return result ? freeze(clone(result)) : null;
+                        },
+                        preview(definition) {
+                            requireCap("scene.shaders.customLibrary.preview");
+                            return freeze(clone(window.GravewrightCustomShaderLibraries?.preview?.(clone(definition))));
+                        },
+                        clearPreview() {
+                            requireCap("scene.shaders.customLibrary.clearPreview");
+                            return freeze(clone(window.GravewrightCustomShaderLibraries?.clearPreview?.()));
+                        },
+                        async use(definition) {
+                            requireCap("scene.shaders.customLibrary.use");
+                            return freeze(clone(await window.GravewrightCustomShaderLibraries?.use?.(clone(definition))));
+                        },
+                    }),
                 }),
                 fog: Object.freeze({
                     async state(sceneId = context.scene?.id) { requireCap("scene.fog.state"); return runtimeRead("fog", { scene_id: sceneId }, "sdk.scene.fog.state"); },
@@ -1514,6 +1720,41 @@
                     async create(sceneId, values = {}) { requireCap("scene.templates.create"); return runtimeCommand("templates.create", { sceneId, values }, "sdk.scene.templates.create"); },
                     async update(templateId, patch = {}, options = {}) { requireCap("scene.templates.update"); return runtimeCommand("templates.update", { templateId, values: patch, expectedVersion: options.expectedVersion }, "sdk.scene.templates.update"); },
                     async delete(templateId, options = {}) { requireCap("scene.templates.delete"); return runtimeCommand("templates.delete", { templateId, expectedVersion: options.expectedVersion }, "sdk.scene.templates.delete"); },
+                }),
+                zones: Object.freeze({
+                    async list(sceneId = context.scene?.id) { requireCap("scene.zones.list"); return (await runtimeRead("scene.zones", { scene_id: sceneId }, "sdk.scene.zones.list")).zones || []; },
+                    async get(id) { requireCap("scene.zones.get"); return (await runtimeRead("scene.zones", { entity_id: id }, "sdk.scene.zones.get")).zone; },
+                    async members(id) { requireCap("scene.zones.members"); return (await runtimeRead("scene.zones", { entity_id: id, action: "members" }, "sdk.scene.zones.members")).members || []; },
+                    async create(sceneId, input = {}) { requireCap("scene.zones.create"); return (await runtimeCommand("zones.create", { sceneId, values: input }, "sdk.scene.zones.create")).zone; },
+                    async update(id, patch = {}, options = {}) { requireCap("scene.zones.update"); return (await runtimeCommand("zones.update", { id, patch, expectedVersion: options.expectedVersion }, "sdk.scene.zones.update")).zone; },
+                    async delete(id, options = {}) { requireCap("scene.zones.delete"); return runtimeCommand("zones.delete", { id, expectedVersion: options.expectedVersion }, "sdk.scene.zones.delete"); },
+                }),
+                objectTypes: Object.freeze({
+                    async register(definition = {}) {
+                        requireCap("scene.objectTypes.register");
+                        await runtimeCommand("objectTypes.register", { definition }, "sdk.scene.objectTypes.register");
+                        let disposed = false;
+                        const dispose = () => { if (!disposed) { disposed = true; sdkEventDisposers.get(pkg.id)?.delete(dispose); } };
+                        if (!sdkEventDisposers.has(pkg.id)) sdkEventDisposers.set(pkg.id, new Set());
+                        sdkEventDisposers.get(pkg.id).add(dispose);
+                        return dispose;
+                    },
+                }),
+                objects: Object.freeze({
+                    async list(sceneId = context.scene?.id, options = {}) { requireCap("scene.objects.list"); return (await runtimeRead("scene.objects", { scene_id: sceneId, q: options.query }, "sdk.scene.objects.list")).objects || []; },
+                    async get(id) { requireCap("scene.objects.get"); return (await runtimeRead("scene.objects", { entity_id: id }, "sdk.scene.objects.get")).object; },
+                    async hitTest(sceneId, point, options = {}) { requireCap("scene.objects.hitTest"); return (await runtimeRead("scene.objects", { scene_id: sceneId, action: "hitTest", q: point?.x, reference: point?.y, limit: options.tolerance ?? 8 }, "sdk.scene.objects.hitTest")).objects || []; },
+                    async create(sceneId, input = {}) { requireCap("scene.objects.create"); return (await runtimeCommand("objects.create", { sceneId, input }, "sdk.scene.objects.create")).object; },
+                    async update(id, patch = {}, options = {}) { requireCap("scene.objects.update"); return (await runtimeCommand("objects.update", { id, patch, expectedVersion: options.expectedVersion }, "sdk.scene.objects.update")).object; },
+                    async delete(id, options = {}) { requireCap("scene.objects.delete"); return runtimeCommand("objects.delete", { id, expectedVersion: options.expectedVersion }, "sdk.scene.objects.delete"); },
+                    async interact(id, interactionId, options = {}) { requireCap("scene.objects.interact"); return (await runtimeCommand("objects.interact", { id, interactionId, expectedVersion: options.expectedVersion }, "sdk.scene.objects.interact")).interaction; },
+                }),
+                spatialSounds: Object.freeze({
+                    async list(sceneId = context.scene?.id) { requireCap("scene.spatialSounds.list"); return (await runtimeRead("scene.spatialSounds", { scene_id: sceneId }, "sdk.scene.spatialSounds.list")).spatialSounds || []; },
+                    async get(id) { requireCap("scene.spatialSounds.get"); return (await runtimeRead("scene.spatialSounds", { entity_id: id }, "sdk.scene.spatialSounds.get")).spatialSound; },
+                    async create(sceneId, input = {}) { requireCap("scene.spatialSounds.create"); return (await runtimeCommand("spatialSounds.create", { sceneId, input }, "sdk.scene.spatialSounds.create")).spatialSound; },
+                    async update(id, patch = {}, options = {}) { requireCap("scene.spatialSounds.update"); return (await runtimeCommand("spatialSounds.update", { id, patch, expectedVersion: options.expectedVersion }, "sdk.scene.spatialSounds.update")).spatialSound; },
+                    async delete(id, options = {}) { requireCap("scene.spatialSounds.delete"); return runtimeCommand("spatialSounds.delete", { id, expectedVersion: options.expectedVersion }, "sdk.scene.spatialSounds.delete"); },
                 }),
                 measurements: Object.freeze({
                     async measure(sceneId, from, to) {
@@ -1818,11 +2059,160 @@
         if (!runtime || !pkg) return;
         readyDone.add(id);
         const sdk = buildScopedSdk(pkg);
+        installInteractionHost(pkg, sdk);
+        installSemanticHosts(pkg, sdk);
         try {
             runtime.ready?.(sdk, { package: pkg, context });
         } catch (err) {
             console.error(`GravewrightSDK ready failed for "${id}"`, err);
         }
+    }
+
+    const interactionHosts = new Set();
+    const semanticHosts = new Set();
+    function installSemanticHosts(pkg, sdk) {
+        if (semanticHosts.has(pkg.id)) return;
+        semanticHosts.add(pkg.id);
+        const disposers = sdkEventDisposers.get(pkg.id) || new Set();
+        sdkEventDisposers.set(pkg.id, disposers);
+        if (caps.hasCapability(pkg, "scene.objects.read")) {
+            const canvas = window.GravewrightMap?.activeCanvas?.() || document.querySelector("[data-map-canvas]");
+            const viewport = canvas?.closest("[data-map-viewport]");
+            if (canvas && viewport) {
+                const layer = document.createElement("div");
+                layer.dataset.sceneObjectLayer = pkg.id;
+                Object.assign(layer.style, { position: "absolute", inset: "0", pointerEvents: "none", overflow: "hidden" });
+                viewport.append(layer);
+                let objects = [];
+                const point = geometry => geometry.kind === "point" || geometry.kind === "circle" ? { x: geometry.x, y: geometry.y }
+                    : geometry.kind === "rect" ? { x: geometry.x + geometry.width / 2, y: geometry.y + geometry.height / 2 }
+                    : geometry.points?.length ? { x: (Math.min(...geometry.points.map(p=>p.x))+Math.max(...geometry.points.map(p=>p.x)))/2, y: (Math.min(...geometry.points.map(p=>p.y))+Math.max(...geometry.points.map(p=>p.y)))/2 } : { x: 0, y: 0 };
+                const draw = () => {
+                    const state = window.GravewrightMap?.stateFor?.(canvas);
+                    if (!state) return;
+                    layer.replaceChildren(...objects.filter(object => object.enabled).map(object => {
+                        const anchor = point(object.geometry); const node = document.createElement("button"); node.type = "button";
+                        node.dataset.sceneObjectId = object.id; node.dataset.sceneObjectType = object.typeId; node.dataset.sceneObjectVersion = String(object.version);
+                        node.dataset.interactionCount = String(object.interactions?.length || 0);
+                        node.title = object.presentation?.label || object.typeId;
+                        node.textContent = object.providerAvailable === false ? "?" : object.presentation?.icon || object.presentation?.label || "◆";
+                        Object.assign(node.style, { position: "absolute", pointerEvents: "auto", left: `${state.offsetX + anchor.x * state.zoom}px`, top: `${state.offsetY + anchor.y * state.zoom}px`, transform: "translate(-50%,-50%)", opacity: String(Math.max(.1, Math.min(1, Number(object.presentation?.opacity ?? 1)))) });
+                        const geometry=object.geometry;const stroke=object.presentation?.stroke||"#f3c969";const fill=object.presentation?.fill||"rgba(243,201,105,.2)";
+                        if(geometry.kind==="rect"||geometry.kind==="circle"){node.style.width=`${(geometry.kind==="rect"?geometry.width:geometry.radius*2)*state.zoom}px`;node.style.height=`${(geometry.kind==="rect"?geometry.height:geometry.radius*2)*state.zoom}px`;node.style.border=`${Math.max(1,Number(object.presentation?.lineWidth||2))}px solid ${stroke}`;node.style.background=fill;if(geometry.kind==="circle")node.style.borderRadius="50%";}
+                        if(geometry.kind==="polygon"||geometry.kind==="polyline"){const xs=geometry.points.map(p=>p.x),ys=geometry.points.map(p=>p.y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);node.style.width=`${Math.max(1,(maxX-minX)*state.zoom)}px`;node.style.height=`${Math.max(1,(maxY-minY)*state.zoom)}px`;node.style.background=geometry.kind==="polygon"?fill:"transparent";if(geometry.kind==="polygon"){node.style.border=`${Math.max(1,Number(object.presentation?.lineWidth||2))}px solid ${stroke}`;node.style.clipPath=`polygon(${geometry.points.map(p=>`${(p.x-minX)/(maxX-minX||1)*100}% ${(p.y-minY)/(maxY-minY||1)*100}%`).join(",")})`;}else{node.textContent="";const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox",`0 0 ${maxX-minX||1} ${maxY-minY||1}`);svg.setAttribute("width","100%");svg.setAttribute("height","100%");const line=document.createElementNS(svg.namespaceURI,"polyline");line.setAttribute("points",geometry.points.map(p=>`${p.x-minX},${p.y-minY}`).join(" "));line.setAttribute("fill","none");line.setAttribute("stroke",stroke);line.setAttribute("stroke-width",String(Math.max(1,Number(object.presentation?.lineWidth||2))/state.zoom));svg.append(line);node.append(svg);}}
+                        node.addEventListener("click", () => { layer.querySelectorAll("[aria-selected]").forEach(n => n.removeAttribute("aria-selected")); node.setAttribute("aria-selected", "true"); document.dispatchEvent(new CustomEvent("vtt:scene-object-selected", { detail: { id: object.id, typeId: object.typeId } })); const interaction=object.interactions?.[0];if(interaction)void sdk.scene.objects.interact(object.id,interaction.id,{expectedVersion:object.version}); });
+                        node.addEventListener("contextmenu", event => {
+                            event.preventDefault();const properties=object.dataSchema?.properties||{};if(!object.providerAvailable||!Object.keys(properties).length)return;
+                            const dialog=document.createElement("dialog");dialog.dataset.sceneObjectEditor=object.id;const form=document.createElement("form");form.method="dialog";const draft=clone(object.data||{});
+                            for(const [key,rule] of Object.entries(properties).slice(0,32)){if(!rule||!["string","number","integer","boolean"].includes(rule.type)&&!Array.isArray(rule.enum))continue;const label=document.createElement("label");label.append(document.createTextNode(String(rule.title||key)));let input;if(Array.isArray(rule.enum)){input=document.createElement("select");for(const value of rule.enum){const option=document.createElement("option");option.value=String(value);option.textContent=String(value);option.selected=value===draft[key];input.append(option);}}else{input=document.createElement("input");input.type=rule.type==="boolean"?"checkbox":rule.type==="number"||rule.type==="integer"?"number":"text";if(input.type==="checkbox")input.checked=Boolean(draft[key]);else input.value=String(draft[key]??"");}input.addEventListener("input",()=>{draft[key]=input.type==="checkbox"?input.checked:rule.type==="number"?Number(input.value):rule.type==="integer"?Math.trunc(Number(input.value)):input.value;});label.append(input);form.append(label);}
+                            const save=document.createElement("button");save.type="submit";save.textContent="Save";const cancel=document.createElement("button");cancel.type="button";cancel.textContent="Cancel";cancel.addEventListener("click",()=>dialog.close());form.append(cancel,save);form.addEventListener("submit",async submit=>{submit.preventDefault();try{Object.assign(object,await sdk.scene.objects.update(object.id,{data:draft},{expectedVersion:object.version}));dialog.close();}catch(error){console.error("Scene object edit failed",error);}});dialog.addEventListener("close",()=>dialog.remove(),{once:true});dialog.append(form);document.body.append(dialog);dialog.showModal();
+                        });
+                        if (object.editor?.movable && caps.hasCapability(pkg, "scene.objects.write")) node.addEventListener("pointerdown", event => {
+                            event.preventDefault(); node.setPointerCapture(event.pointerId);
+                            const original=clone(object.geometry); const start=window.GravewrightMap.worldFromScreen(canvas,event.clientX,event.clientY);
+                            const shifted=(geometry,dx,dy)=>geometry.kind==="point"||geometry.kind==="circle"?{...geometry,x:geometry.x+dx,y:geometry.y+dy}:geometry.kind==="rect"?{...geometry,x:geometry.x+dx,y:geometry.y+dy}:{...geometry,points:geometry.points.map(p=>({x:p.x+dx,y:p.y+dy}))};
+                            const move=next=>{const current=window.GravewrightMap.worldFromScreen(canvas,next.clientX,next.clientY);object.geometry=shifted(original,current.worldX-start.worldX,current.worldY-start.worldY);position();};
+                            const cancel=()=>{object.geometry=original;position();cleanup();};
+                            const commit=async next=>{move(next);cleanup();try{const updated=await sdk.scene.objects.update(object.id,{geometry:object.geometry},{expectedVersion:object.version});Object.assign(object,updated);}catch(_){object.geometry=original;}position();};
+                            const cleanup=()=>{node.removeEventListener("pointermove",move);node.removeEventListener("pointerup",commit);node.removeEventListener("pointercancel",cancel);};
+                            node.addEventListener("pointermove",move);node.addEventListener("pointerup",commit);node.addEventListener("pointercancel",cancel);
+                        });
+                        return node;
+                    }));
+                };
+                const position = () => {
+                    const state=window.GravewrightMap?.stateFor?.(canvas);if(!state)return;
+                    for(const node of layer.querySelectorAll("[data-scene-object-id]")){const object=objects.find(item=>item.id===node.dataset.sceneObjectId);if(!object)continue;const anchor=point(object.geometry);node.style.left=`${state.offsetX+anchor.x*state.zoom}px`;node.style.top=`${state.offsetY+anchor.y*state.zoom}px`;}
+                };
+                const refresh = async () => { try { objects = await sdk.scene.objects.list(context.scene?.id); draw(); } catch (_) {} };
+                const onEvent = event => { if (["scene.objects.changed","scene.changed","token.moved"].includes(event.detail?.event)) void refresh(); };
+                document.addEventListener("vtt:transport-event", onEvent); window.addEventListener("resize", draw); void refresh();
+                const timer = window.setInterval(position, 50);
+                disposers.add(() => { window.clearInterval(timer); window.removeEventListener("resize", draw); document.removeEventListener("vtt:transport-event", onEvent); layer.remove(); });
+            }
+        }
+        if (caps.hasCapability(pkg, "ui.presentations")) {
+            const host = document.createElement("section"); host.dataset.semanticPresentationHost = pkg.id;
+            Object.assign(host.style, { position: "fixed", inset: "0", pointerEvents: "none", zIndex: "10000" }); document.body.append(host);
+            let timer;const acknowledged=new Set();
+            const render = async () => {
+                let presentations=[]; try { presentations=await sdk.ui.presentations.list({ sceneId: context.scene?.id }); } catch (_) { return; }
+                for(const p of presentations){if(p.status==="active"&&p.audience?.ids?.includes(context.user?.id)&&p.endsAt&&Date.now()>=p.endsAt&&!acknowledged.has(p.id)){acknowledged.add(p.id);void runtimeCommand("presentations.ack",{id:p.id},"core.presentations.ack").catch(()=>acknowledged.delete(p.id));}}
+                host.replaceChildren(...presentations.filter(p => p.status==="active"&&p.audience?.ids?.includes(context.user?.id)&&(!p.endsAt||Date.now()<p.endsAt)).map(p => {
+                    const node=document.createElement("article"); node.dataset.presentationId=p.id; node.dataset.presentationMode=p.mode;
+                    Object.assign(node.style,{pointerEvents:"auto",position:"absolute",left:"50%",top:p.mode==="world-anchor"?"40%":"15%",transform:"translateX(-50%)",maxWidth:"32rem"});
+                    if (p.mode==="world-anchor" && p.anchor) {
+                        const target=document.querySelector(p.anchor.kind==="scene-object"?`[data-scene-object-id="${CSS.escape(p.anchor.id)}"]`:`[data-token-id="${CSS.escape(p.anchor.id)}"]`);
+                        if (target) { const box=target.getBoundingClientRect();node.style.left=`${box.left+box.width/2}px`;node.style.top=`${box.top}px`;node.style.transform="translate(-50%,-100%)"; }
+                        else if (p.anchor.kind==="token") {
+                            const canvas=window.GravewrightMap?.activeCanvas?.();const state=canvas&&window.GravewrightMap?.stateFor?.(canvas);const token=canvas&&window.GravewrightMap?.tokenStoreFor?.(canvas)?.get?.(p.anchor.id);const box=canvas?.getBoundingClientRect();const grid=Number(canvas?.dataset.sceneGridSize||canvas?.dataset.sceneTileSize||70);
+                            if(!state||!token||!box)node.hidden=true;else{node.style.left=`${box.left+state.offsetX+(Number(token.grid_x)+Number(token.width_cells||1)/2)*grid*state.zoom}px`;node.style.top=`${box.top+state.offsetY+Number(token.grid_y)*grid*state.zoom}px`;node.style.transform="translate(-50%,-100%)";}
+                        } else node.hidden=true;
+                    }
+                    if (p.mode==="screen-overlay" || p.mode==="fade") Object.assign(node.style,{inset:"0",transform:"none",maxWidth:"none",background:`rgba(0,0,0,${Math.max(0,Math.min(1,Number(p.content?.value ?? .65)))})`});
+                    if(p.content?.preset==="letterbox")Object.assign(node.style,{borderBlock:"10vh solid #000",background:"transparent"});
+                    if(p.content?.preset==="damage-flash")node.style.background="rgba(180,0,0,.45)";
+                    if(p.content?.asset){const img=document.createElement("img");img.alt="";img.src=p.content.asset.kind==="package-asset"?`/sdk/packages/${encodeURIComponent(p.packageId)}/asset/${p.content.asset.id.split("/").map(encodeURIComponent).join("/")}`:`/game/journal/asset/${encodeURIComponent(p.content.asset.id)}`;Object.assign(img.style,{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"});node.append(img);}
+                    for (const key of ["title","subtitle","text","label"]) if (p.content?.[key]) { const el=document.createElement(key==="title"?"h2":"p"); el.textContent=p.content[key]; node.append(el); }
+                    if (p.mode==="countdown" && p.deadline) { const value=document.createElement("time"); value.textContent=String(Math.max(0,p.deadline-Math.floor(Date.now()/1000))); node.append(value); }
+                    for (const button of p.content?.buttons || []) { const el=document.createElement("button");el.type="button";el.textContent=button.label;el.addEventListener("click",()=>void sdk.rules?.actions?.executeReference?.(button.actionReference,{},{}));node.append(el); }
+                    return node;
+                }));
+            };
+            const onEvent=event=>{if (["ui.presentation.changed","scene.activated","token.moved","token.updated","token.deleted","scene.objects.changed"].includes(event.detail?.event))void render();};
+            document.addEventListener("vtt:transport-event",onEvent);timer=window.setInterval(render,1000);void render();
+            disposers.add(()=>{window.clearInterval(timer);document.removeEventListener("vtt:transport-event",onEvent);host.remove();void sdk.ui.presentations.list().then(rows=>Promise.all(rows.map(row=>sdk.ui.presentations.close(row.id,{expectedVersion:row.version}).catch(()=>null)))).catch(()=>null);});
+        }
+    }
+    function installInteractionHost(pkg, sdk) {
+        if (interactionHosts.has(pkg.id) || !caps.hasCapability(pkg, "interactions.respond")) return;
+        interactionHosts.add(pkg.id);
+        let showing = false;
+        const present = async () => {
+            if (showing) return;
+            let pending;
+            try { pending = await sdk.interactions.list({ status: "open", recipient: "me" }); }
+            catch (_) { return; }
+            const interaction = pending[0];
+            if (!interaction) return;
+            showing = true;
+            const dialog = document.createElement("dialog");
+            dialog.dataset.testid = "directed-interaction";
+            const form = document.createElement("form"); form.method = "dialog";
+            const title = document.createElement("h2"); title.textContent = interaction.prompt.title;
+            title.dataset.testid = "directed-interaction-title";
+            const text = document.createElement("p"); text.textContent = interaction.prompt.text;
+            text.dataset.testid = "directed-interaction-prompt";
+            const field = document.createElement("div"); const schema = interaction.responseSchema;
+            let control;
+            if (schema.type === "boolean") {
+                control = document.createElement("input"); control.type = "checkbox";
+                const label = document.createElement("label"); label.append(control, document.createTextNode(" Yes")); field.append(label);
+            } else if (schema.type === "single-choice" || schema.type === "multi-choice") {
+                control = document.createElement("select"); control.multiple = schema.type === "multi-choice";
+                for (const choice of schema.choices || []) { const option = document.createElement("option"); option.value = choice.id; option.textContent = choice.label; control.append(option); }
+                field.append(control);
+            } else {
+                control = document.createElement("input"); control.type = schema.type === "number" ? "number" : "text";
+                if (schema.minimum != null) control.min = String(schema.minimum); if (schema.maximum != null) control.max = String(schema.maximum); if (schema.maxLength) control.maxLength = schema.maxLength;
+                field.append(control);
+            }
+            control.dataset.testid = "directed-interaction-response";
+            const decline = document.createElement("button"); decline.type = "button"; decline.textContent = "Close";
+            const submit = document.createElement("button"); submit.type = "submit"; submit.textContent = "Respond";
+            submit.dataset.testid = "directed-interaction-submit";
+            form.append(title, text, field, decline, submit); dialog.append(form); document.body.append(dialog);
+            decline.addEventListener("click", () => dialog.close());
+            form.addEventListener("submit", async event => {
+                event.preventDefault();
+                let value = schema.type === "boolean" ? control.checked : schema.type === "multi-choice" ? [...control.selectedOptions].map(option => option.value) : schema.type === "number" ? Number(control.value) : control.value;
+                try { await sdk.interactions.respond(interaction.id, value, { expectedVersion: interaction.version, idempotencyKey: `${interaction.id}:${interaction.version}` }); dialog.close(); } catch (error) { console.error("Directed interaction response failed", error); }
+            });
+            dialog.addEventListener("close", () => { showing = false; dialog.remove(); queueMicrotask(present); }, { once: true });
+            dialog.showModal();
+        };
+        document.addEventListener("vtt:transport-event", event => { if (event.detail?.event === "interaction.changed") void present(); });
+        void present();
     }
 
     function register(definition) {

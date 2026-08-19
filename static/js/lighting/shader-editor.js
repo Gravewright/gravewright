@@ -43,6 +43,63 @@
     let sourcePreviewTimer = null;
     const presetChoice = new WeakMap();
 
+    const CUSTOM_FORMAT = "gravewright-custom-shader";
+    const CUSTOM_VERSION = 1;
+    const MAX_DEFINITION_BYTES = 40000;
+    const providerRegistry = new Map();
+    const DEFAULT_CUSTOM = Object.freeze({
+        format: CUSTOM_FORMAT, version: CUSTOM_VERSION,
+        definition: Object.freeze({
+            source: "void main() { float a = 0.35 * uIntensity; finalColor = vec4(uColor * a, a); }",
+            opacity: 1, intensity: 0.6, scale: 1, speed: 1, rotation: 0,
+            radius: 8, color: "#8fb6ff", blend_mode: "normal", enabled: true,
+        }),
+    });
+
+    function customError(code, message = code) {
+        const error = new Error(message); error.code = code; return error;
+    }
+
+    function validateCustomEnvelope(value) {
+        if (!value || typeof value !== "object" || value.format !== CUSTOM_FORMAT
+            || value.version !== CUSTOM_VERSION || !value.definition || typeof value.definition !== "object") {
+            throw customError("CUSTOM_SHADER_INVALID");
+        }
+        let encoded;
+        try { encoded = JSON.stringify(value); } catch { throw customError("CUSTOM_SHADER_INVALID"); }
+        if (new TextEncoder().encode(encoded).byteLength > MAX_DEFINITION_BYTES) throw customError("CUSTOM_SHADER_INVALID");
+        const input = value.definition;
+        const source = String(input.source || "");
+        if (!source.trim() || new TextEncoder().encode(source).byteLength > 32000) throw customError("CUSTOM_SHADER_INVALID");
+        const number = (key, fallback, min, max) => {
+            const result = input[key] === undefined ? fallback : Number(input[key]);
+            if (!Number.isFinite(result) || result < min || result > max) throw customError("CUSTOM_SHADER_INVALID");
+            return result;
+        };
+        const blend = String(input.blend_mode || "normal");
+        const color = String(input.color || "#8fb6ff").toLowerCase();
+        if (!new Set(["normal", "add", "multiply", "screen"]).has(blend) || !/^#[0-9a-f]{6}$/.test(color)) {
+            throw customError("CUSTOM_SHADER_INVALID");
+        }
+        return Object.freeze({ format: CUSTOM_FORMAT, version: CUSTOM_VERSION, definition: Object.freeze({
+            source, opacity: number("opacity", 1, 0, 1), intensity: number("intensity", .6, 0, 1),
+            scale: number("scale", 1, .1, 20), speed: number("speed", 1, 0, 8),
+            rotation: number("rotation", 0, 0, 359), radius: number("radius", 8, 0, 120),
+            color, blend_mode: blend, enabled: input.enabled !== false,
+        }) });
+    }
+
+    async function validateCustomForCore(value, roomId) {
+        const envelope = validateCustomEnvelope(value);
+        const canvas = canvasFor(roomId);
+        lighting()?.previewCustomDefinition?.(canvas, envelope.definition);
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const problem = window.GravewrightShaderEffects?.errorFor?.("__gravewright_custom_shader_preview__");
+        lighting()?.clearCustomDefinitionPreview?.(canvas);
+        if (problem) throw customError("CUSTOM_SHADER_INVALID", problem);
+        return envelope;
+    }
+
     const modals = () => window.GravewrightModals;
     const lighting = () => window.GravewrightLighting;
     const panelFor = (roomId) =>
@@ -159,12 +216,26 @@
         if (!panel) return;
         const shader = shadersOf(roomId).find((candidate) => candidate.id === shaderId) || null;
         target = { roomId, shaderId: shader?.id || "" };
+        panel.querySelector("[data-shader-delete]")?.removeAttribute("hidden");
         previewPatch = {};
         fillFields(panel, shader || {});
         renderPresets(panel);
         window.GravewrightLimits?.paint?.(panel, "radius");
         const compileError = window.GravewrightShaderEffects?.errorFor?.(shader?.id);
         say(panel, compileError || "", Boolean(compileError));
+    }
+
+    function showCustom(roomId, envelope, resolve) {
+        const panel = panelFor(roomId);
+        if (!panel) throw customError("CUSTOM_SHADER_UNAVAILABLE");
+        const value = validateCustomEnvelope(envelope || DEFAULT_CUSTOM);
+        target = { roomId, shaderId: "", mode: "custom-library", resolve, settled: false };
+        previewPatch = {};
+        fillFields(panel, value.definition);
+        panel.querySelector("[data-shader-delete]")?.setAttribute("hidden", "");
+        renderPresets(panel);
+        lighting()?.previewCustomDefinition?.(canvasFor(roomId), value.definition);
+        say(panel, "", false);
     }
 
     function patch(patchValues) {
@@ -176,7 +247,7 @@
 
     function valueOf(input) {
         if (input.type === "checkbox") return input.checked;
-        if (["color", "text"].includes(input.type) || input.tagName === "SELECT") return input.value;
+        if (["color", "text"].includes(input.type) || ["SELECT", "TEXTAREA"].includes(input.tagName)) return input.value;
         const value = Number(input.value);
         if (!Number.isFinite(value)) return null;
         const min = input.min === "" ? -Infinity : Number(input.min);
@@ -190,12 +261,23 @@
         if (value === null) { say(panel, PROBLEMS["lighting.errors.invalid"], true); return false; }
         previewPatch[key] = value;
         const canvas = canvasFor(target.roomId);
-        lighting()?.previewShader?.(canvas, target.shaderId, { [key]: value });
+        if (target.mode === "custom-library") lighting()?.previewCustomDefinition?.(canvas, { ...fieldsFrom(panel), [key]: value });
+        else lighting()?.previewShader?.(canvas, target.shaderId, { [key]: value });
         say(panel, "", false);
         return true;
     }
 
+    function fieldsFrom(panel) {
+        const values = {};
+        panel?.querySelectorAll("[data-shader-field]").forEach((input) => {
+            const value = valueOf(input);
+            if (value !== null) values[input.dataset.shaderField] = value;
+        });
+        return values;
+    }
+
     async function commitPreview(panel) {
+        if (target?.mode === "custom-library") { previewPatch = {}; return; }
         if (!target?.shaderId || !Object.keys(previewPatch).length) return;
         const values = previewPatch;
         previewPatch = {};
@@ -210,9 +292,10 @@
     }
 
     function cancelPreview() {
-        if (!target?.shaderId) return;
+        if (!target) return;
         window.clearTimeout(sourcePreviewTimer);
-        lighting()?.restoreShaderPreview?.(canvasFor(target.roomId), target.shaderId);
+        if (target.mode === "custom-library") lighting()?.clearCustomDefinitionPreview?.(canvasFor(target.roomId));
+        else if (target.shaderId) lighting()?.restoreShaderPreview?.(canvasFor(target.roomId), target.shaderId);
         previewPatch = {};
     }
 
@@ -234,10 +317,11 @@
     document.addEventListener("input", (event) => {
         if (event.target?.tagName !== "SELECT") updateField(event);
         const source = event.target.closest?.('[data-shader-field="source"]');
-        if (!source || !target?.shaderId) return;
+        if (!source || !target) return;
         window.clearTimeout(sourcePreviewTimer);
         sourcePreviewTimer = window.setTimeout(() => {
-            lighting()?.previewShader?.(canvasFor(target.roomId), target.shaderId, { source: source.value });
+            if (target.mode === "custom-library") lighting()?.previewCustomDefinition?.(canvasFor(target.roomId), fieldsFrom(source.closest("[data-shader-editor-panel]")));
+            else if (target.shaderId) lighting()?.previewShader?.(canvasFor(target.roomId), target.shaderId, { source: source.value });
             window.GravewrightMap?.redraw?.();
         }, 350);
     });
@@ -308,6 +392,15 @@
         }
 
         if (event.target.closest("[data-shader-save]")) {
+            if (target.mode === "custom-library") {
+                try {
+                    const definition = await validateCustomForCore({ format: CUSTOM_FORMAT, version: CUSTOM_VERSION, definition: fieldsFrom(panel) }, roomId);
+                    const complete = target; complete.settled = true;
+                    cancelPreview(); complete.resolve(definition); target = null;
+                    modals()?.close?.(`shader-editor-${roomId}`);
+                } catch (error) { say(panel, error.code || "CUSTOM_SHADER_INVALID", true); }
+                return;
+            }
             await commitPreview(panel);
             const source = panel.querySelector('[data-shader-field="source"]')?.value || "";
             try {
@@ -369,7 +462,7 @@
     });
 
     document.addEventListener("keydown", (event) => {
-        if (event.key !== "Escape" || !target?.shaderId) return;
+        if (event.key !== "Escape" || !target) return;
         cancelPreview();
         const panel = panelFor(target.roomId);
         const shader = shadersOf(target.roomId).find((candidate) => candidate.id === target.shaderId);
@@ -377,7 +470,11 @@
     }, true);
     document.addEventListener("vtt:modal-closed", (event) => {
         const modalId = event.detail?.modal?.dataset?.modalId || event.detail?.modal?.id || "";
-        if (target?.roomId && modalId === `shader-editor-${target.roomId}`) cancelPreview();
+        if (target?.roomId && modalId === `shader-editor-${target.roomId}`) {
+            const closing = target; cancelPreview();
+            if (closing.mode === "custom-library" && !closing.settled) closing.resolve(null);
+            target = null;
+        }
     });
 
 
@@ -389,5 +486,66 @@
         modals()?.open?.(`shader-editor-${roomId}`);
     });
 
+    function registerProvider(packageId, definition) {
+        const localId = String(definition?.id || "");
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(localId) || typeof definition?.open !== "function") {
+            throw new TypeError("custom shader provider requires a kebab-case id and open callback");
+        }
+        const id = `${packageId}.${localId}`;
+        if (providerRegistry.has(id)) throw customError("CUSTOM_SHADER_PROVIDER_DUPLICATE");
+        providerRegistry.set(id, Object.freeze({ id, packageId, label: String(definition.label || localId).slice(0, 80), description: String(definition.description || "").slice(0, 240), open: definition.open }));
+        return () => providerRegistry.delete(id);
+    }
+
+    function openProviderPicker() {
+        const providers = [...providerRegistry.values()];
+        if (!providers.length) return false;
+        if (providers.length === 1) { Promise.resolve().then(() => providers[0].open()).catch(() => {}); return true; }
+        const dialog = document.createElement("dialog");
+        dialog.className = "custom-shader-provider-picker";
+        const heading = document.createElement("h2"); heading.textContent = "Custom shader libraries"; dialog.appendChild(heading);
+        providers.forEach((provider) => {
+            const button = document.createElement("button"); button.type = "button";
+            button.textContent = provider.label; button.title = provider.description;
+            button.addEventListener("click", () => { dialog.close(); Promise.resolve(provider.open()).catch(() => {}); });
+            dialog.appendChild(button);
+        });
+        dialog.addEventListener("close", () => dialog.remove(), { once: true });
+        document.body.appendChild(dialog); dialog.showModal(); return true;
+    }
+
+    function openCustomEditor(definition) {
+        const roomId = document.querySelector(".room-workspace.is-active")?.dataset.roomId || "";
+        if (!roomId || document.querySelector(".room-workspace.is-active")?.dataset.isGm !== "true") return Promise.reject(customError("PERMISSION_DENIED"));
+        return new Promise((resolve, reject) => {
+            try { showCustom(roomId, definition || DEFAULT_CUSTOM, resolve); modals()?.open?.(`shader-editor-${roomId}`); }
+            catch (error) { reject(error); }
+        });
+    }
+
+    async function useCustomDefinition(definition) {
+        const workspace = document.querySelector(".room-workspace.is-active");
+        if (!workspace || workspace.dataset.isGm !== "true") throw customError("PERMISSION_DENIED");
+        const value = await validateCustomForCore(definition, workspace.dataset.roomId || "");
+        if (!window.GravewrightTools?.selectCustomShaderDefinition) throw customError("CUSTOM_SHADER_UNAVAILABLE");
+        window.GravewrightTools.selectCustomShaderDefinition(value);
+        return Object.freeze({ accepted: true });
+    }
+
+    function previewCustomDefinition(definition) {
+        const workspace = document.querySelector(".room-workspace.is-active");
+        if (!workspace || workspace.dataset.isGm !== "true") throw customError("PERMISSION_DENIED");
+        const value = validateCustomEnvelope(definition);
+        lighting()?.previewCustomDefinition?.(canvasFor(workspace.dataset.roomId || ""), value.definition);
+        return Object.freeze({ active: true });
+    }
+
+    function clearCustomPreview() {
+        const roomId = document.querySelector(".room-workspace.is-active")?.dataset.roomId || "";
+        if (roomId) lighting()?.clearCustomDefinitionPreview?.(canvasFor(roomId));
+        return Object.freeze({ active: false });
+    }
+
     window.GravewrightShaderEditor = { open: (roomId, shaderId) => { show(roomId, shaderId); modals()?.open?.(`shader-editor-${roomId}`); } };
+    window.GravewrightCustomShaderLibraries = Object.freeze({ registerProvider, openProviderPicker, openEditor: openCustomEditor, preview: previewCustomDefinition, clearPreview: clearCustomPreview, use: useCustomDefinition, validate: validateCustomEnvelope });
 })();

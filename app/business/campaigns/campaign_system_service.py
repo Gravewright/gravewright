@@ -7,6 +7,22 @@ from app.engine.sdk.package_install_service import PackageInstallService
 from app.persistence.repositories.campaign_repository import CampaignRepository
 
 
+CORE_AREA_MARKER_PRESETS = (
+    {"id": "core.line", "shape": "line", "labelKey": "game.tool_dock.shape.line", "style": {"stroke": "#c69c59", "fill": "transparent", "strokeWidth": 2}},
+    {"id": "core.circle", "shape": "circle", "labelKey": "game.tool_dock.shape.circle", "style": {"stroke": "#c69c59", "fill": "rgba(198,156,89,0.14)", "strokeWidth": 2}},
+    {"id": "core.square", "shape": "square", "labelKey": "game.tool_dock.shape.square", "style": {"stroke": "#c69c59", "fill": "rgba(198,156,89,0.14)", "strokeWidth": 2}},
+    {"id": "core.cone", "shape": "cone", "labelKey": "game.tool_dock.shape.cone", "style": {"stroke": "#c69c59", "fill": "rgba(198,156,89,0.14)", "strokeWidth": 2}},
+)
+
+
+def resolved_area_marker_presets(presets: list[dict] | None) -> list[dict]:
+    source = presets if presets else CORE_AREA_MARKER_PRESETS
+    return [
+        {**preset, **({"style": dict(preset["style"])} if isinstance(preset.get("style"), dict) else {})}
+        for preset in source
+    ]
+
+
 @dataclass(frozen=True)
 class CampaignSystemResult:
     success: bool
@@ -29,11 +45,11 @@ class CampaignSystemService:
         ``campaign.system.changed`` broadcast can refresh the tool palette in place.
         """
         if not system_id:
-            return []
+            return resolved_area_marker_presets([])
         for item in self.system_install.list_for_tab():
             if item["id"] == system_id and item["status"] == "enabled":
-                return item.get("area_markers", [])
-        return []
+                return resolved_area_marker_presets(item.get("area_markers", []))
+        return resolved_area_marker_presets([])
 
     def assign_to_campaign(
         self,

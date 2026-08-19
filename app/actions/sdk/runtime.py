@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+import base64
 import json
 
 from litestar import Request, get, post
@@ -25,15 +26,28 @@ from app.engine.scenes.scene_wall_service import SceneWallService
 from app.engine.scenes.fog_service import FogService
 from app.engine.scenes.scene_image_service import SceneImageService
 from app.engine.scenes.scene_template_service import SceneTemplateService
+from app.engine.scenes.scene_zone_service import SceneZoneService
+from app.engine.scenes.scene_object_service import SceneObjectService
 from app.domain.fog import FogInitialState
 from app.realtime.fog_command_handler import _parse_op
 from app.engine.sdk.runtime_authority import SdkRuntimeAuthority
 from app.engine.sdk.runtime_permissions import SdkRuntimePermissionInspector
 from app.engine.sdk.package_asset_service import PackageAssetService
 from app.engine.sdk.package_install_service import PackageInstallService
-from app.engine.sdk.runtime_dto import actor_snapshot, chat_snapshot, item_snapshot, light_snapshot, particle_snapshot, scene_snapshot, shader_metadata_snapshot, wall_snapshot
+from app.engine.sdk.runtime_dto import actor_snapshot, chat_snapshot, item_snapshot, light_snapshot, particle_snapshot, scene_snapshot, shader_metadata_snapshot, token_snapshot, wall_snapshot
 from app.engine.sdk.pdf_service import SdkPdfService
 from app.engine.sdk.ephemeral_domain_service import TokenTargetService, SharedMeasurementService, PdfPresentationService
+from app.engine.sdk.directed_interaction_service import DirectedInteractionService
+from app.engine.sdk.semantic_presentation_service import SemanticPresentationService
+from app.engine.sdk.input_registry_service import InputRegistryService
+from app.engine.sdk.scene_navigation_service import SceneNavigationService
+from app.engine.sdk.semantic_drag_drop_service import SemanticDragDropService
+from app.engine.sdk.durable_workflow_service import DurableWorkflowService
+from app.engine.sdk.gameplay_flow_service import GameplayFlowService
+from app.engine.sdk.semantic_timeline_service import SemanticTimelineService
+from app.engine.sdk.token_transfer_service import TokenTransferService
+from app.engine.audio.audio_runtime_service import AudioRuntimeService
+from app.engine.audio.sound_domain_service import SoundDomainService
 from app.engine.sdk.content_reference_service import ContentReferenceService
 from app.engine.decks.card_service import CardService
 from app.engine.decks.cards import CardFaceState, DrawDestination, DrawMode
@@ -56,6 +70,7 @@ from app.engine.items.item_permissions import can_view_item
 from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.item_repository import ItemRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
+from app.persistence.repositories.token_repository import TokenRepository
 from app.helpers.auth import require_user
 from app.helpers.async_blocking import run_blocking
 
@@ -66,6 +81,7 @@ _RESOURCE_CAPABILITIES = {
     "items": "items.read",
     "tokens": "tokens.read",
     "scenes": "scene.read",
+    "campaign.members": "campaign.members.read",
     "combat": "combat.read",
     "permissions": "permissions.inspect",
     "packages": "packages.inspect",
@@ -95,6 +111,20 @@ _RESOURCE_CAPABILITIES = {
     "pdf.presentation": "pdf.presentation",
     "automation.jobs": "automation.schedule",
     "automation.audit": "automation.schedule",
+    "scene.zones": "scene.zones.read",
+    "interactions": "interactions.respond",
+    "scene.objects": "scene.objects.read",
+    "ui.presentations": "ui.presentations",
+    "ui.dragDrop": "ui.dragDrop",
+    "audio.playbacks": "audio.playback",
+    "scene.spatialSounds": "scene.spatialSounds.read",
+    "sounds": "sounds.read",
+    "navigation.scene": "navigation.scene",
+    "input.commands": "input.commands",
+    "input.bindings": "input.commands",
+    "workflows": "workflows.read",
+    "gameplay.flows": "gameplay.flows.read",
+    "timelines": "timelines.read",
 }
 
 
@@ -106,6 +136,59 @@ def _plain(value: Any) -> Any:
     return value
 
 
+def _spatial_sound_dto(value: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": value["id"], "sceneId": value["scene_id"], "soundId": value["sound_id"],
+        "position": {"x": value["x"], "y": value["y"]}, "radius": value["radius"],
+        "gain": value["gain"], "falloff": value["falloff"], "loop": bool(value["loop"]),
+        "enabled": bool(value["enabled"]), "audience": value["audience"],
+        "constrainedByWalls": bool(value.get("constrained_by_walls", True)),
+        "version": value["version"],
+    }
+
+
+def _sound_dto(value: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": value["id"], "campaignId": value["campaign_id"], "name": value["name"],
+        "asset": {"kind": "library-asset", "id": value["asset_id"]}, "kind": value["kind"],
+        "tags": value.get("tags") or [], "defaultGain": value["default_gain"],
+        "defaultLoop": bool(value["default_loop"]), "metadata": value.get("metadata") or {},
+        "version": value["version"],
+    }
+
+
+def _with_controllers(tokens: list[dict[str, Any]], campaign_id: str, user_id: str) -> list[dict[str, Any]]:
+    """Attach canonical controllers only where the caller may inspect control.
+
+    Seeing a token on the board is not authority to learn who drives it, so the
+    projection is limited to tokens this caller could control themselves. That
+    keeps TokenDTO from becoming a roster side-channel.
+    """
+    service = TokenService()
+    rows = {str(row["id"]): row for row in TokenRepository().list_by_scene(
+        str(next((token.get("scene_id") for token in tokens if token and token.get("scene_id")), "")))}
+    resolved = service.controllers_for_tokens(campaign_id=campaign_id, tokens=list(rows.values()))
+    projected = []
+    for token in tokens:
+        token_id = str(token.get("token_id") or token.get("id") or "")
+        row = rows.get(token_id)
+        visible = bool(row) and service.can_control_token(token=row, user_id=user_id, campaign_id=campaign_id)
+        projected.append(token_snapshot(token, controllers=resolved.get(token_id, []) if visible else []))
+    return projected
+
+
+def _can_read_spatial_sound(value: dict[str, Any], campaign_id: str, user_id: str) -> bool:
+    role = CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=user_id)
+    audience = value.get("audience") or {}
+    kind = audience.get("kind")
+    return bool(role) and (
+        role in {"gm", "assistant_gm"}
+        or kind == "campaign"
+        or (kind == "gm" and role in {"gm", "assistant_gm"})
+        or (kind == "users" and user_id in set(audience.get("ids") or []))
+    )
+
+
 def _card_asset_urls(payload: dict[str, Any]) -> dict[str, Any]:
     for card in payload.get("cards", []) if isinstance(payload.get("cards"), list) else []:
         if not isinstance(card, dict):
@@ -115,13 +198,15 @@ def _card_asset_urls(payload: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def _error(error_key: str, status_code: int) -> Response[dict[str, Any]]:
+def _error(error_key: str, status_code: int, details: Any = None) -> Response[dict[str, Any]]:
     codes = {
         400: "VALIDATION_FAILED", 403: "PERMISSION_DENIED", 404: "NOT_FOUND", 409: "STALE_VERSION"
     }
     code = codes.get(status_code, "UNSUPPORTED")
     if error_key in {"UNSUPPORTED_MEDIA_TYPE", "RATE_LIMITED", "VALIDATION_FAILED", "PERMISSION_DENIED", "NOT_FOUND"}:
         code = error_key
+    elif "in_use" in error_key:
+        code = "RESOURCE_IN_USE"
     elif "package_inactive" in error_key or "package_disabled" in error_key:
         code = "PACKAGE_INACTIVE"
     elif "capability_required" in error_key:
@@ -132,8 +217,19 @@ def _error(error_key: str, status_code: int) -> Response[dict[str, Any]]:
         code = "NOT_DURABLE"
     elif "rate_limited" in error_key or ".quota" in error_key:
         code = "RATE_LIMITED"
+    elif "already_responded" in error_key:
+        code = "ALREADY_RESPONDED"
+    elif "already_submitted" in error_key:
+        code = "ALREADY_SUBMITTED"
+    elif error_key.endswith(".expired"):
+        code = "INTERACTION_EXPIRED"
+    elif error_key.endswith(".cancelled") or error_key.endswith(".closed"):
+        code = "INTERACTION_CANCELLED"
+    error: dict[str, Any] = {"code": code, "message": error_key}
+    if isinstance(details, dict):
+        error["details"] = _plain(details)
     return Response(
-        {"error": {"code": code, "message": error_key}, "error_key": error_key},
+        {"error": error, "error_key": error_key},
         status_code=status_code,
     )
 
@@ -160,16 +256,24 @@ def _float(value: Any, default: float = 0.0) -> float:
         return default
 
 
-def _service_error(error_key: str | None) -> Response[dict[str, Any]]:
+def _service_error(error_key: str | None, details: Any = None) -> Response[dict[str, Any]]:
     key = error_key or "sdk.runtime.validation_failed"
     lowered=key.lower()
+    # A referenced resource is a state conflict, not a malformed request: the SDK
+    # mirrors the native dependency policy, information included.
+    if "in_use" in lowered:
+        return _error(key, 409, details)
     if "stale" in lowered or "version_conflict" in lowered:
         return _error(key, 409)
-    if "denied" in lowered or "required" in lowered or "not_allowed" in lowered:
+    if "already_responded" in lowered or "already_submitted" in lowered:
+        return _error(key, 409)
+    if lowered.endswith((".expired", ".cancelled", ".closed")):
+        return _error(key, 410)
+    if "denied" in lowered or "required" in lowered or "not_allowed" in lowered or "not_authorized" in lowered or "not_active_participant" in lowered:
         return _error(key, 403)
     if "not_found" in lowered:
         return _error(key, 404)
-    return _error(key, 400)
+    return _error(key, 400, details)
 
 
 def _resource_in_campaign(row: dict[str, Any] | None, campaign_id: str) -> bool:
@@ -185,6 +289,33 @@ async def _emit_resource_event(*, kind: str, event: TransportEvent, campaign_id:
     payload = {"room_id": campaign_id, f"{kind}_id": resource_id}
     if version is not None: payload["version"] = version
     await RealtimeTransport().to_players(player_ids=audience, event=event, payload=payload)
+
+
+async def _emit_timeline_cues(campaign_id: str, timeline: dict[str, Any]) -> None:
+    transport=RealtimeTransport()
+    for cue in timeline.pop("_cueEvents",[]):
+        value=cue.get("value") if isinstance(cue.get("value"),dict) else {};kind=cue.get("type")
+        if kind=="AUDIO_PLAY":
+            await transport.to_players(player_ids=((value.get("audience") or {}).get("ids") or []),event=TransportEvent.AUDIO_CHANGED,payload={"room_id":campaign_id,"playback_id":value.get("id"),"state":value.get("state"),"playback":value,"schema_version":1})
+            continue
+        if kind=="PRESENTATION_SHOW":
+            ids=list(dict.fromkeys([*((value.get("audience") or {}).get("ids") or []),str(value.get("ownerUserId") or "")]))
+            await transport.to_players(player_ids=[i for i in ids if i],event=TransportEvent.UI_PRESENTATION_CHANGED,payload={"room_id":campaign_id,"presentation_id":value.get("id"),"status":value.get("status"),"presentation":value,"schema_version":1})
+            continue
+        if kind=="NAVIGATION":
+            await transport.to_players(player_ids=value.get("recipientIds",[]),event=TransportEvent.NAVIGATION_SCENE_CHANGED,payload={"room_id":campaign_id,"scene_id":value.get("sceneId"),"schema_version":1})
+            continue
+        event={"LIGHT_CREATE":TransportEvent.SCENE_LIGHTS_UPDATED,"SHADER_PRESET":TransportEvent.SCENE_SHADERS_UPDATED,"PARTICLE_CREATE":TransportEvent.SCENE_PARTICLES_UPDATED,"ACTION":TransportEvent.RULES_ACTION_COMPLETED}.get(kind)
+        if event:
+            await transport.to_room(room_id=campaign_id,event=event,payload={"room_id":campaign_id,"scene_id":timeline.get("sceneId"),"timeline_id":timeline.get("id"),"cue_id":cue.get("cueId"),"schema_version":1})
+
+
+async def _emit_workflow_side_effects(campaign_id: str, workflow: dict[str, Any]) -> None:
+    transport=RealtimeTransport();interaction=workflow.pop("_interactionEvent",None)
+    if interaction:
+        await transport.to_players(player_ids=list(dict.fromkeys([interaction["requester"],*interaction["recipients"]])),event=TransportEvent.INTERACTION_CHANGED,payload={"room_id":campaign_id,"interaction_id":interaction["id"],"schema_version":1})
+    for action in workflow.pop("_actionEvents",[]):
+        await transport.to_room(room_id=campaign_id,event=TransportEvent.RULES_ACTION_COMPLETED,payload={"room_id":campaign_id,"package_id":workflow.get("providerPackageId"),"action_id":action.get("action"),"version":action.get("version"),"execution_id":action.get("executionId"),"schema_version":1})
 
 
 async def _emit_journal_event(*, event: TransportEvent, campaign_id: str, row: dict[str, Any], version: int | None = None) -> None:
@@ -252,6 +383,8 @@ def sdk_runtime_read(
     kinds: FromQuery[str | None] = None,
     slot: FromQuery[str | None] = None,
     version: FromQuery[int | None] = None,
+    status: FromQuery[str | None] = None,
+    recipient: FromQuery[str | None] = None,
 ) -> Response[dict[str, Any]]:
     capability = _RESOURCE_CAPABILITIES.get(resource_name)
     if capability is None:
@@ -267,6 +400,68 @@ def sdk_runtime_read(
         return _error(authority.error_key or "sdk.runtime.denied", 403)
 
     user_id = current_user["id"]
+    if resource_name == "scene.zones":
+        service=SceneZoneService()
+        if entity_id:
+            result=service.members(campaign_id=campaign_id,zone_id=entity_id,user_id=user_id) if action=="members" else service.get(campaign_id=campaign_id,zone_id=entity_id,user_id=user_id)
+            return Response({"members":result.value} if action=="members" else {"zone":result.value}) if result.success else _service_error(result.error_key)
+        result=service.list(campaign_id=campaign_id,scene_id=str(scene_id or ""),user_id=user_id)
+        return Response({"zones":result.value}) if result.success else _service_error(result.error_key)
+    if resource_name == "interactions":
+        service=DirectedInteractionService()
+        result=service.get(campaign_id=campaign_id,interaction_id=entity_id,user_id=user_id) if entity_id else service.list(campaign_id=campaign_id,user_id=user_id,status=status,recipient_me=recipient=="me")
+        return Response({"interaction":result.value} if entity_id else {"interactions":result.value}) if result.success else _service_error(result.error_key)
+    if resource_name == "scene.objects":
+        service=SceneObjectService()
+        if action=="hitTest": result=service.hit_test(campaign_id=campaign_id,scene_id=str(scene_id or ""),user_id=user_id,x=q,y=reference,tolerance=limit)
+        elif entity_id: result=service.get(campaign_id=campaign_id,object_id=entity_id,user_id=user_id)
+        else: result=service.list(campaign_id=campaign_id,scene_id=str(scene_id or ""),user_id=user_id,q=q)
+        return Response({"objects":result.value} if not entity_id else {"object":result.value}) if result.success else _service_error(result.error_key)
+    if resource_name == "ui.presentations":
+        service=SemanticPresentationService()
+        result=service.get(campaign_id=campaign_id,user_id=user_id,package_id=package_id,presentation_id=entity_id) if entity_id else service.list(campaign_id=campaign_id,user_id=user_id,package_id=package_id,scene_id=scene_id)
+        return Response({"presentation":result.value} if entity_id else {"presentations":result.value}) if result.success else _service_error(result.error_key)
+    if resource_name == "ui.dragDrop":
+        result=SemanticDragDropService().list(campaign_id=campaign_id,package_id=package_id,kind="target" if action=="targets" else "source")
+        return Response({"targets" if action=="targets" else "sources":result.value})
+    if resource_name == "audio.playbacks":
+        result=AudioRuntimeService().get(campaign_id=campaign_id,user_id=user_id,playback_id=str(entity_id)) if entity_id else AudioRuntimeService().list(campaign_id=campaign_id,user_id=user_id,package_id=package_id,scene_id=scene_id)
+        return Response({"playback":result.value} if entity_id else {"playbacks":result.value}) if result.success else _service_error(result.error_key)
+    if resource_name == "scene.spatialSounds":
+        service = SoundDomainService()
+        if entity_id:
+            value = service.get_spatial(campaign_id, str(entity_id))
+            visible = value if value and _can_read_spatial_sound(value, campaign_id, user_id) else None
+            return Response({"spatialSound": _spatial_sound_dto(visible) if visible else None})
+        result = service.list_spatial(campaign_id=campaign_id, scene_id=str(scene_id or ""), user_id=user_id)
+        if not result.success:
+            return _service_error(result.error_key)
+        values = [_spatial_sound_dto(value) for value in result.value if _can_read_spatial_sound(value, campaign_id, user_id)]
+        return Response({"spatialSounds": values})
+    if resource_name == "sounds":
+        service = SoundDomainService()
+        if entity_id:
+            value = service._sound(campaign_id, str(entity_id))
+            return Response({"sound": _sound_dto(value) if value else None})
+        result = service.list_sounds(campaign_id=campaign_id, user_id=user_id, q=str(q or ""), kind=str(kinds or "") or None, cursor=_int(cursor), limit=limit)
+        return Response({"sounds": [_sound_dto(value) for value in result.value]}) if result.success else _service_error(result.error_key)
+    if resource_name == "navigation.scene":
+        result=SceneNavigationService().get(campaign_id=campaign_id,user_id=user_id)
+        return Response({"navigation":result.value})
+    if resource_name == "input.commands":
+        result=InputRegistryService().list_commands(campaign_id=campaign_id,package_id=package_id)
+        return Response({"commands":result.value})
+    if resource_name == "input.bindings":
+        return Response({"bindings":InputRegistryService().get_bindings(user_id=user_id).value})
+    if resource_name == "workflows":
+        service=DurableWorkflowService();result=service.get(campaign_id=campaign_id,user_id=user_id,package_id=package_id,instance_id=str(entity_id)) if entity_id else service.list(campaign_id=campaign_id,user_id=user_id,package_id=package_id)
+        return Response({"workflow":result.value} if entity_id else {"workflows":result.value}) if result.success else _service_error(result.error_key)
+    if resource_name == "gameplay.flows":
+        service=GameplayFlowService();result=service.get(campaign_id=campaign_id,user_id=user_id,package_id=package_id,instance_id=str(entity_id)) if entity_id else service.list(campaign_id=campaign_id,user_id=user_id,package_id=package_id)
+        return Response({"flow":result.value} if entity_id else {"flows":result.value}) if result.success else _service_error(result.error_key)
+    if resource_name == "timelines":
+        service=SemanticTimelineService();result=service.get(campaign_id=campaign_id,user_id=user_id,package_id=package_id,instance_id=str(entity_id)) if entity_id else service.list(campaign_id=campaign_id,user_id=user_id,package_id=package_id)
+        return Response({"timeline":result.value} if entity_id else {"timelines":result.value}) if result.success else _service_error(result.error_key)
     if resource_name == "card.definitions":
         from app.engine.decks.declarative_card_registry import CardDefinitionError, DeclarativeCardRegistry
         try:
@@ -409,9 +604,18 @@ def sdk_runtime_read(
             return _error(result.error_key or "sdk.runtime.denied", 403)
         tokens = result.tokens or []
         if entity_id:
-            token = next((token for token in tokens if token.get("id") == entity_id), None)
-            return Response({"token": _plain(token)}) if token else _error("sdk.runtime.not_found", 404)
-        return Response({"scene_id": scene_id, "tokens": _plain(tokens[:max(1, min(int(limit), 500))])})
+            token = next((token for token in tokens if str(token.get("token_id") or token.get("id") or "") == entity_id), None)
+            return Response({"token": _plain(_with_controllers([token], campaign_id, user_id)[0])}) if token else _error("sdk.runtime.not_found", 404)
+        page = tokens[:max(1, min(int(limit), 500))]
+        return Response({"scene_id": scene_id, "tokens": _plain(_with_controllers(page, campaign_id, user_id))})
+    if resource_name == "campaign.members":
+        members = CampaignRepository().list_members(campaign_id=campaign_id)
+        if not any(member["user_id"] == user_id for member in members):
+            return _error("sdk.runtime.denied", 403)
+        return Response({"members": [
+            {"userId": member["user_id"], "role": member["role"], "name": member.get("name") or ""}
+            for member in members
+        ]})
 
     if resource_name == "scenes":
         result = SceneService().list_scenes_for_campaign(campaign_id=campaign_id, user_id=user_id)
@@ -547,6 +751,16 @@ async def sdk_runtime_command(
         "journals.create": "journals.write", "journals.update": "journals.write", "journals.delete": "journals.write", "handouts.present": "handouts.present",
         "tokens.create": "tokens.manage", "tokens.update": "tokens.manage", "tokens.delete": "tokens.manage",
         "tokens.move": "tokens.move", "geometry.createWall": "scene.geometry.write",
+        "zones.create": "scene.zones.write", "zones.update": "scene.zones.write", "zones.delete": "scene.zones.write",
+        "interactions.request": "interactions.request", "interactions.respond": "interactions.respond", "interactions.cancel": "interactions.request",
+        "objectTypes.register": "scene.objectTypes.register", "objectTypes.unregister": "scene.objectTypes.register", "objects.create": "scene.objects.write", "objects.update": "scene.objects.write", "objects.delete": "scene.objects.write", "objects.interact": "scene.objects.interact",
+        "presentations.show": "ui.presentations", "presentations.update": "ui.presentations", "presentations.close": "ui.presentations", "presentations.ack": "ui.presentations",
+        "dragDrop.register": "ui.dragDrop", "dragDrop.unregister": "ui.dragDrop", "dragDrop.drop": "ui.dragDrop",
+        "audio.play": "audio.playback", "audio.update": "audio.playback", "audio.stop": "audio.playback",
+        "spatialSounds.create": "scene.spatialSounds.write", "spatialSounds.update": "scene.spatialSounds.write", "spatialSounds.delete": "scene.spatialSounds.write",
+        "sounds.create": "sounds.write", "sounds.update": "sounds.write", "sounds.delete": "sounds.write",
+        "navigation.scene.go": "navigation.scene",
+        "input.register": "input.commands", "input.execute": "input.commands", "input.bindings.set": "input.commands",
         "geometry.updateWall": "scene.geometry.write", "geometry.deleteWall": "scene.geometry.write", "geometry.setDoorState": "scene.geometry.write",
         "geometry.splitWall": "scene.geometry.write", "geometry.moveWallNode": "scene.geometry.write", "geometry.moveWalls": "scene.geometry.write", "geometry.deleteWalls": "scene.geometry.write",
         "geometry.createLight": "scene.geometry.write", "geometry.updateLight": "scene.geometry.write",
@@ -571,6 +785,10 @@ async def sdk_runtime_command(
         "pdf.presentation.start": "pdf.presentation", "pdf.presentation.update": "pdf.presentation", "pdf.presentation.end": "pdf.presentation",
         "automation.schedule": "automation.schedule", "automation.cancel": "automation.schedule",
         "assets.ingest": "assets.import", "assets.cancelImport": "assets.import",
+        "workflows.register": "workflows.start", "workflows.start": "workflows.start", "workflows.cancel": "workflows.control",
+        "gameplay.flows.register": "gameplay.flows.manage", "gameplay.flows.start": "gameplay.flows.manage", "gameplay.flows.advance": "gameplay.flows.manage", "gameplay.flows.submit": "gameplay.flows.participate",
+        "tokens.transfer": "tokens.transfer", "tokens.transferMany": "tokens.transfer",
+        "timelines.register": "timelines.start", "timelines.start": "timelines.start", "timelines.cancel": "timelines.control",
     }.get(command_name)
     if capability is None:
         return _error("sdk.runtime.command_unknown", 404)
@@ -582,6 +800,196 @@ async def sdk_runtime_command(
 
     user_id = current_user["id"]
     payload = data.get("payload") if isinstance(data.get("payload"), dict) else {}
+
+    if command_name.startswith("workflows."):
+        service=DurableWorkflowService()
+        if command_name=="workflows.register":result=service.register(campaign_id=campaign_id,package_id=package_id,definition=payload.get("definition") if isinstance(payload.get("definition"),dict) else {})
+        elif command_name=="workflows.start":result=service.start(campaign_id=campaign_id,user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        else:result=service.cancel(campaign_id=campaign_id,user_id=user_id,package_id=package_id,instance_id=str(payload.get("id") or ""),expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        value=result.value
+        if command_name!="workflows.register":
+            await _emit_workflow_side_effects(campaign_id,value)
+            await RealtimeTransport().to_room(room_id=campaign_id,event=TransportEvent.WORKFLOW_CHANGED,payload={"room_id":campaign_id,"workflow_id":value["id"],"status":value["status"],"schema_version":1})
+        return Response({"definition" if command_name=="workflows.register" else "workflow":value},status_code=201 if command_name.endswith(("register","start")) else 200)
+    if command_name.startswith("gameplay.flows."):
+        service=GameplayFlowService()
+        if command_name=="gameplay.flows.register":result=service.register(campaign_id=campaign_id,package_id=package_id,definition=payload.get("definition") if isinstance(payload.get("definition"),dict) else {})
+        elif command_name=="gameplay.flows.start":result=service.start(campaign_id=campaign_id,user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        elif command_name=="gameplay.flows.advance":result=service.advance(campaign_id=campaign_id,user_id=user_id,package_id=package_id,instance_id=str(payload.get("id") or ""),expected_version=payload.get("expectedVersion"))
+        else:result=service.submit(campaign_id=campaign_id,user_id=user_id,package_id=package_id,instance_id=str(payload.get("id") or ""),value=payload.get("value"),expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        value=result.value
+        if command_name!="gameplay.flows.register":await RealtimeTransport().to_room(room_id=campaign_id,event=TransportEvent.GAMEPLAY_FLOW_CHANGED,payload={"room_id":campaign_id,"flow_id":value["id"],"status":value["status"],"phase_id":value.get("phaseId"),"schema_version":1})
+        return Response({"definition" if command_name.endswith("register") else "flow":value},status_code=201 if command_name.endswith(("register","start")) else 200)
+    if command_name in {"tokens.transfer","tokens.transferMany"}:
+        service=TokenTransferService();result=service.transfer(campaign_id=campaign_id,user_id=user_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {}) if command_name.endswith("transfer") else service.transfer_many(campaign_id=campaign_id,user_id=user_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        if not result.success:return _service_error(result.error_key)
+        zone_events=result.value.pop("_zoneEvents",[]);deliveries=result.value.pop("_deliveries",[])
+        for delivery in deliveries:
+            await RealtimeTransport().to_players(player_ids=delivery["audienceIds"],event=TransportEvent.TOKENS_TRANSFERRED,payload={"room_id":campaign_id,"tokens":[delivery["token"]],"schema_version":1})
+        for zone_event in zone_events:
+            await RealtimeTransport().to_players(player_ids=zone_event["audienceIds"],event=TransportEvent.ZONE_ENTERED if zone_event["event"]=="zone.entered" else TransportEvent.ZONE_LEFT,payload={"room_id":campaign_id,"scene_id":zone_event["sceneId"],"zone_id":zone_event["zoneId"],"token_id":zone_event["tokenId"],"teleport":True,"schema_version":1})
+        return Response({"transfer":result.value})
+    if command_name.startswith("timelines."):
+        service=SemanticTimelineService()
+        if command_name=="timelines.register":result=service.register(campaign_id=campaign_id,package_id=package_id,definition=payload.get("definition") if isinstance(payload.get("definition"),dict) else {})
+        elif command_name=="timelines.start":result=service.start(campaign_id=campaign_id,user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        else:result=service.cancel(campaign_id=campaign_id,user_id=user_id,package_id=package_id,instance_id=str(payload.get("id") or ""),expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        value=result.value
+        if command_name!="timelines.register":
+            await _emit_timeline_cues(campaign_id,value)
+            await RealtimeTransport().to_room(room_id=campaign_id,event=TransportEvent.TIMELINE_CHANGED,payload={"room_id":campaign_id,"timeline_id":value["id"],"status":value["status"],"schema_version":1})
+        return Response({"definition" if command_name=="timelines.register" else "timeline":value},status_code=201 if command_name.endswith(("register","start")) else 200)
+
+    if command_name.startswith("dragDrop."):
+        service=SemanticDragDropService()
+        if command_name=="dragDrop.register":result=service.register(campaign_id=campaign_id,package_id=package_id,kind=str(payload.get("kind") or ""),definition=payload.get("definition") if isinstance(payload.get("definition"),dict) else {})
+        elif command_name=="dragDrop.unregister":result=service.unregister(campaign_id=campaign_id,package_id=package_id,kind=str(payload.get("kind") or ""),entry_id=str(payload.get("id") or ""))
+        else:result=service.drop(campaign_id=campaign_id,user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        if result.success and command_name=="dragDrop.drop":
+            changed=((result.value or {}).get("actionResult") or {}).get("changedResources",[])
+            if any(item.get("type")=="card-placement" for item in changed):
+                await RealtimeTransport().to_room(room_id=campaign_id,event=TransportEvent.CARDS_STATE_UPDATED,payload={"room_id":campaign_id,"schema_version":1})
+            if any(item.get("type")=="scene-object" for item in changed):
+                await RealtimeTransport().to_room(room_id=campaign_id,event=TransportEvent.SCENE_OBJECTS_CHANGED,payload={"room_id":campaign_id,"scene_id":((result.value or {}).get("destination") or {}).get("resource",{}).get("sceneId"),"schema_version":1})
+        return Response({"result":result.value}) if result.success else _service_error(result.error_key)
+    if command_name.startswith("audio."):
+        service=AudioRuntimeService()
+        if command_name=="audio.play":result=service.play(campaign_id=campaign_id,user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        elif command_name=="audio.update":result=service.update(campaign_id=campaign_id,user_id=user_id,playback_id=str(payload.get("id") or ""),patch=payload.get("patch") if isinstance(payload.get("patch"),dict) else {},expected_version=payload.get("expectedVersion"))
+        else:result=service.stop(campaign_id=campaign_id,user_id=user_id,playback_id=str(payload.get("id") or ""),fade=payload.get("fade"),expected_version=payload.get("expectedVersion"))
+        if result.success and isinstance(result.value,dict) and result.value.get("audience"):
+            await RealtimeTransport().to_players(player_ids=result.value["audience"]["ids"],event=TransportEvent.AUDIO_CHANGED,payload={"room_id":campaign_id,"playback_id":result.value["id"],"state":result.value["state"],"scene_id":result.value.get("sceneId"),"playback":result.value,"schema_version":1})
+        return Response({"playback":result.value}) if result.success else _service_error(result.error_key)
+    if command_name.startswith("spatialSounds."):
+        service = SoundDomainService()
+        if command_name == "spatialSounds.create":
+            values = payload.get("input") if isinstance(payload.get("input"), dict) else {}
+            position = values.get("position") if isinstance(values.get("position"), dict) else {}
+            native = {**values, "x": position.get("x"), "y": position.get("y")}
+            native.pop("position", None)
+            result = service.create_spatial(campaign_id=campaign_id, scene_id=str(payload.get("sceneId") or ""), user_id=user_id, values=native)
+        else:
+            patch = payload.get("patch") if isinstance(payload.get("patch"), dict) else {}
+            position = patch.pop("position", None)
+            if isinstance(position, dict):
+                patch = {**patch, "x": position.get("x"), "y": position.get("y")}
+            result = service.mutate_spatial(campaign_id=campaign_id, user_id=user_id, rid=str(payload.get("id") or ""), patch=patch, expected_version=payload.get("expectedVersion"), remove=command_name == "spatialSounds.delete")
+        if not result.success:
+            return _service_error(result.error_key)
+        if command_name == "spatialSounds.delete":
+            return Response({"id": result.value["id"], "deleted": True})
+        return Response({"spatialSound": _spatial_sound_dto(result.value)})
+    if command_name.startswith("sounds."):
+        service = SoundDomainService()
+        if command_name == "sounds.create":
+            values = payload.get("input") if isinstance(payload.get("input"), dict) else {}
+            asset = values.get("asset") if isinstance(values.get("asset"), dict) else {}
+            asset_id = str(asset.get("id") or "")
+            if asset.get("kind") == "package-asset":
+                resolved = PackageAssetService().resolve(package_id, asset_id)
+                if not resolved or not resolved[1].startswith("audio/"):
+                    return _service_error("sound.invalid")
+                path, media_type = resolved
+                ingested = AssetIngestionService().ingest(campaign_id=campaign_id, user_id=user_id, package_id=package_id, source={"kind": "browser-file", "name": path.name, "mime": media_type, "base64": base64.b64encode(path.read_bytes()).decode("ascii")})
+                if not ingested.success:
+                    return _service_error(ingested.error_key)
+                asset_id = ingested.payload["asset"]["id"]
+            elif asset.get("kind") != "library-asset":
+                return _service_error("sound.invalid")
+            native = {**values, "assetId": asset_id}
+            native.pop("asset", None)
+            result = service.create_sound(campaign_id=campaign_id, user_id=user_id, values=native)
+        elif command_name == "sounds.update":
+            result = service.update_sound(campaign_id=campaign_id, user_id=user_id, sound_id=str(payload.get("id") or ""), patch=payload.get("patch") if isinstance(payload.get("patch"), dict) else {}, expected_version=payload.get("expectedVersion"))
+        else:
+            result = service.delete_sound(campaign_id=campaign_id, user_id=user_id, sound_id=str(payload.get("id") or ""), expected_version=payload.get("expectedVersion"))
+        if not result.success:
+            return _service_error(result.error_key, result.value)
+        if command_name == "sounds.delete":
+            return Response(result.value)
+        return Response({"sound": _sound_dto(result.value)})
+    if command_name=="navigation.scene.go":
+        result=SceneNavigationService().go(campaign_id=campaign_id,user_id=user_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        if result.success: await RealtimeTransport().to_players(player_ids=result.value["recipientIds"],event=TransportEvent.NAVIGATION_SCENE_CHANGED,payload={"room_id":campaign_id,"scene_id":result.value["sceneId"],"schema_version":1})
+        return Response({"navigation":result.value}) if result.success else _service_error(result.error_key)
+    if command_name.startswith("input."):
+        service=InputRegistryService()
+        if command_name=="input.register":result=service.register(campaign_id=campaign_id,package_id=package_id,kind=str(payload.get("kind") or ""),definition=payload.get("definition") if isinstance(payload.get("definition"),dict) else {})
+        elif command_name=="input.execute":result=service.execute(campaign_id=campaign_id,user_id=user_id,package_id=package_id,command_id=str(payload.get("commandId") or ""),inputs=payload.get("inputs") if isinstance(payload.get("inputs"),dict) else {})
+        else:result=service.set_binding(campaign_id=campaign_id,user_id=user_id,package_id=package_id,command_id=str(payload.get("commandId") or ""),binding=payload.get("binding"),expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        # A registered action reached through a command completes exactly as it does
+        # through the direct path, so the same canonical event carries it.
+        if command_name=="input.execute":
+            await RealtimeTransport().to_room(
+                room_id=campaign_id, event=TransportEvent.RULES_ACTION_COMPLETED,
+                payload={"room_id":campaign_id,"package_id":package_id,"action_id":result.value["action"],"version":result.value["version"],"execution_id":result.value["executionId"],"schema_version":1})
+        if command_name=="input.bindings.set":
+            await RealtimeTransport().to_players(
+                player_ids=[user_id], event=TransportEvent.INPUT_BINDING_CHANGED,
+                payload={"room_id":campaign_id,"package_id":package_id,"command_id":result.value["command_id"],"binding":result.value["binding"],"version":result.value["version"],"schema_version":1})
+        return Response({"result":result.value})
+
+    if command_name in {"objectTypes.register","objectTypes.unregister"}:
+        result=(SceneObjectService().register_type(campaign_id=campaign_id,user_id=user_id,package_id=package_id,definition=payload.get("definition") if isinstance(payload.get("definition"),dict) else {}) if command_name.endswith("register") and not command_name.endswith("unregister") else SceneObjectService().unregister_type(campaign_id=campaign_id,package_id=package_id,type_id=str(payload.get("typeId") or "")))
+        return Response({"type":result.value}) if result.success else _service_error(result.error_key)
+    if command_name.startswith("objects."):
+        service=SceneObjectService(); old=service.repo.get(str(payload.get("id") or ""))
+        if command_name=="objects.create":result=service.create(campaign_id=campaign_id,scene_id=str(payload.get("sceneId") or ""),user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        elif command_name=="objects.update":result=service.update(campaign_id=campaign_id,object_id=str(payload.get("id") or ""),user_id=user_id,patch=payload.get("patch") if isinstance(payload.get("patch"),dict) else {},expected_version=payload.get("expectedVersion"))
+        elif command_name=="objects.delete":result=service.delete(campaign_id=campaign_id,object_id=str(payload.get("id") or ""),user_id=user_id,expected_version=payload.get("expectedVersion"))
+        else:result=service.interact(campaign_id=campaign_id,object_id=str(payload.get("id") or ""),user_id=user_id,interaction_id=str(payload.get("interactionId") or ""),expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        value=result.value; obj=value.get("object") if command_name=="objects.interact" else value; scene=(obj or {}).get("sceneId") or (old or {}).get("scene_id")
+        if command_name=="objects.interact" and value.get("actionReference"):
+            reference=value["actionReference"];executed=DeclarativeActionService().execute(campaign_id=campaign_id,user_id=user_id,package_id=reference["provider"],action_id=reference["id"],version=reference.get("version"),inputs={"objectId":obj["id"],"interactionId":value["interactionId"]})
+            if not executed.success:return _service_error(executed.error_key)
+            value["actionResult"]=executed.value
+        event=TransportEvent.SCENE_OBJECT_INTERACTED if command_name=="objects.interact" else TransportEvent.SCENE_OBJECTS_CHANGED
+        stored=service.repo.get(str((obj or {}).get("id") or payload.get("id") or "")) or old
+        recipients=[member["user_id"] for member in CampaignRepository().list_members(campaign_id=campaign_id) if stored and service._visible(campaign_id,stored,member["user_id"])]
+        await RealtimeTransport().to_players(player_ids=recipients,event=event,payload={"room_id":campaign_id,"scene_id":scene,"object_id":str((obj or {}).get("id") or payload.get("id") or ""),"type_id":str((obj or {}).get("typeId") or (old or {}).get("type_id") or ""),"interaction_id":payload.get("interactionId"),"principal_user_id":user_id if command_name=="objects.interact" else None,"deleted":command_name=="objects.delete","schema_version":1})
+        return Response({"interaction":value} if command_name=="objects.interact" else {"object":value},status_code=201 if command_name=="objects.create" else 200)
+    if command_name.startswith("presentations."):
+        service=SemanticPresentationService()
+        if command_name=="presentations.show":result=service.show(campaign_id=campaign_id,user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        elif command_name=="presentations.ack":result=service.acknowledge(campaign_id=campaign_id,user_id=user_id,package_id=package_id,presentation_id=str(payload.get("id") or ""))
+        elif command_name=="presentations.update":result=service.update(campaign_id=campaign_id,user_id=user_id,package_id=package_id,presentation_id=str(payload.get("id") or ""),patch=payload.get("patch") if isinstance(payload.get("patch"),dict) else {},expected_version=payload.get("expectedVersion"))
+        else:result=service.close(campaign_id=campaign_id,user_id=user_id,package_id=package_id,presentation_id=str(payload.get("id") or ""),expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        presentation=result.value; recipients=list(dict.fromkeys([*((presentation.get("audience") or {}).get("ids") or []),str(presentation.get("ownerUserId") or user_id)]))
+        await RealtimeTransport().to_players(player_ids=recipients,event=TransportEvent.UI_PRESENTATION_CHANGED,payload={"room_id":campaign_id,"presentation_id":presentation["id"],"closed":command_name=="presentations.close","status":presentation.get("status"),"completion_reason":presentation.get("completionReason"),"presentation":presentation,"schema_version":1})
+        return Response({"presentation":presentation},status_code=201 if command_name=="presentations.show" else 200)
+
+    if command_name.startswith("zones."):
+        service=SceneZoneService()
+        prior_zone=service.zones.get(str(payload.get("id") or "")) if command_name=="zones.delete" else None
+        if command_name=="zones.create": result=service.create(campaign_id=campaign_id,scene_id=str(payload.get("sceneId") or ""),user_id=user_id,package_id=package_id,values=payload.get("values") if isinstance(payload.get("values"),dict) else {})
+        elif command_name=="zones.update": result=service.update(campaign_id=campaign_id,zone_id=str(payload.get("id") or ""),user_id=user_id,patch=payload.get("patch") if isinstance(payload.get("patch"),dict) else {},expected_version=payload.get("expectedVersion"))
+        else: result=service.delete(campaign_id=campaign_id,zone_id=str(payload.get("id") or ""),user_id=user_id,expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        value=result.value; zone_id=str(value.get("id") or ""); zone=service.zones.get(zone_id) if zone_id else prior_zone
+        if zone:
+            audience=[m["user_id"] for m in CampaignRepository().list_members(campaign_id=campaign_id) if service._visible(zone,m["user_id"])]
+            await RealtimeTransport().to_players(player_ids=audience,event=TransportEvent.SCENE_ZONES_CHANGED,payload={"room_id":campaign_id,"scene_id":zone["scene_id"],"zone_id":zone_id,"deleted":command_name=="zones.delete","schema_version":1})
+        return Response({"zone":value},status_code=201 if command_name=="zones.create" else 200)
+
+    if command_name.startswith("interactions."):
+        service=DirectedInteractionService()
+        if command_name=="interactions.request": result=service.request(campaign_id=campaign_id,user_id=user_id,package_id=package_id,values=payload.get("input") if isinstance(payload.get("input"),dict) else {})
+        elif command_name=="interactions.respond": result=service.respond(campaign_id=campaign_id,interaction_id=str(payload.get("id") or ""),user_id=user_id,response=payload.get("response"),expected_version=payload.get("expectedVersion"),idempotency_key=payload.get("idempotencyKey"))
+        else: result=service.cancel(campaign_id=campaign_id,interaction_id=str(payload.get("id") or ""),user_id=user_id,expected_version=payload.get("expectedVersion"))
+        if not result.success:return _service_error(result.error_key)
+        interaction=result.value
+        if command_name=="interactions.respond":
+            for workflow in DurableWorkflowService().resume_interaction(campaign_id=campaign_id,interaction_id=interaction["id"]):
+                await _emit_workflow_side_effects(campaign_id,workflow)
+                await RealtimeTransport().to_room(room_id=campaign_id,event=TransportEvent.WORKFLOW_CHANGED,payload={"room_id":campaign_id,"workflow_id":workflow["id"],"status":workflow["status"],"schema_version":1})
+        await RealtimeTransport().to_players(player_ids=list(dict.fromkeys([interaction["requester"],*interaction["recipients"]])),event=TransportEvent.INTERACTION_CHANGED,payload={"room_id":campaign_id,"interaction_id":interaction["id"],"schema_version":1})
+        return Response({"interaction":interaction},status_code=201 if command_name=="interactions.request" else 200)
     if command_name in {"assets.ingest", "assets.cancelImport"}:
         service=AssetIngestionService()
         result=(service.ingest(campaign_id=campaign_id,user_id=user_id,package_id=package_id,source=payload.get("source")) if command_name=="assets.ingest" else service.cancel(campaign_id=campaign_id,user_id=user_id,package_id=package_id,asset_id=str(payload.get("assetId") or "")))
@@ -901,7 +1309,7 @@ async def sdk_runtime_command(
         if command_name == "tokens.create":
             result = await service.create_many_from_actors(**common, actor_ids=[str(payload.get("actorId") or "")], origin_x=_int(payload.get("x")), origin_y=_int(payload.get("y")), elevation=_float(payload.get("elevation")))
         elif command_name == "tokens.move":
-            result = await service.move(**common, token_id=str(payload.get("id") or ""), grid_x=_int(payload.get("x")), grid_y=_int(payload.get("y")), expected_version=_int(payload.get("expectedVersion"), -1) if payload.get("expectedVersion") is not None else None)
+            result = await service.move(**common, token_id=str(payload.get("id") or ""), grid_x=_int(payload.get("x")), grid_y=_int(payload.get("y")), expected_version=_int(payload.get("expectedVersion"), -1) if payload.get("expectedVersion") is not None else None, origin_execution_id=payload.get("originExecutionId"), origin_job_id=payload.get("originJobId"), causal_depth=_int(payload.get("causalDepth")))
         elif command_name == "tokens.update":
             result = await service.update_override(**common, token_id=str(payload.get("id") or ""), overrides=payload.get("patch") if isinstance(payload.get("patch"), dict) else {}, expected_version=_int(payload.get("expectedVersion"), -1) if payload.get("expectedVersion") is not None else None)
         else:

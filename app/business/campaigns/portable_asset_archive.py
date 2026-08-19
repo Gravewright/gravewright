@@ -17,6 +17,7 @@ from app.persistence.tables import (
     card_instances, card_pile_entries, card_piles, journal_assets, library_assets,
     pdf_annotations, scene_assets, scene_card_placements, scene_chunks,
     scene_image_placements, scene_layers, scenes, scene_tiles, tokens,
+    sounds, sound_playlists, soundscapes, scene_spatial_sounds,
 )
 from app.infrastructure.storage.local_chunk_storage import LocalChunkStorage
 
@@ -33,11 +34,13 @@ REFERENCE_FIELDS: dict[str, tuple[str, ...]] = {
     "card_definitions": ("front_asset_id", "back_asset_id"),
     "scene_image_placements": ("asset_id",),
     "pdf_annotations": ("document_id",),
+    "sounds": ("asset_id",),
 }
 
 PORTABLE_TABLES = (
     card_deck_definitions, card_definitions, card_deck_instances, card_piles,
     card_instances, card_pile_entries, scene_card_placements,
+    sounds, sound_playlists, soundscapes,
 )
 
 
@@ -63,6 +66,7 @@ class PortableAssetGraph:
         if scene_ids:
             content["tokens"] = [dict(row) for row in connection.execute(select(tokens).where(tokens.c.scene_id.in_(scene_ids))).mappings()]
             content["scene_image_placements"] = [dict(row) for row in connection.execute(select(scene_image_placements).where(scene_image_placements.c.campaign_id == campaign_id)).mappings()]
+            content["scene_spatial_sounds"] = [dict(row) for row in connection.execute(select(scene_spatial_sounds).where(scene_spatial_sounds.c.scene_id.in_(scene_ids))).mappings()]
         for table in PORTABLE_TABLES:
             if table is card_definitions:
                 deck_ids = [str(row["id"]) for row in content.get("card_deck_definitions", [])]

@@ -17,6 +17,7 @@
             handleSceneUpdated,
             handleSessionResumed,
             handleViewportReady,
+            updateSceneInfoCache,
             handleGmPrefetchHint,
             handleTokensConditionsUpdated,
             handleTokensCreated,
@@ -78,14 +79,14 @@
             if (evtName === "tokens.deleted") handleTokensDeleted(payload);
             if (evtName === "tokens.visibility_changed") handleTokensVisibilityChanged(payload);
             if (evtName === "tokens.conditions.updated") handleTokensConditionsUpdated(payload);
-            if (evtName === "board.area_marker.upserted") applyRemoteAreaMarkerUpsert(payload);
-            if (evtName === "board.area_marker.deleted") applyRemoteAreaMarkerDelete(payload);
-            if (evtName === "board.area_marker.cleared") applyRemoteAreaMarkerClear(payload);
+            if (evtName === "board.area_marker.upserted") { updateSceneInfoCache(evtName, payload); applyRemoteAreaMarkerUpsert(payload); }
+            if (evtName === "board.area_marker.deleted") { updateSceneInfoCache(evtName, payload); applyRemoteAreaMarkerDelete(payload); }
+            if (evtName === "board.area_marker.cleared") { updateSceneInfoCache(evtName, payload); applyRemoteAreaMarkerClear(payload); }
             if (evtName === "board.measure.flashed") applyRemoteMeasureFlash(payload);
             if (evtName === "board.measure.deleted") applyRemoteMeasureDelete(payload);
             if (evtName === "board.measure.cleared") applyRemoteMeasureClear(payload);
-            if (evtName === "board.draw.upserted") applyRemoteDrawUpsert(payload);
-            if (evtName === "board.draw.cleared") applyRemoteDrawClear(payload);
+            if (evtName === "board.draw.upserted") { updateSceneInfoCache(evtName, payload); applyRemoteDrawUpsert(payload); }
+            if (evtName === "board.draw.cleared") { updateSceneInfoCache(evtName, payload); applyRemoteDrawClear(payload); }
 
 
 

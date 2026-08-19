@@ -1,0 +1,1 @@
+{"actions":[{"id":"command-hit","version":1,"inputs":{"type":"object","properties":{"actorId":{"type":"string"}},"required":["actorId"],"additionalProperties":false},"operations":[{"op":"actor.data.patch","actorId":"$input.actorId","patch":{"commandHit":true}}],"idempotency":"NOT_DURABLE"}]}

@@ -22,6 +22,7 @@ from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.rows import Row
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
+from app.business.campaigns.campaign_system_service import resolved_area_marker_presets
 
 
 @dataclass
@@ -61,6 +62,17 @@ async def _emit_packages_changed(campaign_id: str, package_id: str, action: str)
             "action": action,
         },
     )
+
+async def _emit_cancelled_presentations(campaign_id: str, presentations: tuple[dict, ...]) -> None:
+    transport=RealtimeTransport()
+    for presentation in presentations:
+        recipients=list(dict.fromkeys([*((presentation.get("audience") or {}).get("ids") or []),str(presentation.get("ownerUserId") or "")]))
+        await transport.to_players(player_ids=[value for value in recipients if value],event=TransportEvent.UI_PRESENTATION_CHANGED,payload={"room_id":campaign_id,"presentation_id":presentation["id"],"closed":False,"status":"cancelled","completion_reason":"package-unload","presentation":presentation,"schema_version":1})
+
+async def _emit_cancelled_semantics(campaign_id: str, instances: tuple[dict, ...]) -> None:
+    transport=RealtimeTransport();events={"workflow":TransportEvent.WORKFLOW_CHANGED,"gameplay-flow":TransportEvent.GAMEPLAY_FLOW_CHANGED,"timeline":TransportEvent.TIMELINE_CHANGED}
+    for instance in instances:
+        await transport.to_room(room_id=campaign_id,event=events[instance["domain"]],payload={"room_id":campaign_id,"status":"CANCELLED","completion_reason":"package-unload",f"{instance['domain'].replace('-','_')}_id":instance["id"],"schema_version":1})
 
 
 @get("/sdk/campaigns/packages", guards=[require_user], sync_to_thread=False)
@@ -123,6 +135,8 @@ async def deactivate_campaign_package(
         if not json_response:
             return _redirect(data.campaign_id, error_key=result.error_key)
         return Response({"error_key": result.error_key}, status_code=400)
+    await _emit_cancelled_presentations(data.campaign_id,result.cancelled_presentations)
+    await _emit_cancelled_semantics(data.campaign_id,result.cancelled_semantics)
     await _emit_packages_changed(data.campaign_id, data.package_id.strip(), "deactivate")
     if not json_response:
         return _redirect(data.campaign_id, message_key="sdk.messages.campaign_disabled")
@@ -166,7 +180,9 @@ async def set_campaign_ruleset(
         payload={
             "room_id": campaign_id,
             "system_id": package_id,
-            "area_markers": details.get("area_markers", []) if details else [],
+            "area_markers": resolved_area_marker_presets(
+                details.get("area_markers", []) if details else []
+            ),
         },
     )
     if wants_json:

@@ -15,12 +15,12 @@
         draw:     { options: ["select", "brush", "text"], default: "brush" },
         ruler:    { options: ["line", "circle", "square", "cone"], default: "line" },
         shape:    { options: ["select", "square", "circle", "line", "cone"], default: "square" },
-        hp:       { options: ["damage", "heal", "set"], default: "damage" },
         light:     { options: ["none", "torch", "pulse"], default: "torch" },
 
 
         particles: { options: ["smoke", "ember", "dust", "arcane"], default: "smoke" },
         shader: { options: ["custom"], default: "custom" },
+        sound: { options: ["place"], default: "place" },
     };
 
 
@@ -29,7 +29,6 @@
         r: "ruler",
         d: "draw",
         m: "shape",
-        h: "hp",
     };
 
 
@@ -46,7 +45,6 @@
     const TOOL_LAYERS = {
         select: LAYERS,
         ruler: ["game", "gm"],
-        hp: ["game", "gm"],
         draw: ["game", "gm"],
         shape: ["game", "gm"],
         wall: ["walls"],
@@ -54,6 +52,7 @@
         light: ["lighting"],
         particles: ["effects"],
         shader: ["effects"],
+        sound: ["composition"],
     };
 
 

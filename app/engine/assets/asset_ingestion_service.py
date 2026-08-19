@@ -14,8 +14,8 @@ MAX_PIXELS=16_000_000
 MAX_DECODED_BYTES=64*1024*1024
 CAMPAIGN_QUOTA_BYTES=100*1024*1024
 MAX_IMPORTS_PER_MINUTE=20
-SIGNATURES={"image/png":lambda b:b.startswith(b"\x89PNG\r\n\x1a\n"),"image/jpeg":lambda b:b.startswith(b"\xff\xd8\xff"),"image/webp":lambda b:len(b)>=12 and b[:4]==b"RIFF" and b[8:12]==b"WEBP"}
-EXTENSIONS={"image/png":".png","image/jpeg":".jpg","image/webp":".webp"}
+SIGNATURES={"image/png":lambda b:b.startswith(b"\x89PNG\r\n\x1a\n"),"image/jpeg":lambda b:b.startswith(b"\xff\xd8\xff"),"image/webp":lambda b:len(b)>=12 and b[:4]==b"RIFF" and b[8:12]==b"WEBP","audio/ogg":lambda b:b.startswith(b"OggS"),"audio/mpeg":lambda b:b.startswith(b"ID3") or (len(b)>1 and b[0]==0xff and b[1]&0xe0==0xe0),"audio/wav":lambda b:len(b)>=12 and b[:4]==b"RIFF" and b[8:12]==b"WAVE","audio/mp4":lambda b:len(b)>=12 and b[4:8]==b"ftyp"}
+EXTENSIONS={"image/png":".png","image/jpeg":".jpg","image/webp":".webp","audio/ogg":".ogg","audio/mpeg":".mp3","audio/wav":".wav","audio/mp4":".m4a"}
 PDF_MIME="application/pdf"
 @dataclass(frozen=True)
 class IngestionResult:
@@ -36,10 +36,14 @@ class AssetIngestionService:
         if not data or len(data)>MAX_ASSET_BYTES:return self._failure(campaign_id,user_id,package_id,"VALIDATION_FAILED")
         if not SIGNATURES[mime](data):return self._failure(campaign_id,user_id,package_id,"UNSUPPORTED_MEDIA_TYPE")
         try:
+            if mime.startswith("audio/"):
+                raise StopIteration
             with Image.open(BytesIO(data)) as image:
                 width,height=int(image.width),int(image.height);actual=(image.format or "").upper()
             expected={"image/png":"PNG","image/jpeg":"JPEG","image/webp":"WEBP"}[mime]
             if actual!=expected or width<=0 or height<=0 or width>8000 or height>8000 or width*height>MAX_PIXELS or width*height*4>MAX_DECODED_BYTES:return self._failure(campaign_id,user_id,package_id,"VALIDATION_FAILED")
+        except StopIteration:
+            pass
         except (OSError,UnidentifiedImageError,Image.DecompressionBombError):return self._failure(campaign_id,user_id,package_id,"VALIDATION_FAILED")
         rows=self.assets.list_for_campaign(campaign_id=campaign_id)
         if sum(int(row.get("byte_size") or 0) for row in rows)+len(data)>CAMPAIGN_QUOTA_BYTES:return self._failure(campaign_id,user_id,package_id,"RATE_LIMITED")
@@ -68,6 +72,9 @@ class AssetIngestionService:
         sniffed=next((mime for mime,check in SIGNATURES.items() if check(data)),None)
         if sniffed is None:
             return IngestionResult(False,error_key="UNSUPPORTED_MEDIA_TYPE")
+        if sniffed.startswith("audio/"):
+            if media_type_hint and media_type_hint != sniffed: return IngestionResult(False,error_key="UNSUPPORTED_MEDIA_TYPE")
+            return IngestionResult(True,{"contentType":sniffed,"extension":EXTENSIONS[sniffed],"width":None,"height":None})
         try:
             with Image.open(BytesIO(data)) as image:
                 width,height=int(image.width),int(image.height);actual=(image.format or "").upper()

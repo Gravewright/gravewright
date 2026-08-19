@@ -16,6 +16,7 @@ from app.engine.sdk.package_storage import (
     validate_named_queries,
     validate_storage_manifest,
 )
+from app.engine.sdk.package_storage_runtime import PackageStorageRuntime
 
 
 def _manifest(**overrides) -> dict:
@@ -69,6 +70,18 @@ def test_storage_sqlite_capability_requires_storage_block():
     assert "sdk.storage.declaration_invalid" in validate_storage_manifest(raw)
     # And it surfaces through the full validator.
     assert "sdk.storage.declaration_invalid" in validate_manifest(raw).errors
+
+
+def test_json_params_are_serialized_to_sqlite_safe_canonical_text():
+    bound = PackageStorageRuntime._validate_params(
+        {"definition": "json", "tags": "json"},
+        {"definition": {"format": "shader", "version": 1}, "tags": ["fog", "magic"]},
+        "saveShader",
+    )
+    assert bound == {
+        "definition": '{"format":"shader","version":1}',
+        "tags": '["fog","magic"]',
+    }
 
 
 def test_storage_sqlite_storage_block_requires_capability():

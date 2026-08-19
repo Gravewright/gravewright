@@ -495,6 +495,8 @@ class MapUploadService:
 
         was_active = bool(scene["active"])
 
+        from app.persistence.repositories.semantic_instance_repository import SemanticInstanceRepository
+        cancelled_semantics=SemanticInstanceRepository().fail_closed_scene(campaign_id,scene_id)
         self.scenes.delete(scene_id)
         try:
             self.asset_storage.delete_scene(scene_id=scene_id)
@@ -510,6 +512,9 @@ class MapUploadService:
         )
 
         if transport is not None:
+            semantic_events={"workflow":TransportEvent.WORKFLOW_CHANGED,"gameplay-flow":TransportEvent.GAMEPLAY_FLOW_CHANGED,"timeline":TransportEvent.TIMELINE_CHANGED}
+            for instance in cancelled_semantics:
+                await transport.to_room(room_id=campaign_id,event=semantic_events[instance["domain"]],payload={"room_id":campaign_id,"status":"CANCELLED","completion_reason":"scene-deleted",f"{instance['domain'].replace('-','_')}_id":instance["id"],"schema_version":1})
             await transport.to_room(
                 room_id=campaign_id,
                 event=TransportEvent.SCENE_DELETED,

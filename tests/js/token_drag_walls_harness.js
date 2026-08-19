@@ -110,6 +110,7 @@ function check(label, condition) {
     check("mapa livre nao barra o arrasto", world.controller.active().currentGridX === 8);
     world.controller.stop({ pointerId: 3 });
     check("mapa livre grava o destino", world.tokens.get("t1").grid_x === 8);
+    check("arrasto envia a trajetoria validada", world.sent[0].payload.movement_path.at(-1).grid_x === 8);
 }
 
 // Arrasto de grupo: um barrado trava a formação inteira.

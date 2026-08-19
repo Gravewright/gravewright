@@ -1,34 +1,5 @@
 (() => {
-    function appendSvg(parent, tag, attrs = {}) {
-        const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
-        Object.entries(attrs).forEach(([key, value]) => {
-            el.setAttribute(key, String(value));
-        });
-        parent.appendChild(el);
-        return el;
-    }
-
-    function appendMeasureLabel(parent, x, y, text) {
-        const width = Math.max(44, text.length * 7 + 14);
-        const height = 22;
-        const group = appendSvg(parent, "g", { class: "board-measure-label" });
-        appendSvg(group, "rect", {
-            x: Math.round(x - width / 2),
-            y: Math.round(y - height / 2),
-            width,
-            height,
-            rx: 5,
-            ry: 5,
-        });
-        const label = appendSvg(group, "text", {
-            x: Math.round(x),
-            y: Math.round(y + 4),
-            "text-anchor": "middle",
-        });
-        label.textContent = text;
-    }
-
-    function wrappedMarkerTextLines(text) {
+    function wrappedMarkerText(text) {
         const lines = [];
         String(text || "").split("\n").forEach((rawLine) => {
             const words = rawLine.trim().split(/\s+/).filter(Boolean);
@@ -44,13 +15,13 @@
             });
             if (line) lines.push(line);
         });
-        return lines.slice(0, 4);
+        return lines.slice(0, 4).join("\n");
     }
 
     function createMeasureRenderer(deps) {
-        let overlayEl = null;
         const {
             activeCanvas,
+            boardRenderer,
             effectiveIsGm,
             flashStoreFor,
             geometry,
@@ -60,229 +31,72 @@
             onRenderStart,
             sceneDataFor,
             selectedMeasureIdFor,
-            stateFor,
-            svgStyleFor,
             textFontSizeFor,
         } = deps;
 
-        function ensureOverlay() {
-            if (overlayEl) return overlayEl;
-            overlayEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            overlayEl.classList.add("board-measure-overlay");
-            overlayEl.setAttribute("aria-hidden", "true");
-            document.body.appendChild(overlayEl);
-            return overlayEl;
-        }
-
-        function appendAreaMarkerText(parent, measure, state) {
-            const lines = wrappedMarkerTextLines(measure.text);
-            if (!lines.length) return;
-            const anchor = geometry.worldToScreenXY(geometry.areaMarkerTextAnchor(measure), state);
-            const width = Math.max(90, Math.max(...lines.map((line) => line.length)) * 7.1 + 22);
-            const lineHeight = 15;
-            const height = lines.length * lineHeight + 14;
-            const group = appendSvg(parent, "g", { class: "board-area-marker-text" });
-            appendSvg(group, "rect", {
-                x: Math.round(anchor.x - width / 2),
-                y: Math.round(anchor.y - height / 2),
-                width,
-                height,
-                rx: 6,
-                ry: 6,
-            });
-            const text = appendSvg(group, "text", {
-                x: Math.round(anchor.x),
-                y: Math.round(anchor.y - ((lines.length - 1) * lineHeight) / 2 + 5),
-                "text-anchor": "middle",
-            });
-            lines.forEach((line, index) => {
-                const tspan = appendSvg(text, "tspan", {
-                    x: Math.round(anchor.x),
-                    dy: index === 0 ? 0 : lineHeight,
-                });
-                tspan.textContent = line;
-            });
-        }
-
-        function conePathFor(start, end, state) {
-            const angle = Math.atan2(end.worldY - start.worldY, end.worldX - start.worldX);
-            const radius = Math.sqrt((end.worldX - start.worldX) ** 2 + (end.worldY - start.worldY) ** 2);
-            const halfAngle = Math.PI / 6;
-            const left = {
-                worldX: start.worldX + Math.cos(angle - halfAngle) * radius,
-                worldY: start.worldY + Math.sin(angle - halfAngle) * radius,
+        function presentationItem(measure, scene, preview = false) {
+            const item = {
+                id: measure.id || "preview",
+                kind: measure.kind || "shape",
+                shape: measure.shape,
+                style: measure.style || null,
+                preview,
+                selected: !preview && selectedMeasureIdFor(activeCanvas()) === measure.id,
+                gmLayer: measure.layer === "gm",
             };
-            const right = {
-                worldX: start.worldX + Math.cos(angle + halfAngle) * radius,
-                worldY: start.worldY + Math.sin(angle + halfAngle) * radius,
-            };
-            const tip = geometry.worldToScreenXY(start, state);
-            const l = geometry.worldToScreenXY(left, state);
-            const r = geometry.worldToScreenXY(right, state);
-            const screenRadius = radius * state.zoom;
-            return `M ${tip.x} ${tip.y} L ${l.x} ${l.y} A ${screenRadius} ${screenRadius} 0 0 1 ${r.x} ${r.y} Z`;
-        }
-
-        function renderSingleMeasure(parent, measure, scene, state, preview = false) {
-            if (measure.kind === "text") {
-                const pos = geometry.worldToScreenXY(measure.position, state);
-                const isSelected = !preview && selectedMeasureIdFor(activeCanvas()) === measure.id;
-                const group = appendSvg(parent, "g", {
-                    class: [
-                        "board-measure",
-                        "board-measure--text",
-                        preview ? "board-measure--preview" : "",
-                        isSelected ? "board-measure--selected" : "",
-                        measure.layer === "gm" ? "board-measure--gm-layer" : "",
-                    ].filter(Boolean).join(" "),
-                });
-                const fontPx = Math.max(6, (measure.fontSize || textFontSizeFor(scene)) * state.zoom);
-                const fill = measure.style?.fill || "#f8fafc";
-                const text = appendSvg(group, "text", {
-                    x: pos.x,
-                    y: pos.y,
-                    "dominant-baseline": "hanging",
-                    "text-anchor": "start",
-                    style: `font-size:${fontPx}px;fill:${fill}`,
-                });
-                text.textContent = measure.text || "";
-                return;
-            }
-
             if (measure.kind === "freehand") {
-                const isSelected = !preview && selectedMeasureIdFor(activeCanvas()) === measure.id;
-                const group = appendSvg(parent, "g", {
-                    class: [
-                        "board-measure",
-                        "board-measure--freehand",
-                        preview ? "board-measure--preview" : "",
-                        isSelected ? "board-measure--selected" : "",
-                        measure.layer === "gm" ? "board-measure--gm-layer" : "",
-                    ].filter(Boolean).join(" "),
-                });
-                appendSvg(group, "path", {
-                    d: geometry.worldPathFor(measure.points, state),
-                    ...svgStyleFor(measure),
-                });
-                return;
+                item.points = measure.points || [];
+                return item;
             }
-
-            const start = geometry.worldToScreenXY(measure.start, state);
-            const end = geometry.worldToScreenXY(measure.end, state);
-            const selected = selectedMeasureIdFor(activeCanvas()) === measure.id;
-            const group = appendSvg(parent, "g", {
-                class: [
-                    "board-measure",
-                    `board-measure--${measure.shape}`,
-                    preview ? "board-measure--preview" : "",
-                    selected && !preview ? "board-measure--selected" : "",
-                    measure.layer === "gm" ? "board-measure--gm-layer" : "",
-                ].filter(Boolean).join(" "),
-            });
-            const label = geometry.measureLabelFor(measure, scene);
-            const shapeStyle = svgStyleFor(measure);
-            const hasMarkerText = Boolean(measure.text);
-
-            if (measure.shape === "line") {
-                appendSvg(group, "line", { x1: start.x, y1: start.y, x2: end.x, y2: end.y, ...shapeStyle });
-                appendMeasureLabel(group, (start.x + end.x) / 2, (start.y + end.y) / 2 - 14, label);
-                if (hasMarkerText) appendAreaMarkerText(group, measure, state);
-                return;
+            if (measure.kind === "text") {
+                item.position = measure.position;
+                item.text = measure.text || "";
+                item.fontSize = measure.fontSize || textFontSizeFor(scene);
+                return item;
             }
-
-            if (measure.shape === "circle") {
-                const radius = Math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2);
-                appendSvg(group, "circle", { cx: start.x, cy: start.y, r: radius, ...shapeStyle });
-                appendSvg(group, "line", { class: "board-measure-guide", x1: start.x, y1: start.y, x2: end.x, y2: end.y });
-                appendMeasureLabel(group, end.x, end.y - 16, label);
-                if (hasMarkerText) appendAreaMarkerText(group, measure, state);
-                return;
+            item.start = measure.start;
+            item.end = measure.end;
+            item.rotation = geometry.normalizedRotation(measure);
+            item.label = geometry.measureLabelFor(measure, scene);
+            if (measure.shape === "line" || measure.shape === "square") {
+                item.cells = geometry.gridCellsForMeasure(measure, scene);
             }
-
-            if (measure.shape === "square") {
-                const x = Math.min(start.x, end.x);
-                const y = Math.min(start.y, end.y);
-                appendSvg(group, "rect", {
-                    x,
-                    y,
-                    width: Math.abs(end.x - start.x),
-                    height: Math.abs(end.y - start.y),
-                    ...shapeStyle,
-                });
-                if (hasMarkerText) {
-                    appendMeasureLabel(group, (start.x + end.x) / 2, Math.min(start.y, end.y) - 14, label);
-                    appendAreaMarkerText(group, measure, state);
-                } else {
-                    appendMeasureLabel(group, (start.x + end.x) / 2, (start.y + end.y) / 2, label);
-                }
-                return;
+            const markerText = wrappedMarkerText(measure.text);
+            if (markerText) {
+                item.markerText = markerText;
+                item.markerTextAnchor = geometry.areaMarkerTextAnchor(measure);
             }
-
-            if (measure.shape === "cone") {
-                appendSvg(group, "path", { d: conePathFor(measure.start, measure.end, state), ...shapeStyle });
-                appendSvg(group, "line", { class: "board-measure-guide", x1: start.x, y1: start.y, x2: end.x, y2: end.y });
-                appendMeasureLabel(group, end.x, end.y - 16, label);
-                if (hasMarkerText) appendAreaMarkerText(group, measure, state);
-            }
+            return item;
         }
 
         function renderOverlay(canvas = activeCanvas()) {
-            const scene = canvas ? sceneDataFor(canvas) : null;
-            if (!canvas || !scene || !canvas.closest(".room-workspace")?.classList.contains("is-active")) {
-                if (overlayEl) overlayEl.hidden = true;
+            if (!canvas) return;
+            const scene = sceneDataFor(canvas);
+            const workspaceActive = canvas.closest(".room-workspace")?.classList.contains("is-active");
+            if (!scene || !workspaceActive) {
+                boardRenderer.setMeasurements(canvas, { items: [] });
                 return;
             }
-
-            const state = stateFor(canvas);
+            onRenderStart?.(canvas);
             const showGmLayer = effectiveIsGm(canvas);
             const roomId = canvas.dataset.roomId || "";
-            const measures = measureStoreFor(canvas)
-                .filter((measure) => showGmLayer || measure.layer !== "gm")
-                .filter((measure) => window.GravewrightTools?.isLayerVisible?.(
-                    measure.layer === "gm" ? "gm" : "game", roomId
-                ) !== false);
-            const flashes = flashStoreFor(canvas);
+            const visible = (measure) => (showGmLayer || measure.layer !== "gm")
+                && window.GravewrightTools?.isLayerVisible?.(
+                    measure.layer === "gm" ? "gm" : "game",
+                    roomId,
+                ) !== false;
+            const items = [
+                ...measureStoreFor(canvas).filter(visible).map((measure) => presentationItem(measure, scene)),
+                ...flashStoreFor(canvas).filter(visible).map((measure) => presentationItem(measure, scene)),
+            ];
             const activeFreehand = getActiveFreehand?.();
             const activeMeasure = getActiveMeasure?.();
-            const hasActiveFreehand = activeFreehand?.canvas === canvas;
-            const hasActiveMeasure = activeMeasure?.canvas === canvas;
-
-            // Empty scenes are the common case. Avoid creating or mutating a
-            // document-sized SVG on every camera frame when there is nothing
-            // for the overlay to draw.
-            if (!measures.length && !flashes.length && !hasActiveMeasure && !hasActiveFreehand) {
-                if (overlayEl) overlayEl.hidden = true;
-                return;
-            }
-
-            const overlay = ensureOverlay();
-            overlay.setAttribute("viewBox", `0 0 ${window.innerWidth} ${window.innerHeight}`);
-            overlay.setAttribute("width", String(window.innerWidth));
-            overlay.setAttribute("height", String(window.innerHeight));
-            while (overlay.firstChild) overlay.removeChild(overlay.firstChild);
-            onRenderStart?.(canvas);
-            measures.forEach((measure) => renderSingleMeasure(overlay, measure, scene, state));
-            flashes.forEach((measure) => renderSingleMeasure(overlay, measure, scene, state, false));
-
-            if (hasActiveFreehand) {
-                renderSingleMeasure(overlay, activeFreehand, scene, state, true);
-            }
-            if (hasActiveMeasure) {
-                renderSingleMeasure(overlay, activeMeasure, scene, state, true);
-            }
-            overlay.hidden = false;
+            if (activeFreehand?.canvas === canvas) items.push(presentationItem(activeFreehand, scene, true));
+            if (activeMeasure?.canvas === canvas) items.push(presentationItem(activeMeasure, scene, true));
+            boardRenderer.setMeasurements(canvas, { items });
         }
 
-        return {
-            appendAreaMarkerText,
-            appendMeasureLabel,
-            appendSvg,
-            conePathFor,
-            ensureOverlay,
-            renderOverlay,
-            renderSingleMeasure,
-            wrappedMarkerTextLines,
-        };
+        return { renderOverlay, wrappedMarkerText };
     }
 
     window.GravewrightMapMeasureRenderer = { createMeasureRenderer };

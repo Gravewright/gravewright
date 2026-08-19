@@ -49,6 +49,16 @@ Fields:
 |---|---|
 | `maxSteps` | `number` |
 
+## `ActionReferenceDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `provider` | `string` |
+| `id` | `string` |
+| `version` | `number` |
+
 ## `ActionReferenceExecuteOptions`
 
 Fields:
@@ -227,7 +237,7 @@ Fields:
 | `height` | `number | null` |
 | `created_at` | `number` |
 | `src` | `string` |
-| `kind` | `'image' | 'pdf'` |
+| `kind` | `'image' | 'pdf' | 'audio'` |
 
 ## `AssetIngestResult`
 
@@ -246,7 +256,7 @@ Fields:
 | Field | Type |
 |---|---|
 | `campaignId` | `string` |
-| `kind` | `'image' | 'pdf'` |
+| `kind` | `'image' | 'pdf' | 'audio'` |
 
 ## `AssetOperationDTO`
 
@@ -257,6 +267,98 @@ Fields:
 | `status` | `'ready'` |
 | `progress` | `'ready'` |
 | `cancelled` | `boolean` |
+
+## `AssetReferenceDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'library-asset' | 'package-asset'` |
+| `id` | `string` |
+
+## `AudienceDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'self' | 'users' | 'campaign' | 'gm'` |
+| `ids` | `string[]` |
+
+## `AudioAssetReferenceDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'library-asset' | 'package-asset'` |
+| `id` | `string` |
+
+## `AudioListOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `sceneId` | `string` |
+
+## `AudioMutationOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `expectedVersion` | `number` |
+| `fade` | `FadeDTO` |
+
+## `AudioPlayInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `asset` | `AudioAssetReferenceDTO` |
+| `channel` | `'music' | 'ambience' | 'sfx' | 'cinematic'` |
+| `loop` | `boolean` |
+| `gain` | `number` |
+| `audience` | `AudienceDTO` |
+| `sceneId` | `string` |
+| `worldAnchor` | `SemanticAnchorDTO` |
+| `fade` | `FadeDTO` |
+| `idempotencyKey` | `string` |
+
+## `AudioPlaybackDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `asset` | `AudioAssetReferenceDTO` |
+| `channel` | `'music' | 'ambience' | 'sfx' | 'cinematic'` |
+| `state` | `'pending-user-unlock' | 'playing' | 'paused' | 'stopped' | 'failed'` |
+| `loop` | `boolean` |
+| `gain` | `number` |
+| `audience` | `AudienceDTO` |
+| `sceneId` | `string | null` |
+| `worldAnchor` | `SemanticAnchorDTO | null` |
+| `startedAt` | `number` |
+| `expiresAt` | `number | null` |
+| `fade` | `FadeDTO | null` |
+| `version` | `number` |
+| `ownerPackageId` | `string` |
+
+## `AudioPlaybackPatch`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `gain` | `number` |
+| `state` | `'playing' | 'paused'` |
+| `loop` | `boolean` |
+| `fade` | `FadeDTO` |
 
 ## `AutomationAuditDTO`
 
@@ -351,6 +453,16 @@ Fields:
 | `worldX` | `number` |
 | `worldY` | `number` |
 | `zoom` | `number` |
+
+## `CampaignMemberDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `userId` | `string` |
+| `role` | `string` |
+| `name` | `string` |
 
 ## `CardDeckMutationResult`
 
@@ -871,6 +983,60 @@ Fields:
 | `entries` | `ContentSearchEntryDTO[]` |
 | `nextCursor` | `string | null` |
 
+## `CustomShaderDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `format` | `'gravewright-custom-shader'` |
+| `version` | `1` |
+| `definition` | `CustomShaderValues` |
+
+## `CustomShaderPreviewResult`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `active` | `boolean` |
+
+## `CustomShaderProviderDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `label` | `string` |
+| `description` | `string` |
+| `open` | `(context: SdkContextDTO) => void | Promise<void>` |
+
+## `CustomShaderUseResult`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `accepted` | `true` |
+
+## `CustomShaderValues`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `source` | `string` |
+| `opacity` | `number` |
+| `intensity` | `number` |
+| `scale` | `number` |
+| `speed` | `number` |
+| `rotation` | `number` |
+| `radius` | `number` |
+| `color` | `string` |
+| `blend_mode` | `'normal' | 'add' | 'multiply' | 'screen'` |
+| `enabled` | `boolean` |
+
 ## `DeclaredCardArtworkDTO`
 
 Fields:
@@ -902,6 +1068,41 @@ Fields:
 | `label` | `string` |
 | `actorId` | `string` |
 
+## `DragSourceDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `referenceKinds` | `string[]` |
+| `operations` | `string[]` |
+| `schemaVersion` | `1` |
+
+## `DropTargetDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `surface` | `string` |
+| `targetKinds` | `DropTargetKind[]` |
+| `worldObjectTypeId` | `string` |
+| `operations` | `string[]` |
+| `actionReference` | `string` |
+| `schemaVersion` | `1` |
+
+## `DropTargetResource`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `sceneId` | `string` |
+| `typeId` | `string` |
+
 ## `EffectStateDTO`
 
 Fields:
@@ -929,6 +1130,15 @@ Fields:
 | Field | Type |
 |---|---|
 | `expectedVersion` | `number` |
+
+## `FadeDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `durationMs` | `number` |
+| `curve` | `'linear' | 'ease-in' | 'ease-out'` |
 
 ## `FogMutationResult`
 
@@ -963,6 +1173,69 @@ Fields:
 | `ops` | `FogOp[]` |
 | `version` | `number` |
 
+## `GameplayFlowDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `campaignId` | `string` |
+| `sceneId` | `string | null` |
+| `definitionId` | `string` |
+| `providerPackageId` | `string` |
+| `status` | `'ACTIVE' | 'COMPLETED' | 'CANCELLED'` |
+| `phaseId` | `string | null` |
+| `round` | `number` |
+| `cycle` | `number` |
+| `participants` | `string[]` |
+| `activeParticipants` | `string[]` |
+| `submissions` | `GameplaySubmissions` |
+| `revealed` | `boolean` |
+| `version` | `number` |
+
+## `GameplayFlowDefinitionDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `schemaVersion` | `1` |
+| `turnModel` | `GameplayTurnModel` |
+| `phases` | `GameplayPhaseDTO[]` |
+| `packageId` | `string` |
+
+## `GameplayFlowMutationOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `expectedVersion` | `number` |
+
+## `GameplayFlowStartInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `definitionId` | `string` |
+| `participants` | `string[]` |
+| `sceneId` | `string` |
+| `idempotencyKey` | `string` |
+
+## `GameplayPhaseDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `label` | `string` |
+| `submissionPolicy` | `'all'` |
+| `deadlineSeconds` | `number` |
+
 ## `GeometryBehaviorDTO`
 
 Fields:
@@ -989,6 +1262,184 @@ Fields:
 | Field | Type |
 |---|---|
 | `presented` | `true` |
+
+## `InputBindingDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `user_id` | `string` |
+| `package_id` | `string` |
+| `command_id` | `string` |
+| `binding` | `string` |
+| `version` | `number` |
+
+## `InputBindingOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `expectedVersion` | `number` |
+
+## `InputCommandDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `packageId` | `string` |
+| `label` | `string` |
+| `contexts` | `string[]` |
+| `registeredAction` | `string` |
+| `actionInput` | `ActionInput` |
+
+## `InputCommandDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `label` | `string` |
+| `description` | `string` |
+| `contexts` | `string[]` |
+| `registeredAction` | `string` |
+| `actionInput` | `ActionInput` |
+| `defaultBindings` | `string[]` |
+
+## `InputCommandInvocationDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `commandId` | `string` |
+| `packageId` | `string` |
+| `source` | `'binding' | 'gesture'` |
+| `binding` | `string | null` |
+| `context` | `string` |
+
+## `InputGestureDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `gesture` | `'tap' | 'double-tap' | 'long-press' | 'drag' | 'pan' | 'cancel'` |
+| `commandId` | `string` |
+
+## `InteractionChoiceDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `label` | `string` |
+
+## `InteractionDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `kind` | `string` |
+| `schemaVersion` | `1` |
+| `requester` | `string` |
+| `recipients` | `string[]` |
+| `prompt` | `InteractionPromptDTO` |
+| `responseSchema` | `InteractionResponseSchema` |
+| `visibility` | `'requester' | 'participants' | 'public-after-close'` |
+| `deadline` | `number` |
+| `status` | `'open' | 'completed' | 'expired' | 'cancelled'` |
+| `responses` | `{ [userId: string]: InteractionResponseDTO }` |
+| `version` | `number` |
+| `origin` | `InteractionOriginDTO` |
+| `packageProvenance` | `PackageProvenanceDTO` |
+| `createdAt` | `number` |
+| `expiresAt` | `number` |
+
+## `InteractionListOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `status` | `'open' | 'completed' | 'expired' | 'cancelled'` |
+| `recipient` | `'me'` |
+
+## `InteractionMutationOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `expectedVersion` | `number` |
+| `idempotencyKey` | `string` |
+
+## `InteractionOriginDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `originExecutionId` | `string` |
+| `originJobId` | `string` |
+| `causalDepth` | `number` |
+| `resourceRef` | `string` |
+
+## `InteractionPromptDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `title` | `string` |
+| `text` | `string` |
+
+## `InteractionRequestInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `string` |
+| `recipients` | `string[]` |
+| `title` | `string` |
+| `text` | `string` |
+| `responseSchema` | `InteractionResponseSchema` |
+| `visibility` | `'requester' | 'participants' | 'public-after-close'` |
+| `deadline` | `number` |
+| `responsePolicy` | `'immutable' | 'replace'` |
+| `origin` | `InteractionOriginDTO` |
+
+## `InteractionResponseDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `value` | `InteractionResponseValue` |
+| `respondedAt` | `number` |
+| `idempotencyKey` | `string` |
+
+## `InteractionResponseSchema`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `type` | `'boolean' | 'single-choice' | 'multi-choice' | 'number' | 'string'` |
+| `choices` | `InteractionChoiceDTO[]` |
+| `maxSelections` | `number` |
+| `minimum` | `number` |
+| `maximum` | `number` |
+| `maxLength` | `number` |
 
 ## `InteropProviderContext`
 
@@ -1263,6 +1714,15 @@ Fields:
 | `provides` | `string[]` |
 | `requires` | `string[]` |
 
+## `PackageProvenanceDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `packageId` | `string` |
+| `providerId` | `string | null` |
+
 ## `ParticleDTO`
 
 Fields:
@@ -1449,6 +1909,147 @@ Fields:
 | `sceneId` | `string` |
 | `id` | `string` |
 
+## `PresentationAnchor`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'token' | 'scene-object'` |
+| `id` | `string` |
+| `sceneId` | `string` |
+
+## `PresentationAudience`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'self' | 'campaign' | 'gm' | 'users'` |
+| `ids` | `string[]` |
+
+## `PresentationButton`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `label` | `string` |
+| `actionReference` | `string` |
+
+## `PresentationCloseResult`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `status` | `'closed'` |
+
+## `PresentationCompletionPolicy`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `policy` | `'server-time' | 'all-connected-recipients'` |
+| `timeoutMs` | `number` |
+
+## `PresentationContent`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `title` | `string` |
+| `subtitle` | `string` |
+| `text` | `string` |
+| `label` | `string` |
+| `icon` | `string` |
+| `asset` | `AssetReferenceDTO` |
+| `progress` | `number` |
+| `value` | `number` |
+| `preset` | `string` |
+| `buttons` | `PresentationButton[]` |
+
+## `PresentationDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `campaignId` | `string` |
+| `packageId` | `string` |
+| `ownerUserId` | `string` |
+| `sceneId` | `string | null` |
+| `mode` | `'world-anchor' | 'screen-overlay' | 'title-card' | 'countdown' | 'fade'` |
+| `content` | `PresentationContent` |
+| `audience` | `PresentationAudience` |
+| `anchor` | `PresentationAnchor | null` |
+| `deadline` | `number | null` |
+| `status` | `'active' | 'completed' | 'closed' | 'cancelled'` |
+| `startedAt` | `number` |
+| `endsAt` | `number` |
+| `completedAt` | `number | null` |
+| `completionReason` | `'server-time' | 'recipients' | 'timeout' | 'closed' | 'package-unload' | null` |
+| `completionPolicy` | `PresentationCompletionPolicy` |
+| `recipientSummary` | `PresentationRecipientSummary` |
+| `version` | `number` |
+| `createdAt` | `number` |
+| `updatedAt` | `number` |
+| `expiresAt` | `number` |
+
+## `PresentationInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `mode` | `'world-anchor' | 'screen-overlay' | 'title-card' | 'countdown' | 'fade'` |
+| `content` | `PresentationContent` |
+| `audience` | `PresentationAudience` |
+| `anchor` | `PresentationAnchor` |
+| `sceneId` | `string` |
+| `duration` | `number` |
+| `deadline` | `number` |
+| `completion` | `PresentationCompletionPolicy` |
+
+## `PresentationListOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `sceneId` | `string` |
+
+## `PresentationPatch`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `content` | `PresentationContent` |
+| `anchor` | `PresentationAnchor` |
+
+## `PresentationRecipientSummary`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `expected` | `number` |
+| `completed` | `number` |
+
+## `PresentationWaitOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `timeoutMs` | `number` |
+
 ## `RollGroupDTO`
 
 Fields:
@@ -1602,6 +2203,195 @@ Fields:
 | `layer` | `string` |
 | `assetId` | `string` |
 
+## `SceneNavigationDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `sceneId` | `string` |
+| `recipientIds` | `string[]` |
+| `states` | `SceneNavigationStateDTO[]` |
+
+## `SceneNavigationInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `sceneId` | `string` |
+| `recipients` | `AudienceDTO` |
+| `reason` | `string` |
+| `idempotencyKey` | `string` |
+
+## `SceneNavigationRecipients`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'self' | 'users' | 'gm' | 'campaign'` |
+| `ids` | `string[]` |
+
+## `SceneNavigationStateDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `campaignId` | `string` |
+| `userId` | `string` |
+| `sceneId` | `string` |
+| `reason` | `string` |
+| `version` | `number` |
+| `updatedAt` | `number` |
+
+## `SceneObjectAudience`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'campaign' | 'gm' | 'users'` |
+| `ids` | `string[]` |
+
+## `SceneObjectDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `sceneId` | `string` |
+| `typeId` | `string` |
+| `providerPackageId` | `string` |
+| `schemaVersion` | `number` |
+| `geometry` | `SceneObjectGeometry` |
+| `transform` | `SceneObjectTransform` |
+| `presentation` | `JsonObject` |
+| `interactions` | `SceneObjectInteractionDefinition[]` |
+| `editor` | `JsonObject` |
+| `dataSchema` | `ActionInputSchema` |
+| `data` | `JsonObject` |
+| `audience` | `SceneObjectAudience` |
+| `enabled` | `boolean` |
+| `providerAvailable` | `boolean` |
+| `providerStatus` | `'available' | 'unavailable' | 'outdated'` |
+| `version` | `number` |
+| `createdAt` | `number` |
+| `updatedAt` | `number` |
+
+## `SceneObjectDeleteResult`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `deleted` | `true` |
+
+## `SceneObjectGeometry`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'point' | 'rect' | 'circle' | 'polygon' | 'polyline'` |
+| `x` | `number` |
+| `y` | `number` |
+| `radius` | `number` |
+| `width` | `number` |
+| `height` | `number` |
+| `points` | `WorldPointDTO[]` |
+
+## `SceneObjectHitTestOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `tolerance` | `number` |
+
+## `SceneObjectInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `typeId` | `string` |
+| `geometry` | `SceneObjectGeometry` |
+| `transform` | `Partial<SceneObjectTransform>` |
+| `presentation` | `JsonObject` |
+| `data` | `JsonObject` |
+| `audience` | `SceneObjectAudience` |
+| `enabled` | `boolean` |
+
+## `SceneObjectInteractionDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `label` | `string` |
+| `actionReference` | `ActionReferenceDTO` |
+
+## `SceneObjectInteractionIntentDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `object` | `SceneObjectDTO` |
+| `interactionId` | `string` |
+| `actionReference` | `ActionReferenceDTO | null` |
+| `principal` | `{ userId: string }` |
+
+## `SceneObjectListOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `query` | `string` |
+
+## `SceneObjectPatch`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `geometry` | `SceneObjectGeometry` |
+| `transform` | `Partial<SceneObjectTransform>` |
+| `presentation` | `JsonObject` |
+| `data` | `JsonObject` |
+| `enabled` | `boolean` |
+
+## `SceneObjectTransform`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `rotation` | `number` |
+| `scale` | `number` |
+
+## `SceneObjectTypeDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `typeId` | `string` |
+| `schemaVersion` | `number` |
+| `displayName` | `string` |
+| `dataSchema` | `ActionInputSchema` |
+| `geometryKinds` | `Array<'point' | 'rect' | 'circle' | 'polygon' | 'polyline'>` |
+| `visualDefinition` | `JsonObject[]` |
+| `interactionDefinitions` | `SceneObjectInteractionDefinition[]` |
+| `editorDefinition` | `JsonObject` |
+| `searchableFields` | `string[]` |
+
 ## `SceneTemplateDTO`
 
 Fields:
@@ -1657,6 +2447,79 @@ Fields:
 | `target` | `WorldPointDTO` |
 | `audience` | `'campaign' | 'gm'` |
 
+## `SceneZoneAudience`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'campaign' | 'gm' | 'users'` |
+| `ids` | `string[]` |
+
+## `SceneZoneDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `sceneId` | `string` |
+| `type` | `string` |
+| `geometry` | `SceneZoneGeometry` |
+| `vertical` | `VerticalBoundsDTO` |
+| `audience` | `SceneZoneAudience` |
+| `enabled` | `boolean` |
+| `tags` | `string[]` |
+| `packageProvenance` | `PackageProvenanceDTO` |
+| `version` | `number` |
+
+## `SceneZoneDeleteResult`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `deleted` | `true` |
+
+## `SceneZoneGeometry`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `shape` | `'circle' | 'rect' | 'polygon'` |
+| `x` | `number` |
+| `y` | `number` |
+| `radius` | `number` |
+| `width` | `number` |
+| `height` | `number` |
+| `points` | `WorldPointDTO[]` |
+
+## `SceneZoneInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `type` | `string` |
+| `geometry` | `SceneZoneGeometry` |
+| `vertical` | `VerticalBoundsDTO` |
+| `audience` | `SceneZoneAudience` |
+| `enabled` | `boolean` |
+| `tags` | `string[]` |
+| `providerId` | `string` |
+
+## `SceneZonePatch`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `geometry` | `SceneZoneGeometry` |
+| `enabled` | `boolean` |
+| `tags` | `string[]` |
+
 ## `SdkContextDTO`
 
 Fields:
@@ -1667,6 +2530,84 @@ Fields:
 | `scene` | `SceneContext | null` |
 | `user` | `UserContext | null` |
 | `permissions` | `PermissionContext | null` |
+
+## `SemanticAnchorDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'token' | 'scene-object'` |
+| `id` | `string` |
+| `sceneId` | `string` |
+
+## `SemanticDragPayload`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `string` |
+| `reference` | `string` |
+| `sourceContext` | `string` |
+| `metadata` | `JsonObject` |
+| `schemaVersion` | `1` |
+
+## `SemanticDropDestination`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `targetDefinitionId` | `string` |
+| `kind` | `DropTargetKind` |
+| `resource` | `DropTargetResource` |
+| `expectedVersion` | `number` |
+| `worldPosition` | `WorldPointDTO` |
+| `sceneContext` | `string` |
+
+## `SemanticDropInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `payload` | `SemanticDragPayload` |
+| `destination` | `SemanticDropDestination` |
+| `operation` | `string` |
+| `idempotencyKey` | `string` |
+
+## `SemanticDropResultDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `operation` | `string` |
+| `targetId` | `string` |
+| `source` | `ContentResolutionDTO` |
+| `actionResult` | `ActionExecutionResult` |
+
+## `SemanticOriginDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `source` | `string` |
+| `resourceId` | `string` |
+| `executionId` | `string` |
+
+## `SemanticRegistrationDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `packageId` | `string` |
+| `schemaVersion` | `1` |
+| `operations` | `string[]` |
 
 ## `SettingChangeDTO`
 
@@ -1900,6 +2841,137 @@ Fields:
 | `version` | `number` |
 | `changed_paths` | `string[]` |
 
+## `SoundCreateInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `name` | `string` |
+| `asset` | `AudioAssetReferenceDTO` |
+| `kind` | `'sound-effect' | 'music' | 'ambience'` |
+| `tags` | `string[]` |
+| `defaultGain` | `number` |
+| `defaultLoop` | `boolean` |
+| `metadata` | `JsonObject` |
+
+## `SoundDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `campaignId` | `string` |
+| `name` | `string` |
+| `asset` | `AudioAssetReferenceDTO` |
+| `kind` | `'sound-effect' | 'music' | 'ambience'` |
+| `tags` | `string[]` |
+| `defaultGain` | `number` |
+| `defaultLoop` | `boolean` |
+| `metadata` | `JsonObject` |
+| `version` | `number` |
+
+## `SoundDeleteResult`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `deleted` | `true` |
+
+## `SoundListOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `kind` | `'sound-effect' | 'music' | 'ambience'` |
+| `query` | `string` |
+| `cursor` | `number` |
+| `limit` | `number` |
+
+## `SoundPatch`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `name` | `string` |
+| `kind` | `'sound-effect' | 'music' | 'ambience'` |
+| `tags` | `string[]` |
+| `defaultGain` | `number` |
+| `defaultLoop` | `boolean` |
+| `metadata` | `JsonObject` |
+
+## `SpatialSoundDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `sceneId` | `string` |
+| `soundId` | `string` |
+| `position` | `SpatialSoundPositionDTO` |
+| `radius` | `number` |
+| `gain` | `number` |
+| `falloff` | `'linear' | 'smooth'` |
+| `loop` | `boolean` |
+| `enabled` | `boolean` |
+| `audience` | `AudienceDTO` |
+| `constrainedByWalls` | `boolean` |
+| `version` | `number` |
+
+## `SpatialSoundDeleteResult`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `deleted` | `true` |
+
+## `SpatialSoundInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `soundId` | `string` |
+| `position` | `SpatialSoundPositionDTO` |
+| `radius` | `number` |
+| `gain` | `number` |
+| `falloff` | `'linear' | 'smooth'` |
+| `loop` | `boolean` |
+| `enabled` | `boolean` |
+| `audience` | `AudienceDTO` |
+| `constrainedByWalls` | `boolean` |
+
+## `SpatialSoundPatch`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `position` | `SpatialSoundPositionDTO` |
+| `radius` | `number` |
+| `gain` | `number` |
+| `falloff` | `'linear' | 'smooth'` |
+| `loop` | `boolean` |
+| `enabled` | `boolean` |
+| `constrainedByWalls` | `boolean` |
+
+## `SpatialSoundPositionDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `x` | `number` |
+| `y` | `number` |
+
 ## `StorageExecuteResult`
 
 Fields:
@@ -1928,6 +3000,64 @@ Fields:
 | `scope` | `'campaign' | 'global'` |
 | `ready` | `boolean` |
 | `size_bytes` | `number` |
+
+## `TimelineCueDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `cueId` | `string` |
+| `offsetMs` | `number` |
+| `type` | `TimelineCueType` |
+| `action` | `string` |
+| `parameters` | `TimelineParameters` |
+| `cleanupAction` | `string` |
+| `cleanupInput` | `ActionInput` |
+
+## `TimelineDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `definitionId` | `string` |
+| `providerPackageId` | `string` |
+| `campaignId` | `string` |
+| `sceneId` | `string | null` |
+| `status` | `'RUNNING' | 'COMPLETED' | 'CANCELLED' | 'FAILED'` |
+| `startedAt` | `number` |
+| `audience` | `AudienceDTO` |
+| `origin` | `SemanticOriginDTO` |
+| `executedCueIds` | `string[]` |
+| `completionReason` | `string | null` |
+| `version` | `number` |
+
+## `TimelineDefinitionDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `schemaVersion` | `1` |
+| `cues` | `TimelineCueDTO[]` |
+| `durationMs` | `number` |
+| `packageId` | `string` |
+
+## `TimelineStartInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `definitionId` | `string` |
+| `sceneId` | `string` |
+| `audience` | `AudienceDTO` |
+| `origin` | `SemanticOriginDTO` |
+| `startedAt` | `number` |
+| `idempotencyKey` | `string` |
 
 ## `ToastHandle`
 
@@ -1981,6 +3111,7 @@ Fields:
 | `locked` | `boolean` |
 | `disposition` | `string` |
 | `vision` | `TokenVisionDTO` |
+| `controllers` | `string[]` |
 | `updated_at` | `number` |
 
 ## `TokenMoveInput`
@@ -2010,6 +3141,9 @@ Fields:
 |---|---|
 | `sceneId` | `string` |
 | `expectedVersion` | `number` |
+| `originExecutionId` | `string` |
+| `originJobId` | `string` |
+| `causalDepth` | `number` |
 
 ## `TokenReadOptions`
 
@@ -2019,6 +3153,57 @@ Fields:
 |---|---|
 | `sceneId` | `string` |
 | `limit` | `number` |
+
+## `TokenTransferDestination`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `sceneId` | `string` |
+| `x` | `number` |
+| `y` | `number` |
+| `elevation` | `number` |
+
+## `TokenTransferManyOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `navigateAudience` | `SceneNavigationRecipients` |
+
+## `TokenTransferOptions`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `expectedVersion` | `number` |
+| `navigateAudience` | `SceneNavigationRecipients` |
+
+## `TokenTransferResultDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `tokens` | `TransferredTokenDTO[]` |
+| `atomic` | `true` |
+| `navigation` | `SceneNavigationDTO | null` |
+
+## `TokenTransferSpec`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `tokenId` | `string` |
+| `sceneId` | `string` |
+| `x` | `number` |
+| `y` | `number` |
+| `elevation` | `number` |
+| `expectedVersion` | `number` |
 
 ## `TokenVisionDTO`
 
@@ -2076,6 +3261,20 @@ Fields:
 | `world` | `WorldPointDTO` |
 | `button` | `number` |
 | `modifiers` | `ToolModifiersDTO` |
+
+## `TransferredTokenDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `sceneId` | `string` |
+| `actorId` | `string | null` |
+| `x` | `number` |
+| `y` | `number` |
+| `elevation` | `number` |
+| `version` | `number` |
 
 ## `VerticalBoundsDTO`
 
@@ -2173,6 +3372,53 @@ Fields:
 | `scene_id` | `string` |
 | `walls` | `WallDTO[]` |
 
+## `WorkflowDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `definitionId` | `string` |
+| `providerPackageId` | `string` |
+| `campaignId` | `string` |
+| `sceneId` | `string | null` |
+| `status` | `WorkflowStatus` |
+| `currentStep` | `number` |
+| `context` | `WorkflowContext` |
+| `origin` | `SemanticOriginDTO` |
+| `createdBy` | `string` |
+| `startedAt` | `number` |
+| `wakeAt` | `number | null` |
+| `waitingOn` | `string | null` |
+| `completionReason` | `string | null` |
+| `version` | `number` |
+
+## `WorkflowDefinitionDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `schemaVersion` | `1` |
+| `steps` | `WorkflowStepDTO[]` |
+| `maxDuration` | `number` |
+| `maxSteps` | `number` |
+| `packageId` | `string` |
+
+## `WorkflowStartInput`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `definitionId` | `string` |
+| `input` | `WorkflowContext` |
+| `sceneId` | `string` |
+| `idempotencyKey` | `string` |
+| `origin` | `SemanticOriginDTO` |
+
 ## `WorldPointDTO`
 
 Fields:
@@ -2261,6 +3507,22 @@ Definition: `() => void`
 ## `FogOp`
 
 Definition: `{ mode: 'reveal' | 'hide'; shape: 'circle'; geom: { center_x_cells: number; center_y_cells: number; radius_cells: number } } | { mode: 'reveal' | 'hide'; shape: 'square'; geom: { center_x_cells: number; center_y_cells: number; size_cells: number } } | { mode: 'reveal' | 'hide'; shape: 'polygon'; geom: { points_cells: [number, number][] } }`
+
+## `GameplaySubmissionValue`
+
+Definition: `boolean | string | number | null | JsonObject | JsonValue[]`
+
+## `GameplayTurnModel`
+
+Definition: `'SEQUENTIAL' | 'SIMULTANEOUS' | 'PHASED'`
+
+## `InputCommandHandler`
+
+Definition: `(invocation: InputCommandInvocationDTO) => void | Promise<void>`
+
+## `InteractionResponseValue`
+
+Definition: `boolean | string | number | string[]`
 
 ## `InteropHandler`
 
@@ -2402,6 +3664,10 @@ Definition: `JsonObject`
 
 Definition: `JsonObject`
 
+## `TimelineCueType`
+
+Definition: `'ACTION' | 'AUDIO_PLAY' | 'PRESENTATION_SHOW' | 'LIGHT_CREATE' | 'SHADER_PRESET' | 'PARTICLE_CREATE' | 'NAVIGATION'`
+
 ## `TokenOverrides`
 
 Definition: `JsonObject`
@@ -2409,6 +3675,14 @@ Definition: `JsonObject`
 ## `UserContext`
 
 Definition: `JsonObject`
+
+## `WorkflowStatus`
+
+Definition: `'RUNNING' | 'WAITING_INTERACTION' | 'WAITING_TIME' | 'COMPLETED' | 'CANCELLED' | 'FAILED'`
+
+## `WorkflowStepDTO`
+
+Definition: `{ type: 'ACTION'; action: string; input?: ActionInput } | { type: 'INTERACTION'; request: InteractionRequestInput; resultKey?: string } | { type: 'WAIT_UNTIL'; at?: number; delaySeconds?: number } | { type: 'BRANCH'; key: string; equals: JsonValue; then: number; else: number } | { type: 'SET'; key: string; value: JsonValue } | { type: 'COMPLETE'; output?: JsonValue } | { type: 'FAIL'; reason: string }`
 
 # Extensible semantic types
 
@@ -2509,6 +3783,18 @@ Definition: `ActorDTO | ItemDTO | SceneDTO | TokenDTO | JournalDTO | PdfDocument
 This shape is intentionally extensible by contract: keys and nested values are supplied by the active ruleset, package, user content, or negotiated semantic protocol. It remains a named JSON-safe type, never `any` or `unknown`.
 
 ## `DeckRuntimeDTO`
+
+Definition: `JsonObject`
+
+This shape is intentionally extensible by contract: keys and nested values are supplied by the active ruleset, package, user content, or negotiated semantic protocol. It remains a named JSON-safe type, never `any` or `unknown`.
+
+## `DropTargetKind`
+
+Definition: `'actor' | 'scene-object' | 'scene-surface'`
+
+This shape is intentionally extensible by contract: keys and nested values are supplied by the active ruleset, package, user content, or negotiated semantic protocol. It remains a named JSON-safe type, never `any` or `unknown`.
+
+## `GameplaySubmissions`
 
 Definition: `JsonObject`
 
@@ -2652,6 +3938,12 @@ Definition: `JsonObject`
 
 This shape is intentionally extensible by contract: keys and nested values are supplied by the active ruleset, package, user content, or negotiated semantic protocol. It remains a named JSON-safe type, never `any` or `unknown`.
 
+## `TimelineParameters`
+
+Definition: `JsonObject`
+
+This shape is intentionally extensible by contract: keys and nested values are supplied by the active ruleset, package, user content, or negotiated semantic protocol. It remains a named JSON-safe type, never `any` or `unknown`.
+
 ## `TokenOverrides`
 
 Definition: `JsonObject`
@@ -2659,6 +3951,12 @@ Definition: `JsonObject`
 This shape is intentionally extensible by contract: keys and nested values are supplied by the active ruleset, package, user content, or negotiated semantic protocol. It remains a named JSON-safe type, never `any` or `unknown`.
 
 ## `UserContext`
+
+Definition: `JsonObject`
+
+This shape is intentionally extensible by contract: keys and nested values are supplied by the active ruleset, package, user content, or negotiated semantic protocol. It remains a named JSON-safe type, never `any` or `unknown`.
+
+## `WorkflowContext`
 
 Definition: `JsonObject`
 

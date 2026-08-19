@@ -28,6 +28,8 @@ class ActivationResult:
     success: bool
     error_key: str | None = None
     active_dependents: tuple[dict, ...] = ()
+    cancelled_presentations: tuple[dict, ...] = ()
+    cancelled_semantics: tuple[dict, ...] = ()
 
 
 class PackageActivationService:
@@ -137,6 +139,23 @@ class PackageActivationService:
                     active_dependents=tuple(dependents),
                 )
         self.campaign_packages.deactivate(campaign_id=campaign_id, package_id=package_id)
+        # Directed decisions fail closed when their requesting package leaves.
+        from app.engine.sdk.directed_interaction_service import DirectedInteractionService
+        DirectedInteractionService().cancel_package(campaign_id=campaign_id, package_id=package_id)
+        from app.persistence.repositories.scene_object_repository import SceneObjectRepository
+        from app.engine.sdk.semantic_presentation_service import SemanticPresentationService
+        SceneObjectRepository().deactivate_package(campaign_id, package_id)
+        cancelled_presentations=SemanticPresentationService().close_package(campaign_id=campaign_id, package_id=package_id)
+        # First-class audio remains core-owned; package-owned playback intent is
+        # stopped and declarative input/drag contributions are removed.
+        from app.engine.audio.audio_runtime_service import AudioRuntimeService
+        from app.persistence.repositories.semantic_registration_repository import SemanticRegistrationRepository
+        from app.persistence.repositories.semantic_instance_repository import SemanticInstanceRepository
+        AudioRuntimeService().stop_package(campaign_id=campaign_id, package_id=package_id)
+        # Publish terminal core state before definitions are detached.  This
+        # prevents orphan waits/cues and makes reconnect observe cancellation.
+        cancelled_semantics=SemanticInstanceRepository().fail_closed_package(campaign_id, package_id)
+        SemanticRegistrationRepository().remove_package(campaign_id, package_id)
         record = self.install.get(package_id)
         self.audit.record(
             campaign_id=campaign_id,
@@ -151,7 +170,7 @@ class PackageActivationService:
                 "forced": force,
             },
         )
-        return ActivationResult(success=True)
+        return ActivationResult(success=True,cancelled_presentations=tuple(cancelled_presentations),cancelled_semantics=tuple(cancelled_semantics))
 
     def list_campaign_packages(self, campaign_id: str) -> list[dict]:
         out: list[dict] = []

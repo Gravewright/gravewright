@@ -256,6 +256,7 @@ class TokenCommandHandler:
         grid_x = payload.get("grid_x")
         grid_y = payload.get("grid_y")
         expected_version = payload.get("expected_version")
+        movement_path = payload.get("movement_path")
 
         if not isinstance(scene_id, str) or not scene_id:
             return _invalid(command_id, "scene_id is required.")
@@ -267,6 +268,11 @@ class TokenCommandHandler:
             return _invalid(
                 command_id, "expected_version must be a non-negative integer when provided."
             )
+        if movement_path is not None:
+            if not isinstance(movement_path,list) or len(movement_path)>512 or any(not isinstance(point,dict) or not isinstance(point.get("grid_x"),int) or not isinstance(point.get("grid_y"),int) for point in movement_path):
+                return _invalid(command_id,"movement_path must contain grid coordinates.")
+            if movement_path and (movement_path[-1]["grid_x"]!=grid_x or movement_path[-1]["grid_y"]!=grid_y):
+                return _invalid(command_id,"movement_path must end at the requested destination.")
 
         result = await self.service.move(
             campaign_id=campaign_id,
@@ -276,6 +282,7 @@ class TokenCommandHandler:
             grid_y=grid_y,
             user_id=context.user_id,
             expected_version=expected_version,
+            movement_path=movement_path,
             transport=transport,
         )
 

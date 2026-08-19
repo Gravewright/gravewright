@@ -128,6 +128,7 @@ from app.actions.game.manage_particles import create_particle, delete_particle, 
 from app.actions.game.manage_shaders import apply_shader_preset, create_shader, delete_shader, delete_shaders, get_shader_presets, get_shaders, update_shader, update_shader_preset
 from app.actions.game.manage_lights import create_light, delete_light, delete_lights, get_lights, update_light
 from app.actions.game.manage_walls import create_wall, delete_wall, delete_walls, get_walls, move_wall_endpoint, move_wall_node, move_walls, set_door_state, split_wall
+from app.actions.game.manage_sounds import create_composition, create_sound, create_spatial_sound, delete_sound, delete_spatial_sound, get_scene_soundscape, list_compositions, list_scene_sounds, list_sounds, pause_ambient_sound, play_ambient_sound, scene_sound_acoustics, set_scene_soundscape, stop_ambient_sound, stream_sound_asset, update_sound, update_spatial_sound
 from app.actions.game.manage_onboarding import get_gm_onboarding
 from app.actions.game.manage_onboarding import update_gm_onboarding_preference
 from app.actions.game.player_onboarding import claim_player_onboarding
@@ -266,6 +267,23 @@ _protected_handlers = [
     delete_wall,
     delete_walls,
     split_wall,
+    list_sounds,
+    create_sound,
+    update_sound,
+    delete_sound,
+    list_compositions,
+    create_composition,
+    list_scene_sounds,
+    scene_sound_acoustics,
+    play_ambient_sound,
+    pause_ambient_sound,
+    stop_ambient_sound,
+    get_scene_soundscape,
+    set_scene_soundscape,
+    create_spatial_sound,
+    update_spatial_sound,
+    delete_spatial_sound,
+    stream_sound_asset,
     get_lights,
     create_light,
     get_particles,

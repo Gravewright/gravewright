@@ -163,15 +163,21 @@ def test_image_and_pdf_have_separate_upload_buttons():
     template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
     strip = template.split("asset-bar__uploads", 1)[1].split("</header>", 1)[0]
 
-    kinds = set(re.findall(r'data-scene-asset-upload="(\w+)"', strip))
-    assert kinds == {"image", "pdf"}, f"botões de upload encontrados: {sorted(kinds)}"
+    kinds = set(re.findall(r'data-scene-asset-upload="([\w-]+)"', strip))
+    assert kinds == {"image", "ambient-audio", "effect-audio", "pdf"}, (
+        f"botões de upload encontrados: {sorted(kinds)}"
+    )
 
-    inputs = dict(
-        re.findall(r'accept="([^"]+)"[^>]*data-scene-asset-upload-input="(\w+)"', strip)
+    inputs = re.findall(
+        r'accept="([^"]+)"[^>]*data-scene-asset-upload-input="([\w-]+)"', strip
     )
     assert inputs, "cada botão precisa do seu próprio seletor de arquivo"
-    accepts = {kind: value for value, kind in inputs.items()}
+    accepts = {kind: value for value, kind in inputs}
     assert "application/pdf" not in accepts["image"], "o seletor de imagem não pode listar PDF"
+    assert accepts["ambient-audio"] == accepts["effect-audio"]
+    assert accepts["ambient-audio"].startswith("audio/"), (
+        "os fluxos artísticos devem aceitar o mesmo tipo físico de asset de áudio"
+    )
     assert accepts["pdf"] == "application/pdf", "o seletor de ficha só aceita PDF"
 
     # O handler precisa escolher o input pelo tipo; sem isso os dois botões abrem

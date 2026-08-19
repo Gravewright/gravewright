@@ -46,6 +46,26 @@ from app.business.users.user_preference_service import DEFAULT_PING_COLOR
 _GM_ROLES = {"gm", "assistant_gm"}
 
 
+def _representation_shape_style(raw_style: Any, color: str | None) -> dict[str, Any]:
+    normalized_color = (color or "").strip().lower()
+    if (
+        len(normalized_color) != 7
+        or not normalized_color.startswith("#")
+        or any(char not in "0123456789abcdef" for char in normalized_color[1:])
+    ):
+        normalized_color = DEFAULT_PING_COLOR
+    red = int(normalized_color[1:3], 16)
+    green = int(normalized_color[3:5], 16)
+    blue = int(normalized_color[5:7], 16)
+    style = dict(raw_style) if isinstance(raw_style, dict) else {}
+    style.update({
+        "stroke": normalized_color,
+        "fill": f"rgba({red},{green},{blue},0.18)",
+        "strokeWidth": style.get("strokeWidth", 2),
+    })
+    return style
+
+
 _BOARD_COMMAND_PERMISSIONS = {
     ClientCommand.BOARD_PING.value: TablePermission.BOARD_PING,
     ClientCommand.BOARD_AREA_MARKER_UPSERT.value: TablePermission.BOARD_MARKER_CREATE,
@@ -324,6 +344,10 @@ class BoardCommandHandler:
             marker_count = sum(1 for item in existing_items if not self._is_drawing(item))
             if marker_count >= config.board_markers_max_per_scene:
                 return _limit_reached(command_id, "This scene has too many markers.")
+            normalized["style"] = _representation_shape_style(
+                normalized.get("style"),
+                await run_blocking(self.preferences.get_ping_color, context.user_id),
+            )
 
         if await self._is_gm(context.user_id, room_id) and marker.get("layer") == "gm":
             normalized["layer"] = "gm"
@@ -710,6 +734,10 @@ class BoardCommandHandler:
             )
 
         ttl_ms = _normalize_ttl_ms(payload.get("ttl_ms"))
+        normalized["style"] = _representation_shape_style(
+            normalized.get("style"),
+            await run_blocking(self.preferences.get_ping_color, context.user_id),
+        )
         broadcast = {
             "room_id": room_id,
             "scene_id": normalized["scene_id"],

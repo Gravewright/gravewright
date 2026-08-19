@@ -17,7 +17,8 @@ def test_all_locales_expose_the_exact_canonical_method_set():
     expected = [method["signature"] for method in CONTRACT["methods"]]
     for locale, directory in LOCALES.items():
         assert _headings(directory / "method-reference.md", 2) == expected, locale
-    assert len(expected) == 187
+    registry=json.loads((ROOT / "app/engine/sdk/capabilities.json").read_text(encoding="utf-8"))
+    assert len(expected) == len({method for value in registry["capabilities"].values() for method in value.get("methods", [])})
 
 
 def test_all_locales_expose_the_exact_dto_alias_and_semantic_type_set():

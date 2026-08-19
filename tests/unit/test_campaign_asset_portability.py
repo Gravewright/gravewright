@@ -183,3 +183,49 @@ def test_recovery_cleans_incomplete_trees_is_idempotent_and_preserves_committed_
     marker = CampaignImportService._write_recovery_marker(campaign_id=committed, scene_ids=[], phase="IMPORTING")
     CampaignImportService.recover_incomplete_imports()
     assert committed_tree.exists() and not marker.exists()
+
+
+def test_audio_asset_sound_and_spatial_sound_survive_a_clean_storage_roundtrip(db):
+    """The SDK audio chain rides the native portability graph, not a package format."""
+    from app.engine.audio.sound_domain_service import SoundDomainService
+    from app.persistence.tables import scene_spatial_sounds, sounds
+
+    ogg = b"OggS" + b"generator-hum" * 8
+    gm = seed_user(name="GM"); source = seed_campaign(gm, title="Portable audio table"); scene = seed_scene(source)
+    uploaded = AssetLibraryService().upload_asset(campaign_id=source, user_id=gm, filename="hum.ogg", content_type="audio/ogg", data=ogg)
+    assert uploaded.success, uploaded.error_key
+    asset_id = uploaded.payload["asset"]["id"]
+
+    sound = SoundDomainService().create_sound(campaign_id=source, user_id=gm, values={
+        "name": "Generator Hum", "assetId": asset_id, "kind": "sound-effect",
+        "defaultGain": 0.7, "defaultLoop": True, "tags": ["black-vault"],
+    })
+    assert sound.success, sound.error_key
+    emitter = SoundDomainService().create_spatial(campaign_id=source, scene_id=scene["id"], user_id=gm, values={
+        "soundId": sound.value["id"], "x": 280, "y": 280, "radius": 560, "constrainedByWalls": True,
+    })
+    assert emitter.success, emitter.error_key
+
+    exported = CampaignExportService().export(campaign_id=source, user_id=gm, options=CampaignExportOptions())
+    assert exported.success and exported.archive
+    original_path = LocalAssetStorage().root / source
+    with engine_begin() as conn:
+        conn.execute(delete(scene_spatial_sounds).where(scene_spatial_sounds.c.scene_id == scene["id"]))
+        conn.execute(delete(sounds).where(sounds.c.campaign_id == source))
+        conn.execute(delete(campaigns).where(campaigns.c.id == source))
+    shutil.rmtree(original_path, ignore_errors=True)
+
+    imported = CampaignImportService().import_archive(archive=exported.archive, user_id=gm, title="Restored audio table")
+    assert imported.success and imported.campaign_id != source
+    with engine_connect() as conn:
+        asset = conn.execute(select(library_assets).where(library_assets.c.campaign_id == imported.campaign_id)).mappings().one()
+        restored_sound = conn.execute(select(sounds).where(sounds.c.campaign_id == imported.campaign_id)).mappings().one()
+        restored_emitter = conn.execute(select(scene_spatial_sounds).where(
+            scene_spatial_sounds.c.sound_id == restored_sound["id"])).mappings().one()
+
+    assert asset["id"] != asset_id and asset["content_type"] == "audio/ogg"
+    assert restored_sound["id"] != sound.value["id"] and restored_sound["asset_id"] == asset["id"]
+    assert restored_sound["name"] == "Generator Hum" and restored_sound["kind"] == "sound-effect"
+    assert restored_emitter["id"] != emitter.value["id"] and restored_emitter["radius"] == 560
+    assert bool(restored_emitter["constrained_by_walls"]) is True
+    assert __import__("pathlib").Path(asset["storage_path"]).read_bytes() == ogg

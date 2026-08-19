@@ -194,6 +194,7 @@
     });
     const mapMeasures = window.GravewrightMapMeasures.createMeasureToolkit({
         activeCanvas,
+        boardRenderer,
         activeDrawColor: (canvas) => window.GravewrightTools?.activeDrawColor || canvas.dataset.activeDrawColor || "#f8fafc",
         applyActiveLayer,
         broadcastAreaMarkerUpsert,
@@ -230,6 +231,17 @@
         measures: mapMeasures,
         sceneDataFor,
         stateFor,
+    });
+    document.querySelectorAll("[data-map-canvas][data-scene-id]").forEach((canvas) => {
+        try {
+            const boardItems = JSON.parse(canvas.dataset.boardAreaMarkers || "[]");
+            if (Array.isArray(boardItems)) {
+                mapMeasureController.applyMeasureSnapshot({
+                    scene_id: canvas.dataset.sceneId,
+                    board_area_markers: boardItems,
+                });
+            }
+        } catch {  }
     });
     mapLayerMode.bindEvents();
     const mapRenderLoop = window.GravewrightMapRenderLoop.createRenderLoop({
@@ -437,83 +449,6 @@
     function clearSelection(canvas) {
         mapSelection.clear(canvas);
     }
-
-
-    function hpToolConfig() {
-        const panel = document.querySelector('[data-tool-sub-panel="hp"]');
-        const input = panel?.querySelector('[data-hp-amount]');
-        const raw = Number.parseInt(input?.value || "1", 10);
-        const amount = Number.isFinite(raw) ? Math.max(0, raw) : 1;
-        const operation = window.GravewrightTools?.activeSubTool || "damage";
-        return { operation, amount };
-    }
-
-    function showHpToast(message) {
-        if (window.GravewrightToasts?.showToast) {
-            window.GravewrightToasts.showToast(message, { duration: 2200, id: "token-hp-tool" });
-        }
-    }
-
-    function applyLocalHpTool(canvas, token, operation, amount) {
-        const store = tokenStoreFor(canvas);
-        const current = store.get(token.token_id) || token;
-        const bars = { ...(current.bars || {}) };
-        const bar = { ...(bars.bar_1 || {}) };
-        const before = Number.isFinite(Number(bar.value)) ? Number(bar.value) : 0;
-        const max = Number.isFinite(Number(bar.max)) ? Number(bar.max) : null;
-        let next = operation === "set"
-            ? amount
-            : operation === "heal"
-                ? before + amount
-                : before - amount;
-        if (max != null) next = Math.min(max, next);
-        next = Math.max(0, next);
-        bar.value = next;
-        bars.bar_1 = bar;
-        store.set(current.token_id, { ...current, bars });
-        markDirty(canvas);
-        showHpToast(`${current.name || "Token"}: HP ${max == null ? next : `${next}/${max}`}`);
-    }
-
-    async function applyHpTool(canvas, token) {
-        if (!token?.token_id) return;
-        if (!canControlToken(token, canvas)) {
-            showHpToast("Você não controla este token.");
-            return;
-        }
-        const scene = sceneDataFor(canvas);
-        if (!scene) return;
-        const { operation, amount } = hpToolConfig();
-        if (document.body?.dataset?.streamerMode === "true") {
-            applyLocalHpTool(canvas, token, operation, amount);
-            return;
-        }
-        const payload = {
-            room_id: canvas.dataset.roomId || "",
-            campaign_id: canvas.dataset.roomId || "",
-            scene_id: scene.id,
-            token_id: token.token_id,
-            operation,
-        };
-        if (operation === "set") payload.value = amount;
-        else payload.amount = amount;
-
-        try {
-            const result = await mapApi.updateTokenHp(payload);
-            if (result?.token_view?.token_id) {
-                tokenStoreFor(canvas).set(result.token_view.token_id, result.token_view);
-                markDirty(canvas);
-            }
-            const next = result?.value_after;
-            const max = result?.max_value;
-            const hp = max == null ? next : `${next}/${max}`;
-            showHpToast(`${token.name || "Token"}: HP ${hp}`);
-        } catch (err) {
-            const key = err?.details?.error_key || err?.message || "Erro ao alterar HP.";
-            showHpToast(key === "tokens.errors.permission_denied" ? "Você não pode alterar o HP deste token." : key);
-        }
-    }
-
 
 
     function selectedMeasureIdFor(canvas) {
@@ -815,6 +750,7 @@
 
 
     document.addEventListener("pointerdown", (event) => {
+        if (event.target.closest?.("[data-scene-object-id]")) return;
         const canvas = event.target.closest("[data-map-canvas]")
             || event.target.closest("[data-map-viewport]")?.querySelector("[data-map-canvas]");
         if (!canvas) return;
@@ -854,12 +790,6 @@
                 startMeasure(canvas, event);
                 return;
             }
-            if (activeTool === "hp") {
-                event.preventDefault();
-                const hit = tokenAtPoint(canvas, event.clientX, event.clientY);
-                if (hit) void applyHpTool(canvas, hit);
-                return;
-            }
             scheduleBoardPing(canvas, event);
             if (activeTool !== "select") return;
 
@@ -867,6 +797,8 @@
             const hit = tokenAtPoint(canvas, event.clientX, event.clientY);
             if (hit) {
                 mapTokenDrag.start(canvas, event, hit, { additive });
+            } else if (mapMeasureController.startShapeSelection(canvas, event)) {
+                event.preventDefault();
             } else {
 
                 mapMarquee.start(canvas, event, { additive });
@@ -1141,6 +1073,7 @@
     window.GravewrightMapZoom.bindZoomWheel({
         clampZoom,
         markDirty,
+        rotateSelectedMeasureByWheel: (canvas, deltaY) => mapMeasureController.rotateSelectedMeasureByWheel(canvas, deltaY),
         scheduleCameraSave,
         scheduleViewportUpdate,
         stateFor,
@@ -1188,6 +1121,7 @@
         handleSceneUpdated,
         handleSessionResumed,
         handleViewportReady,
+        updateSceneInfoCache: mapStreaming.updateSceneInfoCache,
         handleGmPrefetchHint: mapStreaming.handleGmPrefetchHint,
         handleTokensConditionsUpdated,
         handleTokensCreated,
@@ -1309,6 +1243,7 @@
         historyUndo: () => boardHistory.undo(),
         historyRedo: () => boardHistory.redo(),
         debugSnapshot,
+        measurementSnapshot: () => boardRenderer.measurementSnapshot(activeCanvas()),
         benchmarkSetAnimatedTokens: (tokens, sources) => {
             const canvas = activeCanvas();
             const store = canvas ? tokenStoreFor(canvas) : null;

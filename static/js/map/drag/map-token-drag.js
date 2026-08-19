@@ -82,6 +82,10 @@
                 });
             }
 
+            const paths = Object.fromEntries(group.map((item) => [item.tokenId, [
+                { grid_x: item.startGridX, grid_y: item.startGridY },
+            ]]));
+
             const state = stateFor(canvas);
             const pointerWorld = screenToWorldXY(event.clientX, event.clientY, state);
             const tokenWorldX = hit.grid_x * scene.scaledTileSize;
@@ -101,6 +105,7 @@
                 grabOffsetWorldY: pointerWorld.worldY - tokenWorldY,
                 hasMoved: false,
                 group,
+                paths,
             };
             canvas.setPointerCapture(event.pointerId);
             return true;
@@ -204,6 +209,14 @@
             activeDrag.currentGridY = grid_y;
             activeDrag.hasMoved = true;
             if (positions) activeDrag.positions = positions;
+            activeDrag.group.forEach((groupToken) => {
+                const candidate = positions?.[groupToken.tokenId] || { gridX: grid_x, gridY: grid_y };
+                const path = activeDrag.paths[groupToken.tokenId];
+                const last = path[path.length - 1];
+                if (last.grid_x !== candidate.gridX || last.grid_y !== candidate.gridY) {
+                    path.push({ grid_x: candidate.gridX, grid_y: candidate.gridY });
+                }
+            });
 
             markDirty(canvas);
             return true;
@@ -233,20 +246,21 @@
                         if (token) store.set(id, { ...token, ...position });
                         markDirty(canvas);
                     };
-                    const sendMove = (id, gx, gy) => {
+                    const sendMove = (id, gx, gy, path = []) => {
                         const token = store.get(id);
                         if (token && (token.grid_x !== gx || token.grid_y !== gy)) {
                             moves.push({
                                 token_id: id,
                                 from: { grid_x: token.grid_x, grid_y: token.grid_y },
                                 to: { grid_x: gx, grid_y: gy },
+                                path,
                             });
                         }
                         if (token) store.set(id, { ...token, grid_x: gx, grid_y: gy });
                         if (streamerLocalMode()) return;
                         window.GravewrightRealtime?.sendCommand(
                             "token.move",
-                            { scene_id: scene.id, token_id: id, grid_x: gx, grid_y: gy },
+                            { scene_id: scene.id, token_id: id, grid_x: gx, grid_y: gy, movement_path: path },
                             { sceneId: scene.id, roomId },
                         );
                     };
@@ -258,11 +272,11 @@
                                 pos
                                 && (pos.gridX !== groupToken.startGridX || pos.gridY !== groupToken.startGridY)
                             ) {
-                                sendMove(groupToken.tokenId, pos.gridX, pos.gridY);
+                                sendMove(groupToken.tokenId, pos.gridX, pos.gridY, drag.paths?.[groupToken.tokenId] || []);
                             }
                         });
                     } else if (currentGridX !== startGridX || currentGridY !== startGridY) {
-                        sendMove(tokenId, currentGridX, currentGridY);
+                        sendMove(tokenId, currentGridX, currentGridY, drag.paths?.[tokenId] || []);
                     }
                     if (moves.length) {
                         history?.push?.({
@@ -274,7 +288,7 @@
                                     }
                                     window.GravewrightRealtime?.sendCommand?.(
                                         "token.move",
-                                        { scene_id: scene.id, token_id: move.token_id, ...move.from },
+                                        { scene_id: scene.id, token_id: move.token_id, ...move.from, movement_path: [...move.path].reverse() },
                                         { sceneId: scene.id, roomId },
                                     );
                                 });
@@ -287,7 +301,7 @@
                                     }
                                     window.GravewrightRealtime?.sendCommand?.(
                                         "token.move",
-                                        { scene_id: scene.id, token_id: move.token_id, ...move.to },
+                                        { scene_id: scene.id, token_id: move.token_id, ...move.to, movement_path: move.path },
                                         { sceneId: scene.id, roomId },
                                     );
                                 });

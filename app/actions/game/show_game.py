@@ -14,6 +14,8 @@ from app.config import config
 from app.business.game_page_service import GamePageService
 from app.business.users import UserPreferenceService
 from app.engine.sdk.package_asset_service import PackageAssetService
+from app.engine.audio.audio_runtime_service import AudioRuntimeService
+from app.persistence.repositories.input_binding_repository import InputBindingRepository
 from app.helpers.i18n import get_locale_from_cookies
 from app.helpers.view import view_context
 from app.realtime.transport import websocket_manager
@@ -28,6 +30,7 @@ def _game_client_context(
 ) -> dict:
     active_room = next((room for room in rooms if room["id"] == active_room_id), None)
     active_scene = active_room.get("active_scene") if active_room else None
+    audio = AudioRuntimeService().list(campaign_id=active_room_id, user_id=user["id"]) if active_room_id else None
     return {
 
 
@@ -36,6 +39,8 @@ def _game_client_context(
 
 
         "packageNonces": dict(package_nonces),
+        "audioPlaybacks": audio.value if audio and audio.success else [],
+        "inputBindings": InputBindingRepository().list(user["id"]),
         "user": {
             "id": user["id"],
             "name": user["name"],

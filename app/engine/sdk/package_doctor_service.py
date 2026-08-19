@@ -268,11 +268,46 @@ class PackageDoctorService:
                 used_capabilities.add(capability)
                 if capability not in declared:
                     findings.append(DoctorFinding(code="capability_used_undeclared", severity=SEVERITY_ERROR, package_id=package_id, details={"capability": capability, "method": f"sdk.{method}"}))
+        used_capabilities |= self._declarative_capabilities(loaded)
         for capability in sorted(declared - used_capabilities) if source else ():
             registered = registry.capabilities.get(capability)
             if registered and registered.methods and registered.is_frontend:
                 findings.append(DoctorFinding(code="capability_declared_unused", severity=SEVERITY_WARNING, package_id=package_id, details={"capability": capability}))
         return findings
+
+    @staticmethod
+    def _declarative_capabilities(loaded) -> set[str]:
+        """Capabilities a package exercises through declared registries, not calls.
+
+        A registered action never appears as ``sdk.<method>(`` in package source:
+        core executes it from the manifest's action registry. Its operations still
+        require real authority, so scanning only for call sites reports a declared
+        capability as unused when it is in fact mandatory.
+        """
+        from app.engine.rules.declarative_action_registry import OPERATIONS
+
+        manifest = getattr(loaded, "manifest", None)
+        package_dir = getattr(loaded, "package_dir", None)
+        rules = getattr(manifest, "rules", None) if manifest else None
+        relative = rules.get("actionRegistry", "") if isinstance(rules, dict) else ""
+        path = safe_join(package_dir, relative) if package_dir and relative else None
+        if path is None or not path.is_file():
+            return set()
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return set()
+        actions = document.get("actions") if isinstance(document, dict) else None
+        if not isinstance(actions, list) or not actions:
+            return set()
+        # Declaring executable actions is itself use of the action surface.
+        used = {"rules.actions"}
+        for action in actions:
+            for operation in (action.get("operations") or []) if isinstance(action, dict) else ():
+                capability = OPERATIONS.get(operation.get("op")) if isinstance(operation, dict) else None
+                if capability:
+                    used.add(capability)
+        return used
 
     def _audit_manifest_integrity(
         self, package_id: str, record: dict, loaded

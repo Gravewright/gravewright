@@ -25,7 +25,7 @@ def test_generated_sdk1_contract_covers_the_stable_registry_and_runtime() -> Non
     assert methods==expected
     assert all(item["signature"].startswith(f"sdk.{item['path']}(") for item in contract["methods"])
     assert all(item["requiredCapability"] in registry["capabilities"] for item in contract["methods"])
-    assert len(contract["methods"]) == 187
+    assert len(contract["methods"]) == len(expected)
     assert all(item["returns"] != "JsonValue" for item in contract["methods"])
     assert all(
         parameter["type"] not in {"object", "function", "JsonValue", "any", "unknown"}

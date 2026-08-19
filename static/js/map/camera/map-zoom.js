@@ -3,6 +3,7 @@
         const {
             clampZoom,
             markDirty,
+            rotateSelectedMeasureByWheel,
             scheduleCameraSave,
             scheduleViewportUpdate,
             stateFor,
@@ -14,6 +15,12 @@
             if (!canvas) return;
 
             if (event.altKey && window.GravewrightFog?.handleAltWheel?.(event)) {
+                event.preventDefault();
+                return;
+            }
+
+
+            if (event.shiftKey && rotateSelectedMeasureByWheel?.(canvas, event.deltaY)) {
                 event.preventDefault();
                 return;
             }

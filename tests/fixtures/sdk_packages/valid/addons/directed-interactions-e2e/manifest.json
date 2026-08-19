@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "addon",
+  "id": "directed-interactions-e2e",
+  "name": "Directed Interactions E2E",
+  "version": "1.0.0",
+  "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"},
+  "capabilities": [
+    "assets.scripts",
+    "ui.slots",
+    "events.subscribe",
+    "interactions.request",
+    "interactions.respond"
+  ],
+  "activation": {"scope": "campaign", "mode": "multiple"},
+  "entrypoints": {"game": {"scripts": ["main.js"]}},
+  "provides": {}
+}

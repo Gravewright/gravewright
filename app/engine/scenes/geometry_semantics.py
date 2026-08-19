@@ -6,7 +6,7 @@ from math import inf, isfinite
 
 
 def channel_blocks(wall: dict, channel: str) -> bool:
-    if channel not in {"movement", "vision", "light"}:
+    if channel not in {"movement", "vision", "light", "sound"}:
         raise ValueError("unsupported geometry channel")
     if wall.get("kind") == "door" and wall.get("door_state") == "open":
         return False
@@ -58,3 +58,19 @@ def movement_crosses_wall(*, walls: list[dict], origin: tuple[float, float], tar
 def line_of_sight_blocked(*, walls: list[dict], origin: tuple[float,float,float], target: tuple[float,float,float], channel: str = "vision") -> bool:
     if channel not in {"vision","light"} or not all(isfinite(float(value)) for value in (*origin,*target)): raise ValueError("invalid semantic ray")
     return any(ray_crosses_wall(wall=wall,channel=channel,origin=origin,target=target) for wall in walls)
+
+
+def sound_attenuation(*, walls: list[dict], origin: tuple[float,float,float], target: tuple[float,float,float]) -> float:
+    """Return only a safe acoustic scalar; callers never need hidden geometry."""
+    if not all(isfinite(float(value)) for value in (*origin,*target)): raise ValueError("invalid acoustic ray")
+    gain = 1.0
+    for wall in walls:
+        if wall.get("kind") == "door" and wall.get("door_state") == "open": continue
+        t=_intersection_t(origin,target,(float(wall["x1"]),float(wall["y1"])),(float(wall["x2"]),float(wall["y2"])))
+        if t is None: continue
+        z=origin[2]+(target[2]-origin[2])*t
+        if not height_blocked(wall,z): continue
+        behavior=wall.get("sound_behavior","block")
+        gain *= 1.0 if behavior=="pass" else 0.45 if behavior=="attenuate" else 0.0
+        if gain <= 0.0025: return 0.0
+    return max(0.0,min(1.0,gain))

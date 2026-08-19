@@ -11,7 +11,17 @@ from app.engine.sdk.package_paths import safe_join
 
 ACTION_ID = re.compile(r"^[a-z][a-z0-9._-]{0,95}$")
 IDEMPOTENCY = {"IDEMPOTENT", "REQUIRES_IDEMPOTENCY_KEY", "NOT_DURABLE"}
-OPERATIONS = {"actor.data.patch": "actors.data.write"}
+OPERATIONS = {
+    "actor.data.patch": "actors.data.write",
+    "cards.placement.place": "cards.manage",
+    "actors.items.insertCopy": "actors.items.write",
+    "scene.objects.create": "scene.objects.write",
+}
+DROP_BINDINGS = {
+    "cards.placement.place": {"card": "SOURCE_CARD", "boardZone": "TARGET_SCENE_OBJECT", "position": "DROP_WORLD_POSITION"},
+    "actors.items.insertCopy": {"item": "SOURCE_ITEM", "actor": "TARGET_ACTOR"},
+    "scene.objects.create": {"scene": "TARGET_SCENE", "position": "DROP_WORLD_POSITION", "content": "SOURCE_CONTENT_REFERENCE"},
+}
 MAX_ACTIONS = 128
 MAX_STEPS = 16
 MAX_SCHEMA_BYTES = 16_384
@@ -42,7 +52,7 @@ class RegisteredAction:
     @property
     def durability(self) -> str:
         # Derived by core from the operation topology; packages cannot assert it.
-        return "supported" if len(self.operations) == 1 and self.operations[0].get("op") == "actor.data.patch" else "unsupported"
+        return "supported" if len(self.operations) == 1 and self.operations[0].get("op") in OPERATIONS else "unsupported"
 
     def public(self) -> dict:
         return {
@@ -89,6 +99,17 @@ def _validate_definition(package_id: str, raw: object, capabilities: set[str]) -
             raise ActionContractError("sdk.rules.actions.capability_unknown")
         if operation["op"] == "actor.data.patch" and not isinstance(operation.get("patch"), dict):
             raise ActionContractError("sdk.rules.actions.operation_invalid")
+        if operation["op"] in DROP_BINDINGS:
+            expected=DROP_BINDINGS[operation["op"]]
+            if any(operation.get(name)!=binding for name,binding in expected.items()):
+                raise ActionContractError("sdk.rules.actions.operation_binding_invalid")
+            allowed={"op",*expected}
+            if operation["op"]=="actors.items.insertCopy":allowed.add("slot")
+            if operation["op"]=="scene.objects.create":allowed.update({"objectTypeId","audience"})
+            if set(operation)-allowed or operation["op"]=="actors.items.insertCopy" and not ACTION_ID.fullmatch(str(operation.get("slot") or "")):
+                raise ActionContractError("sdk.rules.actions.operation_invalid")
+            if operation["op"]=="scene.objects.create" and (not str(operation.get("objectTypeId") or "").startswith(package_id+".") or operation.get("audience",{"kind":"campaign"}).get("kind") not in {"campaign","gm"}):
+                raise ActionContractError("sdk.rules.actions.operation_invalid")
         required.add(capability)
         clean.append(operation)
     semantics = raw.get("semantics", [])

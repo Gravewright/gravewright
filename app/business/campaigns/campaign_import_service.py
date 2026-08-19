@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.business.campaigns.campaign_export_service import CampaignExportService
@@ -44,6 +44,7 @@ from app.persistence.tables import (
     scene_assets, scene_tiles, scene_chunks,
     card_deck_definitions, card_definitions, card_deck_instances, card_piles,
     card_instances, card_pile_entries, scene_card_placements,
+    sounds, sound_playlists, soundscapes, scene_spatial_sounds,
 )
 
 MAX_CAMPAIGN_ARCHIVE_BYTES = 50 * 1024 * 1024
@@ -488,6 +489,37 @@ class CampaignImportService:
             row.update(id=uuid.uuid4().hex,campaign_id=campaign_id,scene_id=scene,asset_id=mapped,owner_user_id=user_id,created_at=now,updated_at=now)
             connection.execute(insert(scene_image_placements).values(**row))
         counts["scene_images"]=len(self._rows(content,"scene_image_placements"))
+
+        sound_map={str(raw.get("id")):uuid.uuid4().hex for raw in self._rows(content,"sounds")}
+        for raw in self._rows(content,"sounds"):
+            asset=required(asset_map,raw.get("asset_id"))
+            if not asset: raise ValueError("unresolved Sound asset")
+            row=self._fit(sounds,raw);row.update(id=sound_map[str(raw.get("id"))],campaign_id=campaign_id,asset_id=asset,created_at=now,updated_at=now)
+            connection.execute(insert(sounds).values(**row))
+        def rewrite_sound_ids(value):
+            decoded=json.loads(value or "[]")
+            def walk(node):
+                if isinstance(node,dict):
+                    for key,item in list(node.items()): node[key]=required(sound_map,item) if key=="soundId" else [required(sound_map,x) for x in item] if key=="soundIds" and isinstance(item,list) else walk(item)
+                elif isinstance(node,list):
+                    for index,item in enumerate(node): node[index]=walk(item)
+                return node
+            return json.dumps(walk(decoded),ensure_ascii=False,separators=(",",":"))
+        soundscape_map={str(raw.get("id")):uuid.uuid4().hex for raw in self._rows(content,"soundscapes")}
+        for table,mapping,json_fields in ((sound_playlists,{str(raw.get("id")):uuid.uuid4().hex for raw in self._rows(content,"sound_playlists")},("entries_json",)),(soundscapes,soundscape_map,("layers_json","random_pools_json"))):
+            for raw in self._rows(content,table.name):
+                row=self._fit(table,raw);row.update(id=mapping[str(raw.get("id"))],campaign_id=campaign_id,created_at=now,updated_at=now)
+                for json_field in json_fields: row[json_field]=rewrite_sound_ids(raw.get(json_field))
+                connection.execute(insert(table).values(**row))
+        for raw in self._rows(content,"scene_spatial_sounds"):
+            scene=required(scene_map,raw.get("scene_id"));sound=required(sound_map,raw.get("sound_id"))
+            if not scene or not sound: raise ValueError("unresolved Spatial Sound")
+            row=self._fit(scene_spatial_sounds,raw);row.update(id=uuid.uuid4().hex,scene_id=scene,sound_id=sound,created_at=now,updated_at=now)
+            connection.execute(insert(scene_spatial_sounds).values(**row))
+        for raw in self._rows(content,"scenes"):
+            old=raw.get("soundscape_id")
+            if old: connection.execute(update(scenes).where(scenes.c.id==required(scene_map,raw.get("id"))).values(soundscape_id=required(soundscape_map,old)))
+        counts["sounds"]=len(sound_map);counts["soundscapes"]=len(soundscape_map);counts["spatial_sounds"]=len(self._rows(content,"scene_spatial_sounds"))
 
         deck_map={str(raw.get("id")):uuid.uuid4().hex for raw in self._rows(content,"card_deck_definitions")}
         for raw in self._rows(content,"card_deck_definitions"):

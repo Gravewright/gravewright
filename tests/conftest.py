@@ -7,7 +7,9 @@ os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("ALLOW_METADATA_BOOTSTRAP", "true")
 
 
-os.environ.setdefault("ALLOWED_HOSTS", "testserver.local,localhost,127.0.0.1")
+# The test session owns its host policy.  A developer's local ``.env`` must not
+# change deterministic TestClient expectations before ``app.config`` is imported.
+os.environ["ALLOWED_HOSTS"] = "testserver.local,localhost,127.0.0.1"
 
 import time
 import uuid

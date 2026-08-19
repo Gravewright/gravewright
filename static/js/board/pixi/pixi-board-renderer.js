@@ -357,6 +357,23 @@
             this.deps.requestRender?.();
         }
 
+        setMeasurements(canvas, snapshot) {
+            this.attach(canvas);
+            const board = this.boards.get(canvas);
+            if (!board) return;
+            const next = snapshot || { items: [] };
+            const key = JSON.stringify(next);
+            if (key === board.measureSnapshotKey) return;
+            board.measureSnapshot = next;
+            board.measureSnapshotKey = key;
+            this.deps.requestRender?.();
+        }
+
+        measurementSnapshot(canvas = this.active) {
+            const board = canvas && this.boards.get(canvas);
+            return JSON.parse(JSON.stringify(board?.measureSnapshot || { items: [] }));
+        }
+
         render() {
             const board = this.active && this.boards.get(this.active);
             if (!board || !board.ready) return;
@@ -384,8 +401,10 @@
             this._renderTokens(board, cssW, cssH);
             this._renderGhosts(board);
             this._renderOrigin(board);
+            this._renderSpatialSounds?.(board);
             this._renderLighting?.(board, cssW, cssH);
             this._renderFog(board, cssW, cssH);
+            this._renderMeasurements?.(board);
             this._renderPings(board);
             this._cancelObsoleteTextureJobs();
             this._enforceTextureBudget();
@@ -430,6 +449,8 @@
                 originWorldLayer: null,
                 ghostsGfx: null,
                 originGfx: null,
+                spatialSoundLayer: null,
+                spatialSoundGfx: null,
                 lightingLayer: null,
                 lightingSprite: null,
                 lightingScene: null,
@@ -469,6 +490,12 @@
                 pingLayer: null,
                 pingGfx: null,
                 pings: [],
+                measureLayer: null,
+                measureGfx: null,
+                measureLabelLayer: null,
+                measureLabels: [],
+                measureSnapshot: { items: [] },
+                measureSnapshotKey: "",
 
                 tileSprites: new Map(),
                 tokenNodes: new Map(),

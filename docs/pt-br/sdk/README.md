@@ -126,6 +126,7 @@ grave package doctor my-rpg
 - [`kinds.md`](kinds.md): kinds de pacote e regras específicas.
 - [`capabilities.md`](capabilities.md): capabilities permitidas, proibidas e gates por método.
 - [`runtime.md`](runtime.md): ciclo de vida do runtime e `window.GravewrightSDK`.
+- [`input-commands.md`](input-commands.md): comandos semânticos, atalhos e regras de digitação.
 - [`html-sheets.md`](html-sheets.md): guia completo de fichas HTML de ator/item, do template ao controller.
 - [`reference.md`](reference.md): referência completa dos namespaces do `sdk` escopado.
 - [`rolls.md`](rolls.md) - rolagens autoritativas, intents de rolagem e sintaxe de dados.

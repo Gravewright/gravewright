@@ -4,13 +4,23 @@ import pytest
 from litestar.testing import TestClient
 
 from app.business.users.user_preference_service import DEFAULT_PING_COLOR, UserPreferenceService
-from app.realtime.board_command_handler import BoardCommandHandler
+from app.realtime.board_command_handler import BoardCommandHandler, _representation_shape_style
 from app.realtime.command_dispatcher import ClientCommandContext
 from app.realtime.events import TransportEvent
 from tests.conftest import TEST_SESSION_CONFIG, login, seed_campaign, seed_member, seed_scene, seed_user
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_identification_color_styles_markers_and_measurements_consistently():
+    style = _representation_shape_style({"strokeDasharray": "4 2", "strokeWidth": 3}, "#22c55e")
+    assert style == {
+        "strokeDasharray": "4 2",
+        "strokeWidth": 3,
+        "stroke": "#22c55e",
+        "fill": "rgba(34,197,94,0.18)",
+    }
 
 
 def test_ping_color_is_persisted_and_validated(db):

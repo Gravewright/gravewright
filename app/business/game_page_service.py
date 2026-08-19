@@ -29,6 +29,9 @@ from app.persistence.repositories.item_folder_repository import ItemFolderReposi
 from app.persistence.repositories.item_repository import ItemRepository
 from app.persistence.repositories.journal_folder_repository import JournalFolderRepository
 from app.persistence.repositories.journal_repository import JournalRepository
+from app.persistence.repositories.scene_navigation_repository import NavigationRepository
+from app.engine.sheets.pdf_system_policy import is_pdf_sheet_system
+from app.business.campaigns.campaign_system_service import resolved_area_marker_presets
 
 
 DEFAULT_MEASURE_FLASH_SECONDS = 6
@@ -59,6 +62,7 @@ class GamePageService:
         self.items = ItemRepository()
         self.item_folders = ItemFolderRepository()
         self.system_install = PackageInstallService()
+        self.navigation = NavigationRepository()
 
     def build_context(self, *, user_id: str, navigated_scene_id: str | None = None) -> GamePageContext:
         campaigns = self.campaigns.list_for_user(user_id)
@@ -146,6 +150,13 @@ class GamePageService:
             room["active_scene"] = self.scenes.get_active_scene(campaign["id"])
             room["loaded_scene"] = room["active_scene"]
             room["navigated_scene"] = room["active_scene"]
+            persisted_navigation = self.navigation.get(campaign["id"], user_id)
+            if persisted_navigation:
+                persisted_scene = next((scene for scene in room["scenes"] if scene["id"] == persisted_navigation["scene_id"]), None)
+                if persisted_scene is not None:
+                    room["active_scene"] = persisted_scene
+                    room["loaded_scene"] = persisted_scene
+                    room["navigated_scene"] = persisted_scene
             if navigated_scene_id and has_full_view(room["member_role"]):
                 navigated = next(
                     (scene for scene in room["scenes"] if scene["id"] == navigated_scene_id),
@@ -200,9 +211,27 @@ class GamePageService:
                 if record is not None and active_system is not None
                 else None
             )
+            room["uses_pdf_sheet_system"] = is_pdf_sheet_system(sys_id)
             room["area_marker_presets_json"] = json.dumps(
-                room["active_system"]["area_markers"] if room["active_system"] else []
+                resolved_area_marker_presets(
+                    room["active_system"]["area_markers"] if room["active_system"] else []
+                )
             )
+            initial_board_items: list[dict] = []
+            if room["active_scene"]:
+                try:
+                    parsed_board_items = json.loads(
+                        room["active_scene"].get("board_area_markers_json") or "[]"
+                    )
+                    if isinstance(parsed_board_items, list):
+                        can_view_gm_layer = room["member_role"] in ("gm", "assistant_gm") or room.get("is_streamer")
+                        initial_board_items = [
+                            item for item in parsed_board_items
+                            if isinstance(item, dict) and (can_view_gm_layer or item.get("layer") != "gm")
+                        ]
+                except (TypeError, ValueError):
+                    initial_board_items = []
+            room["board_area_markers_json"] = json.dumps(initial_board_items, separators=(",", ":"))
 
             room["members_json"] = json.dumps(
                 [

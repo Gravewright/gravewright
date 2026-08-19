@@ -10,7 +10,6 @@
             flashStoreFor: (canvas) => store.flashStoreFor(canvas),
             geometry,
             measureStoreFor: (canvas) => store.measureStoreFor(canvas),
-            svgStyleFor: window.GravewrightMapMeasureStore.svgStyleFor,
         });
         const editors = window.GravewrightMapMeasureEditors.createMeasureEditors({
             ...deps,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import time
 import uuid
 from typing import Any
@@ -533,7 +534,7 @@ def _normalize_board_area_marker(raw: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("marker.shape is invalid")
     if not isinstance(start, dict) or not isinstance(end, dict):
         raise ValueError("marker points are required")
-    return {
+    marker = {
         "id": marker_id,
         "scene_id": scene_id,
         "shape": shape,
@@ -544,6 +545,14 @@ def _normalize_board_area_marker(raw: dict[str, Any]) -> dict[str, Any]:
         **_normalize_board_area_marker_style(raw.get("style")),
         **_normalize_board_layer(raw.get("layer")),
     }
+    if raw.get("anchor_mode") in {"center", "vertex"}:
+        marker["anchor_mode"] = raw["anchor_mode"]
+    rotation = raw.get("rotation")
+    if isinstance(rotation, int | float) and not isinstance(rotation, bool) and math.isfinite(rotation):
+        normalized_rotation = float(rotation) % 360.0
+        if normalized_rotation:
+            marker["rotation"] = normalized_rotation
+    return marker
 
 
 def _normalize_board_layer(raw: Any) -> dict[str, str]:

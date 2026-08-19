@@ -1,0 +1,18 @@
+(() => { window.GravewrightSDK.register({id:"scene-runtime-e2e",async ready(sdk){
+  const actor=(await sdk.actors.list())[0];
+  let completions=0;
+  sdk.events.on("rules.action.completed",()=>{document.body.dataset.sceneRuntimeCompletions=String(++completions);});
+  sdk.events.on("input.binding.changed",()=>{document.body.dataset.sceneRuntimeBindingEvent="1";});
+  // Server-authoritative command: the actor is pre-bound once the package knows it,
+  // so a keypress carries no payload of its own and cannot be redirected.
+  await sdk.input.commands.register({id:"certify",label:"Certify",contexts:["global","text-input-excluded"],defaultBindings:["Shift+H"],registeredAction:"scene-runtime-e2e:command-hit@1",actionInput:{actorId:actor.id}});
+  sdk.ui.applications.register("console",{parts:{status(context,root){const body=root.ownerDocument.createElement("p");body.dataset.testid="scene-runtime-console-body";body.textContent="Console open";return body;}}});
+  let consoleHost=null;
+  // Local semantic command: opens a package application through the public UI API.
+  await sdk.input.commands.register({id:"open-console",label:"Open console",contexts:["global","text-input-excluded"],defaultBindings:["Alt+U"]},async invocation=>{
+    document.body.dataset.sceneRuntimeInvocation=Object.keys(invocation).sort().join(",");
+    document.body.dataset.sceneRuntimeInvocationCommand=String(invocation.commandId)+"/"+String(invocation.source)+"/"+String(invocation.binding);
+    if(!consoleHost)return;consoleHost.hidden=false;await sdk.ui.applications.render("console",consoleHost);
+  });
+  sdk.ui.slots.register("dock.actions",host=>{const root=document.createElement("section");root.dataset.testid="scene-runtime-controls";root.innerHTML='<input data-testid="scene-runtime-users" aria-label="Users"><input data-testid="scene-runtime-scene" aria-label="Scene"><button data-testid="scene-runtime-audio">Audio</button><button data-testid="scene-runtime-nav">Navigate</button><button data-testid="scene-runtime-rebind">Rebind</button><button data-testid="scene-runtime-read">Read</button><output data-testid="scene-runtime-result"></output><div data-testid="scene-runtime-console" hidden></div>';const users=()=>root.querySelector('[data-testid="scene-runtime-users"]').value.split(",").filter(Boolean);const result=root.querySelector("output");consoleHost=root.querySelector('[data-testid="scene-runtime-console"]');root.querySelector('[data-testid="scene-runtime-audio"]').onclick=async()=>{try{const playback=await sdk.audio.play({asset:{kind:"package-asset",id:"tone.mp3"},channel:"ambience",loop:true,gain:.8,audience:{kind:"users",ids:users()},fade:{durationMs:1000,curve:"linear"},idempotencyKey:"scene-runtime-audio"});document.body.dataset.sceneRuntimePlaybackId=playback.id;result.textContent=playback.id;}catch(error){document.body.dataset.sceneRuntimeError=error.message;}};root.querySelector('[data-testid="scene-runtime-nav"]').onclick=()=>sdk.navigation.scene.go({sceneId:root.querySelector('[data-testid="scene-runtime-scene"]').value,recipients:{kind:"users",ids:users()},reason:"scene-runtime-certification"});root.querySelector('[data-testid="scene-runtime-rebind"]').onclick=async()=>{const bound=await sdk.input.bindings.set("certify","Ctrl+J");document.body.dataset.sceneRuntimeBinding=String(bound.binding);};root.querySelector('[data-testid="scene-runtime-read"]').onclick=async()=>{const projection=await sdk.actors.data(actor.id);document.body.dataset.sceneRuntimeCommandHit=String(Boolean(projection&&projection.data&&projection.data.commandHit));};host.append(root);});
+}}); })();
