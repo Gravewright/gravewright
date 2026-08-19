@@ -25,6 +25,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
+        with:
+          # Pinned to the uv the Dockerfile installs. Resolving "latest" makes the
+          # action fetch a version index over the network, which is a build-breaking
+          # dependency on a third-party host for something that should be fixed.
+          version: "0.9.11"
       - run: uv python install
       - run: uv sync --frozen --extra dev
       - name: Ruff lint
@@ -42,6 +47,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
+        with:
+          # Pinned to the uv the Dockerfile installs. Resolving "latest" makes the
+          # action fetch a version index over the network, which is a build-breaking
+          # dependency on a third-party host for something that should be fixed.
+          version: "0.9.11"
       - run: uv python install 3.11
       - run: uv sync --frozen
       - name: Compile Python files
@@ -71,6 +81,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
+        with:
+          # Pinned to the uv the Dockerfile installs. Resolving "latest" makes the
+          # action fetch a version index over the network, which is a build-breaking
+          # dependency on a third-party host for something that should be fixed.
+          version: "0.9.11"
       - run: uv python install
       - run: uv sync --frozen
       - name: Empty DB -> alembic upgrade head -> status
@@ -112,6 +127,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v7
+        with:
+          # Pinned to the uv the Dockerfile installs. Resolving "latest" makes the
+          # action fetch a version index over the network, which is a build-breaking
+          # dependency on a third-party host for something that should be fixed.
+          version: "0.9.11"
       - run: uv python install
       - run: uv sync --frozen --extra postgres --extra dev
       - name: Full migration chain on PostgreSQL
