@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "ruleset",
+  "id": "item-insertion-e2e",
+  "name": "Item Insertion E2E",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "1",
+    "verified": "1",
+    "maximum": "1.x"
+  },
+  "capabilities": [
+    "actors.register",
+    "items.register",
+    "rules.declarative",
+    "sheets.declarative"
+  ],
+  "activation": {
+    "scope": "campaign",
+    "mode": "exclusive"
+  },
+  "entrypoints": {},
+  "provides": {
+    "storage": {
+      "model": "item-insertion-e2e"
+    },
+    "actorTypes": [
+      {
+        "id": "character",
+        "label": "Character",
+        "sheet": "layouts/character.sheet.gw.json"
+      }
+    ],
+    "itemTypes": [
+      {
+        "id": "equipment",
+        "label": "Equipment"
+      }
+    ],
+    "rules": {
+      "itemInsertion": "rules/item-insertion.gw.json"
+    }
+  }
+}

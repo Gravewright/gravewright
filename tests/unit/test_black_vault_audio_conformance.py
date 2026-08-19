@@ -19,7 +19,7 @@ from tests.conftest import TEST_SESSION_CONFIG, login, seed_campaign, seed_scene
 
 
 PACKAGE_ID = "black-vault"
-PACKAGE_DIR = Path(__file__).resolve().parents[2] / "data" / "packages" / "addons" / PACKAGE_ID
+PACKAGE_DIR = Path(__file__).resolve().parents[2] / "examples" / "packages" / PACKAGE_ID
 SCRIPT = PACKAGE_DIR / "assets" / "black-vault.js"
 
 # A package that reaches any of these has left the public contract.

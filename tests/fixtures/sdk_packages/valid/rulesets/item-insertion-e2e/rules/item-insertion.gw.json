@@ -1,0 +1,16 @@
+{
+  "slots": [
+    {
+      "id": "inventory",
+      "storage": "inventory",
+      "accepts": [
+        "equipment"
+      ],
+      "duplicatePolicy": "allow",
+      "mapping": {
+        "name": "core.name",
+        "type": "core.type"
+      }
+    }
+  ]
+}
