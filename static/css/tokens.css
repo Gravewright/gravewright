@@ -33,8 +33,10 @@
     --border-strong: #46505c;
     --border-control: #637183;
     --border-soft: var(--border);
-    --border-accent: rgba(192, 154, 90, 0.36);
-    --border-accent-strong: rgba(192, 154, 90, 0.6);
+    /* O traco de detalhe herda a camada ativa da mesa; fora dela, e dourado. */
+    --layer-accent-rgb: 192, 154, 90;
+    --border-accent: rgba(var(--layer-accent-rgb), 0.36);
+    --border-accent-strong: rgba(var(--layer-accent-rgb), 0.6);
 
     --text-bright: #f0ebdd;
     --text: #d8d2c3;

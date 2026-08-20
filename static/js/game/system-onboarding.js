@@ -51,7 +51,7 @@
         const roomId = dialog.dataset.campaignId;
         dialog.close();
         if (action === "character") window.GravewrightModals?.open?.(`actor-create-${roomId}`);
-        if (action === "scene") window.GravewrightModals?.open?.(`scene-manager-${roomId}`);
+        if (action === "scene") window.GravewrightModals?.open?.(`panel-scenes-${roomId}`);
         if (action === "code") window.GravewrightModals?.open?.(`join-code-${roomId}`);
         if (action === "system") {
             window.GravewrightModals?.open?.(`panel-settings-${roomId}`);

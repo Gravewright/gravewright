@@ -162,6 +162,7 @@
             button.setAttribute("aria-pressed", locked ? "true" : "false");
             button.querySelector("i").className = locked ? "ph ph-lock" : "ph ph-lock-open";
         });
+        document.body.dataset.tableLayer = activeLayer;
         document.querySelectorAll("[data-tool-dock]").forEach((dock) => {
             dock.dataset.activeLayer = activeLayer;
             dock.dataset.layerLocked = layerState.locked[activeLayer] ? "true" : "false";

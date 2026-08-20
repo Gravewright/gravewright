@@ -4,13 +4,16 @@ import time
 import uuid
 
 from sqlalchemy import insert
+from sqlalchemy import delete
 from sqlalchemy import select
+from sqlalchemy import update
 
 from app.persistence.database import all_dicts
 from app.persistence.database import engine_begin
 from app.persistence.database import engine_connect
 from app.persistence.database import one_or_none
 from app.persistence.tables import scene_groups as scene_groups_table
+from app.persistence.tables import scenes as scenes_table
 
 
 class SceneGroupRepository:
@@ -64,3 +67,35 @@ class SceneGroupRepository:
                     )
                 )
             )
+
+    def rename(self, *, group_id: str, name: str) -> None:
+        with engine_begin() as conn:
+            conn.execute(
+                update(scene_groups_table)
+                .where(scene_groups_table.c.id == group_id)
+                .values(name=name, updated_at=int(time.time()))
+            )
+
+    def set_color(self, *, group_id: str, color: str) -> None:
+        with engine_begin() as conn:
+            conn.execute(
+                update(scene_groups_table)
+                .where(scene_groups_table.c.id == group_id)
+                .values(color=color, updated_at=int(time.time()))
+            )
+
+    def delete(self, *, group_id: str) -> None:
+        """Apaga a pasta e SOLTA as cenas dela; nunca apaga cena.
+
+        Uma cena carrega o mapa, os tiles e os chunks. Deixar uma pasta levar
+        tudo isso junto seria destruicao irreversivel escondida atras de um
+        clique de arrumacao -- remover cena continua sendo item proprio, no
+        menu do cartao, com confirmacao.
+        """
+        with engine_begin() as conn:
+            conn.execute(
+                update(scenes_table)
+                .where(scenes_table.c.group_id == group_id)
+                .values(group_id=None, updated_at=int(time.time()))
+            )
+            conn.execute(delete(scene_groups_table).where(scene_groups_table.c.id == group_id))

@@ -35,8 +35,8 @@
     <script defer src="/static/js/core/bootstrap.js"></script>
     
     <script defer src="/static/js/ui/slider-nudge.js?v=20260809-preview2"></script>
-    <script defer src="/static/js/tools/tools-registry.js?v=20260818-core-tools-cleanup2"></script>
-    <script defer src="/static/js/tools/tools-toolbar.js?v=20260818-core-tools-cleanup2"></script>
+    <script defer src="/static/js/tools/tools-registry.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/tools/tools-toolbar.js?v={{ asset_version }}-ctxorder1"></script>
     
     <script defer src="/static/js/realtime/realtime-client.js?v=20260604-realtime-split"></script>
     <script defer src="/static/js/realtime/realtime-events.js?v=20260604-realtime-split"></script>
@@ -66,10 +66,10 @@
     <script defer src="/static/js/map/camera/map-camera.js"></script>
     <script defer src="/static/js/map/camera/map-pan.js?v=20260604-map-controller"></script>
     <script defer src="/static/js/map/camera/map-zoom.js?v=20260818-marker-shift-wheel"></script>
-    <script defer src="/static/js/map/streaming/map-streaming.js?v=20260818-board-cache-delta"></script>
+    <script defer src="/static/js/map/streaming/map-streaming.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/map/board-history.js?v=20260605-board-history"></script>
     <script defer src="/static/js/map/selection/map-selection.js"></script>
-    <script defer src="/static/js/map/selection/map-marquee.js?v=20260624-marquee-overlay-select"></script>
+    <script defer src="/static/js/map/selection/map-marquee.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/map/drag/map-drag.js"></script>
     <script defer src="/static/js/map/drag/map-token-drag.js?v=20260818-wall-route-1"></script>
     <script defer src="/static/js/map/tokens/map-tokens.js"></script>
@@ -79,7 +79,7 @@
     <script defer src="/static/js/map/tokens/map-token-dom-events.js?v=20260604-map-controller"></script>
     <script defer src="/static/js/map/board-ping/map-board-ping.js?v=20260810-pixi-ping-realtime"></script>
     <script defer src="/static/js/map/add-to-scene/map-add-to-scene.js"></script>
-    <script defer src="/static/js/map/layers/map-layer-mode.js?v=20260809-preview2"></script>
+    <script defer src="/static/js/map/layers/map-layer-mode.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/map/input/map-token-steps.js?v=20260806-token-steps"></script>
     <script defer src="/static/js/map/input/map-keyboard-events.js?v=20260818-area-marker-transform"></script>
     <script defer src="/static/js/map/events/map-realtime-events.js?v=20260818-board-cache-delta"></script>
@@ -91,7 +91,7 @@
     <script defer src="/static/js/map/measures/map-measures.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/map/measures/map-measure-controller.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/map/map-debug.js?v=20260604-map-controller"></script>
-    <script defer src="/static/js/map/map-controller.js?v=20260818-pixi-measures-1"></script>
+    <script defer src="/static/js/map/map-controller.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/ui/status-zones.js?v=20260603-effects-board3"></script>
     <script defer src="/static/js/ui/invitations.js"></script>
     {% if command_palette_enabled %}<script defer src="/static/js/ui/command-palette.js?v={{ asset_version }}"></script>{% endif %}
@@ -108,7 +108,7 @@
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-remote.js?v=20260604-modals-split"></script>
-    <script defer src="/static/js/ui/modals/modal-forms.js?v=20260805-lights-vision"></script>
+    <script defer src="/static/js/ui/modals/modal-forms.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/ui/modals/modal-window-actions.js?v=20260605-detached-remote"></script>
     <script defer src="/static/js/ui/modals/modal-manager.js?v=20260814-journal-workspace"></script>
     <script defer src="/static/js/ui/modals/modal-drag.js?v=20260604-modals-split"></script>
@@ -138,6 +138,7 @@
     <script defer src="/static/js/assets/asset-library.js?v={{ asset_version }}-dynamic-asset-filters-1"></script>
     <script defer src="/static/js/dice/dice-tray.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/scene-images/scene-image-layer.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/scene-images/scene-image-picker.js?v={{ asset_version }}"></script>
     <script defer src="/static/vendor/easymde/easymde.min.js?v={{ asset_version }}"></script>
     <script defer src="/static/vendor/marked.min.js?v={{ asset_version }}"></script>
     <script defer src="/static/vendor/purify.min.js?v={{ asset_version }}"></script>
@@ -179,19 +180,19 @@
     <script defer src="/static/js/items/items-tree.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-context-actions.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-drag.js?v=20260604-items-split"></script>
-    <script defer src="/static/js/items/items-panel.js?v=20260604-items-split"></script>
+    <script defer src="/static/js/items/items-panel.js?v={{ asset_version }}-ctxorder1"></script>
     
     <script defer src="/static/js/content/content-api.js"></script>
     <script defer src="/static/js/content/content-browser.js"></script>
     <script defer src="/static/js/content/content-drag.js"></script>
     
-    <script defer src="/static/js/ui/context-menu/context-menu.js?v=20260814-journal-folders"></script>
-    <script defer src="/static/js/ui/context-menu/folder-editor.js?v=20260814-journal-folders"></script>
-    <script defer src="/static/js/ui/context-menu/token-context-menu.js?v=20260806-lighting-editors"></script>
-    <script defer src="/static/js/ui/context-menu/measure-context-menu.js?v=20260605-measure-layer-menu"></script>
-    <script defer src="/static/js/ui/context-menu/journal-context-menu.js?v=20260814-journal-folders"></script>
-    <script defer src="/static/js/ui/context-menu/actor-context-menu.js?v=20260604-ctxmenu-split"></script>
-    <script defer src="/static/js/ui/context-menu/item-context-menu.js?v=20260604-ctxmenu-split"></script>
+    <script defer src="/static/js/ui/context-menu/context-menu.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/ui/context-menu/folder-editor.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/ui/context-menu/token-context-menu.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/ui/context-menu/measure-context-menu.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/ui/context-menu/journal-context-menu.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/ui/context-menu/actor-context-menu.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/ui/context-menu/item-context-menu.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/ui/toasts.js"></script>
     
     <script defer src="/static/js/fog/fog-state.js?v=20260604-fog-split"></script>
@@ -201,6 +202,11 @@
     <script defer src="/static/js/fog/fog-panel.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/fog/fog-events.js?v=20260604-fog-split"></script>
     <script defer src="/static/js/fog/fog-controller.js?v=20260604-fog-split"></script>
+    <script defer src="/static/js/lighting/lighting-panel.js?v={{ asset_version }}-visibility1"></script>
+    <script defer src="/static/js/scenes/scenes-tree.js?v={{ asset_version }}-scene-panel1"></script>
+    <script defer src="/static/js/scenes/scenes-api.js?v={{ asset_version }}-scene-panel1"></script>
+    <script defer src="/static/js/scenes/scenes-drag.js?v={{ asset_version }}-scene-panel1"></script>
+    <script defer src="/static/js/scenes/scene-context-menu.js?v={{ asset_version }}-scene-panel1"></script>
     
     <script defer src="/static/js/combat/combat-panel.js"></script>
     <script defer src="/static/js/combat/combat-actions.js"></script>
@@ -228,6 +234,14 @@
     data-scene-image-label-move-game="{{ t('game.scene_images.move_game') }}"
     data-scene-image-label-move-gm="{{ t('game.scene_images.move_gm') }}"
     data-scene-image-label-move-composition="{{ t('game.scene_images.move_composition') }}"
+    data-scene-menu-activate="{{ t('game.scenes.activate') }}"
+    data-scene-menu-navigate="{{ t('game.scenes.navigate') }}"
+    data-scene-menu-configure="{{ t('game.scenes.configure') }}"
+    data-scene-menu-remove="{{ t('game.scenes.delete') }}"
+    data-scene-menu-remove-confirm="{{ t('game.scenes.delete_confirm') }}"
+    data-scene-menu-new-in-folder="{{ t('game.scenes.create_scene_here') }}"
+    data-scene-menu-folder-delete="{{ t('game.scenes.delete_group') }}"
+    data-scene-menu-folder-delete-confirm="{{ t('game.scenes.delete_group_confirm') }}"
     data-handout-granted="{{ t('handout.granted') }}"
     data-handout-empty="{{ t('handout.empty') }}"
     data-lobby-ready="{{ t('lobby.ready_short') }}" data-lobby-waiting="{{ t('lobby.waiting') }}"
@@ -286,6 +300,7 @@
     data-ctx-item-delete-confirm="{{ t('game.items.ctx.delete_confirm') }}"
     data-ctx-actor-delete="{{ t('game.actors.ctx.delete') }}"
     data-ctx-actor-create="{{ t('game.actors.create_actor_title') }}"
+    data-ctx-item-create="{{ t('game.items.create_item_title') }}"
     data-ctx-actor-delete-confirm="{{ t('game.actors.ctx.delete_confirm') }}"
     data-ctx-actor-permissions="{{ t('game.actors.ctx.permissions') }}"
     data-ctx-actor-owner="{{ t('game.actors.ctx.set_owner') }}"
@@ -333,6 +348,13 @@
     data-asset-label-empty-folder="{{ t('game.assets.empty_folder') }}"
     data-asset-label-show="{{ t('game.assets.show_to_players') }}"
     data-asset-label-no-match="{{ t('game.assets.no_match') }}"
+    data-scene-image-label-title="{{ t('game.scene_images.title') }}"
+    data-scene-image-label-search="{{ t('game.scene_images.search') }}"
+    data-scene-image-label-hint="{{ t('game.scene_images.hint') }}"
+    data-scene-image-label-empty="{{ t('game.scene_images.empty') }}"
+    data-scene-image-label-no-match="{{ t('game.scene_images.no_match') }}"
+    data-scene-image-label-minimize="{{ t('game.scene_images.minimize') }}"
+    data-scene-image-label-close="{{ t('game.scene_images.close') }}"
     data-asset-label-no-kind="{{ t('game.assets.no_kind') }}"
     data-dice-label-empty-pool="{{ t('game.dice.empty_pool') }}"
     data-dice-label-count="{{ t('game.dice.count') }}"
@@ -520,7 +542,10 @@
                             data-scene-grid-visible="{{ 'true' if room.active_scene['grid_visible'] else 'false' }}"
                             data-scene-grid-color="{{ room.active_scene['grid_color'] }}"
                             data-scene-grid-opacity="{{ room.active_scene['grid_opacity'] | default(0.4) }}"
-                            data-scene-darkness="{{ room.active_scene['darkness'] | default(0.0) }}"
+                            data-scene-darkness="{{ room.active_scene['effective_darkness'] | default(0.0) }}"
+                            data-scene-darkness-config="{{ room.active_scene['darkness_config'] | default(0.0) }}"
+                            data-scene-lighting-mode="{{ room.active_scene['lighting_mode'] | default('none') }}"
+                            data-scene-lights-out="{{ 'true' if room.active_scene['lights_out'] else 'false' }}"
                             data-scene-image-scale="{{ room.active_scene['image_scale'] | default(1.0) }}"
                             data-scene-start-world-x="{{ room.active_scene['start_world_x'] | default(room.active_scene['width'] / 2) }}"
                             data-scene-start-world-y="{{ room.active_scene['start_world_y'] | default(room.active_scene['height'] / 2) }}"
@@ -1141,6 +1166,7 @@
                         </div>
                     </header>
                     <form class="dialog-form" data-item-create-form data-room-id="{{ room.id }}">
+                        <input type="hidden" name="folder_id" value="" />
                         <label class="dialog-field">
                             <span>{{ t("game.items.name_label") }}</span>
                             <input type="text" data-item-create-name maxlength="120"
@@ -1519,19 +1545,21 @@
                 {% endif %}
 
                 
-                {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
-                <article class="game-modal-window game-panel" data-modal-window data-modal-id="panel-gm-{{ room.id }}"
-                    data-window-key="panel-gm-{{ room.id }}" data-panel-room="{{ room.id }}" hidden>
+
+                {% if room.member_role == "gm" or room.is_streamer %}
+                {# Cenas deixaram de ser um modal com abas e viraram um painel de
+                   diretorio, igual a atores, itens e diarios: a navegacao mora na
+                   aba, e criar cena ou pasta abre um dialogo proprio. #}
+                <article class="game-modal-window game-panel" data-modal-window
+                    data-modal-id="panel-scenes-{{ room.id }}" data-window-key="panel-scenes-{{ room.id }}"
+                    data-panel-room="{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">{{ t("game.tools.gm") }}</span>
+                        <span class="game-panel-title">{{ t("game.gm.scenes") }}</span>
                         <div class="game-modal-controls">
                             <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
-
                                 <i class="ph ph-arrows-out" aria-hidden="true"></i>
-
                             </button>
-
                             <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
                                 <i class="ph ph-minus" aria-hidden="true"></i>
                             </button>
@@ -1541,242 +1569,186 @@
                             </button>
                         </div>
                     </header>
-                    <div class="game-panel-body">
-                        <div class="gm-actions">
-                            {% if room.member_role == "gm" or room.is_streamer %}
-                            <button type="button" data-modal-open="scene-manager-{{ room.id }}"><i
-                                    class="ph ph-map-trifold" aria-hidden="true"></i><span>{{ t("game.gm.scenes")
-                                    }}</span></button>
-                            {% endif %}
-                            {% if room.member_role == "gm" %}
-                            <button type="button" data-panel-toggle="panel-content-{{ room.id }}"
-                                aria-pressed="false"><i class="ph ph-package" aria-hidden="true"></i><span>{{
-                                    t("game.gm.content_packs") }}</span></button>
-                            {% endif %}
-                            {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
-                            <button type="button" data-modal-open="panel-cards-{{ room.id }}"><i
-                                    class="ph ph-cards" aria-hidden="true"></i><span>{{ t("game.cards.decks_title") }}</span></button>
-                            {% endif %}
-                            {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
-                            <button type="button" data-modal-open="library-images-{{ room.id }}"><i
-                                    class="ph ph-folders" aria-hidden="true"></i><span>{{ t("game.assets.title")
-                                    }}</span></button>
-                            {% endif %}
-                            {% if room.member_role == "gm" or room.is_streamer %}
-                            <button type="button" data-modal-open="fog-panel-{{ room.id }}"><i class="ph ph-cloud"
-                                    aria-hidden="true"></i><span>{{ t("game.fog.title") }}</span></button>
-                            <button type="button" data-panel-toggle="panel-settings-{{ room.id }}"
-                                aria-pressed="false"><i class="ph ph-users-three" aria-hidden="true"></i><span>{{
-                                    t("game.gm.players") }}</span></button>
-                            {% endif %}
+                    <div class="game-panel-body scene-panel-body" data-scene-panel data-room-id="{{ room.id }}"
+                        data-is-gm="{{ 'true' if room.member_role == 'gm' else 'false' }}">
+                        {% if room.member_role == "gm" %}
+                        <header class="directory-head">
+                            <div class="directory-actions">
+                                <button type="button" class="directory-btn"
+                                    data-modal-open="scene-create-{{ room.id }}">
+                                    <i class="ph ph-map-trifold" aria-hidden="true"></i>
+                                    <span>{{ t("game.scenes.create_scene_title") }}</span>
+                                </button>
+                                <button type="button" class="directory-btn"
+                                    data-modal-open="scene-group-create-{{ room.id }}">
+                                    <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                                    <span>{{ t("game.scenes.create_group") }}</span>
+                                </button>
+                            </div>
+                        </header>
+                        {% endif %}
+                        <div class="directory-search">
+                            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+                            <input type="search" data-scene-search
+                                placeholder="{{ t('game.scenes.search_placeholder') }}" />
+                            <button type="button" class="directory-icon-btn" data-scene-collapse-all
+                                title="{{ t('game.scenes.collapse_all') }}"
+                                aria-label="{{ t('game.scenes.collapse_all') }}">
+                                <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="scene-tree-host" data-scene-tree-host>
+                            {% include "pages/game/_scenes_panel.html" %}
                         </div>
                     </div>
                 </article>
-                {% endif %}
 
-                {% if room.member_role == "gm" or room.is_streamer %}
-                <article class="game-modal-window scene-manager-modal" data-modal-window
-                    data-modal-id="scene-manager-{{ room.id }}" data-window-key="scene-manager-{{ room.id }}"
-                    data-auto-fit-width="720" data-auto-fit-min-width="720" data-auto-fit-min-height="620" hidden>
+                <article class="game-modal-window dialog-modal scene-create-modal" data-modal-window
+                    data-modal-id="scene-create-{{ room.id }}" data-window-key="scene-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">{{ t("game.scenes.title") }}</span>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.scenes.create_scene_title") }}</span>
+                        </div>
                         <div class="game-modal-controls">
-                            <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
-                                <i class="ph ph-arrows-out" aria-hidden="true"></i>
-                            </button>
-                            <button class="game-modal-control" type="button" data-modal-minimize aria-label="Minimize">
-                                <i class="ph ph-minus" aria-hidden="true"></i>
-                            </button>
                             <button class="game-modal-control" type="button" data-modal-close
-                                aria-label="{{ t('inside.campaigns.cancel') }}">
-                                <i class="ph ph-x" aria-hidden="true"></i>
-                            </button>
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
                         </div>
                     </header>
+                    <div class="game-modal-body scene-create-body">
+                        <p class="scene-create-meta">{{ t("game.scenes.upload_meta") }}</p>
+                        <form class="scene-upload-form" method="post" action="/game/scenes/upload-map"
+                                                            enctype="multipart/form-data" data-scene-ajax-form data-upload-progress-form>
+                                                            {{ csrf_input | safe }}
+                                                            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                                                            <input type="hidden" name="upload_id" value="" />
+                                                            <div class="scene-two-col">
+                                                                <label class="game-field">
+                                                                    <span>{{ t("game.scenes.scene_name") }}</span>
+                                                                    <input type="text" name="name" maxlength="120" required />
+                                                                </label>
+                                                                <label class="game-field">
+                                                                    <span>{{ t("game.scenes.grid_size") }}</span>
+                                                                    <input type="number" name="tile_size" min="8" max="1024" value="70"
+                                                                        required />
+                                                                </label>
+                                                            </div>
+                                                            <label class="game-field scene-file-field">
+                                                                <span>{{ t("game.scenes.map_file") }}</span>
+                                                                <input type="file" name="map_file" accept="image/png,image/jpeg,image/webp"
+                                                                    required />
+                                                            </label>
+                                                            <div class="scene-two-col">
+                                                                <label class="game-field">
+                                                                    <span>{{ t("game.scenes.group") }}</span>
+                                                                    <select name="group_id">
+                                                                        <option value="">{{ t("game.scenes.ungrouped") }}</option>
+                                                                        {% for group in room.scene_groups %}
+                                                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </label>
+                                                                <label class="game-field">
+                                                                    <span>{{ t("game.scenes.visibility") }}</span>
+                                                                    <select name="visibility">
+                                                                        <option value="players">{{ t("game.scenes.visibility.players") }}
+                                                                        </option>
+                                                                        <option value="gm_only">{{ t("game.scenes.visibility.gm_only") }}
+                                                                        </option>
+                                                                        <option value="hidden">{{ t("game.scenes.visibility.hidden") }}</option>
+                                                                    </select>
+                                                                </label>
+                                                            </div>
+                                                            <div class="scene-grid-row scene-grid-row--boxed">
+                                                                <label class="scene-check">
+                                                                    <input type="checkbox" name="grid_visible" checked />
+                                                                    <span>{{ t("game.scenes.grid_visible") }}</span>
+                                                                </label>
+                                                                <label class="scene-color-field">
+                                                                    <span>{{ t("game.scenes.grid_color") }}</span>
+                                                                    <input type="color" name="grid_color" value="#6fddb4" />
+                                                                </label>
+                                                                <label class="scene-opacity-field">
+                                                                    <span>{{ t("game.scenes.grid_opacity") }}</span>
+                                                                    <input type="range" name="grid_opacity" min="0" max="1" step="0.05"
+                                                                        value="0.4" data-grid-opacity-input />
+                                                                    <output data-grid-opacity-output>0.4</output>
+                                                                </label>
+                                                            </div>
+                                                            <label class="scene-check">
+                                                                <input type="checkbox" name="activate_after_upload" checked />
+                                                                <span>{{ t("game.scenes.activate_after_upload") }}</span>
+                                                            </label>
+                                                            <button class="primary-action" type="submit">
+                                                                <i class="ph ph-upload-simple" aria-hidden="true"></i>
+                                                                <span>{{ t("game.scenes.upload") }}</span>
+                                                            </button>
+                                                            <div class="scene-upload-progress" data-upload-progress hidden
+                                                                data-label-uploading="{{ t('game.maps.progress.uploading') }}"
+                                                                data-label-preparing="{{ t('game.maps.progress.preparing') }}"
+                                                                data-label-tiling="{{ t('game.maps.progress.tiling') }}"
+                                                                data-label-chunking="{{ t('game.maps.progress.chunking') }}"
+                                                                data-label-complete="{{ t('game.maps.progress.complete') }}">
+                                                                <div class="scene-upload-progress__head">
+                                                                    <span class="scene-upload-progress__label"
+                                                                        data-upload-progress-label></span>
+                                                                    <span class="scene-upload-progress__pct"
+                                                                        data-upload-progress-pct>0%</span>
+                                                                </div>
+                                                                <div class="scene-upload-progress__track" role="progressbar"
+                                                                    aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                                                                    <div class="scene-upload-progress__bar"
+                                                                        data-upload-progress-bar style="width: 0%"></div>
+                                                                </div>
+                                                            </div>
+                                                        </form>
+                    </div>
+                </article>
 
-                    <div class="game-panel-body scene-manager-body">
-                        {% if scenes_error_key %}
-                        <div class="game-notice game-notice--danger" role="alert" data-auto-dismiss>{{
-                            t(scenes_error_key) }}</div>
-                        {% endif %}
-                        {% if scenes_message_key %}
-                        <div class="game-notice" role="status" data-auto-dismiss>{{ t(scenes_message_key) }}</div>
-                        {% endif %}
-
-                        <div class="scene-tabs" data-scene-tabs>
-                            <input class="scene-tab-radio" type="radio" name="scene-tab-{{ room.id }}"
-                                id="scene-tab-library-{{ room.id }}" checked />
-                            <input class="scene-tab-radio" type="radio" name="scene-tab-{{ room.id }}"
-                                id="scene-tab-upload-{{ room.id }}" />
-                            <div class="scene-tabbar" role="tablist">
-                                <label class="scene-tab" for="scene-tab-library-{{ room.id }}">
-                                    <i class="ph ph-stack" aria-hidden="true"></i><span>{{ t("game.scenes.groups")
-                                        }}</span>
-                                </label>
-                                <label class="scene-tab" for="scene-tab-upload-{{ room.id }}">
-                                    <i class="ph ph-upload-simple" aria-hidden="true"></i><span>{{
-                                        t("game.scenes.upload") }}</span>
-                                </label>
-                            </div>
-                            <section class="scene-manager-section scene-manager-section--upload scene-tab-panel">
-                                <p class="scene-tab-meta">{{ t("game.scenes.upload_meta") }}</p>
-                                <form class="scene-upload-form" method="post" action="/game/scenes/upload-map"
-                                    enctype="multipart/form-data" data-scene-ajax-form data-upload-progress-form>
-                                    {{ csrf_input | safe }}
-                                    <input type="hidden" name="campaign_id" value="{{ room.id }}" />
-                                    <input type="hidden" name="upload_id" value="" />
-                                    <div class="scene-two-col">
-                                        <label class="game-field">
-                                            <span>{{ t("game.scenes.scene_name") }}</span>
-                                            <input type="text" name="name" maxlength="120" required />
-                                        </label>
-                                        <label class="game-field">
-                                            <span>{{ t("game.scenes.grid_size") }}</span>
-                                            <input type="number" name="tile_size" min="8" max="1024" value="70"
-                                                required />
-                                        </label>
-                                    </div>
-                                    <label class="game-field scene-file-field">
-                                        <span>{{ t("game.scenes.map_file") }}</span>
-                                        <input type="file" name="map_file" accept="image/png,image/jpeg,image/webp"
-                                            required />
-                                    </label>
-                                    <div class="scene-two-col">
-                                        <label class="game-field">
-                                            <span>{{ t("game.scenes.group") }}</span>
-                                            <select name="group_id">
-                                                <option value="">{{ t("game.scenes.ungrouped") }}</option>
-                                                {% for group in room.scene_groups %}
-                                                <option value="{{ group.id }}">{{ group.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </label>
-                                        <label class="game-field">
-                                            <span>{{ t("game.scenes.visibility") }}</span>
-                                            <select name="visibility">
-                                                <option value="players">{{ t("game.scenes.visibility.players") }}
-                                                </option>
-                                                <option value="gm_only">{{ t("game.scenes.visibility.gm_only") }}
-                                                </option>
-                                                <option value="hidden">{{ t("game.scenes.visibility.hidden") }}</option>
-                                            </select>
-                                        </label>
-                                    </div>
-                                    <div class="scene-grid-row scene-grid-row--boxed">
-                                        <label class="scene-check">
-                                            <input type="checkbox" name="grid_visible" checked />
-                                            <span>{{ t("game.scenes.grid_visible") }}</span>
-                                        </label>
-                                        <label class="scene-color-field">
-                                            <span>{{ t("game.scenes.grid_color") }}</span>
-                                            <input type="color" name="grid_color" value="#6fddb4" />
-                                        </label>
-                                        <label class="scene-opacity-field">
-                                            <span>{{ t("game.scenes.grid_opacity") }}</span>
-                                            <input type="range" name="grid_opacity" min="0" max="1" step="0.05"
-                                                value="0.4" data-grid-opacity-input />
-                                            <output data-grid-opacity-output>0.4</output>
-                                        </label>
-                                    </div>
-                                    <label class="scene-check">
-                                        <input type="checkbox" name="activate_after_upload" checked />
-                                        <span>{{ t("game.scenes.activate_after_upload") }}</span>
-                                    </label>
-                                    <button class="primary-action" type="submit">
-                                        <i class="ph ph-upload-simple" aria-hidden="true"></i>
-                                        <span>{{ t("game.scenes.upload") }}</span>
-                                    </button>
-                                    <div class="scene-upload-progress" data-upload-progress hidden
-                                        data-label-uploading="{{ t('game.maps.progress.uploading') }}"
-                                        data-label-preparing="{{ t('game.maps.progress.preparing') }}"
-                                        data-label-tiling="{{ t('game.maps.progress.tiling') }}"
-                                        data-label-chunking="{{ t('game.maps.progress.chunking') }}"
-                                        data-label-complete="{{ t('game.maps.progress.complete') }}">
-                                        <div class="scene-upload-progress__head">
-                                            <span class="scene-upload-progress__label"
-                                                data-upload-progress-label></span>
-                                            <span class="scene-upload-progress__pct"
-                                                data-upload-progress-pct>0%</span>
-                                        </div>
-                                        <div class="scene-upload-progress__track" role="progressbar"
-                                            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                                            <div class="scene-upload-progress__bar"
-                                                data-upload-progress-bar style="width: 0%"></div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </section>
-
-                            <section class="scene-manager-section scene-manager-section--library scene-tab-panel">
-                                <p class="scene-tab-meta">{{ t("game.scenes.groups_meta") }}</p>
-                                <form class="scene-group-form" method="post" action="/game/scenes/group"
-                                    data-scene-ajax-form>
-                                    {{ csrf_input | safe }}
-                                    <input type="hidden" name="campaign_id" value="{{ room.id }}" />
-                                    <div class="scene-group-create-row">
-                                        <input type="text" name="name" placeholder="{{ t('game.scenes.group_name') }}"
-                                            maxlength="80" aria-label="{{ t('game.scenes.group_name') }}" required />
-                                        <input type="color" name="color" value="#8ea8ff"
-                                            aria-label="{{ t('game.scenes.group_color') }}" />
-                                        <button type="submit" class="scene-icon-button"
-                                            title="{{ t('game.scenes.create_group') }}">
-                                            <i class="ph ph-folder-plus" aria-hidden="true"></i>
-                                        </button>
-                                    </div>
-                                </form>
-
-                                <div class="scene-list">
-                                    {% for item in room.scene_groups_with_scenes %}
-                                    <details class="scene-group-block" {% if item.has_active %}open{% endif %}>
-                                        <summary>
-                                            <span class="scene-group-dot"
-                                                data-dot-color="{{ item.group.color }}"></span>
-                                            <strong>{{ item.group.name }}</strong>
-                                            <small>{{ item.scenes|length }}</small>
-                                            <i class="ph ph-caret-down" aria-hidden="true"></i>
-                                        </summary>
-                                        <div class="scene-group-scenes">
-                                            {% for scene in item.scenes %}
-                                            {% include "pages/game/scene_card.html" %}
-                                            {% else %}
-                                            <p class="scene-empty-line">{{ t("game.scenes.no_scenes") }}</p>
-                                            {% endfor %}
-                                        </div>
-                                    </details>
-                                    {% endfor %}
-
-                                    <details class="scene-group-block" {% if room.ungrouped_scenes_has_active %}open{%
-                                        endif %}>
-                                        <summary>
-                                            <span class="scene-group-dot"></span>
-                                            <strong>{{ t("game.scenes.ungrouped") }}</strong>
-                                            <small>{{ room.ungrouped_scenes|length }}</small>
-                                            <i class="ph ph-caret-down" aria-hidden="true"></i>
-                                        </summary>
-                                        <div class="scene-group-scenes">
-                                            {% for scene in room.ungrouped_scenes %}
-                                            {% include "pages/game/scene_card.html" %}
-                                            {% else %}
-                                            <p class="scene-empty-line">{{ t("game.scenes.no_scenes") }}</p>
-                                            {% endfor %}
-                                        </div>
-                                    </details>
-                                </div>
-                            </section>
+                <article class="game-modal-window dialog-modal" data-modal-window
+                    data-modal-id="scene-group-create-{{ room.id }}"
+                    data-window-key="scene-group-create-{{ room.id }}" hidden>
+                    <header class="game-modal-titlebar" data-modal-drag-handle>
+                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
+                        <div class="game-modal-sheet-title">
+                            <span class="sheet-modal-name">{{ t("game.scenes.create_group") }}</span>
                         </div>
+                        <div class="game-modal-controls">
+                            <button class="game-modal-control" type="button" data-modal-close
+                                aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"
+                                    aria-hidden="true"></i></button>
+                        </div>
+                    </header>
+                    <div class="game-modal-body">
+                        <form class="scene-group-form" method="post" action="/game/scenes/group"
+                                                            data-scene-ajax-form>
+                                                            {{ csrf_input | safe }}
+                                                            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                                                            <div class="scene-group-create-row">
+                                                                <input type="text" name="name" placeholder="{{ t('game.scenes.group_name') }}"
+                                                                    maxlength="80" aria-label="{{ t('game.scenes.group_name') }}" required />
+                                                                <input type="color" name="color" value="#8ea8ff"
+                                                                    aria-label="{{ t('game.scenes.group_color') }}" />
+                                                                <button type="submit" class="scene-icon-button"
+                                                                    title="{{ t('game.scenes.create_group') }}">
+                                                                    <i class="ph ph-folder-plus" aria-hidden="true"></i>
+                                                                </button>
+                                                            </div>
+                                                        </form>
                     </div>
                 </article>
                 {% endif %}
 
                 {% if room.member_role == "gm" or room.is_streamer %}
                 
-                <article class="game-modal-window fog-panel" data-modal-window data-modal-id="fog-panel-{{ room.id }}"
-                    data-window-key="fog-panel-{{ room.id }}" data-auto-fit-width="420" data-auto-fit-min-width="420"
-                    data-auto-fit-min-height="320" data-fog-panel data-room-id="{{ room.id }}" hidden>
+                <article class="game-modal-window fog-panel lighting-panel" data-modal-window
+                    data-modal-id="lighting-panel-{{ room.id }}"
+                    data-window-key="lighting-panel-{{ room.id }}" data-auto-fit-width="420" data-auto-fit-min-width="420"
+                    data-auto-fit-min-height="320" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
                         <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">{{ t("game.fog.title") }}</span>
+                        <span class="game-panel-title">{{ t("game.lighting_panel.title") }}</span>
                         <div class="game-modal-controls">
                             <button class="game-modal-control" type="button" data-modal-detach aria-label="Detach">
                                 <i class="ph ph-arrows-out" aria-hidden="true"></i>
@@ -1791,7 +1763,68 @@
                         </div>
                     </header>
 
-                    <div class="game-panel-body fog-panel-body">
+                    <div class="game-panel-body fog-panel-body lighting-panel-body" data-lighting-panel
+                        data-room-id="{{ room.id }}"
+                        data-lighting-hint-none="{{ t('game.lighting_panel.mode_none_hint') }}"
+                        data-lighting-hint-dynamic="{{ t('game.lighting_panel.mode_dynamic_hint') }}"
+                        data-lighting-hint-manual="{{ t('game.lighting_panel.mode_manual_hint') }}"
+                        data-lighting-save-failed="{{ t('game.lighting_panel.save_failed') }}">
+                        <p class="lighting-empty" data-lighting-empty hidden>{{ t("game.lighting_panel.no_scene") }}</p>
+
+                        <div class="lighting-mode-row" role="group" aria-label="{{ t('game.lighting_panel.mode') }}">
+                            <button type="button" class="fog-btn fog-btn--toggle" data-lighting-mode="none"
+                                aria-pressed="false">
+                                <i class="ph ph-sun" aria-hidden="true"></i>
+                                <span>{{ t("game.lighting_panel.mode_none") }}</span>
+                            </button>
+                            <button type="button" class="fog-btn fog-btn--toggle" data-lighting-mode="dynamic"
+                                aria-pressed="false">
+                                <i class="ph ph-lightbulb-filament" aria-hidden="true"></i>
+                                <span>{{ t("game.lighting_panel.mode_dynamic") }}</span>
+                            </button>
+                            <button type="button" class="fog-btn fog-btn--toggle" data-lighting-mode="manual"
+                                aria-pressed="false">
+                                <i class="ph ph-cloud" aria-hidden="true"></i>
+                                <span>{{ t("game.lighting_panel.mode_manual") }}</span>
+                            </button>
+                        </div>
+                        <p class="lighting-mode-hint" data-lighting-mode-hint></p>
+
+                        <section class="lighting-pane" data-lighting-pane="dynamic" hidden>
+                            <div class="fog-opacity-row">
+                                <label class="fog-label" for="lighting-darkness-{{ room.id }}">
+                                    <span>{{ t("game.lighting_panel.darkness") }}</span>
+                                    <output data-lighting-darkness-output>0.0</output>
+                                </label>
+                                <input id="lighting-darkness-{{ room.id }}" type="range" min="0" max="1" step="0.05"
+                                    value="0" data-lighting-darkness />
+                                <small class="fog-hint">{{ t("game.lighting_panel.darkness_hint") }}</small>
+                            </div>
+
+                            <div class="lighting-switch-row">
+                                <p class="fog-label">{{ t("game.lighting_panel.lights") }}</p>
+                                <div class="fog-button-row">
+                                    <button type="button" class="fog-btn fog-btn--toggle" data-lighting-lights="on"
+                                        aria-pressed="false">
+                                        <i class="ph ph-lightbulb" aria-hidden="true"></i>
+                                        <span>{{ t("game.lighting_panel.lights_on") }}</span>
+                                    </button>
+                                    <button type="button" class="fog-btn fog-btn--toggle" data-lighting-lights="off"
+                                        aria-pressed="true">
+                                        <i class="ph ph-lightbulb-filament" aria-hidden="true"></i>
+                                        <span>{{ t("game.lighting_panel.lights_off") }}</span>
+                                    </button>
+                                </div>
+                                <small class="fog-hint">{{ t("game.lighting_panel.lights_hint") }}</small>
+                            </div>
+                        </section>
+
+                        <!-- A nevoa manual segue sendo dona do proprio DOM: o JS de fog
+                             procura [data-fog-panel] e observa o `hidden` dele, entao o
+                             seletor de modo liga e desliga as ferramentas de pintura sem
+                             que nada em fog/* precise saber que existe uma modal nova. -->
+                        <section class="lighting-pane" data-lighting-pane="manual" data-fog-panel
+                            data-room-id="{{ room.id }}" hidden>
                         <section class="fog-section fog-section--enable" data-fog-enable-section>
                             <p class="fog-status" data-fog-status>{{ t("game.fog.status_disabled") }}</p>
                             <div class="fog-enable-controls" data-fog-enable-controls>
@@ -1881,6 +1914,7 @@
                                     <span>{{ t("game.fog.reset_reveal_all") }}</span>
                                 </button>
                             </div>
+                        </section>
                         </section>
                     </div>
                 </article>
@@ -2267,6 +2301,18 @@
                                 <span>{{ t("game.streamer.title") }}</span>
                             </button>
                             {% endif %}
+                            {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
+                            <button class="settings-open-modal" type="button"
+                                data-modal-open="panel-cards-{{ room.id }}">
+                                <i class="ph ph-cards" aria-hidden="true"></i>
+                                <span>{{ t("game.cards.decks_title") }}</span>
+                            </button>
+                            <button class="settings-open-modal" type="button"
+                                data-modal-open="library-images-{{ room.id }}">
+                                <i class="ph ph-folders" aria-hidden="true"></i>
+                                <span>{{ t("game.assets.title") }}</span>
+                            </button>
+                            {% endif %}
                         </div>
                         </section>
                         </div>
@@ -2406,6 +2452,8 @@
                         </div>
                     <div class="tool-dock-group" data-tool-layer-scope="lighting">
                         <button class="tool-dock-btn" data-tool="light" aria-pressed="false" data-tooltip="{{ t('lighting.light') }}" aria-label="{{ t('lighting.light') }}"><i class="ph ph-lightbulb-filament"></i></button>
+                        <button class="tool-dock-btn" type="button" data-modal-open="lighting-panel-{{ room.id }}"
+                            data-tooltip="{{ t('game.lighting_panel.tool') }}" aria-label="{{ t('game.lighting_panel.tool') }}"><i class="ph ph-circle-half"></i></button>
                     </div>
                     <div class="tool-dock-group" data-tool-layer-scope="effects">
                         <button class="tool-dock-btn" data-tool="particles" aria-pressed="false"
@@ -2425,8 +2473,8 @@
                     </div>
                     {% endif %}
                     {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
-                    <div class="tool-dock-sep"></div>
-                    <div class="tool-dock-group">
+                    <div class="tool-dock-sep" data-tool-layer-scope="game"></div>
+                    <div class="tool-dock-group" data-tool-layer-scope="game">
                         <button class="tool-dock-btn" data-vision-toggle aria-pressed="false"
                             data-tooltip="{{ t('game.tool_dock.vision') }}" aria-label="{{ t('game.tool_dock.vision') }}"
                             data-player-view-banner="{{ t('game.tool_dock.vision.player_view_indicator') }}">
@@ -2682,11 +2730,19 @@
                     </button>
                     {% endif %}
                     {% if room.member_role == "gm" or room.is_streamer %}
-                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-gm-{{ room.id }}"
-                        aria-pressed="false" data-tooltip="{{ t('game.tools.gm') }}"
-                        title="{{ t('game.tools.gm') }}">
-                        <i class="ph ph-crown" aria-hidden="true"></i>
-                        <span class="sr-only">{{ t("game.tools.gm") }}</span>
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-scenes-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.gm.scenes') }}"
+                        title="{{ t('game.gm.scenes') }}">
+                        <i class="ph ph-map-trifold" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.gm.scenes") }}</span>
+                    </button>
+                    {% endif %}
+                    {% if room.member_role == "gm" %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-content-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.gm.content_packs') }}"
+                        title="{{ t('game.gm.content_packs') }}">
+                        <i class="ph ph-books" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.gm.content_packs") }}</span>
                     </button>
                     {% endif %}
                     {% if show_combat_panel %}
@@ -2695,14 +2751,6 @@
                         title="{{ t('game.tools.combat') }}">
                         <i class="ph ph-sword" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.combat") }}</span>
-                    </button>
-                    {% endif %}
-                    {% if command_palette_enabled %}
-                    <button class="game-dock-btn" type="button" data-command-palette-open
-                        aria-keyshortcuts="Control+K Meta+K" data-tooltip="{{ t('search.title') }} (Ctrl+K)"
-                        title="{{ t('search.title') }} (Ctrl+K)">
-                        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
-                        <span class="sr-only">{{ t("search.title") }}</span>
                     </button>
                     {% endif %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-settings-{{ room.id }}"

@@ -82,6 +82,7 @@
             const drawable = (window.GravewrightToolsRegistry?.LAYERS || [])
                 .filter((name) => name !== "game");
             activeDrawLayer = drawable.includes(layer) ? layer : "game";
+            if (activeDrawLayer !== "game") setPlayerVision(false);
             const canvas = activeCanvas();
             if (canvas) {
                 const store = window.GravewrightMap?.tokenStoreFor?.(canvas);

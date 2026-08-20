@@ -1216,6 +1216,9 @@
             canvas.dataset.sceneGridColor = scenePayload.grid_color || "";
             canvas.dataset.sceneGridOpacity = String(scenePayload.grid_opacity ?? 0.4);
             canvas.dataset.sceneDarkness = String(scenePayload.darkness ?? 0);
+            canvas.dataset.sceneDarknessConfig = String(scenePayload.darkness_config ?? scenePayload.darkness ?? 0);
+            canvas.dataset.sceneLightingMode = scenePayload.lighting_mode || "none";
+            canvas.dataset.sceneLightsOut = scenePayload.lights_out === false ? "false" : "true";
             canvas.dataset.sceneImageScale = String(scenePayload.image_scale || 1);
             canvas.dataset.sceneStartWorldX = String(scenePayload.start_world_x ?? (scenePayload.width || 0) / 2);
             canvas.dataset.sceneStartWorldY = String(scenePayload.start_world_y ?? (scenePayload.height || 0) / 2);

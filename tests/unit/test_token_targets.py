@@ -1,3 +1,4 @@
+import time
 from types import SimpleNamespace
 
 from app.engine.sdk.ephemeral_domain_service import TokenTargetService
@@ -43,6 +44,21 @@ def test_visibility_deletion_and_scene_transition_fail_closed(db, monkeypatch):
     assert not service.set(campaign_id=campaign, scene_id=new_scene, user_id=user, ids=["hidden"]).success
 
 
+class _Relogio:
+    """Relógio do serviço, movido à mão.
+
+    O debounce compara `updated_at` com `time.time()` em segundos inteiros, então
+    qualquer teste que dependa do relógio real é uma corrida: as duas chamadas
+    podem cair em lados opostos da virada do segundo. Congelar só o `time` do
+    módulo do serviço mantém os timestamps gravados pelo repositório reais e
+    torna a comparação determinística.
+    """
+
+    def __init__(self, agora): self._agora = agora
+    def time(self): return self._agora
+    def mover(self, segundos): self._agora += segundos
+
+
 def test_limits_rate_and_no_global_token_state(db, monkeypatch):
     user = seed_user(); campaign = seed_campaign(user); scene = seed_scene(campaign)["id"]
     ids = [str(index) for index in range(TokenTargetService.MAX + 1)]
@@ -50,6 +66,15 @@ def test_limits_rate_and_no_global_token_state(db, monkeypatch):
     service = TokenTargetService()
     assert service.set(campaign_id=campaign, scene_id=scene, user_id=user, ids=ids).error_key == "sdk.tokens.targets.invalid"
     assert service.set(campaign_id=campaign, scene_id=scene, user_id=user, ids=["0"]).success
+
+    # Dentro da janela: o segundo update é barrado.
+    from app.engine.sdk import ephemeral_domain_service as modulo
+    relogio = _Relogio(int(time.time()) - 5)
+    monkeypatch.setattr(modulo, "time", relogio)
     assert service.set(campaign_id=campaign, scene_id=scene, user_id=user, ids=["1"]).error_key == "sdk.tokens.targets.rate_limited"
+
+    # E o debounce solta: passado o segundo, o mesmo update entra.
+    relogio.mover(60)
+    assert service.set(campaign_id=campaign, scene_id=scene, user_id=user, ids=["1"]).success
     from app.persistence.tables import tokens
     assert not any("target" in column.name for column in tokens.c)

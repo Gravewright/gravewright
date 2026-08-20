@@ -8,6 +8,9 @@
         "data-scene-grid-color",
         "data-scene-grid-opacity",
         "data-scene-darkness",
+        "data-scene-darkness-config",
+        "data-scene-lighting-mode",
+        "data-scene-lights-out",
         "data-scene-image-scale",
         "data-scene-start-world-x",
         "data-scene-start-world-y",
@@ -59,24 +62,8 @@
             });
         }
 
-        function sceneGroupOpenLabels(modal) {
-            return new Set(
-                [...modal.querySelectorAll(".scene-group-block[open] summary strong")]
-                    .map((label) => label.textContent.trim())
-                    .filter(Boolean)
-            );
-        }
-
-        function restoreSceneGroupOpenLabels(modal, labels) {
-            if (!labels.size) return;
-            modal.querySelectorAll(".scene-group-block").forEach((group) => {
-                const label = group.querySelector("summary strong")?.textContent.trim();
-                if (label && labels.has(label)) group.open = true;
-            });
-        }
-
         function showSceneRequestError(modal) {
-            const body = modal.querySelector(".scene-manager-body");
+            const body = modal.querySelector(".scene-panel-body") || modal.querySelector(".game-modal-body");
             if (!body) return;
 
             const notice = document.createElement("div");
@@ -89,31 +76,31 @@
         }
 
         function resolveSceneManagerModal(form) {
-            let modal = form.closest(".scene-manager-modal");
-            if (!modal) {
-                const campaignId = form.querySelector("input[name='campaign_id']")?.value;
-                if (campaignId) {
-                    modal = document.querySelector(
-                        `[data-modal-id="scene-manager-${cssEscape(campaignId)}"]`
-                    );
-                }
-            }
-            return modal;
+            // Os formularios de cena vivem espalhados -- no painel, no dialogo de
+            // criar e no de editar --, entao o alvo sai sempre do campaign_id.
+            const campaignId = form.querySelector("input[name='campaign_id']")?.value;
+            if (!campaignId) return form.closest("[data-scene-panel]")?.closest("[data-modal-window]") || null;
+            return document.querySelector(`[data-modal-id="panel-scenes-${cssEscape(campaignId)}"]`);
         }
 
-        function applySceneManagerResponse(text, { modal, modalId, form, editModal, openLabels }) {
+        function applySceneManagerResponse(text, { modal, modalId, form, editModal }) {
             const doc = new DOMParser().parseFromString(text, "text/html");
-            const nextBody = doc.querySelector(
-                `[data-modal-id="${cssEscape(modalId)}"] .scene-manager-body`
+            // So a arvore e trocada: cabecalho e busca do painel ficam de pe, e o
+            // que o mestre digitou na busca sobrevive ao salvamento.
+            const nextTree = doc.querySelector(
+                `[data-modal-id="${cssEscape(modalId)}"] [data-scene-tree-host]`
             );
-            const currentBody = modal.querySelector(".scene-manager-body");
+            const currentTree = modal.querySelector("[data-scene-tree-host]");
 
-            if (!nextBody || !currentBody) throw new Error("Scene manager body missing from response");
+            if (!nextTree || !currentTree) throw new Error("Scene tree missing from response");
 
-            currentBody.replaceWith(nextBody);
-            applyDotColors(nextBody);
+            currentTree.innerHTML = nextTree.innerHTML;
             syncCanvasFromResponse(doc, form);
-            restoreSceneGroupOpenLabels(modal, openLabels);
+            document.dispatchEvent(new CustomEvent("vtt:scene-panel-refreshed", {
+                detail: { host: currentTree, roomId: modal.dataset.panelRoom || "" },
+            }));
+            const search = modal.querySelector("[data-scene-search]");
+            if (search?.value) window.GravewrightScenesTree?.applySearch?.(modal.querySelector("[data-scene-panel]"));
             dismissAutoNotices(modal);
             if (editModal) closeModal(editModal);
             modal.hidden = false;
@@ -135,7 +122,6 @@
                 return;
             }
 
-            const openLabels = sceneGroupOpenLabels(modal);
             const method = (form.getAttribute("method") || "POST").toUpperCase();
             const isMultipart = form.enctype === "multipart/form-data";
             const formData = new FormData(form);
@@ -157,7 +143,7 @@
                     },
                 });
                 if (!response.ok) throw new Error(`Scene action failed: ${response.status}`);
-                applySceneManagerResponse(await response.text(), { modal, modalId, form, editModal, openLabels });
+                applySceneManagerResponse(await response.text(), { modal, modalId, form, editModal });
             } catch {
                 showSceneRequestError(editModal || modal);
             } finally {
@@ -209,7 +195,6 @@
                 return;
             }
 
-            const openLabels = sceneGroupOpenLabels(modal);
             const formData = new FormData(form);
             let uploadId = (form.querySelector("input[name='upload_id']")?.value || "").trim();
             if (!uploadId) {
@@ -277,7 +262,7 @@
                 try {
                     serverPct = 100;
                     render("complete");
-                    applySceneManagerResponse(xhr.responseText, { modal, modalId, form, editModal, openLabels });
+                    applySceneManagerResponse(xhr.responseText, { modal, modalId, form, editModal });
                 } catch {
                     showSceneRequestError(editModal || modal);
                 } finally {

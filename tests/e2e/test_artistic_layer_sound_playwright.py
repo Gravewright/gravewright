@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 import base64,contextlib,os,subprocess,sys
 import pytest
 from playwright.sync_api import expect,sync_playwright
@@ -75,7 +76,7 @@ def test_artistic_layer_places_and_restores_spatial_sound(sound_server):
             assert persisted_after_save[0]["id"]==persisted_before_save[0]["id"] and persisted_after_save[0]["version"]==created_version+1,(persisted_before_save,persisted_after_save)
             page.locator('[data-artistic-domain="sounds"]:visible').click();page.locator('[data-open-sound-modal="effect"]:visible').click();effect_modal=page.locator('[data-sound-product-modal="effect"]:not([hidden])');active=effect_modal.locator("[data-spatial-enabled]");expect(active).to_be_checked();active.uncheck();expect(effect_modal.locator("[data-spatial-enabled]")).not_to_be_checked();effect_modal.locator("[data-spatial-enabled]").check();expect(effect_modal.locator("[data-spatial-enabled]")).to_be_checked();effect_modal.locator("[data-modal-close]").click()
             fixed_before=page.evaluate("GravewrightSpatialSounds.debugSnapshot().emitters[0]");page.mouse.click(target_x-220,target_y-160);page.wait_for_timeout(150);fixed_after=page.evaluate("GravewrightSpatialSounds.debugSnapshot().emitters[0]");assert (fixed_after["x"],fixed_after["y"])==(fixed_before["x"],fixed_before["y"]),(fixed_before,fixed_after)
-            page.locator('[data-tool-dock]:not([hidden]) [data-tool="select"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="images"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");artistic_reference=page.evaluate("GravewrightSpatialSounds.snapshotFor(GravewrightMap.activeCanvas())");assert artistic_reference["artisticReference"] and not artistic_reference["authoring"] and artistic_reference["selectedId"] is None,artistic_reference;page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"] [data-modal-close]').click();page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="sounds"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1")
+            page.locator('[data-tool-dock]:not([hidden]) [data-tool="select"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="images"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");artistic_reference=page.evaluate("GravewrightSpatialSounds.snapshotFor(GravewrightMap.activeCanvas())");assert artistic_reference["artisticReference"] and not artistic_reference["authoring"] and artistic_reference["selectedId"] is None,artistic_reference;expect(page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"]')).to_be_visible();page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"] [data-modal-close]').click();page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="sounds"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1")
             projection=page.evaluate("GravewrightSpatialSounds.debugSnapshot()")
             assert projection["renderer"]=="pixi",projection
             assert len(projection["projected"])==1,projection
@@ -100,10 +101,13 @@ def test_artistic_images_opens_asset_picker_places_and_restores(sound_server):
         try:
             _login(page,s["base_url"],GM_EMAIL,GM_PASSWORD);page.goto(f"{s['base_url']}/game?room={s['campaign_id']}");close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None
             page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="images"]:visible').click()
-            modal=page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"]');expect(modal).to_be_visible();expect(modal.locator('[data-asset-kind="image"]')).to_have_attribute("aria-pressed","true")
-            modal.locator(f'[data-library-asset-id="{s["image_id"]}"] [data-asset-place-scene]').click();image=page.locator('[data-scene-image-id]');expect(image).to_have_count(1);image.click();page.keyboard.press("ArrowRight")
+            modal=page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"]');expect(modal).to_be_visible()
+            card=modal.locator(f'[data-library-asset-id="{s["image_id"]}"]');expect(card).to_be_visible()
+            search=modal.locator("[data-scene-image-search]");search.fill("nao-existe-esta-imagem");expect(card).to_have_count(0);search.fill("");expect(card).to_be_visible()
+            card.drag_to(page.locator('.room-workspace.is-active [data-map-canvas]'))
+            image=page.locator('[data-scene-image-id]');expect(image).to_have_count(1);image.click();page.keyboard.press("ArrowRight")
             page.reload();close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None;expect(page.locator('[data-scene-image-id]')).to_have_count(1)
-            page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="images"]:visible').click();expect(page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"]')).to_be_visible()
+            page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="images"]:visible').click();expect(page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"]')).to_be_visible()
             assert not [error for error in page_errors if "sceneId" in error or "sceneDataFor" in error],page_errors
         finally:_close(ctx);browser.close()
 
@@ -196,3 +200,31 @@ def test_player_hears_spatial_effect_only_through_controlled_token(sound_server)
             player.wait_for_function("id=>{const s=GravewrightAudioRuntime.inspect(id);return s&&s.playing&&Math.abs(s.volume-.5)<.02}",arg=projection["playbackId"])
             gm.wait_for_function("id=>{const s=GravewrightAudioRuntime.inspect(id);return s&&s.playing===false}",arg=projection["playbackId"])
         finally:_close(gm_ctx);_close(player_ctx);browser.close()
+
+
+LAYER_TRIM={"game":"192, 154, 90","gm":"208, 111, 111","composition":"96, 165, 250",
+            "effects":"109, 179, 134","walls":"167, 139, 250","lighting":"250, 204, 21"}
+
+def test_active_layer_paints_the_ui_trim(sound_server):
+    """A borda de detalhe diz em que camada o mestre esta editando."""
+    s=sound_server
+    with sync_playwright() as p:
+        browser=p.chromium.launch(headless=True);ctx=browser.new_context();page=ctx.new_page()
+        try:
+            _login(page,s["base_url"],GM_EMAIL,GM_PASSWORD);page.goto(f"{s['base_url']}/game?room={s['campaign_id']}")
+            close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None
+            expect(page.locator("[data-tool-dock]:not([hidden])")).to_be_visible()
+            checked=[]
+            for layer,rgb in LAYER_TRIM.items():
+                button=page.locator(f'.room-workspace.is-active [data-active-layer="{layer}"]')
+                if not button.count():continue
+                button.click();expect(page.locator("body")).to_have_attribute("data-table-layer",layer)
+                assert page.evaluate("getComputedStyle(document.body).getPropertyValue('--layer-accent-rgb').trim()")==rgb,layer
+                # o token derivado e a borda concreta do dock acompanham a camada
+                accent=page.evaluate("getComputedStyle(document.body).getPropertyValue('--border-accent-strong').trim()")
+                assert [int(v) for v in re.findall(r"\d+",accent)[:3]]==[int(v) for v in rgb.split(", ")],(layer,accent)
+                border=page.evaluate("getComputedStyle(document.querySelector('[data-tool-dock]:not([hidden])')).borderTopColor")
+                assert [int(v) for v in re.findall(r"\d+",border)[:3]]==[int(v) for v in rgb.split(", ")],(layer,border)
+                checked.append(layer)
+            assert set(checked)==set(LAYER_TRIM),checked
+        finally:_close(ctx);browser.close()

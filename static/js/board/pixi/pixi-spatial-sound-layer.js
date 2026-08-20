@@ -12,6 +12,8 @@
             const snapshot = this.overlays?.spatialSounds;
             const emitters = (snapshot?.authoring || snapshot?.artisticReference || snapshot?.wallReference) ? (snapshot.emitters || []) : [];
             const zoom = Number(this.camera.zoom) || 1;
+            const picked = new Set(snapshot?.selectedIds || (snapshot?.selectedId ? [snapshot.selectedId] : []));
+            const single = picked.size === 1;
             const accent = this._color("#c69c59");
             const muted = this._color("#776f63");
 
@@ -19,7 +21,7 @@
                 const x = Number(item.x) * zoom + this.camera.offsetX;
                 const y = Number(item.y) * zoom + this.camera.offsetY;
                 const radius = Math.max(12, Number(item.radius || 0) * zoom);
-                const selected = item.id === snapshot.selectedId;
+                const selected = picked.has(item.id);
                 const color = item.enabled === false ? muted : accent;
                 const alpha = item.enabled === false ? 0.38 : selected ? 0.95 : snapshot?.wallReference ? 0.72 : 0.55;
                 const propagation = window.GravewrightLighting?.soundPropagationFor?.(this.active, item);
@@ -43,7 +45,7 @@
                 gfx.arc(x + 3, y, 7, arcStart, Math.PI / 3)
                     .stroke({ color: glyph, width: 2, alpha: 1 });
 
-                if (selected) {
+                if (selected && single) {
                     gfx.circle(x + radius, y, 6)
                         .fill({ color: accent, alpha: 1 })
                         .stroke({ color: 0x15191e, width: 2, alpha: 1 });

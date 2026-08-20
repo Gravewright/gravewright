@@ -1,0 +1,44 @@
+{# Arvore de cenas. Os grupos usam as mesmas classes .sheet-folder de atores,
+   itens e diarios: e o que deixa window.GravewrightDirectoryTree cuidar de
+   busca, colapso e persistencia sem uma linha propria. Grupos de cena sao
+   planos -- nao ha parent_id em scene_groups -- entao a arvore tem um nivel. #}
+
+{% macro scene_entry(scene) %}
+<li class="scene-entry" data-scene-card="{{ scene.id }}" data-directory-name="{{ scene.name | e }}"
+    {% if room.member_role == "gm" %}draggable="true"{% endif %}>
+    {% include "pages/game/scene_card.html" %}
+</li>
+{% endmacro %}
+
+{% macro scene_group(group, scenes) %}
+<div class="sheet-folder scene-folder" data-folder-id="{{ group.id }}" data-room-id="{{ room.id }}"
+     data-folder-name="{{ group.name }}" data-folder-color="{{ group.color or '' }}">
+    <div class="sheet-folder-header" data-scene-folder-drop="{{ group.id }}">
+        <button class="sheet-folder-toggle" type="button" data-scene-folder-collapse aria-expanded="false">
+            <i class="ph ph-folder sheet-folder-icon" aria-hidden="true"></i>
+            <span class="sheet-folder-name">{{ group.name }}</span>
+            <span class="sheet-folder-count">{{ scenes | length }}</span>
+            <i class="ph ph-caret-right sheet-folder-caret" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="sheet-folder-body" hidden>
+        <ul class="scene-list">
+            {% for scene in scenes %}{{ scene_entry(scene) }}{% endfor %}
+        </ul>
+    </div>
+</div>
+{% endmacro %}
+
+<div class="scene-tree" data-scene-tree>
+    {% for item in room.scene_groups_with_scenes %}
+    {{ scene_group(item.group, item.scenes) }}
+    {% endfor %}
+
+    <ul class="scene-list scene-root-list" data-scene-root-list data-scene-folder-drop="">
+        {% for scene in room.ungrouped_scenes %}{{ scene_entry(scene) }}{% endfor %}
+    </ul>
+
+    {% if not room.scenes %}
+    <p class="actor-empty">{{ t("game.scenes.no_scenes") }}</p>
+    {% endif %}
+</div>

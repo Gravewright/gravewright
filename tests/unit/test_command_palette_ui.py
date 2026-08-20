@@ -47,15 +47,23 @@ def test_game_page_renders_palette_and_shortcut(db):
         response = client.get("/game")
     assert response.status_code == 200
     assert "data-command-palette" in response.text
-    assert "data-command-palette-open" in response.text
+    # O atalho ja nao tem botao no rail, entao quem o declara e a propria paleta.
+    # Sem isto o Ctrl+K vira folclore: a dica no placeholder do chat e visual e
+    # nao chega a leitor de tela.
     assert "Control+K Meta+K" in response.text
 
 
-def test_search_button_is_immediately_before_settings_in_the_dock():
+def test_the_dock_does_not_spend_a_slot_on_search():
+    """A busca saiu do rail e ficou so no Ctrl+K, com a dica no chat.
+
+    O rail classico tem 320px e cada botao ocupa 30px; devolver esse espaco foi
+    o que deixou Cenas e Compendios caberem la sem espremer o resto.
+    """
     template = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
     dock = template.split('<nav class="game-dock"', 1)[1]
-    search = dock.index("data-command-palette-open")
-    settings = dock.index('data-panel-toggle="panel-settings-{{ room.id }}"')
+    assert "data-command-palette-open" not in dock
 
-    assert search < settings
-    assert "data-panel-toggle=" not in dock[search:settings]
+    from app.i18n.pt_br import CATALOG
+    assert "Ctrl K" in CATALOG["game.chat.placeholder"], (
+        "a dica do atalho vive no placeholder do chat"
+    )

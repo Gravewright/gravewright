@@ -18,6 +18,31 @@ from app.persistence.repositories.scene_repository import SceneRepository
 from app.realtime.events import TransportEvent
 
 
+LIGHTING_MODES = ("none", "dynamic", "manual")
+
+
+def normalized_lighting_mode(value: Any) -> str:
+    """Um valor desconhecido cai em "none": mapa aberto nunca esconde nada."""
+    text = str(value or "none")
+    return text if text in LIGHTING_MODES else "none"
+
+
+def effective_darkness(scene: Any) -> float:
+    """A escuridao que o mapa deve pintar agora.
+
+    `darkness` na cena e so a intensidade CONFIGURADA. Ela vale quando a cena
+    esta em iluminacao dinamica e a luz esta apagada; em visao total ou com a
+    luz acesa o mapa fica aberto sem perder o valor que o mestre ajustou.
+    """
+    if scene is None:
+        return 0.0
+    if normalized_lighting_mode(scene.get("lighting_mode")) != "dynamic":
+        return 0.0
+    if not bool(scene.get("lights_out", 1)):
+        return 0.0
+    return float(scene.get("darkness") or 0.0)
+
+
 @dataclass(frozen=True)
 class SceneServiceResult:
     success: bool
@@ -97,6 +122,40 @@ class SceneService:
             return SceneServiceResult(success=False, error_key="permissions.errors.denied")
         return SceneServiceResult(success=True, scene=scene)
 
+    def _manageable_group(self, *, group_id: str, user_id: str) -> dict | None:
+        group = self.groups.get_by_id(group_id)
+        if group is None:
+            return None
+        if not self.permissions.can(
+            user_id=user_id,
+            campaign_id=group["campaign_id"],
+            permission=TablePermission.SCENE_MANAGE,
+        ):
+            return None
+        return group
+
+    def rename_group(self, *, group_id: str, name: str, user_id: str) -> bool:
+        group = self._manageable_group(group_id=group_id, user_id=user_id)
+        normalized = " ".join(str(name or "").split())[:80]
+        if group is None or not normalized:
+            return False
+        self.groups.rename(group_id=group_id, name=normalized)
+        return True
+
+    def set_group_color(self, *, group_id: str, color: str, user_id: str) -> bool:
+        group = self._manageable_group(group_id=group_id, user_id=user_id)
+        if group is None:
+            return False
+        self.groups.set_color(group_id=group_id, color=color)
+        return True
+
+    def delete_group(self, *, group_id: str, user_id: str) -> bool:
+        group = self._manageable_group(group_id=group_id, user_id=user_id)
+        if group is None:
+            return False
+        self.groups.delete(group_id=group_id)
+        return True
+
     def get_edit_page(self, *, scene_id: str, user_id: str) -> SceneServiceResult:
         result = self.get_scene_for_management(scene_id=scene_id, user_id=user_id)
         if not result.success or result.scene is None:
@@ -115,8 +174,34 @@ class SceneService:
             return None
         return group_id
 
+    def move_scene_to_group(self, *, scene_id: str, group_id: str | None, campaign_id: str) -> bool:
+        scene = self.scenes.get_by_id(scene_id)
+        if scene is None or scene["campaign_id"] != campaign_id:
+            return False
+        self.scenes.set_group(
+            scene_id=scene_id,
+            group_id=self.normalize_group_id(group_id=group_id, campaign_id=campaign_id),
+        )
+        return True
+
     def update_scene_metadata(self, **kwargs: Any) -> None:
         self.scenes.update_metadata(**kwargs)
+
+    def update_scene_lighting(
+        self,
+        *,
+        scene_id: str,
+        mode: str,
+        darkness: float | None = None,
+        lights_out: bool | None = None,
+    ) -> Row | None:
+        self.scenes.update_lighting(
+            scene_id=scene_id,
+            mode=normalized_lighting_mode(mode),
+            darkness=darkness,
+            lights_out=lights_out,
+        )
+        return self.scenes.get_by_id(scene_id)
 
     async def broadcast_scene_update(
         self,
@@ -251,7 +336,10 @@ class SceneService:
             "grid_visible": bool(scene["grid_visible"]),
             "grid_color": scene["grid_color"],
             "grid_opacity": float(scene["grid_opacity"]),
-            "darkness": float(scene["darkness"]),
+            "darkness": effective_darkness(scene),
+            "darkness_config": float(scene["darkness"]),
+            "lighting_mode": normalized_lighting_mode(scene.get("lighting_mode")),
+            "lights_out": bool(scene.get("lights_out", 1)),
             "image_scale": float(scene["image_scale"]),
             "start_world_x": float(scene["start_world_x"]),
             "start_world_y": float(scene["start_world_y"]),

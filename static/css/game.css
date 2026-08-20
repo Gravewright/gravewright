@@ -1961,30 +1961,8 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
     color: var(--text);
 }
 
-.scene-manager-modal {
-    width: min(720px, calc(100vw - 44px));
-    height: min(680px, calc(100vh - 86px));
-    max-height: min(700px, calc(100vh - 86px));
-    min-width: 480px;
-    min-height: min(420px, calc(100vh - 86px));
-    display: flex !important;
-    flex-direction: column;
-    resize: both;
-    overflow: hidden;
-}
 
-.scene-manager-modal[hidden] {
-    display: none !important;
-}
 
-.scene-manager-body {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 0;
-    overflow: auto;
-    padding: 10px;
-}
 
 .scene-manager-section,
 .scene-card {
@@ -2001,78 +1979,15 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
 }
 
 .scene-card small,
-.scene-empty-line {
-    color: var(--text-faint);
-    font-size: 12px;
-    line-height: 1.45;
-}
 
 .scene-section-label,
-.scene-manager-section-head h3 {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 10px;
-    font-weight: 850;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-}
 
-.scene-tabs {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    min-height: 0;
-    flex: 1;
-}
 
-.scene-tab-radio {
-    display: none;
-}
 
-.scene-tabbar {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid var(--border);
-}
 
-.scene-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    margin-bottom: -1px;
-    padding: 7px 13px;
-    border: 1px solid transparent;
-    border-bottom: none;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    user-select: none;
-}
 
-.scene-tab:hover {
-    color: var(--text);
-}
 
-.scene-tab-meta {
-    margin: 0;
-    color: var(--text-faint);
-    font-size: 12px;
-    line-height: 1.45;
-}
 
-.scene-manager-section {
-    display: grid;
-    grid-template-rows: auto;
-    align-content: start;
-    gap: 10px;
-    min-height: 0;
-    padding: 10px 12px;
-    overflow: hidden;
-}
 
 .scene-manager-section--upload {
     overflow-y: auto;
@@ -2090,30 +2005,10 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
 }
 
 .scene-tabs>.scene-tab-radio:nth-of-type(1):checked~.scene-tabbar .scene-tab:nth-child(1),
-.scene-tabs>.scene-tab-radio:nth-of-type(2):checked~.scene-tabbar .scene-tab:nth-child(2) {
-    color: var(--text);
-    background: rgba(16, 19, 21, 0.72);
-    border-color: var(--border);
-}
 
 .scene-tabs>.scene-tab-radio:nth-of-type(1):checked~.scene-manager-section--library,
-.scene-tabs>.scene-tab-radio:nth-of-type(2):checked~.scene-manager-section--upload {
-    display: grid;
-}
 
-.scene-manager-section-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-}
 
-.scene-manager-section-head p {
-    margin: 5px 0 0;
-    color: var(--text-faint);
-    font-size: 12px;
-    line-height: 1.45;
-}
 
 .scene-upload-form,
 .scene-group-form,
@@ -2301,85 +2196,16 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
     scrollbar-color: rgba(192, 154, 90, 0.45) rgba(255, 255, 255, 0.04);
 }
 
-.scene-group-block {
-    display: grid;
-    border: 1px solid rgba(192, 154, 90, 0.12);
-    border-radius: var(--radius-lg);
-    background: rgba(9, 12, 14, 0.36);
-    overflow: hidden;
-}
 
-.scene-group-block summary {
-    min-height: 38px;
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto auto;
-    align-items: center;
-    gap: 8px;
-    padding: 0 10px;
-    cursor: pointer;
-    color: var(--text-muted);
-    list-style: none;
-    background: rgba(16, 19, 21, 0.78);
-}
 
-.scene-group-block summary::-webkit-details-marker {
-    display: none;
-}
 
-.scene-group-block summary:hover {
-    color: var(--text);
-}
 
-.scene-group-block summary strong {
-    min-width: 0;
-    overflow: hidden;
-    color: inherit;
-    font-size: 11px;
-    font-weight: 850;
-    letter-spacing: 0.08em;
-    text-overflow: ellipsis;
-    text-transform: uppercase;
-    white-space: nowrap;
-}
 
-.scene-group-block summary small {
-    min-width: 24px;
-    border: 1px solid rgba(192, 154, 90, 0.2);
-    border-radius: var(--radius-pill);
-    padding: 2px 7px;
-    color: var(--text-faint);
-    font-size: 10px;
-    font-weight: 800;
-    text-align: center;
-}
 
-.scene-group-block summary i {
-    color: var(--text-faint);
-    font-size: 14px;
-    transition: transform var(--motion-fast);
-}
 
-.scene-group-block[open] summary {
-    border-bottom: 1px solid rgba(192, 154, 90, 0.1);
-}
 
-.scene-group-block[open] summary i {
-    transform: rotate(180deg);
-}
 
-.scene-group-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-}
 
-.scene-group-scenes {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 8px;
-    padding: 8px;
-}
 
 .scene-card {
     display: grid;
@@ -2426,13 +2252,6 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
     text-transform: uppercase;
 }
 
-.scene-card-actions {
-    grid-column: 2;
-    grid-row: 1;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
 
 .scene-edit-modal {
     width: min(440px, calc(100% - 44px));
@@ -2463,32 +2282,8 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
     padding-top: 12px;
 }
 
-.scene-delete-form {
-    display: flex;
-    justify-content: flex-end;
-    border-top: 1px solid rgba(214, 96, 96, 0.18);
-    padding-top: 12px;
-}
 
-.scene-delete-button {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 14px;
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(214, 96, 96, 0.45);
-    background: rgba(214, 96, 96, 0.1);
-    color: #e58a8a;
-    font-size: 12px;
-    font-weight: 650;
-    cursor: pointer;
-}
 
-.scene-delete-button:hover {
-    background: rgba(214, 96, 96, 0.18);
-    border-color: rgba(214, 96, 96, 0.7);
-    color: #f0a3a3;
-}
 
 .scene-upload-form .primary-action {
     justify-self: end;
@@ -2560,13 +2355,7 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
 }
 
 @media (max-width: 860px) {
-    .scene-manager-modal {
-        min-width: 0;
-    }
 
-    .scene-manager-body {
-        overflow: auto;
-    }
 
     .scene-manager-grid,
     .scene-two-col,
@@ -2574,9 +2363,6 @@ body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .
         grid-template-columns: 1fr;
     }
 
-    .scene-group-scenes {
-        grid-template-columns: 1fr;
-    }
 
     .scene-edit-modal {
         width: min(440px, calc(100% - 24px));
@@ -6016,7 +5802,7 @@ body[data-detached-modal] .journal-shell {
     padding: 5px;
     gap: 2px;
     background: rgba(14, 17, 19, 0.94);
-    border: 1px solid var(--border-strong);
+    border: 1px solid var(--border-accent-strong);
     border-left: none;
     border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
     backdrop-filter: blur(16px);
@@ -6520,7 +6306,7 @@ body[data-game-layout="gravewright"] .game-modal-window::-webkit-resizer {
     gap: 3px;
     min-width: 0;
     overflow-x: auto;
-    border-bottom: 1px solid rgba(192, 154, 90, 0.22);
+    border-bottom: 1px solid rgba(var(--layer-accent-rgb), 0.22);
     padding: 5px 6px 0;
     background: #0b0e10;
     scrollbar-width: thin;
@@ -6540,8 +6326,8 @@ body[data-game-layout="gravewright"] .game-modal-window::-webkit-resizer {
 
 .game-panel-tab-item:has(.game-panel-tab[aria-selected="true"]) {
     border-color: var(--border-accent-strong);
-    background: rgba(192, 154, 90, 0.12);
-    color: var(--accent-hover);
+    background: rgba(var(--layer-accent-rgb), 0.12);
+    color: rgb(var(--layer-accent-rgb));
 }
 
 .game-panel-tab,
@@ -6564,7 +6350,7 @@ body[data-game-layout="gravewright"] .game-modal-window::-webkit-resizer {
 }
 
 .game-panel-tab i {
-    color: var(--accent);
+    color: rgb(var(--layer-accent-rgb));
     font-size: 14px;
 }
 
@@ -6600,8 +6386,8 @@ body[data-game-layout="classic"] .game-dock {
     justify-content: center;
     border-top: 0;
     border-right: 0;
-    border-bottom: 1px solid var(--border);
-    border-left: 1px solid var(--border-strong);
+    border-bottom: 1px solid var(--border-accent);
+    border-left: 1px solid var(--border-accent-strong);
     border-radius: 0;
     padding: 4px 6px;
     background: rgba(13, 16, 18, 0.98);
@@ -6611,7 +6397,7 @@ body[data-game-layout="classic"] .game-dock {
 }
 
 body[data-game-layout="classic"] .game-dock-btn {
-    width: 34px;
+    width: 30px;
     height: 36px;
     font-size: 19px;
 }
@@ -6649,7 +6435,7 @@ body[data-game-layout="classic"] .game-panel {
     border-top: 0;
     border-right: 0;
     border-bottom: 0;
-    border-left: 1px solid var(--border-strong);
+    border-left: 1px solid var(--border-accent-strong);
     border-radius: 0;
     resize: none;
     background: rgba(13, 16, 18, 0.98);
@@ -7621,11 +7407,8 @@ body[data-game-layout="classic"] .game-panel-body {
     width: 360px;
 }
 
-.tool-dock[data-active-layer="gm"] { border-color: rgba(192, 154, 90, .72); }
-.tool-dock[data-active-layer="composition"] { border-color: rgba(96, 165, 250, .72); }
 .tool-dock[data-layer-locked="true"] .tool-dock-toggle::after { content: "\1F512"; margin-left: 3px; font-size: 9px; }
 .tool-layer-active-label { max-width: 48px; padding: 3px 2px 5px; overflow: hidden; color: var(--accent, #6fddb4); font-size: 8px; font-weight: 800; letter-spacing: .04em; text-align: center; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
-.tool-dock[data-active-layer="lighting"] { border-color: rgba(250, 204, 21, .8); }
 
 .gm-onboarding-dialog {
     width: min(620px, calc(100vw - 32px));
@@ -10665,31 +10448,11 @@ body[data-game-layout="classic"] .gw-effects-hud {
     touch-action: none;
 }
 
-/* GM-only layer: dashed amber frame so the GM can tell it is hidden from players. */
-.scene-image.is-gm-layer {
-    outline: 2px dashed rgba(192, 154, 90, 0.85);
-    outline-offset: 1px;
-}
-
-.scene-image.is-gm-layer.is-selected {
-    outline-style: solid;
-    outline-color: rgba(111, 221, 180, 0.85);
-}
-
+/* A imagem colocada no mapa e cenario: nao leva moldura. O que a camada GM
+   sinaliza -- "isto os jogadores nao veem" -- fica na opacidade, e o contorno
+   de selecao continua sendo o unico traco que o mapa desenha por cima dela. */
 .scene-image.is-gm-layer img {
     opacity: 0.92;
-}
-
-/* Composition layer: world-anchored support scenery. The blue frame is a GM-only
-   authoring hint (scoped to the GM's layer); players just see the image. */
-[data-scene-image-layer][data-is-gm="true"] .scene-image.is-composition {
-    outline: 1px dashed rgba(93, 169, 255, 0.7);
-    outline-offset: 1px;
-}
-
-[data-scene-image-layer][data-is-gm="true"] .scene-image.is-composition.is-selected {
-    outline-style: solid;
-    outline-color: rgba(111, 221, 180, 0.85);
 }
 
 /* Always-visible GM-only layer controller, top-left of the board. */
@@ -10704,7 +10467,7 @@ body[data-game-layout="classic"] .gw-effects-hud {
     padding: 5px 7px;
     border-radius: var(--radius-xl);
     background: rgba(9, 13, 16, 0.62);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-accent);
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
@@ -10733,10 +10496,11 @@ body[data-game-layout="classic"] .gw-effects-hud {
 
 .layer-hud__title i {
     font-size: 13px;
-    color: var(--accent);
+    color: rgb(var(--layer-accent-rgb));
 }
 
 .layer-hud__btn {
+    --layer-btn-rgb: var(--layer-accent-rgb);
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -10753,7 +10517,15 @@ body[data-game-layout="classic"] .gw-effects-hud {
 
 .layer-hud__btn i {
     font-size: 14px;
+    color: rgba(var(--layer-btn-rgb), 0.85);
 }
+
+.layer-hud__btn[data-active-layer="game"] { --layer-btn-rgb: 192, 154, 90; }
+.layer-hud__btn[data-active-layer="gm"] { --layer-btn-rgb: 208, 111, 111; }
+.layer-hud__btn[data-active-layer="composition"] { --layer-btn-rgb: 96, 165, 250; }
+.layer-hud__btn[data-active-layer="effects"] { --layer-btn-rgb: 109, 179, 134; }
+.layer-hud__btn[data-active-layer="walls"] { --layer-btn-rgb: 167, 139, 250; }
+.layer-hud__btn[data-active-layer="lighting"] { --layer-btn-rgb: 250, 204, 21; }
 
 .layer-hud__btn:hover {
     color: #fff;
@@ -10762,20 +10534,12 @@ body[data-game-layout="classic"] .gw-effects-hud {
 
 .layer-hud__btn[aria-pressed="true"] {
     color: #0c100f;
-    background: var(--accent);
-    border-color: var(--accent);
+    background: rgba(var(--layer-btn-rgb), 0.95);
+    border-color: rgba(var(--layer-btn-rgb), 0.95);
 }
 
-.layer-hud__btn[data-active-layer="gm"][aria-pressed="true"] {
-    color: #1a1407;
-    background: rgba(192, 154, 90, 0.95);
-    border-color: rgba(192, 154, 90, 0.95);
-}
-
-.layer-hud__btn[data-active-layer="composition"][aria-pressed="true"] {
-    color: #06121a;
-    background: rgba(93, 169, 255, 0.92);
-    border-color: rgba(93, 169, 255, 0.92);
+.layer-hud__btn[aria-pressed="true"] i {
+    color: inherit;
 }
 
 /* Collapsed layer controller: only the title remains, to free up space. */
@@ -11027,12 +10791,6 @@ body[data-game-layout="classic"] .gw-effects-hud {
     padding: min(14vh, 120px) 16px 16px;
     background: rgba(5, 7, 9, 0.72);
     backdrop-filter: blur(3px);
-}
-
-.layer-hud__btn[data-active-layer="lighting"][aria-pressed="true"] {
-    color: #fde047;
-    border-color: rgba(250, 204, 21, .72);
-    background: rgba(250, 204, 21, .12);
 }
 
 .command-palette-backdrop[hidden] {
@@ -11686,7 +11444,12 @@ body.command-palette-open {
     aspect-ratio: 4 / 3; display: grid; place-items: center; overflow: hidden;
     background: rgba(0, 0, 0, 0.25);
 }
-.asset-card__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.asset-card__img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    /* Quem arrasta e o cartao. Sem isto o Chrome monta um drag nativo da
+       miniatura e anexa a imagem como arquivo, e o mapa a trata como upload. */
+    -webkit-user-drag: none;
+}
 .asset-card__icon { font-size: 30px; color: rgba(255, 255, 255, 0.45); }
 
 .asset-card__meta { display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; min-width: 0; }
@@ -13088,3 +12851,205 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
 body.is-placing-spatial-sound [data-map-canvas]{cursor:crosshair!important}.spatial-sound-inspector{width:min(540px,calc(100vw - 32px));height:min(680px,calc(100vh - 48px))}.spatial-sound-inspector-body{display:grid;gap:14px;padding:14px}.spatial-sound-inspector fieldset{display:grid;gap:12px;margin:0;padding:14px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:color-mix(in srgb,var(--surface-raised) 75%,transparent)}.spatial-sound-inspector legend{padding:0 6px;color:var(--accent);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.spatial-field-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.spatial-sound-inspector .permission-toggle{display:flex;align-items:center;justify-content:space-between}.spatial-sound-inspector .game-modal-footer{display:flex;justify-content:flex-end}
 .spatial-sound-inspector .permission-toggle>span{display:grid;gap:3px;padding-right:16px}.spatial-sound-inspector .permission-toggle small{color:var(--text-muted);font-size:11px;font-weight:400;line-height:1.35}.spatial-sound-inspector .permission-toggle input[type=checkbox]{position:relative;flex:0 0 auto;appearance:none;width:38px;height:20px;margin:0;border:1px solid var(--border-soft);border-radius:999px;background:var(--surface-base);cursor:pointer;transition:.15s ease}.spatial-sound-inspector .permission-toggle input[type=checkbox]::before{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--text-muted);transition:.15s ease}.spatial-sound-inspector .permission-toggle input[type=checkbox]:checked{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 35%,var(--surface-base))}.spatial-sound-inspector .permission-toggle input[type=checkbox]:checked::before{left:20px;background:var(--accent)}.spatial-gain-field>span{display:flex;justify-content:space-between;gap:12px}.spatial-gain-field output{color:var(--accent);font-variant-numeric:tabular-nums}.spatial-gain-field input[type=range]{width:100%;accent-color:var(--accent)}
 .spatial-sound-inspector{width:min(610px,calc(100vw - 40px));height:min(740px,calc(100vh - 48px));background:var(--surface);box-shadow:0 24px 72px #000c}.spatial-sound-inspector>.game-modal-titlebar{padding-inline:16px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface))}.spatial-sound-inspector-body{gap:18px;padding:20px}.spatial-sound-inspector fieldset{gap:14px;padding:16px 18px;border-color:color-mix(in srgb,var(--accent) 24%,var(--border));background:color-mix(in srgb,var(--surface-raised) 92%,var(--surface))}.spatial-sound-inspector legend{font-size:11px;letter-spacing:.1em}.spatial-sound-inspector .dialog-field{gap:7px}.spatial-sound-inspector .dialog-help{margin:0;color:var(--text-muted);line-height:1.45}.spatial-sound-inspector .permission-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;min-height:44px;padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 65%,transparent)}.spatial-sound-inspector .permission-toggle:last-child{border-bottom:0}.spatial-sound-inspector .permission-toggle>span{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:0}.spatial-sound-inspector .permission-toggle strong{display:block;line-height:1.25}.spatial-sound-inspector .permission-toggle small{display:block;max-width:430px;line-height:1.4}.spatial-sound-inspector .permission-toggle input[type=checkbox]{appearance:none!important;-webkit-appearance:none!important;width:42px!important;height:22px!important;padding:0!important;border-radius:999px!important;align-self:center}.spatial-sound-inspector .permission-toggle input[type=checkbox]::before{width:16px;height:16px}.spatial-sound-inspector .permission-toggle input[type=checkbox]:checked::before{left:22px}.spatial-sound-inspector .game-modal-footer{padding:12px 16px;background:var(--surface);border-top:1px solid var(--border)}
+
+
+/* Seletor de imagens da camada artistica: uma grade para arrastar ao mapa. */
+.scene-image-picker {
+    width: min(560px, calc(100vw - 32px));
+    height: min(620px, calc(100vh - 48px));
+}
+
+.scene-image-picker-body {
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px 12px 0;
+}
+
+.scene-image-picker-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--surface-base);
+}
+
+.scene-image-picker-search i { color: var(--text-muted); font-size: 14px; }
+
+.scene-image-picker-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+
+.scene-image-picker-search input:focus { outline: none; }
+
+.scene-image-picker-hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+/* A grade ja vem da biblioteca; aqui ela so perde o respiro que a modal da. */
+.scene-image-picker .asset-grid { padding: 0 0 12px; }
+
+
+/* A camada ativa pinta o traco de detalhe da mesa inteira: o dock, os paineis e
+ * as janelas passam a dizer, pela borda, em que camada o mestre esta editando.
+ * Trocar apenas a cor-base mantem as espessuras e opacidades ja calibradas. */
+body[data-table-layer] {
+    --border-accent: rgba(var(--layer-accent-rgb), 0.36);
+    --border-accent-strong: rgba(var(--layer-accent-rgb), 0.6);
+}
+
+body[data-table-layer="game"] { --layer-accent-rgb: 192, 154, 90; }
+body[data-table-layer="gm"] { --layer-accent-rgb: 208, 111, 111; }
+body[data-table-layer="composition"] { --layer-accent-rgb: 96, 165, 250; }
+body[data-table-layer="effects"] { --layer-accent-rgb: 109, 179, 134; }
+body[data-table-layer="walls"] { --layer-accent-rgb: 167, 139, 250; }
+body[data-table-layer="lighting"] { --layer-accent-rgb: 250, 204, 21; }
+
+
+/* Ferramenta Visibilidade: o seletor de regime fica acima dos paineis, e cada
+ * regime mostra so os proprios controles. As pecas reusam .fog-* de proposito
+ * -- e a mesma modal, so ganhou um andar a mais. */
+.lighting-pane > .fog-opacity-row {
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: rgba(16, 19, 21, 0.72);
+}
+
+.lighting-mode-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.lighting-mode-row .fog-btn {
+    flex-direction: column;
+    gap: 4px;
+    min-height: 56px;
+    text-align: center;
+}
+
+.lighting-mode-row .fog-btn i {
+    font-size: 17px;
+}
+
+.lighting-mode-hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.lighting-pane {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.lighting-pane[hidden] {
+    display: none;
+}
+
+.lighting-switch-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: rgba(16, 19, 21, 0.72);
+}
+
+.lighting-empty {
+    margin: 0;
+    color: var(--text-faint);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+
+/* Painel de cenas: mesma casca de atores/itens/diarios. A arvore reusa
+ * .sheet-folder, entao aqui so mora o que e proprio da cena -- a lista e o
+ * respiro do cartao dentro da pasta. */
+.scene-panel-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 8px;
+    min-height: 0;
+    overflow: auto;
+}
+
+.scene-tree-host {
+    min-height: 0;
+}
+
+.scene-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.scene-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.scene-entry[hidden] {
+    display: none;
+}
+
+.scene-root-list:not(:empty) {
+    margin-top: 2px;
+}
+
+/* O cartao de cena vinha do modal antigo, onde tinha a largura toda da modal.
+   Dentro do painel estreito ele precisa poder encolher. */
+.scene-tree .scene-card {
+    min-width: 0;
+}
+
+.scene-create-body {
+    padding: 14px;
+}
+
+.scene-create-meta {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+/* Alvos de arrasto da cena. O realce principal vem de .directory-drop-target,
+   compartilhado com atores e itens; estas sao as regras de fallback, para o
+   caso de a maquina de arrasto generica nao ter carregado. */
+.scene-drop-over.sheet-folder-header {
+    box-shadow: inset 0 0 0 1px var(--accent, #6fddb4);
+    background: rgba(111, 221, 180, 0.08);
+}
+
+.scene-drop-over.scene-root-list {
+    border: 1px dashed var(--accent, #6fddb4);
+    border-radius: var(--radius-lg);
+}
+
+/* A lista solta precisa ter altura mesmo vazia, senao nao ha onde soltar uma
+   cena para tira-la de uma pasta. */
+.scene-root-list {
+    min-height: 34px;
+}

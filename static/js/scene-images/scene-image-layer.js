@@ -785,6 +785,9 @@
 
     document.addEventListener("pointerdown", (event) => {
       if (event.target.closest(".scene-image")) return;
+      // Shift/Ctrl comeca uma marquee aditiva: limpar aqui apagaria justamente
+      // o que o mestre esta somando.
+      if (event.shiftKey || event.ctrlKey || event.metaKey) return;
       controllers.forEach((controller) => controller.deselect());
     });
 

@@ -14,13 +14,17 @@ from litestar.enums import RequestEncodingType
 from litestar.params import Body
 from litestar.params import FromPath
 from litestar.response import Redirect
+from litestar.response import Response
 from litestar.response import Template
 
+from app.business.game_page_service import GamePageService
 from app.helpers.view import view_context
 from app.domain.scenes import SceneVisibility
 from app.domain.scenes import SCENE_NATIVE_CHUNK_SIZE
 from app.engine.scenes.map_upload_service import MapUploadService
 from app.engine.scenes.scene_service import SceneService
+from app.engine.scenes.scene_service import effective_darkness
+from app.engine.scenes.scene_service import normalized_lighting_mode
 from app.config import config
 from app.realtime.transport import RealtimeTransport
 
@@ -51,7 +55,6 @@ class UpdateSceneForm:
     grid_visible: str = ""
     grid_color: str = "#6fddb4"
     grid_opacity: str = "0.4"
-    darkness: str = "0.0"
     tile_size: str = ""
     image_scale: str = ""
 
@@ -72,7 +75,7 @@ class UpdateSceneStartPointForm:
 
 
 def _scene_modal_id(campaign_id: str | None) -> str:
-    return f"scene-manager-{campaign_id}" if campaign_id else ""
+    return f"panel-scenes-{campaign_id}" if campaign_id else ""
 
 
 def _redirect_error(error_key: str, *, campaign_id: str | None = None) -> Redirect:
@@ -255,7 +258,7 @@ async def update_scene(
         grid_visible=data.grid_visible == "on",
         grid_color=_valid_color(data.grid_color, "#6fddb4"),
         grid_opacity=_clamp_opacity(data.grid_opacity, 0.4),
-        darkness=_clamp_opacity(data.darkness, 0.0),
+        darkness=None,
         tile_size=scene["tile_size"],
         grid_size=new_grid_size,
         image_scale=new_image_scale,
@@ -270,6 +273,161 @@ async def update_scene(
     )
 
     return _redirect_message("game.scenes.updated", campaign_id=scene["campaign_id"])
+
+
+@get("/game/scenes/panel/{campaign_id:str}")
+async def scenes_panel_fragment(
+    campaign_id: FromPath[str],
+    cookies: dict[str, str],
+    current_user: Row,
+    game_page_service: GamePageService,
+) -> Redirect | Template:
+    """Arvore do painel de cenas, buscada pelo cliente para atualizar em lugar
+    depois de uma mutacao -- o mesmo contrato do fragmento de atores."""
+    room = next(
+        (
+            r
+            for r in game_page_service.build_context(user_id=current_user["id"]).rooms
+            if r["id"] == campaign_id
+        ),
+        None,
+    )
+    if room is None:
+        return Redirect(path="/game")
+    return Template(
+        template_name="pages/game/_scenes_panel.html",
+        context=view_context(cookies, room=room),
+    )
+
+
+@post("/game/scenes/move")
+async def move_scene_to_group(
+    request: Request,
+    current_user: Row,
+    scene_service: SceneService,
+) -> Response:
+    """Arrastar uma cena para uma pasta na biblioteca do mestre."""
+    body = await request.json()
+    scene_id = str(body.get("scene_id") or "")
+    scene_result = scene_service.get_scene_for_management(
+        scene_id=scene_id, user_id=current_user["id"]
+    )
+    if scene_result.scene is None:
+        return Response({"error_key": "game.scenes.errors.not_found"}, status_code=404)
+    if not scene_result.success:
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+
+    moved = scene_service.move_scene_to_group(
+        scene_id=scene_id,
+        group_id=str(body.get("group_id") or "") or None,
+        campaign_id=scene_result.scene["campaign_id"],
+    )
+    if not moved:
+        return Response({"error_key": "game.scenes.errors.not_found"}, status_code=404)
+    return Response({"scene_id": scene_id}, status_code=200)
+
+
+def _valid_group_color(value: str) -> str:
+    return value if HEX_COLOR_RE.match(value or "") else "#8ea8ff"
+
+
+async def _group_form(request: Request) -> dict:
+    form = await request.form()
+    return {k: str(form.get(k) or "") for k in ("folder_id", "campaign_id", "name", "color")}
+
+
+@post("/game/scene-folder/rename")
+async def rename_scene_folder(
+    request: Request, current_user: Row, scene_service: SceneService
+) -> Response:
+    data = await _group_form(request)
+    ok = scene_service.rename_group(
+        group_id=data["folder_id"], name=data["name"], user_id=current_user["id"]
+    )
+    if not ok:
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+    return Response({"folder_id": data["folder_id"]}, status_code=200)
+
+
+@post("/game/scene-folder/color")
+async def set_scene_folder_color(
+    request: Request, current_user: Row, scene_service: SceneService
+) -> Response:
+    data = await _group_form(request)
+    ok = scene_service.set_group_color(
+        group_id=data["folder_id"],
+        color=_valid_group_color(data["color"]),
+        user_id=current_user["id"],
+    )
+    if not ok:
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+    return Response({"folder_id": data["folder_id"]}, status_code=200)
+
+
+@post("/game/scene-folder/delete")
+async def delete_scene_folder(
+    request: Request, current_user: Row, scene_service: SceneService
+) -> Response:
+    """Apaga so a pasta: as cenas dela voltam para a raiz da biblioteca."""
+    data = await _group_form(request)
+    ok = scene_service.delete_group(group_id=data["folder_id"], user_id=current_user["id"])
+    if not ok:
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+    return Response({"folder_id": data["folder_id"]}, status_code=200)
+
+
+@post("/game/scenes/lighting")
+async def update_scene_lighting(
+    request: Request,
+    current_user: Row,
+    scene_service: SceneService,
+) -> Response:
+    """Regime de luz da cena: visao total, iluminacao dinamica ou manual.
+
+    A nevoa manual continua com os proprios comandos, pelo WebSocket: sair do
+    modo manual dispara um fog.disable no cliente, que ja transmite para a sala
+    inteira. Aqui so registramos o regime escolhido.
+    """
+    body = await request.json()
+    scene_id = str(body.get("scene_id") or "")
+    scene_result = scene_service.get_scene_for_management(
+        scene_id=scene_id, user_id=current_user["id"]
+    )
+    scene = scene_result.scene
+    if scene is None:
+        return Response({"error_key": "game.scenes.errors.not_found"}, status_code=404)
+    if not scene_result.success:
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+
+    mode = normalized_lighting_mode(body.get("mode") or scene.get("lighting_mode"))
+    darkness = (
+        _clamp_opacity(str(body.get("darkness")), float(scene.get("darkness") or 0.0))
+        if body.get("darkness") is not None
+        else None
+    )
+    lights_out = bool(body.get("lights_out")) if body.get("lights_out") is not None else None
+
+    updated = scene_service.update_scene_lighting(
+        scene_id=scene_id, mode=mode, darkness=darkness, lights_out=lights_out
+    )
+    if updated is None:
+        return Response({"error_key": "game.scenes.errors.not_found"}, status_code=404)
+
+    await scene_service.broadcast_scene_update(
+        scene_id=scene_id,
+        transport=RealtimeTransport(),
+    )
+
+    return Response(
+        {
+            "scene_id": scene_id,
+            "lighting_mode": normalized_lighting_mode(updated.get("lighting_mode")),
+            "darkness": float(updated.get("darkness") or 0.0),
+            "lights_out": bool(updated.get("lights_out", 1)),
+            "effective_darkness": effective_darkness(updated),
+        },
+        status_code=200,
+    )
 
 
 @post("/game/scenes/delete")

@@ -1,4 +1,12 @@
-<article class="scene-card {% if scene.active %}scene-card--active{% endif %}{% if room.navigated_scene and room.navigated_scene.id == scene.id %} scene-card--navigating{% endif %}">
+{# Cartao de cena na biblioteca: nome e estado, nada mais.
+
+   Ativar, navegar, configurar e remover mudaram para o menu de botao direito
+   (scene-context-menu.js). Numa arvore estreita, quatro icones por linha
+   competiam com o unico dado que o mestre procura ao varrer a lista -- o nome
+   da cena -- e as dimensoes so importam dentro do dialogo de configurar. #}
+<article class="scene-card {% if scene.active %}scene-card--active{% endif %}{% if room.navigated_scene and room.navigated_scene.id == scene.id %} scene-card--navigating{% endif %}"
+    data-scene-id="{{ scene.id }}" data-room-id="{{ room.id }}"
+    data-scene-active="{{ 'true' if scene.active else 'false' }}">
     <div class="scene-card-main">
         <div class="scene-card-title-row">
             <strong>{{ scene.name }}</strong>
@@ -9,27 +17,5 @@
             <span>{{ t("game.scenes.navigating_badge") }}</span>
             {% endif %}
         </div>
-        <small>{{ scene.width }}x{{ scene.height }} · {{ t("game.scenes.grid_size") }} {{ scene.get('grid_size') or scene.tile_size }}</small>
-    </div>
-    <div class="scene-card-actions">
-        {% if room.member_role == "gm" %}<form method="post" action="/game/scenes/activate" class="scene-activate-form" data-scene-ajax-form>
-            {{ csrf_input | safe }}
-            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
-            <input type="hidden" name="scene_id" value="{{ scene.id }}" />
-            <button type="submit" class="scene-icon-button" {% if scene.active %}disabled{% endif %}
-                title="{{ t('game.scenes.activate') }}">
-                <i class="ph ph-play" aria-hidden="true"></i>
-            </button>
-        </form>{% endif %}
-        {% if room.member_role == "gm" or room.is_streamer %}
-        <a class="scene-icon-button" href="/game?room={{ room.id | urlencode }}&view_scene={{ scene.id | urlencode }}&open_modal=scene-manager-{{ room.id | urlencode }}"
-            title="{{ t('game.scenes.navigate') }}" aria-label="{{ t('game.scenes.navigate') }}">
-            <i class="ph ph-eye" aria-hidden="true"></i>
-        </a>
-        {% endif %}
-        <button type="button" class="scene-icon-button" data-scene-edit="{{ scene.id }}" data-room-id="{{ room.id }}"
-            title="{{ t('game.scenes.configure') }}">
-            <i class="ph ph-sliders-horizontal" aria-hidden="true"></i>
-        </button>
     </div>
 </article>

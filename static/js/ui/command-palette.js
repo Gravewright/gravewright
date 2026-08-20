@@ -69,7 +69,7 @@
     if (target.action === "open_actor") document.dispatchEvent(new CustomEvent("vtt:open-actor-sheet", { detail: { actorId: target.id } }));
     else if (target.action === "open_item") document.dispatchEvent(new CustomEvent("vtt:open-item-sheet", { detail: { itemId: target.id } }));
     else if (target.action === "open_journal") document.dispatchEvent(new CustomEvent("vtt:open-journal", { detail: { journalId: target.id } }));
-    else if (target.action === "open_scene_manager") { openModal(`scene-manager-${campaignId()}`); window.setTimeout(() => document.querySelector(`[data-scene-edit="${CSS.escape(target.id)}"]`)?.focus(), 0); }
+    else if (target.action === "open_scene_manager") { openModal(`panel-scenes-${campaignId()}`); window.setTimeout(() => document.querySelector(`[data-scene-edit="${CSS.escape(target.id)}"]`)?.focus(), 0); }
     else if (target.action === "focus_scene") document.querySelector(`.room-workspace[data-room-id="${CSS.escape(campaignId())}"] [data-map-canvas]`)?.focus();
     else if (target.action === "open_compendium") {
       openModal(`panel-content-${campaignId()}`);

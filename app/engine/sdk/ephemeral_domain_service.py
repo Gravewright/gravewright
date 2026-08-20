@@ -1,6 +1,7 @@
 """Semantic adapters over the core's internal TTL coordination store."""
 from __future__ import annotations
 import math
+import time
 import uuid
 from dataclasses import dataclass
 from typing import Any
@@ -32,7 +33,7 @@ class TokenTargetService:
         allowed = {str(t.get("id") or t.get("token_id")) for t in visible.tokens or []}; normalized = [str(i) for i in ids]
         if any(i not in allowed for i in normalized): return EphemeralResult(False, error_key="sdk.tokens.targets.not_found")
         current = next((r for r in self.store.list_scope(namespace=self.NS,campaign_id=campaign_id,scope_id=scene_id) if r["owner_user_id"]==user_id),None)
-        if current and current["updated_at"] >= __import__('time').time().__int__(): return EphemeralResult(False,error_key="sdk.tokens.targets.rate_limited")
+        if current and current["updated_at"] >= int(time.time()): return EphemeralResult(False,error_key="sdk.tokens.targets.rate_limited")
         self.store.delete_owner_except_scope(namespace=self.NS, campaign_id=campaign_id, owner_user_id=user_id, scope_id=scene_id)
         self.store.put(namespace=self.NS, campaign_id=campaign_id, scope_id=scene_id, owner_user_id=user_id, entry_key=self.KEY, audience={"kind":"owner"}, payload={"ids":normalized}, ttl_seconds=86_400)
         return EphemeralResult(True, normalized)
@@ -43,6 +44,7 @@ class TokenTargetService:
 
 class SharedMeasurementService:
     NS = "shared-measurements-v1"; MAX_ACTIVE = 16
+    RATE_MAX = 8; RATE_WINDOW_SECONDS = 5
     def __init__(self): self.store = CoreEphemeralStateRepository()
     def _scene(self, campaign_id, scene_id, user_id):
         return any(s.get("id") == scene_id for s in (SceneService().list_scenes_for_campaign(campaign_id=campaign_id, user_id=user_id).scenes or []))
@@ -53,7 +55,8 @@ class SharedMeasurementService:
         if not isinstance(points, list) or not 2 <= len(points) <= 32 or any(not isinstance(p, dict) or any(not isinstance(p.get(k),(int,float)) or isinstance(p.get(k),bool) or not math.isfinite(p[k]) for k in ("x","y")) for p in points): return EphemeralResult(False, error_key="sdk.scene.measurements.invalid")
         active = [r for r in self.store.list_scope(namespace=self.NS, campaign_id=campaign_id, scope_id=scene_id) if r["owner_user_id"] == user_id]
         if len(active) >= self.MAX_ACTIVE: return EphemeralResult(False, error_key="sdk.scene.measurements.quota")
-        if sum(r["created_at"] >= __import__('time').time().__int__() for r in active) >= 8: return EphemeralResult(False,error_key="sdk.scene.measurements.rate_limited")
+        janela = int(time.time()) - self.RATE_WINDOW_SECONDS
+        if sum(r["created_at"] > janela for r in active) >= self.RATE_MAX: return EphemeralResult(False,error_key="sdk.scene.measurements.rate_limited")
         entry = uuid.uuid4().hex; row = self.store.put(namespace=self.NS, campaign_id=campaign_id, scope_id=scene_id, owner_user_id=user_id, entry_key=entry, audience={"kind":audience}, payload={"geometry":geometry}, ttl_seconds=max(1,min(int(ttl_seconds),300)))
         return EphemeralResult(True, self._public(row))
     def list(self, *, campaign_id: str, scene_id: str, user_id: str) -> EphemeralResult:
@@ -92,7 +95,7 @@ class PdfPresentationService:
         if not row: return EphemeralResult(False,error_key="sdk.pdf.presentation.not_found")
         try: page=int(page); expected_version=int(expected_version)
         except (TypeError,ValueError): return EphemeralResult(False,error_key="sdk.pdf.presentation.page_invalid")
-        updated=self.store.put(namespace=self.NS,campaign_id=campaign_id,scope_id=document_id,owner_user_id=user_id,entry_key=self.KEY,audience=row["audience"],payload={**row["payload"],"page":page},ttl_seconds=max(1,row["expires_at"]-__import__('time').time().__int__()),expected_version=expected_version)
+        updated=self.store.put(namespace=self.NS,campaign_id=campaign_id,scope_id=document_id,owner_user_id=user_id,entry_key=self.KEY,audience=row["audience"],payload={**row["payload"],"page":page},ttl_seconds=max(1,row["expires_at"]-int(time.time())),expected_version=expected_version)
         return EphemeralResult(bool(updated),self._public(updated) if updated else None,"sdk.pdf.presentation.stale_version" if not updated else None)
     def end(self, *, campaign_id, document_id, user_id):
         row=next((r for r in self.store.list_scope(namespace=self.NS,campaign_id=campaign_id,scope_id=document_id) if r["entry_key"]==self.KEY and r["owner_user_id"]==user_id),None)

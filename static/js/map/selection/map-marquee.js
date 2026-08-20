@@ -27,7 +27,10 @@
             el.style.width = `${Math.abs(marquee.x - marquee.startX)}px`;
             el.style.height = `${Math.abs(marquee.y - marquee.startY)}px`;
 
-            el.classList.toggle("board-marquee--all", marquee.x >= marquee.startX);
+            // Na camada artistica os dois sentidos pegam tudo: a marquee mostra
+            // sempre o traco de selecao ampla para nao prometer um filtro que nao existe.
+            const artistic = (window.GravewrightTools?.activeLayer || "game") === "composition";
+            el.classList.toggle("board-marquee--all", artistic || marquee.x >= marquee.startX);
             el.style.display = "block";
         }
 
@@ -77,15 +80,21 @@
             }, { additive: marquee.additive });
 
             // Left-to-right is the broad selection: tokens plus every overlay.
-            if (marquee.x >= marquee.startX) {
+            // Na camada artistica os overlays SAO o conteudo -- nao ha token para
+            // separar -- entao ali a marquee pega nos dois sentidos, como nas
+            // camadas de efeitos, paredes e iluminacao.
+            const broad = marquee.x >= marquee.startX;
+            const artistic = (window.GravewrightTools?.activeLayer || "game") === "composition";
+            if (broad || artistic) {
                 const rect = {
                     left: Math.min(marquee.startX, marquee.x),
                     top: Math.min(marquee.startY, marquee.y),
                     right: Math.max(marquee.startX, marquee.x),
                     bottom: Math.max(marquee.startY, marquee.y),
                 };
-                window.GravewrightCards?.selectInRect?.(canvas, rect, { additive: marquee.additive });
+                if (broad) window.GravewrightCards?.selectInRect?.(canvas, rect, { additive: marquee.additive });
                 window.GravewrightSceneImages?.selectInRect?.(canvas, rect, { additive: marquee.additive });
+                window.GravewrightSpatialSounds?.selectInRect?.(canvas, rect, { additive: marquee.additive });
             }
         }
 
