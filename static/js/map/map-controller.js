@@ -768,8 +768,12 @@
         }
 
 
+        // Na camada artistica o token nao e alvo: ele nem seleciona ali, entao
+        // deixar que ele engula o ponteiro so tiraria a marquee e o pan do mestre.
+        const artisticLayer = () => (window.GravewrightTools?.activeLayer || "game") === "composition";
+
         if (event.button === 2) {
-            const hit = tokenAtPoint(canvas, event.clientX, event.clientY);
+            const hit = artisticLayer() ? null : tokenAtPoint(canvas, event.clientX, event.clientY);
             if (hit) return;
             if (isGmForCanvas(canvas) && measureAtPointForContext(canvas, event)) return;
             mapPan.start(canvas, event);
@@ -794,10 +798,10 @@
             if (activeTool !== "select") return;
 
             const additive = event.shiftKey;
-            const hit = tokenAtPoint(canvas, event.clientX, event.clientY);
+            const hit = artisticLayer() ? null : tokenAtPoint(canvas, event.clientX, event.clientY);
             if (hit) {
                 mapTokenDrag.start(canvas, event, hit, { additive });
-            } else if (mapMeasureController.startShapeSelection(canvas, event)) {
+            } else if (!artisticLayer() && mapMeasureController.startShapeSelection(canvas, event)) {
                 event.preventDefault();
             } else {
 
@@ -906,13 +910,6 @@
         const types = Array.from(dt?.types || []);
 
 
-        if (window.GravewrightSceneImages?.hasImageFiles?.(dt)) {
-            event.preventDefault();
-            dt.dropEffect = "copy";
-            return;
-        }
-
-
         if (types.includes(CARD_DROP_MIME)) {
             event.preventDefault();
             dt.dropEffect = "move";
@@ -921,6 +918,13 @@
 
 
         if (types.includes(ASSET_DROP_MIME)) {
+            event.preventDefault();
+            dt.dropEffect = "copy";
+            return;
+        }
+
+
+        if (window.GravewrightSceneImages?.hasImageFiles?.(dt)) {
             event.preventDefault();
             dt.dropEffect = "copy";
             return;
@@ -939,15 +943,6 @@
         const dt = event.dataTransfer;
 
 
-        const imageFiles = imageFilesFrom(dt);
-        if (imageFiles.length && window.GravewrightSceneImages?.uploadFilesAt && canvas.dataset.sceneId) {
-            event.preventDefault();
-
-            window.GravewrightSceneImages.uploadFilesAt(canvas, imageFiles, event.clientX, event.clientY);
-            return;
-        }
-
-
         const cardRaw = dt?.getData?.(CARD_DROP_MIME);
         if (cardRaw) {
             event.preventDefault();
@@ -956,6 +951,10 @@
         }
 
 
+        // O payload proprio vem antes dos arquivos: arrastar um cartao da
+        // biblioteca pela miniatura faz o navegador anexar a imagem tambem como
+        // arquivo, e tratar isso como upload criaria um asset novo em vez de
+        // reusar o que ja esta na biblioteca.
         const assetRaw = dt?.getData?.(ASSET_DROP_MIME);
         if (assetRaw) {
             event.preventDefault();
@@ -963,6 +962,15 @@
 
             if (!isImageAssetDrop(assetRaw)) return;
             window.GravewrightSceneImages?.placeLibraryAssetAt?.(canvas, assetRaw, event.clientX, event.clientY);
+            return;
+        }
+
+
+        const imageFiles = imageFilesFrom(dt);
+        if (imageFiles.length && window.GravewrightSceneImages?.uploadFilesAt && canvas.dataset.sceneId) {
+            event.preventDefault();
+
+            window.GravewrightSceneImages.uploadFilesAt(canvas, imageFiles, event.clientX, event.clientY);
             return;
         }
 

@@ -4,8 +4,9 @@ A lista em linha única servia quando só havia imagem. Com ficha em PDF na mesm
 pasta, ela deixou de servir por dois motivos: a miniatura de 48px não ajuda a
 escolher uma imagem, e não havia como separar os tipos.
 
-A aba "Biblioteca" existia só para hospedar um botão. Ela morreu, e o botão foi
-para o painel de GM como "Assets".
+A aba "Biblioteca" existia só para hospedar um botão. Ela morreu, e o botão
+virou "Assets". O painel de GM que o hospedava também morreu depois, e Assets
+passou a viver no cartão de gerenciamento das Configurações.
 """
 
 from __future__ import annotations
@@ -29,33 +30,29 @@ def test_the_library_tab_is_gone():
     assert 'data-panel-toggle="panel-library-' not in html, "nem o botão do dock"
 
 
-def test_the_assets_button_lives_in_the_gm_panel():
+def test_the_gm_panel_is_gone_and_assets_lives_in_settings():
+    """O painel da coroa foi desmontado: Cenas e Compêndios subiram ao rail,
+    Decks e Assets desceram para Configurações, e Jogadores era só um atalho
+    que já abria a própria aba de Configurações."""
     html = _template()
-    painel = html.split('data-modal-id="panel-gm-', 1)[1].split("</article>", 1)[0]
-    assert 'data-modal-open="library-images-' in painel, "o botão precisa abrir a modal"
-    assert 'game.assets.title' in painel, "renomeado para Assets"
+    assert 'data-modal-id="panel-gm-' not in html, "o painel de GM não existe mais"
+    assert 'data-panel-toggle="panel-gm-' not in html, "nem o botão da coroa"
+
+    gerenciamento = html.split('data-settings-section="management"', 1)[1].split("</section>", 1)[0]
+    assert 'data-modal-open="library-images-' in gerenciamento, "Assets abre a modal"
+    assert "game.assets.title" in gerenciamento
+    assert 'data-modal-open="panel-cards-' in gerenciamento, "Decks veio junto"
 
 
 def test_nobody_gains_or_loses_access_in_the_move():
-    """A Biblioteca era de gm+assistant_gm; o painel de GM era de gm+streamer.
-    Mover sem cuidado tiraria o acesso do assistente e daria ao streamer."""
+    """Assets e Decks eram de gm+assistente+streamer. Mudar de casa não pode
+    mexer nisso: a condição viajou junto com o botão."""
     html = _template()
 
-    abertura = html.split('data-modal-id="panel-gm-', 1)[0]
-    condicao = abertura.rsplit("{% if", 1)[1].split("%}", 1)[0]
-    assert "assistant_gm" in condicao, "o assistente precisa alcançar o painel"
-
-    painel = html.split('data-modal-id="panel-gm-', 1)[1].split("</article>", 1)[0]
-    # Assets: gm + assistente (como era na Biblioteca)
-    bloco_assets = painel.split('data-modal-open="library-images-', 1)[0].rsplit("{% if", 1)[1]
-    assert "assistant_gm" in bloco_assets
-
-    # Névoa e Jogadores continuam onde estavam: gm ou streamer
-    for acao in ("fog-panel-", "panel-settings-"):
-        antes = painel.split(acao, 1)[0].rsplit("{% if", 1)[1]
-        assert "is_streamer" in antes and "assistant_gm" not in antes, (
-            f"{acao} não pode passar a ser visível para o assistente"
-        )
+    gerenciamento = html.split('data-settings-section="management"', 1)[1].split("</section>", 1)[0]
+    for acao in ('data-modal-open="library-images-', 'data-modal-open="panel-cards-'):
+        antes = gerenciamento.split(acao, 1)[0].rsplit("{% if", 1)[1]
+        assert "assistant_gm" in antes and "is_streamer" in antes, acao
 
     # A modal em si mantém o público de sempre
     modal = html.split('class="game-modal-window library-images-modal"', 1)[0].rsplit("{% if", 1)[1]

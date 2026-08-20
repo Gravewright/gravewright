@@ -28,18 +28,37 @@ def test_game_page_renders_the_lighting_ui_for_the_gm(db):
     for sub in ("torch", "pulse", "none"):
         assert f'data-subtool="{sub}"' in body, sub
 
-def test_scene_edit_modal_renders_the_darkness_control(db):
+def test_scene_edit_modal_no_longer_owns_the_darkness_control(db):
+    """A escuridao mudou de dono: e um ajuste do regime de luz, nao um campo de
+    metadados da cena. Deixar as duas portas abertas daria dois donos ao mesmo
+    valor, e salvar a cena zeraria o que a ferramenta acabou de ajustar."""
     from main import app
     gm=seed_user(name="GM"); campaign=seed_campaign(gm); scene=seed_scene(campaign)
     with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
         login(client, gm)
         response=client.get(f'/game/scenes/{scene["id"]}/edit-modal', params={"campaign_id": campaign})
     assert response.status_code == 200, response.text
+    assert 'name="darkness"' not in response.text
+
+
+def test_game_page_renders_the_visibility_tool_on_the_lighting_layer(db):
+    gm=seed_user(name="GM"); campaign=seed_campaign(gm); seed_scene(campaign)
+    response=_game_page(gm)
+    assert response.status_code == 200, response.text
     body=response.text
-    assert 'name="darkness"' in body
-    # o bloco proprio e o que impede a escuridao de esticar o modal
-    assert 'class="scene-boxed-field scene-grid-row--boxed"' in body
-    assert "scene-field-hint" in body
+
+    assert f'data-modal-id="lighting-panel-{campaign}"' in body
+    assert f'data-modal-open="lighting-panel-{campaign}"' in body
+    for mode in ("none", "dynamic", "manual"):
+        assert f'data-lighting-mode="{mode}"' in body, mode
+    assert "data-lighting-darkness" in body, "o slider de escuridao mora aqui agora"
+    assert 'data-lighting-lights="on"' in body and 'data-lighting-lights="off"' in body
+
+    # A nevoa manual continua com o proprio DOM, so que dentro da nova modal:
+    # o JS de fog procura [data-fog-panel] e observa o hidden dele.
+    assert 'data-lighting-pane="manual" data-fog-panel' in body
+    assert "data-fog-enable-section" in body and "data-fog-tools" in body
+    assert f'data-modal-id="fog-panel-{campaign}"' not in body, "a modal antiga saiu"
 
 def test_player_game_page_renders_without_the_gm_only_lighting_tools(db):
     gm=seed_user(name="GM"); player=seed_user(name="Player")
@@ -269,9 +288,15 @@ def test_light_sources_are_placed_animated_and_cached():
     # comparar com um id so pintaria apenas o ultimo que foi clicado.
     assert "lighting.picked?.light?.has(light.id)" in pixi
 
-def test_scene_darkness_flows_from_the_scene_editor_to_the_canvas():
+def test_scene_darkness_flows_from_the_visibility_tool_to_the_canvas():
+    """A escuridao saiu do formulario da cena e virou parte do regime de luz.
+
+    O canvas passou a carregar DOIS valores: `darkness` e a escuridao efetiva,
+    que e o que o mapa pinta, e `darkness-config` e a intensidade ajustada, que
+    e o que a ferramenta edita. Confundir os dois faz o slider zerar sozinho
+    toda vez que a luz e acesa.
+    """
     tables=(ROOT/"app/persistence/tables.py").read_text(encoding="utf-8")
-    modal=(ROOT/"templates/pages/game/scene_edit_modal.html").read_text(encoding="utf-8")
     action=(ROOT/"app/actions/game/manage_scenes.py").read_text(encoding="utf-8")
     repo=(ROOT/"app/persistence/repositories/scene_repository.py").read_text(encoding="utf-8")
     scene_js=(ROOT/"static/js/map/scene/map-scene.js").read_text(encoding="utf-8")
@@ -279,17 +304,25 @@ def test_scene_darkness_flows_from_the_scene_editor_to_the_canvas():
     forms=(ROOT/"static/js/ui/modals/modal-forms.js").read_text(encoding="utf-8")
     template=(ROOT/"templates/pages/game/index.html").read_text(encoding="utf-8")
     service=(ROOT/"app/engine/scenes/scene_service.py").read_text(encoding="utf-8")
+    panel=(ROOT/"static/js/lighting/lighting-panel.js").read_text(encoding="utf-8")
 
     assert 'Column("darkness"' in tables
-    assert 'name="darkness"' in modal
-    assert "darkness=_clamp_opacity(data.darkness, 0.0)" in action
-    assert "darkness=darkness" in repo and "float(existing[\"darkness\"]) != float(darkness)" in repo, "mudar escuridao precisa bumpar a epoca"
-    assert '"darkness": float(scene["darkness"])' in service
-    # os tres caminhos que atualizam o canvas precisam carregar o campo
-    assert "data-scene-darkness" in template
+    assert 'Column("lighting_mode"' in tables and 'Column("lights_out"' in tables
+    assert '@post("/game/scenes/lighting")' in action
+    assert "def update_lighting(" in repo and "scenes_table.c.scene_epoch + (1 if changed else 0)" in repo,         "mudar o regime precisa bumpar a epoca"
+    assert '"darkness": effective_darkness(scene)' in service
+    assert '"darkness_config": float(scene["darkness"])' in service
+
+    # os tres caminhos que atualizam o canvas precisam carregar os dois campos
+    for attr in ("data-scene-darkness", "data-scene-darkness-config", "data-scene-lighting-mode"):
+        assert attr in template, attr
+        assert f'"{attr}"' in forms, attr
     assert "canvas.dataset.sceneDarkness" in streaming
-    assert '"data-scene-darkness"' in forms
+    assert "canvas.dataset.sceneDarknessConfig" in streaming
     assert "darkness: clampOpacity(canvas.dataset.sceneDarkness, 0)" in scene_js
+
+    # o painel edita a configurada e nunca a efetiva
+    assert "canvas.dataset.sceneDarknessConfig" in panel
 
 def test_vision_is_per_viewer_and_gm_is_not_blinded():
     script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
@@ -461,24 +494,22 @@ def test_darkness_is_composed_with_erase_like_the_fog_layer():
     assert "this._resetGlowPool(board)" in pixi, "sem reciclar, o brilho anterior fica"
 
 def test_scene_form_boxed_blocks_span_instead_of_stretching_the_modal():
-    """A escuridao entrou na linha flex da grade e, espremida numa das duas colunas,
-    empurrava o modal de cena para alem da largura maxima."""
+    """A linha emoldurada da grade tem de vazar as colunas do formulario.
+
+    Espremida numa das duas colunas, ela empurrava o modal de cena para alem da
+    largura maxima. A escuridao, que era o outro bloco emoldurado, mudou-se para
+    a ferramenta Visibilidade -- resta a linha da grade.
+    """
     modal=(ROOT/"templates/pages/game/scene_edit_modal.html").read_text(encoding="utf-8")
     css=(ROOT/"static/css/game.css").read_text(encoding="utf-8")
 
-    # a escuridao tem bloco proprio, fora da linha de 3 itens da grade
     grid_row=modal.split('class="scene-grid-row scene-grid-row--boxed"',1)[1].split("</div>",1)[0]
-    assert 'name="darkness"' not in grid_row, "escuridao nao volta para a linha da grade"
     assert 'name="grid_opacity"' in grid_row
-    assert 'class="scene-boxed-field scene-grid-row--boxed"' in modal
-    darkness=modal.split('class="scene-boxed-field',1)[1]
-    assert 'name="darkness"' in darkness and "scene-field-hint" in darkness
+    assert 'name="darkness"' not in modal, "a escuridao nao volta para o formulario da cena"
 
-    # o span tem de estar na regra dos blocos emoldurados, nao em qualquer lugar
-    assert "> .scene-boxed-field {" in css
+    assert ".scene-edit-grid > .scene-grid-row--boxed," in css, "a linha da grade precisa vazar"
     rule=css.split("> .scene-boxed-field {",1)[1].split("}",1)[0]
     assert "grid-column: 1 / -1" in rule, rule
-    assert ".scene-edit-grid > .scene-grid-row--boxed," in css, "a linha da grade tambem precisa vazar"
 
     row=css.split(".scene-grid-row {",1)[1].split("}",1)[0]
     assert "flex-wrap: wrap" in row, row
@@ -713,9 +744,14 @@ def test_the_client_never_posts_an_emission_it_does_not_know():
 
     # E as duas listas precisam sair da mesma versao: editar o registro sem trocar
     # a query deixa o navegador com o dock antigo e o resto novo.
-    registry=re.search(r'tools-registry\.js\?v=([\w-]+)', template).group(1)
-    toolbar=re.search(r'tools-toolbar\.js\?v=([\w-]+)', template).group(1)
-    assert registry == toolbar, "dock e registro precisam chegar juntos"
+    def versao(arquivo: str) -> str:
+        achado = re.search(re.escape(arquivo) + r'\?v=([^"]+)"', template)
+        assert achado, f"{arquivo} precisa de query de versao"
+        return achado.group(1)
+
+    assert versao("tools-registry.js") == versao("tools-toolbar.js"), (
+        "dock e registro precisam chegar juntos"
+    )
 
 def test_a_failed_request_is_not_disguised_as_a_validation_error():
     """`lighting.errors.invalid` era o retorno de QUALQUER resposta sem corpo

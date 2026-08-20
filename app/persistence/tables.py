@@ -831,6 +831,11 @@ scenes = Table(
     Column("grid_color", _STR, nullable=False, server_default=text("'#6fddb4'")),
     Column("grid_opacity", Float, nullable=False, server_default=text("0.4")),
     Column("darkness", Float, nullable=False, server_default=text("0.0")),
+    # Regime de luz da cena: "none" (mapa aberto), "dynamic" (escuridao + focos)
+    # ou "manual" (nevoa pintada a mao). `darkness` guarda so a intensidade
+    # configurada; `lights_out` diz se ela esta valendo agora.
+    Column("lighting_mode", _STR, nullable=False, server_default=text("'none'")),
+    Column("lights_out", Integer, nullable=False, server_default=text("1")),
     Column("image_scale", Float, nullable=False, server_default=text("1.0")),
     Column("start_world_x", Float, nullable=False, server_default=text("0.0")),
     Column("start_world_y", Float, nullable=False, server_default=text("0.0")),

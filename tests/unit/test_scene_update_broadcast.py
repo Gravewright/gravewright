@@ -41,7 +41,6 @@ def _update_form(campaign_id: str, scene_id: str, **overrides) -> dict:
         "grid_visible": "on",
         "grid_color": "#6fddb4",
         "grid_opacity": "0.4",
-        "darkness": "0.0",
         "tile_size": "",
         "image_scale": "",
     }
@@ -65,7 +64,7 @@ def test_saving_scene_metadata_announces_it_to_the_room(db, captured_room_events
         login(client, gm)
         response = client.post(
             "/game/scenes/update",
-            data=_update_form(campaign, scene["id"], darkness="0.75"),
+            data=_update_form(campaign, scene["id"], grid_opacity="0.75"),
             follow_redirects=False,
         )
 
@@ -74,11 +73,11 @@ def test_saving_scene_metadata_announces_it_to_the_room(db, captured_room_events
     updates = [e for e in captured_room_events if e["event"] == TransportEvent.SCENE_UPDATED]
     assert len(updates) == 1, captured_room_events
     assert updates[0]["room_id"] == campaign
-    assert updates[0]["payload"]["scene"]["darkness"] == 0.75
+    assert updates[0]["payload"]["scene"]["grid_opacity"] == 0.75
     assert updates[0]["payload"]["scene"]["id"] == scene["id"]
 
     # e o valor realmente foi gravado, não só anunciado
-    assert float(SceneRepository().get_by_id(scene["id"])["darkness"]) == 0.75
+    assert float(SceneRepository().get_by_id(scene["id"])["grid_opacity"]) == 0.75
 
 
 def test_editing_a_stored_scene_stays_quiet(db, captured_room_events):
@@ -103,9 +102,9 @@ def test_editing_a_stored_scene_stays_quiet(db, captured_room_events):
         login(client, gm)
         client.post(
             "/game/scenes/update",
-            data=_update_form(campaign, stored["id"], name="Segredo do GM", darkness="0.9"),
+            data=_update_form(campaign, stored["id"], name="Segredo do GM", grid_opacity="0.9"),
             follow_redirects=False,
         )
 
     assert [e for e in captured_room_events if e["event"] == TransportEvent.SCENE_UPDATED] == []
-    assert float(SceneRepository().get_by_id(stored["id"])["darkness"]) == 0.9, "gravou mesmo assim"
+    assert float(SceneRepository().get_by_id(stored["id"])["grid_opacity"]) == 0.9, "gravou mesmo assim"

@@ -40,11 +40,19 @@ def test_generate_and_consume_streamer_link(db):
         assert f'data-modal-id="light-editor-{campaign_id}"' in body
         assert f'data-modal-id="particle-editor-{campaign_id}"' in body
         assert f'data-modal-id="shader-editor-{campaign_id}"' in body
-        assert f'data-modal-open="scene-manager-{campaign_id}"' in body
+        # Cenas deixou de ser modal e virou painel de diretório, alcançado pela
+        # aba do rail; Decks e Assets desceram para Configurações.
+        assert f'data-panel-toggle="panel-scenes-{campaign_id}"' in body
+        assert f'data-modal-id="panel-scenes-{campaign_id}"' in body
         assert f'data-modal-open="panel-cards-{campaign_id}"' in body
         assert f'data-modal-open="library-images-{campaign_id}"' in body
-        assert f'data-modal-id="scene-manager-{campaign_id}"' in body
         assert f'data-modal-id="library-images-{campaign_id}"' in body
+
+        # O streamer lê a biblioteca de cenas, mas não cria: criar cena e pasta
+        # são do GM, e roles.py garante que ele nunca muta o estado da mesa.
+        painel = body.split(f'data-modal-id="panel-scenes-{campaign_id}"', 1)[1].split("</article>", 1)[0]
+        assert f'data-modal-open="scene-create-{campaign_id}"' not in painel
+        assert f'data-modal-open="scene-group-create-{campaign_id}"' not in painel
 
     members = CampaignRepository().list_members(campaign_id=campaign_id)
     roles = {m["role"] for m in members}

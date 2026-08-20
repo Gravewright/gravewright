@@ -19,6 +19,12 @@ from app.actions.game.manage_scenes import create_scene_group
 from app.actions.game.manage_scenes import delete_scene
 from app.actions.game.manage_scenes import scene_edit_modal
 from app.actions.game.manage_scenes import update_scene
+from app.actions.game.manage_scenes import update_scene_lighting
+from app.actions.game.manage_scenes import scenes_panel_fragment
+from app.actions.game.manage_scenes import move_scene_to_group
+from app.actions.game.manage_scenes import rename_scene_folder
+from app.actions.game.manage_scenes import set_scene_folder_color
+from app.actions.game.manage_scenes import delete_scene_folder
 from app.actions.game.manage_scenes import update_scene_start_point
 from app.actions.game.manage_scenes import upload_scene_map
 from app.actions.game.manage_actors import create_actor
@@ -168,6 +174,12 @@ _protected_handlers = [
     create_scene_group,
     activate_scene,
     update_scene,
+    update_scene_lighting,
+    scenes_panel_fragment,
+    move_scene_to_group,
+    rename_scene_folder,
+    set_scene_folder_color,
+    delete_scene_folder,
     delete_scene,
     scene_edit_modal,
     update_scene_start_point,

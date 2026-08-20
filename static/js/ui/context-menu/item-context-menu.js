@@ -58,6 +58,13 @@
 
         showMenu(e.clientX, e.clientY, [
             {
+                text: body.dataset.ctxItemCreate || "Create item",
+                action() {
+                    FI.openItemCreateModal?.({ campaignId, folderId });
+                },
+            },
+            { type: "sep" },
+            {
                 text: body.dataset.ctxFolderEdit || "Edit folder",
                 action() {
                     FI.openFolderEditor?.({

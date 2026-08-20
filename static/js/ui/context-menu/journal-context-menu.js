@@ -77,7 +77,19 @@
         const campaignId = panel?.dataset.roomId || "";
         const folderId = folderEl.dataset.folderId || "";
         if (!campaignId || !folderId) return;
+        // Ordem canonica das quatro abas: criar dentro da pasta primeiro, depois
+        // o que mexe na pasta, e por ultimo apagar. Criar diario vinha no meio,
+        // depois do separador -- fora do lugar em relacao a ator e item.
         showMenu(e.clientX, e.clientY, [
+            {
+                text: body.dataset.ctxJournalCreate || "Create journal",
+                action() {
+                    document.dispatchEvent(new CustomEvent("vtt:open-journal-create", {
+                        detail: { campaignId, folderId },
+                    }));
+                },
+            },
+            { type: "sep" },
             {
                 text: body.dataset.ctxFolderEdit || "Edit folder",
                 action() {
@@ -92,15 +104,6 @@
                 text: body.dataset.ctxActorFolderAddSubfolder || "New subfolder",
                 action() {
                     FI.openFolderCreateModal({ kind: "journal", campaignId, parentId: folderId });
-                },
-            },
-            { type: "sep" },
-            {
-                text: body.dataset.ctxJournalCreate || "Create journal",
-                action() {
-                    document.dispatchEvent(new CustomEvent("vtt:open-journal-create", {
-                        detail: { campaignId, folderId },
-                    }));
                 },
             },
             { type: "sep" },

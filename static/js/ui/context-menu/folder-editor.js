@@ -67,11 +67,12 @@
     const color = form.elements.color.value.trim();
     if (!name) return;
 
-    const internals = state.kind === "actor"
-      ? window.GravewrightActorsInternals
-      : state.kind === "item"
-        ? window.GravewrightItemsInternals
-        : window.GravewrightJournalsInternals;
+    const internals = {
+      actor: window.GravewrightActorsInternals,
+      item: window.GravewrightItemsInternals,
+      scene: window.GravewrightScenesInternals,
+      journal: window.GravewrightJournalsInternals,
+    }[state.kind] || window.GravewrightJournalsInternals;
     const basePath = state.kind === "journal"
       ? "/game/journal/folder"
       : `/game/${state.kind}-folder`;
@@ -167,6 +168,22 @@
     openNearRight(`actor-create-${campaignId}`, "actor", campaignId);
   }
 
+  function prepareItemCreateForm(campaignId, folderId = "") {
+    const modalId = `item-create-${campaignId}`;
+    const modal = document.querySelector(`[data-modal-id="${CSS.escape(modalId)}"]`);
+    const form = modal?.querySelector("[data-item-create-form]");
+    if (!form) return false;
+    form.reset();
+    const folder = form.querySelector('input[name="folder_id"]');
+    if (folder) folder.value = folderId;
+    return true;
+  }
+
+  function openItemCreateModal({ campaignId, folderId = "" }) {
+    if (!prepareItemCreateForm(campaignId, folderId)) return;
+    openNearRight(`item-create-${campaignId}`, "item", campaignId);
+  }
+
   document.addEventListener("click", (event) => {
     const opener = event.target.closest('[data-modal-open^="actor-folder-create-"], [data-modal-open^="item-folder-create-"], [data-modal-open^="journal-folder-create-"]');
     if (!opener) return;
@@ -177,14 +194,20 @@
     prepareCreateForm(kind, campaignId, "");
   });
 
+  // Abrir pelo botao do cabecalho cria na raiz: o form.reset() nao limpa um
+  // hidden, entao a pasta escolhida no menu anterior ficaria grudada.
   document.addEventListener("click", (event) => {
-    const opener = event.target.closest('[data-modal-open^="actor-create-"]');
+    const opener = event.target.closest('[data-modal-open^="actor-create-"], [data-modal-open^="item-create-"]');
     if (!opener) return;
-    const campaignId = opener.dataset.modalOpen.slice("actor-create-".length);
-    prepareActorCreateForm(campaignId, "");
+    const isActor = opener.dataset.modalOpen.startsWith("actor-create-");
+    const prefix = isActor ? "actor-create-" : "item-create-";
+    const campaignId = opener.dataset.modalOpen.slice(prefix.length);
+    if (isActor) prepareActorCreateForm(campaignId, "");
+    else prepareItemCreateForm(campaignId, "");
   });
 
   FI.openFolderEditor = openFolderEditor;
   FI.openFolderCreateModal = openFolderCreateModal;
   FI.openActorCreateModal = openActorCreateModal;
+  FI.openItemCreateModal = openItemCreateModal;
 })();

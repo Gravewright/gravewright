@@ -1,4 +1,5 @@
 from __future__ import annotations
+import re
 import base64,contextlib,os,subprocess,sys
 import pytest
 from playwright.sync_api import expect,sync_playwright
@@ -47,7 +48,7 @@ def test_artistic_layer_places_and_restores_spatial_sound(sound_server):
             close=page.locator("[data-onboarding-close]"); close.first.click() if close.count() else None
             personal_toggle=page.locator("[data-personal-audio-toggle]");expect(personal_toggle).to_be_visible();toggle_box=personal_toggle.bounding_box();assert toggle_box["x"]<80 and toggle_box["y"]>page.viewport_size["height"]-80,toggle_box
             personal_toggle.click();personal=page.locator("[data-personal-audio-popover]");expect(personal).to_be_visible();personal_box=personal.bounding_box();assert personal_box["width"]<=225 and personal_box["height"]<=210,personal_box;expect(personal.locator("[data-mixer-channel]")).to_have_count(3);master=personal.locator('[data-mixer-channel="master"]');ambience=personal.locator('[data-mixer-channel="ambience"]');effects=personal.locator('[data-mixer-channel="sfx"]');master.evaluate("el=>{el.value='.9';el.dispatchEvent(new Event('input',{bubbles:true}));}");ambience.evaluate("el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));}");assert page.evaluate("[GravewrightAudioRuntime.preference('master'),GravewrightAudioRuntime.preference('ambience'),GravewrightAudioRuntime.preference('music')]")==[.9,.9,.9];master.evaluate("el=>{el.value='.3';el.dispatchEvent(new Event('input',{bubbles:true}));}");expect(personal.locator('[data-mixer-output="master"]')).to_have_text("30%");expect(ambience).to_have_value("0.3");expect(ambience).to_have_attribute("max","0.3");expect(effects).to_have_value("0.3");expect(effects).to_have_attribute("max","0.3");assert page.evaluate("[GravewrightAudioRuntime.preference('master'),GravewrightAudioRuntime.preference('ambience'),GravewrightAudioRuntime.preference('music'),GravewrightAudioRuntime.preference('sfx')]")==[.3,.3,.3,.3];personal.locator("[data-personal-audio-close]").click();expect(personal).to_be_hidden()
-            artistic=page.locator('.room-workspace.is-active [data-active-layer="composition"]');expect(artistic).to_contain_text("Camada artística");artistic.click()
+            artistic=page.locator('.room-workspace.is-active [data-active-layer="composition"]');expect(artistic).to_contain_text("Artística");artistic.click()
             for domain in ("images","sounds"):expect(page.locator(f'[data-artistic-domain="{domain}"]').first).to_be_attached()
             for domain in ("lights","shaders","particles"):expect(page.locator(f'[data-artistic-domain="{domain}"]')).to_have_count(0)
             page.locator('[data-artistic-domain="sounds"]:visible').click();expect(page.locator("[data-sound-panel]")).to_be_visible();active_tools=page.locator('[data-tool-dock]:not([hidden]) .tool-dock-btn[aria-pressed="true"]:visible');expect(active_tools).to_have_count(1);expect(active_tools).to_have_attribute("data-tool","sound");page.locator('[data-open-sound-modal="ambient"]').click();ambient_modal=page.locator('[data-sound-product-modal="ambient"]:not([hidden])');expect(ambient_modal).to_be_visible();expect(ambient_modal.locator(".sound-mixer-rail,[data-mixer-channel]")).to_have_count(0);ambient_preview=ambient_modal.locator(f'[data-sound-id="{s["ambient_sound_id"]}"] [data-sound-preview]');expect(ambient_preview).to_be_visible()
@@ -75,7 +76,7 @@ def test_artistic_layer_places_and_restores_spatial_sound(sound_server):
             assert persisted_after_save[0]["id"]==persisted_before_save[0]["id"] and persisted_after_save[0]["version"]==created_version+1,(persisted_before_save,persisted_after_save)
             page.locator('[data-artistic-domain="sounds"]:visible').click();page.locator('[data-open-sound-modal="effect"]:visible').click();effect_modal=page.locator('[data-sound-product-modal="effect"]:not([hidden])');active=effect_modal.locator("[data-spatial-enabled]");expect(active).to_be_checked();active.uncheck();expect(effect_modal.locator("[data-spatial-enabled]")).not_to_be_checked();effect_modal.locator("[data-spatial-enabled]").check();expect(effect_modal.locator("[data-spatial-enabled]")).to_be_checked();effect_modal.locator("[data-modal-close]").click()
             fixed_before=page.evaluate("GravewrightSpatialSounds.debugSnapshot().emitters[0]");page.mouse.click(target_x-220,target_y-160);page.wait_for_timeout(150);fixed_after=page.evaluate("GravewrightSpatialSounds.debugSnapshot().emitters[0]");assert (fixed_after["x"],fixed_after["y"])==(fixed_before["x"],fixed_before["y"]),(fixed_before,fixed_after)
-            page.locator('[data-tool-dock]:not([hidden]) [data-tool="select"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="images"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");artistic_reference=page.evaluate("GravewrightSpatialSounds.snapshotFor(GravewrightMap.activeCanvas())");assert artistic_reference["artisticReference"] and not artistic_reference["authoring"] and artistic_reference["selectedId"] is None,artistic_reference;page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"] [data-modal-close]').click();page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="sounds"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1")
+            page.locator('[data-tool-dock]:not([hidden]) [data-tool="select"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="images"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1");artistic_reference=page.evaluate("GravewrightSpatialSounds.snapshotFor(GravewrightMap.activeCanvas())");assert artistic_reference["artisticReference"] and not artistic_reference["authoring"] and artistic_reference["selectedId"] is None,artistic_reference;expect(page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"]')).to_be_visible();page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"] [data-modal-close]').click();page.locator('[data-tool-dock]:not([hidden]) [data-artistic-domain="sounds"]:visible').click();page.wait_for_function("()=>window.__gravewrightSpatialSoundPixi?.count===1")
             projection=page.evaluate("GravewrightSpatialSounds.debugSnapshot()")
             assert projection["renderer"]=="pixi",projection
             assert len(projection["projected"])==1,projection
@@ -100,10 +101,13 @@ def test_artistic_images_opens_asset_picker_places_and_restores(sound_server):
         try:
             _login(page,s["base_url"],GM_EMAIL,GM_PASSWORD);page.goto(f"{s['base_url']}/game?room={s['campaign_id']}");close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None
             page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="images"]:visible').click()
-            modal=page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"]');expect(modal).to_be_visible();expect(modal.locator('[data-asset-kind="image"]')).to_have_attribute("aria-pressed","true")
-            modal.locator(f'[data-library-asset-id="{s["image_id"]}"] [data-asset-place-scene]').click();image=page.locator('[data-scene-image-id]');expect(image).to_have_count(1);image.click();page.keyboard.press("ArrowRight")
+            modal=page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"]');expect(modal).to_be_visible()
+            card=modal.locator(f'[data-library-asset-id="{s["image_id"]}"]');expect(card).to_be_visible()
+            search=modal.locator("[data-scene-image-search]");search.fill("nao-existe-esta-imagem");expect(card).to_have_count(0);search.fill("");expect(card).to_be_visible()
+            card.drag_to(page.locator('.room-workspace.is-active [data-map-canvas]'))
+            image=page.locator('[data-scene-image-id]');expect(image).to_have_count(1);image.click();page.keyboard.press("ArrowRight")
             page.reload();close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None;expect(page.locator('[data-scene-image-id]')).to_have_count(1)
-            page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="images"]:visible').click();expect(page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"]')).to_be_visible()
+            page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="images"]:visible').click();expect(page.locator(f'[data-modal-id="scene-image-picker-{s["campaign_id"]}"]')).to_be_visible()
             assert not [error for error in page_errors if "sceneId" in error or "sceneDataFor" in error],page_errors
         finally:_close(ctx);browser.close()
 
@@ -156,9 +160,25 @@ def test_upload_once_asset_becomes_reusable_native_sound(sound_server):
         browser=p.chromium.launch(headless=True);ctx=browser.new_context();page=ctx.new_page()
         try:
             _login(page,s["base_url"],GM_EMAIL,GM_PASSWORD);page.goto(f"{s['base_url']}/game?room={s['campaign_id']}");close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None
-            page.locator(f'[data-panel-toggle="panel-gm-{s["campaign_id"]}"]').click();page.locator(f'[data-modal-open="library-images-{s["campaign_id"]}"]').click();modal=page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"]');expect(modal).to_be_visible()
+            # A aba da coroa foi desmontada: Assets desceu para Configuracoes, e la
+            # cada categoria e um modal proprio -- o painel e so o lancador.
+            page.locator(f'[data-panel-toggle="panel-settings-{s["campaign_id"]}"]').click()
+            page.locator(f'[data-modal-open="settings-management-{s["campaign_id"]}"]').first.click()
+            gerenciamento=page.locator(f'[data-modal-id="settings-management-{s["campaign_id"]}"]');expect(gerenciamento).to_be_visible()
+            # O botao mudou de casa e precisa estar AQUI dentro -- e isso que a
+            # migracao quebraria. O clique em si vai pela API de modais: o modal
+            # da categoria abre sobre o painel lancador, e a checagem de alvo do
+            # Playwright rola o corpo e cai sob a titlebar. Testar o empilhamento
+            # de dois modais nao e o assunto deste teste, que e o reuso do asset.
+            expect(gerenciamento.locator(f'[data-modal-open="library-images-{s["campaign_id"]}"]')).to_have_count(1)
+            page.evaluate("id=>window.GravewrightModals.open(id)", f'library-images-{s["campaign_id"]}')
+            modal=page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"]');expect(modal).to_be_visible()
             expect(modal.locator('[data-scene-asset-upload="pdf"]')).to_have_count(0);expect(modal.locator('[data-asset-package-open]')).to_be_hidden();expect(modal.locator('[data-asset-kind="image"]')).to_be_visible();expect(modal.locator('[data-asset-kind="ambient-audio"]')).to_be_visible();effect_filter=modal.locator('[data-asset-kind="effect-audio"]');expect(effect_filter).to_be_visible();expect(effect_filter.locator("small")).to_have_text("1");modal.locator('[data-scene-asset-upload-input="effect-audio"]').set_input_files(s["upload_audio"]);expect(modal.get_by_text("storm.ogg",exact=False)).to_be_visible();expect(effect_filter.locator("small")).to_have_text("2")
             before=page.evaluate("async id=>(await (await fetch('/game/assets/state/'+id)).json()).assets.length",s["campaign_id"]);window_close=modal.locator("[data-modal-close]");window_close.click()
+            # O modal de Gerenciamento abre no canto superior esquerdo, em cima da
+            # barra de camadas; deixa-lo aberto tapa o clique seguinte.
+            page.evaluate("ids=>ids.forEach(id=>window.GravewrightModals.close(id))",
+                          [f'settings-management-{s["campaign_id"]}', f'panel-settings-{s["campaign_id"]}'])
             page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="sounds"]:visible').click();initial_emitters=page.evaluate("GravewrightSpatialSounds.debugSnapshot().emitters.length");page.locator('[data-open-sound-modal="effect"]').click();effect_modal=page.locator('[data-sound-product-modal="effect"]:not([hidden])');effect_modal.locator("[data-place-spatial-sound]").click();canvas=page.locator(".room-workspace.is-active [data-map-canvas]");box=canvas.bounding_box();page.mouse.click(box["x"]+box["width"]*.6,box["y"]+box["height"]*.6);inspector=page.locator(".spatial-sound-inspector:not([hidden])");expect(inspector).to_be_visible();page.wait_for_function("expected=>GravewrightSpatialSounds.debugSnapshot().emitters.length===expected",arg=initial_emitters+1);inspector.locator("[data-spatial-inspector-save]").click()
             after=page.evaluate("async id=>(await (await fetch('/game/assets/state/'+id)).json()).assets.length",s["campaign_id"]);assert after==before
             page.reload();close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None;page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="sounds"]:visible').click();page.locator('[data-open-sound-modal="effect"]').click();expect(page.locator('[data-sound-product-modal="effect"]:not([hidden]) [data-spatial-id]')).to_have_count(initial_emitters+1)
@@ -196,3 +216,31 @@ def test_player_hears_spatial_effect_only_through_controlled_token(sound_server)
             player.wait_for_function("id=>{const s=GravewrightAudioRuntime.inspect(id);return s&&s.playing&&Math.abs(s.volume-.5)<.02}",arg=projection["playbackId"])
             gm.wait_for_function("id=>{const s=GravewrightAudioRuntime.inspect(id);return s&&s.playing===false}",arg=projection["playbackId"])
         finally:_close(gm_ctx);_close(player_ctx);browser.close()
+
+
+LAYER_TRIM={"game":"192, 154, 90","gm":"208, 111, 111","composition":"96, 165, 250",
+            "effects":"109, 179, 134","walls":"167, 139, 250","lighting":"250, 204, 21"}
+
+def test_active_layer_paints_the_ui_trim(sound_server):
+    """A borda de detalhe diz em que camada o mestre esta editando."""
+    s=sound_server
+    with sync_playwright() as p:
+        browser=p.chromium.launch(headless=True);ctx=browser.new_context();page=ctx.new_page()
+        try:
+            _login(page,s["base_url"],GM_EMAIL,GM_PASSWORD);page.goto(f"{s['base_url']}/game?room={s['campaign_id']}")
+            close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None
+            expect(page.locator("[data-tool-dock]:not([hidden])")).to_be_visible()
+            checked=[]
+            for layer,rgb in LAYER_TRIM.items():
+                button=page.locator(f'.room-workspace.is-active [data-active-layer="{layer}"]')
+                if not button.count():continue
+                button.click();expect(page.locator("body")).to_have_attribute("data-table-layer",layer)
+                assert page.evaluate("getComputedStyle(document.body).getPropertyValue('--layer-accent-rgb').trim()")==rgb,layer
+                # o token derivado e a borda concreta do dock acompanham a camada
+                accent=page.evaluate("getComputedStyle(document.body).getPropertyValue('--border-accent-strong').trim()")
+                assert [int(v) for v in re.findall(r"\d+",accent)[:3]]==[int(v) for v in rgb.split(", ")],(layer,accent)
+                border=page.evaluate("getComputedStyle(document.querySelector('[data-tool-dock]:not([hidden])')).borderTopColor")
+                assert [int(v) for v in re.findall(r"\d+",border)[:3]]==[int(v) for v in rgb.split(", ")],(layer,border)
+                checked.append(layer)
+            assert set(checked)==set(LAYER_TRIM),checked
+        finally:_close(ctx);browser.close()

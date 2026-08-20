@@ -18,10 +18,11 @@
         const roomId = form.dataset.roomId || "";
         const name = (form.querySelector("[data-item-create-name]")?.value || "").trim();
         const target = form.querySelector("[data-item-create-target]")?.value || "";
+        const folderId = form.querySelector("input[name='folder_id']")?.value || "";
         const [systemId, type] = target.split("::");
         if (!name || !systemId || !type) return;
         const res = await postJson("/game/item", {
-            campaign_id: roomId, system_id: systemId, type, name,
+            campaign_id: roomId, system_id: systemId, type, name, folder_id: folderId,
         });
         if (!res.ok) return;
         const data = await res.json().catch(() => ({}));

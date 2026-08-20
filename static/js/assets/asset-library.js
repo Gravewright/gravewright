@@ -380,7 +380,7 @@
             const preview = isPdf
               ? `<span class="asset-card__icon" aria-hidden="true"><i class="ph ph-file-pdf"></i></span>`
               : isAudio ? `<span class="asset-card__icon asset-card__icon--audio" aria-hidden="true"><i class="ph ph-waveform"></i></span>`
-              : `<img class="asset-card__img" src="${esc(asset.src || "")}" alt="" loading="lazy">`;
+              : `<img class="asset-card__img" src="${esc(asset.src || "")}" alt="" loading="lazy" draggable="false">`;
             const detail = isPdf || isAudio
               ? esc(formatBytes(asset.byte_size))
               : `${Number(asset.width || 0)} × ${Number(asset.height || 0)}`;

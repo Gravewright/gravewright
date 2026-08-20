@@ -31,6 +31,16 @@ DELIBERATELY_SILENT = {
     "/game/streamer-link": "painel só do GM",
     "/game/streamer-link/revoke": "painel só do GM",
     "/game/scenes/group": "organização do gerenciador de cenas, só o GM vê",
+    "/game/scenes/move": (
+        "arrumar a cena numa pasta é organização da biblioteca do GM: não muda "
+        "nada do que a mesa enxerga, e por isso nem bumpa a época da cena"
+    ),
+    "/game/scene-folder/rename": "nome de pasta na biblioteca do GM; a mesa não a vê",
+    "/game/scene-folder/color": "cor de pasta na biblioteca do GM; a mesa não a vê",
+    "/game/scene-folder/delete": (
+        "apaga só a pasta e solta as cenas na raiz; nenhuma cena é removida e "
+        "a mesa não enxerga o agrupamento"
+    ),
     "/game/cards/assets/upload": "asset solto; o baralho anuncia ao ser usado",
     "/game/journal/asset": "asset solto; o diário anuncia ao ser aberto",
     "/game/scenes/start-point": "afeta o enquadramento inicial de quem ainda vai entrar",

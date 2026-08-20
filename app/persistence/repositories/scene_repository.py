@@ -168,7 +168,7 @@ class SceneRepository:
         grid_visible: bool,
         grid_color: str,
         grid_opacity: float,
-        darkness: float,
+        darkness: float | None,
         tile_size: int,
         image_scale: float,
         tile_table_version: int,
@@ -201,7 +201,7 @@ class SceneRepository:
                     or bool(existing["grid_visible"]) != grid_visible
                     or existing["grid_color"] != grid_color
                     or float(existing["grid_opacity"]) != float(grid_opacity)
-                    or float(existing["darkness"]) != float(darkness)
+                    or (darkness is not None and float(existing["darkness"]) != float(darkness))
                     or existing["tile_size"] != tile_size
                     or (grid_size is not None and existing["grid_size"] != grid_size)
                     or float(existing["image_scale"]) != float(image_scale)
@@ -218,13 +218,73 @@ class SceneRepository:
                     grid_visible=1 if grid_visible else 0,
                     grid_color=grid_color,
                     grid_opacity=grid_opacity,
-                    darkness=darkness,
+                    darkness=darkness if darkness is not None else scenes_table.c.darkness,
                     tile_size=tile_size,
                     grid_size=grid_size if grid_size is not None else scenes_table.c.grid_size,
                     image_scale=image_scale,
                     tile_table_version=tile_table_version,
                     scene_epoch=scenes_table.c.scene_epoch + (1 if bump_epoch else 0),
                     updated_at=now,
+                )
+            )
+
+    def set_group(self, *, scene_id: str, group_id: str | None) -> None:
+        """Move a cena de pasta.
+
+        Separado de update_metadata de proposito: arrastar uma cena entre grupos
+        nao pode exigir que o cliente reenvie grade, escala e visibilidade -- e
+        nao mexe na epoca da cena, porque a mesa nao ve a arrumacao da
+        biblioteca do mestre.
+        """
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(scenes_table)
+                .where(scenes_table.c.id == scene_id)
+                .values(group_id=group_id or None, updated_at=now)
+            )
+
+    def update_lighting(
+        self,
+        *,
+        scene_id: str,
+        mode: str,
+        darkness: float | None = None,
+        lights_out: bool | None = None,
+    ) -> None:
+        """Grava o regime de luz da cena.
+
+        `darkness` e `lights_out` sao opcionais de proposito: mexer no seletor
+        de modo nao pode apagar a intensidade que o mestre ja tinha ajustado, e
+        mexer no slider nao pode acender a luz sozinho.
+        """
+        now = int(time.time())
+        values: dict = {"lighting_mode": mode, "updated_at": now}
+        if darkness is not None:
+            values["darkness"] = float(darkness)
+        if lights_out is not None:
+            values["lights_out"] = 1 if lights_out else 0
+        with engine_begin() as conn:
+            existing = one_or_none(
+                conn.execute(
+                    select(
+                        scenes_table.c.lighting_mode,
+                        scenes_table.c.darkness,
+                        scenes_table.c.lights_out,
+                    )
+                    .where(scenes_table.c.id == scene_id)
+                    .limit(1)
+                )
+            )
+            changed = existing is None or any(
+                existing[key] != value for key, value in values.items() if key in existing
+            )
+            conn.execute(
+                update(scenes_table)
+                .where(scenes_table.c.id == scene_id)
+                .values(
+                    **values,
+                    scene_epoch=scenes_table.c.scene_epoch + (1 if changed else 0),
                 )
             )
 

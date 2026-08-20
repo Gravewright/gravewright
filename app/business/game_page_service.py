@@ -15,6 +15,8 @@ from app.engine.items.item_service import ItemService
 from app.engine.items.folder_tree import build_item_folder_tree
 from app.engine.journals.folder_tree import build_journal_folder_tree
 from app.engine.journals.journal_service import JournalService
+from app.engine.scenes.scene_service import effective_darkness
+from app.engine.scenes.scene_service import normalized_lighting_mode
 from app.engine.sdk.package_install_service import PackageInstallService
 from app.domain.permissions.permissions import TablePermission
 from app.domain.roles import PlayerRole
@@ -166,6 +168,13 @@ class GamePageService:
                     room["active_scene"] = navigated
                     room["navigated_scene"] = navigated
             if room["active_scene"]:
+                # A pagina desenha com a escuridao EFETIVA, mas a ferramenta
+                # Visibilidade edita a configurada -- por isso as duas viajam.
+                scene = room["active_scene"]
+                scene["lighting_mode"] = normalized_lighting_mode(scene.get("lighting_mode"))
+                scene["lights_out"] = bool(scene.get("lights_out", 1))
+                scene["darkness_config"] = float(scene.get("darkness") or 0.0)
+                scene["effective_darkness"] = effective_darkness(scene)
                 scene_layers = self.layers.list_by_scene(room["active_scene"]["id"])
                 ground = next(
                     (layer for layer in scene_layers if layer["kind"] == "raster_tile_refs"), None

@@ -3,7 +3,7 @@
   const panel = () => document.querySelector("[data-sound-panel]:not([hidden])") || document.querySelector("[data-sound-panel]");
   const canvas = () => window.GravewrightMap?.activeCanvas?.() || document.querySelector(".room-workspace.is-active [data-map-canvas]") || document.querySelector("[data-map-canvas]");
   const context = () => ({ campaignId: canvas()?.dataset.roomId || "", sceneId: canvas()?.dataset.sceneId || "" });
-  let sounds = [], spatial = [], audioAssets = [], placement = null, placing = false, selected = null, previewTokenId = null;
+  let sounds = [], spatial = [], audioAssets = [], placement = null, placing = false, selected = null, selectedSpatial = [], previewTokenId = null;
   const label=(name,fallback)=>document.body?.dataset?.[name]||fallback;
   const kindLabel=kind=>kind==="music"?label("soundLabelMusic","Music"):kind==="ambience"?label("soundLabelAmbience","Ambience"):label("soundLabelEffects","Sound Effects");
   const placementHint=()=>document.querySelector("[data-spatial-placement-hint]");
@@ -22,7 +22,7 @@
   }
   function post(url, value) { return json(url, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(value)}); }
   function escape(value) { const node=document.createElement("span"); node.textContent=String(value ?? ""); return node.innerHTML; }
-  function clearSpatialSelection(){if(!selected)return;selected=null;document.dispatchEvent(new CustomEvent("sound:spatial-select",{detail:{id:null}}));}
+  function clearSpatialSelection(){if(!selected)return;selected=null;selectedSpatial=[];document.dispatchEvent(new CustomEvent("sound:spatial-select",{detail:{id:null}}));}
   function spatialListMarkup(){return spatial.length?spatial.map(e=>`<article class="spatial-sound-row${e.id===selected?' is-selected':''}" data-spatial-id="${escape(e.id)}" tabindex="0"><i class="ph ph-speaker-high"></i><span><strong>${escape(sounds.find(s=>s.id===e.sound_id)?.name||label("soundLabelSpatial","Spatial Sound"))}</strong><small>${Math.round(Number(e.radius||0))} · ${escape(e.loop?label("soundLabelLoop","Loop"):label("soundLabelOneShot","One shot"))}</small></span><label class="spatial-active-toggle"><input type="checkbox" data-spatial-enabled ${e.enabled?'checked':''} aria-label="${escape(label("soundLabelEnabled","Enabled"))}"><span>${escape(label("soundLabelEnabled","Enabled"))}</span></label><button class="sound-icon-btn spatial-delete-effect" type="button" data-spatial-delete aria-label="${escape(label("soundLabelDelete","Delete"))}" title="${escape(label("soundLabelDelete","Delete"))}"><i class="ph ph-trash"></i></button></article>`).join(""):`<p class="sound-empty">${escape(label("soundLabelEmptySpatial","No sound effects have been placed in this Scene."))}</p>`;}
   function openSoundEditor(sound=null){
     let dialog=document.querySelector("[data-native-sound-editor]");if(!dialog){dialog=document.createElement("dialog");dialog.className="native-sound-editor";dialog.dataset.nativeSoundEditor="";document.body.append(dialog);}
@@ -103,7 +103,7 @@
       if (target) document.querySelector(`[data-active-layer="${target}"]`)?.click();
       if (domain==="shaders" || domain==="particles") window.GravewrightTools?.setActiveTool(domain.slice(0,-1));
       if (domain==="lights") window.GravewrightTools?.setActiveTool("light");
-      if (domain==="images") document.dispatchEvent(new CustomEvent("artistic:asset-library",{detail:{...context(),roomId:context().campaignId,kind:"image",artistic:true}}));
+      if (domain==="images") document.dispatchEvent(new CustomEvent("artistic:image-picker",{detail:{...context(),roomId:context().campaignId}}));
     }
     if (event.target.closest('[data-tool="sound"]')) setTimeout(()=>refresh().catch(()=>{}),0);
     const product=event.target.closest("[data-open-sound-modal]");if(product){await refresh();renderNativeProductModal(product.dataset.openSoundModal,product.dataset.roomId||context().campaignId);}
@@ -146,9 +146,10 @@
     if(!["Delete","Backspace"].includes(event.key)||!selected||event.defaultPrevented||event.target.closest?.("input,textarea,select,[contenteditable]"))return;
     const tools=window.GravewrightTools;
     if(tools?.activeLayer!=="composition"||!["sound","select"].includes(tools?.activeTool||"select"))return;
-    const emitter=spatial.find(value=>value.id===selected);if(!emitter)return;
+    const ids=selectedSpatial.length?selectedSpatial:[selected];
+    const doomed=ids.map(id=>spatial.find(value=>value.id===id)).filter(Boolean);if(!doomed.length)return;
     event.preventDefault();event.stopImmediatePropagation();
-    await post("/game/sounds/spatial/delete",{campaignId:context().campaignId,id:emitter.id,expectedVersion:emitter.version});clearSpatialSelection();await refresh();
+    await Promise.all(doomed.map(emitter=>post("/game/sounds/spatial/delete",{campaignId:context().campaignId,id:emitter.id,expectedVersion:emitter.version}).catch(()=>{})));clearSpatialSelection();await refresh();
   });
   document.addEventListener("input",event=>{const channel=event.target.dataset?.mixerChannel;if(channel){window.GravewrightAudioRuntime?.setPreference(channel,event.target.value);const linked=event.target.dataset.mixerLinkedChannel;if(linked)window.GravewrightAudioRuntime?.setPreference(linked,event.target.value);}if(event.target.matches?.("[data-mixer-muted]"))window.GravewrightAudioRuntime?.setMuted(event.target.checked);});
   function syncPersonalMixer(){const runtime=window.GravewrightAudioRuntime,master=runtime?.preference("master")??1;document.querySelectorAll("[data-mixer-channel]").forEach(input=>{const channel=input.dataset.mixerChannel,value=runtime?.preference(channel)??1;input.max=channel==="master"?"1":String(master);input.value=String(value);document.querySelector(`[data-mixer-output="${CSS.escape(channel)}"]`)?.replaceChildren(`${Math.round(value*100)}%`);});const muted=Boolean(runtime?.muted());document.querySelectorAll("[data-mixer-muted]").forEach(input=>input.checked=muted);const toggle=document.querySelector("[data-personal-audio-toggle]");if(toggle){toggle.classList.toggle("is-muted",muted);toggle.querySelector("i").className=`ph ${muted?'ph-speaker-slash':'ph-speaker-high'}`;}}
@@ -160,7 +161,7 @@
   document.addEventListener("scene:activated",()=>refresh().catch(()=>{}));
   document.addEventListener("tool:active-layer",event=>{if(event.detail?.layer==="composition"){refresh().catch(()=>{});return;}clearSpatialSelection();setArtisticDomain("");showPlacementHint(false);});
   document.addEventListener("tool:active-tool",event=>{if(!["sound","select"].includes(event.detail?.tool))clearSpatialSelection();});
-  document.addEventListener("sound:spatial-selection",event=>{selected=event.detail?.id||null;document.querySelectorAll("[data-spatial-id]").forEach(row=>row.classList.toggle("is-selected",row.dataset.spatialId===selected));});
+  document.addEventListener("sound:spatial-selection",event=>{selected=event.detail?.id||null;selectedSpatial=Array.isArray(event.detail?.ids)?event.detail.ids:(selected?[selected]:[]);document.querySelectorAll("[data-spatial-id]").forEach(row=>row.classList.toggle("is-selected",selectedSpatial.includes(row.dataset.spatialId)));});
   document.addEventListener("sound:spatial-committed",()=>refresh().catch(()=>{}));
   document.addEventListener("vtt:token-selection-changed",event=>{previewTokenId=event.detail?.tokenId||null;scheduleAcousticRefresh();});
   document.addEventListener("vision:changed",scheduleAcousticRefresh);

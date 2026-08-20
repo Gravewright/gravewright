@@ -131,6 +131,9 @@ async def test_activate_scene_emits_realtime_event(db):
                     "grid_color": "#6fddb4",
                     "grid_opacity": 0.4,
                     "darkness": 0.0,
+                    "darkness_config": 0.0,
+                    "lighting_mode": "none",
+                    "lights_out": True,
                     "image_scale": 1.0,
                     "start_world_x": 700.0,
                     "start_world_y": 700.0,
@@ -384,8 +387,8 @@ async def test_metadata_update_reaches_the_room(db):
         visibility=SceneVisibility.PLAYERS,
         grid_visible=True,
         grid_color="#6fddb4",
-        grid_opacity=0.4,
-        darkness=0.85,
+        grid_opacity=0.55,
+        darkness=None,
         tile_size=70,
         image_scale=1.0,
         tile_table_version=1,
@@ -399,7 +402,27 @@ async def test_metadata_update_reaches_the_room(db):
     assert event["room_id"] == campaign_id
     assert event["event"] == TransportEvent.SCENE_UPDATED
     assert event["payload"]["scene_id"] == scene["id"]
-    assert event["payload"]["scene"]["darkness"] == 0.85
+    assert event["payload"]["scene"]["grid_opacity"] == 0.55
+
+    # A escuridao e do regime de luz, nao dos metadados: o broadcast anuncia a
+    # EFETIVA, e ela so vale com a cena em iluminacao dinamica e a luz apagada.
+    service.update_scene_lighting(
+        scene_id=scene["id"], mode="dynamic", darkness=0.85, lights_out=True
+    )
+    transport = FakeTransport()
+    assert await service.broadcast_scene_update(scene_id=scene["id"], transport=transport)
+    announced = transport.room_events[0]["payload"]["scene"]
+    assert announced["darkness"] == 0.85
+    assert announced["darkness_config"] == 0.85
+    assert announced["lighting_mode"] == "dynamic"
+
+    # Acender a luz abre o mapa sem perder a intensidade ajustada.
+    service.update_scene_lighting(scene_id=scene["id"], mode="dynamic", lights_out=False)
+    transport = FakeTransport()
+    assert await service.broadcast_scene_update(scene_id=scene["id"], transport=transport)
+    lit = transport.room_events[0]["payload"]["scene"]
+    assert lit["darkness"] == 0.0, "luz acesa nao escurece nada"
+    assert lit["darkness_config"] == 0.85, "mas o slider guarda o valor"
 
 
 async def test_only_the_active_scene_is_announced(db):
