@@ -78,7 +78,7 @@ The validator checks:
 | Warning key | Meaning | Typical fix |
 |---|---|---|
 | `sdk.validation.incompatible` | Package is outside the running version compatibility window. | Update compatibility or use a compatible Gravewright version. |
-| `sdk.validation.compatibility_prerelease` | `verified` points at a pre-release older than SDK 1 final. | Set `compatibility.verified` to `"1"`. |
+| `sdk.validation.compatibility_prerelease` | `verified` uses a product or pre-release version instead of the canonical SDK identifier. | Set `compatibility.verified` to `"1"`. |
 | `sdk.validation.provides_key_unknown` | `provides` contains a key the engine does not consume. | Use supported `provides` keys or wait for that surface to become active. |
 | `sdk.validation.assets_image_extension` | Image-like asset has an unexpected extension. | Use `.png`, `.jpg`, `.jpeg`, `.webp`, or `.svg`. |
 | `sdk.validation.assets_map_extension` | Map asset has an unexpected extension. | Use `.png`, `.jpg`, `.jpeg`, or `.webp`. |

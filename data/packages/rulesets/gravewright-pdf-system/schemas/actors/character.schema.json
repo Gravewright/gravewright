@@ -82,6 +82,12 @@
       "type": "object",
       "description": "Escolhas de apresentação do token. bars.<slot> guarda o NOME do campo do PDF que alimenta aquele valor.",
       "properties": {
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "Square token footprint in grid cells. Configured exclusively by the GM."
+        },
         "bars": {
           "type": "object",
           "properties": {

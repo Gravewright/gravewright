@@ -50,6 +50,17 @@ disables styled terminal output for plain logs.
 | `4` | Required external dependency missing |
 | `5` | Package incompatibility |
 
+## Output contracts
+
+Commands that expose `--json` write exactly one JSON document to stdout. They do
+not mix prompts, progress prose, or ANSI styling into that stream. Failures use
+`ok: false`, a stable `error_key`, and the command's documented exit class.
+`grave doctor --ai` instead renders a bounded repair prompt from the same
+findings used by human and JSON output; it never edits files.
+
+For unattended use, combine `--json` with the explicit confirmation flag a
+command requires, such as `--yes`; JSON mode never implies consent.
+
 ## `grave run`
 
 ```bash
@@ -138,6 +149,9 @@ Important behavior:
 - local `update` refreshes installed metadata from disk; `--remote` delegates to
   the canonical Marketplace installer, including checksum, compatibility,
   dependency, rollback, and recovery enforcement.
+- `grave package doctor` diagnoses one installed package through canonical
+  Package Doctor findings. `grave doctor` diagnoses the whole installation,
+  including all discovered packages and orphaned state.
 
 ## Per-kind commands
 
@@ -157,6 +171,38 @@ grave library new my-library --name "My Library"
 ```
 
 Per-kind commands enforce the expected package kind.
+
+## Scaffold, wizard, and templates
+
+All six kinds support `new`, with shared authoring controls:
+
+```bash
+grave ruleset new --wizard
+grave addon new -i
+grave content new my-content --dry-run --json
+grave assets new my-assets --output-dir data/packages --yes --json
+```
+
+`--wizard`/`-i` is the guided interactive flow. Flag-based scaffolding is the
+reproducible automation flow. `--dry-run` returns the intended files without
+writing them; `--force` is required to replace an existing target. `--json`
+returns the created path and file inventory as one machine-readable document.
+
+Rulesets additionally expose maintained templates:
+
+```bash
+grave ruleset new --list-templates
+grave ruleset new my-rpg --template blank --name "My RPG" --yes --json
+```
+
+A template owns its declared intent. Combining it with intent flags that would
+silently change or discard template choices fails with
+`scaffold.template_intent_conflict`. Run `grave <kind> new --help` for
+kind-specific flags; unsupported flags are rejected rather than ignored.
+
+New ruleset/content scaffolds emit content pack format 2: the manifest declares
+`formatVersion`, `documentType`, and bounded `indexFields`, while the pack uses
+an `index` array instead of the legacy `entries` representation.
 
 ## Campaign package activation
 

@@ -1,4 +1,7 @@
 {
+  "gravewright-pdf-system.hint.tokenSize": "GM only. Sets how many grid squares the token occupies on each side when placed on the board.",
+  "gravewright-pdf-system.ui.tokenSize": "Token Size",
+  "gravewright-pdf-system.ui.tokenSizeLabel": "Grid squares",
   "gravewright-pdf-system.actor.character": "PDF Character",
   "gravewright-pdf-system.combat.initiative": "Initiative",
   "gravewright-pdf-system.hint.bars": "Pick which PDF field feeds each token value. The chosen field writes straight to it.",

@@ -115,11 +115,14 @@ from app.actions.game.manage_journals import board_remove_quest
 from app.actions.game.manage_journals import board_reorder
 from app.actions.game.manage_journals import create_journal
 from app.actions.game.manage_journals import create_journal_folder
-from app.actions.game.manage_journals import journals_panel_fragment
 from app.actions.game.manage_journals import delete_journal
+from app.actions.game.manage_journals import delete_journal_folder
+from app.actions.game.manage_journals import journals_panel_fragment
 from app.actions.game.manage_journals import move_journal
 from app.actions.game.manage_journals import move_journal_folder
+from app.actions.game.manage_journals import rename_journal_folder
 from app.actions.game.manage_journals import serve_journal_asset
+from app.actions.game.manage_journals import set_journal_folder_color
 from app.actions.game.manage_journals import set_quest_status
 from app.actions.game.manage_journals import show_journal_create_modal
 from app.actions.game.manage_journals import show_journal_modal
@@ -261,6 +264,9 @@ _protected_handlers = [
     board_reorder,
     board_pin_quest,
     create_journal_folder,
+    rename_journal_folder,
+    set_journal_folder_color,
+    delete_journal_folder,
     journals_panel_fragment,
     show_journal_modal,
     show_journal_create_modal,

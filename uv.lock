@@ -180,7 +180,7 @@ wheels = [
 
 [[package]]
 name = "gravewright"
-version = "1.0.0b2"
+version = "1.0.0b3"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
@@ -216,9 +216,9 @@ requires-dist = [
     { name = "litestar", extras = ["jinja"], specifier = "==2.22.0" },
     { name = "pillow", specifier = "==12.3.0" },
     { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'", specifier = "==3.3.4" },
-    { name = "pyvips", extras = ["binary"], specifier = ">=3.1.1" },
-    { name = "questionary", marker = "extra == 'dev'", specifier = ">=2.1.1" },
-    { name = "rich", marker = "extra == 'dev'", specifier = ">=15.0.0" },
+    { name = "pyvips", extras = ["binary"], specifier = "==3.1.1" },
+    { name = "questionary", marker = "extra == 'dev'", specifier = "==2.1.1" },
+    { name = "rich", marker = "extra == 'dev'", specifier = "==15.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.16.2" },
     { name = "sqlalchemy", specifier = "==2.0.52" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.47.0" },

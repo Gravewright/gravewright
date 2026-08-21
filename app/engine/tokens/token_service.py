@@ -969,7 +969,10 @@ class TokenService:
 
     def _resolve_token_dimensions(self, *, config: dict, projection: dict) -> tuple[int, int]:
         mapped_size = str(projection.get("size", "")).strip().lower()
-        mapped_cells = self._SIZE_CELLS.get(mapped_size, 1)
+        mapped_cells = self._positive_cells(
+            projection.get("size"),
+            fallback=self._SIZE_CELLS.get(mapped_size, 1),
+        )
         return (
             self._positive_cells(config.get("width_cells"), fallback=mapped_cells),
             self._positive_cells(config.get("height_cells"), fallback=mapped_cells),

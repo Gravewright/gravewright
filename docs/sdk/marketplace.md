@@ -6,8 +6,10 @@ validates the complete document, and atomically retains the last known-good
 copy. The repository copy is publication input only and may be removed from the
 Core repository.
 
-The owner selects `stable`, `testing`, or `dev`. Core and Packages are linked by
-default but can be selected independently. Resolution never leaks upward:
+The protocol recognizes `stable`, `testing`, and `dev`, but the settings UI lists
+only channels actually present in the downloaded registry. Selecting a channel
+does not publish it. Core and Packages are linked by default but can be selected
+independently. Resolution never leaks upward:
 
 - `stable` resolves only `stable`;
 - `testing` resolves `testing`, then falls back to `stable`;
@@ -37,6 +39,11 @@ enabled = true
 Presence publishes a channel; absence makes it unavailable. During development,
 Core and packages may expose only `dev`, so stable/testing users never receive
 those builds.
+
+The current CLI parser accepts the three protocol values. Availability is
+decided later by registry resolution; `grave channel set stable` can therefore
+succeed when no stable entry is published, while a subsequent check/update
+reports the unavailable channel without falling upward.
 
 ## Registry format
 

@@ -17,7 +17,7 @@ ARCHIVE = DIST / "Gravewright-Windows-x64.zip"
 DIRECTORIES = ("app", "migrations", "schemas", "scripts", "static", "templates")
 FILES = (
     ".env.development.example", ".python-version", "alembic.ini", "icon.png", "LICENSE", "LICENSE-API.md",
-    "install-windows.bat", "main.py", "marketplace.toml", "NOTICE", "pyproject.toml", "README.md", "SECURITY.md",
+    "install-windows.bat", "main.py", "NOTICE", "pyproject.toml", "README.md", "SECURITY.md",
     "THIRD_PARTY_NOTICES.md", "uv.lock",
 )
 

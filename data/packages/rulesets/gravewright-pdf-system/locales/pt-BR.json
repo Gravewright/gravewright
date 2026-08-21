@@ -1,4 +1,7 @@
 {
+  "gravewright-pdf-system.hint.tokenSize": "Apenas o GM. Define quantos quadrados do grid o token ocupa em cada lado ao ser colocado no tabuleiro.",
+  "gravewright-pdf-system.ui.tokenSize": "Token Size",
+  "gravewright-pdf-system.ui.tokenSizeLabel": "Quadrados do grid",
   "gravewright-pdf-system.actor.character": "Personagem PDF",
   "gravewright-pdf-system.combat.initiative": "Iniciativa",
   "gravewright-pdf-system.hint.bars": "Escolha qual campo do PDF alimenta cada valor do token. O campo escolhido grava direto nele.",

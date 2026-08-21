@@ -1,12 +1,12 @@
 # Beta Status
 
-Current release: **Gravewright v1.0.0-beta.1**.
+Current release: **Gravewright v1.0.0-beta.3**.
 
 The SDK 1 public extension contract is frozen. Beta releases focus on compatible
 bug fixes, security and permission hardening, migration reliability,
 documentation, tests, and performance work.
 
-## Included in Beta 1
+## Included in Beta 3
 
 - server-authoritative campaigns, scenes, actors, items, journals, cards, and combat;
 - SDK 1 packages with capability and user-authority enforcement;
@@ -20,7 +20,8 @@ documentation, tests, and performance work.
 ## Compatibility
 
 Package authors should target `sdkVersion: "1"` and declare every capability
-they consume. Beta 1 keeps the public contract on SDK 1. Database changes are
+they consume. Beta 3 is certified against SDK 1 RC 1; packages continue to use
+`sdkVersion: "1"` because RC status is not a manifest version. Database changes are
 delivered through Alembic migrations, and documented public SDK 1 APIs are the
 compatibility boundary.
 

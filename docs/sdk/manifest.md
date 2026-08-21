@@ -103,7 +103,7 @@ or prevent another documented SDK surface from referencing those records.
 ```
 
 The engine computes a compatibility status against the running **SDK API version
-line** (the same line named by `sdkVersion`, frozen at `1` by Alpha 2.0.0), not
+line** (the same line named by `sdkVersion`, frozen at `1` by SDK 1 RC 1), not
 the core Gravewright marketing version: so a core release bump does not
 retroactively make SDK 1 packages incompatible:
 

@@ -84,7 +84,7 @@ referencie esses registros.
 - `maximum`: maior faixa esperada. Use com cuidado quando houver risco de breaking changes.
 
 A compatibilidade é avaliada contra a **linha de versão da API da SDK** (a mesma
-nomeada por `sdkVersion`, congelada em `1` pela Alpha 2.0.0), não a versão de
+nomeada por `sdkVersion`, congelada em `1` pela SDK 1 RC 1), não a versão de
 marketing do core: então um bump de release do core não torna pacotes da SDK 1
 incompatíveis retroativamente.
 

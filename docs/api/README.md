@@ -5,7 +5,9 @@ This section documents public integration surfaces for Gravewright.
 The supported extension surface is the Gravewright SDK package model. Rulesets, addons, libraries, themes, content packs, and asset packs are all SDK packages described by `manifest.json` and validated against SDK v1.
 
 > [!WARNING]
-> Gravewright is Alpha software. Public APIs are documented so package authors can experiment, but compatibility guarantees are still being finalized. Breaking public API changes must update docs, schemas, and tests in the same change.
+> Gravewright is Beta software. The package extension boundary is SDK 1 RC 1.
+> Breaking public API changes require explicit contract review and must update
+> docs, schemas, generated references, snapshots, and tests in the same change.
 
 ## API surfaces
 

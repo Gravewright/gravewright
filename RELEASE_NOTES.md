@@ -4,39 +4,34 @@ This is the single canonical release-history document for Gravewright. It
 combines the current-release overview, compatibility information, upgrade
 guidance, notable changes, fixes, migrations, and historical Alpha notes.
 
-The project is currently in Beta. SDK 1 is the stable compatibility line;
-compatible additive methods and fixes remain possible within that line.
+The project is currently in Beta. SDK 1 RC 1 is the frozen public compatibility
+candidate; packages continue to declare `sdkVersion: "1"`.
 
 ## Current release at a glance
 
-### Gravewright v1.0.0-beta.1
+### Gravewright v1.0.0-beta.3
 
-Released 2026-08-15. Beta 1 closes the experimental Alpha line with the SDK 1
-compatibility baseline stable and the current tabletop, campaign, package, PDF,
-large-map, and renderer work integrated into one release.
+Beta 3 aligns the operator CLI, package authoring tools, Marketplace channels,
+and public documentation with the certified SDK 1 RC 1 contract.
 
 Highlights:
 
-- GM-guided predictive tile prefetch and adaptive raster granularity.
-- Dense shared-asset rendering validated on an RTX 4060 at approximately 7,500
-  simultaneously visible synthetic dragons in the 60 Hz presentation band and
-  approximately 10,000 in the 30 Hz band. These are stress-test figures, not
-  realistic campaign token recommendations.
-- Expanded SDK 1 coverage for actors, items, tokens, scenes, effects, combat,
-  cards, journals, handouts, fog, scene images, events, PDF viewing, and PDF
-  annotation CRUD, with writes bound to the authorized campaign.
-- Campaign export/import and complete campaign-state snapshots.
-- Savage Worlds action-card initiative with authoritative ordering and Joker
-  reshuffling.
-- Additive migrations for virtual raster v2, adaptive raster policy, and PDF
-  annotations.
+- Certified SDK 1 RC 1 structural contract, generated references, declarations,
+  semantic snapshot, authority boundaries, and lifecycle coverage.
+- CLI parity for all six package kinds, guided wizard, ruleset templates,
+  validation, Package Doctor, stable JSON output, and bounded AI diagnostics.
+- Content pack format 2 scaffolds with explicit document domains, bounded index
+  fields, and indexed inline or lazy documents.
+- Marketplace v2 with repository-published Core/package channels, Debian-style
+  downward fallback, provenance, integrity, and local/remote package updates.
+- Native Windows launcher and source-install fallback documented as separate
+  distribution paths.
 
 Versions:
 
-- Product: `1.0.0-beta.1`
-- Python package: `1.0.0b1`
-- Public extension line: `SDK 1`
-- Savage Worlds package: `1.1`
+- Product: `1.0.0-beta.3`
+- Python package target: `1.0.0b3`
+- Public extension line: `SDK 1 RC 1` (`sdkVersion: "1"`)
 
 Benchmark methodology and workload boundaries are documented in
 [docs/performance.md](docs/performance.md).
@@ -75,6 +70,22 @@ relevant campaign and map dimensions, player count, and GPU/browser information
 for rendering problems.
 
 ## Detailed release history
+
+## v1.0.0-beta.3
+
+- Certified CLI ↔ SDK 1 RC 1 parity across scaffold, install, validation,
+  activation, diagnostics, and package lifecycle.
+- Added Marketplace v2 Core and package distribution channels with
+  `core`/`community`/`partner` provenance.
+- Updated package authoring and AI workflows around canonical JSON diagnostics.
+- Kept runtime and public SDK contracts unchanged by the documentation pass.
+
+## v1.0.0-beta.2
+
+- Completed SDK 1 RC 1 input, semantic runtime, scene, audio, workflow, and
+  generated-contract coverage.
+- Added the RC 1 semantic snapshot and compatibility classifier.
+- Promoted the product version from Beta 1 while preserving `sdkVersion: "1"`.
 
 ## v1.0.0-beta.1: 2026-08-15
 

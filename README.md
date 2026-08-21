@@ -4,7 +4,7 @@ Gravewright is an open-source virtual tabletop platform for tabletop RPGs.
 
 It is built for self-hosted tables that want server-authoritative gameplay, a documented SDK with declarative ruleset/addon/library/theme/content/asset packages, a first-class operator CLI, and predictable performance under large maps and realtime collaboration.
 
-Current release: **Gravewright 1.0.0 Beta 1**, on the stable SDK 1 compatibility line.
+Current release: **Gravewright 1.0.0 Beta 3**, certified against **SDK 1 RC 1**.
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the complete release history.
 
 ## Installation and Demo Video
@@ -163,11 +163,13 @@ Restore is destructive. Gravewright keeps a `*.pre-restore` safety copy of the p
 
 ## Current Status
 
-Gravewright is currently **v1.0.0-beta.1: Beta 1**.
+Gravewright is currently **v1.0.0-beta.3: Beta 3**.
 
-SDK 1 is the stable compatibility line: existing contracts are not broken during the Beta cycle. Additive, capability-gated methods may be introduced when they preserve that compatibility; incompatible changes require a future SDK line.
+SDK 1 RC 1 is the frozen public compatibility candidate. Packages still declare
+`"sdkVersion": "1"`; RC status is release metadata, not a second manifest version.
+Breaking changes require explicit contract review and, when incompatible, a future SDK line.
 
-Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, and browser SDK runtime are included in the Beta 1 line.
+Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, Marketplace channels, and browser SDK runtime are included in the Beta 3 line.
 
 ## What Gravewright Includes
 

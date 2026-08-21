@@ -101,6 +101,16 @@
       <div class="pdf-sheet-image-slot" data-actor-image="token"></div>
     </div>
 
+    <div class="pdf-sheet-field-group" data-pdf-gm-only hidden>
+      <h3 data-pdf-heading="tokenSize"></h3>
+      <p class="pdf-sheet-hint" data-pdf-hint="tokenSize"></p>
+      <label class="pdf-sheet-bar-row">
+        <span data-pdf-heading="tokenSizeLabel"></span>
+        <input type="number" class="pdf-sheet-text" data-bind="system.token.size"
+          min="1" step="1" inputmode="numeric" />
+      </label>
+    </div>
+
     <div class="pdf-sheet-field-group">
       <h3 data-pdf-heading="textColor"></h3>
       <p class="pdf-sheet-hint" data-pdf-hint="textColor"></p>

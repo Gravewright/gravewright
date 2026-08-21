@@ -5,9 +5,10 @@ O catálogo canônico de packages é o `marketplace.toml` publicado em
 inteiro e preserva atomicamente a última cópia válida. A cópia no repositório do
 Core serve apenas para publicação e pode ser removida depois.
 
-O owner escolhe `stable`, `testing` ou `dev`. Core e Packages ficam vinculados
-por padrão, mas podem usar canais diferentes. A resolução nunca sobe para um
-canal mais arriscado:
+O protocolo reconhece `stable`, `testing` e `dev`, mas a interface lista apenas
+os canais presentes no catálogo baixado. Selecionar um nome não publica o canal.
+Core e Packages ficam vinculados por padrão, mas podem usar canais diferentes.
+A resolução nunca sobe para um canal mais arriscado:
 
 - `stable` aceita somente `stable`;
 - `testing` prefere `testing` e usa `stable` como fallback;
@@ -36,6 +37,11 @@ enabled = true
 A presença publica um canal; a ausência o torna indisponível. Enquanto tudo
 estiver em desenvolvimento, Core e packages podem expor somente `dev`, sem
 vazar essas builds para usuários em stable ou testing.
+
+O parser atual da CLI aceita os três valores do protocolo. A disponibilidade é
+resolvida depois pelo catálogo; assim, `grave channel set stable` pode salvar o
+valor mesmo sem entrada stable publicada, e a consulta/update posterior reporta
+canal indisponível sem fallback para cima.
 
 ## Formato
 

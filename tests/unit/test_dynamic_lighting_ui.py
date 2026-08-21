@@ -592,6 +592,13 @@ def test_gm_borrows_the_vision_of_the_token_they_select():
     assert "sources.length === 1 && sources[0].id === selectedTokenId" in script
     assert "const visionLimited = !this.isGm || playerView || previewingToken" in script
 
+
+def test_lights_outside_active_token_vision_do_not_open_darkness_islands():
+    script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
+    assert "const perceivedLights = visionLimited" in script
+    assert "pointInPolygon({ x: light.x, y: light.y }, polygon)" in script
+    assert "lights: perceivedLights" in script
+
 def test_wall_and_light_fetches_do_not_take_each_other_down():
     """Com Promise.all e um catch mudo, uma falha em /game/lights zerava tambem as
     paredes: a cena ficava sem portas e sem nenhum aviso."""

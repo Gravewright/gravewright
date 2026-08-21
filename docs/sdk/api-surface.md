@@ -94,7 +94,7 @@ to the namespaces above and inherit their status.
 | `package_settings` | `stable` |
 | `package_content_imports` | `stable` |
 
-## Closed by the Alpha 2.0.0 SDK Freeze
+## Included in the SDK 1 RC 1 freeze
 
 The gaps tracked during SDK 1 development are now closed and part of the frozen
 surface:

@@ -35,7 +35,7 @@ Instale pacotes com script apenas de autores confiáveis.
 - Backups testados.
 - PostgreSQL com credenciais dedicadas.
 
-## Segurança em Alpha
+## Segurança durante a Beta
 
 Antes de atualizar uma instância com dados importantes:
 
