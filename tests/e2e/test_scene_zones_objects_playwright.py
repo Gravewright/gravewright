@@ -55,5 +55,11 @@ def test_audio_navigation_and_input_representative_multiplayer(runtime_server):
             gm.get_by_test_id("scene-runtime-users").focus();gm.keyboard.press("Control+J");gm.keyboard.press("Alt+u");settle()
             gm.evaluate("() => document.activeElement?.blur()");gm.keyboard.press("Control+J");gm.wait_for_function("() => document.body.dataset.sceneRuntimeCompletions==='3'")
             assert len(executions)==3,"the suppressed press contributed nothing"
-            status=gm.evaluate("""async ({campaignId,csrf})=>{const body=new URLSearchParams({campaign_id:campaignId,package_id:'scene-runtime-e2e'});const response=await fetch('/sdk/campaigns/packages/deactivate',{method:'POST',credentials:'same-origin',headers:{Accept:'application/json','Content-Type':'application/x-www-form-urlencoded','x-csrftoken':csrf},body});return response.status;}""",{"campaignId":s["campaign_id"],"csrf":_csrf(gm)});assert status in {200,201};expect(gm.get_by_test_id("scene-runtime-controls")).to_have_count(0,timeout=10000);gm.keyboard.press("Control+J");settle();assert len(executions)==3,"a deactivated package leaves no live binding"
+            # Package lifecycle changes intentionally reload the table so every
+            # script, binding and registered disposer is rebuilt from the new
+            # activation set. Wait for that navigation before touching the page
+            # again; evaluating during it races the old JavaScript context.
+            with gm.expect_navigation(wait_until="domcontentloaded"):
+                status=gm.evaluate("""async ({campaignId,csrf})=>{const body=new URLSearchParams({campaign_id:campaignId,package_id:'scene-runtime-e2e'});const response=await fetch('/sdk/campaigns/packages/deactivate',{method:'POST',credentials:'same-origin',headers:{Accept:'application/json','Content-Type':'application/x-www-form-urlencoded','x-csrftoken':csrf},body});return response.status;}""",{"campaignId":s["campaign_id"],"csrf":_csrf(gm)})
+            assert status in {200,201};expect(gm.get_by_test_id("scene-runtime-controls")).to_have_count(0,timeout=10000);gm.keyboard.press("Control+J");settle();assert len(executions)==3,"a deactivated package leaves no live binding"
         finally:_close(b_c);_close(a_c);_close(gm_c);browser.close()
