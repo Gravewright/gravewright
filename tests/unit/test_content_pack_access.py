@@ -359,7 +359,7 @@ def test_the_preview_modal_id_never_starts_with_a_routed_prefix(db):
                 for linha in gerente.splitlines() if 'prefix: "' in linha]
     assert prefixos, "o registro de prefixos sumiu; este teste precisa ser revisto"
     for prefixo in prefixos:
-        assert not f"compendium-".startswith(prefixo), (
+        assert not "compendium-".startswith(prefixo), (
             f'o id de preview colide com o prefixo roteado "{prefixo}"'
         )
 
