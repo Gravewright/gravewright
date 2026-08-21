@@ -2,7 +2,7 @@
 
 This directory is the canonical documentation set for Gravewright.
 
-Current release: **Gravewright v1.0.0-beta.1**. See the
+Current release: **Gravewright v1.0.0-beta.3**, certified against **SDK 1 RC 1**. See the
 [release notes and complete history](../RELEASE_NOTES.md).
 
 Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
@@ -42,7 +42,7 @@ Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
 ## SDK: the only extension model
 
 - [SDK overview](sdk/README.md)
-- [Manifest v1](sdk/manifest.md)
+- [SDK 1 manifest](sdk/manifest.md)
 - [Declarative packages](sdk/declarative-packages.md)
 - [Package kinds](sdk/kinds.md)
 - [Capabilities](sdk/capabilities.md)

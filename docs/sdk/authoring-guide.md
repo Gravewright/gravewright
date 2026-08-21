@@ -26,6 +26,23 @@ grave assets new my-assets --name "My Assets" --images
 grave library new my-library --name "My Library"
 ```
 
+Use the guided wizard when exploring intent:
+
+```bash
+grave ruleset new --wizard
+grave addon new -i
+```
+
+Use flags plus `--yes --json` for repeatable automation. Preview without writes
+with `--dry-run`. Rulesets can list and select maintained templates:
+
+```bash
+grave ruleset new --list-templates
+grave ruleset new my-rpg --template blank --name "My RPG" --yes --json
+```
+
+Conflicting template and intent flags fail instead of being silently discarded.
+
 Generated packages should be placed under:
 
 ```text
@@ -102,7 +119,11 @@ grave package validate data/packages/my-package --json
 grave package doctor my-package
 ```
 
-Fix all validation errors before installing or publishing.
+`validate` checks an uninstalled directory: schema, manifest values,
+capabilities, kind rules, safe paths, and referenced files. Package Doctor checks
+installed lifecycle state: compatibility, dependencies/conflicts, activation,
+snapshots, declarative capability usage, and orphaned state. Fix all validation
+and Package Doctor errors before publishing.
 
 ## 8. Install and activate
 

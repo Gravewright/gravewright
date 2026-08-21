@@ -24,6 +24,7 @@ def test_release_zip_places_minimal_launcher_at_root(tmp_path):
     assert "app/cli/__init__.py" in names
     assert "scripts/setup_local_env.py" in names
     assert "data/packages/rulesets/gravewright-pdf-system/manifest.json" in names
+    assert "marketplace.toml" not in names
     assert not any(name.startswith(("storage/", ".venv/")) for name in names)
 
 

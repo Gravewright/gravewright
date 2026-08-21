@@ -1,13 +1,13 @@
 [project]
 name = "Gravewright"
-version = "1.0.0b2"
+version = "1.0.0b3"
 description = "Gravewright is an open-source virtual tabletop platform for tabletop RPGs, built with a focus on performance, extensibility, and full control over the gameplay experience."
 requires-python = ">=3.11"
 dependencies = [
   "alembic==1.19.1",
   "litestar[jinja]==2.22.0",
   "pillow==12.3.0",
-  "pyvips[binary]>=3.1.1",
+  "pyvips[binary]==3.1.1",
   "sqlalchemy==2.0.52",
   "uvicorn[standard]==0.47.0",
   "xdice==1.2.1",
@@ -15,8 +15,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "questionary>=2.1.1",
-    "rich>=15.0.0",
+    "questionary==2.1.1",
+    "rich==15.0.0",
     "ruff==0.16.2",
 ]
 postgres = ["psycopg[binary]==3.3.4"]
@@ -25,7 +25,7 @@ postgres = ["psycopg[binary]==3.3.4"]
 grave = "app.cli:main"
 
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

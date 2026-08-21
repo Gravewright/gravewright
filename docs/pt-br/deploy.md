@@ -1,7 +1,8 @@
 # Deploy
 
 > [!WARNING]
-> Gravewright esta em Alpha. Nao use para campanhas longas ou mesas que voce nao possa perder.
+> Gravewright está em Beta. Mantenha backups verificados e teste o restore antes
+> de atualizar uma instalação com campanhas importantes.
 
 ## Requisitos De Producao
 

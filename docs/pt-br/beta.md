@@ -1,12 +1,12 @@
 # Estado Beta
 
-Versão atual: **Gravewright v1.0.0-beta.1**.
+Versão atual: **Gravewright v1.0.0-beta.3**.
 
 O contrato público de extensões da SDK 1 está congelado. As versões Beta são
 voltadas a correções compatíveis, segurança e permissões, confiabilidade das
 migrações, documentação, testes e desempenho.
 
-## Incluído na Beta 1
+## Incluído na Beta 3
 
 - campanhas, cenas, atores, itens, journals, cartas e combate autoritativos no servidor;
 - pacotes SDK 1 com capabilities e autoridade do usuário verificadas;
@@ -20,7 +20,8 @@ migrações, documentação, testes e desempenho.
 ## Compatibilidade
 
 Autores de pacotes devem usar `sdkVersion: "1"` e declarar todas as capabilities
-consumidas. A Beta 1 mantém o contrato público na SDK 1. Mudanças no banco são entregues
+consumidas. A Beta 3 é certificada contra a SDK 1 RC 1; packages continuam
+declarando `sdkVersion: "1"`, pois RC não é uma segunda versão de manifesto. Mudanças no banco são entregues
 por migrations Alembic, e as APIs públicas documentadas da SDK 1 formam o limite
 de compatibilidade.
 

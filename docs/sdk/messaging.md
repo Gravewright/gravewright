@@ -90,7 +90,7 @@ The manifest validator enforces namespace and path safety. The loader checks
 declared schema files exist on disk. The doctor reports provider conflicts and
 missing required providers for active campaign packages.
 
-Under the Alpha 2.0.0 SDK Freeze, enforcement is **strict**: all four directions
+Under the SDK 1 RC 1 freeze, enforcement is **strict**: all four directions
 are hard-enforced at runtime: `publish`→`emits`, `subscribe`→`listens`,
 `provide`→`provides`, and `request`→`requires`. Runtime payload/response schema
 validation against the declared schemas is tracked as post-freeze hardening

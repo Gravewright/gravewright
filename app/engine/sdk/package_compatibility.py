@@ -3,7 +3,7 @@
 A package declares a ``compatibility`` window (``minimum``/``verified``/
 ``maximum``). We map semver-ish strings to comparable tuples: ``1.x`` treats
 the minor/patch as unbounded and a pre-release sorts **below** its release, with
-``alpha < beta < rc < final`` and numeric ordering within a channel: then
+``dev < alpha < beta < rc < final`` and numeric ordering within a channel: then
 classify the package as compatible, unverified, or incompatible.
 """
 
@@ -22,13 +22,13 @@ _BIG = 1_000_000
 
 
 _FINAL_RANK = 100
-_CHANNEL_RANK = {"alpha": 0, "beta": 1, "rc": 2}
+_CHANNEL_RANK = {"dev": -1, "nightly": -1, "alpha": 0, "beta": 1, "rc": 2}
 _UNKNOWN_CHANNEL_RANK = 50
 
 _PRERELEASE = re.compile(r"^([a-z]+)\.?(\d+)?$", re.IGNORECASE)
 _UPDATE_VERSION = re.compile(
     r"^(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*)){0,2}"
-    r"(?:-(?:alpha|beta|rc)(?:\.(?:0|[1-9]\d*))?)?$",
+    r"(?:-(?:dev|nightly|alpha|beta|rc)(?:\.(?:0|[1-9]\d*))?)?$",
     re.IGNORECASE,
 )
 
@@ -65,7 +65,7 @@ def _prerelease_key(prerelease: str) -> tuple[int, int]:
 def version_key(version: str) -> tuple[int, int, int, int, int]:
     """A comparable key: ``(major, minor, patch, channel_rank, channel_number)``.
 
-    ``1.0.0-alpha.1 < 1.0.0-alpha.2 < 1.0.0-beta.1 < 1.0.0-rc.1 < 1.0.0`` and
+    ``1.0.0-dev.1 < 1.0.0-alpha.1 < 1.0.0-beta.1 < 1.0.0-rc.1 < 1.0.0`` and
     ``1.x`` is an unbounded upper bound for the ``1`` major line.
     """
     version = (version or "").strip()

@@ -255,7 +255,7 @@ def find_drop_zone(layout: object, zone_id: str) -> dict | None:
 def list_drop_zones(layout: object) -> list[dict]:
     """Every dropZone in the layout (standalone or nested in an itemList), in
     document order. Used to route a sheet-wide drop to the zone whose ``accepts``
-    matches the dropped entry (Foundry-style "drop anywhere on the sheet")."""
+    matches the dropped entry (sheet-wide drop behavior)."""
     zones: list[dict] = []
     if not isinstance(layout, dict):
         return zones

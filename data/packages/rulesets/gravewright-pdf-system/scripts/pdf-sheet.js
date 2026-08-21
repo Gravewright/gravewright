@@ -149,6 +149,13 @@
         }
       }
 
+      function applyGmVisibility(root) {
+        const isGm = document.body?.dataset.currentMemberRole === "gm";
+        for (const node of root.querySelectorAll("[data-pdf-gm-only]")) {
+          node.hidden = !isGm;
+        }
+      }
+
       // Um seletor por valor do token, com os campos que o PDF aberto declara.
       // Sem PDF aberto não há o que escolher, e a lista fica vazia com um aviso.
       function buildBarMap(ctx, fieldNames) {
@@ -545,9 +552,11 @@
         // repintar: reconstruir a ficha aqui reabriria o PDF a cada ajuste.
         update(ctx) {
           applyTextColor(ctx);
+          applyGmVisibility(ctx.root);
         },
 
         mount(ctx) {
+          applyGmVisibility(ctx.root);
           // O host não espera por mount: o trabalho assíncrono (mapeamento, pdf.js,
           // biblioteca) corre solto e se reencaixa pelo update acima.
           void build(ctx).catch((error) => {

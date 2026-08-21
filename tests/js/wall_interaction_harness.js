@@ -49,7 +49,7 @@ class El {
 
 function buildWorld({
     sceneId = "scene-1", isGm = true, activeTool = "wall", activeLayer = "walls",
-    darkness = 0, userId = "user-gm", tokens = [], playerView = false, walls = [],
+    darkness = 0, userId = "user-gm", tokens = [], playerView = false, walls = [], lights = [],
 } = {}) {
     const root = new El("body");
     const workspace = new El("article", root);
@@ -85,6 +85,11 @@ function buildWorld({
     // de operacao em jogo comecam com a geometria ja no "servidor".
     if (sceneId) walls.forEach((wall, index) => wallsOf(sceneId).push({
         id: `seed${index + 1}`, kind: "wall", door_state: "closed", ...wall,
+    }));
+    if (sceneId) lights.forEach((light, index) => lightsOf(sceneId).push({
+        id: `light${index + 1}`, bright_radius: 1, dim_radius: 3,
+        color: "#ffd8a8", intensity: 1, animation: "none", enabled: 1,
+        angle: 360, rotation: 0, ...light,
     }));
 
     function dispatch(type, props = {}) {
@@ -932,6 +937,27 @@ async function clickAt(world, x, y, props = {}) {
         world.selectToken("");
         check("desselecionar devolve a visao livre do GM",
             world.state().visionPolygons.length === 0);
+    }
+
+    {
+        const lights = [
+            { x: 220, y: 175 },
+            { x: 900, y: 700 },
+        ];
+        const token = playerToken("t1", ["player-1"], { vision_range: 3 });
+        const gm = buildWorld({ isGm: true, userId: "gm-1", darkness: 0.8, tokens: [token], lights });
+        await gm.settle();
+        check("GM sem token selecionado ve todos os focos", gm.state().lights.length === 2);
+        gm.selectToken("t1");
+        const simulated = gm.state().lights;
+        check("visao emprestada mostra apenas foco visto pelo token",
+            simulated.length === 1 && simulated[0].x === 220, JSON.stringify(simulated.map((light) => light.x)));
+
+        const player = buildWorld({ isGm: false, userId: "player-1", darkness: 0.8, tokens: [token], lights });
+        await player.settle();
+        const perceived = player.state().lights;
+        check("Player nao recebe ilhas de luz fora da propria visao",
+            perceived.length === 1 && perceived[0].x === 220, JSON.stringify(perceived.map((light) => light.x)));
     }
 
     {

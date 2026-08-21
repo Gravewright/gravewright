@@ -2,9 +2,9 @@
 
 ## Architectural diagnosis
 
-### Foundry reference
+### External VTT reference model
 
-Foundry models one pack as a `CompendiumCollection` identified by the providing
+Comparable VTTs model one pack as a collection identified by the providing
 package plus pack name. Its metadata declares package type/name, label, document
 type, system, ownership and lock state. Documents use UUIDs of the form
 `Compendium.<pack>.<DocumentName>.<id>`; embedded UUID segments preserve links.
@@ -35,8 +35,8 @@ Useful product behavior to retain: typed libraries, canonical identities, small
 indexes, lazy documents, shared renderers, drag-copy semantics, explicit
 read-only state, package provenance, folders, and server-side authorization.
 
-Behavior not copied: a mutable package pack as campaign state, client-side
-permission as authority, implicit global access to package files, Foundry's
+Behavior not adopted: a mutable package pack as campaign state, client-side
+permission as authority, implicit global access to package files, application
 document-class globals, or a storage/backend contract exposed to packages.
 
 ### Gravewright before this change

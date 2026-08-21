@@ -8,19 +8,19 @@
 
 > **Do not stabilize accidental behaviour. Stabilize only intentional contract.**
 
-The SDK is considered stable when a package valid for `sdkVersion: "1"` keeps
-installing, enabling, and running across `1.x` releases: unless it uses
-capabilities marked `forbidden`.
+SDK 1 is currently at RC 1. The certified candidate requires a package valid for
+`sdkVersion: "1"` to keep installing, enabling, and running across compatible
+product releases unless it uses capabilities marked `forbidden`.
 
-Package authors should target the final SDK line with `compatibility.minimum`
-and `compatibility.verified` set to `"1"`; pre-release values such as
-`1.0.0-rc.1` are historical and validate as unverified against SDK 1 final.
+Package authors target the SDK identifier with `compatibility.minimum` and
+`compatibility.verified` set to `"1"`. Product or RC labels such as
+`1.0.0-beta.3` and `1.0.0-rc.1` do not belong in these SDK compatibility fields.
 
 ## Stability levels
 
 | Status | Meaning |
 |---|---|
-| `stable` | Public API. Must not break within `sdkVersion: "1"`. |
+| `stable` | Public API included in the frozen RC 1 candidate. It must not break within `sdkVersion: "1"`. |
 | `forbidden` | Capability the SDK refuses (unsafe surface). |
 
 ## Classification of current/planned surfaces
@@ -46,20 +46,11 @@ and `compatibility.verified` set to `"1"`; pre-release values such as
 4. Capabilities are declared in the canonical `capabilities.json`; every public,
    gated method maps to a capability there.
 
-## Release gates (summary)
+## RC 1 enforcement
 
-> Historical: these were the internal stability-sprint gates. Their contents
-> shipped together as **Gravewright Alpha 2.0.0: SDK Freeze** (`v2.0.0-alpha.0`),
-> which froze the SDK 1 surface. The version names below are the sprint plan's,
-> not the released tag.
-
-| Release | Theme |
-|---|---|
-| `v1.0.0-alpha.2` | Foundations: diagnostics contract, capability registry, semver, settings, manifest identity, integrity migration, documented universal layout. |
-| `v1.0.0-alpha.3` | Storage contract (Phase 7A), reverse dependencies, strict doctor, v1 fixtures. |
-| `v1.0.0-alpha.4` | Storage runtime (Phase 7B), frontend lifecycle + capability sync. |
-| `v1.0.0-alpha.5` | `sdk.bus.*` interop hardening. |
-| `v1.0.0-beta.1` | Freeze: manifest v1 frozen, compatibility policy published. |
-| `v1.0.0-rc.1` | Bugfixes/docs/tests only. |
-
-See the plan's "Fase 14: Release gates" for the full per-gate contents.
+The semantic fingerprint is
+`docs/sdk/_data/gravewright-sdk-1.rc1-snapshot.json`. CI regenerates the public
+contract and rejects breaking drift. See
+[`rc1-compatibility-policy.md`](rc1-compatibility-policy.md) and
+[`rc1-certification.md`](rc1-certification.md); historical development gates
+belong in release history, not in the current authoring contract.

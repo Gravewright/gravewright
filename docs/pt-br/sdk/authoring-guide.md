@@ -26,6 +26,17 @@ grave assets new my-assets --name "My Assets" --images
 grave library new my-library --name "My Library"
 ```
 
+Use `grave ruleset new --wizard` ou `grave addon new -i` para o fluxo guiado.
+Para automação reproduzível, use flags com `--yes --json`; antecipe arquivos sem
+escrever com `--dry-run`. Rulesets oferecem templates mantidos:
+
+```bash
+grave ruleset new --list-templates
+grave ruleset new my-rpg --template blank --name "My RPG" --yes --json
+```
+
+Conflitos entre template e flags de intenção falham em vez de descartar opções.
+
 Os pacotes gerados devem ficar em:
 
 ```text

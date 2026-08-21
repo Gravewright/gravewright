@@ -38,7 +38,7 @@ def test_manifest_is_valid_sdk_1(manifest_raw):
     assert manifest_raw["sdkVersion"] == "1"
     assert manifest_raw["kind"] == "ruleset"
     assert manifest_raw["id"] == "gravewright-pdf-system"
-    assert manifest_raw["version"] == "0.2.2"
+    assert manifest_raw["version"] == "0.2.3"
     assert {"pdf.read", "pdf.viewer"} <= set(manifest_raw["capabilities"])
     assert manifest_raw["display"]["directories"]["items"] is False
 
@@ -154,6 +154,23 @@ def test_token_bars_read_the_same_paths_the_pdf_writes():
     assert fields["HPMax"]["path"] == token["bars"]["bar_1"]["max"]
     assert fields["Initiative"]["path"] == token["initiative"]
     assert fields["AC"]["path"] == token["defense"]
+
+
+def test_token_size_is_gm_only_and_projects_to_the_board_footprint():
+    schema = _json("schemas/actors/character.schema.json")
+    size = schema["properties"]["token"]["properties"]["size"]
+    mapping = _json("mappings/token.gw.json")["character"]
+    template = (PACKAGE / "sheets/character.html").read_text(encoding="utf-8")
+    controller = (PACKAGE / "scripts/pdf-sheet.js").read_text(encoding="utf-8")
+
+    assert size["type"] == "integer"
+    assert size["minimum"] == 1
+    assert size["default"] == 1
+    assert mapping["size"] == "sheet.token.size"
+    assert 'data-pdf-gm-only hidden' in template
+    assert 'data-bind="system.token.size"' in template
+    assert 'document.body?.dataset.currentMemberRole === "gm"' in controller
+    assert 'node.hidden = !isGm' in controller
 
 
 def test_every_label_key_used_has_a_translation():

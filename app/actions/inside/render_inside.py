@@ -23,6 +23,33 @@ def split_packages(packages: list[dict]) -> tuple[list[dict], list[dict]]:
     return rulesets, modules
 
 
+def bind_published_update_channels(settings: dict, marketplace: dict) -> dict:
+    """Expose only channels actually published by the remote registry."""
+    core = marketplace.get("core") if isinstance(marketplace.get("core"), dict) else {}
+    core_channels = [str(value) for value in core.get("availableChannels", [])]
+    package_channels = [str(value) for value in marketplace.get("availablePackageChannels", [])]
+    return {
+        **settings,
+        "core_available_channels": core_channels,
+        "packages_available_channels": package_channels,
+        "core_channel_published": settings.get("core_channel") in core_channels,
+        "packages_channel_published": settings.get("packages_channel") in package_channels,
+    }
+
+
+def hide_unpublished_core_channel(status: dict, settings: dict) -> dict:
+    if settings.get("core_channel_published", False):
+        return status
+    return {
+        "status": "unchecked",
+        "currentVersion": status.get("currentVersion", ""),
+        "availableVersion": None,
+        "channel": None,
+        "resolvedChannel": None,
+        "installFormat": status.get("installFormat", ""),
+    }
+
+
 def render_inside(
     *,
     cookies: dict[str, str],
@@ -44,6 +71,7 @@ def render_inside(
         for kind in ("ruleset", "addon", "library", "content", "theme", "assets")
     }
     inside_settings = InsideSettingsService().read()
+    update_settings = bind_published_update_channels(inside_settings["updates"], marketplace)
     ruleset_name_by_id = {p["id"]: p["name"] for p in rulesets}
 
     campaigns = []
@@ -90,7 +118,8 @@ def render_inside(
             marketplace_bands=marketplace_bands,
             all_users=all_users,
             inside_settings=inside_settings["app"],
-            core_update=CoreUpdateService().status(),
+            update_settings=update_settings,
+            core_update=hide_unpublished_core_channel(CoreUpdateService().status(), update_settings),
             privacy_settings=inside_settings["privacy"],
             campaign_error=campaign_error,
             campaign_message=campaign_message,

@@ -23,16 +23,32 @@ ENV = ROOT / ".env"
 EXAMPLE = ROOT / ".env.example"
 DEVELOPMENT_EXAMPLE = ROOT / ".env.development.example"
 PLACEHOLDER_SECRETS = {"", "dev-only-change-me", "change-me"}
+LOCAL_SQLITE_ENV = """# Gravewright local Windows configuration.
+APP_NAME=Gravewright
+APP_ENV=development
+APP_DEBUG=false
+DEFAULT_LOCALE=en
+PUBLIC_BASE_URL=http://localhost:8000
+ALLOWED_HOSTS=localhost,localhost:8000,127.0.0.1,127.0.0.1:8000
+GRAVEWRIGHT_DATA_DIR=./data
+DATABASE_URL=sqlite:///storage/gravewright.sqlite3
+ALLOW_SQLITE_IN_PRODUCTION=false
+SESSION_SECRET=dev-only-change-me
+SESSION_COOKIE_SECURE=false
+SESSION_COOKIE_HTTPONLY=true
+SESSION_COOKIE_SAMESITE=lax
+"""
 
 
 def main() -> int:
     if not ENV.exists():
         source = EXAMPLE if EXAMPLE.exists() else DEVELOPMENT_EXAMPLE
-        if not source.exists():
-            print("ERROR  no local .env template found; cannot create .env")
-            return 1
-        ENV.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
-        print(f"created .env from {source.name}")
+        if source.exists():
+            ENV.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+            print(f"created .env from {source.name}")
+        else:
+            ENV.write_text(LOCAL_SQLITE_ENV, encoding="utf-8")
+            print("created .env with local SQLite defaults")
 
     lines = ENV.read_text(encoding="utf-8").splitlines()
     out: list[str] = []

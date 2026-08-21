@@ -7,7 +7,8 @@ Gravewright is designed so package authors can describe a game system or extensi
 1. Scaffold a package.
 2. Ask an AI assistant to edit only that package directory.
 3. Validate the package.
-4. Paste doctor output back into the AI assistant.
+4. Request JSON validation/doctor output and paste only sanitized findings back
+   into the AI assistant.
 5. Repeat until `grave package doctor` is clean.
 
 ## Ruleset Example
@@ -55,6 +56,11 @@ When doctor reports errors, paste the output into the assistant:
 ```bash
 grave package doctor my-rpg --json
 ```
+
+For installation-wide diagnosis, `grave doctor --ai` produces a bounded repair
+prompt from the same canonical findings as `grave doctor --json`. It instructs
+the assistant not to edit Core or invent capabilities. Package Doctor itself
+uses `--json`; it does not have a separate `--ai` mode.
 
 Prompt:
 

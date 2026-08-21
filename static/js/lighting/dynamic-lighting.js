@@ -1118,6 +1118,16 @@
                 : [];
             const renderedVisionPolygons = lightingVisible ? visionPolygons : [];
 
+            // A scene light is perceptible only when its origin is inside the
+            // active token vision. Without this filter every light polygon is
+            // later unioned into the darkness mask and opens a disconnected
+            // island, leaking rooms the selected token cannot see.
+            const perceivedLights = visionLimited
+                ? litPolygons.filter((light) => visionPolygons.some(
+                    (polygon) => pointInPolygon({ x: light.x, y: light.y }, polygon),
+                ))
+                : litPolygons;
+
             const doorVisionPolygons = visionLimited
                 ? visionPolygons
                 : sources.map((source) => this.cachedPolygon(`vision-${source.id}`, source, visionBlockers, scene, source.radius));
@@ -1258,7 +1268,7 @@
                     };
                 }),
                 walls,
-                lights: litPolygons,
+                lights: perceivedLights,
                 visionPolygons: renderedVisionPolygons,
                 visionRims,
                 visionPreview,

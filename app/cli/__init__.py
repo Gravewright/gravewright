@@ -18,7 +18,7 @@ from app.engine.sdk.package_manifest import PackageKind
 
 PACKAGE_KINDS = tuple(kind.value for kind in PackageKind)
 TOP_LEVEL_COMMANDS = (
-    "doctor", "run", "backup", "restore", "db", "lock", "package", "campaign",
+    "doctor", "run", "backup", "restore", "db", "lock", "package", "campaign", "channel",
     *PACKAGE_KINDS,
 )
 
@@ -61,6 +61,41 @@ def _confirm(prompt: str) -> bool:
 
 def _default_packages_dir() -> Path:
     return Path(config.data_dir) / "packages"
+
+
+def _cmd_channel_show(args: argparse.Namespace) -> int:
+    from app.business.inside_settings_service import InsideSettingsService
+    updates = InsideSettingsService().read()["updates"]
+    if args.json:
+        _print_json({"ok": True, "channels": updates})
+    else:
+        print(f"Core: {updates['core_channel']}")
+        print(f"Packages: {updates['packages_channel']}")
+        print(f"Linked: {'yes' if updates['channels_linked'] else 'no'}")
+    return 0
+
+
+def _cmd_channel_set(args: argparse.Namespace) -> int:
+    from app.business.inside_settings_service import InsideSettingsService, InsideSettingsUpdate
+    service = InsideSettingsService()
+    current = service.read()
+    if args.channel == "dev" and not args.yes:
+        if args.json:
+            _print_json({"ok": False, "error": "UPDATE_CHANNEL_DEV_CONFIRMATION_REQUIRED"})
+            return 3
+        if not _confirm("Dev updates can break packages, campaigns, or startup. Continue? [y/N] "):
+            print("Channel unchanged.")
+            return 3
+    app = current["app"]
+    updates = current["updates"]
+    core = args.channel if args.target in {"all", "core"} else updates["core_channel"]
+    packages = args.channel if args.target in {"all", "packages"} else updates["packages_channel"]
+    linked = args.target == "all" or (updates["channels_linked"] and core == packages)
+    service.update_app(InsideSettingsUpdate(
+        app_name=app["app_name"], default_locale=app["default_locale"],
+        core_channel=core, packages_channel=packages, channels_linked=linked,
+    ))
+    return _cmd_channel_show(args)
 
 
 def _manifest_has_scripts(manifest: Any) -> bool:
@@ -1069,6 +1104,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-color", action="store_true", help="disable styled terminal output"
     )
     sub = parser.add_subparsers(dest="command")
+
+    channel = sub.add_parser("channel", help="show or select Core and package release channels")
+    channel_sub = channel.add_subparsers(dest="channel_command", required=True)
+    channel_show = channel_sub.add_parser("show", help="show selected distribution channels")
+    _add_json(channel_show)
+    channel_show.set_defaults(func=_cmd_channel_show)
+    channel_set = channel_sub.add_parser("set", help="select stable, testing, or dev")
+    channel_set.add_argument("channel", choices=("stable", "testing", "dev"))
+    channel_set.add_argument("--target", choices=("all", "core", "packages"), default="all")
+    channel_set.add_argument("--yes", action="store_true", help="accept dev-channel risk without prompting")
+    _add_json(channel_set)
+    channel_set.set_defaults(func=_cmd_channel_set)
 
     doctor = sub.add_parser("doctor", help="diagnose the local Gravewright install")
     doctor.add_argument("--packages-dir", default=str(_default_packages_dir()))

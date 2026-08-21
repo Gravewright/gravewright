@@ -333,10 +333,17 @@ def cmd_update(args: argparse.Namespace) -> int:
             return rc
         targets = [args.id]
     updated, failed = [], []
+    marketplace = None
+    if getattr(args, "remote", False):
+        from app.engine.sdk.marketplace_service import MarketplaceService
+        marketplace = MarketplaceService()
+        marketplace.catalog_with_automatic_refresh()
     for package_id in targets:
         if getattr(args, "remote", False):
             from app.engine.sdk.marketplace_installer import MarketplaceInstaller
-            result = MarketplaceInstaller().install(package_id=package_id, user_id=None)
+            result = MarketplaceInstaller(marketplace=marketplace).install(
+                package_id=package_id, user_id=None
+            )
             ok, error_key = result.success, result.error_key or None
         else:
             ok, error_key = _update_one(svc, package_id)

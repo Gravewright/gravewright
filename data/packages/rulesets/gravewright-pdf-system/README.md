@@ -1,12 +1,12 @@
 # Gravewright PDF System
 
-Usa um PDF como ficha de personagem. Inspirado no módulo **PDF Sheets** do Foundry
-VTT, mas com uma diferença central de arquitetura.
+Usa um PDF como ficha de personagem, com uma arquitetura em que os dados
+permanecem estruturados e independentes do arquivo visual.
 
 ## O modelo: o PDF é a aparência, não o depósito
 
-O módulo do Foundry salva o **PDF binário preenchido** por ator (`ficha.pdf` vira
-`ficha-ActorID.pdf`). Aqui não.
+Algumas implementações salvam um **PDF binário preenchido** por ator
+(`ficha.pdf` vira `ficha-ActorID.pdf`). Aqui não.
 
 Aqui cada campo do PDF é ligado a um **caminho de dado** pelo mapeamento, e o valor
 vive em `scoped-json-v1` (SQLite) como qualquer outra ficha:
@@ -21,8 +21,8 @@ campo "HP" do PDF  →  mappings/pdf-fields.gw.json  →  sheet.hp.value
 
 Três motivos para isso, nesta ordem:
 
-1. **Pacotes SDK não escrevem binário.** O modelo de storage é JSON; a rota que o
-   Foundry usa (`FilePicker.upload`) não existe na Gravewright.
+1. **Pacotes SDK não escrevem binário.** O modelo de storage é JSON; não existe
+   uma rota pública de upload arbitrário de arquivos para packages.
 2. **Dado dentro de PDF é opaco.** Ninguém além do visualizador lê um campo. Com
    caminhos, rolagem, barra de token e combate leem o mesmo valor.
 3. **Um template serve todos.** Sem cópia por ator, e atualizar o template não

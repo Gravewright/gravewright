@@ -469,8 +469,8 @@ def test_players_only_see_through_tokens_they_own():
 
 def test_darkness_is_composed_with_erase_like_the_fog_layer():
     """Graphics.cut() so abre um buraco por vez: visao + varios focos se atropelam.
-    A nevoa deste projeto ja resolve isso com blendMode erase numa RenderTexture,
-    que e o mesmo caminho que o Foundry usa para mascarar visibilidade."""
+    A nevoa deste projeto resolve isso com blendMode erase numa RenderTexture,
+    compondo todos os focos antes de mascarar a visibilidade."""
     layers=(ROOT/"static/js/board/pixi/pixi-board-layers.js").read_text(encoding="utf-8")
     pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
     renderer=(ROOT/"static/js/board/pixi/pixi-board-renderer.js").read_text(encoding="utf-8")
@@ -591,6 +591,13 @@ def test_gm_borrows_the_vision_of_the_token_they_select():
     assert "const previewingToken = this.isGm && Boolean(selectedTokenId)" in script
     assert "sources.length === 1 && sources[0].id === selectedTokenId" in script
     assert "const visionLimited = !this.isGm || playerView || previewingToken" in script
+
+
+def test_lights_outside_active_token_vision_do_not_open_darkness_islands():
+    script=(ROOT/"static/js/lighting/dynamic-lighting.js").read_text(encoding="utf-8")
+    assert "const perceivedLights = visionLimited" in script
+    assert "pointInPolygon({ x: light.x, y: light.y }, polygon)" in script
+    assert "lights: perceivedLights" in script
 
 def test_wall_and_light_fetches_do_not_take_each_other_down():
     """Com Promise.all e um catch mudo, uma falha em /game/lights zerava tambem as

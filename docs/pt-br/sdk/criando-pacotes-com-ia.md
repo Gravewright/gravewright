@@ -56,6 +56,11 @@ Quando o doctor reportar erros, cole a saída no assistente:
 grave package doctor my-rpg --json
 ```
 
+Para diagnóstico da instalação inteira, `grave doctor --ai` produz um prompt
+limitado a partir dos mesmos findings de `grave doctor --json`. Ele orienta a IA
+a não editar o Core nem inventar capabilities. Package Doctor usa `--json` e não
+possui um modo `--ai` separado.
+
 Prompt:
 
 ```text

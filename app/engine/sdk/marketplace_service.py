@@ -9,12 +9,15 @@ import os
 import socket
 import ssl
 import time
+import uuid
 from pathlib import Path
 from typing import Callable
 from urllib.parse import urljoin, urlparse
 
 from app.config import config
-from app.engine.sdk.marketplace_registry import MarketplaceRegistryError, load_marketplace
+from app.engine.sdk.marketplace_registry import (
+    MarketplaceRegistryError, load_marketplace_document, parse_marketplace_document,
+)
 from app.engine.sdk.package_compatibility import (
     COMPAT_INCOMPATIBLE, update_version_is_valid, version_key,
 )
@@ -28,8 +31,12 @@ from app.persistence.repositories.installed_package_repository import InstalledP
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_REGISTRY = PROJECT_ROOT / "marketplace.toml"
+DEFAULT_REGISTRY_URL = "https://raw.githubusercontent.com/Gravewright/gravewright-marketplace/main/marketplace.toml"
+DEFAULT_REGISTRY_CACHE = Path(config.data_dir) / "marketplace" / "marketplace.toml"
 DEFAULT_CACHE = Path(config.data_dir) / "marketplace" / "cache.json"
 MAX_MANIFEST_BYTES = 1024 * 1024
+MAX_REGISTRY_BYTES = 1024 * 1024
+REMOTE_REFRESH_TTL_SECONDS = 60 * 60
 
 Fetch = Callable[[str, int], bytes]
 
@@ -76,10 +83,26 @@ def fetch_bytes(url: str, limit: int) -> bytes:
 
 
 class MarketplaceService:
-    def __init__(self, *, registry_path: Path = DEFAULT_REGISTRY, cache_path: Path = DEFAULT_CACHE, fetcher: Fetch = fetch_bytes) -> None:
+    def __init__(self, *, registry_path: Path | None = None,
+                 registry_url: str | None = DEFAULT_REGISTRY_URL,
+                 cache_path: Path = DEFAULT_CACHE, fetcher: Fetch = fetch_bytes,
+                 channel: str | None = None, core_channel: str | None = None) -> None:
         self.registry_path = registry_path
+        self.registry_url = registry_url if registry_path is None else None
+        self.registry_cache_path = DEFAULT_REGISTRY_CACHE if registry_path is None else registry_path
         self.cache_path = cache_path
         self.fetcher = fetcher
+        if channel is None or core_channel is None:
+            from app.business.inside_settings_service import InsideSettingsService
+            updates = InsideSettingsService().read()["updates"]
+            if channel is None:
+                channel = str(updates["packages_channel"])
+            if core_channel is None:
+                core_channel = str(updates["core_channel"])
+        self.channel = channel if channel in {"stable", "testing", "dev"} else "stable"
+        self.core_channel = (
+            core_channel if core_channel in {"stable", "testing", "dev"} else self.channel
+        )
         self.installed = InstalledPackageRepository()
 
     def read_cache(self) -> dict:
@@ -92,23 +115,39 @@ class MarketplaceService:
     def refresh(self) -> dict:
         previous = self.read_cache()
         try:
-            entries = load_marketplace(self.registry_path)
+            if self.registry_url:
+                registry_bytes = self.fetcher(self.registry_url, MAX_REGISTRY_BYTES)
+                registry = parse_marketplace_document(registry_bytes)
+                self._write_registry_cache(registry_bytes)
+            else:
+                registry = load_marketplace_document(self.registry_cache_path)
         except MarketplaceRegistryError as exc:
             return {**previous, "refreshStatus": "failed", "refreshError": str(exc)}
+        except Exception:
+            return {**previous, "refreshStatus": "failed", "refreshError": "MARKETPLACE_REGISTRY_UNAVAILABLE"}
 
+        entries = registry.packages
         packages = []
         network_failures = 0
         enabled_entries = [entry for entry in entries if entry.enabled]
         for entry in entries:
             if not entry.enabled:
                 continue
-            item = {"id": entry.id, "name": entry.name, "kind": entry.kind, "manifestUrl": entry.manifest,
-                    "channel": entry.channel, "category": entry.category, "tags": list(entry.tags),
+            resolved = entry.release_for(self.channel)
+            if resolved is None:
+                continue
+            resolved_channel, release = resolved
+            item = {"id": entry.id, "name": entry.name, "kind": entry.kind, "manifestUrl": release.manifest,
+                    "channel": resolved_channel, "selectedChannel": self.channel,
+                    "availableChannels": sorted((entry.channels or {}).keys()),
+                    "category": entry.category, "tags": list(entry.tags),
                     "featured": entry.featured, "reviewedAt": entry.reviewed_at,
-                    "updatePolicy": entry.update_policy, "approvedVersion": entry.approved_version,
+                    "updatePolicy": entry.update_policy, "approvedVersion": release.approved_version,
                     "validationState": "unavailable", "source": entry.source,
                     "effectiveSource": entry.source,
-                    "sourceCertified": True, "bundled": entry.bundled}
+                    "sourceCertified": True, "bundled": entry.bundled,
+                    "access": entry.access, "publisherName": entry.publisher,
+                    "licenseModel": entry.license_model, "authProvider": entry.auth_provider}
             try:
                 if entry.bundled:
                     package_dir = package_registry.package_dir_for(entry.kind, entry.id)
@@ -120,7 +159,7 @@ class MarketplaceService:
                     raw = json.loads((package_dir / "manifest.json").read_text(encoding="utf-8"))
                 else:
                     try:
-                        manifest_bytes = self.fetcher(entry.manifest, MAX_MANIFEST_BYTES)
+                        manifest_bytes = self.fetcher(release.manifest, MAX_MANIFEST_BYTES)
                     except Exception as exc:
                         network_failures += 1
                         raise ValueError("MARKETPLACE_MANIFEST_FETCH_FAILED") from exc
@@ -166,9 +205,9 @@ class MarketplaceService:
                 if (distribution is None or distribution.type != "zip" or not _valid_download(distribution.url)
                         or not _valid_sha256(distribution.sha256)):
                     raise ValueError("MARKETPLACE_ARTIFACT_INVALID")
-                if entry.update_policy == "curated" and manifest.version != entry.approved_version:
+                if entry.update_policy == "curated" and manifest.version != release.approved_version:
                     raise ValueError("MARKETPLACE_VERSION_NOT_APPROVED")
-                if entry.approved_sha256 and distribution.sha256.lower() != entry.approved_sha256:
+                if release.approved_sha256 and distribution.sha256.lower() != release.approved_sha256:
                     raise ValueError("MARKETPLACE_CHECKSUM_NOT_APPROVED")
                 item.update({
                     "name": entry.name or manifest.name, "description": manifest.description,
@@ -189,19 +228,43 @@ class MarketplaceService:
 
         if enabled_entries and network_failures == len(enabled_entries) and previous.get("packages"):
             return {**previous, "refreshStatus": "failed", "refreshError": "MARKETPLACE_REFRESH_FAILED"}
-        result = {"version": 1, "lastRefresh": int(time.time()), "refreshStatus": "ok", "packages": packages}
+        core = None
+        if registry.core is not None:
+            resolved_core_channel = registry.core.release_channel_for(self.core_channel)
+            core = {
+                "id": registry.core.id, "name": registry.core.name,
+                "enabled": registry.core.enabled, "repository": registry.core.repository,
+                "releases": registry.core.releases,
+                "availableChannels": sorted(registry.core.channels),
+                "selectedChannel": self.core_channel, "channel": resolved_core_channel,
+            }
+        available_package_channels = sorted({
+            channel_name
+            for entry in registry.packages if entry.enabled
+            for channel_name in (entry.channels or {})
+        })
+        result = {"version": 2, "lastRefresh": int(time.time()), "refreshStatus": "ok",
+                  "selectedChannel": self.channel, "selectedCoreChannel": self.core_channel,
+                  "registryUrl": self.registry_url or "local",
+                  "core": core, "availablePackageChannels": available_package_channels,
+                  "packages": packages}
         self._write_cache(result)
         return result
 
     def catalog(self) -> dict:
         cache = self.read_cache()
+        channel_stale = cache.get("selectedChannel", "stable") != self.channel
         installed = {row["id"]: row for row in self.installed.list_all()}
         packages = []
         for item in cache.get("packages", []):
             package = dict(item)
             record = installed.get(package.get("id"))
-            if package.get("validationState") == "incompatible":
+            if channel_stale:
+                action = "channel-unavailable"
+            elif package.get("validationState") == "incompatible":
                 action = "incompatible"
+            elif package.get("access") == "entitled":
+                action = "license-required"
             elif package.get("validationState") != "valid":
                 action = "unavailable"
             elif record is None:
@@ -210,34 +273,52 @@ class MarketplaceService:
                 action = "installed"
             elif version_key(str(package.get("version", ""))) > version_key(str(record.get("version", ""))):
                 action = "update"
+            elif version_key(str(package.get("version", ""))) < version_key(str(record.get("version", ""))):
+                action = "ahead-of-channel"
             else:
                 action = "installed"
             package["installState"] = action
+            package["channelStale"] = channel_stale
             package["installedVersion"] = str(record.get("version", "")) if record else ""
             packages.append(package)
-        return {**cache, "packages": packages}
+        return {**cache, "requestedChannel": self.channel, "channelStale": channel_stale,
+                "packages": packages}
 
     def catalog_with_automatic_refresh(self) -> dict:
         """Refresh when the cache is absent or the local registry changed."""
         cache = self.read_cache()
         last_refresh = int(cache.get("lastRefresh") or 0)
-        try:
-            registry_changed = self.registry_path.stat().st_mtime > last_refresh
-        except OSError:
-            registry_changed = False
-        if last_refresh == 0 or registry_changed:
+        if self.registry_url:
+            registry_changed = last_refresh < int(time.time()) - REMOTE_REFRESH_TTL_SECONDS
+        else:
+            try:
+                registry_changed = self.registry_cache_path.stat().st_mtime > last_refresh
+            except OSError:
+                registry_changed = False
+        channel_changed = (cache.get("selectedChannel") != self.channel
+                           or cache.get("selectedCoreChannel", self.core_channel) != self.core_channel)
+        cache_schema_changed = "availablePackageChannels" not in cache
+        if last_refresh == 0 or registry_changed or channel_changed or cache_schema_changed:
             self.refresh()
         return self.catalog()
 
     def get_valid(self, package_id: str) -> dict | None:
         return next((item for item in self.catalog().get("packages", [])
-                     if item.get("id") == package_id and item.get("validationState") == "valid"), None)
+                     if item.get("id") == package_id and item.get("validationState") == "valid"
+                     and item.get("access", "public") == "public"
+                     and not item.get("channelStale")), None)
 
     def _write_cache(self, document: dict) -> None:
         self.cache_path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.cache_path.with_suffix(f".tmp-{os.getpid()}")
+        temporary = self.cache_path.with_suffix(f".tmp-{os.getpid()}-{uuid.uuid4().hex}")
         temporary.write_text(json.dumps(document, ensure_ascii=False, separators=(",", ":")), encoding="utf-8", newline="\n")
         os.replace(temporary, self.cache_path)
+
+    def _write_registry_cache(self, content: bytes) -> None:
+        self.registry_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = self.registry_cache_path.with_suffix(f".tmp-{os.getpid()}-{uuid.uuid4().hex}")
+        temporary.write_bytes(content)
+        os.replace(temporary, self.registry_cache_path)
 
 
 def _valid_sha256(value: str) -> bool:

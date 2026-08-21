@@ -2,7 +2,7 @@
 
 > Define onde os pacotes e seu storage persistente vivem no disco. O layout
 > universal agrupado `data/packages/{kind_plural}/{id}` é o único layout
-> suportado, congelado pela Alpha 2.0.0: SDK Freeze.
+> suportado no contrato da SDK 1 RC 1.
 
 ## Regra arquitetural
 

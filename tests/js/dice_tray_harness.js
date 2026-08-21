@@ -6,8 +6,8 @@
  * inválida" na cara de quem joga.
  *
  * A armadilha específica: no xdice, `Ln`/`Hn` DESCARTAM os n menores/maiores -
- * não "mantêm". Vantagem em d20 é `2d20L1`. Quem vem do Foundry escreve `kh1`,
- * que aqui é sintaxe inválida. E `L` tem de vir antes de `H`.
+ * não "mantêm". Vantagem em d20 é `2d20L1`; `kh1` pertence a outra notação e
+ * aqui é sintaxe inválida. E `L` tem de vir antes de `H`.
  */
 const fs = require("fs");
 const path = require("path");

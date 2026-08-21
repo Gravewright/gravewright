@@ -32,7 +32,7 @@ ativa sem exigir F5.
 - Reduza intensidade, alcance, partículas ou desative shaders em GPUs limitadas.
 - Código GLSL inválido deve ser corrigido no editor; erros do shader não devem
   alterar a posição do efeito nem o zoom do mapa.
-- Faça backup antes de atualizar uma instalação Alpha com campanhas importantes.
+- Faça backup antes de atualizar uma instalação Beta com campanhas importantes.
 
 ## Visibilidade de camadas
 

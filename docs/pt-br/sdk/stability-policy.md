@@ -5,19 +5,19 @@ Este documento define quais superficies publicas fazem parte do contrato da SDK
 
 ## Regra Guia
 
-Estabilizar apenas comportamento intencional. Um package valido para
-`sdkVersion: "1"` deve continuar instalando, ativando e executando em releases
-`1.x`, salvo quando depender de capabilities `forbidden`.
+Estabilizar apenas comportamento intencional. A SDK 1 está em RC 1. Um package
+válido para `sdkVersion: "1"` deve continuar instalando, ativando e executando
+em releases compatíveis, salvo quando depender de capabilities `forbidden`.
 
-Autores de pacote devem mirar a linha final da SDK com `compatibility.minimum`
-e `compatibility.verified` definidos como `"1"`; valores pre-release como
-`1.0.0-rc.1` sao historicos e validam como unverified contra a SDK 1 final.
+Autores devem usar `compatibility.minimum` e `compatibility.verified` como
+`"1"`. Versões do produto ou labels de RC, como `1.0.0-beta.3` e
+`1.0.0-rc.1`, não pertencem nesses campos de compatibilidade da SDK.
 
 ## Niveis de Estabilidade
 
 | Status | Significado |
 |---|---|
-| `stable` | API publica. Nao deve quebrar em `sdkVersion: "1"`. |
+| `stable` | API pública incluída no candidato RC 1 congelado. Não deve quebrar em `sdkVersion: "1"`. |
 | `forbidden` | Capability bloqueada para packages (superficie insegura). |
 
 ## Classificacao Atual
@@ -41,16 +41,11 @@ e `compatibility.verified` definidos como `"1"`; valores pre-release como
 4. Mudancas incompativeis no contrato do manifest exigem novo `sdkVersion` ou
    migracao formal.
 
-## Release Gates
+## Enforcement do RC 1
 
-> Histórico: estes foram os gates internos do sprint de estabilidade. Seu
-> conteúdo foi entregue em conjunto como **Gravewright Alpha 2.0.0: SDK Freeze**
-> (`v2.0.0-alpha.0`), que congelou a superfície da SDK 1. Os nomes de versão
-> abaixo são os do plano do sprint, não a tag publicada.
-
-| Release | Tema |
-|---|---|
-| `v1.0.0-alpha.4` | Storage runtime, lifecycle frontend e sync de capabilities. |
-| `v1.0.0-alpha.5` | Interop `sdk.bus.*`. |
-| `v1.0.0-beta.1` | Consolidacao LTS: storage, bus e HTML sheets estaveis. |
-| `v1.0.0-rc.1` | Apenas bugfixes, docs e testes. |
+O fingerprint semântico é
+`docs/sdk/_data/gravewright-sdk-1.rc1-snapshot.json`. A CI regenera o contrato
+público e rejeita drift incompatível. Consulte
+[`rc1-compatibility-policy.md`](rc1-compatibility-policy.md) e
+[`rc1-certification.md`](rc1-certification.md); gates históricos pertencem ao
+histórico de releases, não ao contrato atual de autoria.

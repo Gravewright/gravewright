@@ -7,7 +7,9 @@ from litestar.params import FromQuery
 from litestar.response import Redirect
 from litestar.response import Template
 
-from app.actions.inside.render_inside import split_packages
+from app.actions.inside.render_inside import (
+    bind_published_update_channels, hide_unpublished_core_channel, split_packages,
+)
 from app.business.campaigns.campaign_invitation_service import CampaignInvitationService
 from app.business.campaigns.campaign_service import CampaignService
 from app.business.campaigns.campaign_snapshot_service import CampaignSnapshotService
@@ -66,6 +68,7 @@ def show_inside(
         for kind in ("ruleset", "addon", "library", "content", "theme", "assets")
     }
     inside_settings = InsideSettingsService().read()
+    update_settings = bind_published_update_channels(inside_settings["updates"], marketplace)
     package_activation_service = PackageActivationService()
     dependency_service = PackageDependencyService()
     pending_join_code = get_pending_join_code(request.session)
@@ -165,7 +168,8 @@ def show_inside(
             marketplace_bands=marketplace_bands,
             all_users=all_users,
             inside_settings=inside_settings["app"],
-            core_update=CoreUpdateService().status(),
+            update_settings=update_settings,
+            core_update=hide_unpublished_core_channel(CoreUpdateService().status(), update_settings),
             privacy_settings=inside_settings["privacy"],
             pending_invitations=[dict(invitation) for invitation in pending_invitations],
             campaign_error_key=campaign_error_key,

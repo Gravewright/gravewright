@@ -33,7 +33,7 @@ A validação garante que o pacote segue o contrato SDK v1 antes de ser instalad
 | `library` ativado como pacote comum | use `passive` e dependências. |
 | Chave desconhecida em `provides` | use apenas campos suportados ou trate como campo planejado fora do contrato ativo. |
 | `provides.rules` como array | use objeto, por exemplo `{ "formulas": "rules/formulas.gw.json" }`. |
-| `compatibility.verified` com valor pre-release | use `"1"` para pacotes mirados na SDK 1 final. |
+| `compatibility.verified` com versão do produto ou pre-release | use `"1"`, o identificador canônico da SDK 1 RC 1. |
 
 ## Códigos recentes
 
@@ -41,7 +41,7 @@ A validação garante que o pacote segue o contrato SDK v1 antes de ser instalad
 |---|---|---|
 | `sdk.validation.rules_shape_invalid` | `provides.rules` não é objeto. | Use entradas nome-para-path, por exemplo `{ "formulas": "rules/formulas.gw.json" }`. |
 | `sdk.validation.provides_key_unknown` | `provides` contém chave que a engine não consome. | Use campos suportados ou aguarde a superfície ficar ativa. |
-| `sdk.validation.compatibility_prerelease` | `verified` aponta para pré-release anterior à SDK 1 final. | Use `compatibility.verified: "1"`. |
+| `sdk.validation.compatibility_prerelease` | `verified` usa uma versão do produto ou pre-release em vez do identificador canônico da SDK. | Use `compatibility.verified: "1"`. |
 
 ## Comandos
 
