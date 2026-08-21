@@ -80,6 +80,7 @@ paths, hosts, origins and URLs are redacted. Always review attachments anyway.
 grave doctor
 grave doctor --json
 grave doctor --ai
+grave doctor --strict
 grave doctor --skip-db
 grave doctor --packages-dir data/packages
 ```
@@ -98,6 +99,10 @@ Doctor checks include:
 - orphan settings;
 - orphan content imports.
 
+`--strict` makes warnings fail the command as well as errors. Human, JSON, and
+AI output are rendered from the same findings; JSON remains the only stdout
+content when `--json` is selected.
+
 ## `grave package`
 
 ```bash
@@ -108,6 +113,8 @@ grave package enable <package_id>
 grave package disable <package_id> [--force]
 grave package remove <package_id> [--force]
 grave package update <package_id> [--json]
+grave package update <package_id> --remote [--json]
+grave package update all --remote [--json]
 grave package doctor <package_id> [--json]
 ```
 
@@ -116,6 +123,9 @@ Important behavior:
 - `validate` checks the SDK manifest contract and referenced paths.
 - `install` prints requested capabilities and warns when a package runs trusted JavaScript.
 - `doctor` surfaces dependency, conflict, compatibility, activation, and package file problems.
+- local `update` refreshes installed metadata from disk; `--remote` delegates to
+  the canonical Marketplace installer, including checksum, compatibility,
+  dependency, rollback, and recovery enforcement.
 
 ## Per-kind commands
 

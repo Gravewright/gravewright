@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 import difflib
-import inspect
 import json
 import os
 import sys
@@ -15,8 +14,9 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from app.config import config
+from app.engine.sdk.package_manifest import PackageKind
 
-PACKAGE_KINDS = ("ruleset", "addon", "library", "theme", "assets", "content")
+PACKAGE_KINDS = tuple(kind.value for kind in PackageKind)
 TOP_LEVEL_COMMANDS = (
     "doctor", "run", "backup", "restore", "db", "lock", "package", "campaign",
     *PACKAGE_KINDS,
@@ -61,16 +61,6 @@ def _confirm(prompt: str) -> bool:
 
 def _default_packages_dir() -> Path:
     return Path(config.data_dir) / "packages"
-
-
-def _call_compatible(fn, /, **kwargs):
-    """Call a function with only the keyword args it currently accepts.
-
-    This keeps the CLI parser compatible with both the current project modules
-    and the fuller CLI modules generated during the SDK tooling pass.
-    """
-    params = inspect.signature(fn).parameters
-    return fn(**{key: value for key, value in kwargs.items() if key in params})
 
 
 def _manifest_has_scripts(manifest: Any) -> bool:
@@ -251,21 +241,16 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
     strict = getattr(args, "strict", False)
 
-    checks = _call_compatible(
-        run_doctor,
-        packages_dir=Path(args.packages_dir),
-        skip_db=args.skip_db,
-        strict=strict,
-    )
+    checks = run_doctor(packages_dir=Path(args.packages_dir), skip_db=args.skip_db)
 
     if args.json:
-        _print_json(_call_compatible(render_json, checks=checks, strict=strict))
+        _print_json(render_json(checks, strict=strict))
     elif args.ai:
-        print(_call_compatible(render_ai_prompt, checks=checks, strict=strict))
+        print(render_ai_prompt(checks, strict=strict))
     else:
-        print(_call_compatible(render_pretty, checks=checks, strict=strict, verbose=args.verbose))
+        print(render_pretty(checks, strict=strict, verbose=args.verbose))
 
-    summary = _call_compatible(summarize, checks=checks, strict=strict)
+    summary = summarize(checks, strict=strict)
     return EXIT_OK if summary["ok"] else EXIT_DOCTOR_ERROR
 
 
@@ -317,8 +302,7 @@ def _cmd_backup(args: argparse.Namespace) -> int:
 
     out_arg = getattr(args, "out", None) or getattr(args, "out_pos", None)
     out = Path(out_arg) if out_arg else Path(default_backup_name())
-    exit_code, _manifest = _call_compatible(
-        create_backup,
+    exit_code, _manifest = create_backup(
         out=out,
         include_assets=args.include_assets,
         include_packages=args.include_packages,
@@ -330,13 +314,10 @@ def _cmd_backup(args: argparse.Namespace) -> int:
 def _cmd_restore(args: argparse.Namespace) -> int:
     from app.cli.backup import restore_backup
 
-    return _call_compatible(
-        restore_backup,
+    return restore_backup(
         path=Path(args.path),
         dry_run=args.dry_run,
         yes=args.yes,
-        replace_assets=args.replace_assets,
-        replace_packages=args.replace_packages,
     )
 
 
@@ -379,40 +360,44 @@ def _intent_from_args(args: argparse.Namespace):
     from app.cli.scaffold import Intent
 
     return Intent(
-        has_characters=args.has_characters,
-        has_monsters=args.has_monsters,
-        has_items=args.has_items,
+        has_characters=getattr(args, "has_characters", True),
+        has_monsters=getattr(args, "has_monsters", False),
+        has_items=getattr(args, "has_items", False),
 
 
         has_sheets=(
-            args.sheets is not None
-            or args.html_sheets
-            or args.actor_types is not None
-            or args.item_types is not None
+            getattr(args, "sheets", None) is not None
+            or getattr(args, "html_sheets", False)
+            or getattr(args, "actor_types", None) is not None
+            or getattr(args, "item_types", None) is not None
         ),
-        sheet_types=tuple(args.sheets) if args.sheets else None,
-        actor_types=tuple(args.actor_types) if args.actor_types is not None else None,
-        item_types=tuple(args.item_types) if args.item_types is not None else None,
-        mechanic=args.mechanic,
-        wants_biography=args.wants_biography,
-        wants_notes=args.wants_notes,
-        wants_effects=args.wants_effects,
-        html_sheets=args.html_sheets,
-        has_rolls=args.has_rolls,
-        has_combat=args.has_combat,
-        wants_content=args.wants_content,
-        wants_settings=args.wants_settings,
-        wants_locales=args.wants_locales,
-        uses_js=args.uses_js,
-        uses_sheet_runtime=args.uses_sheet_runtime,
-        uses_combat_runtime=args.uses_combat_runtime,
-        uses_scene_tools=args.uses_scene_tools,
-        uses_scene_overlays=args.uses_scene_overlays,
-        uses_token_extensions=args.uses_token_extensions,
-        has_images=args.has_images,
-        has_maps=args.has_maps,
-        has_audio=args.has_audio,
-        has_icons=args.has_icons,
+        sheet_types=tuple(args.sheets) if getattr(args, "sheets", None) else None,
+        actor_types=(
+            tuple(args.actor_types) if getattr(args, "actor_types", None) is not None else None
+        ),
+        item_types=(
+            tuple(args.item_types) if getattr(args, "item_types", None) is not None else None
+        ),
+        mechanic=getattr(args, "mechanic", "none"),
+        wants_biography=getattr(args, "wants_biography", False),
+        wants_notes=getattr(args, "wants_notes", False),
+        wants_effects=getattr(args, "wants_effects", False),
+        html_sheets=getattr(args, "html_sheets", False),
+        has_rolls=getattr(args, "has_rolls", False),
+        has_combat=getattr(args, "has_combat", False),
+        wants_content=getattr(args, "wants_content", False),
+        wants_settings=getattr(args, "wants_settings", False),
+        wants_locales=getattr(args, "wants_locales", False),
+        uses_js=getattr(args, "uses_js", False),
+        uses_sheet_runtime=getattr(args, "uses_sheet_runtime", False),
+        uses_combat_runtime=getattr(args, "uses_combat_runtime", False),
+        uses_scene_tools=getattr(args, "uses_scene_tools", False),
+        uses_scene_overlays=getattr(args, "uses_scene_overlays", False),
+        uses_token_extensions=getattr(args, "uses_token_extensions", False),
+        has_images=getattr(args, "has_images", False),
+        has_maps=getattr(args, "has_maps", False),
+        has_audio=getattr(args, "has_audio", False),
+        has_icons=getattr(args, "has_icons", False),
     )
 
 
@@ -426,34 +411,34 @@ def _is_interactive() -> bool:
 def _no_intent_flags(args: argparse.Namespace) -> bool:
     """True when ``new`` was given no intent flags (pure defaults)."""
     return (
-        args.has_characters is True
-        and args.sheets is None
-        and args.actor_types is None
-        and args.item_types is None
-        and args.mechanic == "none"
+        getattr(args, "has_characters", True) is True
+        and getattr(args, "sheets", None) is None
+        and getattr(args, "actor_types", None) is None
+        and getattr(args, "item_types", None) is None
+        and getattr(args, "mechanic", "none") == "none"
         and not any(
             (
-                args.has_monsters,
-                args.has_items,
-                args.html_sheets,
-                args.wants_biography,
-                args.wants_notes,
-                args.wants_effects,
-                args.has_rolls,
-                args.has_combat,
-                args.wants_content,
-                args.wants_settings,
-                args.wants_locales,
-                args.uses_js,
-                args.uses_sheet_runtime,
-                args.uses_combat_runtime,
-                args.uses_scene_tools,
-                args.uses_scene_overlays,
-                args.uses_token_extensions,
-                args.has_images,
-                args.has_maps,
-                args.has_audio,
-                args.has_icons,
+                getattr(args, "has_monsters", False),
+                getattr(args, "has_items", False),
+                getattr(args, "html_sheets", False),
+                getattr(args, "wants_biography", False),
+                getattr(args, "wants_notes", False),
+                getattr(args, "wants_effects", False),
+                getattr(args, "has_rolls", False),
+                getattr(args, "has_combat", False),
+                getattr(args, "wants_content", False),
+                getattr(args, "wants_settings", False),
+                getattr(args, "wants_locales", False),
+                getattr(args, "uses_js", False),
+                getattr(args, "uses_sheet_runtime", False),
+                getattr(args, "uses_combat_runtime", False),
+                getattr(args, "uses_scene_tools", False),
+                getattr(args, "uses_scene_overlays", False),
+                getattr(args, "uses_token_extensions", False),
+                getattr(args, "has_images", False),
+                getattr(args, "has_maps", False),
+                getattr(args, "has_audio", False),
+                getattr(args, "has_icons", False),
             )
         )
     )
@@ -505,6 +490,15 @@ def _cmd_new(args: argparse.Namespace) -> int:
                 print(f"FIX    Available templates: {available}")
                 print(f"       List them with: grave {args.kind} new --list-templates")
             return EXIT_DOCTOR_ERROR
+        if not _no_intent_flags(args):
+            if args.json:
+                _print_json(
+                    {"ok": False, "error_key": "scaffold.template_intent_conflict"}
+                )
+            else:
+                print("ERROR  intent flags cannot be combined with --template.")
+                print("FIX    Choose the template as-is, or use --wizard to customize it.")
+            return EXIT_DOCTOR_ERROR
 
 
 
@@ -519,7 +513,7 @@ def _cmd_new(args: argparse.Namespace) -> int:
         and not args.json
     )
     if use_wizard and not interactive:
-        if args.wizard:
+        if args.wizard and not args.json:
             print("WARN  --wizard needs an interactive terminal; using flags/defaults.")
         use_wizard = False
 
@@ -538,7 +532,10 @@ def _cmd_new(args: argparse.Namespace) -> int:
     else:
         name = _prompt_value(args.name, "Package name")
         if not name:
-            print("ERROR  package name is required")
+            if args.json:
+                _print_json({"ok": False, "error_key": "scaffold.name_required"})
+            else:
+                print("ERROR  package name is required")
             return EXIT_DOCTOR_ERROR
         intent = _intent_from_args(args)
 
@@ -564,8 +561,13 @@ def _cmd_new(args: argparse.Namespace) -> int:
 
     package_id = args.id or suggest_package_id(name)
     if not package_id_is_safe(package_id):
-        print(f"ERROR  invalid package id: {package_id}")
-        print("FIX    Use lowercase kebab-case, for example: my-package")
+        if args.json:
+            _print_json(
+                {"ok": False, "error_key": "scaffold.invalid_id", "package_id": package_id}
+            )
+        else:
+            print(f"ERROR  invalid package id: {package_id}")
+            print("FIX    Use lowercase kebab-case, for example: my-package")
         return EXIT_DOCTOR_ERROR
 
     scaffold = build_package(
@@ -638,6 +640,15 @@ def _cmd_new(args: argparse.Namespace) -> int:
         return EXIT_UNSAFE
 
     if not args.yes:
+        if args.json:
+            _print_json(
+                {
+                    "ok": False,
+                    "error_key": "scaffold.confirmation_required",
+                    "path": str(package_dir),
+                }
+            )
+            return EXIT_UNSAFE
         print(f"Create {args.kind} package at {package_dir}?")
         print(f"Files: {len(files)}")
         if not _confirm("Create? [y/N] "):
@@ -944,101 +955,67 @@ def _add_new_parser(sub, *, kind: str) -> None:
         action="store_true",
         help="interactive guided wizard (checkbox selection) instead of flags",
     )
-    parser.add_argument(
-        "--template",
-        dest="template",
-        default=None,
-        metavar="ID",
-        help="start from a ready-made template (see --list-templates). "
-        "Non-interactive: combine with --name/--yes for scripted scaffolds.",
-    )
-    parser.add_argument(
-        "--list-templates",
-        dest="list_templates",
-        action="store_true",
-        help="list the available templates for this kind and exit",
-    )
+    if kind == "ruleset":
+        parser.add_argument(
+            "--template",
+            dest="template",
+            default=None,
+            metavar="ID",
+            help="start from a ready-made template (see --list-templates). "
+            "Non-interactive: combine with --name/--yes for scripted scaffolds.",
+        )
+        parser.add_argument(
+            "--list-templates",
+            dest="list_templates",
+            action="store_true",
+            help="list the available templates for this kind and exit",
+        )
     _add_json(parser)
 
-    from app.cli.scaffold import mechanic_ids
+    if kind == "ruleset":
+        from app.cli.scaffold import mechanic_ids
 
-    parser.add_argument(
-        "--actor-types",
-        dest="actor_types",
-        nargs="*",
-        default=None,
-        metavar="TYPE",
-        help="actor sheet type ids to generate (e.g. --actor-types character npc). "
-        "Supersedes --characters/--monsters.",
-    )
-    parser.add_argument(
-        "--item-types",
-        dest="item_types",
-        nargs="*",
-        default=None,
-        metavar="TYPE",
-        help="item sheet type ids to generate (e.g. --item-types weapon spell). "
-        "Supersedes --items.",
-    )
-    parser.add_argument(
-        "--mechanic",
-        dest="mechanic",
-        default="none",
-        choices=mechanic_ids(),
-        help="core dice mechanic seeded into the character sheet (default: none)",
-    )
-    parser.add_argument(
-        "--biography",
-        dest="wants_biography",
-        action="store_true",
-        help="add a text-only Biography section to actor sheets",
-    )
-    parser.add_argument(
-        "--notes",
-        dest="wants_notes",
-        action="store_true",
-        help="add a text-only Notes section to actor sheets",
-    )
-    parser.add_argument(
-        "--effects",
-        dest="wants_effects",
-        action="store_true",
-        help="add an effect item type and an Active Effects area to actor sheets",
-    )
-    parser.add_argument("--characters", dest="has_characters", action="store_true", default=True)
-    parser.add_argument("--no-characters", dest="has_characters", action="store_false")
-    parser.add_argument("--monsters", dest="has_monsters", action="store_true")
-    parser.add_argument("--items", dest="has_items", action="store_true")
-    parser.add_argument(
-        "--sheets",
-        dest="sheets",
-        nargs="*",
-        default=None,
-        metavar="TYPE",
-        help="legacy: generate sheets for declared types (prefer --actor-types/--item-types)",
-    )
-    parser.add_argument(
-        "--html-sheets",
-        dest="html_sheets",
-        action="store_true",
-        help="scaffold HTML-mode sheets (template + CSS, plus an inventory controller "
-        "when the ruleset has items) instead of declarative Sheet IR; implies --sheets",
-    )
-    parser.add_argument("--rolls", dest="has_rolls", action="store_true")
-    parser.add_argument("--combat", dest="has_combat", action="store_true")
-    parser.add_argument("--content", dest="wants_content", action="store_true")
-    parser.add_argument("--settings", dest="wants_settings", action="store_true")
+        parser.add_argument("--actor-types", nargs="*", default=None, metavar="TYPE")
+        parser.add_argument("--item-types", nargs="*", default=None, metavar="TYPE")
+        parser.add_argument("--mechanic", default="none", choices=mechanic_ids())
+        parser.add_argument("--biography", dest="wants_biography", action="store_true")
+        parser.add_argument("--notes", dest="wants_notes", action="store_true")
+        parser.add_argument("--effects", dest="wants_effects", action="store_true")
+        parser.add_argument("--characters", dest="has_characters", action="store_true", default=True)
+        parser.add_argument("--no-characters", dest="has_characters", action="store_false")
+        parser.add_argument("--monsters", dest="has_monsters", action="store_true")
+        parser.add_argument("--items", dest="has_items", action="store_true")
+        parser.add_argument(
+            "--sheets",
+            nargs="*",
+            default=None,
+            metavar="TYPE",
+            help="legacy: generate sheets for declared types (prefer --actor-types/--item-types)",
+        )
+        parser.add_argument("--html-sheets", action="store_true")
+        parser.add_argument("--rolls", dest="has_rolls", action="store_true")
+        parser.add_argument("--combat", dest="has_combat", action="store_true")
+        parser.add_argument("--content", dest="wants_content", action="store_true")
+        parser.add_argument("--settings", dest="wants_settings", action="store_true")
+        parser.add_argument("--js", dest="uses_js", action="store_true")
+    elif kind == "addon":
+        parser.add_argument("--content", dest="wants_content", action="store_true")
+        parser.add_argument("--settings", dest="wants_settings", action="store_true")
+        parser.add_argument("--js", dest="uses_js", action="store_true")
+        parser.add_argument("--sheet-runtime", dest="uses_sheet_runtime", action="store_true")
+        parser.add_argument("--combat-runtime", dest="uses_combat_runtime", action="store_true")
+        parser.add_argument("--scene-tools", dest="uses_scene_tools", action="store_true")
+        parser.add_argument("--scene-overlays", dest="uses_scene_overlays", action="store_true")
+        parser.add_argument("--tokens", dest="uses_token_extensions", action="store_true")
+    elif kind in {"library", "theme"}:
+        parser.add_argument("--settings", dest="wants_settings", action="store_true")
+        parser.add_argument("--js", dest="uses_js", action="store_true")
+    elif kind == "assets":
+        parser.add_argument("--images", dest="has_images", action="store_true")
+        parser.add_argument("--maps", dest="has_maps", action="store_true")
+        parser.add_argument("--audio", dest="has_audio", action="store_true")
+        parser.add_argument("--icons", dest="has_icons", action="store_true")
     parser.add_argument("--locales", dest="wants_locales", action="store_true")
-    parser.add_argument("--js", dest="uses_js", action="store_true")
-    parser.add_argument("--sheet-runtime", dest="uses_sheet_runtime", action="store_true")
-    parser.add_argument("--combat-runtime", dest="uses_combat_runtime", action="store_true")
-    parser.add_argument("--scene-tools", dest="uses_scene_tools", action="store_true")
-    parser.add_argument("--scene-overlays", dest="uses_scene_overlays", action="store_true")
-    parser.add_argument("--tokens", dest="uses_token_extensions", action="store_true")
-    parser.add_argument("--images", dest="has_images", action="store_true")
-    parser.add_argument("--maps", dest="has_maps", action="store_true")
-    parser.add_argument("--audio", dest="has_audio", action="store_true")
-    parser.add_argument("--icons", dest="has_icons", action="store_true")
     parser.set_defaults(func=_cmd_new, kind=kind)
 
 
@@ -1137,8 +1114,6 @@ def build_parser() -> argparse.ArgumentParser:
     restore.add_argument("path")
     restore.add_argument("--dry-run", action="store_true")
     restore.add_argument("--yes", action="store_true")
-    restore.add_argument("--replace-assets", action="store_true")
-    restore.add_argument("--replace-packages", action="store_true")
     restore.set_defaults(func=_cmd_restore)
 
     db = sub.add_parser("db", help="database schema status and migrations")

@@ -285,7 +285,12 @@ SDK v1.
 
 Nem todo kind deve usar todos os campos. Por exemplo, `content` normalmente declara `contentPacks`, enquanto `assets` declara `assets`.
 
-Rulesets devem declarar `provides.storage` (modelo de storage) e ao menos um tipo em `provides.actorTypes`. Os tipos de content pack permitidos são `actor_pack`, `item_pack`, `spell_pack`, `journal_pack`, `table_pack` e `condition_pack`.
+Rulesets devem declarar `provides.storage` (modelo de storage) e ao menos um tipo em `provides.actorTypes`. Os tipos de content pack permitidos são `actor_pack`, `item_pack`, `spell_pack`, `journal_pack`, `table_pack`, `condition_pack`, `scene_pack`, `card_pack`, `deck_pack`, `asset_pack`, `macro_pack`, `playlist_pack` e `document_pack`.
+
+Novos packages devem declarar `formatVersion: 2`, um `documentType` estável e
+`indexFields` limitados. O arquivo referenciado usa um array `index`; uma entrada
+pode conter o documento inline ou apontar para um path `document` relativo ao
+package. O formato 1 com `entries` continua aceito somente por compatibilidade.
 
 Arquivos de locale são dicionários JSON. A tradução em runtime fica disponível via `sdk.i18n.t(key, fallback)` quando o pacote declara a capability `locales`.
 

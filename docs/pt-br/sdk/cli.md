@@ -53,9 +53,29 @@ Use em ambiente local para testar o fluxo completo do usuário.
 
 ```bash
 grave package doctor my-package
+grave doctor --json
+grave doctor --ai
+grave doctor --strict
 ```
 
 Use para encontrar dependências ausentes, conflitos, capabilities inconsistentes, arquivos faltando e problemas de ativação.
+
+`--strict` faz warnings também produzirem falha. As saídas humana, JSON e para
+IA partem da mesma coleção de findings; com `--json`, nenhum texto humano é
+misturado ao stdout.
+
+## Atualização
+
+```bash
+grave package update my-package
+grave package update my-package --remote --json
+grave package update all --remote --json
+```
+
+Sem `--remote`, a CLI atualiza o snapshot instalado a partir do disco. Com
+`--remote`, ela delega ao mesmo instalador canônico do Marketplace usado pela
+interface, incluindo checksum, compatibilidade, dependências, rollback e
+diagnóstico de recovery.
 
 ## Workflow recomendado
 

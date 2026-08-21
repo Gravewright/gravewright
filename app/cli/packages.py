@@ -16,6 +16,7 @@ from typing import Any
 from app.cli.exit_codes import (
     EXIT_DOCTOR_ERROR,
     EXIT_INCOMPATIBLE,
+    EXIT_MISSING_DEPENDENCY,
     EXIT_OK,
     EXIT_UNSAFE,
 )
@@ -43,8 +44,50 @@ def _print_json(payload: Any) -> None:
     print(json.dumps(payload, indent=2, sort_keys=True))
 
 
-def _fail(error_key: str | None, *, code: int = EXIT_DOCTOR_ERROR) -> int:
+_INCOMPATIBLE_ERRORS = {
+    "sdk.errors.incompatible",
+    "sdk.errors.dependency_missing",
+    "sdk.errors.dependency_disabled",
+    "sdk.errors.dependency_inactive",
+    "sdk.errors.dependency_outdated",
+    "sdk.errors.dependency_too_new",
+    "sdk.errors.dependency_wrong_kind",
+    "sdk.errors.package_conflict_active",
+    "PACKAGE_UPDATE_VERSION_INVALID",
+}
+_UNSAFE_ERRORS = {
+    "sdk.errors.package_active_in_campaign",
+    "PACKAGE_UPDATE_DISABLE_FIRST",
+    "PACKAGE_UPDATE_ACTIVE_IN_CAMPAIGN",
+}
+_EXTERNAL_ERRORS = {
+    "MARKETPLACE_PACKAGE_UNAVAILABLE",
+    "PACKAGE_DOWNLOAD_FAILED",
+}
+
+
+def _exit_code_for_error(error_key: str | None) -> int:
+    if error_key in _UNSAFE_ERRORS:
+        return EXIT_UNSAFE
+    if error_key in _INCOMPATIBLE_ERRORS:
+        return EXIT_INCOMPATIBLE
+    if error_key in _EXTERNAL_ERRORS:
+        return EXIT_MISSING_DEPENDENCY
+    return EXIT_DOCTOR_ERROR
+
+
+def _fail(
+    error_key: str | None,
+    *,
+    code: int | None = None,
+    as_json: bool = False,
+    details: dict[str, Any] | None = None,
+) -> int:
     key = error_key or "sdk.errors.unknown"
+    code = code if code is not None else _exit_code_for_error(error_key)
+    if as_json:
+        _print_json({"ok": False, "error_key": key, "exit_code": code, **(details or {})})
+        return code
     print(f"ERROR  {key}")
     fix = _ERROR_FIX.get(key)
     if fix:
@@ -142,15 +185,24 @@ def cmd_install(args: argparse.Namespace) -> int:
 
     loaded = load_by_package_id(args.id)
     if loaded is None:
-        return _fail("sdk.errors.not_found")
+        return _fail("sdk.errors.not_found", as_json=args.json)
 
     expected_kind = getattr(args, "kind", None)
     if expected_kind and loaded.manifest.kind != expected_kind:
+        if args.json:
+            return _fail(
+                "sdk.errors.wrong_kind",
+                code=EXIT_INCOMPATIBLE,
+                as_json=True,
+                details={"actual_kind": loaded.manifest.kind, "expected_kind": expected_kind},
+            )
         print(f"ERROR  {loaded.id} is kind '{loaded.manifest.kind}', expected '{expected_kind}'.")
         return EXIT_INCOMPATIBLE
 
     if not args.json:
         _print_capabilities(loaded)
+    if args.json and not args.yes:
+        return _fail("sdk.errors.confirmation_required", code=EXIT_UNSAFE, as_json=True)
     if not _confirm(args.yes):
         print("Aborted.")
         return EXIT_UNSAFE
@@ -158,18 +210,20 @@ def cmd_install(args: argparse.Namespace) -> int:
     svc = _install_service()
     result = svc.install(package_id=loaded.id, user_id=None)
     if not result.success:
-        return _fail(result.error_key)
+        return _fail(result.error_key, as_json=args.json)
 
     if args.enable:
         enabled = svc.enable(package_id=loaded.id)
         if not enabled.success:
-            return _fail(enabled.error_key)
+            return _fail(enabled.error_key, as_json=args.json)
     if args.activate:
         if not args.enable:
-            svc.enable(package_id=loaded.id)
+            enabled = svc.enable(package_id=loaded.id)
+            if not enabled.success:
+                return _fail(enabled.error_key, as_json=args.json)
         activated = _activation_service().activate_package(args.activate, loaded.id, None)
         if not activated.success:
-            return _fail(activated.error_key)
+            return _fail(activated.error_key, as_json=args.json)
 
     if args.json:
         _print_json({"ok": True, "package_id": loaded.id})
@@ -181,11 +235,20 @@ def cmd_install(args: argparse.Namespace) -> int:
 
 
 
-def _require_kind(svc, package_id: str, expected_kind: str | None) -> int | None:
+def _require_kind(
+    svc, package_id: str, expected_kind: str | None, *, as_json: bool = False
+) -> int | None:
     if not expected_kind:
         return None
     record = svc.get(package_id)
     if record and record["kind"] != expected_kind:
+        if as_json:
+            return _fail(
+                "sdk.errors.wrong_kind",
+                code=EXIT_INCOMPATIBLE,
+                as_json=True,
+                details={"actual_kind": record["kind"], "expected_kind": expected_kind},
+            )
         print(f"ERROR  {package_id} is kind '{record['kind']}', expected '{expected_kind}'.")
         return EXIT_INCOMPATIBLE
     return None
@@ -258,7 +321,17 @@ def _update_one(svc, package_id: str) -> tuple[bool, str | None]:
 
 def cmd_update(args: argparse.Namespace) -> int:
     svc = _install_service()
-    targets = [r["id"] for r in svc.installed.list_all()] if args.id == "all" else [args.id]
+    expected_kind = getattr(args, "kind", None)
+    if args.id == "all":
+        targets = [
+            record["id"]
+            for record in svc.installed.list_all()
+            if expected_kind is None or record["kind"] == expected_kind
+        ]
+    else:
+        if (rc := _require_kind(svc, args.id, expected_kind, as_json=args.json)) is not None:
+            return rc
+        targets = [args.id]
     updated, failed = [], []
     for package_id in targets:
         if getattr(args, "remote", False):
@@ -268,10 +341,12 @@ def cmd_update(args: argparse.Namespace) -> int:
         else:
             ok, error_key = _update_one(svc, package_id)
         (updated if ok else failed).append((package_id, error_key))
+    exit_code = max((_exit_code_for_error(error) for _package, error in failed), default=EXIT_OK)
     if args.json:
         _print_json(
             {
                 "ok": not failed,
+                "exit_code": exit_code,
                 "updated": [p for p, _ in updated],
                 "failed": [{"id": p, "error_key": e} for p, e in failed],
             }
@@ -281,7 +356,7 @@ def cmd_update(args: argparse.Namespace) -> int:
             print(f"OK     Updated {p}.")
         for p, e in failed:
             print(f"ERROR  {p}: {e}")
-    return EXIT_OK if not failed else EXIT_DOCTOR_ERROR
+    return exit_code
 
 
 
@@ -289,7 +364,7 @@ def cmd_update(args: argparse.Namespace) -> int:
 
 def cmd_doctor(args: argparse.Namespace) -> int:
     from app.cli.doctor import ERROR, OK, WARN, Check, render_pretty, summarize
-    from app.engine.sdk.package_dependency_service import PackageDependencyService
+    from app.engine.sdk.package_doctor_service import PackageDoctorService
     from app.engine.sdk.package_registry import load_by_package_id
 
     checks: list[Check] = []
@@ -329,12 +404,20 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             f"effective={provenance.get('effectiveSource') or 'community'} "
             f"authority={provenance.get('authority') or 'manual'}",
         ))
-        if record["status"] == "enabled":
-            report = PackageDependencyService().check(args.id)
-            for key in PackageDependencyService.blocking_error_keys(report):
-                checks.append(
-                    Check("dependency", ERROR, f"{args.id}: {key}", fix=_ERROR_FIX.get(key))
+        for finding in PackageDoctorService().audit():
+            if finding.package_id != args.id:
+                continue
+            status = ERROR if finding.severity == "error" else WARN if finding.severity == "warning" else OK
+            context = f" ({finding.campaign_id})" if finding.campaign_id else ""
+            details = f": {finding.details}" if finding.details else ""
+            checks.append(
+                Check(
+                    f"package:{finding.code}{context}",
+                    status,
+                    finding.message or f"{finding.code}{details}",
+                    fix=_ERROR_FIX.get(finding.code),
                 )
+            )
 
     if args.json:
         from app.cli.doctor import render_json
@@ -348,8 +431,14 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 
 
-def _campaign_guard(campaign_id: str) -> int | None:
+def _campaign_guard(campaign_id: str, *, as_json: bool = False) -> int | None:
     if not _campaign_exists(campaign_id):
+        if as_json:
+            return _fail(
+                "sdk.errors.campaign_not_found",
+                as_json=True,
+                details={"campaign_id": campaign_id},
+            )
         print(f"ERROR  campaign not found: {campaign_id}")
         print(
             "FIX    grave campaign package list <campaign_id> uses the campaign's id, not its title."
@@ -359,7 +448,7 @@ def _campaign_guard(campaign_id: str) -> int | None:
 
 
 def cmd_campaign_list(args: argparse.Namespace) -> int:
-    if (rc := _campaign_guard(args.campaign)) is not None:
+    if (rc := _campaign_guard(args.campaign, as_json=args.json)) is not None:
         return rc
     rows = _activation_service().list_campaign_packages(args.campaign)
     if args.json:

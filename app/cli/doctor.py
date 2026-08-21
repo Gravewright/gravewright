@@ -258,10 +258,15 @@ def run_doctor(*, packages_dir: Path, skip_db: bool) -> list[Check]:
     return checks
 
 
-def summarize(checks: list[Check]) -> dict:
+def summarize(checks: list[Check], *, strict: bool = False) -> dict:
     errors = sum(1 for c in checks if c.status == ERROR)
     warns = sum(1 for c in checks if c.status == WARN)
-    return {"ok": errors == 0, "error_count": errors, "warn_count": warns}
+    return {
+        "ok": errors == 0 and (not strict or warns == 0),
+        "error_count": errors,
+        "warn_count": warns,
+        "strict": strict,
+    }
 
 
 def render_check_lines(checks: list[Check], *, verbose: bool = False) -> list[str]:
@@ -283,9 +288,9 @@ def render_check_lines(checks: list[Check], *, verbose: bool = False) -> list[st
     return lines
 
 
-def render_text(checks: list[Check]) -> str:
+def render_text(checks: list[Check], *, strict: bool = False) -> str:
     lines = render_check_lines(checks)
-    s = summarize(checks)
+    s = summarize(checks, strict=strict)
     lines.append("")
     if s["ok"]:
         lines.append("OK, ready to play.")
@@ -297,14 +302,14 @@ def render_text(checks: list[Check]) -> str:
     return "\n".join(lines)
 
 
-def render_pretty(checks: list[Check], *, verbose: bool = False) -> str:
+def render_pretty(checks: list[Check], *, strict: bool = False, verbose: bool = False) -> str:
     """Rich human report; machine-oriented JSON/AI output remains unchanged."""
     try:
         from rich.console import Console
         from rich.panel import Panel
         from rich.table import Table
     except ImportError:  # pragma: no cover - Rich is a runtime dependency
-        return render_text(checks)
+        return render_text(checks, strict=strict)
 
     output = StringIO()
     console = Console(file=output, force_terminal=False, width=110)
@@ -324,7 +329,7 @@ def render_pretty(checks: list[Check], *, verbose: bool = False) -> str:
         cells.extend([check.message, check.fix or ""])
         table.add_row(*cells)
 
-    summary = summarize(checks)
+    summary = summarize(checks, strict=strict)
     console.print(
         "[green bold]OK[/]     Gravewright Doctor"
         if summary["ok"]
@@ -351,18 +356,22 @@ def render_pretty(checks: list[Check], *, verbose: bool = False) -> str:
     return output.getvalue().rstrip()
 
 
-def render_json(checks: list[Check]) -> dict:
-    return {**summarize(checks), "checks": [asdict(c) for c in checks]}
+def render_json(checks: list[Check], *, strict: bool = False) -> dict:
+    return {**summarize(checks, strict=strict), "checks": [asdict(c) for c in checks]}
 
 
-def render_ai_prompt(checks: list[Check]) -> str:
-    report = render_text(checks)
+def render_ai_prompt(checks: list[Check], *, strict: bool = False) -> str:
+    report = render_text(checks, strict=strict)
     return (
         "Copy this prompt into your AI assistant:\n\n"
         "I am operating a Gravewright install. Here is the `grave doctor` output:\n\n"
         f"{report}\n\n"
+        f"Strict mode: {'enabled' if strict else 'disabled'}.\n"
         "Please tell me exactly how to resolve the errors and warnings.\n"
         "Only change package files or my environment/config.\n"
         "Do not edit Gravewright core.\n"
-        "Do not invent capabilities."
+        "Do not invent capabilities.\n"
+        "Fix root causes before derived symptoms.\n"
+        "After each correction, rerun `grave package validate` when working on a package, "
+        "then rerun `grave doctor`."
     )

@@ -20,7 +20,7 @@ from app.cli import build_parser
         ["backup", "--include-assets"],
         ["backup", "--include-assets", "--include-packages", "--no-verify"],
         ["restore", "backup.zip", "--dry-run"],
-        ["restore", "backup.zip", "--yes", "--replace-assets"],
+        ["restore", "backup.zip", "--yes"],
         ["lock"],
         ["lock", "-o", "grave.lock.json"],
         ["lock", "--json"],

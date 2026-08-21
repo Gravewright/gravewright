@@ -450,9 +450,9 @@ def _configure_mechanic(
     skills: tuple[str, ...] = ()
     config: list[tuple[str, str]] = []
     attribute_defaults = {
-        "d20-attribute-modifier-skill": _DND_ATTRIBUTE_DEFAULTS,
-        "d20-attribute-modifier": _DND_ATTRIBUTE_DEFAULTS,
-        "d20-roll-under": _DND_ATTRIBUTE_DEFAULTS,
+        "d20-attribute-modifier-skill": _CLASSIC_ATTRIBUTE_DEFAULTS,
+        "d20-attribute-modifier": _CLASSIC_ATTRIBUTE_DEFAULTS,
+        "d20-roll-under": _CLASSIC_ATTRIBUTE_DEFAULTS,
         "dice-pool-successes": ("strength", "agility", "mind"),
         "dice-pool-count-hits": ("strength", "agility", "mind"),
         "exploding-dice": ("strength", "agility", "mind"),
@@ -564,7 +564,7 @@ def _configure_item(item_type: str, fields: list[str]) -> tuple[tuple[str, str],
     return tuple(config)
 
 
-_DND_ATTRIBUTE_DEFAULTS = (
+_CLASSIC_ATTRIBUTE_DEFAULTS = (
     "strength",
     "dexterity",
     "constitution",
