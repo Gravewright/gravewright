@@ -13,7 +13,9 @@ import pytest
 from app.engine.sdk import package_archive_installer, package_registry
 from app.engine.sdk.diagnostics import DoctorFinding
 from app.engine.sdk.marketplace_installer import MarketplaceInstaller
-from app.engine.sdk.marketplace_registry import MarketplaceRegistryError, parse_marketplace_toml
+from app.engine.sdk.marketplace_registry import (
+    MarketplaceRegistryError, parse_marketplace_document, parse_marketplace_toml,
+)
 from app.engine.sdk.marketplace_service import MarketplaceService, _safe_remote_url
 from app.engine.sdk.package_doctor_service import PackageDoctorService
 from app.engine.sdk.package_install_service import PackageInstallService
@@ -74,6 +76,115 @@ def test_registry_parses_valid_toml_and_canonical_kind() -> None:
     entries = parse_marketplace_toml(registry())
     assert len(entries) == 1 and entries[0].kind == "addon" and entries[0].channel == "stable"
     assert entries[0].source == "community"
+
+
+def test_marketplace_v2_resolves_channels_with_safe_fallback() -> None:
+    document = '''version = 2
+[[packages]]
+id = "channel-addon"
+name = "Channel Addon"
+kind = "addon"
+source = "community"
+[packages.channels.stable]
+manifest = "https://packages.test/stable.json"
+[packages.channels.dev]
+manifest = "https://packages.test/dev.json"
+'''
+    entry = parse_marketplace_toml(document)[0]
+    assert entry.release_for("stable")[0] == "stable"
+    assert entry.release_for("testing")[0] == "stable"
+    assert entry.release_for("dev")[0] == "dev"
+
+
+def test_marketplace_v2_carries_official_core_channels() -> None:
+    document = '''version = 2
+[core]
+id = "gravewright"
+name = "Gravewright"
+enabled = true
+repository = "https://github.com/Gravewright/gravewright"
+releases = "https://api.github.com/repos/Gravewright/gravewright/releases?per_page=30"
+[core.channels.dev]
+enabled = true
+[[packages]]
+id = "dev-addon"
+kind = "addon"
+[packages.channels.dev]
+manifest = "https://packages.test/dev.json"
+'''
+    registry = parse_marketplace_document(document)
+    assert registry.core is not None
+    assert registry.core.release_channel_for("stable") is None
+    assert registry.core.release_channel_for("dev") == "dev"
+    assert registry.packages[0].release_for("stable") is None
+
+
+def test_stable_never_resolves_testing_or_dev() -> None:
+    document = '''version = 2
+[[packages]]
+id = "preview-only"
+kind = "addon"
+[packages.channels.testing]
+manifest = "https://packages.test/testing.json"
+[packages.channels.dev]
+manifest = "https://packages.test/dev.json"
+'''
+    entry = parse_marketplace_toml(document)[0]
+    assert entry.release_for("stable") is None
+    assert entry.release_for("testing")[0] == "testing"
+
+
+def test_entitled_publisher_listing_is_visible_but_fails_closed_for_install(tmp_path: Path, db) -> None:
+    document = '''version = 2
+[[packages]]
+id = "licensed-addon"
+kind = "addon"
+source = "partner"
+access = "entitled"
+publisher = "Publisher"
+license_model = "commercial"
+auth_provider = "publisher-account"
+[packages.channels.stable]
+manifest = "https://packages.test/manifest.json"
+'''
+    path, cache = tmp_path / "marketplace.toml", tmp_path / "cache.json"
+    write_registry(path, document)
+    remote = manifest(package_id="licensed-addon")
+    remote["distribution"]["source"] = "partner"
+    service = MarketplaceService(registry_path=path, cache_path=cache, channel="stable",
+        fetcher=lambda *_: json.dumps(remote).encode())
+    service.refresh()
+    item = service.catalog()["packages"][0]
+    assert item["installState"] == "license-required"
+    assert item["publisherName"] == "Publisher"
+    assert service.get_valid("licensed-addon") is None
+
+
+def test_remote_registry_is_cached_only_after_valid_parse(tmp_path: Path, db) -> None:
+    cache = tmp_path / "catalog.json"
+    service = MarketplaceService(registry_path=None, registry_url="https://registry.test/marketplace.toml",
+        cache_path=cache, channel="testing",
+        fetcher=lambda url, _limit: (
+            b'''version = 2
+[[packages]]
+id = "curated-addon"
+kind = "addon"
+[packages.channels.stable]
+manifest = "https://packages.test/manifest.json"
+''' if "registry.test" in url else json.dumps(manifest()).encode()
+        ))
+    service.registry_cache_path = tmp_path / "marketplace.toml"
+    result = service.refresh()
+    assert result["refreshStatus"] == "ok"
+    assert result["selectedChannel"] == "testing"
+    assert result["packages"][0]["channel"] == "stable"
+    assert service.registry_cache_path.read_text(encoding="utf-8").startswith("version = 2")
+
+    previous_registry = service.registry_cache_path.read_bytes()
+    service.fetcher = lambda *_: b"invalid = ["
+    failed = service.refresh()
+    assert failed["refreshStatus"] == "failed"
+    assert service.registry_cache_path.read_bytes() == previous_registry
 
 
 def test_privileged_source_requires_matching_manifest_declaration(tmp_path: Path, db) -> None:

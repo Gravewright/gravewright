@@ -48,6 +48,78 @@ def test_core_channel_policy_ignores_newer_other_channels(tmp_path):
         assert service.check()["availableVersion"] == expected
 
 
+def test_core_channels_use_debian_style_fallback_without_upward_leaks(tmp_path):
+    releases = [release("1.0.1"), release("1.1.0-rc.1"), release("1.2.0-dev.1")]
+    payload = json.dumps(releases).encode()
+    stable = CoreUpdateService(fetcher=lambda *_: payload, cache_path=tmp_path / "stable.json",
+                               current_version="1.0.0", channel="stable").check()
+    testing = CoreUpdateService(fetcher=lambda *_: payload, cache_path=tmp_path / "testing.json",
+                                current_version="1.0.0", channel="testing").check()
+    dev = CoreUpdateService(fetcher=lambda *_: payload, cache_path=tmp_path / "dev.json",
+                            current_version="1.0.0", channel="dev").check()
+    assert (stable["availableVersion"], stable["resolvedChannel"]) == ("1.0.1", "stable")
+    assert (testing["availableVersion"], testing["resolvedChannel"]) == ("1.1.0-rc.1", "testing")
+    assert (dev["availableVersion"], dev["resolvedChannel"]) == ("1.2.0-dev.1", "dev")
+
+
+def test_returning_to_stable_never_offers_an_automatic_core_downgrade(tmp_path):
+    payload = json.dumps([release("1.9.0")]).encode()
+    result = CoreUpdateService(fetcher=lambda *_: payload, cache_path=tmp_path / "core.json",
+                               current_version="2.0.0-dev.4", channel="stable").check()
+    assert result["status"] == "ahead-of-channel"
+    assert result["artifact"] is None
+    assert result["requiresBackup"] is False
+
+
+def test_catalog_controls_which_core_channels_are_published(tmp_path):
+    registry = b'''version = 2
+packages = []
+[core]
+id = "gravewright"
+name = "Gravewright"
+enabled = true
+repository = "https://github.com/Gravewright/gravewright"
+releases = "https://api.github.com/repos/Gravewright/gravewright/releases?per_page=30"
+[core.channels.dev]
+enabled = true
+'''
+    payload = json.dumps([release("2.0.0-dev.2")]).encode()
+    service = CoreUpdateService(fetcher=lambda *_: payload, registry_fetcher=lambda *_: registry,
+        registry_cache_path=tmp_path / "marketplace.toml",
+        cache_path=tmp_path / "dev.json", current_version="2.0.0-dev.1", channel="dev")
+    service.catalog_bound = True
+    result = service.check()
+    assert result["status"] == "available"
+    assert result["resolvedChannel"] == "dev"
+
+    stable = CoreUpdateService(fetcher=lambda *_: payload, registry_fetcher=lambda *_: registry,
+        registry_cache_path=tmp_path / "marketplace.toml",
+        cache_path=tmp_path / "stable.json", current_version="1.0.0", channel="stable")
+    stable.catalog_bound = True
+    assert stable.check()["errorKey"] == "CORE_RELEASE_CHANNEL_UNAVAILABLE"
+
+
+def test_core_distinguishes_unavailable_registry_from_missing_core_entry(tmp_path):
+    unavailable = CoreUpdateService(
+        registry_fetcher=lambda *_: (_ for _ in ()).throw(OSError("offline")),
+        registry_cache_path=tmp_path / "missing-marketplace.toml",
+        cache_path=tmp_path / "unavailable.json",
+        current_version="1.0.0",
+    )
+    unavailable.catalog_bound = True
+    assert unavailable.check()["errorKey"] == "CORE_MARKETPLACE_REGISTRY_UNAVAILABLE"
+
+    no_core = b"version = 2\npackages = []\n"
+    missing_entry = CoreUpdateService(
+        registry_fetcher=lambda *_: no_core,
+        registry_cache_path=tmp_path / "marketplace.toml",
+        cache_path=tmp_path / "missing-entry.json",
+        current_version="1.0.0",
+    )
+    missing_entry.catalog_bound = True
+    assert missing_entry.check()["errorKey"] == "CORE_MARKETPLACE_ENTRY_UNAVAILABLE"
+
+
 def test_core_rejects_draft_wrong_asset_duplicate_asset_and_bad_digest(tmp_path):
     documents = []
     draft = release("1.0.1"); draft["draft"] = True; documents.append([draft])

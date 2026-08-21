@@ -8,7 +8,8 @@ def test_inside_settings_persist_app_and_privacy(tmp_path, monkeypatch):
     monkeypatch.setattr(service_module, "SETTINGS_PATH", tmp_path / "inside" / "settings.json")
 
     service = InsideSettingsService()
-    service.update_app(InsideSettingsUpdate(app_name="Mesa Local", default_locale="pt-BR"))
+    service.update_app(InsideSettingsUpdate(app_name="Mesa Local", default_locale="pt-BR",
+        core_channel="testing", packages_channel="dev", channels_linked=False))
     service.update_privacy(
         PrivacySettingsUpdate(
             enabled=True,
@@ -26,6 +27,9 @@ def test_inside_settings_persist_app_and_privacy(tmp_path, monkeypatch):
     settings = service.read()
     assert settings["app"]["app_name"] == "Mesa Local"
     assert settings["app"]["default_locale"] == "pt-BR"
+    assert settings["updates"] == {
+        "core_channel": "testing", "packages_channel": "dev", "channels_linked": False,
+    }
     assert settings["privacy"]["enabled"] is True
     assert settings["privacy"]["title"] == "Política da mesa"
     assert settings["privacy"]["updated_at"]

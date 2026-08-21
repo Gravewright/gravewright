@@ -36,6 +36,9 @@ grave library new my-library --name "My Library"
 ## Validação
 
 ```bash
+grave channel show
+grave channel set testing
+grave channel set stable --target packages
 grave package validate data/packages/my-package
 ```
 

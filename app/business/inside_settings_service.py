@@ -17,6 +17,9 @@ SETTINGS_PATH = Path(config.data_dir) / "inside" / "settings.json"
 class InsideSettingsUpdate:
     app_name: str
     default_locale: str
+    core_channel: str = "stable"
+    packages_channel: str = "stable"
+    channels_linked: bool = True
 
 
 @dataclass(frozen=True)
@@ -45,12 +48,23 @@ DEFAULT_PRIVACY = {
     "updated_at": None,
 }
 
+UPDATE_CHANNELS = frozenset({"stable", "testing", "dev"})
+
+
+def _channel(value: object) -> str:
+    normalized = str(value or "stable").strip().lower()
+    return normalized if normalized in UPDATE_CHANNELS else "stable"
+
 
 class InsideSettingsService:
     def read(self) -> dict[str, Any]:
         data = self._read_file()
         app = data.get("app") if isinstance(data.get("app"), dict) else {}
         privacy = data.get("privacy") if isinstance(data.get("privacy"), dict) else {}
+        updates = data.get("updates") if isinstance(data.get("updates"), dict) else {}
+        core_channel = _channel(updates.get("core_channel"))
+        channels_linked = bool(updates.get("channels_linked", True))
+        packages_channel = core_channel if channels_linked else _channel(updates.get("packages_channel"))
 
         default_locale = get_supported_locale(
             str(app.get("default_locale") or config.default_locale)
@@ -66,6 +80,11 @@ class InsideSettingsService:
                 **privacy,
                 "enabled": bool(privacy.get("enabled", DEFAULT_PRIVACY["enabled"])),
             },
+            "updates": {
+                "core_channel": core_channel,
+                "packages_channel": packages_channel,
+                "channels_linked": channels_linked,
+            },
         }
 
     def update_app(self, update: InsideSettingsUpdate) -> None:
@@ -79,6 +98,12 @@ class InsideSettingsService:
             "default_locale": get_supported_locale(update.default_locale),
         }
         data["privacy"] = privacy
+        core_channel = _channel(update.core_channel)
+        data["updates"] = {
+            "core_channel": core_channel,
+            "packages_channel": core_channel if update.channels_linked else _channel(update.packages_channel),
+            "channels_linked": bool(update.channels_linked),
+        }
         self._write_file(data)
 
     def update_privacy(self, update: PrivacySettingsUpdate) -> None:

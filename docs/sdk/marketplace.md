@@ -1,126 +1,104 @@
-# Marketplace v1 curated registry
+# Marketplace v2 and distribution channels
 
-The Marketplace is a curated discovery and installation index. Its canonical
-source is [`marketplace.toml`](../../marketplace.toml). An entry approves one
-stable package identity for catalog display; it does not activate the package,
-grant capabilities, or describe its runtime implementation.
+The canonical package catalog is the `marketplace.toml` published by
+`Gravewright/gravewright-marketplace`. Gravewright downloads it over HTTPS,
+validates the complete document, and atomically retains the last known-good
+copy. The repository copy is publication input only and may be removed from the
+Core repository.
+
+The owner selects `stable`, `testing`, or `dev`. Core and Packages are linked by
+default but can be selected independently. Resolution never leaks upward:
+
+- `stable` resolves only `stable`;
+- `testing` resolves `testing`, then falls back to `stable`;
+- `dev` resolves `dev`, then `testing`, then `stable`.
+
+Changing to a less adventurous channel never downgrades installed code. A
+newer installed package is shown as `ahead-of-channel` until the selected
+channel catches up or the owner performs an explicit, separately protected
+downgrade.
+
+The same document declares which Core channels are currently published. Core
+authority is fixed to the official Gravewright repository and GitHub Releases
+feed; alternate hosts are rejected.
+
+```toml
+[core]
+id = "gravewright"
+name = "Gravewright"
+enabled = true
+repository = "https://github.com/Gravewright/gravewright"
+releases = "https://api.github.com/repos/Gravewright/gravewright/releases?per_page=30"
+
+[core.channels.dev]
+enabled = true
+```
+
+Presence publishes a channel; absence makes it unavailable. During development,
+Core and packages may expose only `dev`, so stable/testing users never receive
+those builds.
 
 ## Registry format
 
 ```toml
-version = 1
+version = 2
 
 [[packages]]
 id = "example-addon"
 name = "Example Addon"
 kind = "addon"
-manifest = "https://packages.example/example-addon/manifest.json"
 enabled = true
-channel = "stable"
-category = "gm-tools"
-tags = ["tools"]
-featured = false
-reviewed_at = "2026-08-16"
-update_policy = "publisher"
 source = "community"
+update_policy = "publisher"
+
+[packages.channels.stable]
+manifest = "https://packages.example/stable/manifest.json"
+
+[packages.channels.testing]
+manifest = "https://packages.example/testing/manifest.json"
+
+[packages.channels.dev]
+manifest = "https://packages.example/dev/manifest.json"
 ```
 
-`id`, `name`, `kind`, `manifest`, `enabled`, `channel`, and `update_policy` are the registry
-fields. `category`, `tags`, `featured`, and `reviewed_at` are optional editorial
-fields. IDs must be unique. Kinds are exactly `ruleset`, `addon`, `library`,
-`content`, `theme`, and `assets`. Channels are `stable`, `beta`, or
-`experimental`. Manifest and artifact URLs must be HTTP(S) URLs without embedded
-credentials.
+IDs remain unique. Each entry may expose any subset of the three channels.
+Marketplace v1 is accepted as migration input and its legacy `beta` and
+`experimental` values map to `testing` and `dev`.
 
-## Distribution source and certification
+For `update_policy = "curated"`, every declared channel carries its own
+`approved_version` and optional `approved_sha256`. `publisher` follows the
+version at the channel-specific manifest.
 
-`source` is one of `core`, `community`, or `partner`; omitted registry values
-default to `community`. The registry is the certification authority. A manifest's
-optional `distribution.source` is only a declaration and cannot self-certify a
-privileged origin. If an unverified or manually installed package declares `core`
-or `partner`, Gravewright reports the mismatch and treats it as `community`.
+## Provenance and commercial access
 
-Remote certification binds registry identity, version, source, and the verified
-artifact SHA-256. Bundled `core` entries additionally set `bundled = true` and an
-`approved_tree_sha256` covering every relative path and file digest in the package
-tree. Any changed byte or path removes certification. These labels classify
-provenance only: they grant no SDK capabilities, runtime permissions, sandbox
-exception, commercial entitlement, payment state, ownership, or licensing rights.
-
-The package manifest remains authoritative for technical identity, version,
-SDK compatibility, dependencies, entrypoints, capabilities, license, and
-`distribution`. Marketplace refresh rejects an entry when manifest `id` or
-`kind` differs from the approved entry. Marketplace v1 requires a ZIP
-distribution with its SHA-256 digest.
-
-`update_policy = "publisher"` follows the version published by a trusted
-publisher's stable root manifest. Community entries use a manifest pinned to
-the approved release together with `update_policy = "curated"` and
-`approved_version`. They may also specify `approved_sha256` when review must
-bind the exact bytes as well as the version. Marketplace v1 intentionally does
-not implement manifest history; pinning the community manifest URL keeps fresh
-installs reproducible.
+`source` is `core`, `community`, or `partner`; the UI presents `partner` as a
+verified Publisher. Channel, provenance, editorial policy, and download rights
+are independent. Optional listing metadata supports protected IP:
 
 ```toml
-[[packages]]
-id = "community-addon"
-kind = "addon"
-manifest = "https://raw.githubusercontent.com/example/addon/v1.4.2/manifest.json"
-enabled = true
-channel = "stable"
-update_policy = "curated"
-approved_version = "1.4.2"
+source = "partner"
+access = "entitled"
+publisher = "Example Publisher"
+license_model = "commercial"
+auth_provider = "example-publisher"
 ```
 
-The manifest's `$schema` only identifies the JSON Schema used for validation.
-It is never used for discovery or download. The preferred v1 fields are
-top-level `download` and `sha256`; the existing `distribution.url` and
-`distribution.sha256` representation remains compatible. Release artifacts
-should use immutable, versioned URLs.
+The public catalog never contains credentials, license keys, permanent secret
+URLs, or buyer data. Until an entitlement provider is connected, entitled
+packages are visible as `license-required` and installation fails closed.
+Selecting `dev` does not grant access to a publisher's private dev channel.
 
-`enabled = false` (or removing the entry) removes the package from discovery.
-It never uninstalls, disables, or deletes an already-installed package.
+## Integrity and installation
 
-## Refresh and cache
+The manifest remains authoritative for SDK compatibility, capabilities,
+dependencies, conflicts, and ZIP distribution. Every installation validates
+HTTPS policy, SHA-256, archive limits and paths, staged identity, Package Doctor,
+and dependency state before atomic promotion. Failures preserve the previous
+tree. A bad remote registry or total network failure preserves the last valid
+catalog.
 
-Refresh fetches manifests only, validates each independently, and writes an
-atomic cache under the configured Gravewright data directory. Opening the UI
-reads this cache and does not contact every publisher. A bad package becomes
-Unavailable without hiding valid siblings. A registry error or total network
-failure retains the last valid cache and reports Refresh failed.
-
-## Installation and updates
-
-Install and Update use the same pipeline:
-
-1. Resolve the approved cached entry.
-2. Download the bounded artifact.
-3. compare its SHA-256 digest;
-4. validate ZIP members, sizes, paths and symlinks;
-5. extract into staging;
-6. bind staged manifest ID, kind, version, and SDK version to the fetched manifest;
-7. run Package Doctor against staging;
-8. swap the package tree and persist installed state;
-9. restore the previous tree if the final swap or persistence fails.
-
-An install leaves the package installed but does not enable it globally or
-activate it in campaigns. Updating preserves its existing lifecycle status.
-The existing manual file install remains available for advanced use and does
-not require Marketplace membership.
-
-Marketplace approval means curated for discovery and installation. Package
-browser JavaScript remains trusted package code; approval is not a sandbox or a
-complete security audit.
-
-## Maintainer approval workflow
-
-1. Review the package source, manifest, license, publisher and distribution.
-2. Run Package Doctor against the packaged ZIP.
-3. Confirm SDK 1 compatibility and declared capabilities.
-4. Reproduce the artifact SHA-256.
-5. Add the minimal curated entry to `marketplace.toml`.
-6. Merge the reviewed change; users expose it on their next Refresh.
-
-The versioned registry and stable package ID allow later signed indexes,
-publisher submissions, screenshots and multiple registries without changing
-installed package identity.
+The catalog controls package manifests and which Core channels are published.
+Core binaries still come exclusively from the official Gravewright GitHub
+Releases feed and use the same channel vocabulary.
+The running web process never overwrites itself; the verified launcher handles
+product replacement and recovery.

@@ -1231,7 +1231,14 @@
                         <div class="marketplace-status" data-marketplace-status>
                             {% if marketplace.refreshStatus == 'failed' %}Refresh failed · {% endif %}
                             {% if marketplace.lastRefresh %}Last updated <time data-marketplace-time="{{ marketplace.lastRefresh }}">{{ marketplace.lastRefresh }}</time>{% else %}Not refreshed yet{% endif %}
+                            · Selected channel: <strong>{{ marketplace.requestedChannel or update_settings.packages_channel }}</strong>
+                            {% if marketplace.channelStale %} · cached catalog belongs to {{ marketplace.selectedChannel }}; installs are paused until refresh succeeds{% endif %}
                         </div>
+                        {% if update_settings.packages_channel == 'dev' %}
+                        <div class="system-banner system-banner--error">Dev channel: packages may change without notice, lose compatibility, or prevent campaigns from loading. Create a verified backup before updating.</div>
+                        {% elif update_settings.packages_channel == 'testing' %}
+                        <div class="system-banner system-banner--warning">Testing channel: candidate releases receive fixes earlier and should be kept up to date, but regressions may still occur.</div>
+                        {% endif %}
                         <div class="marketplace-filters">
                             <input type="search" placeholder="Search packages" aria-label="Search packages" data-marketplace-search />
                             <select aria-label="Filter by kind" data-marketplace-kind>
@@ -1255,13 +1262,13 @@
                                     {% for package in entries %}
                                     <article class="marketplace-card" data-marketplace-package data-kind="{{ package.kind }}" data-source="{{ package.effectiveSource }}"
                                              data-search="{{ package.name }} {{ package.publisher }} {{ package.description }} {{ package.tags | join(' ') }}">
-                                        <header><h3>{{ package.name }}</h3><span class="package-source-badge package-source-badge--{{ package.effectiveSource }}">{{ package.effectiveSource | upper }}</span><span class="package-kind-badge package-kind-badge--{{ package.kind }}">{{ package.kind }}</span></header>
+                                        <header><h3>{{ package.name }}</h3><span class="package-source-badge package-source-badge--{{ package.effectiveSource }}">{{ 'PUBLISHER' if package.effectiveSource == 'partner' else package.effectiveSource | upper }}</span><span class="package-kind-badge package-kind-badge--{{ package.kind }}">{{ package.kind }}</span>{% if package.access == 'entitled' %}<span class="package-kind-badge">LICENSE REQUIRED</span>{% endif %}</header>
                                         <p>{{ package.description }}</p>
                                         <div class="marketplace-card-meta"><span>{{ package.publisher }}</span>
                                             <span>{% if package.installState == 'update' %}v{{ package.installedVersion }} → v{{ package.version }}{% else %}v{{ package.version or '?' }}{% endif %}</span>
                                             {% if package.category %}<span>{{ package.category }}</span>{% endif %}</div>
                                         <details class="marketplace-card-details"><summary>Details</summary>
-                                            <dl><div><dt>Channel</dt><dd>{{ package.channel }}</dd></div><div><dt>SDK</dt><dd>{{ package.sdkVersion or '?' }}</dd></div><div><dt>Source</dt><dd>{{ package.effectiveSource | capitalize }} · registry certified</dd></div><div><dt>Publisher</dt><dd>{{ package.publisher or '—' }}</dd></div>{% if package.tags %}<div><dt>Tags</dt><dd>{{ package.tags | join(', ') }}</dd></div>{% endif %}</dl>
+                                            <dl><div><dt>Channel</dt><dd>{{ package.channel }}{% if package.channel != package.selectedChannel %} (fallback from {{ package.selectedChannel }}){% endif %}</dd></div><div><dt>Available channels</dt><dd>{{ package.availableChannels | join(', ') }}</dd></div><div><dt>SDK</dt><dd>{{ package.sdkVersion or '?' }}</dd></div><div><dt>Source</dt><dd>{{ 'Publisher' if package.effectiveSource == 'partner' else package.effectiveSource | capitalize }} · registry certified</dd></div><div><dt>Publisher</dt><dd>{{ package.publisherName or package.publisher or '—' }}</dd></div><div><dt>Access</dt><dd>{{ package.access | capitalize }}{% if package.licenseModel %} · {{ package.licenseModel }}{% endif %}</dd></div>{% if package.tags %}<div><dt>Tags</dt><dd>{{ package.tags | join(', ') }}</dd></div>{% endif %}</dl>
                                         </details>
                                         <footer>
                                             <span class="marketplace-package-status" data-marketplace-package-status>{{ package.installState | capitalize }}</span>
@@ -1297,59 +1304,94 @@
                         <div class="system-banner system-banner--error">{{ t(settings_error_key) }}</div>
                         {% endif %}
 
-                        <div class="settings-grid">
-                            <section class="settings-card" data-core-update data-state="{{ core_update.status or 'unchecked' }}">
-                                <h3>Gravewright updates</h3>
-                                <p data-core-update-status>
-                                    {% if core_update.status == 'available' %}Update available — {{ core_update.currentVersion }} → {{ core_update.availableVersion }}
-                                    {% elif core_update.status == 'current' %}Up to date
-                                    {% elif core_update.status == 'failed' %}Last check failed — {{ core_update.errorKey }}
-                                    {% else %}Not checked yet{% endif %}
-                                </p>
-                                <dl class="package-details-list">
-                                    <div><dt>Current</dt><dd>{{ core_update.currentVersion }}</dd></div>
-                                    <div><dt>Available</dt><dd data-core-update-available>{{ core_update.availableVersion or '—' }}</dd></div>
-                                    <div><dt>Channel</dt><dd data-core-update-channel>{{ core_update.channel or '—' }}</dd></div>
-                                    <div><dt>Installation</dt><dd>{{ core_update.installFormat }}</dd></div>
-                                </dl>
-                                <p class="form-help" data-core-update-details>
-                                    {% if core_update.status == 'available' %}Create a verified backup before installing. Product artifacts never include campaign data.{% endif %}
-                                </p>
-                                <div class="settings-actions">
+                        <div class="section-actions settings-owner-actions">
+                            <button class="system-action" type="button" data-inside-modal-open="registered-users-modal">
+                                <i class="ph ph-users" aria-hidden="true"></i>
+                                <span>{{ t("inside.admin.users.manage") }}</span>
+                                <span class="settings-users-count">{{ all_users | length }}</span>
+                            </button>
+                        </div>
+
+                        <div class="settings-grid settings-dashboard">
+                            <section class="settings-card update-card" data-core-update data-state="{{ core_update.status or 'unchecked' }}"
+                                data-text-available="{{ t('inside.settings.updates.status.available') }}"
+                                data-text-current="{{ t('inside.settings.updates.status.current') }}"
+                                data-text-ahead="{{ t('inside.settings.updates.status.ahead') }}"
+                                data-text-failed="{{ t('inside.settings.updates.status.failed') }}"
+                                data-text-unchecked="{{ t('inside.settings.updates.status.unchecked') }}"
+                                data-text-checking="{{ t('inside.settings.updates.status.checking') }}"
+                                data-text-backup="{{ t('inside.settings.updates.backup') }}"
+                                data-text-sha="{{ t('inside.settings.updates.sha') }}">
+                                <header class="settings-compact-head">
+                                    <div><h3>{{ t("inside.settings.updates.title") }}</h3><p data-core-update-status>
+                                        {% if core_update.status == 'available' %}{{ t("inside.settings.updates.status.available") }} — {{ core_update.currentVersion }} → {{ core_update.availableVersion }}
+                                        {% elif core_update.status == 'current' %}{{ t("inside.settings.updates.status.current") }}
+                                        {% elif core_update.status == 'ahead-of-channel' %}{{ t("inside.settings.updates.status.ahead") }} — {{ core_update.channel }}
+                                        {% elif core_update.status == 'failed' %}{{ t("inside.settings.updates.status.failed") }}
+                                        {% else %}{{ t("inside.settings.updates.status.unchecked") }}{% endif %}
+                                    </p></div>
                                     <form method="post" action="/inside/updates/core/check" data-core-update-check>
                                         {{ csrf_input | safe }}
-                                        <button class="system-action" type="submit">Check for updates</button>
+                                        <button class="system-action" type="submit" {% if not update_settings.core_channel_published %}disabled{% endif %}><i class="ph ph-arrows-clockwise" aria-hidden="true"></i>{{ t("inside.settings.updates.check") }}</button>
                                     </form>
-                                    <a class="system-action system-action--primary" data-core-update-action
-                                       href="{{ core_update.artifact.url if core_update.artifact else '#' }}"
-                                       {% if not core_update.artifact %}hidden{% endif %}>Download verified update</a>
-                                </div>
+                                </header>
+                                <dl class="update-facts">
+                                    <div><dt>{{ t("inside.settings.updates.current") }}</dt><dd>{{ core_update.currentVersion }}</dd></div>
+                                    <div><dt>{{ t("inside.settings.updates.available") }}</dt><dd data-core-update-available>{{ core_update.availableVersion or '—' }}</dd></div>
+                                    <div><dt>{{ t("inside.settings.updates.channel") }}</dt><dd data-core-update-channel>{{ core_update.channel or '—' }}</dd></div>
+                                    <div><dt>{{ t("inside.settings.updates.resolved_channel") }}</dt><dd data-core-update-resolved-channel>{{ core_update.resolvedChannel or '—' }}</dd></div>
+                                    <div><dt>{{ t("inside.settings.updates.installation") }}</dt><dd>{{ core_update.installFormat }}</dd></div>
+                                </dl>
+                                <p class="form-help update-card-details" data-core-update-details>
+                                    {% if core_update.status == 'available' %}{{ t("inside.settings.updates.backup") }}{% endif %}
+                                </p>
+                                <a class="system-action system-action--primary update-download" data-core-update-action
+                                   href="{{ core_update.artifact.url if core_update.artifact else '#' }}"
+                                   {% if not core_update.artifact %}hidden{% endif %}>{{ t("inside.settings.updates.download") }}</a>
                             </section>
-                            <section class="settings-card">
-                                <h3>{{ t("inside.settings.general.title") }}</h3>
-                                <form class="settings-form" method="post" action="/inside/settings">
+                            <section class="settings-card preferences-card">
+                                <header class="settings-compact-head">
+                                    <div><h3>{{ t("inside.settings.general.title") }}</h3><p>{{ t("inside.settings.general.description") }}</p></div>
+                                </header>
+                                <form class="settings-form" method="post" action="/inside/settings" data-update-channel-form
+                                    data-dev-confirm="{{ t('inside.settings.channels.dev.confirm') }}">
                                     {{ csrf_input | safe }}
-                                    <label>
-                                        <span>{{ t("inside.settings.app_name") }}</span>
-                                        <input type="text" name="app_name" value="{{ inside_settings.app_name }}" maxlength="80" required />
-                                    </label>
-                                    <label>
-                                        <span>{{ t("inside.settings.default_locale") }}</span>
-                                        <select name="default_locale">
-                                            {% for option in inside_settings.supported_locales %}
-                                            <option value="{{ option }}" {% if option == locale %}selected{% endif %}>
-                                                {{ t("inside.settings.locale." ~ option) }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </label>
-                                    <button class="system-action system-action--primary" type="submit">{{ t("inside.settings.save") }}</button>
+                                    <div class="settings-compact-groups">
+                                      <fieldset class="settings-compact-group">
+                                        <legend>{{ t("inside.settings.identity.title") }}</legend>
+                                        <div class="settings-field-grid settings-field-grid--two">
+                                            <label><span>{{ t("inside.settings.app_name") }}</span><input type="text" name="app_name" value="{{ inside_settings.app_name }}" maxlength="80" required /></label>
+                                            <label><span>{{ t("inside.settings.default_locale") }}</span><select name="default_locale">{% for option in inside_settings.supported_locales %}<option value="{{ option }}" {% if option == locale %}selected{% endif %}>{{ t("inside.settings.locale." ~ option) }}</option>{% endfor %}</select></label>
+                                        </div>
+                                      </fieldset>
+                                      <fieldset class="settings-compact-group channel-settings">
+                                        <legend>{{ t("inside.settings.channels.title") }}</legend>
+                                        <div class="settings-field-grid settings-field-grid--two">
+                                            <label><span>{{ t("inside.settings.channels.core") }}</span><select name="core_channel" data-core-channel-select {% if not update_settings.core_available_channels %}disabled{% endif %}>{% for option in update_settings.core_available_channels %}<option value="{{ option }}" data-description="{{ t('inside.settings.channels.' ~ option ~ '.description') }}" {% if option == update_settings.core_channel %}selected{% endif %}>{{ option | capitalize }}</option>{% endfor %}</select><small data-core-channel-hint></small></label>
+                                            <label><span>{{ t("inside.settings.channels.packages") }}</span><select name="packages_channel" data-packages-channel-select {% if update_settings.channels_linked or not update_settings.packages_available_channels %}disabled{% endif %}>{% for option in update_settings.packages_available_channels %}<option value="{{ option }}" data-description="{{ t('inside.settings.channels.' ~ option ~ '.description') }}" {% if option == update_settings.packages_channel %}selected{% endif %}>{{ option | capitalize }}</option>{% endfor %}</select><small data-packages-channel-hint></small></label>
+                                        </div>
+                                      </fieldset>
+                                    </div>
+                                    <div class="system-banner system-banner--warning" data-testing-channel-warning {% if update_settings.core_channel != 'testing' and update_settings.packages_channel != 'testing' %}hidden{% endif %}>{{ t("inside.settings.channels.testing.warning") }}</div>
+                                    <div class="system-banner system-banner--error" data-dev-channel-warning {% if update_settings.core_channel != 'dev' and update_settings.packages_channel != 'dev' %}hidden{% endif %}>{{ t("inside.settings.channels.dev.warning") }}</div>
+                                    <div class="settings-save-row">
+                                        <label class="channel-link-toggle"><input type="checkbox" name="channels_linked" value="true" {% if update_settings.channels_linked %}checked{% endif %} data-channels-linked /><span class="channel-link-control" aria-hidden="true"></span><span><strong>{{ t("inside.settings.channels.linked") }}</strong></span></label>
+                                        <p>{{ t("inside.settings.channels.save_hint") }}</p>
+                                        <button class="system-action system-action--primary" type="submit"><i class="ph ph-floppy-disk" aria-hidden="true"></i>{{ t("inside.settings.save") }}</button>
+                                    </div>
                                 </form>
                             </section>
                         </div>
 
-                        <div class="admin-block">
-                            <h3 class="admin-block-title">{{ t("inside.admin.users.title") }}</h3>
+                        <div class="modal-backdrop inside-modal-backdrop" data-inside-modal="registered-users-modal"
+                            role="presentation" {% if not admin_message_key and not admin_error_key %}hidden{% endif %}>
+                          <section class="delete-modal system-detail-modal users-admin-modal" role="dialog" aria-modal="true"
+                            aria-labelledby="registered-users-title">
+                            <div class="delete-modal-header">
+                              <div><p class="panel-eyebrow">{{ t("inside.tabs.settings") }}</p><h2 id="registered-users-title">{{ t("inside.admin.users.title") }}</h2></div>
+                              <button class="modal-close" type="button" data-inside-modal-close aria-label="{{ t('inside.admin.users.close') }}">&times;</button>
+                            </div>
+                            <div class="users-admin-body">
                             {% if admin_message_key %}
                             <div class="system-banner system-banner--ok">{{ t(admin_message_key) }}</div>
                             {% endif %}
@@ -1397,6 +1439,8 @@
                                 <p>{{ t("inside.admin.users.empty") }}</p>
                             </div>
                             {% endif %}
+                            </div>
+                          </section>
                         </div>
                     </div>
                 </article>

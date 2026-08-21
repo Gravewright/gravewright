@@ -861,7 +861,7 @@ select {
     }
 }
 
-/* Foundry-style settings: category rail plus one focused pane. */
+/* Settings layout: category rail plus one focused pane. */
 .settings-panel-body .settings-dashboard {
     min-height: 430px;
     grid-template-columns: 178px minmax(0, 1fr);
@@ -10897,7 +10897,7 @@ body[data-game-layout="classic"] .gw-effects-hud {
 body.command-palette-open {
     overflow: hidden;
 }
-/* Transient Foundry-style Show to Players prompt. It intentionally does not use
+/* Transient Show to Players prompt. It intentionally does not use
    .game-panel/.game-modal-window, so it can never become a tab or dock item. */
 .handout-show-dialog {
   width: min(500px, calc(100vw - 32px));

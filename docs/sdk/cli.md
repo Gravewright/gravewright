@@ -105,6 +105,18 @@ content when `--json` is selected.
 
 ## `grave package`
 
+Distribution channels are managed with:
+
+```text
+grave channel show [--json]
+grave channel set stable
+grave channel set testing --target packages
+grave channel set dev --target core --yes --json
+```
+
+`dev` requires interactive confirmation unless `--yes` is supplied. Selecting a
+lower-risk channel never performs an automatic downgrade.
+
 ```bash
 grave package list [--json]
 grave package validate <path> [--json]

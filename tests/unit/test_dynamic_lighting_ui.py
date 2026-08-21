@@ -469,8 +469,8 @@ def test_players_only_see_through_tokens_they_own():
 
 def test_darkness_is_composed_with_erase_like_the_fog_layer():
     """Graphics.cut() so abre um buraco por vez: visao + varios focos se atropelam.
-    A nevoa deste projeto ja resolve isso com blendMode erase numa RenderTexture,
-    que e o mesmo caminho que o Foundry usa para mascarar visibilidade."""
+    A nevoa deste projeto resolve isso com blendMode erase numa RenderTexture,
+    compondo todos os focos antes de mascarar a visibilidade."""
     layers=(ROOT/"static/js/board/pixi/pixi-board-layers.js").read_text(encoding="utf-8")
     pixi=(ROOT/"static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
     renderer=(ROOT/"static/js/board/pixi/pixi-board-renderer.js").read_text(encoding="utf-8")

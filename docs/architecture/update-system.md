@@ -5,8 +5,9 @@ grant packages an updater capability and it never executes package-provided comm
 
 ## Product releases
 
-The owner-only administration surface queries published releases from the official repository.
-It selects the installed release channel (`stable`, `beta`, or `alpha`), ignores drafts and
+The owner-only administration surface reads the channels published by the validated
+Marketplace v2 Core entry, then queries releases from the fixed official repository.
+It selects the owner-configured release channel (`stable`, `testing`, or `dev`), ignores drafts and
 branches, and only exposes a platform artifact whose GitHub release metadata includes a SHA-256
 digest. The current version remains the configured/packaged Gravewright version.
 

@@ -12,6 +12,7 @@ from app.business.inside_settings_service import InsideSettingsService
 from app.business.inside_settings_service import InsideSettingsUpdate
 from app.business.inside_settings_service import PrivacySettingsUpdate
 from app.domain.roles import SystemRole
+from app.engine.sdk.marketplace_service import MarketplaceService
 from app.helpers.auth import require_user
 from app.helpers.i18n import get_supported_locale
 from app.persistence.rows import Row
@@ -21,6 +22,9 @@ from app.persistence.rows import Row
 class InsideSettingsForm:
     app_name: str = ""
     default_locale: str = "en"
+    core_channel: str | None = None
+    packages_channel: str | None = None
+    channels_linked: bool = False
 
 
 @dataclass
@@ -53,10 +57,25 @@ async def update_inside_settings(
         return _redirect("/inside?settings_error_key=inside.admin.errors.not_owner")
 
     locale = get_supported_locale(data.default_locale)
-    InsideSettingsService().update_app(
+    settings_service = InsideSettingsService()
+    current = settings_service.read()["updates"]
+    marketplace = MarketplaceService().catalog_with_automatic_refresh()
+    core_entry = marketplace.get("core") if isinstance(marketplace.get("core"), dict) else {}
+    published_core = set(core_entry.get("availableChannels", []))
+    published_packages = set(marketplace.get("availablePackageChannels", []))
+    core_channel = data.core_channel if data.core_channel in published_core else current["core_channel"]
+    packages_channel = (
+        data.packages_channel
+        if data.packages_channel in published_packages
+        else current["packages_channel"]
+    )
+    settings_service.update_app(
         InsideSettingsUpdate(
             app_name=data.app_name,
             default_locale=locale,
+            core_channel=core_channel,
+            packages_channel=packages_channel,
+            channels_linked=data.channels_linked,
         )
     )
     response = _redirect("/inside?settings_message_key=inside.settings.messages.saved")

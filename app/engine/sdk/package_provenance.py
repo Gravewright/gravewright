@@ -5,7 +5,7 @@ from __future__ import annotations
 import hmac
 
 from app.engine.sdk.marketplace_registry import MarketplaceEntry, load_marketplace
-from app.engine.sdk.marketplace_service import DEFAULT_REGISTRY
+from app.engine.sdk.marketplace_service import DEFAULT_REGISTRY_CACHE
 from app.engine.sdk.package_integrity import compute_package_tree_hash
 from app.engine.sdk.package_manifest import PackageManifest
 
@@ -18,7 +18,7 @@ def declared_source(manifest: PackageManifest | None) -> str:
     return value if value in {"core", "community", "partner"} else ""
 
 
-def certified_listing(package_id: str, *, registry_path=DEFAULT_REGISTRY) -> MarketplaceEntry | None:
+def certified_listing(package_id: str, *, registry_path=DEFAULT_REGISTRY_CACHE) -> MarketplaceEntry | None:
     try:
         return next((entry for entry in load_marketplace(registry_path)
                      if entry.enabled and entry.id == package_id), None)
@@ -27,7 +27,7 @@ def certified_listing(package_id: str, *, registry_path=DEFAULT_REGISTRY) -> Mar
 
 
 def resolve_installed_provenance(*, manifest: PackageManifest | None, record: dict | None,
-                                 package_dir=None, registry_path=DEFAULT_REGISTRY) -> dict:
+                                 package_dir=None, registry_path=DEFAULT_REGISTRY_CACHE) -> dict:
     declared = declared_source(manifest)
     listing = certified_listing(manifest.id if manifest else "", registry_path=registry_path)
     certified = False

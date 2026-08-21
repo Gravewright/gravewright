@@ -3010,6 +3010,443 @@ html {
     border-radius: var(--radius-sm);
 }
 
+/* ---- Owner settings dashboard ------------------------------------------ */
+
+.editor-panel--settings .settings-dashboard {
+    width: min(100%, 1120px);
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-5);
+}
+
+.editor-panel--settings .settings-card {
+    overflow: hidden;
+    padding: 0;
+}
+
+.settings-card-heading {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--space-4);
+    border-bottom: 1px solid var(--hairline);
+    padding: var(--space-5);
+    background: linear-gradient(110deg, rgba(192, 154, 90, 0.055), transparent 58%);
+}
+
+.settings-card-heading-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border-accent-strong);
+    border-radius: var(--radius-sm);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+    font-size: 22px;
+}
+
+.editor-panel .settings-card-heading h3 {
+    margin: 1px 0 var(--space-1);
+    font-size: var(--text-xl);
+}
+
+.editor-panel .settings-card-heading .settings-card-description,
+.editor-panel .settings-card-heading .settings-card-kicker {
+    margin: 0;
+}
+
+.editor-panel .settings-card-heading .settings-card-kicker {
+    color: var(--accent);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.update-state-badge {
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.025);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.update-card[data-state="available"] .update-state-badge {
+    border-color: rgba(224, 179, 106, 0.45);
+    background: rgba(224, 179, 106, 0.1);
+    color: var(--warning);
+}
+
+.update-card[data-state="current"] .update-state-badge {
+    border-color: rgba(109, 179, 134, 0.42);
+    background: rgba(109, 179, 134, 0.1);
+    color: var(--success);
+}
+
+.update-card[data-state="checking"] .update-state-badge {
+    border-color: var(--border-accent-strong);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+.update-card[data-state="failed"] .update-state-badge {
+    border-color: rgba(210, 121, 107, 0.45);
+    background: rgba(210, 121, 107, 0.1);
+    color: var(--danger-text);
+}
+
+.editor-panel .update-status-copy {
+    margin: 0;
+    border-bottom: 1px solid var(--hairline);
+    padding: var(--space-3) var(--space-5);
+    background: rgba(0, 0, 0, 0.14);
+    color: var(--text);
+}
+
+.update-facts {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0;
+    padding: var(--space-5);
+}
+
+.update-facts > div {
+    min-width: 0;
+    border-right: 1px solid var(--hairline);
+    padding: 0 var(--space-4);
+}
+
+.update-facts > div:first-child { padding-left: 0; }
+.update-facts > div:last-child { border-right: 0; padding-right: 0; }
+
+.update-facts dt {
+    margin-bottom: var(--space-2);
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.update-facts dd {
+    overflow: hidden;
+    margin: 0;
+    color: var(--text-bright);
+    font-size: var(--text-lg);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-panel .update-card-details {
+    margin: 0 var(--space-5);
+}
+
+.update-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    border-top: 1px solid var(--hairline);
+    padding: var(--space-4) var(--space-5);
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.update-card-actions .system-action {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.preferences-card .settings-form {
+    gap: 0;
+    padding: 0 var(--space-5) var(--space-5);
+}
+
+.settings-form-section {
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    border-bottom: 1px solid var(--hairline);
+    padding: var(--space-5) 0;
+}
+
+.settings-form-section legend {
+    padding: 0;
+    color: var(--text-bright);
+    font-family: var(--display-font);
+    font-size: var(--text-lg);
+    font-weight: 600;
+}
+
+.editor-panel .settings-section-help {
+    margin: var(--space-1) 0 var(--space-4);
+    color: var(--text-faint);
+}
+
+.settings-field-grid--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+}
+
+.channel-settings label > small {
+    min-height: 18px;
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    line-height: 1.45;
+}
+
+.editor-panel .channel-link-toggle {
+    position: relative;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+    background: rgba(0, 0, 0, 0.14);
+    cursor: pointer;
+}
+
+.editor-panel .channel-link-toggle > input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.channel-link-control {
+    position: relative;
+    width: 38px;
+    height: 22px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface-field);
+    transition: background var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease);
+}
+
+.channel-link-control::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    transition: transform var(--motion-fast) var(--ease), background var(--motion-fast) var(--ease);
+}
+
+.channel-link-toggle > input:checked + .channel-link-control {
+    border-color: var(--accent);
+    background: rgba(192, 154, 90, 0.22);
+}
+
+.channel-link-toggle > input:checked + .channel-link-control::after {
+    transform: translateX(16px);
+    background: var(--accent-hover);
+}
+
+.channel-link-toggle > input:focus-visible + .channel-link-control {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+
+.channel-link-toggle > span:last-child {
+    display: grid;
+    gap: 2px;
+}
+
+.channel-link-toggle strong { color: var(--text); font-size: var(--text-base); }
+.channel-link-toggle small { color: var(--text-faint); font-size: var(--text-xs); }
+
+.settings-save-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-top: var(--space-5);
+}
+
+.editor-panel .settings-save-row p { margin: 0; color: var(--text-faint); }
+.editor-panel .settings-form .settings-save-row > button { margin: 0; flex: 0 0 auto; }
+
+@media (max-width: 820px) {
+    .update-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4) 0; }
+    .update-facts > div { border-right: 0; padding: 0; }
+    .settings-field-grid--two { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+    .settings-card-heading { grid-template-columns: auto minmax(0, 1fr); }
+    .update-state-badge { grid-column: 1 / -1; justify-self: start; }
+    .update-facts { grid-template-columns: 1fr; }
+    .settings-save-row { align-items: stretch; flex-direction: column; }
+    .editor-panel .settings-form .settings-save-row > button { width: 100%; }
+}
+
+/* Compact settings layout: this screen follows the density of the other
+   owner administration panels instead of behaving like a marketing page. */
+.editor-panel--settings .settings-dashboard { gap: 12px; }
+
+.settings-owner-actions {
+    margin: 0 0 10px;
+}
+
+.settings-owner-actions .system-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.settings-users-count {
+    min-width: 20px;
+    border-radius: 999px;
+    padding: 1px 6px;
+    background: var(--surface-field);
+    color: var(--text-muted);
+    font-size: 10px;
+    text-align: center;
+}
+
+.users-admin-modal {
+    width: min(760px, calc(100vw - 32px));
+    max-height: min(720px, calc(100vh - 48px));
+}
+
+.users-admin-body {
+    display: grid;
+    gap: 10px;
+    overflow-y: auto;
+    padding: 14px 16px 16px;
+}
+
+.users-admin-body .admin-table { margin: 0; }
+
+.editor-panel--settings .settings-card {
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+}
+
+.settings-compact-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 58px;
+    border-bottom: 1px solid var(--hairline);
+    padding: 10px 16px;
+}
+
+.settings-compact-head > div { min-width: 0; flex: 1; }
+.editor-panel .settings-compact-head h3 { margin: 0 0 2px; font-size: 16px; }
+.editor-panel .settings-compact-head p {
+    overflow: hidden;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.settings-compact-head form { flex: 0 0 auto; }
+
+.editor-panel--settings .update-facts {
+    padding: 12px 16px;
+}
+
+.editor-panel--settings .update-facts > div { padding: 0 14px; }
+.editor-panel--settings .update-facts dt { margin-bottom: 3px; font-size: 10px; }
+.editor-panel--settings .update-facts dd { font-size: 13px; }
+.editor-panel--settings .update-card-details { margin: 0 16px 10px; }
+.editor-panel--settings .update-card-details:empty { display: none; }
+.editor-panel--settings .update-download { margin: 0 16px 12px; }
+
+.preferences-card .settings-form { padding: 0 16px; }
+
+.settings-compact-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-compact-group {
+    min-width: 0;
+    margin: 0;
+    border: 0;
+    padding: 12px 16px 12px 0;
+}
+
+.settings-compact-group + .settings-compact-group {
+    border-left: 1px solid var(--hairline);
+    padding-right: 0;
+    padding-left: 16px;
+}
+
+.settings-compact-group legend {
+    padding: 0;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.settings-compact-group .settings-field-grid--two { gap: 10px; }
+.settings-compact-group label { gap: 4px; }
+.settings-compact-group input,
+.settings-compact-group select { min-height: 36px; }
+
+.editor-panel--settings .channel-settings label > small {
+    overflow: hidden;
+    min-height: 0;
+    margin-top: 1px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-panel--settings .settings-save-row {
+    min-height: 54px;
+    border-top: 1px solid var(--hairline);
+    padding: 9px 0;
+}
+
+.editor-panel--settings .settings-save-row > p {
+    overflow: hidden;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.editor-panel--settings .channel-link-toggle {
+    margin: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+
+.editor-panel--settings .channel-link-toggle strong {
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: none;
+}
+
+@media (max-width: 900px) {
+    .settings-compact-groups { grid-template-columns: 1fr; }
+    .settings-compact-group { padding-right: 0; }
+    .settings-compact-group + .settings-compact-group {
+        border-top: 1px solid var(--hairline);
+        border-left: 0;
+        padding-left: 0;
+    }
+}
+
+@media (max-width: 620px) {
+    .settings-compact-head { align-items: flex-start; flex-wrap: wrap; }
+    .settings-compact-head form { width: 100%; }
+    .settings-compact-head form .system-action { width: 100%; }
+    .editor-panel--settings .settings-save-row { align-items: stretch; flex-direction: column; }
+    .editor-panel--settings .settings-save-row > p { white-space: normal; }
+}
+
 /* ---- Empty states ------------------------------------------------------- */
 
 .editor-panel .empty-state {

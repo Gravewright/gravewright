@@ -14,5 +14,10 @@
     "retention_policy": "Os dados são mantidos pelo tempo necessário para operar o serviço e cumprir obrigações legais.",
     "title": "Política de Privacidade",
     "updated_at": "2026-08-14"
+  },
+  "updates": {
+    "channels_linked": true,
+    "core_channel": "dev",
+    "packages_channel": "dev"
   }
 }

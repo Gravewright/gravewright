@@ -3,8 +3,8 @@
 Duas coisas tornam isso fácil de errar:
 
 1. No xdice, ``Ln``/``Hn`` **descartam** os n menores/maiores: não "mantêm".
-   Vantagem em d20 é ``2d20L1``. Quem vem do Foundry escreve ``kh1``, que aqui é
-   sintaxe inválida e volta como "rolagem inválida" na cara de quem joga.
+   Vantagem em d20 é ``2d20L1``. ``kh1`` pertence a outra notação, é sintaxe
+   inválida e volta como "rolagem inválida" na cara de quem joga.
 2. ``L`` precisa vir **antes** de ``H`` num mesmo termo (``6D6L1H2``).
 
 A bandeja também não rola por conta própria: ela manda ``/roll`` e ``/gmroll``
@@ -51,7 +51,7 @@ def test_every_shape_the_tray_can_build_is_accepted_by_the_evaluator(expression:
     assert RollService().evaluate(expression) is not None, expression
 
 
-def test_foundry_notation_is_not_what_this_project_speaks():
+def test_foreign_dice_notation_is_not_accepted():
     """Guarda contra a tentação de escrever kh/kl: é a notação de outro sistema."""
     assert RollService().evaluate("2d20kh1") is None, "kh não é xdice"
     assert RollService().evaluate("4d6kl3") is None, "kl não é xdice"

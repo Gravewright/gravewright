@@ -122,6 +122,24 @@ def _environment_checks() -> list[Check]:
             )
         )
 
+    from app.business.inside_settings_service import InsideSettingsService
+    updates = InsideSettingsService().read()["updates"]
+    selected = {updates["core_channel"], updates["packages_channel"]}
+    if "dev" in selected:
+        checks.append(Check(
+            "update_channels", WARN,
+            f"development updates enabled (core={updates['core_channel']}, packages={updates['packages_channel']})",
+            fix="Keep a verified backup, or run: grave channel set stable",
+        ))
+    elif "testing" in selected:
+        checks.append(Check(
+            "update_channels", WARN,
+            f"testing updates enabled (core={updates['core_channel']}, packages={updates['packages_channel']})",
+            fix="Keep candidate releases current, or run: grave channel set stable",
+        ))
+    else:
+        checks.append(Check("update_channels", OK, "Core and Packages use the stable channel"))
+
     return checks
 
 
