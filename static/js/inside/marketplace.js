@@ -14,10 +14,12 @@
 
   const search = root.querySelector("[data-marketplace-search]");
   const kind = root.querySelector("[data-marketplace-kind]");
+  const source = root.querySelector("[data-marketplace-source]");
   const filter = () => {
     const query = (search?.value || "").trim().toLocaleLowerCase();
     root.querySelectorAll("[data-marketplace-package]").forEach((card) => {
       card.hidden = Boolean((kind?.value && card.dataset.kind !== kind.value)
+        || (source?.value && card.dataset.source !== source.value)
         || (query && !card.dataset.search.toLocaleLowerCase().includes(query)));
     });
     root.querySelectorAll("[data-marketplace-band]").forEach((band) => {
@@ -26,6 +28,7 @@
   };
   search?.addEventListener("input", filter);
   kind?.addEventListener("change", filter);
+  source?.addEventListener("change", filter);
   root.querySelectorAll("[data-marketplace-time]").forEach((time) => {
     time.textContent = new Date(Number(time.dataset.marketplaceTime) * 1000).toLocaleString();
   });

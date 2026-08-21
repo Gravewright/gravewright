@@ -123,6 +123,6 @@ def test_the_ruleset_selector_answers_json():
 
     script = (ROOT / "static/js/game/system-ruleset-form.js").read_text(encoding="utf-8")
     assert 'closest(".system-inline-form")' in script and "event.preventDefault()" in script
-    assert "window.location.reload()" in script, (
+    assert 'GravewrightUiState.reload("system-ruleset-changed")' in script, (
         "trocar o ruleset troca o sistema de fichas: o markup já renderizado fica velho"
     )

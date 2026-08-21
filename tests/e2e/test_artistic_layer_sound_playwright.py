@@ -160,25 +160,12 @@ def test_upload_once_asset_becomes_reusable_native_sound(sound_server):
         browser=p.chromium.launch(headless=True);ctx=browser.new_context();page=ctx.new_page()
         try:
             _login(page,s["base_url"],GM_EMAIL,GM_PASSWORD);page.goto(f"{s['base_url']}/game?room={s['campaign_id']}");close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None
-            # A aba da coroa foi desmontada: Assets desceu para Configuracoes, e la
-            # cada categoria e um modal proprio -- o painel e so o lancador.
-            page.locator(f'[data-panel-toggle="panel-settings-{s["campaign_id"]}"]').click()
-            page.locator(f'[data-modal-open="settings-management-{s["campaign_id"]}"]').first.click()
-            gerenciamento=page.locator(f'[data-modal-id="settings-management-{s["campaign_id"]}"]');expect(gerenciamento).to_be_visible()
-            # O botao mudou de casa e precisa estar AQUI dentro -- e isso que a
-            # migracao quebraria. O clique em si vai pela API de modais: o modal
-            # da categoria abre sobre o painel lancador, e a checagem de alvo do
-            # Playwright rola o corpo e cai sob a titlebar. Testar o empilhamento
-            # de dois modais nao e o assunto deste teste, que e o reuso do asset.
-            expect(gerenciamento.locator(f'[data-modal-open="library-images-{s["campaign_id"]}"]')).to_have_count(1)
-            page.evaluate("id=>window.GravewrightModals.open(id)", f'library-images-{s["campaign_id"]}')
+            # Assets parou na dock da camada de jogo, logo abaixo do olho: um
+            # clique, sem modal empilhado no caminho.
+            page.locator(f'[data-tool-dock]:not([hidden]) [data-modal-open="library-images-{s["campaign_id"]}"]').click()
             modal=page.locator(f'[data-modal-id="library-images-{s["campaign_id"]}"]');expect(modal).to_be_visible()
             expect(modal.locator('[data-scene-asset-upload="pdf"]')).to_have_count(0);expect(modal.locator('[data-asset-package-open]')).to_be_hidden();expect(modal.locator('[data-asset-kind="image"]')).to_be_visible();expect(modal.locator('[data-asset-kind="ambient-audio"]')).to_be_visible();effect_filter=modal.locator('[data-asset-kind="effect-audio"]');expect(effect_filter).to_be_visible();expect(effect_filter.locator("small")).to_have_text("1");modal.locator('[data-scene-asset-upload-input="effect-audio"]').set_input_files(s["upload_audio"]);expect(modal.get_by_text("storm.ogg",exact=False)).to_be_visible();expect(effect_filter.locator("small")).to_have_text("2")
             before=page.evaluate("async id=>(await (await fetch('/game/assets/state/'+id)).json()).assets.length",s["campaign_id"]);window_close=modal.locator("[data-modal-close]");window_close.click()
-            # O modal de Gerenciamento abre no canto superior esquerdo, em cima da
-            # barra de camadas; deixa-lo aberto tapa o clique seguinte.
-            page.evaluate("ids=>ids.forEach(id=>window.GravewrightModals.close(id))",
-                          [f'settings-management-{s["campaign_id"]}', f'panel-settings-{s["campaign_id"]}'])
             page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="sounds"]:visible').click();initial_emitters=page.evaluate("GravewrightSpatialSounds.debugSnapshot().emitters.length");page.locator('[data-open-sound-modal="effect"]').click();effect_modal=page.locator('[data-sound-product-modal="effect"]:not([hidden])');effect_modal.locator("[data-place-spatial-sound]").click();canvas=page.locator(".room-workspace.is-active [data-map-canvas]");box=canvas.bounding_box();page.mouse.click(box["x"]+box["width"]*.6,box["y"]+box["height"]*.6);inspector=page.locator(".spatial-sound-inspector:not([hidden])");expect(inspector).to_be_visible();page.wait_for_function("expected=>GravewrightSpatialSounds.debugSnapshot().emitters.length===expected",arg=initial_emitters+1);inspector.locator("[data-spatial-inspector-save]").click()
             after=page.evaluate("async id=>(await (await fetch('/game/assets/state/'+id)).json()).assets.length",s["campaign_id"]);assert after==before
             page.reload();close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None;page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="sounds"]:visible').click();page.locator('[data-open-sound-modal="effect"]').click();expect(page.locator('[data-sound-product-modal="effect"]:not([hidden]) [data-spatial-id]')).to_have_count(initial_emitters+1)

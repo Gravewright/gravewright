@@ -67,28 +67,10 @@ class ItemSheetService:
         ) or {"version": 1, "data": {}}
         raw_data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
 
-        layout: dict | None = None
-        sheet: dict | None = None
-        data = raw_data
-        if self.systems.get_active_manifest(system_id) is not None:
-            sheet = self.layouts.get_item_html_sheet(system_id=system_id, item_type=item["type"])
-            if sheet is None:
-                candidate = self.layouts.get_item_sheet(
-                    system_id=system_id,
-                    item_type=item["type"],
-                    locale=locale,
-                )
-                if candidate is not None and not validate_sheet_ir(candidate):
-                    layout = candidate
-            helpers = self.rules.get_helpers(system_id)
-            derived = self.rules.get_derived(system_id)
-            data = apply_derived(
-                actor_type=item["type"],
-                data=raw_data,
-                derived_rules=derived,
-                helpers=helpers,
-                core={"name": item["name"]},
-            )
+        layout, sheet, data = self._compose(
+            system_id=system_id, item_type=item["type"], name=item["name"],
+            raw_data=raw_data, locale=locale,
+        )
 
         return ItemSheetBundle(
             item_id=item_id,
@@ -105,6 +87,56 @@ class ItemSheetService:
             sheet=sheet,
             data=data,
         )
+
+    def build_preview_bundle(
+        self, *, preview_id: str, campaign_id: str, system_id: str, item_type: str,
+        name: str, data: dict, locale: str | None = None,
+    ) -> ItemSheetBundle:
+        """Entrada de compêndio de item, sem nada gravado. Mesmo miolo da ficha."""
+        layout, sheet, composed = self._compose(
+            system_id=system_id, item_type=item_type, name=name,
+            raw_data=data if isinstance(data, dict) else {}, locale=locale,
+        )
+        return ItemSheetBundle(
+            item_id=preview_id,
+            campaign_id=campaign_id,
+            system_id=system_id,
+            name=name,
+            type=item_type,
+            version=1,
+            can_edit=False,
+            layout=layout,
+            sheet=sheet,
+            data=composed,
+        )
+
+    def _compose(
+        self, *, system_id: str, item_type: str, name: str, raw_data: dict, locale: str | None
+    ) -> tuple[dict | None, dict | None, dict]:
+        layout: dict | None = None
+        sheet: dict | None = None
+        data = raw_data
+        if self.systems.get_active_manifest(system_id) is not None:
+            sheet = self.layouts.get_item_html_sheet(system_id=system_id, item_type=item_type)
+            if sheet is None:
+                candidate = self.layouts.get_item_sheet(
+                    system_id=system_id,
+                    item_type=item_type,
+                    locale=locale,
+                )
+                if candidate is not None and not validate_sheet_ir(candidate):
+                    layout = candidate
+            helpers = self.rules.get_helpers(system_id)
+            derived = self.rules.get_derived(system_id)
+            data = apply_derived(
+                actor_type=item_type,
+                data=raw_data,
+                derived_rules=derived,
+                helpers=helpers,
+                core={"name": name},
+            )
+
+        return layout, sheet, data
 
     def to_dict(self, bundle: ItemSheetBundle) -> dict:
         return {

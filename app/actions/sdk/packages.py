@@ -91,11 +91,13 @@ async def upload_package(
     """
     wants_json = "application/json" in (request.headers.get("accept") or "")
 
-    def fail(error_key: str, *, conflict: bool = False) -> Redirect | Response[dict[str, Any]]:
+    def fail(error_key: str, *, conflict: bool = False,
+             recovery_paths: tuple[str, ...] = ()) -> Redirect | Response[dict[str, Any]]:
         if wants_json:
             t = translator_for_locale(get_locale_from_cookies(cookies))
             return Response(
-                {"ok": False, "conflict": conflict, "message": t(error_key)}, status_code=200
+                {"ok": False, "conflict": conflict, "message": t(error_key),
+                 "recovery_paths": list(recovery_paths)}, status_code=200
             )
         return _redirect_error(error_key)
 
@@ -120,6 +122,7 @@ async def upload_package(
         return fail(
             result.error_key or "inside.addons.errors.package_invalid",
             conflict=result.error_key == PACKAGE_EXISTS_KEY,
+            recovery_paths=result.recovery_paths,
         )
 
     message_key = (

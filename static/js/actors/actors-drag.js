@@ -90,6 +90,7 @@
     });
 
     function dropTarget(event) {
+        if (event.target.closest("[data-templates-folder]")) return null;
         const folder = event.target.closest(".actor-folder[data-folder-id]");
         return folder?.querySelector(":scope > .sheet-folder-header[data-actor-folder-drop]") ||
             event.target.closest("[data-actor-panel]");

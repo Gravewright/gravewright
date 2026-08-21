@@ -99,6 +99,12 @@ async def import_package_content_entry(
         elif result.journal_id:
             event = TransportEvent.JOURNAL_CREATED
             payload.update({"journal_id": result.journal_id})
+        elif result.deck_id:
+            event = TransportEvent.CARDS_STATE_UPDATED
+            payload.update({"deck_id": result.deck_id})
+        elif result.scene_id:
+            event = TransportEvent.SCENE_CREATED
+            payload.update({"scene_id": result.scene_id})
         if event is not None:
             await RealtimeTransport().to_room(
                 room_id=result.campaign_id, event=event, payload=payload
@@ -110,6 +116,8 @@ async def import_package_content_entry(
             "actor_id": result.actor_id,
             "item_id": result.item_id,
             "journal_id": result.journal_id,
+            "deck_id": result.deck_id,
+            "scene_id": result.scene_id,
             "pack_type": result.pack_type,
         },
         status_code=201,

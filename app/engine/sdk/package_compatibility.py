@@ -26,6 +26,16 @@ _CHANNEL_RANK = {"alpha": 0, "beta": 1, "rc": 2}
 _UNKNOWN_CHANNEL_RANK = 50
 
 _PRERELEASE = re.compile(r"^([a-z]+)\.?(\d+)?$", re.IGNORECASE)
+_UPDATE_VERSION = re.compile(
+    r"^(?:0|[1-9]\d*)(?:\.(?:0|[1-9]\d*)){0,2}"
+    r"(?:-(?:alpha|beta|rc)(?:\.(?:0|[1-9]\d*))?)?$",
+    re.IGNORECASE,
+)
+
+
+def update_version_is_valid(version: str) -> bool:
+    """Strict version grammar for remote update ordering."""
+    return bool(_UPDATE_VERSION.fullmatch((version or "").strip()))
 
 
 def _core_part(parts: list[str], index: int) -> int:

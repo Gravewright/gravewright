@@ -1,5 +1,5 @@
 {% macro actor_card(actor) %}
-<li class="actor-card" data-actor-open="{{ actor.id }}" data-actor-card="{{ actor.id }}" data-directory-name="{{ actor.name | e }}"
+<li class="actor-card" data-directory-entry data-actor-open="{{ actor.id }}" data-actor-card="{{ actor.id }}" data-directory-name="{{ actor.name | e }}"
     role="button" tabindex="0"
     {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}draggable="true"{% endif %}
     data-can-edit="{{ 'true' if actor.can_edit else 'false' }}"
@@ -41,7 +41,39 @@
 </div>
 {% endmacro %}
 
+{# Pasta de sistema: existe so sob o ruleset de PDF e guarda os templates de
+   ficha, que sao assets, nao atores. Usa .sheet-folder para herdar colapso,
+   busca e persistencia da arvore generica, mas NAO leva .actor-folder -- e isso
+   que mantem o arrasto e o menu de pasta longe dela. #}
+{% macro templates_folder() %}
+<div class="sheet-folder actor-templates-folder" data-folder-id="__templates__" data-templates-folder
+     data-room-id="{{ room.id }}" data-folder-name="{{ t('game.actors.templates_folder') }}">
+    <div class="sheet-folder-header">
+        <button class="sheet-folder-toggle" type="button" data-actor-folder-collapse aria-expanded="false">
+            <i class="ph ph-file-pdf sheet-folder-icon" aria-hidden="true"></i>
+            <span class="sheet-folder-name">{{ t("game.actors.templates_folder") }}</span>
+            <span class="sheet-folder-count">{{ room.pdf_templates | length }}</span>
+            <i class="ph ph-caret-right sheet-folder-caret" aria-hidden="true"></i>
+        </button>
+    </div>
+    <div class="sheet-folder-body" hidden>
+        <ul class="actor-list">
+            {% for template in room.pdf_templates %}
+            <li class="actor-card actor-template-card" data-directory-entry
+                data-template-asset="{{ template.id }}" data-directory-name="{{ template.filename | e }}">
+                <i class="ph ph-file-pdf actor-card-icon" aria-hidden="true"></i>
+                <span class="actor-card-info"><strong>{{ template.filename }}</strong></span>
+            </li>
+            {% else %}
+            <li class="actor-empty">{{ t("game.actors.templates_empty") }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endmacro %}
+
 <div class="actor-tree" data-actor-tree>
+    {% if room.uses_pdf_sheet_system %}{{ templates_folder() }}{% endif %}
     {% for folder in room.actor_folder_tree %}
     {% if room.member_role == 'gm' or room.is_streamer or folder.all_count %}{{ actor_folder(folder) }}{% endif %}
     {% endfor %}

@@ -16,8 +16,11 @@
             if (!modal) return null;
 
             targetLayer.appendChild(modal);
-            if (mountedEvent) {
-                document.dispatchEvent(new CustomEvent(mountedEvent, { detail: { modal } }));
+            // Aceita mais de um evento: uma entrada de compendio pode voltar como
+            // ficha de ator OU de item, e so o servidor sabe qual. Cada mount()
+            // desiste sozinho quando nao encontra o proprio bundle no modal.
+            for (const nome of [].concat(mountedEvent || [])) {
+                document.dispatchEvent(new CustomEvent(nome, { detail: { modal } }));
             }
             return modal;
         }
@@ -84,6 +87,19 @@
             );
         }
 
+        async function ensureCompendiumEntryModal({ campaignId, packageId, packId, entryId }) {
+            // Mesma casca do modal de ficha: o servidor entrega o mesmo template,
+            // so que com can_edit falso. Nao ha modal de compendio separado.
+            const modalId = `compendium-${packageId}-${packId}-${entryId}`;
+            document.querySelector(`[data-modal-id="${cssEscape(modalId)}"]`)?.remove();
+            const url = `/game/content/pack/${encodeURIComponent(packageId)}/${encodeURIComponent(packId)}`
+                + `/entry/${encodeURIComponent(entryId)}/sheet?campaign_id=${encodeURIComponent(campaignId)}`;
+            return fetchModal(url, [
+                "vtt:actor-sheet-modal-mounted",
+                "vtt:item-sheet-modal-mounted",
+            ]);
+        }
+
         async function ensureSceneEditModal(sceneId) {
             const modalId = `scene-edit-${sceneId}`;
             document.querySelector(`[data-modal-id="${cssEscape(modalId)}"]`)?.remove();
@@ -96,6 +112,7 @@
             ensureJournalCreateModal,
             ensureJournalModal,
             ensureResourcePermissionsModal,
+            ensureCompendiumEntryModal,
             ensureSceneEditModal,
             ensureTokenSheetModal,
         };

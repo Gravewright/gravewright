@@ -32,7 +32,9 @@ from app.persistence.repositories.item_repository import ItemRepository
 from app.persistence.repositories.journal_folder_repository import JournalFolderRepository
 from app.persistence.repositories.journal_repository import JournalRepository
 from app.persistence.repositories.scene_navigation_repository import NavigationRepository
+from app.engine.content.content_pack_access import ContentPackAccessService
 from app.engine.sheets.pdf_system_policy import is_pdf_sheet_system
+from app.persistence.repositories.asset_repository import AssetRepository
 from app.business.campaigns.campaign_system_service import resolved_area_marker_presets
 
 
@@ -221,6 +223,17 @@ class GamePageService:
                 else None
             )
             room["uses_pdf_sheet_system"] = is_pdf_sheet_system(sys_id)
+            # Os templates de ficha so existem sob o sistema de PDF; fora dele a
+            # pasta nem aparece, entao nao ha por que consultar a biblioteca.
+            room["pdf_templates"] = (
+                [
+                    {"id": asset["id"], "filename": asset["filename"]}
+                    for asset in AssetRepository().list_for_campaign(campaign_id=campaign["id"])
+                    if asset.get("content_type") == "application/pdf"
+                ]
+                if room["uses_pdf_sheet_system"]
+                else []
+            )
             room["area_marker_presets_json"] = json.dumps(
                 resolved_area_marker_presets(
                     room["active_system"]["area_markers"] if room["active_system"] else []
@@ -370,13 +383,16 @@ class GamePageService:
             }
             if sys_id:
                 active_content_package_ids.add(str(sys_id))
+            room["reaches_compendium"] = ContentPackAccessService().reaches_any_pack(
+                campaign_id=campaign["id"], user_id=user_id
+            )
             room["content_packages"] = (
                 [
                     enabled_content_packages_by_id[package_id]
                     for package_id in enabled_content_packages_by_id
                     if package_id in active_content_package_ids
                 ]
-                if is_gm_room
+                if room["reaches_compendium"]
                 else []
             )
 

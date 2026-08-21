@@ -85,3 +85,16 @@ def test_summary_exposes_declarative_directory_visibility():
     summary = PackageManifest.from_dict(raw).summary()
 
     assert summary["directories"] == {"actors": True, "items": False, "journals": True}
+
+
+def test_distribution_source_is_exposed_without_losing_legacy_download():
+    raw = _addon()
+    raw.update({"download": "https://packages.test/addon.zip", "sha256": "B" * 64,
+                "distribution": {"source": "partner"}})
+
+    manifest = PackageManifest.from_dict(raw)
+
+    assert manifest.distribution.source == "partner"
+    assert manifest.distribution.type == "zip"
+    assert manifest.distribution.url == "https://packages.test/addon.zip"
+    assert manifest.summary()["distribution"] == {"declared_source": "partner"}

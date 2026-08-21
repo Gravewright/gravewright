@@ -26,29 +26,15 @@ semantic fingerprint lives in `_data/gravewright-sdk-1.rc1-snapshot.json` and is
 enforced by `scripts/sdk1_contract_snapshot.py --check`. See
 [rc1-compatibility-policy.md](rc1-compatibility-policy.md).
 
-## Conformance package
+### Approved compatible contract addition
 
-Black Vault (`data/packages/addons/black-vault`) is the permanent SDK 1 RC
-conformance and extreme-stress package. It is deliberately **not** published to the
-Marketplace.
-
-| | |
-|---|---|
-| Private API references | 0 |
-| Unknown capabilities | 0 |
-| Undeclared SDK usage | 0 |
-| Core modification required | No |
-| Public methods used | 51 |
-| Capabilities declared | 45 |
-| Events consumed | 2 |
-| Systemless | Yes — no ruleset, no dice |
-
-Domains exercised: campaign members, actors, tokens, zones, world objects, gameplay
-flow, durable workflow, directed interactions, registered actions, semantic timeline,
-audio playback, native sounds, spatial sounds, cards, semantic drag/drop, token
-transfer, scene navigation, presentations, content references, journals, UI
-applications, input commands, settings, and package storage. Package interop is not
-used, because the mission does not need it.
+On 2026-08-21, the optional manifest field `distribution.source` was added with
+the closed values `core`, `community`, and `partner`. Classification:
+`COMPATIBLE` (`manifest_field_added`, optional). Legacy manifests need no change;
+omission resolves to community provenance. This does not change any frozen SDK
+method, capability, event, error, or DTO signature, so the RC 1 semantic snapshot
+is intentionally unchanged. Certification is external to the declaration and is
+anchored in the trusted Marketplace registry and artifact/tree integrity.
 
 ## Known non-blocking observations
 

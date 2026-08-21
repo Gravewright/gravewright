@@ -68,6 +68,29 @@
     });
 
 
+    // Envio de template de ficha. Vive na aba de Atores porque e la que o
+    // template e usado, mas o arquivo em si e um asset: sobe pelo mesmo endpoint
+    // da biblioteca, com purpose=pdf-sheet, que o servidor so aceita sob o
+    // ruleset de PDF.
+    document.addEventListener("click", (event) => {
+        const trigger = event.target.closest("[data-actor-template-upload]");
+        if (!trigger) return;
+        trigger.closest(".directory-actions")?.querySelector("[data-actor-template-input]")?.click();
+    });
+
+    document.addEventListener("change", async (event) => {
+        const input = event.target.closest("[data-actor-template-input]");
+        if (!input || !input.files?.length) return;
+        const roomId = input.closest("[data-actor-panel]")?.dataset.roomId || "";
+        const pdfs = Array.from(input.files).filter((file) => file.type === "application/pdf");
+        input.value = "";
+        if (!roomId || !pdfs.length) return;
+        for (const file of pdfs) {
+            await window.GravewrightAssets?.api?.upload?.(roomId, file, "", "pdf-sheet");
+        }
+        await refreshPanel(roomId);
+    });
+
     document.addEventListener("vtt:transport-event", (event) => {
         const env = event.detail || {};
         if (!["actor.created", "actor.deleted", "actor.updated"].includes(env.event)) return;

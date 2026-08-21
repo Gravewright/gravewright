@@ -38,9 +38,13 @@ class PackageDependencyService:
 
     def check(self, package_id: str) -> DependencyReport:
         manifest = self.install.get_manifest(package_id)
-        report = DependencyReport()
         if manifest is None:
-            return report
+            return DependencyReport()
+        return self.check_manifest(manifest)
+
+    def check_manifest(self, manifest) -> DependencyReport:
+        """Resolve a validated staged manifest against current installed state."""
+        report = DependencyReport()
 
         installed = {row["id"]: row for row in self.install.installed.list_all()}
 

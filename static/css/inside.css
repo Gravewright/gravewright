@@ -3494,3 +3494,17 @@ html {
         transform: none;
     }
 }
+.package-source-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--border-subtle, rgba(255,255,255,.16));
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.82;
+}
+.package-source-badge--core { color: var(--accent, #d6b36a); }
+.package-source-badge--partner { color: #8fc7ff; }
+.package-source-badge--community { color: var(--text-muted, #aaa); }

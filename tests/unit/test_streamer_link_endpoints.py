@@ -41,11 +41,16 @@ def test_generate_and_consume_streamer_link(db):
         assert f'data-modal-id="particle-editor-{campaign_id}"' in body
         assert f'data-modal-id="shader-editor-{campaign_id}"' in body
         # Cenas deixou de ser modal e virou painel de diretório, alcançado pela
-        # aba do rail; Decks e Assets desceram para Configurações.
+        # aba do rail.
         assert f'data-panel-toggle="panel-scenes-{campaign_id}"' in body
         assert f'data-modal-id="panel-scenes-{campaign_id}"' in body
-        assert f'data-modal-open="panel-cards-{campaign_id}"' in body
-        assert f'data-modal-open="library-images-{campaign_id}"' in body
+
+        # Baralhos foi para dentro da mão do GM e Assets para a dock da camada de
+        # jogo, os dois só para o GM. O streamer perdeu ambos de propósito: são
+        # ferramentas de autoria, e roles.py diz que ele só observa. As modais
+        # continuam no DOM porque é delas que a página lê o estado.
+        assert ".tool-dock-btn--hand" not in body, "streamer não tem mão"
+        assert f'data-modal-open="library-images-{campaign_id}"' not in body, "nem Assets"
         assert f'data-modal-id="library-images-{campaign_id}"' in body
 
         # O streamer lê a biblioteca de cenas, mas não cria: criar cena e pasta

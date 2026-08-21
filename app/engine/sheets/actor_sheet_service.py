@@ -134,37 +134,10 @@ class ActorSheetService:
         ) or {"version": 1, "data": {}}
         raw_data = envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
 
-        layout: dict | None = None
-        sheet: dict | None = None
-        dialogs: dict = {}
-        data = raw_data
-        if self.systems.get_active_manifest(system_id) is not None:
-            sheet = self.layouts.get_actor_html_sheet(system_id=system_id, actor_type=actor["type"])
-
-            if sheet is None:
-                candidate = self.layouts.get_actor_sheet(
-                    system_id=system_id,
-                    actor_type=actor["type"],
-                    locale=locale,
-                )
-                if candidate is not None and not validate_sheet_ir(candidate):
-                    layout = candidate
-            from app.config import config
-
-            dialogs = action_dialogs(
-                self.rules.get_actions(system_id),
-                self.locales.get_locale(system_id, locale or config.default_locale),
-            )
-            helpers = self.rules.get_helpers(system_id)
-            derived = self.rules.get_derived(system_id)
-            data = apply_derived(
-                actor_type=actor["type"],
-                data=raw_data,
-                derived_rules=derived,
-                helpers=helpers,
-                core={"name": actor["name"]},
-            )
-            data = apply_stat_modifiers(data)
+        layout, sheet, dialogs, data = self._compose(
+            system_id=system_id, actor_type=actor["type"], name=actor["name"],
+            raw_data=raw_data, locale=locale,
+        )
 
         return ActorSheetBundle(
             actor_id=actor_id,
@@ -183,6 +156,84 @@ class ActorSheetService:
             summary=self.projector.project(actor),
             source_actor_id=actor_id,
         )
+
+    def build_preview_bundle(
+        self,
+        *,
+        campaign_id: str,
+        system_id: str,
+        actor_type: str,
+        name: str,
+        data: dict,
+        preview_id: str,
+        locale: str | None = None,
+    ) -> ActorSheetBundle:
+        """Ficha de uma entrada de compêndio, sem nada gravado.
+
+        A entrada do pack já traz tipo, nome e dados; o que faltava para desenhar
+        era o layout, os diálogos e os derivados, que saem do SISTEMA e não do
+        ator persistido. Por isso o preview reusa exatamente o mesmo miolo -- não
+        existe uma segunda ficha de leitura para manter em dia.
+        """
+        layout, sheet, dialogs, composed = self._compose(
+            system_id=system_id, actor_type=actor_type, name=name,
+            raw_data=data if isinstance(data, dict) else {}, locale=locale,
+        )
+        return ActorSheetBundle(
+            actor_id=preview_id,
+            campaign_id=campaign_id,
+            system_id=system_id,
+            name=name,
+            type=actor_type,
+            version=1,
+            # Compêndio é fonte, não estado da mesa: nunca editável daqui.
+            can_edit=False,
+            layout=layout,
+            sheet=sheet,
+            dialogs=dialogs,
+            data=composed,
+            portrait_url=None,
+            token_url=None,
+            summary={},
+            source_actor_id=None,
+        )
+
+    def _compose(
+        self, *, system_id: str, actor_type: str, name: str, raw_data: dict, locale: str | None
+    ) -> tuple[dict | None, dict | None, dict, dict]:
+        layout: dict | None = None
+        sheet: dict | None = None
+        dialogs: dict = {}
+        data = raw_data
+        if self.systems.get_active_manifest(system_id) is not None:
+            sheet = self.layouts.get_actor_html_sheet(system_id=system_id, actor_type=actor_type)
+
+            if sheet is None:
+                candidate = self.layouts.get_actor_sheet(
+                    system_id=system_id,
+                    actor_type=actor_type,
+                    locale=locale,
+                )
+                if candidate is not None and not validate_sheet_ir(candidate):
+                    layout = candidate
+            from app.config import config
+
+            dialogs = action_dialogs(
+                self.rules.get_actions(system_id),
+                self.locales.get_locale(system_id, locale or config.default_locale),
+            )
+            helpers = self.rules.get_helpers(system_id)
+            derived = self.rules.get_derived(system_id)
+            data = apply_derived(
+                actor_type=actor_type,
+                data=raw_data,
+                derived_rules=derived,
+                helpers=helpers,
+                core={"name": name},
+            )
+            data = apply_stat_modifiers(data)
+
+        return layout, sheet, dialogs, data
 
     def to_dict(self, bundle: ActorSheetBundle) -> dict:
         return bundle_to_dict(bundle)

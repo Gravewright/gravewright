@@ -37,6 +37,7 @@ from app.engine.assets.asset_read_service import AssetReadService
 from app.engine.chat.chat_service import ChatService
 from app.engine.combat.combat_service import CombatService
 from app.engine.content.content_import_service import ContentImportService
+from app.engine.content.content_pack_access import ContentPackAccessService
 from app.engine.content.content_pack_service import ContentPackService
 from app.engine.decks.card_asset_service import CardAssetService
 from app.engine.decks.card_service import CardService
@@ -110,6 +111,7 @@ SERVICE_DEPENDENCIES = {
     "combat_service": _singleton(CombatService),
     "content_import_service": _singleton(ContentImportService),
     "content_pack_service": _singleton(ContentPackService),
+    "content_pack_access": _singleton(ContentPackAccessService),
     "game_page_service": _singleton(GamePageService),
     "global_search_service": _singleton(GlobalSearchService),
     "handout_service": _singleton(HandoutService),

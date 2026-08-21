@@ -41,6 +41,7 @@ from app.engine.sdk.package_install_service import (
     STATUS_ENABLED,
     PackageInstallService,
 )
+from app.engine.sdk.package_provenance import resolve_installed_provenance
 from app.persistence.repositories.campaign_package_repository import CampaignPackageRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
@@ -103,6 +104,7 @@ class PackageDoctorService:
             ("orphan_settings", self._audit_orphan_settings),
             ("orphan_content", self._audit_orphan_content),
             ("orphan_storage", self._audit_orphan_storage),
+            ("update_recovery", self._audit_update_recovery),
         ):
             try:
                 findings.extend(audit(installed))
@@ -115,6 +117,20 @@ class PackageDoctorService:
                         details={"audit": name},
                     )
                 )
+        return findings
+
+    def _audit_update_recovery(self, _installed: dict[str, dict]) -> list[DoctorFinding]:
+        findings: list[DoctorFinding] = []
+        prefixes = (".backup-", ".failed-new-", ".marketplace-backup-",
+                    ".marketplace-failed-new-", ".upload-")
+        if not package_registry.PACKAGES_DIR.is_dir():
+            return findings
+        for path in package_registry.PACKAGES_DIR.rglob("*"):
+            if path.is_dir() and path.name.startswith(prefixes):
+                findings.append(DoctorFinding(
+                    code="sdk.update.recovery_required", severity=SEVERITY_ERROR,
+                    details={"path": str(path)},
+                ))
         return findings
 
     def report(self) -> dict:
@@ -175,6 +191,17 @@ class PackageDoctorService:
                     )
                 )
             findings.extend(self._audit_manifest_integrity(package_id, record, loaded))
+            provenance = resolve_installed_provenance(
+                manifest=loaded.manifest, record=record, package_dir=loaded.package_dir,
+            )
+            if provenance["mismatch"]:
+                findings.append(DoctorFinding(
+                    code="sdk.provenance.declaration_not_certified",
+                    severity=SEVERITY_WARNING, package_id=package_id,
+                    details={"declared_source": provenance["declaredSource"],
+                             "effective_source": provenance["effectiveSource"],
+                             "authority": provenance["authority"]},
+                ))
 
 
             for code in loaded.validation.errors:

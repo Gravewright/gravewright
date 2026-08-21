@@ -4,19 +4,26 @@ from __future__ import annotations
 
 import json
 import ipaddress
+import http.client
 import os
+import socket
+import ssl
 import time
-import urllib.request
 from pathlib import Path
 from typing import Callable
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 from app.config import config
 from app.engine.sdk.marketplace_registry import MarketplaceRegistryError, load_marketplace
-from app.engine.sdk.package_compatibility import COMPAT_INCOMPATIBLE, version_key
+from app.engine.sdk.package_compatibility import (
+    COMPAT_INCOMPATIBLE, update_version_is_valid, version_key,
+)
 from app.engine.sdk.package_manifest import PackageManifest
 from app.engine.sdk.package_manifest import SDK_VERSION
 from app.engine.sdk.package_manifest_validator import validate_manifest
+from app.engine.sdk.package_integrity import compute_package_tree_hash
+from app.engine.sdk.package_loader import load_package
+from app.engine.sdk import package_registry
 from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -28,20 +35,44 @@ Fetch = Callable[[str, int], bytes]
 
 
 def fetch_bytes(url: str, limit: int) -> bytes:
-    if not _safe_remote_url(url):
-        raise ValueError("MARKETPLACE_URL_UNSAFE")
-    request = urllib.request.Request(url, headers={"Accept": "application/json", "User-Agent": "Gravewright-Marketplace/1"})
-    opener = urllib.request.build_opener(_SafeRedirectHandler())
-    with opener.open(request, timeout=15) as response:  # noqa: S310 - URL policy enforced on every hop
-        if not _safe_remote_url(response.geturl()):
+    current = url
+    for _redirect in range(6):
+        parsed = urlparse(current)
+        if not _safe_remote_url(current):
             raise ValueError("MARKETPLACE_URL_UNSAFE")
-        length = int(response.headers.get("Content-Length") or 0)
-        if length > limit:
-            raise ValueError("MARKETPLACE_RESPONSE_TOO_LARGE")
-        data = response.read(limit + 1)
-    if len(data) > limit:
-        raise ValueError("MARKETPLACE_RESPONSE_TOO_LARGE")
-    return data
+        addresses = _resolved_public_addresses(parsed.hostname or "", parsed.port or 443)
+        if not addresses:
+            raise ValueError("MARKETPLACE_URL_UNSAFE")
+        connection = _PinnedHTTPSConnection(parsed.hostname or "", addresses[0], parsed.port or 443, timeout=15)
+        try:
+            path = parsed.path or "/"
+            if parsed.query:
+                path += f"?{parsed.query}"
+            connection.request("GET", path, headers={"Accept": "application/json", "User-Agent": "Gravewright-Marketplace/1"})
+            response = connection.getresponse()
+            if response.status in {301, 302, 303, 307, 308}:
+                location = response.getheader("Location")
+                if not location:
+                    raise ValueError("MARKETPLACE_REDIRECT_INVALID")
+                current = urljoin(current, location)
+                continue
+            if response.status < 200 or response.status >= 300:
+                raise ValueError("MARKETPLACE_HTTP_ERROR")
+            length_header = response.getheader("Content-Length")
+            if length_header is not None and int(length_header) > limit:
+                raise ValueError("MARKETPLACE_RESPONSE_TOO_LARGE")
+            chunks, total = [], 0
+            while chunk := response.read(min(64 * 1024, limit + 1 - total)):
+                total += len(chunk)
+                if total > limit:
+                    raise ValueError("MARKETPLACE_RESPONSE_TOO_LARGE")
+                chunks.append(chunk)
+            if length_header is not None and total != int(length_header):
+                raise ValueError("MARKETPLACE_RESPONSE_INCOMPLETE")
+            return b"".join(chunks)
+        finally:
+            connection.close()
+    raise ValueError("MARKETPLACE_TOO_MANY_REDIRECTS")
 
 
 class MarketplaceService:
@@ -75,16 +106,29 @@ class MarketplaceService:
                     "channel": entry.channel, "category": entry.category, "tags": list(entry.tags),
                     "featured": entry.featured, "reviewedAt": entry.reviewed_at,
                     "updatePolicy": entry.update_policy, "approvedVersion": entry.approved_version,
-                    "validationState": "unavailable"}
+                    "validationState": "unavailable", "source": entry.source,
+                    "effectiveSource": entry.source,
+                    "sourceCertified": True, "bundled": entry.bundled}
             try:
-                try:
-                    manifest_bytes = self.fetcher(entry.manifest, MAX_MANIFEST_BYTES)
-                except Exception as exc:
-                    network_failures += 1
-                    raise ValueError("MARKETPLACE_MANIFEST_FETCH_FAILED") from exc
-                raw = json.loads(manifest_bytes)
+                if entry.bundled:
+                    package_dir = package_registry.package_dir_for(entry.kind, entry.id)
+                    if package_dir is None or not package_dir.is_dir():
+                        raise ValueError("MARKETPLACE_BUNDLED_PACKAGE_MISSING")
+                    loaded = load_package(package_dir, expected_id=entry.id)
+                    if loaded.manifest is None:
+                        raise ValueError(loaded.errors[0] if loaded.errors else "MARKETPLACE_BUNDLED_MANIFEST_INVALID")
+                    raw = json.loads((package_dir / "manifest.json").read_text(encoding="utf-8"))
+                else:
+                    try:
+                        manifest_bytes = self.fetcher(entry.manifest, MAX_MANIFEST_BYTES)
+                    except Exception as exc:
+                        network_failures += 1
+                        raise ValueError("MARKETPLACE_MANIFEST_FETCH_FAILED") from exc
+                    raw = json.loads(manifest_bytes)
                 validation = validate_manifest(raw)
                 manifest = PackageManifest.from_dict(raw)
+                if not update_version_is_valid(manifest.version):
+                    raise ValueError("MARKETPLACE_VERSION_INVALID")
                 if manifest.id != entry.id or manifest.kind != entry.kind:
                     raise ValueError("MARKETPLACE_MANIFEST_MISMATCH")
                 if manifest.sdk_version != SDK_VERSION:
@@ -98,6 +142,27 @@ class MarketplaceService:
                 if not validation.ok:
                     raise ValueError(validation.errors[0])
                 distribution = manifest.distribution
+                declared_source = distribution.source if distribution else ""
+                provenance_mismatch = bool(declared_source and declared_source != entry.source)
+                if entry.source in {"core", "partner"} and declared_source != entry.source:
+                    raise ValueError("MARKETPLACE_PROVENANCE_MISMATCH")
+                if entry.bundled:
+                    tree_hash = compute_package_tree_hash(package_dir)
+                    if tree_hash.lower() != entry.approved_tree_sha256:
+                        raise ValueError("MARKETPLACE_BUNDLED_INTEGRITY_MISMATCH")
+                    item.update({
+                        "name": entry.name or manifest.name, "description": manifest.description,
+                        "publisher": manifest.author_names()[0] if manifest.author_names() else "",
+                        "version": manifest.version, "sdkVersion": manifest.sdk_version,
+                        "compatibility": validation.compatibility_status, "validationState": "valid",
+                        "declaredSource": declared_source, "effectiveSource": entry.source,
+                        "provenanceMismatch": provenance_mismatch,
+                        "manifestIdentity": {"id": manifest.id, "kind": manifest.kind,
+                                             "version": manifest.version, "sdkVersion": manifest.sdk_version,
+                                             "source": declared_source},
+                    })
+                    packages.append(item)
+                    continue
                 if (distribution is None or distribution.type != "zip" or not _valid_download(distribution.url)
                         or not _valid_sha256(distribution.sha256)):
                     raise ValueError("MARKETPLACE_ARTIFACT_INVALID")
@@ -112,8 +177,11 @@ class MarketplaceService:
                     "compatibility": validation.compatibility_status,
                     "validationState": "incompatible" if validation.compatibility_status == COMPAT_INCOMPATIBLE else "valid",
                     "artifact": {"url": distribution.url, "sha256": distribution.sha256},
+                    "declaredSource": declared_source, "effectiveSource": entry.source,
+                    "provenanceMismatch": provenance_mismatch,
                     "manifestIdentity": {"id": manifest.id, "kind": manifest.kind,
-                                         "version": manifest.version, "sdkVersion": manifest.sdk_version},
+                                         "version": manifest.version, "sdkVersion": manifest.sdk_version,
+                                         "source": declared_source},
                 })
             except Exception as exc:  # one bad manifest never destroys valid siblings
                 item["validationError"] = str(exc)
@@ -137,7 +205,9 @@ class MarketplaceService:
             elif package.get("validationState") != "valid":
                 action = "unavailable"
             elif record is None:
-                action = "install"
+                action = "unavailable" if package.get("bundled") else "install"
+            elif package.get("bundled"):
+                action = "installed"
             elif version_key(str(package.get("version", ""))) > version_key(str(record.get("version", ""))):
                 action = "update"
             else:
@@ -180,7 +250,7 @@ def _valid_download(value: str) -> bool:
 
 def _safe_remote_url(value: str) -> bool:
     parsed = urlparse(value)
-    if parsed.scheme not in {"http", "https"} or not parsed.hostname or parsed.username or parsed.password:
+    if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
         return False
     host = parsed.hostname.rstrip(".").lower()
     if host == "localhost" or host.endswith(".localhost"):
@@ -193,8 +263,32 @@ def _safe_remote_url(value: str) -> bool:
                 or address.is_multicast or address.is_unspecified)
 
 
-class _SafeRedirectHandler(urllib.request.HTTPRedirectHandler):
-    def redirect_request(self, req, fp, code, msg, headers, newurl):
-        if not _safe_remote_url(newurl):
-            raise ValueError("MARKETPLACE_REDIRECT_UNSAFE")
-        return super().redirect_request(req, fp, code, msg, headers, newurl)
+def _resolved_public_addresses(host: str, port: int) -> list[str]:
+    try:
+        values = {entry[4][0] for entry in socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)}
+    except socket.gaierror as exc:
+        raise ValueError("MARKETPLACE_DNS_FAILED") from exc
+    addresses = []
+    for value in values:
+        address = ipaddress.ip_address(value)
+        if (address.is_private or address.is_loopback or address.is_link_local or address.is_reserved
+                or address.is_multicast or address.is_unspecified):
+            raise ValueError("MARKETPLACE_DNS_UNSAFE")
+        addresses.append(value)
+    return sorted(addresses)
+
+
+class _PinnedHTTPSConnection(http.client.HTTPSConnection):
+    """TLS connection pinned to the address that passed SSRF validation."""
+
+    def __init__(self, host: str, address: str, port: int, *, timeout: float) -> None:
+        super().__init__(host, port=port, timeout=timeout, context=ssl.create_default_context())
+        self._validated_address = address
+
+    def connect(self) -> None:
+        raw = socket.create_connection((self._validated_address, self.port), self.timeout)
+        try:
+            self.sock = self._context.wrap_socket(raw, server_hostname=self.host)
+        except Exception:
+            raw.close()
+            raise

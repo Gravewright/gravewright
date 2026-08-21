@@ -48,7 +48,11 @@
             }
 
 
-            window.location.reload();
+            if (window.GravewrightUiState?.reload) {
+                window.GravewrightUiState.reload("system-ruleset-changed");
+            } else {
+                window.location.reload();
+            }
         } catch {
             showError(form, message("systemRulesetError", "Não foi possível trocar o sistema."));
         } finally {

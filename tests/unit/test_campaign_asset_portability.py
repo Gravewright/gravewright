@@ -198,7 +198,7 @@ def test_audio_asset_sound_and_spatial_sound_survive_a_clean_storage_roundtrip(d
 
     sound = SoundDomainService().create_sound(campaign_id=source, user_id=gm, values={
         "name": "Generator Hum", "assetId": asset_id, "kind": "sound-effect",
-        "defaultGain": 0.7, "defaultLoop": True, "tags": ["black-vault"],
+        "defaultGain": 0.7, "defaultLoop": True, "tags": ["test-package"],
     })
     assert sound.success, sound.error_key
     emitter = SoundDomainService().create_spatial(campaign_id=source, scene_id=scene["id"], user_id=gm, values={

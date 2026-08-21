@@ -52,7 +52,10 @@ def marketplace_install(
         return Response({"ok": False, "error_key": "sdk.errors.owner_required"}, status_code=403) if wants_json else Redirect("/inside?packages_error_key=sdk.errors.owner_required#marketplace")
     result = MarketplaceInstaller().install(package_id=data.package_id.strip(), user_id=str(current_user["id"]))
     if wants_json:
-        return Response({"ok": result.success, "package_id": result.package_id, "error_key": result.error_key}, status_code=200 if result.success else 422)
+        return Response({"ok": result.success, "package_id": result.package_id,
+                         "error_key": result.error_key,
+                         "recovery_paths": list(result.recovery_paths)},
+                        status_code=200 if result.success else 422)
     key = "sdk.messages.installed" if result.success else result.error_key
     field = "packages_message_key" if result.success else "packages_error_key"
     return Redirect(f"/inside?{field}={key}#marketplace")

@@ -25,6 +25,7 @@
     {% if campaign_export_enabled %}<script defer src="/static/js/inside/campaign-transfer.js?v={{ asset_version }}"></script>{% endif %}
     <script defer src="/static/js/inside/package-upload.js"></script>
     <script defer src="/static/js/inside/marketplace.js?v=20260816-auto-refresh1"></script>
+    <script defer src="/static/js/inside/core-updates.js?v={{ asset_version }}-core-update1"></script>
 </head>
 
 <body data-csrf-token="{{ csrf_token() }}" data-invitation-accepted="{{ t('inside.invitations.accepted') }}"
@@ -840,6 +841,7 @@
                                     data-inside-modal-open="system-detail-{{ system.id }}">
                                     <span class="system-card-top">
                                         <strong>{{ system.name }}</strong>
+                                        <span class="package-source-badge package-source-badge--{{ system.effective_source }}">{{ system.effective_source | upper }}</span>
                                         <span class="system-status-badge system-status-badge--{{ system.status }}">
                                             {{ t("inside.rulesets.status." ~ system.status) }}
                                         </span>
@@ -910,6 +912,7 @@
                                         <span>{{ system.id }}</span>
                                         {% if system.api_version %}<span>API v{{ system.api_version }}</span>{% endif %}
                                         {% if system.author %}<span>{{ system.author }}</span>{% endif %}
+                                        <span>{{ system.effective_source | upper }}{% if system.source_certified %} · certified{% endif %}</span>
                                         <span class="system-compat system-compat--{{ system.compatibility_status }}">
                                             {{ t("inside.rulesets.compat." ~ system.compatibility_status) }}
                                         </span>
@@ -1074,6 +1077,9 @@
                                     <span class="package-kind-badge package-kind-badge--{{ module.kind }}">
                                         {{ t("inside.packages.kind." ~ module.kind) }}
                                     </span>
+                                    <span class="package-source-badge package-source-badge--{{ module.effective_source }}">
+                                        {{ module.effective_source | upper }}{% if module.source_certified %} · VERIFIED{% endif %}
+                                    </span>
                                     {% if module.description %}
                                     <span class="module-card-desc">{{ module.description }}</span>
                                     {% endif %}
@@ -1136,6 +1142,7 @@
                                         </span>
                                         <span>{{ t("inside.addons.status." ~ module.status) }}</span>
                                         <span>{{ t("inside.addons.meta.version", version=module.version) }}</span>
+                                        <span>{{ module.effective_source | capitalize }}{% if module.source_certified %} · registry certified{% endif %}</span>
                                         {% if module.author %}<span>{{ module.author }}</span>{% endif %}
                                     </div>
 
@@ -1233,6 +1240,12 @@
                                 <option value="{{ kind }}">{{ t("inside.packages.kind." ~ kind) }}</option>
                                 {% endfor %}
                             </select>
+                            <select aria-label="Filter by source" data-marketplace-source>
+                                <option value="">All sources</option>
+                                <option value="core">Core</option>
+                                <option value="community">Community</option>
+                                <option value="partner">Partners</option>
+                            </select>
                         </div>
                         <div data-marketplace-bands>
                             {% for kind, entries in marketplace_bands.items() %}{% if entries %}
@@ -1240,13 +1253,15 @@
                                 <h2>{{ t("inside.packages.kind." ~ kind) }}</h2>
                                 <div class="marketplace-grid">
                                     {% for package in entries %}
-                                    <article class="marketplace-card" data-marketplace-package data-kind="{{ package.kind }}"
+                                    <article class="marketplace-card" data-marketplace-package data-kind="{{ package.kind }}" data-source="{{ package.effectiveSource }}"
                                              data-search="{{ package.name }} {{ package.publisher }} {{ package.description }} {{ package.tags | join(' ') }}">
-                                        <header><h3>{{ package.name }}</h3><span class="package-kind-badge package-kind-badge--{{ package.kind }}">{{ package.kind }}</span></header>
+                                        <header><h3>{{ package.name }}</h3><span class="package-source-badge package-source-badge--{{ package.effectiveSource }}">{{ package.effectiveSource | upper }}</span><span class="package-kind-badge package-kind-badge--{{ package.kind }}">{{ package.kind }}</span></header>
                                         <p>{{ package.description }}</p>
-                                        <div class="marketplace-card-meta"><span>{{ package.publisher }}</span><span>v{{ package.version or '?' }}</span>{% if package.category %}<span>{{ package.category }}</span>{% endif %}</div>
+                                        <div class="marketplace-card-meta"><span>{{ package.publisher }}</span>
+                                            <span>{% if package.installState == 'update' %}v{{ package.installedVersion }} → v{{ package.version }}{% else %}v{{ package.version or '?' }}{% endif %}</span>
+                                            {% if package.category %}<span>{{ package.category }}</span>{% endif %}</div>
                                         <details class="marketplace-card-details"><summary>Details</summary>
-                                            <dl><div><dt>Channel</dt><dd>{{ package.channel }}</dd></div><div><dt>SDK</dt><dd>{{ package.sdkVersion or '?' }}</dd></div>{% if package.tags %}<div><dt>Tags</dt><dd>{{ package.tags | join(', ') }}</dd></div>{% endif %}</dl>
+                                            <dl><div><dt>Channel</dt><dd>{{ package.channel }}</dd></div><div><dt>SDK</dt><dd>{{ package.sdkVersion or '?' }}</dd></div><div><dt>Source</dt><dd>{{ package.effectiveSource | capitalize }} · registry certified</dd></div><div><dt>Publisher</dt><dd>{{ package.publisher or '—' }}</dd></div>{% if package.tags %}<div><dt>Tags</dt><dd>{{ package.tags | join(', ') }}</dd></div>{% endif %}</dl>
                                         </details>
                                         <footer>
                                             <span class="marketplace-package-status" data-marketplace-package-status>{{ package.installState | capitalize }}</span>
@@ -1283,6 +1298,33 @@
                         {% endif %}
 
                         <div class="settings-grid">
+                            <section class="settings-card" data-core-update data-state="{{ core_update.status or 'unchecked' }}">
+                                <h3>Gravewright updates</h3>
+                                <p data-core-update-status>
+                                    {% if core_update.status == 'available' %}Update available — {{ core_update.currentVersion }} → {{ core_update.availableVersion }}
+                                    {% elif core_update.status == 'current' %}Up to date
+                                    {% elif core_update.status == 'failed' %}Last check failed — {{ core_update.errorKey }}
+                                    {% else %}Not checked yet{% endif %}
+                                </p>
+                                <dl class="package-details-list">
+                                    <div><dt>Current</dt><dd>{{ core_update.currentVersion }}</dd></div>
+                                    <div><dt>Available</dt><dd data-core-update-available>{{ core_update.availableVersion or '—' }}</dd></div>
+                                    <div><dt>Channel</dt><dd data-core-update-channel>{{ core_update.channel or '—' }}</dd></div>
+                                    <div><dt>Installation</dt><dd>{{ core_update.installFormat }}</dd></div>
+                                </dl>
+                                <p class="form-help" data-core-update-details>
+                                    {% if core_update.status == 'available' %}Create a verified backup before installing. Product artifacts never include campaign data.{% endif %}
+                                </p>
+                                <div class="settings-actions">
+                                    <form method="post" action="/inside/updates/core/check" data-core-update-check>
+                                        {{ csrf_input | safe }}
+                                        <button class="system-action" type="submit">Check for updates</button>
+                                    </form>
+                                    <a class="system-action system-action--primary" data-core-update-action
+                                       href="{{ core_update.artifact.url if core_update.artifact else '#' }}"
+                                       {% if not core_update.artifact %}hidden{% endif %}>Download verified update</a>
+                                </div>
+                            </section>
                             <section class="settings-card">
                                 <h3>{{ t("inside.settings.general.title") }}</h3>
                                 <form class="settings-form" method="post" action="/inside/settings">

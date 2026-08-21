@@ -53,7 +53,10 @@
                 const deletedId = payload?.scene_id;
                 const showing = deletedId && [...document.querySelectorAll("[data-map-canvas]")]
                     .some((canvas) => canvas.dataset.sceneId === deletedId);
-                if (showing) window.location.reload();
+                if (showing) {
+                    if (window.GravewrightUiState?.reload) window.GravewrightUiState.reload("displayed-scene-deleted");
+                    else window.location.reload();
+                }
             }
 
 
@@ -69,7 +72,10 @@
             if (evtName === "campaign.packages.changed") {
                 const roomId = payload?.room_id;
                 const showing = roomId && document.querySelector(`[data-room-id="${CSS.escape(roomId)}"]`);
-                if (showing) window.location.reload();
+                if (showing) {
+                    if (window.GravewrightUiState?.reload) window.GravewrightUiState.reload("campaign-packages-changed");
+                    else window.location.reload();
+                }
             }
             if (evtName === "scene.chunk.updated") handleChunkUpdated(payload);
             if (evtName === "tokens.snapshot") handleTokensSnapshot(payload);

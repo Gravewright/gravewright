@@ -44,6 +44,12 @@ DELIBERATELY_SILENT = {
     "/game/cards/assets/upload": "asset solto; o baralho anuncia ao ser usado",
     "/game/journal/asset": "asset solto; o diário anuncia ao ser aberto",
     "/game/scenes/start-point": "afeta o enquadramento inicial de quem ainda vai entrar",
+    "/game/content/pack-access": (
+        "a aba de compêndio é decidida no servidor, na renderização da página, "
+        "pelo nível que o papel tem em cada pack; liberar no meio da sessão só "
+        "aparece para o jogador no próximo carregamento -- mesmo caso de "
+        "/campaigns/permissions"
+    ),
     "/campaigns/permissions": (
         "a interface do jogador é renderizada no servidor pelas permissões; "
         "aplicar em tempo real exigiria recarregar a página dele"
