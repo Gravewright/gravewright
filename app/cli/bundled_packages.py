@@ -7,9 +7,9 @@ import sys
 from pathlib import Path
 
 from app.config import config
+from app.engine.sdk.package_manifest import KIND_TO_DIRECTORY
 
-
-PACKAGE_KIND_DIRS = ("rulesets", "addons", "libraries", "themes", "content", "assets")
+PACKAGE_KIND_DIRS = tuple(KIND_TO_DIRECTORY.values())
 
 
 def install_bundled_packages(*, bundle_root: Path | None = None) -> list[Path]:

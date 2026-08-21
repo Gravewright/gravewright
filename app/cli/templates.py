@@ -74,7 +74,7 @@ RULESET_TEMPLATES: tuple[Template, ...] = (
     Template(
         id="fantasy-d20",
         label="Classic d20 fantasy",
-        tagline="Six abilities + skills, weapons, armor, spells and effects (D&D-like).",
+        tagline="Six classic abilities, skills, equipment, spells and effects.",
         description=(
             "Characters, NPCs and monsters with the six classic abilities and a "
             "few skills. Weapon, armor, spell and consumable items, plus active "

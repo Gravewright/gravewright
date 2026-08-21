@@ -27,14 +27,15 @@ import json
 import re
 from dataclasses import dataclass
 
-from app.engine.sdk.package_manifest import SDK_VERSION
+from app.engine.sdk.capability_registry import get_registry
+from app.engine.sdk.package_manifest import SDK_VERSION, PackageKind
 
 SCHEMA_URL = (
     "https://raw.githubusercontent.com/Gravewright/gravewright/main/"
     "schemas/gravewright-package-v1.schema.json"
 )
 
-KINDS = {"ruleset", "addon", "library", "theme", "assets", "content"}
+KINDS = PackageKind.values()
 
 
 _KIND_MODE = {
@@ -151,6 +152,10 @@ def _title(value: str) -> str:
 
 
 def _add(caps: list[str], cap: str) -> None:
+    registry = get_registry()
+    capability = registry.capabilities.get(cap)
+    if capability is None or capability.status != "stable" or cap in registry.forbidden_names():
+        raise RuntimeError(f"CLI scaffold references a non-public SDK capability: {cap}")
     if cap not in caps:
         caps.append(cap)
 
@@ -430,6 +435,9 @@ def _derive_ruleset_provides(intent: Intent) -> dict:
             {
                 "id": "sample-actors",
                 "type": "actor_pack",
+                "documentType": "actor",
+                "formatVersion": 2,
+                "indexFields": ["id", "name", "type"],
                 "label": "Sample Actors",
                 "path": "content/sample-actors.gw.json",
             }
@@ -474,6 +482,9 @@ def _derive_content_provides(intent: Intent) -> dict:
             {
                 "id": "sample-journals",
                 "type": "journal_pack",
+                "documentType": "journal",
+                "formatVersion": 2,
+                "indexFields": ["id", "title", "type"],
                 "label": "Sample Journals",
                 "path": "content/sample-journals.gw.json",
             }
@@ -727,7 +738,7 @@ def _sample_audio_placeholder() -> str:
 
 
 
-_DND_ABILITIES = (
+_CLASSIC_ATTRIBUTES = (
     "strength",
     "dexterity",
     "constitution",
@@ -747,7 +758,7 @@ def _ability_fields(names, *, default: int = 10) -> list[dict]:
 MECHANICS: dict[str, dict] = {
     "d20-attribute-modifier-skill": {
         "label": "d20 + attribute modifier + skill",
-        "fields": _ability_fields(_DND_ABILITIES)
+        "fields": _ability_fields(_CLASSIC_ATTRIBUTES)
         + [{"path": "skills.athletics", "label": "Athletics", "type": "number", "default": 0}],
         "roll": {
             "label": "Strength + Athletics check",
@@ -757,7 +768,7 @@ MECHANICS: dict[str, dict] = {
     },
     "d20-attribute-modifier": {
         "label": "d20 + attribute modifier",
-        "fields": _ability_fields(_DND_ABILITIES),
+        "fields": _ability_fields(_CLASSIC_ATTRIBUTES),
         "roll": {
             "label": "Strength check",
             "action": "ability-check",
@@ -766,7 +777,7 @@ MECHANICS: dict[str, dict] = {
     },
     "d20-roll-under": {
         "label": "d20 roll-under attribute",
-        "fields": _ability_fields(_DND_ABILITIES, default=12),
+        "fields": _ability_fields(_CLASSIC_ATTRIBUTES, default=12),
         "roll": {
             "label": "Strength roll-under",
             "action": "roll-under-check",
@@ -932,7 +943,7 @@ def _configured_mechanic(intent: Intent) -> dict:
     roll = dict(base["roll"]) if isinstance(base.get("roll"), dict) else None
 
     if intent.mechanic in {"d20-attribute-modifier-skill", "d20-attribute-modifier"}:
-        fields = _ability_fields(attrs or _DND_ABILITIES)
+        fields = _ability_fields(attrs or _CLASSIC_ATTRIBUTES)
         if intent.mechanic == "d20-attribute-modifier-skill":
             fields += [
                 {"path": f"skills.{name}", "label": _title(name), "type": "number", "default": 0}
@@ -947,7 +958,7 @@ def _configured_mechanic(intent: Intent) -> dict:
             roll["label"] = f"{_title(first_attr)} check"
     elif intent.mechanic == "d20-roll-under":
         fields = _ability_fields(
-            attrs or _DND_ABILITIES, default=_config_int(config.get("default"), 12)
+            attrs or _CLASSIC_ATTRIBUTES, default=_config_int(config.get("default"), 12)
         )
         roll["formula"] = f"under(1, 20, clamp(@sheet.attributes.{first_attr}, 1, 20))"
     elif intent.mechanic == "d100-percentile":
@@ -1758,7 +1769,8 @@ def _sample_actor_pack() -> dict:
     return {
         "id": "sample-actors",
         "type": "actor_pack",
-        "entries": [
+        "formatVersion": 2,
+        "index": [
             {
                 "id": "sample-character",
                 "type": "character",
@@ -1780,7 +1792,8 @@ def _sample_journal_pack() -> dict:
     return {
         "id": "sample-journals",
         "type": "journal_pack",
-        "entries": [
+        "formatVersion": 2,
+        "index": [
             {
                 "id": "welcome",
                 "type": "handout",

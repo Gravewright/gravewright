@@ -299,6 +299,9 @@ Mappings connect declarative ruleset data to Gravewright runtime surfaces.
   {
     "id": "my-rpg-weapons",
     "type": "item_pack",
+    "documentType": "item",
+    "formatVersion": 2,
+    "indexFields": ["id", "name", "type", "tags"],
     "label": "Weapons",
     "labelKey": "my-rpg.content.weapons",
     "path": "content/items.weapons.gwpack.json"
@@ -314,6 +317,17 @@ Allowed content pack types:
 - `journal_pack`
 - `table_pack`
 - `condition_pack`
+- `scene_pack`
+- `card_pack`
+- `deck_pack`
+- `asset_pack`
+- `macro_pack`
+- `playlist_pack`
+- `document_pack`
+
+New authoring should use `formatVersion: 2`, a stable `documentType`, bounded
+`indexFields`, and an `index` array in the referenced file. The legacy
+format-1 `entries` representation is accepted only for compatibility.
 
 ### `provides.locales`
 

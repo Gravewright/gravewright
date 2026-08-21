@@ -12,6 +12,9 @@ Content packs are declared under `provides.contentPacks`.
     {
       "id": "my-rpg-weapons",
       "type": "item_pack",
+      "documentType": "item",
+      "formatVersion": 2,
+      "indexFields": ["id", "name", "type", "tags"],
       "label": "Weapons",
       "labelKey": "my-rpg.content.weapons",
       "path": "content/items.weapons.gwpack.json"
@@ -28,6 +31,13 @@ Allowed content pack types:
 - `journal_pack`
 - `table_pack`
 - `condition_pack`
+- `scene_pack`
+- `card_pack`
+- `deck_pack`
+- `asset_pack`
+- `macro_pack`
+- `playlist_pack`
+- `document_pack`
 
 Each content pack needs:
 
@@ -35,6 +45,13 @@ Each content pack needs:
 - valid `type`;
 - `label` or `labelKey` for display;
 - safe package-relative `path`.
+
+New packages should emit format 2 explicitly. `documentType` identifies the
+system-agnostic document domain, `indexFields` bounds summary data, and the pack
+file uses an `index` array. An index entry may contain the document inline or a
+package-relative `document` path for lazy loading. Format 1 and its legacy
+`entries` array remain readable for compatibility, but the CLI no longer emits
+that representation.
 
 ## Reading content packs at runtime
 
