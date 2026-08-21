@@ -4,6 +4,8 @@ import hashlib
 import io
 import json
 import zipfile
+import stat
+import warnings
 from pathlib import Path
 
 import pytest
@@ -15,6 +17,9 @@ from app.engine.sdk.marketplace_registry import MarketplaceRegistryError, parse_
 from app.engine.sdk.marketplace_service import MarketplaceService, _safe_remote_url
 from app.engine.sdk.package_doctor_service import PackageDoctorService
 from app.engine.sdk.package_install_service import PackageInstallService
+from app.engine.sdk.package_integrity import compute_package_tree_hash
+from app.engine.sdk.package_manifest import PackageManifest
+from app.engine.sdk.package_provenance import resolve_installed_provenance
 
 
 def archive(manifest: dict, extra: dict[str, bytes] | None = None) -> bytes:
@@ -68,6 +73,68 @@ def write_registry(path: Path, value: str | None = None) -> None:
 def test_registry_parses_valid_toml_and_canonical_kind() -> None:
     entries = parse_marketplace_toml(registry())
     assert len(entries) == 1 and entries[0].kind == "addon" and entries[0].channel == "stable"
+    assert entries[0].source == "community"
+
+
+def test_privileged_source_requires_matching_manifest_declaration(tmp_path: Path, db) -> None:
+    path, cache = tmp_path / "marketplace.toml", tmp_path / "cache.json"
+    write_registry(path, registry() + 'source = "partner"\n')
+    result = MarketplaceService(registry_path=path, cache_path=cache,
+        fetcher=lambda *_: json.dumps(manifest()).encode()).refresh()
+    assert result["packages"][0]["validationError"] == "MARKETPLACE_PROVENANCE_MISMATCH"
+
+
+def test_community_registry_never_promotes_self_declared_core(tmp_path: Path, db) -> None:
+    path, cache = tmp_path / "marketplace.toml", tmp_path / "cache.json"
+    write_registry(path)
+    raw = manifest()
+    raw["distribution"]["source"] = "core"
+    item = MarketplaceService(registry_path=path, cache_path=cache,
+        fetcher=lambda *_: json.dumps(raw).encode()).refresh()["packages"][0]
+    assert item["validationState"] == "valid"
+    assert item["declaredSource"] == "core"
+    assert item["effectiveSource"] == "community"
+    assert item["provenanceMismatch"] is True
+
+
+def test_manual_package_cannot_self_certify_privileged_source(tmp_path: Path) -> None:
+    path = tmp_path / "marketplace.toml"
+    write_registry(path, "version = 1\n")
+    raw = manifest()
+    raw["distribution"]["source"] = "core"
+    result = resolve_installed_provenance(
+        manifest=PackageManifest.from_dict(raw), record={"version": "1.0.0"},
+        package_dir=tmp_path, registry_path=path,
+    )
+    assert result == {"declaredSource": "core", "effectiveSource": "community",
+                      "certifiedSource": "", "certified": False,
+                      "authority": "manual", "mismatch": True}
+
+
+def test_bundled_core_requires_registry_tree_hash(tmp_path: Path, monkeypatch, db) -> None:
+    packages = tmp_path / "packages"
+    package_dir = packages / "content" / "core-pack"
+    package_dir.mkdir(parents=True)
+    raw = manifest(package_id="core-pack", kind="content")
+    raw["distribution"] = {"source": "core"}
+    (package_dir / "manifest.json").write_text(json.dumps(raw), encoding="utf-8")
+    digest = compute_package_tree_hash(package_dir)
+    registry_path, cache = tmp_path / "marketplace.toml", tmp_path / "cache.json"
+    write_registry(registry_path, f'''version = 1
+[[packages]]
+id = "core-pack"
+kind = "content"
+manifest = "https://packages.test/core.json"
+source = "core"
+bundled = true
+approved_tree_sha256 = "{digest}"
+''')
+    monkeypatch.setattr(package_registry, "PACKAGES_DIR", packages)
+    item = MarketplaceService(registry_path=registry_path, cache_path=cache,
+        fetcher=lambda *_: pytest.fail("bundled packages are local")).refresh()["packages"][0]
+    assert item["validationState"] == "valid"
+    assert item["effectiveSource"] == "core"
+    assert item["sourceCertified"] is True
 
 
 def test_catalog_refreshes_automatically_before_its_first_render(tmp_path: Path, db) -> None:
@@ -290,6 +357,40 @@ def test_checksum_mismatch_never_installs(marketplace_install_env) -> None:
     assert not (packages / "addons" / "curated-addon").exists()
 
 
+@pytest.mark.parametrize("checksum", ["", "abc", "g" * 64])
+def test_missing_or_malformed_checksum_is_unavailable(tmp_path, db, checksum) -> None:
+    path, cache = tmp_path / "marketplace.toml", tmp_path / "cache.json"
+    write_registry(path)
+    item = MarketplaceService(registry_path=path, cache_path=cache,
+        fetcher=lambda *_: json.dumps(manifest(sha256=checksum)).encode()).refresh()["packages"][0]
+    assert item["validationState"] == "unavailable"
+    assert item["validationError"] == "MARKETPLACE_ARTIFACT_INVALID"
+
+
+def test_uppercase_checksum_authenticates_downloaded_bytes(marketplace_install_env) -> None:
+    _packages, path, cache = marketplace_install_env
+    data = archive(manifest())
+    service = prepared_marketplace(path, cache, data, manifest(
+        sha256=hashlib.sha256(data).hexdigest().upper()))
+    assert MarketplaceInstaller(marketplace=service, fetcher=lambda *_: data).install(
+        package_id="curated-addon", user_id=None).success
+
+
+def test_staged_dependency_incompatibility_is_rejected(marketplace_install_env) -> None:
+    packages, path, cache = marketplace_install_env
+    remote_manifest = manifest()
+    remote_manifest["dependencies"] = [{"id": "missing-library", "kind": "library", "minimum": "1.0.0"}]
+    data = archive(remote_manifest)
+    metadata = dict(remote_manifest)
+    metadata["distribution"] = {"type": "zip", "url": "https://packages.test/addon.zip",
+                                "sha256": hashlib.sha256(data).hexdigest()}
+    service = prepared_marketplace(path, cache, data, metadata)
+    result = MarketplaceInstaller(marketplace=service, fetcher=lambda *_: data).install(
+        package_id="curated-addon", user_id=None)
+    assert result.error_key == "sdk.errors.dependency_missing"
+    assert not (packages / "addons" / "curated-addon").exists()
+
+
 def test_path_traversal_archive_is_rejected(marketplace_install_env) -> None:
     packages, path, cache = marketplace_install_env
     base = manifest()
@@ -333,6 +434,52 @@ def test_staged_install_and_successful_update(marketplace_install_env) -> None:
     assert disk["version"] == "2.0.0"
 
 
+def test_update_refuses_to_replace_enabled_package(marketplace_install_env) -> None:
+    _packages, path, cache = marketplace_install_env
+    first = archive(manifest())
+    service = prepared_marketplace(path, cache, first, manifest(sha256=hashlib.sha256(first).hexdigest()))
+    assert MarketplaceInstaller(marketplace=service, fetcher=lambda *_: first).install(
+        package_id="curated-addon", user_id=None).success
+    assert PackageInstallService().enable(package_id="curated-addon").success
+    second = archive(manifest(version="2.0.0"))
+    service = prepared_marketplace(path, cache, second, manifest(
+        version="2.0.0", sha256=hashlib.sha256(second).hexdigest()))
+    result = MarketplaceInstaller(marketplace=service, fetcher=lambda *_: second).install(
+        package_id="curated-addon", user_id=None)
+    assert result.error_key == "PACKAGE_UPDATE_DISABLE_FIRST"
+    assert PackageInstallService().get("curated-addon")["version"] == "1.0.0"
+
+
+def test_update_refuses_package_active_in_campaign(marketplace_install_env, monkeypatch) -> None:
+    _packages, path, cache = marketplace_install_env
+    first = archive(manifest())
+    service = prepared_marketplace(path, cache, first, manifest(sha256=hashlib.sha256(first).hexdigest()))
+    assert MarketplaceInstaller(marketplace=service, fetcher=lambda *_: first).install(
+        package_id="curated-addon", user_id=None).success
+    monkeypatch.setattr(PackageInstallService, "active_campaign_ids", lambda *_: ["campaign"])
+    second = archive(manifest(version="2.0.0"))
+    service = prepared_marketplace(path, cache, second, manifest(
+        version="2.0.0", sha256=hashlib.sha256(second).hexdigest()))
+    result = MarketplaceInstaller(marketplace=service, fetcher=lambda *_: second).install(
+        package_id="curated-addon", user_id=None)
+    assert result.error_key == "PACKAGE_UPDATE_ACTIVE_IN_CAMPAIGN"
+
+
+@pytest.mark.parametrize("remote_version", ["1.0.0", "0.9.9"])
+def test_update_rejects_same_version_and_downgrade(marketplace_install_env, remote_version) -> None:
+    _packages, path, cache = marketplace_install_env
+    first = archive(manifest())
+    service = prepared_marketplace(path, cache, first, manifest(sha256=hashlib.sha256(first).hexdigest()))
+    assert MarketplaceInstaller(marketplace=service, fetcher=lambda *_: first).install(
+        package_id="curated-addon", user_id=None).success
+    candidate = archive(manifest(version=remote_version))
+    service = prepared_marketplace(path, cache, candidate, manifest(
+        version=remote_version, sha256=hashlib.sha256(candidate).hexdigest()))
+    result = MarketplaceInstaller(marketplace=service, fetcher=lambda *_: candidate).install(
+        package_id="curated-addon", user_id=None)
+    assert result.error_key == "PACKAGE_UPDATE_NOT_NEWER"
+
+
 def test_failed_update_restores_previous_version(marketplace_install_env, monkeypatch) -> None:
     packages, path, cache = marketplace_install_env
     first = archive(manifest())
@@ -363,3 +510,117 @@ def test_artifact_manifest_must_match_fetched_manifest(marketplace_install_env) 
         package_id="curated-addon", user_id=None)
     assert result.error_key == "MARKETPLACE_ARTIFACT_MANIFEST_MISMATCH"
     assert not (packages / "addons" / "curated-addon").exists()
+
+
+@pytest.mark.parametrize("name", [
+    "../escape.txt", "/absolute.txt", "C:/windows.txt", "//server/share.txt",
+    "trailing-space ", "trailing-dot.", "folder/file. ",
+])
+def test_hostile_member_paths_are_rejected(marketplace_install_env, name: str) -> None:
+    packages, _path, _cache = marketplace_install_env
+    data = archive(manifest(), {name: b"hostile"})
+    result = package_archive_installer.stage_archive(filename="hostile.zip", data=data)
+    assert not result.success and result.error_key == package_archive_installer.ERROR_UNSAFE
+    assert not (packages.parent / "escape.txt").exists()
+
+
+def test_raw_zip_backslash_path_is_rejected(marketplace_install_env) -> None:
+    data = archive(manifest(), {"folder/escape.txt": b"hostile"})
+    data = data.replace(b"folder/escape.txt", b"folder\\escape.txt")
+    result = package_archive_installer.stage_archive(filename="backslash.zip", data=data)
+    assert not result.success and result.error_key == package_archive_installer.ERROR_UNSAFE
+
+
+@pytest.mark.parametrize("mode", [stat.S_IFLNK | 0o777, stat.S_IFIFO | 0o600, stat.S_IFCHR | 0o600])
+def test_special_zip_member_types_are_rejected(marketplace_install_env, mode: int) -> None:
+    info = zipfile.ZipInfo("special-entry")
+    info.create_system = 3
+    info.external_attr = mode << 16
+    output = io.BytesIO()
+    with zipfile.ZipFile(output, "w") as package:
+        package.writestr("manifest.json", json.dumps(manifest()))
+        package.writestr(info, b"target")
+    result = package_archive_installer.stage_archive(filename="special.zip", data=output.getvalue())
+    assert not result.success and result.error_key == package_archive_installer.ERROR_UNSAFE
+
+
+@pytest.mark.parametrize("names", [
+    ("duplicate.txt", "duplicate.txt"),
+    ("Case.txt", "case.txt"),
+    ("Manifest.json", "manifest.json"),
+])
+def test_duplicate_and_windows_case_collisions_are_rejected(marketplace_install_env, names) -> None:
+    output = io.BytesIO()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        with zipfile.ZipFile(output, "w") as package:
+            package.writestr("manifest.json", json.dumps(manifest()))
+            package.writestr(names[0], b"first")
+            package.writestr(names[1], b"second")
+    result = package_archive_installer.stage_archive(filename="collision.zip", data=output.getvalue())
+    assert not result.success and result.error_key == package_archive_installer.ERROR_UNSAFE
+
+
+def test_zip_compression_bomb_ratio_is_rejected(marketplace_install_env) -> None:
+    data = archive(manifest(), {"huge.txt": b"0" * (2 * 1024 * 1024)})
+    result = package_archive_installer.stage_archive(filename="bomb.zip", data=data)
+    assert not result.success and result.error_key == package_archive_installer.ERROR_TOO_LARGE
+
+
+def test_zip_entry_budget_is_rejected(marketplace_install_env, monkeypatch) -> None:
+    monkeypatch.setattr(package_archive_installer, "MAX_ZIP_ENTRIES", 1)
+    data = archive(manifest(), {"second.txt": b"x"})
+    result = package_archive_installer.stage_archive(filename="many.zip", data=data)
+    assert not result.success and result.error_key == package_archive_installer.ERROR_TOO_LARGE
+
+
+def test_publication_failure_restores_old_package(marketplace_install_env, monkeypatch) -> None:
+    packages, path, cache = marketplace_install_env
+    first = archive(manifest())
+    service = prepared_marketplace(path, cache, first, manifest(sha256=hashlib.sha256(first).hexdigest()))
+    assert MarketplaceInstaller(marketplace=service, fetcher=lambda *_: first).install(
+        package_id="curated-addon", user_id=None).success
+    second = archive(manifest(version="2.0.0"))
+    service = prepared_marketplace(path, cache, second, manifest(version="2.0.0", sha256=hashlib.sha256(second).hexdigest()))
+    real_move = __import__("app.engine.sdk.marketplace_installer", fromlist=["shutil"]).shutil.move
+    calls = 0
+    def fail_publish(src, dst):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("publish failed")
+        return real_move(src, dst)
+    monkeypatch.setattr("app.engine.sdk.marketplace_installer.shutil.move", fail_publish)
+    result = MarketplaceInstaller(marketplace=service, fetcher=lambda *_: second).install(
+        package_id="curated-addon", user_id=None)
+    assert result.error_key == "PACKAGE_INSTALL_FAILED"
+    disk = json.loads((packages / "addons" / "curated-addon" / "manifest.json").read_text())
+    assert disk["version"] == "1.0.0"
+
+
+def test_rollback_failure_preserves_recovery_artifacts(marketplace_install_env, monkeypatch) -> None:
+    packages, path, cache = marketplace_install_env
+    first = archive(manifest())
+    service = prepared_marketplace(path, cache, first, manifest(sha256=hashlib.sha256(first).hexdigest()))
+    assert MarketplaceInstaller(marketplace=service, fetcher=lambda *_: first).install(
+        package_id="curated-addon", user_id=None).success
+    second = archive(manifest(version="2.0.0"))
+    service = prepared_marketplace(path, cache, second, manifest(version="2.0.0", sha256=hashlib.sha256(second).hexdigest()))
+    installer = MarketplaceInstaller(marketplace=service, fetcher=lambda *_: second)
+    class FailingRepository:
+        def get(self, package_id): return PackageInstallService().get(package_id)
+        def upsert(self, **_kwargs): raise RuntimeError("persist failed")
+    installer.installed = FailingRepository()
+    real_move = __import__("app.engine.sdk.marketplace_installer", fromlist=["shutil"]).shutil.move
+    def fail_restore(src, dst):
+        if ".marketplace-backup-" in str(src) and str(dst).endswith("curated-addon"):
+            raise OSError("rollback failed")
+        return real_move(src, dst)
+    monkeypatch.setattr("app.engine.sdk.marketplace_installer.shutil.move", fail_restore)
+    result = installer.install(package_id="curated-addon", user_id=None)
+    assert result.error_key == "PACKAGE_ROLLBACK_FAILED"
+    assert result.recovery_paths
+    assert all(Path(value).exists() for value in result.recovery_paths)
+    assert PackageInstallService().get("curated-addon")["version"] == "1.0.0"
+    assert any(finding.code == "sdk.update.recovery_required"
+               for finding in PackageDoctorService().audit())

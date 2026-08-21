@@ -25,9 +25,12 @@ from app.persistence.repositories.actor_repository import ActorRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.engine.chat.chat_service import ChatService
 from app.engine.combat.combat_service import CombatService
+from app.domain.roles import PlayerRole
+from app.engine.content.content_pack_access import ContentPackAccessService
 from app.engine.content.content_pack_service import ContentPackService
 from app.engine.sdk.package_content_service import PackageContentService
 from app.engine.sheets.actor_sheet_service import ActorSheetService
+from app.engine.sheets.item_sheet_service import ItemSheetService
 from app.engine.sheets.sheet_action_service import ActionResult, SheetActionService
 from app.engine.sheets.sheet_data_service import SheetDataResult, SheetDataService
 from app.engine.sheets.sheet_drop_service import SheetDropService
@@ -36,6 +39,7 @@ from app.engine.tokens.token_instance_sheet_service import TokenSheetDataResult
 from app.engine.tokens.token_service import TokenService
 from app.engine.tokens.token_instance_sheet_service import TokenInstanceSheetService
 from app.helpers.env import PROJECT_ROOT
+from app.config import config
 from app.helpers.view import view_context
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
@@ -670,6 +674,7 @@ async def execute_action(
         roll_options=roll_options if isinstance(roll_options, dict) else None,
         target_actor_id=str(body.get("target_actor_id") or "") or None,
         target_token_id=str(body.get("target_token_id") or "") or None,
+        locale=view_context(cookies)["locale"],
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
@@ -882,9 +887,154 @@ async def list_content_packs(
     system_id: FromPath[str],
     request: Request,
     cookies: dict[str, str],
+    current_user: Row,
     content_pack_service: ContentPackService,
+    content_pack_access: ContentPackAccessService,
 ) -> Response[dict[str, Any]]:
-    return Response({"packs": content_pack_service.list_packs(system_id)}, status_code=200)
+    campaign_id = str(request.query_params.get("campaign_id") or "")
+    if not campaign_id:
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+    is_gm = content_pack_access.role_of(
+        campaign_id=campaign_id, user_id=current_user["id"]
+    ) == PlayerRole.GM.value
+    niveis = content_pack_access.levels_for_campaign(campaign_id=campaign_id)
+    packs = []
+    for pack in content_pack_service.list_packs(system_id):
+        pack_id = str(pack.get("id") or "")
+        if not content_pack_access.can_read(
+            campaign_id=campaign_id, package_id=system_id, pack_id=pack_id,
+            user_id=current_user["id"],
+        ):
+            continue
+        # O nivel viaja junto so para quem concede: e o que enche o seletor sem
+        # uma segunda ida ao servidor por pack.
+        if is_gm:
+            pack = {
+                **pack,
+                "player_access": niveis.get((system_id, pack_id, PlayerRole.PLAYER.value), "none"),
+            }
+        packs.append(pack)
+    return Response({"packs": packs, "can_grant": is_gm}, status_code=200)
+
+
+@get("/game/content/pack/{system_id:str}/{pack_id:str}/entry/{entry_id:str}/sheet")
+async def show_compendium_entry_sheet(
+    system_id: FromPath[str],
+    pack_id: FromPath[str],
+    entry_id: FromPath[str],
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    package_content_service: PackageContentService,
+    actor_sheet_service: ActorSheetService,
+    item_sheet_service: ItemSheetService,
+    content_pack_access: ContentPackAccessService,
+) -> Redirect | Template:
+    """A entrada do compendio aberta na ficha de verdade, em leitura.
+
+    Nao existe uma "tela de compendio": o que o mestre e o jogador leem aqui e o
+    mesmo renderizador de ficha do mundo, com can_edit falso. Manter duas telas
+    para a mesma coisa e o que faz uma delas envelhecer.
+    """
+    campaign_id = str(request.query_params.get("campaign_id") or "")
+    if not campaign_id or not content_pack_access.can_read(
+        campaign_id=campaign_id, package_id=system_id, pack_id=pack_id,
+        user_id=current_user["id"],
+    ):
+        return Redirect(path="/game")
+
+    pack = package_content_service.get_pack(system_id, pack_id)
+    entry = package_content_service.get_entry(system_id, pack_id, entry_id)
+    # Compatibility for tests/older adapters which override get_pack only.
+    if entry is None:
+        entry = next(
+            (e for e in (pack or {}).get("entries", []) if str(e.get("id") or "") == entry_id), None
+        )
+    if entry is None:
+        return Redirect(path="/game")
+
+    base_context = view_context(cookies)
+    modal_id = f"compendium-{system_id}-{pack_id}-{entry_id}"
+    campanha = CampaignRepository().get(campaign_id) or {}
+    sistema = str(
+        entry.get("systemId")
+        or entry.get("system_id")
+        or campanha.get("active_system_id")
+        or ""
+    )
+    is_gm = content_pack_access.role_of(
+        campaign_id=campaign_id, user_id=current_user["id"]
+    ) == PlayerRole.GM.value
+    tipo_do_pack = str((pack or {}).get("type") or "")
+    comum = {
+        **base_context,
+        "compendium_modal_id": modal_id,
+        "room_id": campaign_id,
+        "is_gm": is_gm,
+    }
+    nome = str(entry.get("name") or entry.get("title") or "")
+    dados = entry.get("data") if isinstance(entry.get("data"), dict) else {}
+
+    # O tipo do PACK decide a ficha. Mandar tudo para a de ator desenhava um
+    # arco curto com classe, raca e pontos de experiencia -- e sem layout, porque
+    # nao existe ficha de ator do tipo "weapon".
+    if tipo_do_pack in {"item_pack", "spell_pack"}:
+        item_bundle = item_sheet_service.build_preview_bundle(
+            preview_id=modal_id, campaign_id=campaign_id, system_id=sistema,
+            item_type=str(entry.get("type") or ""), name=nome, data=dados,
+            locale=base_context["locale"],
+        )
+        return Template(
+            template_name="pages/game/_item_sheet_modal.html",
+            context={
+                **comum,
+                "item": item_bundle,
+                "bundle_json": json.dumps(
+                    item_sheet_service.to_dict(item_bundle), separators=(",", ":")
+                ),
+                "targeted_handouts_enabled": config.targeted_handouts_enabled,
+            },
+        )
+
+    bundle = actor_sheet_service.build_preview_bundle(
+        preview_id=modal_id,
+        campaign_id=campaign_id,
+        system_id=sistema,
+        actor_type=str(entry.get("type") or ""),
+        name=nome,
+        data=dados,
+        locale=base_context["locale"],
+    )
+    return Template(
+        template_name="pages/game/_actor_sheet_modal.html",
+        context={
+            **comum,
+            "actor": bundle,
+            "actor_core_version": 0,
+            "bundle_json": json.dumps(actor_sheet_service.to_dict(bundle), separators=(",", ":")),
+        },
+    )
+
+
+@post("/game/content/pack-access")
+async def set_content_pack_access(
+    request: Request,
+    current_user: Row,
+    content_pack_access: ContentPackAccessService,
+) -> Response[dict[str, Any]]:
+    """O mestre abre ou fecha um pack para um papel."""
+    body = await _json_body(request)
+    granted = content_pack_access.set_level(
+        campaign_id=str(body.get("campaign_id") or ""),
+        package_id=str(body.get("package_id") or ""),
+        pack_id=str(body.get("pack_id") or ""),
+        role=str(body.get("role") or PlayerRole.PLAYER.value),
+        level=str(body.get("level") or "none"),
+        user_id=current_user["id"],
+    )
+    if not granted:
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+    return Response({"level": str(body.get("level") or "none")}, status_code=200)
 
 
 @get("/game/content/active-packages")
@@ -907,9 +1057,24 @@ async def get_content_pack(
     pack_id: FromPath[str],
     request: Request,
     cookies: dict[str, str],
+    current_user: Row,
     content_pack_service: ContentPackService,
+    content_pack_access: ContentPackAccessService,
 ) -> Response[dict[str, Any]]:
-    pack = content_pack_service.get_pack(system_id, pack_id)
+    campaign_id = str(request.query_params.get("campaign_id") or "")
+    if not campaign_id or not content_pack_access.can_read(
+        campaign_id=campaign_id, package_id=system_id, pack_id=pack_id, user_id=current_user["id"]
+    ):
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
+    query = str(request.query_params.get("q") or "")
+    try:
+        offset = int(request.query_params.get("offset") or 0)
+        limit = int(request.query_params.get("limit") or 50)
+    except (TypeError, ValueError):
+        return Response({"error_key": "game.content.errors.invalid_query"}, status_code=400)
+    pack = content_pack_service.get_index(
+        system_id, pack_id, query=query, offset=offset, limit=limit
+    )
     if pack is None:
         return Response({"error_key": "game.drop.errors.entry_not_found"}, status_code=404)
     return Response(pack, status_code=200)
@@ -987,19 +1152,30 @@ async def import_content_entry(
     cookies: dict[str, str],
     current_user: Row,
     package_content_service: PackageContentService,
+    content_pack_access: ContentPackAccessService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
+    campaign_id = str(body.get("campaign_id", ""))
+    package_id = str(body.get("package_id") or body.get("system_id") or "")
+    pack_id = str(body.get("pack_id", ""))
+    # Importar cria ator ou item na campanha: exige `owner` no pack, aqui e nao
+    # so escondendo o botao. Quem tem `read` consulta, mas nao traz para a mesa.
+    if not content_pack_access.can_import(
+        campaign_id=campaign_id, package_id=package_id, pack_id=pack_id, user_id=user["id"]
+    ):
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
     result = package_content_service.import_entry(
-        campaign_id=str(body.get("campaign_id", "")),
+        campaign_id=campaign_id,
         user_id=user["id"],
-        package_id=str(body.get("package_id") or body.get("system_id") or ""),
-        pack_id=str(body.get("pack_id", "")),
+        package_id=package_id,
+        pack_id=pack_id,
         entry_id=str(body.get("entry_id", "")),
+        folder_id=str(body.get("folder_id") or ""),
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
-    if result.campaign_id:
+    if result.campaign_id and result.actor_id:
         await RealtimeTransport().to_room(
             room_id=result.campaign_id,
             event=TransportEvent.ACTOR_CREATED,
@@ -1010,7 +1186,37 @@ async def import_content_entry(
                 "updated_by": user["id"],
             },
         )
-    return Response({"actor_id": result.actor_id}, status_code=201)
+    if result.deck_id and result.campaign_id:
+        await RealtimeTransport().to_room(
+            room_id=result.campaign_id,
+            event=TransportEvent.CARDS_STATE_UPDATED,
+            payload={"room_id": result.campaign_id, "deck_id": result.deck_id,
+                     "updated_by": user["id"]},
+        )
+    if result.item_id and result.campaign_id:
+        await RealtimeTransport().to_room(
+            room_id=result.campaign_id, event=TransportEvent.ITEM_CREATED,
+            payload={"room_id": result.campaign_id, "item_id": result.item_id,
+                     "system_id": result.system_id or "", "updated_by": user["id"]},
+        )
+    if result.journal_id and result.campaign_id:
+        await RealtimeTransport().to_room(
+            room_id=result.campaign_id, event=TransportEvent.JOURNAL_CREATED,
+            payload={"room_id": result.campaign_id, "journal_id": result.journal_id,
+                     "updated_by": user["id"]},
+        )
+    if result.scene_id and result.campaign_id:
+        await RealtimeTransport().to_room(
+            room_id=result.campaign_id, event=TransportEvent.SCENE_CREATED,
+            payload={"room_id": result.campaign_id, "scene_id": result.scene_id,
+                     "updated_by": user["id"]},
+        )
+    return Response(
+        {"actor_id": result.actor_id, "item_id": result.item_id,
+         "journal_id": result.journal_id, "deck_id": result.deck_id,
+         "scene_id": result.scene_id},
+        status_code=201,
+    )
 
 
 @post("/game/content/package/import")
@@ -1018,6 +1224,7 @@ async def import_content_package(
     request: Request,
     current_user: Row,
     package_content_service: PackageContentService,
+    content_pack_access: ContentPackAccessService,
 ) -> Response[dict[str, Any]]:
     """Import every importable entry from one active content package."""
     body = await _json_body(request)
@@ -1026,6 +1233,8 @@ async def import_content_package(
     created_items: list[str] = []
     created_actors: list[str] = []
     created_journals: list[str] = []
+    created_decks: list[str] = []
+    created_scenes: list[str] = []
     errors: list[dict[str, str]] = []
     active_package = next(
         (
@@ -1042,6 +1251,13 @@ async def import_content_package(
         return Response({"error_key": "sdk.errors.dependency_inactive"}, status_code=400)
     for summary in package_content_service.list_packs(package_id):
         pack_id = str(summary.get("id") or "")
+        # Importar o pacote inteiro nao pode contornar o acesso pack a pack: o
+        # que o usuario nao poderia trazer um a um, tambem nao vem no lote.
+        if not content_pack_access.can_import(
+            campaign_id=campaign_id, package_id=package_id, pack_id=pack_id,
+            user_id=current_user["id"],
+        ):
+            continue
         pack = package_content_service.get_pack(package_id, pack_id)
         if pack is None:
             continue
@@ -1084,6 +1300,14 @@ async def import_content_package(
                 created_journals.append(result.journal_id)
                 event = TransportEvent.JOURNAL_CREATED
                 entity_id = result.journal_id
+            elif result.deck_id:
+                created_decks.append(result.deck_id)
+                event = TransportEvent.CARDS_STATE_UPDATED
+                entity_id = result.deck_id
+            elif result.scene_id:
+                created_scenes.append(result.scene_id)
+                event = TransportEvent.SCENE_CREATED
+                entity_id = result.scene_id
             else:
                 continue
             await RealtimeTransport().to_room(
@@ -1096,7 +1320,9 @@ async def import_content_package(
                         if result.item_id
                         else "actor_id"
                         if result.actor_id
-                        else "journal_id"
+                        else "journal_id" if result.journal_id
+                        else "deck_id" if result.deck_id
+                        else "scene_id"
                     ): entity_id,
                     "system_id": result.system_id or "",
                     "updated_by": current_user["id"],
@@ -1104,10 +1330,12 @@ async def import_content_package(
             )
     return Response(
         {
-            "imported": len(created_items) + len(created_actors) + len(created_journals),
+            "imported": len(created_items) + len(created_actors) + len(created_journals) + len(created_decks) + len(created_scenes),
             "item_ids": created_items,
             "actor_ids": created_actors,
             "journal_ids": created_journals,
+            "deck_ids": created_decks,
+            "scene_ids": created_scenes,
             "errors": errors,
         },
         status_code=200,

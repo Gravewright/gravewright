@@ -174,16 +174,25 @@ class PackageContentPack:
     label: str
     path: str
     label_key: str = ""
+    document_type: str = ""
+    format_version: int = 1
+    index_fields: tuple[str, ...] = ()
 
     @classmethod
     def from_dict(cls, raw: object) -> PackageContentPack:
         raw = _dict(raw)
+        format_version = raw.get("formatVersion", 1)
+        if not isinstance(format_version, int) or isinstance(format_version, bool):
+            format_version = 0
         return cls(
             id=_str(raw.get("id")),
             type=_str(raw.get("type")),
             label=_str(raw.get("label")),
             label_key=_str(raw.get("labelKey")),
             path=_str(raw.get("path")),
+            document_type=_str(raw.get("documentType")),
+            format_version=format_version,
+            index_fields=tuple(_str(value) for value in _list(raw.get("indexFields")) if _str(value)),
         )
 
 
@@ -266,6 +275,7 @@ class PackageDistribution:
     type: str = ""
     url: str = ""
     sha256: str = ""
+    source: str = ""
 
     @classmethod
     def from_dict(cls, raw: object) -> PackageDistribution | None:
@@ -275,16 +285,19 @@ class PackageDistribution:
             type=_str(raw.get("type")),
             url=_str(raw.get("url")),
             sha256=_str(raw.get("sha256")),
+            source=_str(raw.get("source")),
         )
 
     @classmethod
     def from_manifest(cls, raw: dict) -> PackageDistribution | None:
         """Resolve additive v1 distribution metadata without changing SDK version."""
         nested = cls.from_dict(raw.get("distribution"))
-        if nested is not None:
-            return nested
         download = _str(raw.get("download"))
         sha256 = _str(raw.get("sha256"))
+        if nested is not None:
+            return cls(type=nested.type or ("zip" if download or sha256 else ""),
+                       url=nested.url or download, sha256=nested.sha256 or sha256,
+                       source=nested.source)
         return cls(type="zip", url=download, sha256=sha256) if download or sha256 else None
 
 
@@ -554,6 +567,9 @@ class PackageManifest:
                 "verified": self.compatibility.verified,
                 "maximum": self.compatibility.maximum,
             },
+            "distribution": {
+                "declared_source": self.distribution.source if self.distribution else "",
+            },
             "actor_types": [
                 {"id": t.id, "label": self._resolve_label(t.label, t.label_key, locale_data)}
                 for t in self.provides.actor_types
@@ -575,6 +591,9 @@ class PackageManifest:
                 {
                     "id": p.id,
                     "type": p.type,
+                    "document_type": p.document_type or p.type.removesuffix("_pack"),
+                    "format_version": p.format_version,
+                    "index_fields": list(p.index_fields),
                     "label": self._resolve_label(p.label, p.label_key, locale_data),
                 }
                 for p in self.provides.content_packs

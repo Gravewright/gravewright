@@ -14,6 +14,9 @@ from app.engine.sdk.marketplace_service import MarketplaceService, fetch_bytes
 from app.engine.sdk.package_doctor_service import PackageDoctorService, SEVERITY_ERROR
 from app.engine.sdk.package_integrity import VALIDATION_VALID, compute_manifest_hash
 from app.engine.sdk.package_install_service import STATUS_INSTALLED
+from app.engine.sdk.package_install_service import PackageInstallService, STATUS_ENABLED
+from app.engine.sdk.package_dependency_service import PackageDependencyService
+from app.engine.sdk.package_compatibility import update_version_is_valid, version_key
 from app.engine.sdk.package_loader import load_package
 from app.persistence.repositories.installed_package_repository import InstalledPackageRepository
 
@@ -23,6 +26,7 @@ class MarketplaceInstallResult:
     success: bool
     package_id: str = ""
     error_key: str = ""
+    recovery_paths: tuple[str, ...] = ()
 
 
 class MarketplaceInstaller:
@@ -35,6 +39,17 @@ class MarketplaceInstaller:
         entry = self.marketplace.get_valid(package_id)
         if entry is None:
             return MarketplaceInstallResult(False, package_id, "MARKETPLACE_PACKAGE_UNAVAILABLE")
+        previous = self.installed.get(package_id)
+        if previous is not None:
+            if not (update_version_is_valid(str(entry.get("version", "")))
+                    and update_version_is_valid(str(previous.get("version", "")))):
+                return MarketplaceInstallResult(False, package_id, "PACKAGE_UPDATE_VERSION_INVALID")
+            if version_key(str(entry.get("version", ""))) <= version_key(str(previous.get("version", ""))):
+                return MarketplaceInstallResult(False, package_id, "PACKAGE_UPDATE_NOT_NEWER")
+            if str(previous.get("status")) == STATUS_ENABLED:
+                return MarketplaceInstallResult(False, package_id, "PACKAGE_UPDATE_DISABLE_FIRST")
+            if PackageInstallService().active_campaign_ids(package_id):
+                return MarketplaceInstallResult(False, package_id, "PACKAGE_UPDATE_ACTIVE_IN_CAMPAIGN")
         artifact = entry.get("artifact") or {}
         try:
             data = self.fetcher(str(artifact.get("url", "")), package_archive_installer.MAX_PACKAGE_BYTES)
@@ -54,6 +69,8 @@ class MarketplaceInstaller:
         staged_raw = json.loads((staged.staging_dir / "manifest.json").read_text(encoding="utf-8"))
         expected = entry.get("manifestIdentity") or {}
         actual_identity = {key: staged_raw.get(key) for key in ("id", "kind", "version", "sdkVersion")}
+        actual_identity["source"] = (((staged_raw.get("distribution") or {}).get("source") or "")
+                                     if isinstance(staged_raw.get("distribution"), dict) else "")
         if actual_identity != expected:
             package_archive_installer.discard(staged.staging_dir)
             return MarketplaceInstallResult(False, package_id, "MARKETPLACE_ARTIFACT_MANIFEST_MISMATCH")
@@ -63,6 +80,11 @@ class MarketplaceInstaller:
         if any(finding.severity == SEVERITY_ERROR for finding in findings):
             package_archive_installer.discard(staged.staging_dir)
             return MarketplaceInstallResult(False, package_id, "PACKAGE_DOCTOR_REJECTED")
+        dependency_report = PackageDependencyService().check_manifest(loaded.manifest)
+        if not dependency_report.ok:
+            package_archive_installer.discard(staged.staging_dir)
+            error = PackageDependencyService.first_error_key(dependency_report)
+            return MarketplaceInstallResult(False, package_id, error or "PACKAGE_DEPENDENCY_REJECTED")
 
         target = package_registry.package_dir_for(staged.kind or "", package_id)
         if target is None:
@@ -70,7 +92,7 @@ class MarketplaceInstaller:
             return MarketplaceInstallResult(False, package_id, "PACKAGE_ARCHIVE_INVALID")
         target.parent.mkdir(parents=True, exist_ok=True)
         backup = target.parent / f".marketplace-backup-{package_id}-{uuid.uuid4().hex}"
-        previous = self.installed.get(package_id)
+        failed_new = target.parent / f".marketplace-failed-new-{package_id}-{uuid.uuid4().hex}"
         try:
             if target.exists():
                 shutil.move(str(target), str(backup))
@@ -88,9 +110,21 @@ class MarketplaceInstaller:
                 manifest_hash=compute_manifest_hash(installed.raw), last_validation_status=VALIDATION_VALID,
             )
         except Exception:
-            package_archive_installer.discard(target)
-            if backup.exists():
-                shutil.move(str(backup), str(target))
+            recovery: list[str] = []
+            try:
+                if target.exists():
+                    shutil.move(str(target), str(failed_new))
+            except Exception:
+                recovery.append(str(target))
+            try:
+                if backup.exists():
+                    shutil.move(str(backup), str(target))
+            except Exception:
+                recovery.extend(str(path) for path in (backup, failed_new, staged.staging_dir)
+                                if path.exists())
+                return MarketplaceInstallResult(False, package_id, "PACKAGE_ROLLBACK_FAILED",
+                                                tuple(dict.fromkeys(recovery)))
+            package_archive_installer.discard(failed_new)
             package_archive_installer.discard(staged.staging_dir)
             return MarketplaceInstallResult(False, package_id, "PACKAGE_INSTALL_FAILED")
         package_archive_installer.discard(backup)

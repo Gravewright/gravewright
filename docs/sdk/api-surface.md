@@ -61,7 +61,7 @@ to the namespaces above and inherit their status.
 | `provides{storage,actorTypes,itemTypes,rules,mappings,contentPacks,locales,assets,areaMarkers}` | `stable` |
 | `settings[]` | `stable` |
 | `dependencies[]`, `conflicts[]` | `stable` |
-| `distribution{type,url,sha256}` | `stable` |
+| `distribution{source,type,url,sha256}` | `stable`; optional `source` added compatibly in RC 1 |
 | `display{color}` | `stable` |
 | `storage.sqlite{...}` | `stable` |
 | `interop{emits,listens,provides,requires}` | `stable` |

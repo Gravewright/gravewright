@@ -36,6 +36,7 @@ ACTIVATION_SCOPES = {"campaign", "global", "user"}
 SETTING_SCOPES = {"global", "package", "campaign", "user", "client"}
 SETTING_TYPES = {"boolean", "string", "number", "integer", "enum"}
 DISTRIBUTION_TYPES = {"zip", "git", "directory"}
+DISTRIBUTION_SOURCES = {"core", "community", "partner"}
 KNOWN_PROVIDES_KEYS = {
     "storage",
     "actorTypes",
@@ -55,7 +56,15 @@ CONTENT_PACK_TYPES = {
     "journal_pack",
     "table_pack",
     "condition_pack",
+    "scene_pack",
+    "card_pack",
+    "deck_pack",
+    "asset_pack",
+    "macro_pack",
+    "playlist_pack",
+    "document_pack",
 }
+CONTENT_DOCUMENT_TYPE = re.compile(r"^[a-z][a-z0-9_.-]{0,63}$")
 
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".svg")
 MAP_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
@@ -147,7 +156,13 @@ def validate_manifest(raw: object) -> PackageManifestValidation:
 
 
     for pack in manifest.provides.content_packs:
-        if not pack.id or not pack.path or pack.type not in CONTENT_PACK_TYPES:
+        custom_type = bool(pack.document_type and CONTENT_DOCUMENT_TYPE.fullmatch(pack.document_type))
+        fields_valid = all(CONTENT_DOCUMENT_TYPE.fullmatch(field) for field in pack.index_fields)
+        if (
+            not pack.id or not pack.path
+            or (pack.type not in CONTENT_PACK_TYPES and not custom_type)
+            or pack.format_version not in {1, 2} or not fields_valid
+        ):
             result.add("sdk.validation.content_pack_invalid")
             break
 
@@ -355,5 +370,9 @@ def _validate_distribution(raw: dict, result: PackageManifestValidation) -> None
         result.add("sdk.validation.distribution_invalid")
         return
     dist_type = distribution.get("type")
-    if dist_type not in DISTRIBUTION_TYPES:
+    source = distribution.get("source")
+    if source is not None and source not in DISTRIBUTION_SOURCES:
+        result.add("sdk.validation.distribution_invalid")
+    has_artifact_fields = any(key in distribution for key in ("type", "url", "sha256"))
+    if has_artifact_fields and dist_type not in DISTRIBUTION_TYPES:
         result.add("sdk.validation.distribution_invalid")

@@ -417,6 +417,7 @@ The existing structured representation remains supported for SDK v1 packages:
 
 ```json
 "distribution": {
+  "source": "community",
   "type": "zip",
   "url": "https://example.com/my-package.zip",
   "sha256": "..."
@@ -428,6 +429,14 @@ Allowed `distribution.type` values:
 - `zip`
 - `git`
 - `directory`
+
+`distribution.source` is optional and accepts `core`, `community`, or `partner`.
+It is a package declaration, not proof of origin. Missing declarations remain
+compatible and default effectively to `community`. Gravewright only displays a
+certified `core` or `partner` source when the trusted Marketplace registry binds
+that source to the installed artifact (or to the complete tree hash of a bundled
+core package). Copying a privileged value into a manifest never grants a badge,
+capability, permission, or trust.
 
 ## Dependencies
 

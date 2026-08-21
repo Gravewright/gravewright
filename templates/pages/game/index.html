@@ -107,12 +107,13 @@
     <script defer src="/static/js/lighting/light-editor.js?v=20260809-preview2"></script>{% endif %}
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
-    <script defer src="/static/js/ui/modals/modal-remote.js?v=20260604-modals-split"></script>
+    <script defer src="/static/js/ui/modals/modal-remote.js?v={{ asset_version }}-compendium1"></script>
     <script defer src="/static/js/ui/modals/modal-forms.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/ui/modals/modal-window-actions.js?v=20260605-detached-remote"></script>
-    <script defer src="/static/js/ui/modals/modal-manager.js?v=20260814-journal-workspace"></script>
+    <script defer src="/static/js/ui/modals/modal-manager.js?v={{ asset_version }}-compendium1"></script>
     <script defer src="/static/js/ui/modals/modal-drag.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/modals/modal-api.js?v=20260604-modals-split"></script>
+    <script defer src="/static/js/ui/ui-state-preservation.js?v={{ asset_version }}-reload-state1"></script>
     <script defer src="/static/js/ui/permissions.js"></script>
     <script type="application/json" id="gravewright-game-context">{{ game_client_context_json | safe }}</script>
     <script type="application/json" id="gravewright-sdk-packages">{{ sdk_client_manifests_json | safe }}</script>
@@ -167,10 +168,10 @@
     {% endfor %}
 
     <script defer src="/static/js/actors/actors-api.js?v=20260604-actors-split"></script>
-    <script defer src="/static/js/actors/actors-tree.js?v=20260604-actors-split"></script>
+    <script defer src="/static/js/actors/actors-tree.js?v={{ asset_version }}-templates1"></script>
     <script defer src="/static/js/actors/actors-context-actions.js?v=20260604-actors-split"></script>
-    <script defer src="/static/js/actors/actors-drag.js?v=20260604-actors-split"></script>
-    <script defer src="/static/js/actors/actors-panel.js?v=20260604-actors-split"></script>
+    <script defer src="/static/js/actors/actors-drag.js?v={{ asset_version }}-templates1"></script>
+    <script defer src="/static/js/actors/actors-panel.js?v={{ asset_version }}-templates1"></script>
     
     <script defer src="/static/js/sheets/items/item-sheet-renderer.js?v={{ asset_version }}-embedded-items-v2"></script>
     <script defer src="/static/js/sheets/items/item-sheet-controller.js?v={{ asset_version }}-embedded-items-v2"></script>
@@ -182,9 +183,10 @@
     <script defer src="/static/js/items/items-drag.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-panel.js?v={{ asset_version }}-ctxorder1"></script>
     
-    <script defer src="/static/js/content/content-api.js"></script>
-    <script defer src="/static/js/content/content-browser.js"></script>
+    <script defer src="/static/js/content/content-api.js?v={{ asset_version }}-packaccess1"></script>
+    <script defer src="/static/js/content/content-browser.js?v={{ asset_version }}-packaccess1"></script>
     <script defer src="/static/js/content/content-drag.js"></script>
+    <script defer src="/static/js/content/content-import-drop.js?v={{ asset_version }}-compendium-dnd1"></script>
     
     <script defer src="/static/js/ui/context-menu/context-menu.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/ui/context-menu/folder-editor.js?v={{ asset_version }}-ctxorder1"></script>
@@ -465,6 +467,7 @@
     data-card-label-remaining="{{ t('game.cards.remaining') }}"
     data-card-label-deck-select="{{ t('game.cards.deck_select') }}"
     data-card-label-draw="{{ t('game.cards.draw') }}"
+    data-card-label-decks="{{ t('game.cards.decks_title') }}"
     data-card-draw-title="{{ t('game.cards.draw_modal.title') }}"
     data-card-draw-destination="{{ t('game.cards.draw_modal.destination') }}"
     data-card-draw-hand="{{ t('game.cards.draw_modal.hand') }}"
@@ -1072,6 +1075,14 @@
                                     <i class="ph ph-folder-plus" aria-hidden="true"></i>
                                     <span>{{ t("game.actors.create_folder_title") }}</span>
                                 </button>
+                                {% if room.uses_pdf_sheet_system %}
+                                <button type="button" class="directory-btn" data-actor-template-upload>
+                                    <i class="ph ph-file-pdf" aria-hidden="true"></i>
+                                    <span>{{ t("game.actors.upload_template") }}</span>
+                                </button>
+                                <input type="file" accept="application/pdf" multiple hidden
+                                    data-actor-template-input />
+                                {% endif %}
                             </div>
                         </header>
                         {% endif %}
@@ -1311,7 +1322,7 @@
                 {% include "pages/game/modals/gm_onboarding.html" %}
                 {% endif %}
 
-                {% if room.member_role == "gm" %}
+                {% if room.reaches_compendium %}
                 
                 <article class="game-modal-window game-panel" data-modal-window
                     data-modal-id="panel-content-{{ room.id }}" data-window-key="panel-content-{{ room.id }}"
@@ -1342,7 +1353,11 @@
                             data-imported-text="{{ t('game.content.imported_count') }}"
                             data-import-failed-text="{{ t('game.content.import_failed') }}"
                             data-pack-empty-text="{{ t('game.content.pack_empty') }}"
-                            data-close-text="{{ t('inside.campaigns.cancel') }}"></div>
+                            data-close-text="{{ t('inside.campaigns.cancel') }}"
+                            data-access-label="{{ t('game.content.access_label') }}"
+                            data-access-none="{{ t('game.content.access_none') }}"
+                            data-access-read="{{ t('game.content.access_read') }}"
+                            data-access-owner="{{ t('game.content.access_owner') }}"></div>
                     </div>
                 </article>
                 {% endif %}
@@ -2301,18 +2316,6 @@
                                 <span>{{ t("game.streamer.title") }}</span>
                             </button>
                             {% endif %}
-                            {% if room.member_role in ('gm', 'assistant_gm') or room.is_streamer %}
-                            <button class="settings-open-modal" type="button"
-                                data-modal-open="panel-cards-{{ room.id }}">
-                                <i class="ph ph-cards" aria-hidden="true"></i>
-                                <span>{{ t("game.cards.decks_title") }}</span>
-                            </button>
-                            <button class="settings-open-modal" type="button"
-                                data-modal-open="library-images-{{ room.id }}">
-                                <i class="ph ph-folders" aria-hidden="true"></i>
-                                <span>{{ t("game.assets.title") }}</span>
-                            </button>
-                            {% endif %}
                         </div>
                         </section>
                         </div>
@@ -2480,6 +2483,12 @@
                             data-player-view-banner="{{ t('game.tool_dock.vision.player_view_indicator') }}">
                             <i class="ph ph-eye" aria-hidden="true"></i>
                         </button>
+                        {% if room.member_role == "gm" %}
+                        <button class="tool-dock-btn" type="button" data-modal-open="library-images-{{ room.id }}"
+                            data-tooltip="{{ t('game.assets.title') }}" aria-label="{{ t('game.assets.title') }}">
+                            <i class="ph ph-folders" aria-hidden="true"></i>
+                        </button>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>
@@ -2737,7 +2746,7 @@
                         <span class="sr-only">{{ t("game.gm.scenes") }}</span>
                     </button>
                     {% endif %}
-                    {% if room.member_role == "gm" %}
+                    {% if room.reaches_compendium %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-content-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.gm.content_packs') }}"
                         title="{{ t('game.gm.content_packs') }}">

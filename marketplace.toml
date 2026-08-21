@@ -7,6 +7,7 @@ manifest = "https://raw.githubusercontent.com/Gravewright/gravewright-5e-srd/mai
 enabled = true
 channel = "stable"
 update_policy = "publisher"
+source = "community"
 
 [[packages]]
 id = "savage-worlds"
@@ -15,3 +16,4 @@ manifest = "https://raw.githubusercontent.com/Gravewright/Savage-Worlds-Compatib
 enabled = true
 channel = "stable"
 update_policy = "publisher"
+source = "community"

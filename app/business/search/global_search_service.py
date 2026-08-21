@@ -7,6 +7,7 @@ from typing import Any
 from app.business.permissions import PermissionService
 from app.domain.permissions.permissions import TablePermission
 from app.engine.actors.actor_permissions import can_view_actor
+from app.engine.content.content_pack_access import ContentPackAccessService
 from app.engine.content.content_pack_service import ContentPackService
 from app.engine.items.item_permissions import can_view_item
 from app.engine.journals.journal_service import JournalService
@@ -33,6 +34,7 @@ class GlobalSearchService:
         self.permissions = PermissionService()
         self.journals = JournalService()
         self.content_packs = ContentPackService()
+        self.pack_access = ContentPackAccessService()
 
     def search(
         self, *, campaign_id: str, user_id: str, query: str, limit: int = SEARCH_LIMIT_MAX
@@ -95,8 +97,9 @@ class GlobalSearchService:
                 )
                 results.append(entry)
 
-        if campaign.get("member_role") == "gm":
-            results.extend(self._search_compendiums(campaign=campaign, query=normalized))
+        results.extend(
+            self._search_compendiums(campaign=campaign, query=normalized, user_id=user_id)
+        )
         results.sort(key=lambda row: (row["title"].casefold(), row["type"], row["id"]))
         return GlobalSearchResult(success=True, results=results[:limit])
 
@@ -122,7 +125,9 @@ class GlobalSearchService:
             "target": {"action": labels[resource_type], "id": str(row["id"])},
         }
 
-    def _search_compendiums(self, *, campaign: dict, query: str) -> list[dict[str, Any]]:
+    def _search_compendiums(
+        self, *, campaign: dict, query: str, user_id: str
+    ) -> list[dict[str, Any]]:
         system_id = str(campaign.get("active_system_id") or "")
         if not system_id:
             return []
@@ -130,6 +135,18 @@ class GlobalSearchService:
             packs = self.content_packs.list_packs(system_id)
         except (OSError, ValueError):
             return []
+        # A busca nao pode revelar a existencia de um pack que o usuario nao
+        # alcanca: era gm-only e agora segue o mesmo nivel do resto.
+        packs = [
+            pack
+            for pack in packs
+            if self.pack_access.can_read(
+                campaign_id=str(campaign.get("id") or ""),
+                package_id=system_id,
+                pack_id=str(pack.get("id") or ""),
+                user_id=user_id,
+            )
+        ]
         needle = query.casefold()
         return [
             {

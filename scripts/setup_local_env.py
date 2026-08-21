@@ -4,7 +4,8 @@ Idempotent and safe to run repeatedly. The Windows and macOS/Linux installers
 call this so non-technical users get a working local configuration without
 editing files by hand:
 
-* If ``.env`` is missing, it is created from ``.env.example``.
+* If ``.env`` is missing, it is created from ``.env.example`` or the canonical
+  local-development template.
 * If ``SESSION_SECRET`` is missing or still the development placeholder, a
   strong random value is generated so sessions are not signed with a shared
   default.
@@ -20,16 +21,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ENV = ROOT / ".env"
 EXAMPLE = ROOT / ".env.example"
+DEVELOPMENT_EXAMPLE = ROOT / ".env.development.example"
 PLACEHOLDER_SECRETS = {"", "dev-only-change-me", "change-me"}
 
 
 def main() -> int:
     if not ENV.exists():
-        if not EXAMPLE.exists():
-            print("ERROR  .env.example not found; cannot create .env")
+        source = EXAMPLE if EXAMPLE.exists() else DEVELOPMENT_EXAMPLE
+        if not source.exists():
+            print("ERROR  no local .env template found; cannot create .env")
             return 1
-        ENV.write_text(EXAMPLE.read_text(encoding="utf-8"), encoding="utf-8")
-        print("created .env from .env.example")
+        ENV.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+        print(f"created .env from {source.name}")
 
     lines = ENV.read_text(encoding="utf-8").splitlines()
     out: list[str] = []

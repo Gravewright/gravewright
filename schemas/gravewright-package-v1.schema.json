@@ -210,14 +210,14 @@
     "distribution": {
       "type": "object",
       "additionalProperties": true,
-      "required": ["type"],
       "properties": {
         "type": {
           "type": "string",
           "enum": ["zip", "git", "directory"]
         },
         "url": { "type": "string", "format": "uri" },
-        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" }
+        "sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "source": { "type": "string", "enum": ["core", "community", "partner"] }
       }
     },
     "dependencies": {
@@ -294,8 +294,25 @@
             "spell_pack",
             "journal_pack",
             "table_pack",
-            "condition_pack"
+            "condition_pack",
+            "scene_pack",
+            "card_pack",
+            "deck_pack",
+            "asset_pack",
+            "macro_pack",
+            "playlist_pack",
+            "document_pack"
           ]
+        },
+        "documentType": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]{0,63}$"
+        },
+        "formatVersion": { "type": "integer", "enum": [1, 2] },
+        "indexFields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$" }
         },
         "label": { "type": "string" },
         "labelKey": { "type": "string" },

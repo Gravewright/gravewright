@@ -114,3 +114,22 @@ def test_assets_must_not_declare_actor_types():
 def test_unsafe_path_rejected():
     r = validate_manifest(_base(entrypoints={"game": {"scripts": ["../escape.js"]}}))
     assert "sdk.validation.path_unsafe" in r.errors
+
+
+def test_distribution_source_is_optional_and_strict():
+    assert validate_manifest(_base()).ok
+    assert validate_manifest(_base(distribution={"source": "community"})).ok
+    assert validate_manifest(_base(distribution={"source": "core"})).ok
+    assert validate_manifest(_base(distribution={"source": "partner"})).ok
+    assert "sdk.validation.distribution_invalid" in validate_manifest(
+        _base(distribution={"source": "official"})
+    ).errors
+
+
+def test_source_only_distribution_preserves_legacy_artifact_fields():
+    raw = _base(
+        download="https://packages.test/my-addon.zip",
+        sha256="a" * 64,
+        distribution={"source": "community"},
+    )
+    assert validate_manifest(raw).ok

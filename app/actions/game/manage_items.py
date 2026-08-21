@@ -20,6 +20,7 @@ from app.engine.items.item_service import ItemResult, ItemService
 from app.engine.items.item_permissions import can_view_item
 from app.persistence.repositories.item_repository import ItemRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
+from app.engine.content.content_pack_access import ContentPackAccessService
 from app.engine.sdk.package_content_service import PackageContentService
 from app.engine.sheets.item_sheet_data_service import ItemSheetDataResult, ItemSheetDataService
 from app.engine.sheets.item_sheet_service import ItemSheetService
@@ -249,15 +250,25 @@ async def import_item_content(
     cookies: dict[str, str],
     current_user: Row,
     package_content_service: PackageContentService,
+    content_pack_access: ContentPackAccessService,
 ) -> Response[dict[str, Any]]:
     user = current_user
     body = await _json_body(request)
+    campaign_id = str(body.get("campaign_id", ""))
+    package_id = str(body.get("package_id") or body.get("system_id") or "")
+    pack_id = str(body.get("pack_id", ""))
+    # Mesmo contrato do import de ator: trazer para a mesa exige `owner`.
+    if not content_pack_access.can_import(
+        campaign_id=campaign_id, package_id=package_id, pack_id=pack_id, user_id=user["id"]
+    ):
+        return Response({"error_key": "permissions.errors.denied"}, status_code=403)
     result = package_content_service.import_entry(
-        campaign_id=str(body.get("campaign_id", "")),
+        campaign_id=campaign_id,
         user_id=user["id"],
-        package_id=str(body.get("package_id") or body.get("system_id") or ""),
-        pack_id=str(body.get("pack_id", "")),
+        package_id=package_id,
+        pack_id=pack_id,
         entry_id=str(body.get("entry_id", "")),
+        folder_id=str(body.get("folder_id") or ""),
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)

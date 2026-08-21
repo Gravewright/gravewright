@@ -86,6 +86,9 @@ def cmd_list(args: argparse.Namespace) -> int:
                         "version": i["version"],
                         "status": i["status"],
                         "scripted": i["scripted"],
+                        "source": i["effective_source"],
+                        "declared_source": i["declared_source"],
+                        "source_certified": i["source_certified"],
                     }
                     for i in items
                 ]
@@ -97,7 +100,8 @@ def cmd_list(args: argparse.Namespace) -> int:
         return EXIT_OK
     for i in items:
         flag = " (trusted JS)" if i["scripted"] else ""
-        print(f"{i['status']:<11} {i['id']:<24} {i['kind']:<8} {i['version']}{flag}")
+        source = i["effective_source"].upper()
+        print(f"{i['status']:<11} {i['id']:<24} {i['kind']:<8} {i['version']:<12} {source}{flag}")
     return EXIT_OK
 
 
@@ -257,7 +261,12 @@ def cmd_update(args: argparse.Namespace) -> int:
     targets = [r["id"] for r in svc.installed.list_all()] if args.id == "all" else [args.id]
     updated, failed = [], []
     for package_id in targets:
-        ok, error_key = _update_one(svc, package_id)
+        if getattr(args, "remote", False):
+            from app.engine.sdk.marketplace_installer import MarketplaceInstaller
+            result = MarketplaceInstaller().install(package_id=package_id, user_id=None)
+            ok, error_key = result.success, result.error_key or None
+        else:
+            ok, error_key = _update_one(svc, package_id)
         (updated if ok else failed).append((package_id, error_key))
     if args.json:
         _print_json(
@@ -311,6 +320,15 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         )
     else:
         checks.append(Check("install", OK, f"installed (status: {record['status']})"))
+        detail = svc.get_details(args.id) or {}
+        provenance = detail.get("provenance") or {}
+        source_status = OK if not provenance.get("mismatch") else WARN
+        checks.append(Check(
+            "provenance", source_status,
+            f"declared={provenance.get('declaredSource') or 'none'} "
+            f"effective={provenance.get('effectiveSource') or 'community'} "
+            f"authority={provenance.get('authority') or 'manual'}",
+        ))
         if record["status"] == "enabled":
             report = PackageDependencyService().check(args.id)
             for key in PackageDependencyService.blocking_error_keys(report):

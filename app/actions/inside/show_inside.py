@@ -14,6 +14,7 @@ from app.business.campaigns.campaign_snapshot_service import CampaignSnapshotSer
 from app.business.admin.admin_service import AdminService
 from app.business.audit import catalog as audit_catalog
 from app.business.inside_settings_service import InsideSettingsService
+from app.business.core_update_service import CoreUpdateService
 from app.business.users import UserPreferenceService
 from app.config import config
 from app.engine.sdk.package_activation_service import PackageActivationService
@@ -164,6 +165,7 @@ def show_inside(
             marketplace_bands=marketplace_bands,
             all_users=all_users,
             inside_settings=inside_settings["app"],
+            core_update=CoreUpdateService().status(),
             privacy_settings=inside_settings["privacy"],
             pending_invitations=[dict(invitation) for invitation in pending_invitations],
             campaign_error_key=campaign_error_key,

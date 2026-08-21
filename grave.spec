@@ -75,12 +75,8 @@ if _libvips_spec is not None and _libvips_spec.origin:
         binaries.append((str(_libvips_dll), '.'))
 
 
-# Desktop UI is provided by PySide6. PyInstaller's official Qt hook follows the
-# imported QtCore/QtGui/QtWidgets modules and collects their required plugins.
-
-
 a = Analysis(
-    ['desktop.py'],
+    ['grave_launcher.py'],
     pathex=['.'],
     binaries=binaries,
     datas=datas,
@@ -101,27 +97,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='Gravewright',
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=False,
-    console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    icon=['icon.png'],
-)
-
-
-exe_debug = EXE(
-    pyz,
-    a.scripts,
-    [],
-    exclude_binaries=True,
-    name='Gravewright-debug',
+    name='grave',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -138,11 +114,10 @@ exe_debug = EXE(
 
 coll = COLLECT(
     exe,
-    exe_debug,
     a.binaries,
     a.datas,
     strip=False,
     upx=False,
     upx_exclude=[],
-    name='Gravewright',
+    name='Gravewright Core',
 )

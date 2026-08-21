@@ -104,7 +104,7 @@
         }
 
         const actorFolderHeader = e.target.closest("[data-actor-panel] .sheet-folder-header");
-        if (actorFolderHeader) {
+        if (actorFolderHeader && !actorFolderHeader.closest("[data-templates-folder]")) {
             const folderEl = actorFolderHeader.closest(".actor-folder[data-folder-id]");
             if (folderEl && folderEl.closest("[data-actor-panel]")?.dataset.isGm === "true") {
                 e.preventDefault();

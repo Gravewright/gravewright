@@ -1,6 +1,6 @@
 <article class="game-modal-window item-sheet-modal" data-modal-window
-         data-modal-id="item-{{ item.item_id }}"
-         data-window-key="item-{{ item.item_id }}"
+         data-modal-id="{% if compendium_modal_id %}{{ compendium_modal_id }}{% else %}item-{{ item.item_id }}{% endif %}"
+         data-window-key="{% if compendium_modal_id %}{{ compendium_modal_id }}{% else %}item-{{ item.item_id }}{% endif %}"
          data-item-id="{{ item.item_id }}"
          data-item-campaign="{{ room_id }}"
          hidden>

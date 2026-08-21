@@ -81,3 +81,61 @@ def test_game_context_recomputes_pdf_sheet_visibility_on_ruleset_change(db):
     service=GamePageService();systemless=next(room for room in service.build_context(user_id=user).rooms if room["id"]==campaign);assert not systemless["uses_pdf_sheet_system"]
     CampaignRepository().update_system(campaign_id=campaign,changed_by_user_id=user,next_system_id="pdf-semantic");pdf=next(room for room in service.build_context(user_id=user).rooms if room["id"]==campaign);assert pdf["uses_pdf_sheet_system"]
     CampaignRepository().update_system(campaign_id=campaign,changed_by_user_id=user,next_system_id=None);normal=next(room for room in service.build_context(user_id=user).rooms if room["id"]==campaign);assert not normal["uses_pdf_sheet_system"]
+
+
+def test_the_sheet_template_folder_only_exists_under_the_pdf_ruleset(db):
+    """Template de ficha é matéria do ruleset de PDF: fora dele, nem o botão de
+    enviar nem a pasta podem existir na aba de Atores.
+
+    A pasta é sintética -- não há linha em actor_folders --, então ela carrega
+    `data-templates-folder` e NÃO carrega `.actor-folder`. É esse par que mantém
+    o arrasto e o menu de pasta longe dela; sem isso, o mestre poderia tentar
+    renomear ou apagar uma pasta que o banco não conhece.
+    """
+    from app.business.game_page_service import GamePageService
+    from app.persistence.repositories.asset_repository import AssetRepository
+    from app.persistence.repositories.campaign_repository import CampaignRepository
+
+    user = seed_user(); campaign = seed_campaign(user)
+
+    sem_pdf = _room(GamePageService(), user, campaign)
+    assert sem_pdf["uses_pdf_sheet_system"] is False
+    assert sem_pdf["pdf_templates"] == [], "sem ruleset de PDF não se consulta a biblioteca"
+
+    manifest = {"capabilities": ["pdf.read", "pdf.viewer"], "provides": {"mappings": {"pdfFields": "fields.json"}}}
+    _install(user, manifest, "pdf-semantic")
+    CampaignRepository().update_system(campaign_id=campaign, changed_by_user_id=user, next_system_id="pdf-semantic")
+    AssetRepository().create(campaign_id=campaign, owner_user_id=user, filename="ficha.pdf",
+                             content_type="application/pdf", byte_size=10, storage_path="/tmp/f.pdf", hash="h")
+    AssetRepository().create(campaign_id=campaign, owner_user_id=user, filename="mapa.png",
+                             content_type="image/png", byte_size=10, storage_path="/tmp/m.png", hash="i")
+
+    com_pdf = _room(GamePageService(), user, campaign)
+    assert com_pdf["uses_pdf_sheet_system"] is True
+    assert [t["filename"] for t in com_pdf["pdf_templates"]] == ["ficha.pdf"], "só PDF entra na pasta"
+
+    painel = (ROOT / "templates/pages/game/_actors_panel.html").read_text(encoding="utf-8")
+    assert "{% if room.uses_pdf_sheet_system %}{{ templates_folder() }}{% endif %}" in painel
+    bloco = painel.split("{% macro templates_folder() %}", 1)[1].split("{% endmacro %}", 1)[0]
+    assert "data-templates-folder" in bloco
+
+    # A classe é o que o arrasto e o menu de pasta consultam (`.actor-folder`);
+    # ela NÃO pode estar lá. Já `data-actor-folder-collapse` fica de propósito no
+    # botão: é o gancho do colapso compartilhado da árvore genérica.
+    classes = bloco.split('class="', 1)[1].split('"', 1)[0].split()
+    assert "sheet-folder" in classes, "precisa da casca para herdar colapso e busca"
+    assert "actor-folder" not in classes, "não pode ser tratada como pasta de ator"
+    assert "data-actor-folder-collapse" in bloco, "mas o colapso continua sendo o mesmo"
+
+    indice = (ROOT / "templates/pages/game/index.html").read_text(encoding="utf-8")
+    antes = indice.split("data-actor-template-upload", 1)[0].rsplit("{% if", 1)[1]
+    assert "uses_pdf_sheet_system" in antes, "o botão segue o mesmo gate da pasta"
+
+    arrasto = (ROOT / "static/js/actors/actors-drag.js").read_text(encoding="utf-8")
+    assert 'closest("[data-templates-folder]")' in arrasto, "soltar ator ali não pode mover para a raiz"
+    menu = (ROOT / "static/js/ui/context-menu/context-menu.js").read_text(encoding="utf-8")
+    assert 'closest("[data-templates-folder]")' in menu, "pasta de sistema não abre menu de pasta"
+
+
+def _room(service, user_id, campaign_id):
+    return next(r for r in service.build_context(user_id=user_id).rooms if r["id"] == campaign_id)

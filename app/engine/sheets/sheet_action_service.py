@@ -31,6 +31,7 @@ from app.engine.effects.active_effects import (
 from app.engine.rules.derived_field_service import apply_derived
 from app.engine.rules.formula_engine import FormulaError, evaluate
 from app.engine.rules.rules_registry import SystemRulesService
+from app.engine.sdk.package_locale_service import PackageLocaleService
 from app.engine.rules.token_mapping_resolver import resolve_token_view
 from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
 from app.engine.sdk.package_install_service import PackageInstallService
@@ -343,6 +344,17 @@ class SheetActionService:
         self.systems = PackageInstallService()
         self.rules = SystemRulesService()
 
+    locales = PackageLocaleService()
+
+    def _localized(self, system_id: str, label: object, locale: str | None) -> str:
+        """Traduz a chave do ruleset; texto livre passa intacto."""
+        text = str(label or "")
+        if not text:
+            return text
+        from app.config import config
+
+        return self.locales.get_locale(system_id, locale or config.default_locale).get(text, text)
+
     def execute(
         self,
         *,
@@ -355,6 +367,7 @@ class SheetActionService:
         roll_options: dict | None = None,
         target_actor_id: str | None = None,
         target_token_id: str | None = None,
+        locale: str | None = None,
     ) -> ActionResult:
         ctx = self._load(actor_id, user_id)
         if ctx.error is not None:
@@ -396,6 +409,7 @@ class SheetActionService:
                 context,
                 scope,
                 helpers,
+                locale=locale,
                 action_id=action_id,
                 item=item if isinstance(item, dict) else None,
                 roll_options=roll_options,
@@ -429,6 +443,7 @@ class SheetActionService:
                 action,
                 context,
                 scope,
+                locale=locale,
                 action_id=action_id,
                 item=item if isinstance(item, dict) else None,
             )
@@ -489,6 +504,7 @@ class SheetActionService:
         scope,
         helpers,
         *,
+        locale: str | None = None,
         action_id: str | None = None,
         item: dict | None = None,
         roll_options: dict | None = None,
@@ -511,6 +527,7 @@ class SheetActionService:
         if isinstance(label, str) and label.startswith("@"):
             resolved_label = _resolve_template(label, lookup)
             label = str(resolved_label) if resolved_label not in (None, "") else "Roll"
+        label = self._localized(actor["system_id"], label, locale)
         try:
             result = evaluate(final_formula, context=context, scope=scope, helpers=helpers)
         except FormulaError:
@@ -584,6 +601,7 @@ class SheetActionService:
         context: dict,
         scope: dict,
         *,
+        locale: str | None = None,
         action_id: str | None,
         item: dict | None,
     ) -> ActionResult:
@@ -600,6 +618,7 @@ class SheetActionService:
         if isinstance(label, str) and label.startswith("@"):
             resolved = _resolve_template(label, lookup)
             label = str(resolved) if resolved not in (None, "") else "Chat"
+        label = self._localized(actor["system_id"], label, locale)
 
         source = (
             {"kind": "actor_item_instance", "itemInstanceId": str(item.get("id"))}

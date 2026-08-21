@@ -153,3 +153,29 @@ jobs:
           for file in tests/docker-compose*.yml; do
             docker compose -f "$file" config
           done
+
+  # --- build the standalone Windows entry point and source distribution -------
+  windows-launcher:
+    name: Windows launcher artifact
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.11"
+      - run: uv python install
+      - run: uv sync --frozen --group dev
+      - name: Launcher and release-layout tests
+        run: uv run pytest tests/unit/test_windows_launcher_bootstrap.py tests/unit/test_windows_release_layout.py -q
+      - name: Build official Windows ZIP
+        run: uv run python scripts/build_windows_release.py
+      - name: Verify standalone executable
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "dist/Gravewright-Windows-x64/Gravewright.exe")) { exit 1 }
+          if (-not (Test-Path "dist/Gravewright-Windows-x64.zip")) { exit 1 }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Gravewright-Windows-x64
+          path: dist/Gravewright-Windows-x64.zip
+          if-no-files-found: error

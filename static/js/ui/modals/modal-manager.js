@@ -656,6 +656,14 @@
         }
     });
 
+    document.addEventListener("vtt:open-compendium-entry", async (e) => {
+        const { campaignId, packageId, packId, entryId } = e.detail ?? {};
+        if (!campaignId || !packageId || !packId || !entryId) return;
+        if (await modalRemote.ensureCompendiumEntryModal({ campaignId, packageId, packId, entryId })) {
+            openModal(`compendium-${packageId}-${packId}-${entryId}`);
+        }
+    });
+
     async function ensureTokenSheetModal(tokenId) {
         return modalRemote.ensureTokenSheetModal(tokenId);
     }

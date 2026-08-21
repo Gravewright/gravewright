@@ -37,6 +37,8 @@ from app.actions.game.manage_actors import get_content_pack
 from app.actions.game.manage_actors import import_content_entry
 from app.actions.game.manage_actors import import_content_package
 from app.actions.game.manage_actors import list_content_packs
+from app.actions.game.manage_actors import set_content_pack_access
+from app.actions.game.manage_actors import show_compendium_entry_sheet
 from app.actions.game.manage_actors import list_active_content_packages
 from app.actions.game.manage_actors import get_sheet_bundle
 from app.actions.game.manage_actors import get_sheet_data
@@ -242,6 +244,8 @@ _protected_handlers = [
     show_actor_sheet_modal,
     show_token_sheet_modal,
     list_content_packs,
+    set_content_pack_access,
+    show_compendium_entry_sheet,
     list_active_content_packages,
     get_content_pack,
     drop_on_actor,

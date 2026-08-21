@@ -13,6 +13,7 @@ from app.engine.sdk.package_compatibility import (
     compatibility_error,
     compute_compatibility_status,
     version_key,
+    update_version_is_valid,
 )
 
 
@@ -32,6 +33,14 @@ def test_prerelease_ordering_alpha_beta_rc_final():
     keys = [version_key(v) for v in chain]
     assert keys == sorted(keys)
     assert len(set(keys)) == len(keys)
+    assert version_key("1.0.0") < version_key("1.0.1") < version_key("1.1.0-alpha.1")
+
+
+def test_remote_update_version_grammar_rejects_ambiguous_values():
+    for value in ("1", "1.0", "1.0.0", "1.0.0-alpha.1", "1.0.0-beta.2", "1.0.0-rc.1"):
+        assert update_version_is_valid(value)
+    for value in ("", "latest", "v1.0.0", "1..0", "1.0.0-preview.1", "01.0.0", "1.x"):
+        assert not update_version_is_valid(value)
 
 
 def test_minimum_blocks_old_sdk():

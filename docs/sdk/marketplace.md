@@ -22,6 +22,7 @@ tags = ["tools"]
 featured = false
 reviewed_at = "2026-08-16"
 update_policy = "publisher"
+source = "community"
 ```
 
 `id`, `name`, `kind`, `manifest`, `enabled`, `channel`, and `update_policy` are the registry
@@ -30,6 +31,21 @@ fields. IDs must be unique. Kinds are exactly `ruleset`, `addon`, `library`,
 `content`, `theme`, and `assets`. Channels are `stable`, `beta`, or
 `experimental`. Manifest and artifact URLs must be HTTP(S) URLs without embedded
 credentials.
+
+## Distribution source and certification
+
+`source` is one of `core`, `community`, or `partner`; omitted registry values
+default to `community`. The registry is the certification authority. A manifest's
+optional `distribution.source` is only a declaration and cannot self-certify a
+privileged origin. If an unverified or manually installed package declares `core`
+or `partner`, Gravewright reports the mismatch and treats it as `community`.
+
+Remote certification binds registry identity, version, source, and the verified
+artifact SHA-256. Bundled `core` entries additionally set `bundled = true` and an
+`approved_tree_sha256` covering every relative path and file digest in the package
+tree. Any changed byte or path removes certification. These labels classify
+provenance only: they grant no SDK capabilities, runtime permissions, sandbox
+exception, commercial entitlement, payment state, ownership, or licensing rights.
 
 The package manifest remains authoritative for technical identity, version,
 SDK compatibility, dependencies, entrypoints, capabilities, license, and

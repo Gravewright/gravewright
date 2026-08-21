@@ -23,6 +23,7 @@ from app.engine.sdk.package_integrity import (
 )
 from app.engine.sdk.package_loader import LoadedPackage
 from app.engine.sdk.package_manifest import PackageManifest
+from app.engine.sdk.package_provenance import resolve_installed_provenance
 from app.persistence.repositories.installed_package_repository import (
     InstalledPackageRepository,
 )
@@ -48,6 +49,7 @@ class PackageActionResult:
     error_key: str | None = None
     active_campaign_ids: tuple[str, ...] = ()
     active_dependents: tuple[dict, ...] = ()
+    recovery_paths: tuple[str, ...] = ()
 
 
 def _is_incompatible(loaded: LoadedPackage) -> bool:
@@ -216,6 +218,11 @@ class PackageInstallService:
             package_archive_installer.promote(
                 staging_dir=staged.staging_dir, kind=kind, package_id=package_id
             )
+        except package_archive_installer.PackagePromotionError as exc:
+            return PackageActionResult(
+                success=False, package_id=package_id, error_key=exc.error_key,
+                recovery_paths=exc.recovery_paths,
+            )
         except Exception:  # noqa: BLE001 - report a clean error, never crash the route
             package_archive_installer.discard(staged.staging_dir)
             return PackageActionResult(
@@ -340,10 +347,17 @@ class PackageInstallService:
         ids.update(str(row["id"]) for row in self.campaigns.list_by_active_system(package_id))
         return sorted(ids)
 
+    def active_campaign_ids(self, package_id: str) -> list[str]:
+        """Public update/removal preflight for operator surfaces."""
+        return self._active_campaign_ids(package_id)
+
     def _tab_item(self, loaded: LoadedPackage, record: dict | None) -> dict:
         summary = loaded.manifest.summary(package_dir=loaded.package_dir)
         compat = loaded.validation.compatibility_status
         installable = _installable(loaded)
+        provenance = resolve_installed_provenance(
+            manifest=loaded.manifest, record=record, package_dir=loaded.package_dir,
+        )
 
         if not loaded.validation.ok:
             status = STATUS_ERROR
@@ -368,6 +382,11 @@ class PackageInstallService:
             "can_install": installable and record is None,
             "installed": record is not None,
             "enabled": status == STATUS_ENABLED,
+            "provenance": provenance,
+            "declared_source": provenance["declaredSource"],
+            "effective_source": provenance["effectiveSource"],
+            "source_certified": provenance["certified"],
+            "provenance_mismatch": provenance["mismatch"],
         }
 
     @staticmethod
@@ -398,4 +417,11 @@ class PackageInstallService:
             "can_install": False,
             "installed": True,
             "enabled": False,
+            "provenance": {"declaredSource": "", "effectiveSource": "community",
+                           "certifiedSource": "", "certified": False,
+                           "authority": "missing", "mismatch": False},
+            "declared_source": "",
+            "effective_source": "community",
+            "source_certified": False,
+            "provenance_mismatch": False,
         }

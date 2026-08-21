@@ -27,29 +27,6 @@ ambos verificam limpo com `--check`. A impressão digital semântica congelada e
 `scripts/sdk1_contract_snapshot.py --check`. Veja
 [rc1-compatibility-policy.md](rc1-compatibility-policy.md).
 
-## Pacote de conformidade
-
-Black Vault (`data/packages/addons/black-vault`) é o pacote permanente de conformidade
-e estresse extremo da SDK 1 RC. Ele **não** é publicado no Marketplace de propósito.
-
-| | |
-|---|---|
-| Referências a API privada | 0 |
-| Capabilities desconhecidas | 0 |
-| Uso de SDK não declarado | 0 |
-| Exige mudança no core | Não |
-| Métodos públicos usados | 51 |
-| Capabilities declaradas | 45 |
-| Eventos consumidos | 2 |
-| Systemless | Sim — sem ruleset, sem dados |
-
-Domínios exercitados: membros da campanha, atores, tokens, zonas, objetos de mundo,
-gameplay flow, workflow durável, interações dirigidas, ações registradas, timeline
-semântica, reprodução de áudio, sons nativos, sons espaciais, cartas, drag/drop
-semântico, transferência de token, navegação de cena, apresentações, referências de
-conteúdo, diários, aplicações de UI, comandos de entrada, settings e storage de
-pacote. Package interop não é usado, porque a missão não precisa.
-
 ## Observações conhecidas não bloqueantes
 
 Registradas, não corrigidas. Nenhuma bloqueia o RC 1.

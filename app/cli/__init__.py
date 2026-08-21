@@ -270,9 +270,11 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
+    from app.cli.bundled_packages import install_bundled_packages
     from app.cli.doctor import render_check_lines
     from app.cli.run import prepare, serve
 
+    install_bundled_packages()
     checks, abort = prepare(
         no_install=args.no_install,
         no_migrate=args.no_migrate,
@@ -901,8 +903,9 @@ def _add_package_remove_parser(sub, *, kind: str | None = None) -> None:
 
 
 def _add_package_update_parser(sub, *, kind: str | None = None) -> None:
-    parser = sub.add_parser("update", help="refresh package metadata from disk")
+    parser = sub.add_parser("update", help="update from Marketplace or refresh metadata from disk")
     parser.add_argument("id", help="package id, or 'all'")
+    parser.add_argument("--remote", action="store_true", help="download a validated newer Marketplace release")
     _add_json(parser)
     parser.set_defaults(func=_package_cmd("cmd_update"), kind=kind)
 

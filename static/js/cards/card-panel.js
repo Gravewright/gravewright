@@ -938,6 +938,9 @@
           <i class="ph ph-plus" aria-hidden="true"></i><span>${esc(label("cardLabelDraw", "Draw"))}</span>
         </button>
         <small class="hand-draw-count">${esc(count)}</small>
+        ${this.isGm ? `<button type="button" class="hand-decks-btn" data-modal-open="panel-cards-${esc(this.roomId)}" title="${esc(label("cardLabelDecks", "Decks"))}">
+          <i class="ph ph-cards" aria-hidden="true"></i><span>${esc(label("cardLabelDecks", "Decks"))}</span>
+        </button>` : ""}
       </div>`;
     }
 

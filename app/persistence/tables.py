@@ -1564,6 +1564,24 @@ automation_jobs = Table(
 )
 
 
+# Acesso ao compendio, pack a pack. A identidade e o PAR (package_id, pack_id):
+# um pack_id so e unico dentro do seu pacote. Linha ausente = "none".
+content_pack_ownership = Table(
+    "content_pack_ownership",
+    metadata,
+    Column("id", _ID, primary_key=True),
+    Column("campaign_id", _ID, ForeignKey("campaigns.id", ondelete="CASCADE"), nullable=False),
+    Column("package_id", _STR, nullable=False),
+    Column("pack_id", _STR, nullable=False),
+    Column("role", _STR, nullable=False),
+    Column("level", _STR, nullable=False, server_default=text("'none'")),
+    Column("created_at", Integer, nullable=False),
+    Column("updated_at", Integer, nullable=False),
+    UniqueConstraint("campaign_id", "package_id", "pack_id", "role", name="uq_content_pack_ownership"),
+    Index("idx_content_pack_ownership_campaign", "campaign_id", "package_id", "pack_id"),
+)
+
+
 schema_migrations = Table(
     "schema_migrations",
     metadata,

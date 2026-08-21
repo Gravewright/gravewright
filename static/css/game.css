@@ -8184,6 +8184,12 @@ body[data-game-layout="classic"] .game-panel-body {
     padding: 14px;
 }
 
+.content-import-drop-over {
+    outline: 2px dashed var(--accent, #b9995d);
+    outline-offset: -3px;
+    background: color-mix(in srgb, var(--accent, #b9995d) 12%, transparent);
+}
+
 .content-system-title {
     margin: 0 0 6px;
     font-size: 12px;
@@ -13052,4 +13058,94 @@ body[data-table-layer="lighting"] { --layer-accent-rgb: 250, 204, 21; }
    cena para tira-la de uma pasta. */
 .scene-root-list {
     min-height: 34px;
+}
+
+/* Baralhos vive dentro da mão do GM, ao lado de Comprar: é onde ele usa. O
+   traço é mais discreto que o de Comprar -- comprar é o gesto da rodada,
+   configurar baralho é preparo. */
+.hand-decks-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.34);
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.hand-decks-btn:hover {
+    border-color: var(--border-accent-strong);
+    color: #fff;
+}
+
+/* Pasta de templates: é do sistema, não do mestre. O tom mais apagado e a
+   ausência de alça de arrasto dizem que ela não se move nem se renomeia. */
+.actor-templates-folder > .sheet-folder-header {
+    opacity: 0.86;
+}
+
+.actor-template-card {
+    cursor: default;
+}
+
+.actor-template-card .actor-card-icon {
+    color: var(--danger, #e15f5f);
+}
+
+/* Seletor de acesso do pack: mora no próprio summary, ao lado do nome, porque
+   é sobre AQUELE pack. Num painel à parte o mestre teria de casar nome com
+   linha, que é justamente onde se erra ao liberar conteúdo. */
+.content-pack-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.content-pack-access {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.content-pack-access-label {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.content-pack-access select {
+    padding: 4px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-base);
+    color: var(--text);
+    font: inherit;
+}
+
+.content-pack-access select:hover {
+    border-color: var(--border-accent-strong);
+}
+
+/* O nome da entrada virou botão: abre a ficha em leitura. Precisa parecer um
+   link, não um controle de formulário. */
+button.content-entry-name {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+button.content-entry-name:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
 }

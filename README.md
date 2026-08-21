@@ -25,7 +25,8 @@ browser. No administrator rights are needed.
 
 1. Download this project to a folder on your computer.
 2. Run the installer for your system:
-   * **Windows:** double-click **`install-windows.bat`**. If Windows SmartScreen
+   * **Windows:** extract the official ZIP and double-click **`Gravewright.exe`**.
+     `install-windows.bat` remains only as a transitional/debug fallback. If SmartScreen
      shows a warning, choose *More info → Run anyway*.
    * **macOS / Linux:** open a terminal in the folder and run:
 
@@ -265,7 +266,8 @@ docker compose -f tests/docker-compose.perf.yml config
 ## Repository Layout
 
 ```text
-install-windows.bat      One-click setup + launch for Windows
+Gravewright.exe          Official minimal Windows bootstrapper (release ZIP)
+install-windows.bat      Transitional/debug Windows fallback
 install-macos-linux.sh   One-click setup + launch for macOS/Linux
 docker-compose.yml       One-command Docker run (SQLite, persistent volumes)
 Dockerfile               Container image build

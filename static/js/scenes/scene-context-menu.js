@@ -14,12 +14,7 @@
   }
 
   function navigateTo(roomId, sceneId) {
-    const params = new URLSearchParams({
-      room: roomId,
-      view_scene: sceneId,
-      open_modal: `panel-scenes-${roomId}`,
-    });
-    window.location.href = `/game?${params.toString()}`;
+    void window.GravewrightSceneNavigation?.navigate?.(sceneId, roomId, { local: true });
   }
 
   function openEditModal(sceneId) {

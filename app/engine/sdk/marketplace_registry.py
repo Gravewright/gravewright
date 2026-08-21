@@ -12,6 +12,7 @@ from app.engine.sdk.package_manifest import PackageKind
 MARKETPLACE_VERSION = 1
 CHANNELS = frozenset({"stable", "beta", "experimental"})
 UPDATE_POLICIES = frozenset({"publisher", "curated"})
+SOURCES = frozenset({"core", "community", "partner"})
 KINDS = frozenset(PackageKind.values())
 
 
@@ -34,6 +35,9 @@ class MarketplaceEntry:
     update_policy: str = "publisher"
     approved_version: str = ""
     approved_sha256: str = ""
+    source: str = "community"
+    bundled: bool = False
+    approved_tree_sha256: str = ""
 
 
 def _text(raw: dict, key: str, *, required: bool = False) -> str:
@@ -86,10 +90,21 @@ def parse_marketplace_toml(data: bytes | str) -> tuple[MarketplaceEntry, ...]:
             raise MarketplaceRegistryError("MARKETPLACE_UPDATE_POLICY_INVALID")
         approved_version = _text(raw, "approved_version")
         approved_sha256 = _text(raw, "approved_sha256")
+        source = _text(raw, "source") or "community"
+        if source not in SOURCES:
+            raise MarketplaceRegistryError("MARKETPLACE_SOURCE_INVALID")
+        bundled = raw.get("bundled", False)
+        if not isinstance(bundled, bool):
+            raise MarketplaceRegistryError("MARKETPLACE_BUNDLED_INVALID")
+        approved_tree_sha256 = _text(raw, "approved_tree_sha256")
         if update_policy == "curated" and not approved_version:
             raise MarketplaceRegistryError("MARKETPLACE_APPROVED_VERSION_REQUIRED")
         if approved_sha256 and (len(approved_sha256) != 64 or any(c not in "0123456789abcdefABCDEF" for c in approved_sha256)):
             raise MarketplaceRegistryError("MARKETPLACE_APPROVED_SHA256_INVALID")
+        if approved_tree_sha256 and (len(approved_tree_sha256) != 64 or any(c not in "0123456789abcdefABCDEF" for c in approved_tree_sha256)):
+            raise MarketplaceRegistryError("MARKETPLACE_APPROVED_TREE_SHA256_INVALID")
+        if bundled and (source != "core" or not approved_tree_sha256):
+            raise MarketplaceRegistryError("MARKETPLACE_BUNDLED_PROVENANCE_INVALID")
         tags = raw.get("tags", [])
         if not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags):
             raise MarketplaceRegistryError("MARKETPLACE_TAGS_INVALID")
@@ -107,6 +122,8 @@ def parse_marketplace_toml(data: bytes | str) -> tuple[MarketplaceEntry, ...]:
             update_policy=update_policy,
             approved_version=approved_version,
             approved_sha256=approved_sha256.lower(),
+            source=source, bundled=bundled,
+            approved_tree_sha256=approved_tree_sha256.lower(),
         ))
     return tuple(entries)
 

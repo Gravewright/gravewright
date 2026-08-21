@@ -5,8 +5,9 @@ pasta, ela deixou de servir por dois motivos: a miniatura de 48px não ajuda a
 escolher uma imagem, e não havia como separar os tipos.
 
 A aba "Biblioteca" existia só para hospedar um botão. Ela morreu, e o botão
-virou "Assets". O painel de GM que o hospedava também morreu depois, e Assets
-passou a viver no cartão de gerenciamento das Configurações.
+virou "Assets". O painel de GM que o hospedava também morreu; Assets passou por
+Configurações e parou onde é usado: na dock da camada de jogo, logo abaixo do
+alternador de visão, só para o GM.
 """
 
 from __future__ import annotations
@@ -30,31 +31,39 @@ def test_the_library_tab_is_gone():
     assert 'data-panel-toggle="panel-library-' not in html, "nem o botão do dock"
 
 
-def test_the_gm_panel_is_gone_and_assets_lives_in_settings():
-    """O painel da coroa foi desmontado: Cenas e Compêndios subiram ao rail,
-    Decks e Assets desceram para Configurações, e Jogadores era só um atalho
-    que já abria a própria aba de Configurações."""
+def test_the_gm_panel_is_gone_and_assets_lives_in_the_game_layer_dock():
+    """O painel da coroa foi desmontado e cada coisa foi para onde é usada:
+    Cenas e Compêndios ao rail, Baralhos para dentro da mão do GM, Assets para a
+    dock da camada de jogo. Jogadores era só um atalho para Configurações."""
     html = _template()
     assert 'data-modal-id="panel-gm-' not in html, "o painel de GM não existe mais"
     assert 'data-panel-toggle="panel-gm-' not in html, "nem o botão da coroa"
 
+    # Assets fica no mesmo grupo do alternador de visão, logo abaixo dele.
+    grupo = html.split("data-vision-toggle", 1)[1].split("</div>", 1)[0]
+    assert 'data-modal-open="library-images-' in grupo, "Assets abre a modal, colado no olho"
+    assert "game.assets.title" in grupo
+
+    # Nenhuma segunda porta: nem Configurações, nem Baralhos por aqui.
     gerenciamento = html.split('data-settings-section="management"', 1)[1].split("</section>", 1)[0]
-    assert 'data-modal-open="library-images-' in gerenciamento, "Assets abre a modal"
-    assert "game.assets.title" in gerenciamento
-    assert 'data-modal-open="panel-cards-' in gerenciamento, "Decks veio junto"
+    assert 'data-modal-open="library-images-' not in gerenciamento
+    assert 'data-modal-open="panel-cards-' not in gerenciamento
 
 
-def test_nobody_gains_or_loses_access_in_the_move():
-    """Assets e Decks eram de gm+assistente+streamer. Mudar de casa não pode
-    mexer nisso: a condição viajou junto com o botão."""
+def test_assets_in_the_dock_is_gm_only():
+    """Assets era de gm+assistente+streamer e passou a ser só do GM.
+
+    É mudança de comportamento deliberada, não descuido: a dock é ferramenta de
+    autoria, e o streamer é observador -- roles.py diz que ele nunca muta a mesa.
+    A modal em si mantém o público de sempre, porque é dela que a página lê.
+    """
     html = _template()
 
-    gerenciamento = html.split('data-settings-section="management"', 1)[1].split("</section>", 1)[0]
-    for acao in ('data-modal-open="library-images-', 'data-modal-open="panel-cards-'):
-        antes = gerenciamento.split(acao, 1)[0].rsplit("{% if", 1)[1]
-        assert "assistant_gm" in antes and "is_streamer" in antes, acao
+    grupo = html.split("data-vision-toggle", 1)[1].split("</div>", 1)[0]
+    antes = grupo.split('data-modal-open="library-images-', 1)[0].rsplit("{% if", 1)[1]
+    assert 'room.member_role == "gm"' in antes, antes
+    assert "is_streamer" not in antes and "assistant_gm" not in antes
 
-    # A modal em si mantém o público de sempre
     modal = html.split('class="game-modal-window library-images-modal"', 1)[0].rsplit("{% if", 1)[1]
     assert "assistant_gm" in modal
 

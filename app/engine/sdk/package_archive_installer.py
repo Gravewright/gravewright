@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import io
 import shutil
+import stat
+import unicodedata
 import uuid
 import zipfile
 from dataclasses import dataclass, field
@@ -32,6 +34,7 @@ MAX_ZIP_ENTRIES = 2048
 MAX_UNCOMPRESSED_BYTES = 80 * 1024 * 1024
 MAX_PACKAGE_FILE_BYTES = 20 * 1024 * 1024
 MAX_MANIFEST_BYTES = 1 * 1024 * 1024
+MAX_COMPRESSION_RATIO = 500
 
 ERROR_BAD_ZIP = "inside.addons.errors.package_invalid"
 ERROR_TOO_LARGE = "inside.addons.errors.package_too_large"
@@ -52,24 +55,45 @@ class StagedPackage:
     validation_errors: tuple[str, ...] = field(default_factory=tuple)
 
 
+class PackagePromotionError(RuntimeError):
+    def __init__(self, error_key: str, recovery_paths: tuple[str, ...] = ()) -> None:
+        super().__init__(error_key)
+        self.error_key = error_key
+        self.recovery_paths = recovery_paths
+
+
 def _zip_member_is_symlink(info: zipfile.ZipInfo) -> bool:
     return ((info.external_attr >> 16) & 0o170000) == 0o120000
 
 
+def _zip_member_is_regular(info: zipfile.ZipInfo) -> bool:
+    mode = (info.external_attr >> 16) & 0o170000
+    return mode in {0, stat.S_IFREG, stat.S_IFDIR}
+
+
 def _safe_member_name(name: str) -> bool:
-    if not name or "\x00" in name or "\\" in name:
+    if not name or "\x00" in name or "\\" in name or "//" in name:
         return False
     if name.startswith("/") or name.startswith("../") or name == "..":
         return False
     if ":" in name.split("/", 1)[0]:
         return False
     parts = [part for part in name.split("/") if part]
-    return bool(parts) and ".." not in parts
+    if not parts or ".." in parts:
+        return False
+    reserved = {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)),
+                *(f"LPT{i}" for i in range(1, 10))}
+    return all(part not in {".", ""} and not part.endswith((" ", ".")) and ":" not in part
+               and part.split(".", 1)[0].upper() not in reserved for part in parts)
 
 
 def _normalized_infos(zf: zipfile.ZipFile) -> list[zipfile.ZipInfo]:
     infos = [info for info in zf.infolist() if not info.filename.endswith("/")]
     return [info for info in infos if not info.filename.startswith("__MACOSX/")]
+
+
+def _all_normalized_infos(zf: zipfile.ZipFile) -> list[zipfile.ZipInfo]:
+    return [info for info in zf.infolist() if not info.filename.startswith("__MACOSX/")]
 
 
 def _root_prefix(infos: list[zipfile.ZipInfo]) -> str | None:
@@ -91,22 +115,37 @@ def _root_prefix(infos: list[zipfile.ZipInfo]) -> str | None:
 
 def _validate_zip_table(zf: zipfile.ZipFile) -> tuple[str | None, str | None]:
     infos = _normalized_infos(zf)
+    all_infos = _all_normalized_infos(zf)
     if not infos:
         return None, ERROR_BAD_ZIP
-    if len(infos) > MAX_ZIP_ENTRIES:
+    if len(all_infos) > MAX_ZIP_ENTRIES:
         return None, ERROR_TOO_LARGE
     total = 0
-    for info in infos:
-        name = info.filename
-        if not _safe_member_name(name) or _zip_member_is_symlink(info):
+    compressed_total = 0
+    canonical_names: set[str] = set()
+    for info in all_infos:
+        name = info.orig_filename
+        canonical = unicodedata.normalize("NFC", name.rstrip("/")).casefold()
+        if canonical in canonical_names:
+            return None, ERROR_UNSAFE
+        canonical_names.add(canonical)
+        if (not _safe_member_name(name) or _zip_member_is_symlink(info)
+                or not _zip_member_is_regular(info) or info.flag_bits & 0x1
+                or info.compress_type not in {zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED}):
             return None, ERROR_UNSAFE
         if info.file_size > MAX_PACKAGE_FILE_BYTES:
             return None, ERROR_TOO_LARGE
         total += info.file_size
+        compressed_total += info.compress_size
         if total > MAX_UNCOMPRESSED_BYTES:
             return None, ERROR_TOO_LARGE
         if name.endswith("manifest.json") and info.file_size > MAX_MANIFEST_BYTES:
             return None, ERROR_TOO_LARGE
+        if (info.file_size > 1024 * 1024
+                and info.file_size / max(1, info.compress_size) > MAX_COMPRESSION_RATIO):
+            return None, ERROR_TOO_LARGE
+    if total > 1024 * 1024 and total / max(1, compressed_total) > MAX_COMPRESSION_RATIO:
+        return None, ERROR_TOO_LARGE
     prefix = _root_prefix(infos)
     if prefix is None:
         return None, ERROR_MANIFEST
@@ -128,9 +167,19 @@ def _extract_normalized(zf: zipfile.ZipFile, *, prefix: str, staging_dir: Path) 
         if not _safe_member_name(relative):
             raise ValueError(ERROR_UNSAFE)
         destination = staging_dir / relative
+        resolved = destination.resolve(strict=False)
+        if staging_dir.resolve() not in resolved.parents:
+            raise ValueError(ERROR_UNSAFE)
         destination.parent.mkdir(parents=True, exist_ok=True)
-        with zf.open(info, "r") as source, destination.open("wb") as target:
-            shutil.copyfileobj(source, target)
+        written = 0
+        with zf.open(info, "r") as source, destination.open("xb") as target:
+            while chunk := source.read(64 * 1024):
+                written += len(chunk)
+                if written > info.file_size or written > MAX_PACKAGE_FILE_BYTES:
+                    raise ValueError(ERROR_TOO_LARGE)
+                target.write(chunk)
+        if written != info.file_size:
+            raise ValueError(ERROR_BAD_ZIP)
 
 
 def discard(path: Path | None) -> None:
@@ -164,7 +213,7 @@ def stage_archive(*, filename: str, data: bytes) -> StagedPackage:
             if error is not None:
                 return StagedPackage(success=False, error_key=error)
             _extract_normalized(zf, prefix=prefix or "", staging_dir=staging_dir)
-    except zipfile.BadZipFile:
+    except (zipfile.BadZipFile, NotImplementedError, RuntimeError, EOFError):
         discard(staging_dir)
         return StagedPackage(success=False, error_key=ERROR_BAD_ZIP)
     except ValueError as exc:
@@ -210,16 +259,30 @@ def promote(*, staging_dir: Path, kind: str, package_id: str) -> Path:
         raise ValueError(ERROR_MANIFEST)
     target_dir.parent.mkdir(parents=True, exist_ok=True)
     backup_dir = target_dir.parent / f".backup-{package_id}-{uuid.uuid4().hex}"
+    failed_new = target_dir.parent / f".failed-new-{package_id}-{uuid.uuid4().hex}"
 
     try:
         if target_dir.exists():
             shutil.move(str(target_dir), str(backup_dir))
         shutil.move(str(staging_dir), str(target_dir))
-    except Exception:
-        if not target_dir.exists() and backup_dir.exists():
-            shutil.move(str(backup_dir), str(target_dir))
+    except Exception as exc:
+        recovery: list[str] = []
+        try:
+            if target_dir.exists():
+                shutil.move(str(target_dir), str(failed_new))
+        except Exception:
+            recovery.append(str(target_dir))
+        try:
+            if backup_dir.exists():
+                shutil.move(str(backup_dir), str(target_dir))
+        except Exception as rollback_exc:
+            recovery.extend(str(path) for path in (backup_dir, failed_new, staging_dir)
+                            if path.exists())
+            raise PackagePromotionError("PACKAGE_ROLLBACK_FAILED",
+                                        tuple(dict.fromkeys(recovery))) from rollback_exc
+        discard(failed_new)
         discard(staging_dir)
-        raise
+        raise PackagePromotionError(ERROR_BAD_ZIP) from exc
 
     discard(backup_dir)
     return target_dir

@@ -14,10 +14,13 @@ For non-technical users, one-click installers set everything up: including the
 correct Python version (via `uv`), and then launch Gravewright in your browser.
 No administrator rights are required.
 
-- **Windows:** double-click `install-windows.bat`.
+- **Windows:** extract the official ZIP and double-click `Gravewright.exe`.
+  The executable includes its own minimal Python runtime and does not require
+  Python or administrator access. `install-windows.bat` is a debug fallback.
 - **macOS / Linux:** run `bash install-macos-linux.sh` in this folder.
 
-Each installer bootstraps `uv` if needed, installs the pinned dependencies with
+The Windows launcher installs a checksum-verified, pinned official `uv` binary
+when needed. Each installer installs the pinned dependencies with
 `uv sync --frozen`, creates `.env` with a unique `SESSION_SECRET`, runs
 diagnostics, and starts the server at `http://127.0.0.1:8000`. Run the same file
 again any time to play later. The steps below are the manual path.
