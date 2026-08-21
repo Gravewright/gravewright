@@ -7,6 +7,17 @@ It is built for self-hosted tables that want server-authoritative gameplay, a do
 Current release: **Gravewright 1.0.0 Beta 3**, certified against **SDK 1 RC 1**.
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the complete release history.
 
+[Website](https://gravewright.com/) ·
+[Beta 3 release](https://github.com/Gravewright/gravewright/releases/tag/v1.0.0-beta.3) ·
+[Download for Windows](https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.3/Gravewright-Windows-x64.zip) ·
+[Documentation](https://gravewright.com/wiki/) ·
+[Issues](https://github.com/Gravewright/gravewright/issues)
+
+> [!WARNING]
+> Gravewright is beta software. Keep verified backups of campaign data before
+> upgrades. Scripted SDK packages execute trusted JavaScript in the browser;
+> install them only from authors you trust.
+
 ## Installation and Demo Video
 
 New to Gravewright? Start here:
@@ -23,9 +34,11 @@ No terminal knowledge required. The installer sets up everything for you -
 including the correct Python version, and then opens Gravewright in your
 browser. No administrator rights are needed.
 
-1. Download this project to a folder on your computer.
+1. Download or clone Gravewright to a folder on your computer.
 2. Run the installer for your system:
-   * **Windows:** extract the official ZIP and double-click **`Gravewright.exe`**.
+   * **Windows:** download and extract the
+     [official Windows ZIP](https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.3/Gravewright-Windows-x64.zip),
+     then double-click **`Gravewright.exe`**.
      `install-windows.bat` remains only as a transitional/debug fallback. If SmartScreen
      shows a warning, choose *More info → Run anyway*.
    * **macOS / Linux:** open a terminal in the folder and run:
@@ -77,7 +90,7 @@ The steps below are the manual path for developers and advanced users.
 
 ```bash
 uv sync
-cp .env.example .env
+cp .env.development.example .env
 chmod +x grave
 ./grave doctor
 ./grave run --open

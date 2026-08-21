@@ -1,7 +1,7 @@
 {
   "app": {
     "app_name": "Gravewright",
-    "default_locale": "pt-BR"
+    "default_locale": "en"
   },
   "privacy": {
     "contact_email": "yoga@decisne.com",
