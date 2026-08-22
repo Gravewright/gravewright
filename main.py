@@ -20,6 +20,7 @@ from app.actions.service_dependencies import SERVICE_DEPENDENCIES
 from app.config import config
 from app.helpers.auth import auth_exception_handler, provide_current_user, provide_session
 from app.middleware.authentication import AuthenticationMiddleware
+from app.middleware.csrf_cookie_recovery import CSRFCookieRecoveryMiddleware
 from app.middleware.http_timing import HttpTimingMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
@@ -63,6 +64,9 @@ app = Litestar(
     ],
     stores={"sessions": SQLiteStore()},
     middleware=[
+        # A downloaded/local installation can inherit a localhost CSRF cookie
+        # signed by another installation. Replace it on the next safe request.
+        DefineMiddleware(CSRFCookieRecoveryMiddleware, secret=config.session_secret),
         # Outermost: assign a correlation id so every downstream log/diagnostic
         # for this request can be tied together.
         DefineMiddleware(RequestIdMiddleware),
