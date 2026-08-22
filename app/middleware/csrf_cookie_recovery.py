@@ -53,7 +53,7 @@ class CSRFCookieRecoveryMiddleware:
             return
 
     def _is_valid(self, token: str) -> bool:
-        if len(token) < (_CSRF_SECRET_LENGTH * 2) + 1:
+        if len(token) != _CSRF_SECRET_LENGTH * 2:
             return False
         token_secret = token[:_CSRF_SECRET_LENGTH]
         supplied_hash = token[_CSRF_SECRET_LENGTH:]
