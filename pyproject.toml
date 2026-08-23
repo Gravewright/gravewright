@@ -5,7 +5,7 @@ description = "Gravewright is an open-source virtual tabletop platform for table
 requires-python = ">=3.11"
 dependencies = [
   "alembic==1.19.1",
-  "litestar[jinja]==2.22.0",
+  "litestar[jinja]==2.24.0",
   "pillow==12.3.0",
   "pyvips[binary]==3.1.1",
   "sqlalchemy==2.0.52",
