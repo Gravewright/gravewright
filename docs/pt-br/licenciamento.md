@@ -49,4 +49,4 @@ licença ou do conteúdo. O pacote também deve incluir o texto aplicável em `L
 e relacionar materiais com licenças diferentes em `THIRD_PARTY_NOTICES.md`.
 
 Para a lista explicada de licenças permissivas, copyleft GNU e licenças de assets,
-consulte [Portando módulos para o Gravewright](sdk/portando-modulos.md#3-licença).
+consulte [Portando módulos para o Gravewright](sdk/porting-modules.md#3-licença).

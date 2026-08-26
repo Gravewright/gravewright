@@ -258,7 +258,7 @@ Start with:
 Additional languages and the module-porting guide:
 
 - [Documentação em português brasileiro](docs/pt-br/README.md)
-- [Portando módulos para o Gravewright](docs/pt-br/sdk/portando-modulos.md)
+- [Portando módulos para o Gravewright](docs/pt-br/sdk/porting-modules.md)
 - [Porting modules to Gravewright (English)](docs/sdk/porting-modules.md)
 - [Portar módulos a Gravewright (Español)](docs/es/sdk/portar-modulos.md)
 

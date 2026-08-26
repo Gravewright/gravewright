@@ -73,7 +73,7 @@ vagos como `GNU`, `open source` ou `free`: declare a variante e a versão exatas
 arquivo `LICENSE` deve conter o texto integral da licença principal, e componentes
 com licenças diferentes devem ser relacionados em `THIRD_PARTY_NOTICES.md`.
 
-Consulte [Portando módulos para o Gravewright](portando-modulos.md#3-licença) para
+Consulte [Portando módulos para o Gravewright](porting-modules.md#3-licença) para
 uma tabela de licenças comuns, obrigações, assets e exemplos de ports derivados.
 
 ## Visibilidade dos diretórios
