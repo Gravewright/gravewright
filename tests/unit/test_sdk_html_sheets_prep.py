@@ -423,7 +423,7 @@ def test_drop_refreshes_the_sheet_after_its_own_successful_write():
     events = (
         PROJECT_ROOT / "static" / "js" / "sheets" / "actors" / "actor-sheet-events.js"
     ).read_text(encoding="utf-8")
-    assert "souEu(envelope.payload) && root.contains(document.activeElement)" in events
+    assert "souEu(envelope.payload) && estaEditando(root)" in events
     assert "if (!actorId || souEu(envelope.payload)) return" not in events
 
 
@@ -436,6 +436,13 @@ def test_item_action_buttons_keep_the_roll_dialog_open_and_share_an_action_group
     assert "[data-item-action]" in ACTOR_ACTIONS
     assert 'actions.className = "gw-item-list__actions"' in RUNTIME
     assert 'meta.className = "gw-item-list__meta"' in RUNTIME
+
+
+def test_sheet_roll_dialog_closes_before_waiting_for_the_roll():
+    handler = ACTOR_ACTIONS.split('roll.addEventListener("click"', 1)[1].split("actions.appendChild", 1)[0]
+    close_at = handler.index("closeFloatingSheetMenus();")
+    request_at = min(handler.index("await executeItemAction"), handler.index("await executeSheetAction"))
+    assert close_at < request_at, "o overlay da ficha não pode cobrir o começo da animação 3D"
 
 
 def test_embedded_items_use_their_real_declarative_sheet_and_patch_the_copy():

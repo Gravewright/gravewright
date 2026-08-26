@@ -2,31 +2,41 @@
     data-error-generic="{{ t('handout.errors.generic') }}">
     <form method="dialog" class="handout-show-dialog__shell" data-handout-form>
         <header class="handout-show-dialog__header">
-            <h2>{{ t("handout.show_title") }}</h2>
+            <div class="modal-heading">
+                <span class="modal-heading__icon"><i class="ph ph-hand-pointing" aria-hidden="true"></i></span>
+                <span class="modal-heading__copy">
+                    <small>{{ t("game.tools.journal") }}</small>
+                    <h2>{{ t("handout.show_title") }}</h2>
+                </span>
+            </div>
             <button type="button" class="handout-show-dialog__close" data-handout-close
                 aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x" aria-hidden="true"></i></button>
         </header>
         <div class="handout-show-dialog__body">
-            <p>{{ t("handout.help") }}</p>
+            <p class="modal-lead">{{ t("handout.help") }}</p>
             <input type="hidden" name="resource_type" />
             <input type="hidden" name="resource_id" />
-            <label class="permission-toggle handout-show-dialog__all">
+            <label class="permission-choice permission-choice--all handout-show-dialog__all">
                 <input type="checkbox" name="all_players" checked />
-                <span>{{ t("handout.everyone") }}</span>
+                <span class="permission-choice__mark"><i class="ph ph-users-three" aria-hidden="true"></i></span>
+                <span class="permission-choice__copy"><strong>{{ t("handout.everyone") }}</strong><small>{{ t("handout.help") }}</small></span>
+                <i class="ph ph-check-circle permission-choice__check" aria-hidden="true"></i>
             </label>
             <fieldset class="handout-show-dialog__players">
                 <legend>{{ t("handout.selected_players") }}</legend>
                 {% for member in room.members %}{% if member.role != "gm" %}
-                <label class="permission-toggle">
+                <label class="permission-choice permission-choice--player">
                     <input type="checkbox" name="players" value="{{ member.user_id }}" disabled />
-                    <span>{{ member.name }} <small>({{ t("roles.campaign." ~ member.role) }})</small></span>
+                    <span class="permission-choice__avatar">{{ member.name[:1] | upper }}</span>
+                    <span class="permission-choice__copy"><strong>{{ member.name }}</strong><small>{{ t("roles.campaign." ~ member.role) }}</small></span>
+                    <i class="ph ph-check-circle permission-choice__check" aria-hidden="true"></i>
                 </label>
                 {% endif %}{% endfor %}
             </fieldset>
             <div class="game-notice game-notice--danger" data-handout-notice role="alert" hidden></div>
         </div>
         <footer class="handout-show-dialog__footer">
-            <button class="secondary-action" type="button" data-handout-close>{{ t("inside.campaigns.cancel") }}</button>
+            <button class="secondary-action" type="button" data-handout-close><i class="ph ph-x" aria-hidden="true"></i><span>{{ t("inside.campaigns.cancel") }}</span></button>
             <button class="primary-action" type="submit"><i class="ph ph-eye" aria-hidden="true"></i>
                 <span>{{ t("handout.show") }}</span></button>
         </footer>

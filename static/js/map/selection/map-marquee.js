@@ -45,8 +45,8 @@
             const ids = [];
 
             tokenStoreFor(canvas).forEach((token) => {
-                const cx = (token.grid_x + (token.width_cells || 1) / 2) * gridSize;
-                const cy = (token.grid_y + (token.height_cells || 1) / 2) * gridSize;
+                const cx = (scene.gridOffsetX || 0) + (token.grid_x + (token.width_cells || 1) / 2) * gridSize;
+                const cy = (scene.gridOffsetY || 0) + (token.grid_y + (token.height_cells || 1) / 2) * gridSize;
                 if (
                     cx >= rect.x0 && cx <= rect.x1
                     && cy >= rect.y0 && cy <= rect.y1

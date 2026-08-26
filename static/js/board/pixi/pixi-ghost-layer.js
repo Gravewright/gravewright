@@ -20,8 +20,8 @@
             const s = scene.scaledTileSize;
 
             positions.forEach((pos) => {
-                const wx = pos.grid_x * s;
-                const wy = pos.grid_y * s;
+                const wx = (scene.gridOffsetX || 0) + pos.grid_x * s;
+                const wy = (scene.gridOffsetY || 0) + pos.grid_y * s;
                 const ww = s * (pos.width_cells || 1);
                 const wh = s * (pos.height_cells || 1);
                 const cx = wx + ww / 2;

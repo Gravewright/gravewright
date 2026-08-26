@@ -118,9 +118,11 @@ async def update_actor_core(
         actor_id=str(body.get("actor_id", "")),
         user_id=user["id"],
         name=str(body.get("name", "")),
-        folder_id=str(body.get("folder_id", "")),
-        portrait_asset_id=str(body.get("portrait_asset_id", "")),
-        token_asset_id=str(body.get("token_asset_id", "")),
+        folder_id=str(body["folder_id"]) if "folder_id" in body else None,
+        portrait_asset_id=(
+            str(body["portrait_asset_id"]) if "portrait_asset_id" in body else None
+        ),
+        token_asset_id=str(body["token_asset_id"]) if "token_asset_id" in body else None,
     )
     await _emit_actor(TransportEvent.ACTOR_UPDATED, result, user_id=user["id"])
     if not result.success:
@@ -351,6 +353,8 @@ async def patch_token_sheet_data(
         payload = {
             "room_id": result.campaign_id,
             "scene_id": result.scene_id,
+            "actor_id": token.get("actor_id"),
+            "updated_by": user["id"],
             "tokens": [
                 {
                     "token_id": result.token_id,
@@ -390,6 +394,7 @@ async def _emit_token_sheet_data(
     payload = {
         "room_id": result.campaign_id,
         "scene_id": result.scene_id,
+        "actor_id": token.get("actor_id"),
         "tokens": [
             {
                 "token_id": result.token_id,

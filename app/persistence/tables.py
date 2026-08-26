@@ -822,7 +822,7 @@ scenes = Table(
     Column("width", Integer, nullable=False),
     Column("height", Integer, nullable=False),
     Column("tile_size", Integer, nullable=False),
-    Column("grid_size", Integer, nullable=False, server_default=text("70")),
+    Column("grid_size", Float, nullable=False, server_default=text("70")),
     Column("scene_format_version", Integer, nullable=False, server_default=text("1")),
     Column("raster_selection_mode", _STR, nullable=False, server_default=text("'legacy'")),
     Column("raster_policy_version", Integer, nullable=False, server_default=text("0")),
@@ -830,6 +830,8 @@ scenes = Table(
     Column("grid_visible", Integer, nullable=False, server_default=text("1")),
     Column("grid_color", _STR, nullable=False, server_default=text("'#6fddb4'")),
     Column("grid_opacity", Float, nullable=False, server_default=text("0.4")),
+    Column("grid_offset_x", Float, nullable=False, server_default=text("0.0")),
+    Column("grid_offset_y", Float, nullable=False, server_default=text("0.0")),
     Column("darkness", Float, nullable=False, server_default=text("0.0")),
     # Regime de luz da cena: "none" (mapa aberto), "dynamic" (escuridao + focos)
     # ou "manual" (nevoa pintada a mao). `darkness` guarda so a intensidade
@@ -1057,8 +1059,8 @@ tokens = Table(
     Column("id", _ID, primary_key=True),
     Column("scene_id", _ID, ForeignKey("scenes.id", ondelete="CASCADE"), nullable=False),
     Column("actor_id", _ID, ForeignKey("actors_core.id", ondelete="SET NULL"), nullable=True),
-    Column("grid_x", Integer, nullable=False, server_default=text("0")),
-    Column("grid_y", Integer, nullable=False, server_default=text("0")),
+    Column("grid_x", Float, nullable=False, server_default=text("0")),
+    Column("grid_y", Float, nullable=False, server_default=text("0")),
     Column("width_cells", Integer, nullable=False, server_default=text("1")),
     Column("height_cells", Integer, nullable=False, server_default=text("1")),
     Column("rotation", Float, nullable=False, server_default=text("0.0")),

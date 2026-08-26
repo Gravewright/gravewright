@@ -309,8 +309,8 @@ class TokenService:
         campaign_id: str,
         scene_id: str,
         token_id: str,
-        grid_x: int,
-        grid_y: int,
+        grid_x: int | float,
+        grid_y: int | float,
         user_id: str,
         expected_version: int | None = None,
         movement_path: list[dict] | None = None,
@@ -346,8 +346,10 @@ class TokenService:
         size = float(scene.get("grid_size") or scene.get("tile_size") or 70) * float(scene.get("image_scale") or 1)
         width = float(token.get("width_cells") or 1)
         height = float(token.get("height_cells") or 1)
-        origin = ((float(token["grid_x"]) + width / 2) * size, (float(token["grid_y"]) + height / 2) * size)
-        target = ((float(grid_x) + width / 2) * size, (float(grid_y) + height / 2) * size)
+        offset_x = float(scene.get("grid_offset_x") or 0.0) * float(scene.get("image_scale") or 1)
+        offset_y = float(scene.get("grid_offset_y") or 0.0) * float(scene.get("image_scale") or 1)
+        origin = (offset_x + (float(token["grid_x"]) + width / 2) * size, offset_y + (float(token["grid_y"]) + height / 2) * size)
+        target = (offset_x + (float(grid_x) + width / 2) * size, offset_y + (float(grid_y) + height / 2) * size)
         member_role = await run_blocking(
             self.campaigns.get_member_role, campaign_id=campaign_id, user_id=user_id
         )
@@ -359,7 +361,7 @@ class TokenService:
                 except (KeyError,TypeError,ValueError):return TokenResult(success=False,error_key="tokens.errors.invalid")
             if route[-1]!=(float(grid_x),float(grid_y)):route.append((float(grid_x),float(grid_y)))
             elevation=float(token.get("elevation") or 0.0)
-            centres=[((gx+width/2)*size,(gy+height/2)*size) for gx,gy in route]
+            centres=[(offset_x+(gx+width/2)*size,offset_y+(gy+height/2)*size) for gx,gy in route]
             if any(movement_crosses_wall(walls=walls,origin=start,target=end,elevation=elevation) for start,end in zip(centres,centres[1:])):
                 return TokenResult(success=False, token=token, error_key="tokens.errors.movement_blocked")
 
@@ -817,19 +819,9 @@ class TokenService:
         transport: RealtimeGatewayContract,
     ) -> None:
 
-        await transport.to_gm(
-            room_id=campaign_id,
-            event=TransportEvent.TOKENS_CREATED,
-            payload={
-                "room_id": campaign_id,
-                "scene_id": scene_id,
-                "tokens": token_views,
-            },
-        )
-
         visible_tokens = [view for view in token_views if not view.get("hidden")]
         if visible_tokens:
-            await transport.to_players_in_room(
+            await transport.to_token_audience(
                 room_id=campaign_id,
                 event=TransportEvent.TOKENS_CREATED,
                 payload={
@@ -837,6 +829,20 @@ class TokenService:
                     "scene_id": scene_id,
                     "tokens": visible_tokens,
                 },
+                include_players=True,
+            )
+
+        hidden_tokens = [view for view in token_views if view.get("hidden")]
+        if hidden_tokens:
+            await transport.to_token_audience(
+                room_id=campaign_id,
+                event=TransportEvent.TOKENS_CREATED,
+                payload={
+                    "room_id": campaign_id,
+                    "scene_id": scene_id,
+                    "tokens": hidden_tokens,
+                },
+                include_players=False,
             )
 
     async def _emit_token_event_to_viewers(

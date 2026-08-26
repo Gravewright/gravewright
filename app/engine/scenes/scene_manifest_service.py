@@ -108,6 +108,8 @@ class SceneManifestService:
             "raster_tile_size": scene["tile_size"],
             "grid_size": scene.get("grid_size") or scene["tile_size"],
             "grid_visible": bool(scene["grid_visible"]),
+            "grid_offset_x": float(scene.get("grid_offset_x") or 0.0),
+            "grid_offset_y": float(scene.get("grid_offset_y") or 0.0),
             "grid_color": scene["grid_color"],
             "grid_opacity": float(scene.get("grid_opacity") or 0.4),
             "darkness": float(scene.get("effective_darkness") or scene.get("darkness_config") or 0.0),

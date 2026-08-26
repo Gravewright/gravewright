@@ -44,8 +44,8 @@
                 const wCells = token.width_cells || 1;
                 const hCells = token.height_cells || 1;
                 const tokenSize = Math.min(wCells, hCells) * s * state.zoom;
-                const cx = screenFromWorld((token.grid_x + wCells / 2) * s, state.offsetX, state.zoom);
-                const cy = screenFromWorld((token.grid_y + hCells / 2) * s, state.offsetY, state.zoom);
+                const cx = screenFromWorld((scene.gridOffsetX || 0) + (token.grid_x + wCells / 2) * s, state.offsetX, state.zoom);
+                const cy = screenFromWorld((scene.gridOffsetY || 0) + (token.grid_y + hCells / 2) * s, state.offsetY, state.zoom);
                 const dist = Math.sqrt((screenX - cx) ** 2 + (screenY - cy) ** 2);
                 if (dist <= tokenSize * 0.42) hit = token;
             });

@@ -424,8 +424,8 @@
         return window.GravewrightMapDrag.clampGridPosition(gridX, gridY, scene, token);
     }
 
-    function snapDragToGrid(worldX, worldY, scene, token) {
-        return window.GravewrightMapDrag.snapDragToGrid(worldX, worldY, scene, token);
+    function snapDragToGrid(worldX, worldY, scene, token, snap = true) {
+        return window.GravewrightMapDrag.snapDragToGrid(worldX, worldY, scene, token, snap);
     }
 
     function selectedSet(canvas) {
@@ -1162,8 +1162,8 @@
         if (!token) return;
         const s = scene.scaledTileSize;
         const viewport = viewportSizeFor(canvas);
-        state.offsetX = viewport.width / 2 - (token.grid_x + 0.5) * s * state.zoom;
-        state.offsetY = viewport.height / 2 - (token.grid_y + 0.5) * s * state.zoom;
+        state.offsetX = viewport.width / 2 - ((scene.gridOffsetX || 0) + (token.grid_x + 0.5) * s) * state.zoom;
+        state.offsetY = viewport.height / 2 - ((scene.gridOffsetY || 0) + (token.grid_y + 0.5) * s) * state.zoom;
         scheduleViewportUpdate(canvas);
         saveCameraNow(canvas);
         markDirty(canvas);
@@ -1240,6 +1240,7 @@
         activeTokenDrag: () => mapTokenDrag.active(),
         activeCameraForScene,
         worldFromScreen,
+        startPan: (canvas, event) => mapPan.start(canvas, event),
         startAddToScene,
         stopAddToScene,
         centerOnToken,

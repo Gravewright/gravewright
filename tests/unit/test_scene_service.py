@@ -130,6 +130,8 @@ async def test_activate_scene_emits_realtime_event(db):
                     "grid_visible": True,
                     "grid_color": "#6fddb4",
                     "grid_opacity": 0.4,
+                    "grid_offset_x": 0.0,
+                    "grid_offset_y": 0.0,
                     "darkness": 0.0,
                     "darkness_config": 0.0,
                     "lighting_mode": "none",
@@ -365,6 +367,68 @@ def test_outsider_cannot_get_scene_manifest(db):
 
     assert not result.success
     assert result.error_key == "permissions.errors.denied"
+
+
+def test_grid_appearance_update_keeps_the_same_scene_instance(db):
+    gm_id = seed_user(name="GM", email="gm-scene-grid-update@test.com")
+    campaign_id = seed_campaign(gm_id)
+    repository = SceneRepository()
+    scene = repository.create(
+        campaign_id=campaign_id,
+        name="Cellar",
+        width=700,
+        height=700,
+        tile_size=70,
+        chunk_size=16,
+    )
+
+    SceneService().update_scene_metadata(
+        scene_id=scene["id"],
+        name=scene["name"],
+        group_id=scene["group_id"],
+        visibility=SceneVisibility(scene["visibility"]),
+        grid_visible=False,
+        grid_color="#ff3366",
+        grid_opacity=0.75,
+        darkness=None,
+        tile_size=scene["tile_size"],
+        grid_size=scene["grid_size"],
+        image_scale=scene["image_scale"],
+        tile_table_version=scene["tile_table_version"],
+    )
+
+    scenes = repository.list_by_campaign(campaign_id)
+    assert len(scenes) == 1
+    assert scenes[0]["id"] == scene["id"]
+    assert scenes[0]["scene_epoch"] == scene["scene_epoch"]
+    assert scenes[0]["grid_visible"] == 0
+    assert scenes[0]["grid_color"] == "#ff3366"
+    assert scenes[0]["grid_opacity"] == 0.75
+
+
+def test_grid_calibration_persists_offsets_and_changes_stream_generation(db):
+    gm_id = seed_user(name="GM", email="gm-grid-calibration@test.com")
+    campaign_id = seed_campaign(gm_id)
+    repository = SceneRepository()
+    scene = repository.create(
+        campaign_id=campaign_id, name="Printed grid", width=700, height=700,
+        tile_size=70, chunk_size=16,
+    )
+
+    SceneService().update_scene_metadata(
+        scene_id=scene["id"], name=scene["name"], group_id=None,
+        visibility=SceneVisibility(scene["visibility"]), grid_visible=True,
+        grid_color=scene["grid_color"], grid_opacity=scene["grid_opacity"],
+        darkness=None, tile_size=scene["tile_size"], grid_size=69.72,
+        image_scale=scene["image_scale"], tile_table_version=scene["tile_table_version"],
+        grid_offset_x=11.5, grid_offset_y=17.25,
+    )
+
+    updated = repository.get_by_id(scene["id"])
+    assert updated["grid_offset_x"] == 11.5
+    assert updated["grid_offset_y"] == 17.25
+    assert updated["grid_size"] == 69.72
+    assert updated["scene_epoch"] == scene["scene_epoch"] + 1
 
 
 async def test_metadata_update_reaches_the_room(db):

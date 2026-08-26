@@ -41,7 +41,7 @@
                 <div class="scene-two-col">
                     <label class="game-field">
                         <span>{{ t("game.scenes.grid_size") }}</span>
-                        <input type="number" name="tile_size" min="8" max="1024" value="{{ scene.get('grid_size') or scene.tile_size }}" required
+                        <input type="number" name="tile_size" min="8" max="1024" step="0.0001" value="{{ scene.get('grid_size') or scene.tile_size }}" required
                                data-warn-on-change="{{ t('game.scenes.grid_size_warning') }}" />
                     </label>
                     <label class="game-field">
@@ -49,6 +49,30 @@
                         <input type="number" name="image_scale" min="0.1" max="10" step="0.01"
                                value="{{ (scene.image_scale | default(1.0)) | round(2) }}" required />
                     </label>
+                </div>
+                <input type="hidden" name="grid_offset_x" value="{{ scene.get('grid_offset_x') or 0 }}" />
+                <input type="hidden" name="grid_offset_y" value="{{ scene.get('grid_offset_y') or 0 }}" />
+                <div class="scene-grid-mapper-card">
+                    <div>
+                        <strong>{{ t("game.scenes.grid_mapper.title") }}</strong>
+                        <span>{{ t("game.scenes.grid_mapper.help") }}</span>
+                    </div>
+                    <button type="button" class="secondary-action" data-grid-mapper-start
+                            data-grid-mapper-instruction="{{ t('game.scenes.grid_mapper.instruction') }}"
+                            data-grid-mapper-step-start="{{ t('game.scenes.grid_mapper.step_start') }}"
+                            data-grid-mapper-step-center="{{ t('game.scenes.grid_mapper.step_center') }}"
+                            data-grid-mapper-step-end="{{ t('game.scenes.grid_mapper.step_end') }}"
+                            data-grid-mapper-panel-title="{{ t('game.scenes.grid_mapper.panel_title') }}"
+                            data-grid-mapper-preview="{{ t('game.scenes.grid_mapper.preview') }}"
+                            data-grid-mapper-cell="{{ t('game.scenes.grid_mapper.cell') }}"
+                            data-grid-mapper-origin="{{ t('game.scenes.grid_mapper.origin') }}"
+                            data-grid-mapper-finish="{{ t('game.scenes.grid_mapper.finish') }}"
+                            data-grid-mapper-undo="{{ t('game.scenes.grid_mapper.undo') }}"
+                            data-grid-mapper-cancel="{{ t('inside.campaigns.cancel') }}"
+                            data-grid-mapper-inactive="{{ t('game.scenes.grid_mapper.inactive') }}">
+                        <i class="ph ph-grid-four" aria-hidden="true"></i>
+                        <span>{{ t("game.scenes.grid_mapper.action") }}</span>
+                    </button>
                 </div>
                 <div class="scene-grid-row scene-grid-row--boxed">
                     <label class="scene-check">

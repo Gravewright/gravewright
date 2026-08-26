@@ -88,8 +88,8 @@
 
             const state = stateFor(canvas);
             const pointerWorld = screenToWorldXY(event.clientX, event.clientY, state);
-            const tokenWorldX = hit.grid_x * scene.scaledTileSize;
-            const tokenWorldY = hit.grid_y * scene.scaledTileSize;
+            const tokenWorldX = (scene.gridOffsetX || 0) + hit.grid_x * scene.scaledTileSize;
+            const tokenWorldY = (scene.gridOffsetY || 0) + hit.grid_y * scene.scaledTileSize;
 
             activeDrag = {
                 canvas,
@@ -139,6 +139,7 @@
                 activeDrag.currentWorldY,
                 scene,
                 token,
+                scene.gridVisible !== false && !event.altKey,
             );
 
             const canvas = activeDrag.canvas;
@@ -162,8 +163,8 @@
                         tokenInGroup,
                     );
                     positions[groupToken.tokenId] = {
-                        worldX: clamped.grid_x * tile,
-                        worldY: clamped.grid_y * tile,
+                        worldX: (scene.gridOffsetX || 0) + clamped.grid_x * tile,
+                        worldY: (scene.gridOffsetY || 0) + clamped.grid_y * tile,
                         gridX: clamped.grid_x,
                         gridY: clamped.grid_y,
                     };
@@ -199,8 +200,8 @@
 
 
             if (blocked) {
-                activeDrag.currentWorldX = activeDrag.currentGridX * tile;
-                activeDrag.currentWorldY = activeDrag.currentGridY * tile;
+                activeDrag.currentWorldX = (scene.gridOffsetX || 0) + activeDrag.currentGridX * tile;
+                activeDrag.currentWorldY = (scene.gridOffsetY || 0) + activeDrag.currentGridY * tile;
                 markDirty(canvas);
                 return true;
             }
