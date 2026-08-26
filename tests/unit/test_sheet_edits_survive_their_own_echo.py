@@ -46,7 +46,10 @@ def test_a_sheet_being_edited_is_not_rebuilt_underneath_the_user():
     assert "refreshQuandoOcioso" in source, "o refresh direto destrói edição em curso"
     helper = source.split("function refreshQuandoOcioso", 1)[1].split("\n  }", 1)[0]
 
-    assert "root.contains(document.activeElement)" in helper, "só adia se houver foco dentro"
+    assert "estaEditando(root)" in helper, "só adia se houver um campo em edição"
+    editing = source.split("function estaEditando", 1)[1].split("\n  }", 1)[0]
+    assert "root.contains(active)" in editing
+    assert 'matches?.("input, textarea, select, [contenteditable]")' in editing
     assert 'root.addEventListener("focusout"' in helper, "e recarrega quando o foco sai"
     # focusout dispara antes de o foco assumir o destino; sem o tique, mover-se
     # entre dois campos da mesma ficha pareceria uma saída.
@@ -68,13 +71,22 @@ def test_your_own_echo_never_rebuilds_your_sheet():
     assert "document.body?.dataset?.currentUserId" in guard, "é a convenção do projeto"
     assert 'payload?.updated_by === eu' in guard
 
-    ouvinte = source.split('if (!["sheet.data.updated", "actor.updated"].includes(envelope.event)) return;', 1)[1]
+    ouvinte = source.split('if (!["sheet.data.updated", "actor.updated", "tokens.updated", "token.updated"].includes(envelope.event)) return;', 1)[1]
     assert "souEu(envelope.payload)" in ouvinte.split("\n  });", 1)[0], (
         "o eco precisa ser descartado antes de procurar a ficha"
     )
 
     # Atualização de OUTRA pessoa continua chegando: só espera o foco sair.
     assert "refreshQuandoOcioso(root)" in ouvinte
+
+
+def test_actor_and_token_modals_both_receive_remote_sheet_changes():
+    source = EVENTS.read_text(encoding="utf-8")
+
+    assert '[data-actor-sheet-root][data-actor-id="${CSS.escape(actorId)}"]' in source
+    assert '[data-actor-sheet-root][data-token-id]' in source
+    assert 'envelope.event === "tokens.updated"' in source
+    assert "tokenIds.has(root.dataset.tokenId" in source
 
 
 def test_the_project_already_ignores_its_own_echo_elsewhere():
