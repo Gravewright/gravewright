@@ -11,10 +11,8 @@ from litestar.params import FromPath, FromQuery
 from litestar.response import Response
 
 from app.business.permissions.permission_service import PermissionService
-from app.business.users import UserPresentationService
 from app.engine.actors.actor_service import ActorService
 from app.engine.combat.combat_service import CombatService
-from app.engine.chat.visibility_policy import ChatVisibilityPolicy
 from app.engine.items.item_service import ItemService
 from app.engine.journals.journal_service import JournalService
 from app.business.handouts import HandoutService, dispatch_handout_presentation
@@ -84,7 +82,6 @@ _RESOURCE_CAPABILITIES = {
     "tokens": "tokens.read",
     "scenes": "scene.read",
     "campaign.members": "campaign.members.read",
-    "user.presentations": "users.presentation.read",
     "combat": "combat.read",
     "permissions": "permissions.inspect",
     "packages": "packages.inspect",
@@ -620,23 +617,6 @@ def sdk_runtime_read(
             for member in members
         ]})
 
-    if resource_name == "user.presentations":
-        service = UserPresentationService()
-        if entity_id:
-            result = service.get(
-                campaign_id=campaign_id,
-                requester_user_id=user_id,
-                target_user_id=entity_id,
-            )
-            if not result.success:
-                status = 404 if result.error_key == "sdk.runtime.not_found" else 403
-                return _error(result.error_key or "sdk.runtime.denied", status)
-            return Response({"presentation": result.presentation})
-        result = service.list(campaign_id=campaign_id, requester_user_id=user_id)
-        if not result.success:
-            return _error(result.error_key or "sdk.runtime.denied", 403)
-        return Response({"presentations": result.presentations or []})
-
     if resource_name == "scenes":
         result = SceneService().list_scenes_for_campaign(campaign_id=campaign_id, user_id=user_id)
         if not result.success:
@@ -743,9 +723,7 @@ def sdk_runtime_read(
             return _error("sdk.runtime.permission_denied", 403)
         repo = ChatMessageRepository()
         role = CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=user_id)
-        visible = lambda message: ChatVisibilityPolicy.can_view(
-            message=message, user_id=user_id, member_role=role
-        )
+        visible = lambda message: role == "gm" or message.get("visibility") not in {"gm", "gm_only", "private", "self"}
         if entity_id:
             message = repo.get_for_campaign(campaign_id=campaign_id, message_id=entity_id)
             return Response({"message": chat_snapshot(message)}) if message and visible(message) else _error("sdk.runtime.not_found", 404)
