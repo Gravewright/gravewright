@@ -15,7 +15,6 @@ from tests.e2e.test_app_server_e2e import (
     GM_EMAIL,
     GM_PASSWORD,
     PLAYER_EMAIL,
-    PLAYER_PASSWORD,
     REPO_ROOT,
     _free_port,
     _seed_database,
