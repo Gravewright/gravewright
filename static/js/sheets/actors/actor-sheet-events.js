@@ -15,8 +15,13 @@
 
   const pendente = new WeakSet();
 
+  function estaEditando(root) {
+    const active = document.activeElement;
+    return root.contains(active) && Boolean(active?.matches?.("input, textarea, select, [contenteditable]"));
+  }
+
   function refreshQuandoOcioso(root) {
-    if (!root.contains(document.activeElement)) {
+    if (!estaEditando(root)) {
       refresh(root);
       return;
     }
@@ -27,7 +32,7 @@
 
 
       setTimeout(() => {
-        if (root.contains(document.activeElement)) return;
+        if (estaEditando(root)) return;
         root.removeEventListener("focusout", aoSair);
         pendente.delete(root);
         refresh(root);
@@ -48,25 +53,34 @@
 
   document.addEventListener("vtt:transport-event", (event) => {
     const envelope = event.detail || {};
-    if (!["sheet.data.updated", "actor.updated"].includes(envelope.event)) return;
-    const actorId = envelope.payload?.actor_id;
-    if (!actorId) return;
-    const modal = document.querySelector(`[data-modal-id="actor-${CSS.escape(actorId)}"]`);
-    const root = modal?.querySelector("[data-actor-sheet-root]");
-    if (!root) return;
-
-
-
-
-
-    if (souEu(envelope.payload) && root.contains(document.activeElement)) return;
-    if (envelope.event === "actor.updated") {
-      void refresh(root).then((ok) => {
-        if (ok === false) modal.querySelector("[data-modal-close]")?.click();
+    if (!["sheet.data.updated", "actor.updated", "tokens.updated", "token.updated"].includes(envelope.event)) return;
+    if (envelope.event === "tokens.updated" || envelope.event === "token.updated") {
+      const values = Array.isArray(envelope.payload?.tokens)
+        ? envelope.payload.tokens
+        : (envelope.payload?.token ? [envelope.payload.token] : []);
+      const tokenIds = new Set(values.map((token) => String(token?.token_id || token?.id || "")).filter(Boolean));
+      if (!tokenIds.size) return;
+      document.querySelectorAll("[data-actor-sheet-root][data-token-id]").forEach((root) => {
+        if (!tokenIds.has(root.dataset.tokenId || "")) return;
+        if (souEu(envelope.payload) && estaEditando(root)) return;
+        refreshQuandoOcioso(root);
       });
       return;
     }
-    refreshQuandoOcioso(root);
+    const actorId = envelope.payload?.actor_id;
+    if (!actorId) return;
+    const roots = document.querySelectorAll(`[data-actor-sheet-root][data-actor-id="${CSS.escape(actorId)}"]`);
+    roots.forEach((root) => {
+      const modal = root.closest("[data-modal-window]");
+      if (souEu(envelope.payload) && estaEditando(root)) return;
+      if (envelope.event === "actor.updated") {
+        void refresh(root).then((ok) => {
+          if (ok === false) modal?.querySelector("[data-modal-close]")?.click();
+        });
+        return;
+      }
+      refreshQuandoOcioso(root);
+    });
   });
 
   document.addEventListener("vtt:actor-sheet-modal-mounted", (event) => {

@@ -314,11 +314,15 @@
       if (targetOption?.dataset.targetTokenId) options.targetTokenId = targetOption.dataset.targetTokenId;
       else if (targetOption?.dataset.targetActorId) options.targetActorId = targetOption.dataset.targetActorId;
       const meta = contexts.get(root) || {};
+
+      // A rolagem 3D pode começar assim que o evento do chat chega. Se este
+      // overlay esperar a resposta HTTP, ele escurece e cobre a bandeja durante
+      // o começo da animação. Os valores já foram coletados; feche no clique.
+      closeFloatingSheetMenus();
       const result = context.itemId
         ? await executeItemAction(root, context.itemId, action, options)
         : await executeSheetAction(root, action, options);
       if (result?.applied) toastApplied(result.applied, meta.systemId);
-      closeFloatingSheetMenus();
     });
     actions.appendChild(cancel);
     actions.appendChild(roll);
