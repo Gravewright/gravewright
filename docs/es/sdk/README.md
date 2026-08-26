@@ -15,5 +15,7 @@ las [capabilities](capabilities.md), el [manifest](manifest.md) y
 [CLI](cli.md), los [kinds y el lifecycle](package-authoring.md), los
 [content packs v2 y assets](content-and-assets.md), el
 [Marketplace](marketplace.md) y el [flujo con IA](authoring-with-ai.md).
+Para adaptar proyectos existentes, consulte
+[Portar módulos a Gravewright](portar-modulos.md).
 Los nombres de methods, capabilities, DTOs, events y
 error codes no se traducen.

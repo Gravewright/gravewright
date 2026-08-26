@@ -164,6 +164,7 @@ grave package doctor my-rpg
 
 ### Guides
 
+- [`porting-modules.md`](porting-modules.md): end-to-end guidance for adapting modules from other platforms to Gravewright.
 - [`tutorial-addon.md`](tutorial-addon.md): end-to-end: from zero to a working addon.
 - [`tutorial-ruleset.md`](tutorial-ruleset.md): end-to-end: from zero to a minimal working ruleset.
 - [`declarative-model.md`](declarative-model.md): declarative-first package model, examples, and author decision rules.

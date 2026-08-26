@@ -6,6 +6,7 @@ Current release: **Gravewright v1.0.0-beta.3**, certified against **SDK 1 RC 1**
 [release notes and complete history](../RELEASE_NOTES.md).
 
 Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
+Spanish SDK documentation starts at [es/sdk/README.md](es/sdk/README.md).
 
 ## Start Here
 
@@ -16,6 +17,7 @@ Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
 - [Core/SDK coverage audit](maintainers/sdk-coverage.md) records missing gameplay APIs and intentional private boundaries.
 - [Benchmark reports](benchmarks/README.md) preserve the realistic-scene and synthetic renderer results.
 - [SDK documentation](sdk/README.md) is the entry point for package authors.
+- [Porting modules to Gravewright](sdk/porting-modules.md) covers licensing, architecture mapping, SDK gaps, testing, and publication.
 
 ## Project Guides
 
@@ -50,6 +52,7 @@ Brazilian Portuguese documentation starts at [pt-br/README.md](pt-br/README.md).
 - [Package messaging](sdk/messaging.md)
 - [CLI](sdk/cli.md)
 - [Creating packages with AI](sdk/creating-packages-with-ai.md)
+- [Porting modules](sdk/porting-modules.md)
 - [SDK security](sdk/security.md)
 
 ## Documentation Rules

@@ -120,6 +120,7 @@ grave package doctor my-rpg
 
 ## Mapa da documentação
 
+- [`porting-modules.md`](porting-modules.md): processo completo para adaptar módulos de outras plataformas ao Gravewright.
 - [`tutorial-addon.md`](tutorial-addon.md): fim a fim: do zero a um addon funcionando.
 - [`tutorial-ruleset.md`](tutorial-ruleset.md): fim a fim: do zero a um ruleset mínimo funcionando.
 - [`declarative-model.md`](declarative-model.md): modelo declarativo-first, exemplos e regras de decisão.

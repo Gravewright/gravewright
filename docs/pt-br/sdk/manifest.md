@@ -51,6 +51,31 @@
 | `authors` | recomendado | Autores/mantenedores. |
 | `license` | recomendado | Licença do pacote. |
 
+### Declaração da licença
+
+Use no campo `license` um identificador ou uma expressão
+[SPDX](https://spdx.org/licenses/) precisa, por exemplo:
+
+```json
+"license": "MIT"
+```
+
+```json
+"license": "AGPL-3.0-only"
+```
+
+```json
+"license": "MIT OR Apache-2.0"
+```
+
+O validador aceita uma string e não decide compatibilidade jurídica. Não use valores
+vagos como `GNU`, `open source` ou `free`: declare a variante e a versão exatas. O
+arquivo `LICENSE` deve conter o texto integral da licença principal, e componentes
+com licenças diferentes devem ser relacionados em `THIRD_PARTY_NOTICES.md`.
+
+Consulte [Portando módulos para o Gravewright](porting-modules.md#3-licença) para
+uma tabela de licenças comuns, obrigações, assets e exemplos de ports derivados.
+
 ## Visibilidade dos diretórios
 
 Um ruleset pode omitir abas de diretório que não façam parte do seu modelo de dados:

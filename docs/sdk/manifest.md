@@ -75,6 +75,28 @@ schemas/gravewright-package-v1.schema.json
 | `settings` | array | Declared package settings. |
 | `display` | object | Optional UI metadata such as `color` and directory visibility. |
 
+### Declaring a license
+
+Use a precise [SPDX](https://spdx.org/licenses/) identifier or expression:
+
+```json
+"license": "MIT"
+```
+
+```json
+"license": "AGPL-3.0-only"
+```
+
+```json
+"license": "MIT OR Apache-2.0"
+```
+
+The validator accepts a string; it does not decide legal compatibility. Do not use
+vague values such as `GNU`, `open source`, or `free`. Include the main license text
+in `LICENSE` and list differently licensed components in
+`THIRD_PARTY_NOTICES.md`. See [Porting modules](porting-modules.md#3-licensing) for
+common software and asset licenses, obligations, and derived-port examples.
+
 ### Directory visibility
 
 A ruleset may omit core directory tabs that do not belong to its data model:
