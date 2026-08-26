@@ -74,8 +74,8 @@
 
                 const groupPos = dragPositions ? dragPositions[token.token_id] : null;
                 const isDragging = !!groupPos || (drag && drag.tokenId === token.token_id);
-                let renderWorldX = token.grid_x * s;
-                let renderWorldY = token.grid_y * s;
+                let renderWorldX = (scene.gridOffsetX || 0) + token.grid_x * s;
+                let renderWorldY = (scene.gridOffsetY || 0) + token.grid_y * s;
                 if (groupPos) {
                     renderWorldX = groupPos.worldX;
                     renderWorldY = groupPos.worldY;

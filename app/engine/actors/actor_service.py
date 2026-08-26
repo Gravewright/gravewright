@@ -115,9 +115,9 @@ class ActorService:
         actor_id: str,
         user_id: str,
         name: str,
-        folder_id: str = "",
-        portrait_asset_id: str = "",
-        token_asset_id: str = "",
+        folder_id: str | None = None,
+        portrait_asset_id: str | None = None,
+        token_asset_id: str | None = None,
         expected_version: int | None = None,
     ) -> ActorResult:
         actor, campaign, error = self._load_editable(actor_id, user_id)
@@ -131,9 +131,17 @@ class ActorService:
         version = self.actors.update_core(
             actor_id=actor_id,
             name=name,
-            folder_id=folder_id or None,
-            portrait_asset_id=portrait_asset_id or None,
-            token_asset_id=token_asset_id or None,
+            folder_id=actor.get("folder_id") if folder_id is None else (folder_id or None),
+            portrait_asset_id=(
+                actor.get("portrait_asset_id")
+                if portrait_asset_id is None
+                else (portrait_asset_id or None)
+            ),
+            token_asset_id=(
+                actor.get("token_asset_id")
+                if token_asset_id is None
+                else (token_asset_id or None)
+            ),
             expected_version=expected_version,
         )
         if version is None:

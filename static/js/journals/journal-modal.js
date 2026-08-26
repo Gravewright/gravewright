@@ -543,7 +543,7 @@
           const pdf = card.querySelector("[data-page-pdf-inline]");
           if (image) image.src = result.src;
           if (pdf) pdf.hidden = !result.asset_id;
-          if (upload && file.type === "application/pdf" && result.asset_id) upload.hidden = true;
+          if (upload) upload.hidden = true;
           scheduleAutosave(form, true);
           if (file.type === "application/pdf" && result.asset_id && pdf) {
             const mountPdf = window.GravewrightJournalPdfViewer?.mount;
@@ -774,17 +774,53 @@
       indexReordering = true;
       entry.classList.add("is-dragging");
       event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedIndexId);
+      event.dataTransfer.setData("application/x-gravewright-journal-page", draggedIndexId);
     });
     indexList.addEventListener("dragover", (event) => {
       if (!draggedIndexId) return;
+      const targetGroup = event.target.closest(".journal-chapter-group");
+      if (!targetGroup) return;
       const targetEntry = event.target.closest("[data-index-page-id]");
-      if (!targetEntry || targetEntry.dataset.indexPageId === "cover" || targetEntry.dataset.indexPageId === draggedIndexId) return;
+      if (targetEntry?.dataset.indexPageId === draggedIndexId) {
+        event.preventDefault();
+        return;
+      }
       const draggedCard = list.querySelector(`[data-section-id="${CSS.escape(draggedIndexId)}"]`);
-      const targetCard = list.querySelector(`[data-section-id="${CSS.escape(targetEntry.dataset.indexPageId)}"]`);
-      if (!draggedCard || !targetCard) return;
+      if (!draggedCard) return;
       event.preventDefault();
-      const rect = targetEntry.getBoundingClientRect();
-      list.insertBefore(draggedCard, event.clientY < rect.top + rect.height / 2 ? targetCard : targetCard.nextSibling);
+      event.dataTransfer.dropEffect = "move";
+
+      const chapter = targetGroup.dataset.chapter === "Sem capítulo" ? "" : targetGroup.dataset.chapter;
+      const category = draggedCard.querySelector("[data-section-category]");
+      if (category) category.value = chapter;
+
+      const draggedEntry = indexList.querySelector(`[data-index-page-id="${CSS.escape(draggedIndexId)}"]`);
+      if (targetEntry && targetEntry.dataset.indexPageId !== draggedIndexId) {
+        const targetCard = list.querySelector(`[data-section-id="${CSS.escape(targetEntry.dataset.indexPageId)}"]`);
+        if (!targetCard) return;
+        const rect = targetEntry.getBoundingClientRect();
+        const before = event.clientY < rect.top + rect.height / 2;
+        list.insertBefore(draggedCard, before ? targetCard : targetCard.nextSibling);
+        targetEntry.parentElement.insertBefore(draggedEntry, before ? targetEntry : targetEntry.nextSibling);
+        return;
+      }
+
+      // Dropping on the chapter header or its empty space files the page at
+      // the end of that chapter, regardless of whether it is text, image or PDF.
+      const chapterEntries = Array.from(targetGroup.querySelectorAll("[data-index-page-id]"))
+        .filter((entry) => entry.dataset.indexPageId !== draggedIndexId);
+      const lastEntry = chapterEntries.at(-1);
+      const lastCard = lastEntry
+        ? list.querySelector(`[data-section-id="${CSS.escape(lastEntry.dataset.indexPageId)}"]`)
+        : null;
+      list.insertBefore(draggedCard, lastCard ? lastCard.nextSibling : list.firstChild);
+      targetGroup.querySelector("[data-chapter-pages]")?.appendChild(draggedEntry);
+    });
+    indexList.addEventListener("drop", (event) => {
+      if (!draggedIndexId || !event.target.closest(".journal-chapter-group")) return;
+      event.preventDefault();
+      scheduleAutosave(form);
     });
     indexList.addEventListener("dragend", () => {
       draggedIndexId = null;

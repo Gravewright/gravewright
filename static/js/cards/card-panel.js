@@ -27,6 +27,35 @@
     return label(`cardDraw${name}`, fallback);
   }
 
+  function openCardPreview({ name, src }) {
+    document.querySelectorAll("dialog.card-preview-dialog").forEach((current) => current.remove());
+
+    const dialog = document.createElement("dialog");
+    dialog.className = "card-preview-dialog";
+    const cardName = name || label("cardLabelCardName", "Card");
+    dialog.innerHTML = `<article class="card-preview-dialog__panel">
+      <header>
+        <strong>${esc(cardName)}</strong>
+        <button type="button" data-card-preview-close title="${esc(label("cardLabelClosePreview", "Close"))}" aria-label="${esc(label("cardLabelClosePreview", "Close"))}"><i class="ph ph-x" aria-hidden="true"></i></button>
+      </header>
+      <div class="card-preview-dialog__media">
+        ${src ? `<img src="${esc(src)}" alt="${esc(cardName)}">` : '<div class="card-preview-dialog__fallback"><i class="ph ph-cardholder" aria-hidden="true"></i></div>'}
+      </div>
+    </article>`;
+
+    const close = () => {
+      if (dialog.open) dialog.close();
+      else dialog.remove();
+    };
+    dialog.querySelector("[data-card-preview-close]").addEventListener("click", close);
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) close();
+    });
+    dialog.addEventListener("close", () => dialog.remove(), { once: true });
+    document.body.appendChild(dialog);
+    dialog.showModal();
+  }
+
   function openDrawDialog({ deckName, maximum }) {
     if (document.querySelector("dialog.card-draw-dialog[open]")) return Promise.resolve(null);
     const max = Math.max(0, Number(maximum) || 0);
@@ -44,23 +73,29 @@
       const dialog = document.createElement("dialog");
       dialog.className = "card-draw-dialog";
       dialog.innerHTML = `<form method="dialog" data-card-draw-form>
-        <header><strong>${esc(drawLabel("Title", "Draw cards"))}</strong><small>${esc(deckName || "")}</small></header>
-        <div class="card-draw-choices">
-          <fieldset><legend>${esc(drawLabel("Destination", "Destination"))}</legend>
-            <label><input type="radio" name="destination" value="hand"${destination === "hand" ? " checked" : ""}> ${esc(drawLabel("Hand", "Hand"))}</label>
-            <label><input type="radio" name="destination" value="table"${destination === "table" ? " checked" : ""}> ${esc(drawLabel("Table", "Table"))}</label>
-            <label><input type="radio" name="destination" value="chat"${destination === "chat" ? " checked" : ""}> ${esc(drawLabel("Chat", "Chat"))}</label>
-          </fieldset>
-          <fieldset><legend>${esc(drawLabel("State", "State"))}</legend>
-            <label><input type="radio" name="face" value="face_up"${face === "face_up" ? " checked" : ""}> ${esc(drawLabel("FaceUp", "Face up"))}</label>
-            <label><input type="radio" name="face" value="face_down"${face === "face_down" ? " checked" : ""}> ${esc(drawLabel("FaceDown", "Face down"))}</label>
-          </fieldset>
+        <header class="card-draw-dialog__header">
+          <span class="card-draw-dialog__icon"><i class="ph ph-cards-three" aria-hidden="true"></i></span>
+          <span class="card-draw-dialog__heading"><small>${esc(deckName || "")}</small><strong>${esc(drawLabel("Title", "Draw cards"))}</strong></span>
+          <button type="button" class="card-draw-dialog__close" data-card-draw-cancel aria-label="${esc(drawLabel("Cancel", "Cancel"))}"><i class="ph ph-x" aria-hidden="true"></i></button>
+        </header>
+        <div class="card-draw-dialog__body">
+          <div class="card-draw-choices">
+            <fieldset><legend>${esc(drawLabel("Destination", "Destination"))}</legend>
+              <label><input type="radio" name="destination" value="hand"${destination === "hand" ? " checked" : ""}><i class="ph ph-hand" aria-hidden="true"></i><span>${esc(drawLabel("Hand", "Hand"))}</span><i class="ph ph-check-circle" aria-hidden="true"></i></label>
+              <label><input type="radio" name="destination" value="table"${destination === "table" ? " checked" : ""}><i class="ph ph-layout" aria-hidden="true"></i><span>${esc(drawLabel("Table", "Table"))}</span><i class="ph ph-check-circle" aria-hidden="true"></i></label>
+              <label><input type="radio" name="destination" value="chat"${destination === "chat" ? " checked" : ""}><i class="ph ph-chat-circle" aria-hidden="true"></i><span>${esc(drawLabel("Chat", "Chat"))}</span><i class="ph ph-check-circle" aria-hidden="true"></i></label>
+            </fieldset>
+            <fieldset><legend>${esc(drawLabel("State", "State"))}</legend>
+              <label><input type="radio" name="face" value="face_up"${face === "face_up" ? " checked" : ""}><i class="ph ph-eye" aria-hidden="true"></i><span>${esc(drawLabel("FaceUp", "Face up"))}</span><i class="ph ph-check-circle" aria-hidden="true"></i></label>
+              <label><input type="radio" name="face" value="face_down"${face === "face_down" ? " checked" : ""}><i class="ph ph-eye-slash" aria-hidden="true"></i><span>${esc(drawLabel("FaceDown", "Face down"))}</span><i class="ph ph-check-circle" aria-hidden="true"></i></label>
+            </fieldset>
+          </div>
+          <label class="card-draw-quantity"><span>${esc(drawLabel("Quantity", "Quantity"))}</span>
+            <span><button type="button" data-card-draw-step="-1" aria-label="-"><i class="ph ph-minus" aria-hidden="true"></i></button><input type="number" min="1" max="${max}" value="1" data-card-draw-count><button type="button" data-card-draw-step="1" aria-label="+"><i class="ph ph-plus" aria-hidden="true"></i></button></span>
+            <small>${esc(format(drawLabel("Available", "{count} available"), { count: max }))}</small>
+          </label>
         </div>
-        <label class="card-draw-quantity"><span>${esc(drawLabel("Quantity", "Quantity"))}</span>
-          <span><button type="button" data-card-draw-step="-1" aria-label="-">−</button><input type="number" min="1" max="${max}" value="1" data-card-draw-count><button type="button" data-card-draw-step="1" aria-label="+">+</button></span>
-          <small>${esc(format(drawLabel("Available", "{count} available"), { count: max }))}</small>
-        </label>
-        <footer><button type="button" data-card-draw-cancel>${esc(drawLabel("Cancel", "Cancel"))}</button><button type="submit" class="primary" data-card-draw-submit>${esc(drawLabel("Submit", "Draw"))}</button></footer>
+        <footer><button type="button" class="secondary-action" data-card-draw-cancel><i class="ph ph-x" aria-hidden="true"></i><span>${esc(drawLabel("Cancel", "Cancel"))}</span></button><button type="submit" class="primary-action" data-card-draw-submit><i class="ph ph-cards" aria-hidden="true"></i><span>${esc(drawLabel("Submit", "Draw"))}</span></button></footer>
       </form>`;
       const input = dialog.querySelector("[data-card-draw-count]");
       const submit = dialog.querySelector("[data-card-draw-submit]");
@@ -85,7 +120,7 @@
           validate();
         }
       });
-      dialog.querySelector("[data-card-draw-cancel]").addEventListener("click", () => finish(null));
+      dialog.querySelectorAll("[data-card-draw-cancel]").forEach((button) => button.addEventListener("click", () => finish(null)));
       dialog.addEventListener("cancel", (event) => { event.preventDefault(); finish(null); });
       input.addEventListener("input", validate);
       dialog.querySelector("form").addEventListener("submit", (event) => {
@@ -628,11 +663,16 @@
         if (action === "shuffle") this.shuffle(button.dataset.deckId);
         if (action === "delete-deck") this.removeDeck(button.dataset.deckId, button.dataset.deckName);
         if (action === "open-draw") this.openDraw(button.dataset.deckId);
+        if (action === "view-hand") this.viewHandCard(button.dataset.cardId);
         if (action === "flip-hand") this.toggleHandFlip(button.dataset.cardId);
         if (action === "discard") this.discard(button.dataset.cardId);
         if (action === "flip") this.flipPlacement(button.dataset.placementId, button.dataset.faceState);
         if (action === "discard-placement") this.discardPlacement(button.dataset.placementId);
         if (action === "reset") this.reset(button.dataset.deckId);
+      });
+
+      this.root.addEventListener("pointerdown", (event) => {
+        if (event.target.closest("button[data-card-action]")) event.stopPropagation();
       });
 
       const form = this.root.querySelector("[data-card-create-form]");
@@ -960,6 +1000,7 @@
           <div class="fan-card__img">${this.handFace(card, flipped)}</div>
           <div class="fan-card__name">${esc(card.name || label("cardLabelCardName", "Card"))}</div>
           <div class="fan-card__actions">
+            <button type="button" draggable="false" data-card-action="view-hand" data-card-id="${esc(card.id)}" title="${esc(label("cardLabelView", "View card"))}" aria-label="${esc(label("cardLabelView", "View card"))}"><i class="ph ph-magnifying-glass-plus" aria-hidden="true"></i></button>
             <button type="button" draggable="false" data-card-action="flip-hand" data-card-id="${esc(card.id)}" title="${esc(flipTitle)}"><i class="ph ph-arrows-clockwise"></i></button>
             <button type="button" draggable="false" data-card-action="discard" data-card-id="${esc(card.id)}" title="${esc(label("cardLabelDiscard", "Discard"))}"><i class="ph ph-trash"></i></button>
           </div>
@@ -981,6 +1022,17 @@
         return `<img src="${assetUrl(card.front_asset_id)}" alt="${esc(card.name || label("cardLabelCardName", "Card"))}" draggable="false">`;
       }
       return '<i class="ph ph-cardholder" aria-hidden="true"></i>';
+    }
+
+    viewHandCard(cardId) {
+      const card = (this.store.state?.cards || []).find((item) => item.id === cardId);
+      if (!card) return;
+      const flipped = this.flipped.has(card.id);
+      const assetId = flipped ? card.back_asset_id : card.front_asset_id;
+      openCardPreview({
+        name: flipped ? label("cardLabelCardBack", "Card back") : (card.name || label("cardLabelCardName", "Card")),
+        src: assetId ? assetUrl(assetId) : "",
+      });
     }
 
     renderScene(state) {

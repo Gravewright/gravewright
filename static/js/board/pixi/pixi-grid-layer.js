@@ -23,6 +23,8 @@
             if (!scene) return;
 
             const gridSize = scene.scaledTileSize;
+            const originX = scene.gridOffsetX || 0;
+            const originY = scene.gridOffsetY || 0;
             const scaledGrid = gridSize * cam.zoom;
             const visible = scene.gridVisible;
 
@@ -48,13 +50,13 @@
 
             if (clipW <= 0 || clipH <= 0) return;
 
-            let startX = Math.floor((clipX - cam.offsetX) / scaledGrid) - 1;
-            let endX = Math.ceil((clipRight - cam.offsetX) / scaledGrid) + 1;
-            let startY = Math.floor((clipY - cam.offsetY) / scaledGrid) - 1;
-            let endY = Math.ceil((clipBottom - cam.offsetY) / scaledGrid) + 1;
+            let startX = Math.floor(((clipX - cam.offsetX) / cam.zoom - originX) / gridSize) - 1;
+            let endX = Math.ceil(((clipRight - cam.offsetX) / cam.zoom - originX) / gridSize) + 1;
+            let startY = Math.floor(((clipY - cam.offsetY) / cam.zoom - originY) / gridSize) - 1;
+            let endY = Math.ceil(((clipBottom - cam.offsetY) / cam.zoom - originY) / gridSize) + 1;
 
-            const maxGridX = Math.floor(scene.width / gridSize);
-            const maxGridY = Math.floor(scene.height / gridSize);
+            const maxGridX = Math.floor((scene.width - originX) / gridSize);
+            const maxGridY = Math.floor((scene.height - originY) / gridSize);
 
             startX = Math.max(0, startX);
             endX = Math.min(maxGridX, endX);
@@ -65,7 +67,7 @@
 
             if (scaledGrid >= 4) {
                 for (let gx = startX; gx <= endX; gx += 1) {
-                    const x = Math.round(screenFromWorld(gx * gridSize, cam.offsetX, cam.zoom));
+                    const x = Math.round(screenFromWorld(originX + gx * gridSize, cam.offsetX, cam.zoom));
 
                     if (x < clipX || x > clipRight) continue;
 
@@ -76,7 +78,7 @@
                 }
 
                 for (let gy = startY; gy <= endY; gy += 1) {
-                    const y = Math.round(screenFromWorld(gy * gridSize, cam.offsetY, cam.zoom));
+                    const y = Math.round(screenFromWorld(originY + gy * gridSize, cam.offsetY, cam.zoom));
 
                     if (y < clipY || y > clipBottom) continue;
 

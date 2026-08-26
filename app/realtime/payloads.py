@@ -183,8 +183,8 @@ class TokenViewPayload(TypedDict):
     token_id: str
     scene_id: str
     actor_id: NotRequired[str | None]
-    grid_x: int
-    grid_y: int
+    grid_x: int | float
+    grid_y: int | float
     width_cells: int
     height_cells: int
     name: str

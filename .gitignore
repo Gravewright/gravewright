@@ -26,28 +26,25 @@ htmlcov/
 /diagnostics/
 /site/
 
-# ``data/`` mistura duas coisas: dados de execução (campanhas, imports) e os
-# pacotes que acompanham o projeto, que são código-fonte. Por isso o diretório em
-# si não pode ser ignorado — o Git não reexamina o conteúdo de um diretório
-# excluído, e nenhuma negação lá dentro funcionaria. Ignoramos o conteúdo e
-# reincluímos o caminho até o que é fonte, nível por nível.
+# ``data/`` mistura dados de execução e pacotes instalados localmente. Nenhum
+# módulo/addon entra no repositório; a única exceção versionada é o ruleset PDF
+# mantido pelo próprio projeto.
 /data/*
 !/data/packages/
 /data/packages/*
-!/data/packages/addons/
-/data/packages/addons/*
-!/data/packages/addons/my-custom-shader/
-!/data/packages/addons/my-custom-shader/**
-!/data/packages/addons/sdk-lab-*/
-!/data/packages/addons/sdk-lab-*/**
 !/data/packages/rulesets/
 /data/packages/rulesets/*
 !/data/packages/rulesets/gravewright-pdf-system/
+!/data/packages/rulesets/gravewright-pdf-system/**
 
 # Ficha em PDF enviada pelo GM vive na biblioteca de assets da campanha, não aqui.
 # Dentro do pacote fica só o template que ele traz de fábrica.
 /data/packages/rulesets/gravewright-pdf-system/assets/sheets/*
 !/data/packages/rulesets/gravewright-pdf-system/assets/sheets/blank-a4.pdf
+
+# Cópias locais de módulos e repositórios usados como referência/importação.
+/foundryvtt-dice-so-nice-master/
+/rpg-bkp-master/
 
 # Databases and SQLite sidecars
 *.sqlite

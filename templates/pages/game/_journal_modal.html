@@ -337,7 +337,7 @@
                             <input type="hidden" data-page-src value="{{ section.src }}" />
                             <input type="hidden" data-page-asset-id value="{{ section.assetId }}" />
                             <button type="button" data-page-asset-upload
-                                    {% if section.kind == 'pdf' and section.assetId %}hidden{% endif %}><i class="ph ph-upload-simple"></i> Enviar arquivo</button>
+                                    {% if section.src or section.assetId %}hidden{% endif %}><i class="ph ph-upload-simple"></i> Enviar arquivo</button>
                             <img data-page-image-preview {% if section.src %}src="{{ section.src }}"{% endif %} alt="" />
                             <div data-journal-pdf-inline data-page-pdf-inline data-document-id="{{ section.assetId }}"
                                  {% if not section.assetId %}hidden{% endif %}></div>

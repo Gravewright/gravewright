@@ -1277,7 +1277,7 @@ async def sdk_runtime_command(
         if command_name == "actors.create":
             result = service.create_actor(campaign_id=campaign_id, user_id=user_id, system_id=str(payload.get("systemId") or ""), actor_type=str(payload.get("type") or ""), name=str(payload.get("name") or ""), folder_id=str(payload.get("folderId") or ""))
         elif command_name == "actors.update":
-            result = service.update_core(actor_id=str(payload.get("id") or ""), user_id=user_id, name=str(payload.get("name") or ""), folder_id=str(payload.get("folderId") or ""), portrait_asset_id=str(payload.get("portraitAssetId") or ""), token_asset_id=str(payload.get("tokenAssetId") or ""), expected_version=_int(payload.get("expectedVersion"), -1) if payload.get("expectedVersion") is not None else None)
+            result = service.update_core(actor_id=str(payload.get("id") or ""), user_id=user_id, name=str(payload.get("name") or ""), folder_id=str(payload["folderId"]) if "folderId" in payload else None, portrait_asset_id=str(payload["portraitAssetId"]) if "portraitAssetId" in payload else None, token_asset_id=str(payload["tokenAssetId"]) if "tokenAssetId" in payload else None, expected_version=_int(payload.get("expectedVersion"), -1) if payload.get("expectedVersion") is not None else None)
         else:
             result = service.delete_actor(actor_id=str(payload.get("id") or ""), user_id=user_id)
         if not result.success:
@@ -1293,7 +1293,7 @@ async def sdk_runtime_command(
         if command_name == "items.create":
             result = service.create_item(campaign_id=campaign_id, user_id=user_id, system_id=str(payload.get("systemId") or ""), item_type=str(payload.get("type") or ""), name=str(payload.get("name") or ""), folder_id=str(payload.get("folderId") or ""))
         elif command_name == "items.update":
-            result = service.update_core(item_id=str(payload.get("id") or ""), user_id=user_id, name=str(payload.get("name") or ""), folder_id=str(payload.get("folderId") or ""), portrait_asset_id=str(payload.get("portraitAssetId") or ""), expected_version=_int(payload.get("expectedVersion"), -1) if payload.get("expectedVersion") is not None else None)
+            result = service.update_core(item_id=str(payload.get("id") or ""), user_id=user_id, name=str(payload.get("name") or ""), folder_id=str(payload["folderId"]) if "folderId" in payload else None, portrait_asset_id=str(payload["portraitAssetId"]) if "portraitAssetId" in payload else None, expected_version=_int(payload.get("expectedVersion"), -1) if payload.get("expectedVersion") is not None else None)
         else:
             result = service.delete_item(item_id=str(payload.get("id") or ""), user_id=user_id)
         if not result.success:

@@ -87,8 +87,10 @@ async def update_item_core(
         item_id=str(body.get("item_id", "")),
         user_id=user["id"],
         name=str(body.get("name", "")),
-        folder_id=str(body.get("folder_id", "")),
-        portrait_asset_id=str(body.get("portrait_asset_id", "")),
+        folder_id=str(body["folder_id"]) if "folder_id" in body else None,
+        portrait_asset_id=(
+            str(body["portrait_asset_id"]) if "portrait_asset_id" in body else None
+        ),
     )
     await _emit_item(TransportEvent.ITEM_UPDATED, result, user_id=user["id"])
     if not result.success:

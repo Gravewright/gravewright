@@ -1213,6 +1213,8 @@
             canvas.dataset.sceneRasterTileSize = String(scenePayload.raster_tile_size || scenePayload.tile_size || defaultGridSize());
             canvas.dataset.sceneGridSize = String(scenePayload.grid_size || scenePayload.tile_size || defaultGridSize());
             canvas.dataset.sceneGridVisible = scenePayload.grid_visible === false ? "false" : "true";
+            canvas.dataset.sceneGridOffsetX = String(scenePayload.grid_offset_x || 0);
+            canvas.dataset.sceneGridOffsetY = String(scenePayload.grid_offset_y || 0);
             canvas.dataset.sceneGridColor = scenePayload.grid_color || "";
             canvas.dataset.sceneGridOpacity = String(scenePayload.grid_opacity ?? 0.4);
             canvas.dataset.sceneDarkness = String(scenePayload.darkness ?? 0);

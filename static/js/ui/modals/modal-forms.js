@@ -5,6 +5,8 @@
         "data-scene-height",
         "data-scene-tile-size",
         "data-scene-grid-visible",
+        "data-scene-grid-offset-x",
+        "data-scene-grid-offset-y",
         "data-scene-grid-color",
         "data-scene-grid-opacity",
         "data-scene-darkness",

@@ -45,6 +45,8 @@
                 scaledRasterTileSize: rasterTileSize * imageScale,
                 imageScale,
                 gridVisible: canvas.dataset.sceneGridVisible !== "false",
+                gridOffsetX: finiteNumber(canvas.dataset.sceneGridOffsetX, 0) * imageScale,
+                gridOffsetY: finiteNumber(canvas.dataset.sceneGridOffsetY, 0) * imageScale,
                 gridColor: canvas.dataset.sceneGridColor || null,
                 gridOpacity: clampOpacity(canvas.dataset.sceneGridOpacity, 0.4),
                 darkness: clampOpacity(canvas.dataset.sceneDarkness, 0),

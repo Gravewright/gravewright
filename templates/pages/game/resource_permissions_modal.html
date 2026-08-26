@@ -26,24 +26,28 @@
         <input type="hidden" name="resource_type" value="{{ resource_type }}" />
         <input type="hidden" name="resource_id" value="{{ resource_id }}" />
 
+        <div class="resource-permissions-intro">
+            <span class="resource-permissions-intro__icon"><i class="ph ph-shield-check" aria-hidden="true"></i></span>
+            <p>{{ t("resource_permissions.help") }}</p>
+        </div>
         <div class="resource-permissions-list">
             {% for row in rows %}
             <fieldset class="resource-permission-row">
-                <legend>{{ row.name }}</legend>
+                <legend><span class="resource-permission-avatar">{{ row.name[:1] | upper }}</span><span>{{ row.name }}</span></legend>
                 <label>
                     <input type="radio" name="access__{{ row.user_id }}" value="none"
                            {% if row.access == "none" %}checked{% endif %} />
-                    <span>{{ t("resource_permissions.none") }}</span>
+                    <i class="ph ph-eye-slash" aria-hidden="true"></i><span>{{ t("resource_permissions.none") }}</span>
                 </label>
                 <label>
                     <input type="radio" name="access__{{ row.user_id }}" value="read"
                            {% if row.access == "read" %}checked{% endif %} />
-                    <span>{{ t("resource_permissions.read") }}</span>
+                    <i class="ph ph-eye" aria-hidden="true"></i><span>{{ t("resource_permissions.read") }}</span>
                 </label>
                 <label>
                     <input type="radio" name="access__{{ row.user_id }}" value="owner"
                            {% if row.access == "owner" %}checked{% endif %} />
-                    <span>{{ t("resource_permissions.owner") }}</span>
+                    <i class="ph ph-pencil-simple" aria-hidden="true"></i><span>{{ t("resource_permissions.owner") }}</span>
                 </label>
             </fieldset>
             {% else %}
@@ -62,4 +66,3 @@
         </footer>
     </form>
 </article>
-

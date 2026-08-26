@@ -73,7 +73,7 @@
     <script defer src="/static/js/map/drag/map-drag.js"></script>
     <script defer src="/static/js/map/drag/map-token-drag.js?v=20260818-wall-route-1"></script>
     <script defer src="/static/js/map/tokens/map-tokens.js"></script>
-    <script defer src="/static/js/map/tokens/map-token-events.js"></script>
+    <script defer src="/static/js/map/tokens/map-token-events.js?v={{ asset_version }}-realtime-reconcile1"></script>
     <script defer src="/static/js/map/tokens/map-token-delete.js?v=20260604-map-controller"></script>
     <script defer src="/static/js/map/tokens/map-token-clipboard.js?v=20260811-component-actions"></script>
     <script defer src="/static/js/map/tokens/map-token-dom-events.js?v=20260604-map-controller"></script>
@@ -82,7 +82,7 @@
     <script defer src="/static/js/map/layers/map-layer-mode.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/map/input/map-token-steps.js?v=20260806-token-steps"></script>
     <script defer src="/static/js/map/input/map-keyboard-events.js?v=20260818-area-marker-transform"></script>
-    <script defer src="/static/js/map/events/map-realtime-events.js?v=20260818-board-cache-delta"></script>
+    <script defer src="/static/js/map/events/map-realtime-events.js?v={{ asset_version }}-token-broadcast1"></script>
     <script defer src="/static/js/map/render-loop/map-render-loop.js"></script>
     <script defer src="/static/js/map/measures/map-measure-store.js?v=20260818-identification-color-1"></script>
     <script defer src="/static/js/map/measures/map-measure-geometry.js?v=20260818-grid-footprint-1"></script>
@@ -109,8 +109,9 @@
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-remote.js?v={{ asset_version }}-compendium1"></script>
     <script defer src="/static/js/ui/modals/modal-forms.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/ui/modals/scene-grid-mapper.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/ui/modals/modal-window-actions.js?v=20260605-detached-remote"></script>
-    <script defer src="/static/js/ui/modals/modal-manager.js?v={{ asset_version }}-compendium1"></script>
+    <script defer src="/static/js/ui/modals/modal-manager.js?v={{ asset_version }}-unique-token-link1"></script>
     <script defer src="/static/js/ui/modals/modal-drag.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/modals/modal-api.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/ui-state-preservation.js?v={{ asset_version }}-reload-state1"></script>
@@ -120,7 +121,7 @@
     <script defer src="/static/js/sdk/sdk-capabilities.js?v=20260614-sdk"></script>
     <script defer src="/static/js/ui/partial-applications.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sdk/gravewright-sdk.js?v={{ asset_version }}"></script>
-    <script defer src="/static/js/audio/core-audio-runtime.js?v={{ asset_version }}-mixer-limit-1"></script>
+    <script defer src="/static/js/audio/core-audio-runtime.js?v={{ asset_version }}-ambient-recovery-1"></script>
     <script defer src="/static/js/audio/native-sound-ui.js?v={{ asset_version }}-ambient-empty-copy-1"></script>
     <script defer src="/static/js/audio/spatial-sound-layer.js?v={{ asset_version }}-artistic-all-sounds-1"></script>
     <script defer src="/static/js/input/core-input-runtime.js?v={{ asset_version }}"></script>
@@ -134,7 +135,7 @@
     <script defer src="/static/js/chat/chat-controller.js?v=20260604-chat-split"></script>
     <script defer src="/static/js/cards/card-api.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/cards/card-state.js?v={{ asset_version }}"></script>
-    <script defer src="/static/js/cards/card-panel.js?v={{ asset_version }}-draw-modal-table1"></script>
+    <script defer src="/static/js/cards/card-panel.js?v={{ asset_version }}-card-preview1"></script>
     <script defer src="/static/js/ui/context-menu.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/assets/asset-library.js?v={{ asset_version }}-dynamic-asset-filters-1"></script>
     <script defer src="/static/js/dice/dice-tray.js?v={{ asset_version }}"></script>
@@ -161,7 +162,7 @@
     <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sheets/actors/actor-sheet-actions.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sheets/actors/actor-sheet-controller.js?v={{ asset_version }}"></script>
-    <script defer src="/static/js/sheets/actors/actor-sheet-events.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/sheets/actors/actor-sheet-events.js?v={{ asset_version }}-bidirectional-sheet-sync1"></script>
     <script defer src="/static/js/combat/combat-api.js?v=20260605-system-api-v1"></script>
     
     {% for script in system_scripts %}<script defer src="{{ script.src }}" data-gw-package="{{ script.package_id }}" data-gw-nonce="{{ script.nonce }}"></script>
@@ -181,7 +182,7 @@
     <script defer src="/static/js/items/items-tree.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-context-actions.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-drag.js?v=20260604-items-split"></script>
-    <script defer src="/static/js/items/items-panel.js?v={{ asset_version }}-ctxorder1"></script>
+    <script defer src="/static/js/items/items-panel.js?v={{ asset_version }}-broadcast-reconcile1"></script>
     
     <script defer src="/static/js/content/content-api.js?v={{ asset_version }}-packaccess1"></script>
     <script defer src="/static/js/content/content-browser.js?v={{ asset_version }}-packaccess1"></script>
@@ -486,6 +487,8 @@
     data-card-label-hand-empty="{{ t('game.cards.hand_empty') }}"
     data-card-label-show-front="{{ t('game.cards.show_front') }}"
     data-card-label-show-back="{{ t('game.cards.show_back') }}"
+    data-card-label-view="{{ t('game.cards.view') }}"
+    data-card-label-close-preview="{{ t('game.cards.close_preview') }}"
     data-card-label-drag-table="{{ t('game.cards.drag_table') }}"
     data-card-label-discard="{{ t('game.cards.discard') }}"
     data-card-label-empty-scene="{{ t('game.cards.empty_scene') }}"
@@ -543,6 +546,8 @@
                             data-scene-raster-tile-size="{{ room.active_scene['tile_size'] }}"
                             data-scene-grid-size="{{ room.active_scene.get('grid_size') or room.active_scene['tile_size'] }}"
                             data-scene-grid-visible="{{ 'true' if room.active_scene['grid_visible'] else 'false' }}"
+                            data-scene-grid-offset-x="{{ room.active_scene.get('grid_offset_x') or 0 }}"
+                            data-scene-grid-offset-y="{{ room.active_scene.get('grid_offset_y') or 0 }}"
                             data-scene-grid-color="{{ room.active_scene['grid_color'] }}"
                             data-scene-grid-opacity="{{ room.active_scene['grid_opacity'] | default(0.4) }}"
                             data-scene-darkness="{{ room.active_scene['effective_darkness'] | default(0.0) }}"
@@ -971,10 +976,8 @@
                         data-is-gm="{{ 'true' if room.member_role in ('gm', 'assistant_gm') or room.is_streamer else 'false' }}">
                         <div class="cards-notice" data-card-notice hidden></div>
                         {% if room.member_role in ("gm", "assistant_gm") or room.is_streamer %}
-                        <section class="cards-section cards-create-section">
-                            <header>
-                                <h3>{{ t("game.cards.create_deck") }}</h3>
-                            </header>
+                        <details class="cards-create-drawer">
+                            <summary><i class="ph ph-plus-circle" aria-hidden="true"></i><span>{{ t("game.cards.create_deck") }}</span><i class="ph ph-caret-down cards-create-drawer__caret" aria-hidden="true"></i></summary>
                             <form class="cards-create" data-card-create-form>
                                 <label class="game-field">
                                     <span>{{ t("game.cards.deck_name") }}</span>
@@ -988,12 +991,12 @@
                                     <span>{{ t("game.cards.card_back_optional") }}</span>
                                     <input type="file" name="back" accept="image/png,image/jpeg,image/webp" />
                                 </label>
-                                <button class="primary-action" type="submit">
+                                <button class="primary-action cards-create__submit" type="submit">
                                     <i class="ph ph-upload-simple" aria-hidden="true"></i>
                                     <span>{{ t("game.cards.create_deck") }}</span>
                                 </button>
                             </form>
-                        </section>
+                        </details>
                         {% endif %}
                         <section class="cards-section cards-section--table">
                             <header>

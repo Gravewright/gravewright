@@ -45,7 +45,7 @@ class SceneRepository:
         start_zoom: float = 1.0,
         tile_table_version: int = 1,
         scene_epoch: int = 1,
-        grid_size: int | None = None,
+        grid_size: int | float | None = None,
         scene_format_version: int = 1,
         raster_selection_mode: str = "legacy",
         raster_policy_version: int = 0,
@@ -173,6 +173,8 @@ class SceneRepository:
         image_scale: float,
         tile_table_version: int,
         grid_size: int | None = None,
+        grid_offset_x: float | None = None,
+        grid_offset_y: float | None = None,
     ) -> None:
         now = int(time.time())
         with engine_begin() as conn:
@@ -188,6 +190,8 @@ class SceneRepository:
                         scenes_table.c.grid_size,
                         scenes_table.c.image_scale,
                         scenes_table.c.tile_table_version,
+                        scenes_table.c.grid_offset_x,
+                        scenes_table.c.grid_offset_y,
                     )
                     .where(scenes_table.c.id == scene_id)
                     .limit(1)
@@ -196,16 +200,17 @@ class SceneRepository:
 
             bump_epoch = False
             if existing is not None:
+                # scene_epoch identifies the streamed scene generation. Cosmetic
+                # canvas settings are broadcast with ``scene.updated`` and must
+                # not make clients discard the current scene as a new instance.
                 bump_epoch = (
                     existing["visibility"] != visibility.value
-                    or bool(existing["grid_visible"]) != grid_visible
-                    or existing["grid_color"] != grid_color
-                    or float(existing["grid_opacity"]) != float(grid_opacity)
-                    or (darkness is not None and float(existing["darkness"]) != float(darkness))
                     or existing["tile_size"] != tile_size
                     or (grid_size is not None and existing["grid_size"] != grid_size)
                     or float(existing["image_scale"]) != float(image_scale)
                     or existing["tile_table_version"] != tile_table_version
+                    or (grid_offset_x is not None and float(existing["grid_offset_x"]) != float(grid_offset_x))
+                    or (grid_offset_y is not None and float(existing["grid_offset_y"]) != float(grid_offset_y))
                 )
 
             conn.execute(
@@ -223,6 +228,8 @@ class SceneRepository:
                     grid_size=grid_size if grid_size is not None else scenes_table.c.grid_size,
                     image_scale=image_scale,
                     tile_table_version=tile_table_version,
+                    grid_offset_x=grid_offset_x if grid_offset_x is not None else scenes_table.c.grid_offset_x,
+                    grid_offset_y=grid_offset_y if grid_offset_y is not None else scenes_table.c.grid_offset_y,
                     scene_epoch=scenes_table.c.scene_epoch + (1 if bump_epoch else 0),
                     updated_at=now,
                 )

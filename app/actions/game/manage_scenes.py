@@ -57,6 +57,8 @@ class UpdateSceneForm:
     grid_opacity: str = "0.4"
     tile_size: str = ""
     image_scale: str = ""
+    grid_offset_x: str = ""
+    grid_offset_y: str = ""
 
 
 @dataclass
@@ -237,7 +239,7 @@ async def update_scene(
     )
 
     current_grid_size = scene.get("grid_size") or scene["tile_size"]
-    new_grid_size = _parse_int(data.tile_size) if data.tile_size.strip() else current_grid_size
+    new_grid_size = _parse_float(data.tile_size, float(current_grid_size)) if data.tile_size.strip() else current_grid_size
     if new_grid_size < 8:
         new_grid_size = current_grid_size
 
@@ -263,6 +265,8 @@ async def update_scene(
         grid_size=new_grid_size,
         image_scale=new_image_scale,
         tile_table_version=scene["tile_table_version"],
+        grid_offset_x=_parse_float(data.grid_offset_x, scene.get("grid_offset_x") or 0.0),
+        grid_offset_y=_parse_float(data.grid_offset_y, scene.get("grid_offset_y") or 0.0),
     )
 
 

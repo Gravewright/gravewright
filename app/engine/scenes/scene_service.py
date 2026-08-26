@@ -336,6 +336,8 @@ class SceneService:
             "grid_visible": bool(scene["grid_visible"]),
             "grid_color": scene["grid_color"],
             "grid_opacity": float(scene["grid_opacity"]),
+            "grid_offset_x": float(scene.get("grid_offset_x") or 0.0),
+            "grid_offset_y": float(scene.get("grid_offset_y") or 0.0),
             "darkness": effective_darkness(scene),
             "darkness_config": float(scene["darkness"]),
             "lighting_mode": normalized_lighting_mode(scene.get("lighting_mode")),

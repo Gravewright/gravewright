@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -38,6 +39,14 @@ _MAX_OVERRIDE_KEYS = 64
 _MAX_OVERRIDE_BYTES = 64 * 1024
 _MAX_CONDITION_LABEL_LEN = 120
 _ALLOWED_CONDITION_VISIBILITY = frozenset({"everyone", "gm"})
+
+
+def _valid_coordinate(value: Any) -> bool:
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    )
 
 
 @dataclass(frozen=True)
@@ -164,8 +173,8 @@ class TokenCommandHandler:
             return _invalid(command_id, "scene_id is required.")
         if not isinstance(actor_id, str) or not actor_id:
             return _invalid(command_id, "actor_id is required.")
-        if not isinstance(grid_x, int) or not isinstance(grid_y, int):
-            return _invalid(command_id, "grid_x and grid_y are required integers.")
+        if not _valid_coordinate(grid_x) or not _valid_coordinate(grid_y):
+            return _invalid(command_id, "grid_x and grid_y are required numbers.")
 
         result = await self.service.create_many_from_actors(
             campaign_id=campaign_id,
@@ -262,14 +271,14 @@ class TokenCommandHandler:
             return _invalid(command_id, "scene_id is required.")
         if not isinstance(token_id, str) or not token_id:
             return _invalid(command_id, "token_id is required.")
-        if not isinstance(grid_x, int) or not isinstance(grid_y, int):
-            return _invalid(command_id, "grid_x and grid_y are required integers.")
+        if not _valid_coordinate(grid_x) or not _valid_coordinate(grid_y):
+            return _invalid(command_id, "grid_x and grid_y are required numbers.")
         if not _valid_optional_version(expected_version):
             return _invalid(
                 command_id, "expected_version must be a non-negative integer when provided."
             )
         if movement_path is not None:
-            if not isinstance(movement_path,list) or len(movement_path)>512 or any(not isinstance(point,dict) or not isinstance(point.get("grid_x"),int) or not isinstance(point.get("grid_y"),int) for point in movement_path):
+            if not isinstance(movement_path,list) or len(movement_path)>512 or any(not isinstance(point,dict) or not _valid_coordinate(point.get("grid_x")) or not _valid_coordinate(point.get("grid_y")) for point in movement_path):
                 return _invalid(command_id,"movement_path must contain grid coordinates.")
             if movement_path and (movement_path[-1]["grid_x"]!=grid_x or movement_path[-1]["grid_y"]!=grid_y):
                 return _invalid(command_id,"movement_path must end at the requested destination.")
