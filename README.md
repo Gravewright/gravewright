@@ -255,9 +255,12 @@ Start with:
 - [SDK](docs/sdk/README.md)
 - [SDK governance policy](GRAVEWRIGHT_SDK_GOVERNANCE_POLICY.md)
 
-Brazilian Portuguese documentation starts at:
+Additional languages and the module-porting guide:
 
 - [Documentação em português brasileiro](docs/pt-br/README.md)
+- [Portando módulos para o Gravewright](docs/pt-br/sdk/portando-modulos.md)
+- [Porting modules to Gravewright (English)](docs/sdk/porting-modules.md)
+- [Portar módulos a Gravewright (Español)](docs/es/sdk/portar-modulos.md)
 
 ## Licensing
 

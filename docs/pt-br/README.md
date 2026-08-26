@@ -12,6 +12,7 @@ Versão atual: **Gravewright v1.0.0-beta.3**, certificada contra a **SDK 1 RC 1*
 - [`performance.md`](performance.md): metodologia e resultados atuais de benchmark.
 - [`auditoria-core-sdk.md`](auditoria-core-sdk.md): cobertura do core, lacunas da SDK 1 e fronteiras privadas.
 - [`sdk/README.md`](sdk/README.md): ponto de entrada para autores de pacotes.
+- [`sdk/portando-modulos.md`](sdk/portando-modulos.md): guia para portar módulos de outras plataformas para o Gravewright.
 - [`sdk/declarative-model.md`](sdk/declarative-model.md): modelo declarativo da SDK.
 - [`sdk/author-complete-checklist.md`](sdk/author-complete-checklist.md): checklist da superfície da SDK.
 - [`sdk/power-map.md`](sdk/power-map.md): objetivo → manifesto → capability → API de runtime.

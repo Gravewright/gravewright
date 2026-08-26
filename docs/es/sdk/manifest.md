@@ -12,3 +12,24 @@ Todo package declara `schemaVersion`, `sdkVersion`, `kind`, `id`, `name`,
 
 Las capabilities son allow-listed y no reemplazan la autoridad del usuario.
 Los package kinds válidos proceden exclusivamente del schema canónico.
+
+## Declarar la licencia
+
+Use un identificador o expresión [SPDX](https://spdx.org/licenses/) preciso:
+
+```json
+"license": "MIT"
+```
+
+```json
+"license": "AGPL-3.0-only"
+```
+
+```json
+"license": "MIT OR Apache-2.0"
+```
+
+El validator acepta un string; no decide compatibilidad jurídica. No use valores
+vagos como `GNU`, `open source` o `free`. Incluya el texto principal en `LICENSE` y
+registre componentes con licencias diferentes en `THIRD_PARTY_NOTICES.md`. Consulte
+[Portar módulos](portar-modulos.md#3-licencia) para licencias, obligaciones y assets.

@@ -36,3 +36,17 @@ Os ícones de porta incluídos em `static/icons/` foram feitos por Delapouite,
 publicados pelo Game-icons.net e licenciados sob CC BY 3.0. O mapeamento de cada
 arquivo, links das obras e indicação das adaptações estão em
 `../../static/icons/LICENSE-GAME-ICONS.md`.
+
+## Licenças de pacotes
+
+Pacotes da SDK não são obrigados a adotar a licença do core. O autor deve escolher
+uma licença compatível com todo código e material reutilizado e declará-la no campo
+`license` do `manifest.json` por meio de um identificador SPDX, como `MIT`,
+`Apache-2.0`, `MPL-2.0`, `GPL-3.0-only` ou `AGPL-3.0-only`.
+
+O schema aceita uma string; isso não representa aprovação jurídica automática da
+licença ou do conteúdo. O pacote também deve incluir o texto aplicável em `LICENSE`
+e relacionar materiais com licenças diferentes em `THIRD_PARTY_NOTICES.md`.
+
+Para a lista explicada de licenças permissivas, copyleft GNU e licenças de assets,
+consulte [Portando módulos para o Gravewright](sdk/portando-modulos.md#3-licença).

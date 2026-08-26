@@ -35,6 +35,18 @@ it is copied or redistributed. In particular, the bundled door icons are works
 by Delapouite from Game-icons.net under CC BY 3.0; their per-file attribution is
 stored in `static/icons/LICENSE-GAME-ICONS.md`.
 
+## Package licenses
+
+SDK packages do not have to use the core license. Authors must choose a license
+compatible with all reused code and material and declare a precise SPDX identifier
+in manifest `license`, such as `MIT`, `Apache-2.0`, `MPL-2.0`, `GPL-3.0-only`, or
+`AGPL-3.0-only`.
+
+The schema accepts a string; this is not automatic legal approval. Include the main
+text in `LICENSE` and map differently licensed materials in
+`THIRD_PARTY_NOTICES.md`. See [Porting modules](sdk/porting-modules.md#3-licensing)
+for the explained list of permissive, GNU copyleft, and asset licenses.
+
 ## Contributions
 
 Unless explicitly stated otherwise:
