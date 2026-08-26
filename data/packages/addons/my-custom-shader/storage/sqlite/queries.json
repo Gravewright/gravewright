@@ -1,8 +1,0 @@
-{
-  "queries": {
-    "listShaders": {"type":"read","params":{},"sql":"SELECT id, name, description, tags, favorite, definition, created_at, updated_at FROM custom_shader_library ORDER BY favorite DESC, updated_at DESC"},
-    "createShader": {"type":"write","params":{"id":"id","name":"string","description":"string","tags":"json","favorite":"integer","definition":"json","created_at":"integer","updated_at":"integer"},"sql":"INSERT INTO custom_shader_library (id,name,description,tags,favorite,definition,created_at,updated_at) VALUES (:id,:name,:description,:tags,:favorite,:definition,:created_at,:updated_at)"},
-    "updateShader": {"type":"write","params":{"id":"id","name":"string","description":"string","tags":"json","favorite":"integer","definition":"json","updated_at":"integer"},"sql":"UPDATE custom_shader_library SET name=:name,description=:description,tags=:tags,favorite=:favorite,definition=:definition,updated_at=:updated_at WHERE id=:id"},
-    "deleteShader": {"type":"write","params":{"id":"id"},"sql":"DELETE FROM custom_shader_library WHERE id=:id"}
-  }
-}
