@@ -317,6 +317,7 @@ def test_editing_scene_updates_the_same_instance(four_client_server):
             if close.count(): close.first.click()
             page.locator(f'[data-panel-toggle="panel-scenes-{room}"]').click()
             cards = page.locator(f'[data-scene-panel][data-room-id="{room}"] [data-scene-card]')
+            expect(cards).to_have_count(1)
             before_ids = cards.evaluate_all("nodes => nodes.map(node => node.dataset.sceneCard)")
             before_canvases = page.locator(f'[data-map-canvas][data-room-id="{room}"]').count()
 
@@ -327,7 +328,8 @@ def test_editing_scene_updates_the_same_instance(four_client_server):
             modal.locator('button[type="submit"]').first.click()
             expect(modal).to_be_hidden()
 
-            after_ids = cards.evaluate_all("nodes => nodes.map(node => node.dataset.sceneId)")
+            expect(cards).to_have_count(len(before_ids))
+            after_ids = cards.evaluate_all("nodes => nodes.map(node => node.dataset.sceneCard)")
             assert after_ids == before_ids
             assert len(after_ids) == len(set(after_ids))
             assert page.locator(f'[data-map-canvas][data-room-id="{room}"]').count() == before_canvases
