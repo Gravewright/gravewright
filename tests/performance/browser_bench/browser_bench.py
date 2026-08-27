@@ -371,13 +371,20 @@ def run(args: argparse.Namespace) -> Results:
         _RSS_REF.start()
 
     with sync_playwright() as p:
+        executable_path = getattr(args, "browser_executable", "") or None
         context = p.chromium.launch_persistent_context(
             user_data_dir=str(user_data_dir),
+            executable_path=executable_path,
             headless=not args.headed,
             args=launch_args,
             viewport={"width": args.width, "height": args.height},
         )
         page = context.new_page()
+        if args.graphics_profile != "auto":
+            profile_json = json.dumps(args.graphics_profile)
+            page.add_init_script(
+                f"localStorage.setItem('gravewright:graphics-quality', {profile_json})"
+            )
 
         # Approximate a weaker CPU (8 GB / iGPU laptops are usually CPU-bound on
         # the render thread too) via the CDP throttle multiplier.
@@ -426,9 +433,11 @@ def write_outputs(
 ) -> None:
     summary = {
         "host": args.host,
+        "browser_executable": getattr(args, "browser_executable", "") or "playwright-chromium",
         "headed": args.headed,
         "gpu": args.gpu,
         "cpu_throttle": args.cpu_throttle,
+        "graphics_profile": args.graphics_profile,
         "viewport": {"width": args.width, "height": args.height},
         "run_seconds": duration_s,
         "map_visible": results.map_visible,
@@ -477,6 +486,7 @@ def write_outputs(
         f.write(
             f"headed:         {args.headed}   gpu: {args.gpu}   cpu_throttle: {args.cpu_throttle}x\n"
         )
+        f.write(f"graphics:       {args.graphics_profile}\n")
         f.write(f"run_seconds:    {duration_s:.0f}\n")
         f.write(f"map_visible:    {results.map_visible}\n")
         f.write("```\n\n")
@@ -526,6 +536,11 @@ def write_outputs(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="http://localhost:8007")
+    parser.add_argument(
+        "--browser-executable",
+        default="",
+        help="Chromium-compatible executable to profile, e.g. /usr/bin/brave-browser",
+    )
     parser.add_argument("--email", default="")
     parser.add_argument("--password", default="")
     parser.add_argument("--fixtures", default=str(FIXTURES_PATH))
@@ -542,6 +557,9 @@ def main() -> None:
         "--headed", action="store_true", help="show the browser (real GPU on a desktop)"
     )
     parser.add_argument("--gpu", choices=["on", "off"], default="on")
+    parser.add_argument(
+        "--graphics-profile", choices=["auto", "low", "medium", "high"], default="auto"
+    )
     parser.add_argument(
         "--cpu-throttle",
         type=float,

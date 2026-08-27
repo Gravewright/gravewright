@@ -341,6 +341,18 @@
     return root ? trays.get(root.dataset.roomId || "") || null : null;
   }
 
+  function rolarEFechar(tray, paraGm) {
+    // Não esconda a janela se ainda não existe uma rolagem para enviar.
+    if (!tray.expressao() || !tray.roomId) return;
+
+    // rolar() chega ao fetch antes do primeiro await. Disparamos o envio e
+    // fechamos o modal na mesma interação, sem esperar rede, animação ou toast.
+    const envio = tray.rolar(paraGm);
+    const modal = tray.root.closest("[data-modal-window]");
+    modal?.querySelector("[data-modal-close]")?.click();
+    void envio;
+  }
+
 
 
   document.addEventListener("click", (event) => {
@@ -390,7 +402,7 @@
     if (reuso) return tray.usar(Number(reuso.dataset.diceReuse));
 
     const rolar = event.target.closest("[data-dice-roll]");
-    if (rolar) return void tray.rolar(rolar.dataset.diceRoll === "gm");
+    if (rolar) return rolarEFechar(tray, rolar.dataset.diceRoll === "gm");
   });
 
   document.addEventListener("change", (event) => {

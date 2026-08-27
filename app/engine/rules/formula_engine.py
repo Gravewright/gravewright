@@ -326,7 +326,7 @@ class _Evaluator:
         results = self._roll_values(count, sides)
         subtotal = sum(results)
         self.groups.append(
-            {"notation": f"{count}d{sides}", "results": results, "subtotal": subtotal}
+            {"notation": f"{count}d{sides}", "sides": sides, "results": results, "subtotal": subtotal}
         )
         return float(subtotal)
 
@@ -342,6 +342,7 @@ class _Evaluator:
         self.groups.append(
             {
                 "notation": f"{count}d{sides}{operator}{target}",
+                "sides": sides,
                 "results": results,
                 "subtotal": hits,
             }
@@ -381,6 +382,7 @@ class _Evaluator:
         self.groups.append(
             {
                 "notation": f"1d{sides}!>={threshold}",
+                "sides": sides,
                 "results": results,
                 "subtotal": subtotal,
             }
@@ -419,7 +421,7 @@ class _Evaluator:
         else:
             subtotal = sum(results)
         self.groups.append(
-            {"notation": f"{count}d{sides}{keep}", "results": list(results), "subtotal": subtotal}
+            {"notation": f"{count}d{sides}{keep}", "sides": sides, "results": list(results), "subtotal": subtotal}
         )
         return float(subtotal)
 

@@ -24,6 +24,14 @@ def test_transparent_plain_tokens_use_contiguous_sprite_fast_path() -> None:
     assert "board.fastTokenSprites" in SOURCE
 
 
+def test_defeated_combatant_uses_death_skull_overlay() -> None:
+    combat_state = (Path(__file__).resolve().parents[2] / "static/js/combat/combat-state.js").read_text(encoding="utf-8")
+    assert 'const DEFEATED_ICON_URL = "/static/icons/base/death-skull.png"' in SOURCE
+    assert "node.defeatedIcon" in SOURCE
+    assert "!!token.combat_marker?.defeated" in SOURCE
+    assert "(!role && !combatant.defeated)" in combat_state
+
+
 def test_lighting_submits_only_viewport_relevant_sources() -> None:
     lighting = (Path(__file__).resolve().parents[2] / "static/js/board/pixi/pixi-lighting-layer.js").read_text(encoding="utf-8")
     assert "const visibleLights = (lighting.lights || []).filter" in lighting

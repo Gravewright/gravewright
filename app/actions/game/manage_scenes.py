@@ -304,6 +304,31 @@ async def scenes_panel_fragment(
     )
 
 
+@get("/game/scenes/create-dialogs/{campaign_id:str}")
+async def scene_create_dialogs_fragment(
+    campaign_id: FromPath[str],
+    cookies: dict[str, str],
+    current_user: Row,
+    game_page_service: GamePageService,
+) -> Redirect | Template:
+    room = next(
+        (
+            candidate
+            for candidate in game_page_service.build_context(user_id=current_user["id"]).rooms
+            if candidate["id"] == campaign_id
+        ),
+        None,
+    )
+    if room is None or not (
+        room["member_role"] in {"gm", "assistant_gm"} or room["is_streamer"]
+    ):
+        return Redirect(path="/game")
+    return Template(
+        template_name="pages/game/_scene_create_dialogs.html",
+        context=view_context(cookies, room=room),
+    )
+
+
 @post("/game/scenes/move")
 async def move_scene_to_group(
     request: Request,

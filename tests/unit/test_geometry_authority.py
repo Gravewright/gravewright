@@ -97,6 +97,57 @@ def test_gm_can_reposition_a_token_through_a_wall(db):
     assert moved.success and (moved.token["grid_x"],moved.token["grid_y"])==(2,0)
 
 
+def test_condition_restriction_blocks_player_token_movement(db, monkeypatch):
+    gm = seed_user(name="GM")
+    player = seed_user(name="Player")
+    campaign = seed_campaign(gm)
+    seed_member(campaign, player, "player")
+    scene = seed_scene(campaign)
+    token = TokenRepository().create(scene_id=scene["id"], actor_id=None, grid_x=0, grid_y=0)
+    service = TokenService()
+    monkeypatch.setattr(service, "_can_control_token", lambda **_: True)
+    monkeypatch.setattr(service, "_movement_sheet", lambda _token: {
+        "effects": [{
+            "id": "condition:bound",
+            "data": {"restrictions": [{"target": "token.movement"}]},
+        }]
+    })
+    moved = asyncio.run(service.move(
+        campaign_id=campaign,
+        scene_id=scene["id"],
+        token_id=token["id"],
+        grid_x=1,
+        grid_y=0,
+        user_id=player,
+    ))
+    assert moved.error_key == "tokens.errors.movement_restricted"
+    persisted = TokenRepository().get_by_id(token["id"])
+    assert (persisted["grid_x"], persisted["grid_y"]) == (0, 0)
+
+
+def test_gm_can_reposition_a_movement_restricted_token(db, monkeypatch):
+    gm = seed_user(name="GM")
+    campaign = seed_campaign(gm)
+    scene = seed_scene(campaign)
+    token = TokenRepository().create(scene_id=scene["id"], actor_id=None, grid_x=0, grid_y=0)
+    service = TokenService()
+    monkeypatch.setattr(service, "_movement_sheet", lambda _token: {
+        "effects": [{
+            "id": "condition:bound",
+            "data": {"restrictions": [{"target": "token.movement"}]},
+        }]
+    })
+    moved = asyncio.run(service.move(
+        campaign_id=campaign,
+        scene_id=scene["id"],
+        token_id=token["id"],
+        grid_x=1,
+        grid_y=0,
+        user_id=gm,
+    ))
+    assert moved.success
+
+
 def test_player_drag_route_can_go_around_a_wall_without_being_retested_as_a_straight_line(db,monkeypatch):
     gm=seed_user(name="GM");player=seed_user(name="Player");campaign=seed_campaign(gm);seed_member(campaign,player,"player");scene=seed_scene(campaign)
     token=TokenRepository().create(scene_id=scene["id"],actor_id=None,grid_x=0,grid_y=0)

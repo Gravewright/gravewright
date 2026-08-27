@@ -17,7 +17,7 @@
         const status=document.createElement("output");status.dataset.testid="world-objects-status";
         create.addEventListener("click",async()=>{const made=await sdk.scene.objects.create(sdk.game.scene().id,{typeId:"world-objects-e2e.lever",geometry:{kind:"point",x:350,y:350},presentation:{icon:"⚙",label:"Crypt lever"},data:{label:"Crypt lever"},audience:{kind:"campaign"}});status.textContent=`created:${made.id}`;});
         show.addEventListener("click",async()=>{const made=await sdk.ui.presentations.show({mode:"title-card",content:{title:"THE CRYPT",subtitle:"Below"},audience:{kind:"users",ids:[recipient.value]},duration:6,sceneId:sdk.game.scene().id});status.textContent=`shown:${made.id}`;});
-        sdk.events.on("scene.object.interacted",event=>{status.textContent=`interacted:${event.resource.id}`;});
+        sdk.events.on("scene.object.interacted",event=>{status.textContent=`interacted:${event.resourceId}`;});
         root.append(recipient,create,show,status);host.append(root);
       });
     },

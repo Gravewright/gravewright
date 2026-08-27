@@ -24,6 +24,7 @@ from app.middleware.csrf_cookie_recovery import CSRFCookieRecoveryMiddleware
 from app.middleware.http_timing import HttpTimingMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.middleware.versioned_asset_cache import VersionedAssetCacheMiddleware
 from app.persistence.session_store import SQLiteStore
 from app.routes import route_handlers
 from app.observability.telemetry import configure_local_diagnostics_from_environment
@@ -74,6 +75,7 @@ app = Litestar(
         DefineMiddleware(HttpTimingMiddleware),
         _session_config.middleware,
         DefineMiddleware(AuthenticationMiddleware, exclude=_AUTH_EXCLUDE),
+        DefineMiddleware(VersionedAssetCacheMiddleware),
         DefineMiddleware(SecurityHeadersMiddleware),
     ],
     dependencies={

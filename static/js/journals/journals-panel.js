@@ -293,12 +293,12 @@
     const env = event.detail || {};
     if (!PANEL_REFRESH_EVENTS.has(env.event)) return;
     const roomId = env.payload?.room_id;
-    if (roomId && journalPanelFor(roomId)) refreshJournalPanel(roomId);
+    if (roomId && FI.journalTreeHost(roomId)?.dataset.directoryLoaded === "true") refreshJournalPanel(roomId);
   });
 
   document.addEventListener("vtt:ws-open", () => {
     document.querySelectorAll("[data-journal-panel][data-room-id]").forEach((panel) => {
-      if (panel.dataset.roomId) refreshJournalPanel(panel.dataset.roomId);
+      if (panel.dataset.roomId && FI.journalTreeHost(panel.dataset.roomId)?.dataset.directoryLoaded === "true") refreshJournalPanel(panel.dataset.roomId);
     });
   });
 

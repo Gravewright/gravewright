@@ -47,8 +47,28 @@
 
 
     const boardRenderer = window.GravewrightBoard.create("pixi", {
-        requestRender: () => requestDrawAll(),
+        requestRender: (flags = "all") => requestDrawAll(flags),
     });
+    let boardPruneFrame = 0;
+    const boardObserver = new MutationObserver(() => {
+        if (boardPruneFrame) return;
+        boardPruneFrame = window.requestAnimationFrame(() => {
+            boardPruneFrame = 0;
+            boardRenderer.pruneDisconnectedBoards?.();
+        });
+    });
+    boardObserver.observe(document.body, { childList: true, subtree: true });
+    let boardDestroyed = false;
+    const destroyBoard = () => {
+        if (boardDestroyed) return;
+        boardDestroyed = true;
+        boardObserver.disconnect();
+        if (boardPruneFrame) window.cancelAnimationFrame(boardPruneFrame);
+        boardPruneFrame = 0;
+        boardRenderer.destroy?.();
+    };
+    window.addEventListener("pagehide", destroyBoard, { once: true });
+    window.addEventListener("vtt:game-exit", destroyBoard, { once: true });
 
     const mapApi = window.GravewrightMapApi;
     const mapScene = window.GravewrightMapScene.createSceneController({

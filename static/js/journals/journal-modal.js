@@ -763,13 +763,15 @@
     });
 
     let draggedIndexId = null;
-    let indexDragFromHandle = false;
+    let indexDragFromEntry = false;
     indexList.addEventListener("pointerdown", (event) => {
-      indexDragFromHandle = !!event.target.closest("[data-index-drag-handle]");
+      // A página inteira é a superfície de arraste. O grip continua como pista
+      // visual, mas não é mais um alvo minúsculo obrigatório.
+      indexDragFromEntry = !!event.target.closest("[data-index-page-id]");
     });
     indexList.addEventListener("dragstart", (event) => {
       const entry = event.target.closest("[data-index-page-id]");
-      if (!entry?.draggable || !indexDragFromHandle) { event.preventDefault(); return; }
+      if (!entry?.draggable || !indexDragFromEntry) { event.preventDefault(); return; }
       draggedIndexId = entry.dataset.indexPageId;
       indexReordering = true;
       entry.classList.add("is-dragging");
@@ -824,7 +826,7 @@
     });
     indexList.addEventListener("dragend", () => {
       draggedIndexId = null;
-      indexDragFromHandle = false;
+      indexDragFromEntry = false;
       indexReordering = false;
       indexList.querySelector(".is-dragging")?.classList.remove("is-dragging");
       scheduleAutosave(form);
@@ -976,6 +978,86 @@
     }
   }
 
+  function initRollTable(modal) {
+    const editor = modal.querySelector("[data-roll-table-editor]");
+    const jsonField = editor?.querySelector("[data-roll-table-json]");
+    const rows = editor?.querySelector("[data-roll-table-rows]");
+    let entries = [];
+    try { entries = JSON.parse(jsonField?.value || "[]"); } catch { entries = []; }
+
+    const sync = () => {
+      if (!rows || !jsonField) return;
+      const withReplacement = !!editor.querySelector('[name="roll_table_with_replacement"]')?.checked;
+      const activeRows = Array.from(rows.children).filter((row) => row.querySelector("[data-table-active]")?.checked && (withReplacement || row.dataset.drawn !== "true"));
+      const total = activeRows.reduce((sum, row) => sum + Math.max(1, Number.parseInt(row.querySelector("[data-table-weight]")?.value || "1", 10)), 0);
+      const count = editor.querySelector("[data-roll-table-active-count]");
+      if (count) count.textContent = String(activeRows.length);
+      editor.querySelectorAll("[data-roll-table-reset]").forEach((button) => { button.hidden = withReplacement; });
+      const value = Array.from(rows.children).map((row, index) => {
+        const weight = Math.max(1, Number.parseInt(row.querySelector("[data-table-weight]")?.value || "1", 10));
+        const active = !!row.querySelector("[data-table-active]")?.checked;
+        row.querySelector("[data-table-chance]").textContent = active && (withReplacement || row.dataset.drawn !== "true") && total ? `${(weight / total * 100).toFixed(1)}%` : "—";
+        return { id: row.dataset.entryId, name: row.querySelector("[data-table-name]").value.trim(), weight,
+          result: row.querySelector("[data-table-result]").value.trim(), active,
+          drawn: row.dataset.drawn === "true", sortOrder: (index + 1) * 10 };
+      });
+      jsonField.value = JSON.stringify(value);
+    };
+    const makeRow = (entry = {}) => {
+      const row = document.createElement("article");
+      row.className = "roll-table-editor-row";
+      row.draggable = true;
+      row.dataset.entryId = entry.id || `table_${globalThis.crypto?.randomUUID?.().replaceAll("-", "").slice(0, 12) || Date.now().toString(36)}`;
+      row.dataset.drawn = entry.drawn ? "true" : "false";
+      row.innerHTML = `<i class="ph ph-dots-six-vertical" aria-hidden="true"></i>
+        <input type="text" data-table-name maxlength="160" aria-label="Nome">
+        <input data-table-weight type="number" min="1" max="1000000" aria-label="Peso">
+        <output data-table-chance>—</output>
+        <input type="text" data-table-result maxlength="20000" aria-label="Resultado">
+        <input data-table-active type="checkbox" aria-label="Ativa">
+        <button type="button" data-table-remove aria-label="Remover"><i class="ph ph-trash"></i></button>`;
+      row.querySelector("[data-table-name]").value = entry.name || "";
+      row.querySelector("[data-table-weight]").value = Math.max(1, Number(entry.weight) || 1);
+      row.querySelector("[data-table-result]").value = entry.result || "";
+      row.querySelector("[data-table-active]").checked = entry.active !== false;
+      row.querySelector("[data-table-remove]").addEventListener("click", () => { row.remove(); sync(); scheduleAutosave(editor.closest("form")); });
+      return row;
+    };
+    if (rows) {
+      entries.forEach((entry) => rows.append(makeRow(entry)));
+      editor.querySelector("[data-roll-table-add]")?.addEventListener("click", () => {
+        const row = makeRow({ active: true, weight: 1 }); rows.prepend(row); sync(); row.querySelector("[data-table-name]").focus(); scheduleAutosave(editor.closest("form"));
+      });
+      rows.addEventListener("input", sync);
+      editor.querySelector('[name="roll_table_with_replacement"]')?.addEventListener("change", sync);
+      let dragged = null;
+      rows.addEventListener("dragstart", (event) => { dragged = event.target.closest(".roll-table-editor-row"); dragged?.classList.add("is-dragging"); });
+      rows.addEventListener("dragover", (event) => { event.preventDefault(); const over = event.target.closest(".roll-table-editor-row"); if (dragged && over && over !== dragged) rows.insertBefore(dragged, over.getBoundingClientRect().top + over.offsetHeight / 2 < event.clientY ? over.nextSibling : over); });
+      rows.addEventListener("dragend", () => { dragged?.classList.remove("is-dragging"); dragged = null; sync(); scheduleAutosave(editor.closest("form")); });
+      sync();
+    }
+
+    const postAction = async (path) => {
+      const form = editor?.closest("form");
+      if (form) await autosaveJournal(form);
+      const body = new URLSearchParams({ journal_id: modal.dataset.journalId, csrf_token: csrfToken() });
+      const response = await fetch(path, { method: "POST", credentials: "same-origin", headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error_key || "Não foi possível rolar a tabela.");
+      return payload;
+    };
+    modal.querySelectorAll("[data-roll-table-roll]").forEach((rollButton) => rollButton.addEventListener("click", async (event) => {
+      const button = event.currentTarget; button.disabled = true;
+      try { const payload = await postAction("/game/journal/roll-table/roll"); window.GravewrightToasts?.showToast?.(`${payload.entry.name}${payload.entry.result ? ` — ${payload.entry.result}` : ""}`); await reloadJournalModal(modal.dataset.journalId, "reader"); }
+      catch (error) { window.GravewrightToasts?.showToast?.(String(error.message || error)); } finally { button.disabled = false; }
+    }));
+    modal.querySelectorAll("[data-roll-table-reset]").forEach((resetButton) => resetButton.addEventListener("click", async (event) => {
+      const button = event.currentTarget; button.disabled = true;
+      try { await postAction("/game/journal/roll-table/reset"); await reloadJournalModal(modal.dataset.journalId, "reader"); }
+      catch (error) { window.GravewrightToasts?.showToast?.(String(error.message || error)); } finally { button.disabled = false; }
+    }));
+  }
+
   function initJournalModal(modal) {
     if (initialized.has(modal)) return;
     initialized.add(modal);
@@ -995,6 +1077,7 @@
     initDiaryWorkspace(modal);
     initDiaryPager(modal);
     initNotebookNavigation(modal);
+    initRollTable(modal);
     syncCreateTypeFields(modal);
 
     const editForm = modal.querySelector("[data-journal-editor]");
@@ -1102,6 +1185,7 @@
       const label = submit?.querySelector("span");
       if (submit && label) {
         const key = typeSelect.value === "quest_board" ? "labelQuestBoard"
+          : typeSelect.value === "roll_table" ? "labelRollTable"
           : typeSelect.value === "quest" ? "labelQuest" : "labelDiary";
         label.textContent = submit.dataset[key] || label.textContent;
       }
@@ -1163,9 +1247,15 @@
     document.querySelectorAll("[data-journal-panel]").forEach(initPanel);
     document.querySelectorAll("[data-journal-modal]").forEach((body) => {
       const modal = body.closest("[data-modal-window]");
-      if (modal) initJournalModal(modal);
+      const detached = document.body.dataset.detachedModal === modal?.dataset.modalId;
+      if (modal && (!modal.hidden || detached)) initJournalModal(modal);
     });
     applyJournalFolderColors(document);
+  });
+
+  document.addEventListener("vtt:modal-opened", (event) => {
+    const modal = event.detail?.modal;
+    if (modal?.querySelector("[data-journal-modal]")) initJournalModal(modal);
   });
 
   document.addEventListener("vtt:journal-modal-mounted", (event) => {

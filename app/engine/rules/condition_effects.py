@@ -47,6 +47,11 @@ def _instance(condition: dict, labels: dict[str, str]) -> dict:
         modifier_key = str(resolved.pop("labelKey", "") or "")
         resolved.setdefault("label", labels.get(modifier_key) or modifier_key or name)
         modifiers.append(resolved)
+    restrictions = [
+        dict(entry) if isinstance(entry, dict) else {"target": str(entry)}
+        for entry in (condition.get("restrictions") or [])[:16]
+        if isinstance(entry, (dict, str))
+    ]
     return {
 
 
@@ -60,6 +65,7 @@ def _instance(condition: dict, labels: dict[str, str]) -> dict:
             "kind": condition.get("kind") or "neutral",
             "duration": {"type": "permanent"},
             "modifiers": modifiers,
+            "restrictions": restrictions,
         },
     }
 

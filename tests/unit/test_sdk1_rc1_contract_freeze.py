@@ -39,13 +39,12 @@ def test_the_current_contract_has_no_breaking_drift_from_the_rc1_snapshot():
 def test_rc1_snapshot_records_the_certified_contract_shape():
     snapshot = baseline_fingerprint()
     assert snapshot["sdkVersion"] == "1"
-    assert len(snapshot["methods"]) == 264
-    assert len(snapshot["capabilities"]) == 116
-    assert len(snapshot["events"]) == 51
+    assert len(snapshot["methods"]) == 266
+    assert len(snapshot["capabilities"]) == 117
+    assert len(snapshot["events"]) == 52
     assert len(snapshot["errors"]) == 25
-    # 291 since the RC 1 Input Registry correction added InputCommandInvocationDTO,
-    # the semantic invocation a package handler receives instead of a browser event.
-    assert len(snapshot["dtos"]) == 291
+    # UserPresentationDTO is the bounded participant-color projection added during RC 1.
+    assert len(snapshot["dtos"]) == 292
     # Every method resolves to a capability that exists in the same snapshot.
     assert all(m["capability"] in set(snapshot["capabilities"]) for m in snapshot["methods"].values())
     # Nothing in the frozen surface is an unresolved shape.

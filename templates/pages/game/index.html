@@ -1,4 +1,7 @@
 {% import "pages/game/_journal_block_field.html" as blockfield with context %}
+{% set detached_actor_sheet = detached_modal and (detached_modal.startswith('actor-') or detached_modal.startswith('token-')) %}
+{% set detached_item_sheet = detached_modal and detached_modal.startswith('item-') %}
+{% set detached_journal = detached_modal and detached_modal.startswith('journal-') %}
 <!doctype html>
 <html lang="{{ locale }}">
 
@@ -11,41 +14,47 @@
     <link rel="icon" type="image/svg+xml" href="/static/icons/icon.svg" />
     <link rel="stylesheet" href="/static/vendor/phosphor/regular.css?v={{ asset_version }}" />
     <link rel="stylesheet" href="/static/vendor/phosphor/bold.css?v={{ asset_version }}" />
-    <link rel="stylesheet" href="/static/vendor/easymde/easymde.min.css?v={{ asset_version }}" />
-    
     <link rel="stylesheet" href="/static/css/tokens.css?v={{ asset_version }}-sound-theme-1" />
-    <link rel="stylesheet" href="/static/css/dialog.css" />
+    <link rel="stylesheet" href="/static/css/dialog.css?v={{ asset_version }}" />
     <link rel="stylesheet" href="/static/css/game.css?v={{ asset_version }}-journal-editorial-workspace-3-shader-picker-1-tool-layers-cleanup-1-pixi-measures-1" />
+    {% if not detached_modal or detached_journal %}
     <link rel="stylesheet" href="/static/css/journal-workspace.css?v={{ asset_version }}-2" />
     <link rel="stylesheet" href="/static/css/journal-quest.css?v={{ asset_version }}-1" />
+    {% endif %}
     
     {% for href in system_styles %}<link rel="stylesheet" href="{{ href }}" />
     {% endfor %}
 
-    <script defer src="/static/js/csrf.js"></script>
+    <script defer src="/static/js/csrf.js?v={{ asset_version }}"></script>
     
-    <script defer src="/static/js/core/csrf.js"></script>
-    <script defer src="/static/js/core/http.js"></script>
-    <script defer src="/static/js/core/dom.js"></script>
-    <script defer src="/static/js/core/events.js"></script>
-    <script defer src="/static/js/core/storage.js"></script>
-    <script defer src="/static/js/core/geometry.js"></script>
-    <script defer src="/static/js/core/sanitization.js"></script>
-    <script defer src="/static/js/core/dialog.js"></script>
-    <script defer src="/static/js/core/bootstrap.js"></script>
+    <script defer src="/static/js/core/csrf.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/http.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/dom.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/events.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/storage.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/geometry.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/sanitization.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/dialog.js?v={{ asset_version }}"></script>
+    <script defer src="/static/js/core/bootstrap.js?v={{ asset_version }}"></script>
     
+    {% if not detached_modal %}
     <script defer src="/static/js/ui/slider-nudge.js?v=20260809-preview2"></script>
     <script defer src="/static/js/tools/tools-registry.js?v={{ asset_version }}-ctxorder1"></script>
     <script defer src="/static/js/tools/tools-toolbar.js?v={{ asset_version }}-ctxorder1"></script>
+    {% endif %}
     
     <script defer src="/static/js/realtime/realtime-client.js?v=20260604-realtime-split"></script>
     <script defer src="/static/js/realtime/realtime-events.js?v=20260604-realtime-split"></script>
+    {% if not detached_modal %}
     <script defer src="/static/js/realtime/presence.js?v=20260604-realtime-split"></script>
     <script defer src="/static/js/realtime/command-client.js?v=20260604-realtime-split"></script>
+    {% endif %}
     <script defer src="/static/js/combat/combat-state.js?v=20260605-token-rings"></script>
-    <script defer src="/static/vendor/pixi.min.js"></script>
+    {% if not detached_modal %}
+    <script defer src="/static/js/game/graphics-quality.js?v={{ asset_version }}-1"></script>
+    <script defer src="/static/vendor/pixi.min.js?v={{ asset_version }}"></script>
     <script defer src="/static/vendor/pixi-filters.min.js?v=6.1.5"></script>
-    <script defer src="/static/js/board/board-renderer.js"></script>
+    <script defer src="/static/js/board/board-renderer.js?v={{ asset_version }}"></script>
     
     <script defer src="/static/js/board/pixi/pixi-board-renderer.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/board/pixi/pixi-board-layers.js?v=20260818-pixi-measures-1"></script>
@@ -92,19 +101,21 @@
     <script defer src="/static/js/map/measures/map-measure-controller.js?v=20260818-pixi-measures-1"></script>
     <script defer src="/static/js/map/map-debug.js?v=20260604-map-controller"></script>
     <script defer src="/static/js/map/map-controller.js?v={{ asset_version }}-ctxorder1"></script>
+    {% endif %}
+    {% if not detached_modal %}
     <script defer src="/static/js/ui/status-zones.js?v=20260603-effects-board3"></script>
-    <script defer src="/static/js/ui/invitations.js"></script>
     {% if command_palette_enabled %}<script defer src="/static/js/ui/command-palette.js?v={{ asset_version }}"></script>{% endif %}
     {% if campaign_join_code_enabled %}<script defer src="/static/js/ui/join-code.js?v={{ asset_version }}-urlencoded"></script>{% endif %}
     {% if targeted_handouts_enabled %}<script defer src="/static/js/game/targeted-handouts.js?v={{ asset_version }}"></script>{% endif %}
     {% if lobby_ready_check_enabled %}<script defer src="/static/js/game/lobby-ready-check.js?v={{ asset_version }}"></script>{% endif %}
-    {% if dynamic_lighting_enabled %}<script defer src="/static/js/lighting/vision-mode.js?v={{ asset_version }}"></script>
+    {% if dynamic_lighting_enabled and not detached_modal %}<script defer src="/static/js/lighting/vision-mode.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/lighting/limit-toggle.js?v=20260809-preview2"></script>
     <script defer src="/static/js/lighting/shader-preference.js?v=20260809-preview2"></script>
     <script defer src="/static/js/lighting/shader-presets.js?v=20260809-library3"></script>
     <script defer src="/static/js/lighting/shader-editor.js?v=20260809-library2"></script>
     <script defer src="/static/js/lighting/dynamic-lighting.js?v=20260821-token-light-vision1"></script>
     <script defer src="/static/js/lighting/light-editor.js?v=20260809-preview2"></script>{% endif %}
+    {% endif %}
     <script defer src="/static/js/ui/modals/modal-layout.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-docking.js?v=20260604-modal-fit2"></script>
     <script defer src="/static/js/ui/modals/modal-remote.js?v={{ asset_version }}-compendium1"></script>
@@ -112,6 +123,7 @@
     <script defer src="/static/js/ui/modals/scene-grid-mapper.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/ui/modals/modal-window-actions.js?v=20260605-detached-remote"></script>
     <script defer src="/static/js/ui/modals/modal-manager.js?v={{ asset_version }}-unique-token-link1"></script>
+    <script defer src="/static/js/ui/lazy-directory-panels.js?v={{ asset_version }}-1"></script>
     <script defer src="/static/js/ui/modals/modal-drag.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/modals/modal-api.js?v=20260604-modals-split"></script>
     <script defer src="/static/js/ui/ui-state-preservation.js?v={{ asset_version }}-reload-state1"></script>
@@ -121,6 +133,7 @@
     <script defer src="/static/js/sdk/sdk-capabilities.js?v=20260614-sdk"></script>
     <script defer src="/static/js/ui/partial-applications.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sdk/gravewright-sdk.js?v={{ asset_version }}"></script>
+    {% if not detached_modal %}
     <script defer src="/static/js/audio/core-audio-runtime.js?v={{ asset_version }}-ambient-recovery-1"></script>
     <script defer src="/static/js/audio/native-sound-ui.js?v={{ asset_version }}-ambient-empty-copy-1"></script>
     <script defer src="/static/js/audio/spatial-sound-layer.js?v={{ asset_version }}-artistic-all-sounds-1"></script>
@@ -141,11 +154,9 @@
     <script defer src="/static/js/dice/dice-tray.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/scene-images/scene-image-layer.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/scene-images/scene-image-picker.js?v={{ asset_version }}"></script>
-    <script defer src="/static/vendor/easymde/easymde.min.js?v={{ asset_version }}"></script>
-    <script defer src="/static/vendor/marked.min.js?v={{ asset_version }}"></script>
-    <script defer src="/static/vendor/purify.min.js?v={{ asset_version }}"></script>
-    
-    <script type="module" src="/static/js/journals/block-editor.js?v=20260814-journal-inline-headings"></script>
+    {% endif %}
+    {% if not detached_modal or detached_journal %}
+    <script defer src="/static/js/journals/journal-editor-assets.js?v={{ asset_version }}-lazy1" data-asset-version="{{ asset_version }}"></script>
     {{ blockfield.labels() }}
     
     <script defer src="/static/js/ui/directory-tree.js?v=20260814-directory-tree"></script>
@@ -158,26 +169,36 @@
     <script defer src="/static/js/journals/journal-modal.js?v=20260816-pdf-inline-upload1"></script>
     <script defer src="/static/js/content/core-content-open.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/journals/journal-pdf-viewer.js?v=20260816-inline-viewer1"></script>
+    {% endif %}
     
+    {% if not detached_modal or detached_actor_sheet %}
     <script defer src="/static/js/sheets/actors/actor-sheet-renderer.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sheets/actors/actor-sheet-actions.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sheets/actors/actor-sheet-controller.js?v={{ asset_version }}"></script>
     <script defer src="/static/js/sheets/actors/actor-sheet-events.js?v={{ asset_version }}-bidirectional-sheet-sync1"></script>
     <script defer src="/static/js/combat/combat-api.js?v=20260605-system-api-v1"></script>
+    {% endif %}
     
-    {% for script in system_scripts %}<script defer src="{{ script.src }}" data-gw-package="{{ script.package_id }}" data-gw-nonce="{{ script.nonce }}"></script>
-    {% endfor %}
+    {% if not detached_modal or detached_actor_sheet or detached_item_sheet %}
+        {% for script in system_scripts %}<script defer src="{{ script.src }}" data-gw-package="{{ script.package_id }}" data-gw-nonce="{{ script.nonce }}"></script>
+        {% endfor %}
+    {% endif %}
 
+    {% if not detached_modal %}
     <script defer src="/static/js/actors/actors-api.js?v=20260604-actors-split"></script>
     <script defer src="/static/js/actors/actors-tree.js?v={{ asset_version }}-templates1"></script>
     <script defer src="/static/js/actors/actors-context-actions.js?v=20260604-actors-split"></script>
     <script defer src="/static/js/actors/actors-drag.js?v={{ asset_version }}-templates1"></script>
     <script defer src="/static/js/actors/actors-panel.js?v={{ asset_version }}-templates1"></script>
+    {% endif %}
     
+    {% if not detached_modal or detached_item_sheet or detached_actor_sheet %}
     <script defer src="/static/js/sheets/items/item-sheet-renderer.js?v={{ asset_version }}-embedded-items-v2"></script>
     <script defer src="/static/js/sheets/items/item-sheet-controller.js?v={{ asset_version }}-embedded-items-v2"></script>
     <script defer src="/static/js/sheets/items/item-sheet-events.js?v={{ asset_version }}-embedded-items-v2"></script>
+    {% endif %}
     
+    {% if not detached_modal %}
     <script defer src="/static/js/items/items-api.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-tree.js?v=20260604-items-split"></script>
     <script defer src="/static/js/items/items-context-actions.js?v=20260604-items-split"></script>
@@ -217,9 +238,13 @@
     <script defer src="/static/js/game/system-onboarding.js?v={{ asset_version }}-gm-checklist"></script>
     <script defer src="/static/js/game/system-ruleset-form.js?v=20260806-ruleset-ajax"></script>
     <script defer src="/static/js/game/streamer-link.js?v=20260607-streamer-mode"></script>
+    {% endif %}
     <script defer src="/static/js/game/game-bootstrap.js?v=20260604-game-entrypoint"></script>
     <script defer src="/static/js/game/game-entrypoint.js?v=20260604-game-entrypoint"></script>
+    {% if not detached_modal %}
     <script defer src="/static/js/game/settings-navigation.js?v={{ asset_version }}-player-first-visit"></script>
+    <script defer src="/static/js/game/system-tray.js?v={{ asset_version }}"></script>
+    {% endif %}
 </head>
 
 {% set active_room = rooms|selectattr("id", "equalto", active_room_id)|first if rooms else none %}
@@ -508,7 +533,12 @@
     {% endif %}
 
     <main class="game-page">
-        {% if rooms %}
+        {% if detached_modal %}
+        {# Detached windows host only the requested modal. Rendering the full
+           board here used to create another Pixi/WebGL renderer for every
+           popped-out sheet, multiplying GPU and memory usage. #}
+        <section class="game-modal-layer" aria-label="Game windows"></section>
+        {% elif rooms %}
         <section class="game-shell">
             {% for room in rooms %}
             <input class="room-switch-control" type="radio" name="selected-room" id="room-{{ room.id }}"
@@ -1099,9 +1129,8 @@
                                 <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div class="actor-tree-host" data-actor-tree-host>
-                            {% include "pages/game/_actors_panel.html" %}
-                        </div>
+                        <div class="actor-tree-host" data-actor-tree-host
+                            data-lazy-directory-kind="actors" data-lazy-directory-room="{{ room.id }}"></div>
                     </div>
                 </article>
                 {% endif %}
@@ -1156,9 +1185,8 @@
                                 <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div class="actor-tree-host" data-item-tree-host>
-                            {% include "pages/game/_items_panel.html" %}
-                        </div>
+                        <div class="actor-tree-host" data-item-tree-host
+                            data-lazy-directory-kind="items" data-lazy-directory-room="{{ room.id }}"></div>
                     </div>
                 </article>
                 {% endif %}
@@ -1166,6 +1194,7 @@
                 {% if room.member_role == "gm" %}
                 {% if room.active_system and room.active_system.item_types %}
                 
+                {% if eager_directory_dialogs|default(false) %}
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="item-create-{{ room.id }}" data-window-key="item-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
@@ -1201,8 +1230,10 @@
                     </form>
                 </article>
                 {% endif %}
+                {% endif %}
 
                 
+                {% if eager_directory_dialogs|default(false) %}
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="item-folder-create-{{ room.id }}" data-window-key="item-folder-create-{{ room.id }}"
                     hidden>
@@ -1239,10 +1270,12 @@
                     </form>
                 </article>
                 {% endif %}
+                {% endif %}
 
                 {% if room.member_role == "gm" %}
                 {% if room.active_system %}
                 
+                {% if eager_directory_dialogs|default(false) %}
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="actor-create-{{ room.id }}" data-window-key="actor-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
@@ -1282,8 +1315,10 @@
                     </form>
                 </article>
                 {% endif %}
+                {% endif %}
 
                 
+                {% if eager_directory_dialogs|default(false) %}
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="actor-folder-create-{{ room.id }}"
                     data-window-key="actor-folder-create-{{ room.id }}" hidden>
@@ -1319,6 +1354,7 @@
                         </button>
                     </form>
                 </article>
+                {% endif %}
                 {% endif %}
 
                 {% if room.member_role == "gm" and room.gm_onboarding %}
@@ -1419,14 +1455,14 @@
                                 <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div class="journal-tree-host" data-journal-tree-host>
-                            {% include "pages/game/_journals_panel.html" %}
-                        </div>
+                        <div class="journal-tree-host" data-journal-tree-host
+                            data-lazy-directory-kind="journals" data-lazy-directory-room="{{ room.id }}"></div>
                     </div>
                 </article>
 
                 {% if room.member_role == "gm" %}
                 
+                {% if eager_directory_dialogs|default(false) %}
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="journal-folder-create-{{ room.id }}"
                     data-window-key="journal-folder-create-{{ room.id }}" hidden>
@@ -1462,6 +1498,7 @@
                         </button>
                     </form>
                 </article>
+                {% endif %}
                 {% endif %}
                 {% endif %}
 
@@ -1615,12 +1652,12 @@
                                 <i class="ph ph-arrows-in-line-vertical" aria-hidden="true"></i>
                             </button>
                         </div>
-                        <div class="scene-tree-host" data-scene-tree-host>
-                            {% include "pages/game/_scenes_panel.html" %}
-                        </div>
+                        <div class="scene-tree-host" data-scene-tree-host
+                            data-lazy-directory-kind="scenes" data-lazy-directory-room="{{ room.id }}"></div>
                     </div>
                 </article>
 
+                {% if eager_scene_create_dialogs|default(false) %}
                 <article class="game-modal-window dialog-modal scene-create-modal" data-modal-window
                     data-modal-id="scene-create-{{ room.id }}" data-window-key="scene-create-{{ room.id }}" hidden>
                     <header class="game-modal-titlebar" data-modal-drag-handle>
@@ -1723,7 +1760,9 @@
                                                         </form>
                     </div>
                 </article>
+                {% endif %}
 
+                {% if eager_scene_create_dialogs|default(false) %}
                 <article class="game-modal-window dialog-modal" data-modal-window
                     data-modal-id="scene-group-create-{{ room.id }}"
                     data-window-key="scene-group-create-{{ room.id }}" hidden>
@@ -1756,6 +1795,7 @@
                                                         </form>
                     </div>
                 </article>
+                {% endif %}
                 {% endif %}
 
                 {% if room.member_role == "gm" or room.is_streamer %}
@@ -2004,48 +2044,6 @@
                 {% endif %}
 
                 
-                {% if room.can_invite and campaign_email_invitation_creation_enabled %}
-                <article class="game-modal-window dialog-modal invite-modal" data-modal-window
-                    data-modal-id="invite-{{ room.id }}" data-window-key="invite-{{ room.id }}" hidden>
-                    <header class="game-modal-titlebar" data-modal-drag-handle>
-                        <span class="game-modal-drag-grip" aria-hidden="true"></span>
-                        <span class="game-panel-title">{{ t("game.invite.title") }}</span>
-                        <div class="game-modal-controls">
-                            <button class="game-modal-control" type="button" data-modal-close
-                                aria-label="{{ t('inside.campaigns.cancel') }}">
-                                <i class="ph ph-x" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </header>
-                    <div class="game-modal-body">
-                        <p class="join-code-help">{{ t("game.invite.deprecated_help") }}</p>
-                        <div id="game-invite-notice" class="game-notice" hidden></div>
-                        <form class="invite-form" method="post" action="/campaigns/invitations">
-                            {{ csrf_input | safe }}
-                            <input type="hidden" name="campaign_id" value="{{ room.id }}" />
-                            <label class="game-field">
-                                <span>{{ t("game.invite.email") }}</span>
-                                <input type="email" name="email"
-                                    placeholder="{{ t('game.invite.email_placeholder') }}" autocomplete="off"
-                                    required />
-                            </label>
-                            <label class="game-field">
-                                <span>{{ t("game.invite.role") }}</span>
-                                <select name="role" required>
-                                    <option value="player">{{ t("roles.campaign.player") }}</option>
-                                    <option value="assistant_gm">{{ t("roles.campaign.assistant_gm") }}</option>
-                                    <option value="streamer">{{ t("roles.campaign.streamer") }}</option>
-                                </select>
-                            </label>
-                            <button class="invite-submit" type="submit">
-                                <i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>
-                                <span>{{ t("game.invite.submit") }}</span>
-                            </button>
-                        </form>
-                    </div>
-                </article>
-                {% endif %}
-
                 {% if room.can_invite and campaign_join_code_enabled %}
                 {% include "pages/game/modals/join_code.html" %}
                 {% endif %}
@@ -2102,11 +2100,15 @@
                         {% if invite_message_key %}
                         <div class="game-notice" role="status">{{ t(invite_message_key) }}</div>
                         {% endif %}
-                        <div class="settings-dashboard" data-settings-dashboard>
+                        <div class="settings-dashboard" data-settings-dashboard
+                            data-general-label="{{ t('game.settings.general_category') }}"
+                            data-interface-label="{{ t('game.settings.interface_category') }}"
+                            data-administration-label="{{ t('game.settings.management_category') }}"
+                            data-administration-select-label="{{ t('game.settings.management_select') }}">
                         <nav class="settings-category-nav" aria-label="{{ t('game.settings.categories') }}">
                             <button type="button" class="settings-category-btn" data-settings-section-tab="interface" aria-selected="true"
-                                data-tooltip="{{ t('game.settings.interface_category') }}" aria-label="{{ t('game.settings.interface_category') }}">
-                                <i class="ph ph-monitor" aria-hidden="true"></i><span>{{ t("game.settings.interface_category") }}</span>
+                                data-tooltip="{{ t('game.settings.general_category') }}" aria-label="{{ t('game.settings.general_category') }}">
+                                <i class="ph ph-gear" aria-hidden="true"></i><span>{{ t("game.settings.general_category") }}</span>
                             </button>
                             {% if dynamic_lighting_enabled %}
                             <button type="button" class="settings-category-btn" data-settings-section-tab="vision" aria-selected="false"
@@ -2118,9 +2120,9 @@
                                 data-tooltip="{{ t('game.settings.system_category') }}" aria-label="{{ t('game.settings.system_category') }}">
                                 <i class="ph ph-book-open-text" aria-hidden="true"></i><span>{{ t("game.settings.system_category") }}</span>
                             </button>
-                            <button type="button" class="settings-category-btn" data-settings-section-tab="players" aria-selected="false"
-                                data-tooltip="{{ t('game.settings.players_category') }}" aria-label="{{ t('game.settings.players_category') }}">
-                                <i class="ph ph-users" aria-hidden="true"></i><span>{{ t("game.settings.players_category") }}</span>
+                            <button type="button" class="settings-category-btn" data-settings-section-tab="modules" aria-selected="false"
+                                data-tooltip="{{ t('game.settings.modules_category') }}" aria-label="{{ t('game.settings.modules_category') }}">
+                                <i class="ph ph-puzzle-piece" aria-hidden="true"></i><span>{{ t("game.settings.modules_category") }}</span>
                             </button>
                             <button type="button" class="settings-category-btn" data-settings-section-tab="management" aria-selected="false"
                                 data-tooltip="{{ t('game.settings.management_category') }}" aria-label="{{ t('game.settings.management_category') }}">
@@ -2147,12 +2149,39 @@
                                     <span>{{ t("game.settings.classic_mode") }}</span>
                                 </button>
                             </div>
-                            <label class="game-field game-field--color">
-                                <span>{{ t("game.settings.ping_color") }}</span>
-                                <input type="color" value="{{ ping_color }}" data-ping-color-input
-                                    aria-label="{{ t('game.settings.ping_color') }}">
+                            <label class="game-field">
+                                <span>{{ t("game.settings.graphics_quality") }}</span>
+                                <select data-graphics-quality aria-label="{{ t('game.settings.graphics_quality') }}">
+                                    <option value="auto">{{ t("game.settings.graphics_auto") }}</option>
+                                    <option value="low">{{ t("game.settings.graphics_low") }}</option>
+                                    <option value="medium">{{ t("game.settings.graphics_medium") }}</option>
+                                    <option value="high">{{ t("game.settings.graphics_high") }}</option>
+                                </select>
                             </label>
-                            <p class="settings-hint">{{ t("game.settings.ping_color_hint") }}</p>
+                            <p class="settings-hint">{{ t("game.settings.graphics_quality_hint") }}</p>
+                        </section>
+
+                        <section class="settings-section settings-card" data-settings-section="modules" hidden>
+                            <header class="settings-card-header">
+                                <span class="settings-card-icon"><i class="ph ph-puzzle-piece" aria-hidden="true"></i></span>
+                                <div>
+                                    <p class="sidebar-section-title">{{ t("game.settings.modules_category") }}</p>
+                                    <p class="settings-card-description">{{ t("game.settings.modules_description") }}</p>
+                                </div>
+                            </header>
+                            <div class="modules-settings-layout" data-modules-settings
+                                data-modules-packages='{{ room.installed_modules | tojson }}'>
+                                <nav class="modules-settings-list" data-modules-settings-list
+                                    aria-label="{{ t('game.settings.modules_category') }}"></nav>
+                                <section class="modules-settings-content">
+                                    <div class="modules-settings-empty" data-modules-settings-empty>
+                                        <i class="ph ph-puzzle-piece" aria-hidden="true"></i>
+                                        <p>{{ t("game.settings.modules_empty") }}</p>
+                                    </div>
+                                    <div data-sdk-slot="settings.modules" data-room-id="{{ room.id }}"
+                                        data-can-edit="{{ 'true' if room.member_role == 'gm' else 'false' }}"></div>
+                                </section>
+                            </div>
                         </section>
 
 
@@ -2200,12 +2229,12 @@
                                     <p class="settings-card-description">{{ t("game.settings.system_description") }}</p>
                                 </div>
                             </header>
-                            <p class="settings-system-name">{% if room.active_system %}{{ room.active_system.name }}{% else %}{{
-                                t("inside.campaigns.systemless") }}{% endif %}</p>
                             {% if room.member_role == "gm" %}
                             <form method="post" action="/sdk/campaigns/ruleset" class="system-inline-form">
                                 {{ csrf_input | safe }}
                                 <input type="hidden" name="campaign_id" value="{{ room.id }}" />
+                                <label class="system-select-field">
+                                <span>{{ t("game.about.fields.system") }}</span>
                                 <select name="package_id" class="system-select">
                                     <option value="">{{ t("inside.campaigns.systemless") }}</option>
                                     {% for system in available_systems %}
@@ -2215,10 +2244,14 @@
                                     </option>
                                     {% endfor %}
                                 </select>
+                                </label>
                                 <button class="secondary-action" type="submit">{{ t("inside.campaigns.set_system")
                                     }}</button>
                             </form>
                             {% endif %}
+                            <div class="settings-system-extension" data-sdk-slot="settings.system"
+                                data-room-id="{{ room.id }}"
+                                data-can-edit="{{ 'true' if room.member_role == 'gm' else 'false' }}"></div>
                         </section>
 
 
@@ -2240,6 +2273,14 @@
                                             <span
                                                 class="status-dot {% if member.is_online %}status-dot--online{% else %}status-dot--offline{% endif %}"
                                                 aria-hidden="true"></span>
+                                            {% if member.user_id == user.id %}
+                                            <input class="player-identity-color" type="color" value="{{ member.color }}"
+                                                data-ping-color-input data-player-identity-color="{{ member.user_id }}"
+                                                aria-label="{{ t('game.settings.ping_color') }}" title="{{ t('game.settings.ping_color') }}">
+                                            {% else %}
+                                            <span class="player-identity-color" data-player-identity-color="{{ member.user_id }}"
+                                                style="--player-identity-color: {{ member.color }}" aria-hidden="true"></span>
+                                            {% endif %}
                                             <strong>{{ member.name }}</strong>
                                         </div>
                                     </div>
@@ -2296,12 +2337,6 @@
                                 data-modal-open="join-code-{{ room.id }}">
                                 <i class="ph ph-key" aria-hidden="true"></i>
                                 <span>{{ t("game.join_code.title") }}</span>
-                            </button>
-                            {% endif %}
-                            {% if campaign_email_invitation_creation_enabled %}
-                            <button class="settings-open-modal" type="button" data-modal-open="invite-{{ room.id }}">
-                                <i class="ph ph-user-plus" aria-hidden="true"></i>
-                                <span>{{ t("game.invite.title") }} <small>{{ t("game.invite.deprecated") }}</small></span>
                             </button>
                             {% endif %}
                             {% endif %}
@@ -2717,20 +2752,20 @@
                         <i class="ph ph-chat-circle-text" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.chat") }}</span>
                     </button>
+                    {% if room.member_role == "gm" or room.is_streamer %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-scenes-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.gm.scenes') }}"
+                        title="{{ t('game.gm.scenes') }}">
+                        <i class="ph ph-map-trifold" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.gm.scenes") }}</span>
+                    </button>
+                    {% endif %}
                     {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["actors"] %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-actors-{{ room.id }}"
                         aria-pressed="false" data-tooltip="{{ t('game.tools.actors') }}"
                         title="{{ t('game.tools.actors') }}">
                         <i class="ph ph-user-circle-gear" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.tools.actors") }}</span>
-                    </button>
-                    {% endif %}
-                    {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["items"] %}
-                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-items-{{ room.id }}"
-                        aria-pressed="false" data-tooltip="{{ t('game.tools.items') }}"
-                        title="{{ t('game.tools.items') }}">
-                        <i class="ph ph-package" aria-hidden="true"></i>
-                        <span class="sr-only">{{ t("game.tools.items") }}</span>
                     </button>
                     {% endif %}
                     {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["journals"] %}
@@ -2741,12 +2776,20 @@
                         <span class="sr-only">{{ t("game.tools.journal") }}</span>
                     </button>
                     {% endif %}
-                    {% if room.member_role == "gm" or room.is_streamer %}
-                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-scenes-{{ room.id }}"
-                        aria-pressed="false" data-tooltip="{{ t('game.gm.scenes') }}"
-                        title="{{ t('game.gm.scenes') }}">
-                        <i class="ph ph-map-trifold" aria-hidden="true"></i>
-                        <span class="sr-only">{{ t("game.gm.scenes") }}</span>
+                    {% if show_combat_panel %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-combat-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.combat') }}"
+                        title="{{ t('game.tools.combat') }}">
+                        <i class="ph ph-sword" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.combat") }}</span>
+                    </button>
+                    {% endif %}
+                    {% if not room.active_system or room.active_system.directories is not defined or room.active_system.directories["items"] %}
+                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-items-{{ room.id }}"
+                        aria-pressed="false" data-tooltip="{{ t('game.tools.items') }}"
+                        title="{{ t('game.tools.items') }}">
+                        <i class="ph ph-package" aria-hidden="true"></i>
+                        <span class="sr-only">{{ t("game.tools.items") }}</span>
                     </button>
                     {% endif %}
                     {% if room.reaches_compendium %}
@@ -2755,14 +2798,6 @@
                         title="{{ t('game.gm.content_packs') }}">
                         <i class="ph ph-books" aria-hidden="true"></i>
                         <span class="sr-only">{{ t("game.gm.content_packs") }}</span>
-                    </button>
-                    {% endif %}
-                    {% if show_combat_panel %}
-                    <button class="game-dock-btn" type="button" data-panel-toggle="panel-combat-{{ room.id }}"
-                        aria-pressed="false" data-tooltip="{{ t('game.tools.combat') }}"
-                        title="{{ t('game.tools.combat') }}">
-                        <i class="ph ph-sword" aria-hidden="true"></i>
-                        <span class="sr-only">{{ t("game.tools.combat") }}</span>
                     </button>
                     {% endif %}
                     <button class="game-dock-btn" type="button" data-panel-toggle="panel-settings-{{ room.id }}"
@@ -2783,13 +2818,12 @@
                 {% endif %}
             </nav>
         </section>
-        <div class="personal-audio-control" data-personal-audio>
-            <button class="personal-audio-toggle" type="button" data-personal-audio-toggle
-                aria-expanded="false" aria-controls="personal-audio-mixer"
-                aria-label="{{ t('game.sound.mixer') }}" title="{{ t('game.sound.mixer') }}">
-                <i class="ph ph-speaker-high" aria-hidden="true"></i>
-            </button>
-            <section class="personal-audio-popover" id="personal-audio-mixer" data-personal-audio-popover hidden>
+        <div class="system-tray" data-system-tray data-personal-audio>
+            <section class="system-tray-popover system-tray-users" data-system-tray-panel="users" hidden>
+                <header><span><i class="ph ph-users" aria-hidden="true"></i><strong>{{ t('game.settings.connected_players') }}</strong></span><button type="button" data-system-tray-close aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x"></i></button></header>
+                <div data-system-tray-users-host></div>
+            </section>
+            <section class="personal-audio-popover system-tray-popover" id="personal-audio-mixer" data-personal-audio-popover hidden>
                 <header>
                     <span><i class="ph ph-speaker-high" aria-hidden="true"></i><strong>{{ t('game.sound.mixer') }}</strong></span>
                     <button type="button" data-personal-audio-close aria-label="{{ t('game.sound.cancel') }}"><i class="ph ph-x"></i></button>
@@ -2799,6 +2833,10 @@
                 <label><span>{{ t('game.sound.effects') }} <output data-mixer-output="sfx">100%</output></span><input type="range" min="0" max="1" step=".05" data-mixer-channel="sfx"></label>
                 <label class="personal-audio-mute"><span><i class="ph ph-speaker-slash"></i>{{ t('game.sound.mute') }}</span><input type="checkbox" data-mixer-muted></label>
             </section>
+            <nav class="system-tray-actions" aria-label="System tray">
+                <button class="system-tray-toggle" type="button" data-system-tray-toggle="users" aria-expanded="false" aria-label="{{ t('game.settings.connected_players') }}" title="{{ t('game.settings.connected_players') }}"><i class="ph ph-users" aria-hidden="true"></i></button>
+                <button class="personal-audio-toggle system-tray-toggle" type="button" data-personal-audio-toggle aria-expanded="false" aria-controls="personal-audio-mixer" aria-label="{{ t('game.sound.mixer') }}" title="{{ t('game.sound.mixer') }}"><i class="ph ph-speaker-high" aria-hidden="true"></i></button>
+            </nav>
         </div>
         {% else %}
         <section class="game-empty-page">

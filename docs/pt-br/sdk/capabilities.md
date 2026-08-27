@@ -126,6 +126,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `ui.dragDrop` | Registra sources tipados e destinations concretas revalidadas por autoridade. |
 | `ui.presentations` | Mostra presentations efêmeras limitadas e renderizadas pelo core para audiences autorizadas. |
 | `ui.slots` | Monta UI do pacote em slots documentados do host. |
+| `users.presentation.read` | Lê a cor pública e limitada de apresentação dos participantes visíveis na campanha ativa. |
 | `workflows.control` | Cancela workflows autorizados sem rollback implícito. |
 | `workflows.read` | Lê instâncias autorizadas de workflows duráveis. |
 | `workflows.start` | Registra definições limitadas e inicia workflows duráveis pertencentes ao core. |
@@ -413,6 +414,8 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 | `sdk.ui.slots.available` | `ui.slots` |
 | `sdk.ui.slots.register` | `ui.slots` |
 | `sdk.ui.toast` | `assets.ui` |
+| `sdk.users.presentation.get` | `users.presentation.read` |
+| `sdk.users.presentation.list` | `users.presentation.read` |
 | `sdk.workflows.cancel` | `workflows.control` |
 | `sdk.workflows.get` | `workflows.read` |
 | `sdk.workflows.list` | `workflows.read` |

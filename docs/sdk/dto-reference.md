@@ -109,6 +109,7 @@ Fields:
 | `folder_id` | `string | null` |
 | `portrait_asset_id` | `string | null` |
 | `token_asset_id` | `string | null` |
+| `owner_user_ids` | `string[]` |
 | `version` | `number` |
 | `created_at` | `number` |
 | `updated_at` | `number` |
@@ -814,6 +815,9 @@ Fields:
 | `current_name` | `string` |
 | `next_id` | `string` |
 | `next_name` | `string` |
+| `interrupted` | `boolean` |
+| `interrupted_id` | `string` |
+| `interrupted_name` | `string` |
 | `config` | `CombatConfigDTO` |
 | `updated_actors` | `RulesetEffectMutation[]` |
 | `expired_effects` | `RulesetEffectMutation[]` |
@@ -836,6 +840,7 @@ Fields:
 | `is_current` | `boolean` |
 | `is_next` | `boolean` |
 | `has_acted` | `boolean` |
+| `holding` | `boolean` |
 | `can_move_up` | `boolean` |
 | `can_move_down` | `boolean` |
 | `portrait_url` | `string` |
@@ -2050,6 +2055,18 @@ Fields:
 |---|---|
 | `timeoutMs` | `number` |
 
+## `RollActionDefinition`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `label` | `string` |
+| `intents` | `string[]` |
+| `actionIds` | `string[]` |
+| `excludeActionIds` | `string[]` |
+
 ## `RollGroupDTO`
 
 Fields:
@@ -2068,6 +2085,7 @@ Fields:
 |---|---|
 | `actorId` | `string` |
 | `actionId` | `string` |
+| `itemInstanceId` | `string` |
 | `inputs` | `ActionInput` |
 | `rollOptions` | `RollOptions` |
 | `targetActorId` | `string` |
@@ -3276,6 +3294,15 @@ Fields:
 | `elevation` | `number` |
 | `version` | `number` |
 
+## `UserPresentationDTO`
+
+Fields:
+
+| Field | Type |
+|---|---|
+| `userId` | `string` |
+| `color` | `string` |
+
 ## `VerticalBoundsDTO`
 
 Fields:
@@ -3567,6 +3594,10 @@ Definition: `PdfDocumentDTO & PdfViewerHostState & { page: number }`
 ## `PermissionContext`
 
 Definition: `JsonObject`
+
+## `RollActionHandler`
+
+Definition: `(message: ChatMessageDTO) => void | Promise<void>`
 
 ## `RollAppliedMutation`
 

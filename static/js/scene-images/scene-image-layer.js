@@ -711,38 +711,21 @@
     controllerForCanvas(canvas)?.selectInRect(rect, opts || {});
   };
 
-  function startTicker() {
-    if (startTicker.handle) return;
-    startTicker.handle = window.setInterval(() => {
-      controllers.forEach((controller) => {
-        if (controller.drag) return;
-        if (controller.activeSceneId() !== controller.lastSceneId) {
-          controller.render();
-        }
-      });
-    }, 250);
-  }
-
-
-
-  function startCompositionFollow() {
-    if (startCompositionFollow.running) return;
-    startCompositionFollow.running = true;
-    function frame() {
-      controllers.forEach((controller) => controller.syncComposition());
-      window.requestAnimationFrame(frame);
-    }
-    window.requestAnimationFrame(frame);
-  }
-
   function init() {
     document.querySelectorAll("[data-scene-image-layer]").forEach((layer) => {
       if (layer.dataset.sceneImageReady === "true") return;
       layer.dataset.sceneImageReady = "true";
       new SceneImageController(layer);
     });
-    startTicker();
-    startCompositionFollow();
+    document.addEventListener("vtt:map-view-changed", (event) => {
+      const controller = controllerForCanvas(event.detail?.canvas);
+      if (!controller || controller.drag) return;
+      if (event.detail?.sceneChanged || controller.activeSceneId() !== controller.lastSceneId) {
+        controller.render();
+      } else {
+        controller.syncComposition();
+      }
+    });
 
     document.addEventListener("tool:active-layer", (event) => {
       const layer = event.detail?.layer;

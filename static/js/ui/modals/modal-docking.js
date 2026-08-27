@@ -82,6 +82,9 @@
 
         function clearGravewrightPanelTabs() {
             document.querySelectorAll(".game-panel-tabs").forEach((tabs) => tabs.remove());
+            document.querySelectorAll('.game-panel[data-gravewright-detached="true"]').forEach((panel) => {
+                delete panel.dataset.gravewrightDetached;
+            });
             gravewrightPanelGroups.clear();
         }
 
@@ -148,7 +151,15 @@
                 close.setAttribute("aria-label", `Fechar ${label.textContent}`);
                 close.innerHTML = '<i class="ph ph-x" aria-hidden="true"></i>';
 
-                item.append(tab, close);
+                const detach = document.createElement("button");
+                detach.className = "game-panel-tab-detach";
+                detach.type = "button";
+                detach.dataset.gravewrightPanelTabDetach = panelId;
+                detach.setAttribute("aria-label", `Destacar ${label.textContent}`);
+                detach.title = "Destacar aba";
+                detach.innerHTML = '<i class="ph ph-arrows-out-simple" aria-hidden="true"></i>';
+
+                item.append(tab, detach, close);
                 tabs.appendChild(item);
             });
 
@@ -193,6 +204,8 @@
             const dockButton = dockButtonFor(modal.dataset.modalId);
             modal.hidden = false;
             if (dockButton) dockButton.hidden = true;
+
+            document.dispatchEvent(new CustomEvent("vtt:modal-opened", { detail: { modal } }));
 
             observeModal(modal);
             bringToFront(modal);
@@ -264,6 +277,13 @@
         function openGravewrightPanel(panel) {
             const panelId = panel.dataset.modalId;
             const roomId = panel.dataset.panelRoom;
+
+            if (panel.dataset.gravewrightDetached === "true") {
+                showFloatingModal(panel, { fit: false });
+                setPanelToggleState(panelId, true);
+                return;
+            }
+
             const group = gravewrightPanelGroup(roomId, true);
 
             if (!panelId || !group) {
@@ -274,7 +294,11 @@
             document.querySelectorAll(`${panelSelectorForRoom(roomId)}:not([hidden])`).forEach(
                 (visiblePanel) => {
                     const visiblePanelId = visiblePanel.dataset.modalId;
-                    if (visiblePanelId && !group.panelIds.includes(visiblePanelId)) {
+                    if (
+                        visiblePanel.dataset.gravewrightDetached !== "true"
+                        && visiblePanelId
+                        && !group.panelIds.includes(visiblePanelId)
+                    ) {
                         group.panelIds.push(visiblePanelId);
                     }
                 }
@@ -282,6 +306,66 @@
 
             if (!group.panelIds.includes(panelId)) group.panelIds.push(panelId);
             activateGravewrightPanel(group, panelId);
+        }
+
+        function detachGravewrightPanel(panelId) {
+            const panel = document.querySelector(
+                `.game-panel[data-modal-id="${cssEscape(panelId)}"]`
+            );
+            const group = gravewrightPanelGroup(panel?.dataset.panelRoom);
+            if (!panel || !group?.panelIds.includes(panelId)) return false;
+
+            const removedIndex = group.panelIds.indexOf(panelId);
+            const wasActive = group.activePanelId === panelId;
+            group.panelIds.splice(removedIndex, 1);
+            panel.querySelector(":scope > .game-panel-tabs")?.remove();
+            panel.dataset.gravewrightDetached = "true";
+
+            if (wasActive && group.panelIds.length) {
+                const nextId = group.panelIds[Math.min(removedIndex, group.panelIds.length - 1)];
+                const nextPanel = document.querySelector(
+                    `.game-panel[data-modal-id="${cssEscape(nextId)}"]`
+                );
+                if (nextPanel) {
+                    copyPanelFrame(panel, nextPanel);
+                    group.activePanelId = nextId;
+                    showFloatingModal(nextPanel, { framePrepared: true, preserveWidth: true });
+                }
+            }
+
+            if (!group.panelIds.length) {
+                gravewrightPanelGroups.delete(group.roomId);
+            } else {
+                renderGravewrightPanelTabs(group);
+            }
+
+            const position = modalLayout.getPosition(panel);
+            modalLayout.setPosition(
+                panel,
+                Math.max(10, Math.min(window.innerWidth - panel.offsetWidth - 10, position.x + 28)),
+                Math.max(10, Math.min(window.innerHeight - panel.offsetHeight - 10, position.y + 28)),
+            );
+            panel.hidden = false;
+            setPanelToggleState(panelId, true);
+            bringToFront(panel);
+            return true;
+        }
+
+        function attachGravewrightPanel(panel) {
+            if (!panel || panel.dataset.gravewrightDetached !== "true") return false;
+
+            const panelId = panel.dataset.modalId;
+            const group = gravewrightPanelGroup(panel.dataset.panelRoom, true);
+            delete panel.dataset.gravewrightDetached;
+            if (!group.panelIds.includes(panelId)) group.panelIds.push(panelId);
+            activateGravewrightPanel(group, panelId);
+            return true;
+        }
+
+        function toggleGravewrightPanelAttachment(panel) {
+            if (!isGravewrightPanel(panel)) return false;
+            if (panel.dataset.gravewrightDetached === "true") return attachGravewrightPanel(panel);
+            return detachGravewrightPanel(panel.dataset.modalId);
         }
 
         function removeGravewrightPanel(panelId) {
@@ -317,6 +401,13 @@
         function toggleGravewrightPanel(panel) {
             const panelId = panel.dataset.modalId;
             const group = gravewrightPanelGroup(panel.dataset.panelRoom);
+
+            if (panel.dataset.gravewrightDetached === "true") {
+                panel.hidden = !panel.hidden;
+                setPanelToggleState(panelId, !panel.hidden);
+                if (!panel.hidden) bringToFront(panel);
+                return;
+            }
 
             if (panelId && group?.panelIds.includes(panelId)) {
                 removeGravewrightPanel(panelId);
@@ -420,8 +511,10 @@
 
         return {
             activateGravewrightPanel,
+            attachGravewrightPanel,
             applyLayoutMode,
             defaultPanelIdForRoom,
+            detachGravewrightPanel,
             dockButtonFor,
             getActiveRoomId,
             getLayoutMode,
@@ -437,6 +530,7 @@
             showFloatingModal,
             syncActiveRoomUi,
             toggleGravewrightPanel,
+            toggleGravewrightPanelAttachment,
         };
     }
 

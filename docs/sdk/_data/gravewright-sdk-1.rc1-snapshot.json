@@ -60,7 +60,9 @@
     "pdf.read",
     "pdf.viewer",
     "permissions.inspect",
+    "rolls.actions",
     "rolls.intent",
+    "rolls.reroll",
     "rules.actions",
     "rules.declarative",
     "rules.extends",
@@ -113,6 +115,7 @@
     "ui.dragDrop",
     "ui.presentations",
     "ui.slots",
+    "users.presentation.read",
     "workflows.control",
     "workflows.read",
     "workflows.start"
@@ -2692,6 +2695,20 @@
       },
       "required": []
     },
+    "RollActionDefinition": {
+      "additionalProperties": false,
+      "fields": {
+        "actionIds": "string[]",
+        "excludeActionIds": "string[]",
+        "id": "string",
+        "intents": "string[]",
+        "label": "string"
+      },
+      "required": [
+        "id",
+        "label"
+      ]
+    },
     "RollGroupDTO": {
       "additionalProperties": false,
       "fields": {
@@ -4255,6 +4272,17 @@
         "y"
       ]
     },
+    "UserPresentationDTO": {
+      "additionalProperties": false,
+      "fields": {
+        "color": "string",
+        "userId": "string"
+      },
+      "required": [
+        "color",
+        "userId"
+      ]
+    },
     "VerticalBoundsDTO": {
       "additionalProperties": false,
       "fields": {
@@ -4532,6 +4560,7 @@
     "token.updated",
     "tokens.transferred",
     "ui.presentation.changed",
+    "user.presentation.changed",
     "workflow.changed",
     "zone.crossed",
     "zone.entered",
@@ -8029,6 +8058,7 @@
     "PdfViewerHostState": "JsonObject",
     "PdfViewerOpenResult": "PdfDocumentDTO & PdfViewerHostState & { page: number }",
     "PermissionContext": "JsonObject",
+    "RollActionHandler": "(message: ChatMessageDTO) => void | Promise<void>",
     "RollAppliedMutation": "JsonObject",
     "RollMetadata": "JsonObject",
     "RollOptions": "JsonObject",

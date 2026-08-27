@@ -50,6 +50,30 @@ async def actors_panel_fragment(
     )
 
 
+@get("/game/directory-dialogs/{campaign_id:str}")
+async def directory_dialogs_fragment(
+    campaign_id: FromPath[str],
+    cookies: dict[str, str],
+    current_user: Row,
+    game_page_service: GamePageService,
+) -> Redirect | Template:
+    """Lazy bundle for authenticated directory creation dialogs."""
+    room = next(
+        (
+            candidate
+            for candidate in game_page_service.build_context(user_id=current_user["id"]).rooms
+            if candidate["id"] == campaign_id
+        ),
+        None,
+    )
+    if room is None or room["member_role"] != "gm":
+        return Redirect(path="/game")
+    return Template(
+        template_name="pages/game/_directory_dialogs.html",
+        context=view_context(cookies, room=room),
+    )
+
+
 def _str(form: Any, key: str, default: str = "") -> str:
     return str(form.get(key) or default)
 

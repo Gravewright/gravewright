@@ -60,6 +60,12 @@
     template.innerHTML = (await response.text()).trim();
     const modal = template.content.querySelector("[data-modal-window]");
     if (!modal) return;
+    modal.querySelectorAll('img[src^="/game/journal/asset/"]').forEach((image) => {
+      const assetId = image.getAttribute("src").slice("/game/journal/asset/".length).split(/[?#]/, 1)[0];
+      if (assetId && !assetId.includes("/")) {
+        image.src = `/game/handouts/presentation/${encodeURIComponent(ticket)}/asset/${encodeURIComponent(assetId)}`;
+      }
+    });
     document.querySelector(`[data-modal-id="${CSS.escape(modal.dataset.modalId)}"]`)?.remove();
     document.querySelector(".game-modal-layer")?.append(modal);
     document.dispatchEvent(new CustomEvent(

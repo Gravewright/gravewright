@@ -88,7 +88,7 @@ async def test_public_message_saved_and_emitted(db, transport):
     assert transport.room_messages[0]["visibility"] == ChatVisibility.PUBLIC
 
 
-async def test_system_message_saved_and_emitted(db, transport):
+async def test_live_only_system_message_emits_without_resource_id(db, transport):
     gm_id = seed_user(name="GM", email="sys@test.com")
     campaign_id = seed_campaign(gm_id)
 
@@ -103,6 +103,7 @@ async def test_system_message_saved_and_emitted(db, transport):
     msg = transport.room_messages[0]
     assert msg["kind"] == "system"
     assert msg["author"] == "Sistema"
+    assert "message_id" not in msg
     assert "Aria sofreu 4" in msg["content"]
 
     assert ChatMessageRepository().list_for_campaign(campaign_id=campaign_id) == []
@@ -214,7 +215,7 @@ async def test_r_alias_rolls_like_roll(db, transport):
     assert "total" in transport.room_messages[0]
 
 
-async def test_gmroll_is_secret_and_not_persisted(db, transport):
+async def test_gmroll_is_secret_and_persisted_for_canonical_readback(db, transport):
     gm_id = seed_user(name="GM", email="gm-gmroll@test.com")
     player_id = seed_user(name="Player", email="player-gmroll@test.com")
     campaign_id = seed_campaign(gm_id)
@@ -238,10 +239,13 @@ async def test_gmroll_is_secret_and_not_persisted(db, transport):
     assert whisper["kind"] == "roll"
     assert whisper["secret"] is True
 
-    assert ChatMessageRepository().list_for_campaign(campaign_id=campaign_id) == []
+    stored = ChatMessageRepository().list_for_campaign(campaign_id=campaign_id)
+    assert len(stored) == 1
+    assert stored[0]["visibility"] == ChatVisibility.GM_ONLY.value
+    assert set(stored[0]["_audience_user_ids"]) == {gm_id, player_id}
 
 
-async def test_whisper_delivered_to_named_target(db, transport):
+async def test_whisper_delivered_and_persisted_for_canonical_readback(db, transport):
     gm_id = seed_user(name="GM", email="gm-whisper@test.com")
     bob_id = seed_user(name="Bob", email="bob-whisper@test.com")
     campaign_id = seed_campaign(gm_id)
@@ -262,7 +266,10 @@ async def test_whisper_delivered_to_named_target(db, transport):
     assert whisper["targets"] == [bob_id]
     assert whisper["content"] == "hello there"
     assert whisper["target_names"] == ["Bob"]
-    assert ChatMessageRepository().list_for_campaign(campaign_id=campaign_id) == []
+    stored = ChatMessageRepository().list_for_campaign(campaign_id=campaign_id)
+    assert len(stored) == 1
+    assert stored[0]["visibility"] == ChatVisibility.WHISPER.value
+    assert set(stored[0]["_audience_user_ids"]) == {gm_id, bob_id}
 
 
 async def test_whisper_to_name_with_spaces(db, transport):

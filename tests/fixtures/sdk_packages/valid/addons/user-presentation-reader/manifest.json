@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "addon",
+  "id": "user-presentation-reader",
+  "name": "User Presentation Reader",
+  "version": "1.0.0",
+  "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"},
+  "capabilities": ["users.presentation.read"],
+  "activation": {"scope": "campaign", "mode": "multiple"},
+  "entrypoints": {"game": {"scripts": ["main.js"]}},
+  "provides": {}
+}

@@ -414,6 +414,16 @@
         border-color var(--motion-fast) var(--ease);
 }
 
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry[draggable="true"],
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry[draggable="true"] .journal-index-open {
+    cursor: grab;
+}
+
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-dragging,
+.journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-dragging .journal-index-open {
+    cursor: grabbing;
+}
+
 .journal-modal .journal-diary-workspace--editorial .journal-index-entry:hover,
 .journal-modal .journal-diary-workspace--editorial .journal-index-entry.is-active {
     border-color: var(--border);
@@ -1167,6 +1177,73 @@
 .journal-modal .journal-reader--editorial .journal-notebook-section[hidden] { display: none !important; }
 
 /* ── Narrow windows ────────────────────────────────────────────────────── */
+
+/* ── Roll tables ───────────────────────────────────────────────────────── */
+.journal-modal--roll_table .journal-modal-body { background: color-mix(in srgb, var(--surface) 92%, #000); }
+.roll-table-reader, .roll-table-editor { padding: var(--space-5); overflow: auto; }
+.roll-table-editor { display: grid; gap: 6px; padding: 10px 12px; }
+.roll-table-roll-primary { min-width: 82px; height: 30px; padding: 4px 10px; }
+.roll-table-reset-button { width: 30px; height: 30px; padding: 0; }
+.roll-table-available { margin-left: auto; color: var(--text-muted); font-size: 11px; white-space: nowrap; }
+.roll-table-available strong { color: var(--accent); }
+.roll-table-summary { display: flex; align-items: center; gap: var(--space-5); padding: var(--space-3); border: 1px solid var(--border); background: var(--surface-raised); }
+.roll-table-summary > div:not(.roll-table-actions) { display: grid; min-width: 90px; }
+.roll-table-summary strong { color: var(--accent); font: 700 var(--text-xl) var(--font-display); }
+.roll-table-summary span { color: var(--text-muted); font-size: var(--text-xs); text-transform: uppercase; }
+.roll-table-actions { margin-left: auto; display: flex; gap: var(--space-2); }
+.roll-table-results { display: grid; gap: 6px; margin-top: var(--space-3); }
+.roll-table-result { display: flex; min-height: 42px; align-items: center; justify-content: space-between; gap: var(--space-4); padding: 6px 12px; border: 1px solid var(--border); border-left: 3px solid var(--accent); background: var(--surface-raised); }
+.roll-table-result > div { min-width: 0; line-height: 1.15; }
+.roll-table-result strong { display: block; line-height: 1.2; }
+.roll-table-result p { margin: 2px 0 0; overflow: hidden; color: var(--text-muted); line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.roll-table-result > span { flex: 0 0 auto; color: var(--accent); font-variant-numeric: tabular-nums; }
+.roll-table-result.is-inactive { opacity: .45; }
+.roll-table-result.is-drawn { opacity: .55; filter: grayscale(.7); }
+.roll-table-options { display: flex; min-height: 38px; align-items: center; gap: 12px; margin: 0 0 4px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-raised) 55%, transparent); }
+.roll-table-options label { display: flex; align-items: center; gap: var(--space-2); }
+.roll-table-options label:first-child { white-space: nowrap; }
+.roll-table-options select { width: 118px; min-width: 118px; }
+.roll-table-editor-head, .roll-table-editor-row { display: grid; grid-template-columns: 14px minmax(100px, 1fr) 58px 54px minmax(120px, 1.35fr) 30px 26px; gap: 6px; align-items: center; }
+.roll-table-editor-head { height: 24px; padding: 0 5px; color: var(--text-muted); font-size: 9px; text-transform: uppercase; }
+.roll-table-editor-row { height: 36px; min-height: 36px; margin: 0; padding: 2px 5px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; cursor: grab; transition: background .12s ease; }
+.roll-table-editor-row:first-child { border-top: 1px solid var(--border); }
+.roll-table-editor-row:hover { background: color-mix(in srgb, var(--accent) 5%, var(--surface-raised)); }
+.roll-table-editor-row:active { cursor: grabbing; }
+.roll-table-editor-row.is-dragging { opacity: .45; }
+.journal-modal--roll_table .roll-table-editor-row input[type="text"],
+.journal-modal--roll_table .roll-table-editor-row input[type="number"],
+.journal-modal--roll_table .roll-table-editor-row textarea,
+.journal-modal--roll_table .roll-table-editor-row [data-table-result],
+.journal-modal--roll_table .roll-table-options select {
+    box-sizing: border-box;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(10, 13, 15, .78) !important;
+    color: var(--text-bright) !important;
+    box-shadow: none;
+}
+.journal-modal--roll_table .roll-table-editor-row input { min-height: 28px; height: 28px; padding: 3px 6px; font-size: 12px; }
+.journal-modal--roll_table .roll-table-editor-row textarea { min-height: 28px; height: 28px; padding: 4px 6px; resize: none; line-height: 18px; }
+.journal-modal--roll_table .roll-table-options select { min-height: 30px; height: 30px; padding: 3px 25px 3px 7px; font-size: 12px; }
+.journal-modal--roll_table .roll-table-editor-row input:focus,
+.journal-modal--roll_table .roll-table-editor-row textarea:focus,
+.journal-modal--roll_table .roll-table-options select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 15%, transparent); }
+.roll-table-editor-row output { color: var(--accent); text-align: center; font-variant-numeric: tabular-nums; }
+.roll-table-editor-row [data-table-active] { justify-self: center; }
+.roll-table-editor-row [data-table-remove] { display: grid; width: 26px; height: 26px; place-items: center; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); }
+.roll-table-editor-row [data-table-remove]:hover { border-color: var(--danger); color: var(--danger); }
+.roll-table-editor .journal-list-add { width: 100%; min-height: 30px; margin: 0 0 2px; border: 1px dashed color-mix(in srgb, var(--accent) 55%, var(--border)); border-radius: var(--radius-sm); background: transparent; color: var(--accent); font-size: 12px; font-weight: 700; }
+.roll-table-editor .journal-list-add:hover { background: color-mix(in srgb, var(--accent) 13%, transparent); }
+
+@media (max-width: 760px) {
+    .roll-table-editor-head { display: none; }
+    .roll-table-editor-row { height: auto; grid-template-columns: 14px minmax(90px, 1fr) 52px 26px 26px; }
+    .roll-table-editor-row [data-table-chance] { display: none; }
+    .roll-table-editor-row [data-table-result] { grid-column: 2 / -1; }
+    .roll-table-options, .roll-table-summary { align-items: stretch; flex-direction: column; }
+    .roll-table-actions { margin-left: 0; }
+}
 
 @media (max-width: 980px) {
     .journal-modal[data-journal-type="diary"] {

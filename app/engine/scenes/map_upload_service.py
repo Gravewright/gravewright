@@ -688,7 +688,11 @@ class MapUploadService:
                     )
                 )
 
-            self._replace_retile_metadata_atomic(scene_id=scene_id, staged_layers=staged_layers)
+            self._replace_retile_metadata_atomic(
+                scene_id=scene_id,
+                staged_layers=staged_layers,
+                dimensions=dimensions,
+            )
         except Exception:
             for backup in reversed(backups):
                 try:
@@ -764,6 +768,8 @@ class MapUploadService:
                 except Exception:
                     pass
             return MapUploadResult(success=False, error_key="game.maps.errors.processing_failed")
+
+        self._update_retile_scene_dimensions(scene_id=scene_id, dimensions=dimensions)
 
         return MapUploadResult(success=True, tile_count=total_tiles, chunk_count=total_chunks)
 
@@ -890,6 +896,7 @@ class MapUploadService:
         *,
         scene_id: str,
         staged_layers: list[_StagedRetileLayer],
+        dimensions: SceneDimensions,
     ) -> None:
         now = int(time.time())
         with engine_begin() as conn:
@@ -974,8 +981,37 @@ class MapUploadService:
                 conn.execute(
                     update(scenes_table)
                     .where(scenes_table.c.id == scene_id)
-                    .values(scene_epoch=scenes_table.c.scene_epoch + 1, updated_at=now)
+                    .values(
+                        width=dimensions.width,
+                        height=dimensions.height,
+                        tile_size=dimensions.tile_size,
+                        tile_table_version=scenes_table.c.tile_table_version + 1,
+                        scene_epoch=scenes_table.c.scene_epoch + 1,
+                        updated_at=now,
+                    )
                 )
+
+    def _update_retile_scene_dimensions(
+        self,
+        *,
+        scene_id: str,
+        dimensions: SceneDimensions,
+    ) -> None:
+        """Keep raster metadata aligned with newly generated tile coordinates."""
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(scenes_table)
+                .where(scenes_table.c.id == scene_id)
+                .values(
+                    width=dimensions.width,
+                    height=dimensions.height,
+                    tile_size=dimensions.tile_size,
+                    tile_table_version=scenes_table.c.tile_table_version + 1,
+                    scene_epoch=scenes_table.c.scene_epoch + 1,
+                    updated_at=now,
+                )
+            )
 
     def _discard_staged_layer(self, staged: _StagedRetileLayer) -> None:
         self.asset_storage.discard_path(staged.tile_stage_dir)

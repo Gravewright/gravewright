@@ -661,6 +661,10 @@ metadata, is scoped to the active campaign, and answers only for a caller who is
 themselves a member. It is a roster, not a presence feed: membership is not online
 status.
 
+The bounded visual projection is separate: `sdk.users.presentation.get(userId)`
+and `sdk.users.presentation.list()` return only `{ userId, color }` for members
+visible in the active campaign. See [User presentation](user-presentation.md).
+
 `TokenDTO.controllers` reports the users who may control that token, derived from the
 same authority that decides whether a move is allowed, so a token with several owners
 lists all of them rather than collapsing to one. The projection is filtered: a caller

@@ -32,7 +32,12 @@ class CombatEncounterRepository:
         return dict(row) if row is not None else None
 
     def create(
-        self, *, campaign_id: str, scene_id: str | None, created_by_user_id: str
+        self,
+        *,
+        campaign_id: str,
+        scene_id: str | None,
+        created_by_user_id: str,
+        started: bool = True,
     ) -> dict:
         now = int(time.time())
         combat_id = uuid.uuid4().hex
@@ -49,10 +54,13 @@ class CombatEncounterRepository:
                     campaign_id=campaign_id,
                     scene_id=scene_id,
                     status="active",
+                    # Draft encounters remain schema-compatible with databases
+                    # that constrain rounds to >= 1; ``started_at`` is the state boundary.
                     round_number=1,
                     turn_index=0,
+                    interrupted_turn_index=None,
                     created_by_user_id=created_by_user_id,
-                    started_at=now,
+                    started_at=now if started else None,
                     ended_at=None,
                     created_at=now,
                     updated_at=now,
@@ -63,6 +71,18 @@ class CombatEncounterRepository:
             raise RuntimeError("Created combat encounter could not be read back.")
         return dict(row)
 
+    def start(self, *, combat_id: str) -> dict | None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            conn.execute(
+                update(encounters_table)
+                .where(encounters_table.c.id == combat_id)
+                .where(encounters_table.c.status == "active")
+                .values(round_number=1, turn_index=0, interrupted_turn_index=None, started_at=now, updated_at=now)
+            )
+            row = self._get(conn, combat_id)
+        return dict(row) if row is not None else None
+
     def set_position(self, *, combat_id: str, round_number: int, turn_index: int) -> dict | None:
         now = int(time.time())
         with engine_begin() as conn:
@@ -72,9 +92,43 @@ class CombatEncounterRepository:
                 .values(
                     round_number=max(1, int(round_number)),
                     turn_index=max(0, int(turn_index)),
+                    interrupted_turn_index=None,
                     updated_at=now,
                 )
             )
+            row = self._get(conn, combat_id)
+        return dict(row) if row is not None else None
+
+    def interrupt_turn(self, *, combat_id: str, turn_index: int) -> dict | None:
+        """Jump temporarily while retaining the original turn durably."""
+        now = int(time.time())
+        with engine_begin() as conn:
+            current = self._get(conn, combat_id)
+            if current is None or current.get("interrupted_turn_index") is not None:
+                return dict(current) if current is not None else None
+            conn.execute(
+                update(encounters_table).where(encounters_table.c.id == combat_id).values(
+                    interrupted_turn_index=int(current.get("turn_index") or 0),
+                    turn_index=max(0, int(turn_index)),
+                    updated_at=now,
+                )
+            )
+            row = self._get(conn, combat_id)
+        return dict(row) if row is not None else None
+
+    def resume_turn(self, *, combat_id: str) -> dict | None:
+        now = int(time.time())
+        with engine_begin() as conn:
+            current = self._get(conn, combat_id)
+            if current is None:
+                return None
+            interrupted = current.get("interrupted_turn_index")
+            if interrupted is not None:
+                conn.execute(
+                    update(encounters_table).where(encounters_table.c.id == combat_id).values(
+                        turn_index=max(0, int(interrupted)), interrupted_turn_index=None, updated_at=now
+                    )
+                )
             row = self._get(conn, combat_id)
         return dict(row) if row is not None else None
 
@@ -124,6 +178,8 @@ class CombatEncounterRepository:
                     tie_break=0,
                     hidden=1 if hidden else 0,
                     defeated=0,
+                    acted_round=0,
+                    holding=0,
                     created_at=now,
                     updated_at=now,
                 )
@@ -226,6 +282,33 @@ class CombatEncounterRepository:
                 update(combatants_table)
                 .where(combatants_table.c.id == combatant_id)
                 .values(**values)
+            )
+
+    def set_turn_state(
+        self,
+        *,
+        combatant_id: str,
+        acted_round: int | None = None,
+        holding: bool | None = None,
+    ) -> None:
+        values: dict = {"updated_at": int(time.time())}
+        if acted_round is not None:
+            values["acted_round"] = max(0, int(acted_round))
+        if holding is not None:
+            values["holding"] = 1 if holding else 0
+        with engine_begin() as conn:
+            conn.execute(
+                update(combatants_table)
+                .where(combatants_table.c.id == combatant_id)
+                .values(**values)
+            )
+
+    def clear_holding(self, *, combat_id: str) -> None:
+        with engine_begin() as conn:
+            conn.execute(
+                update(combatants_table)
+                .where(combatants_table.c.combat_id == combat_id)
+                .values(holding=0, updated_at=int(time.time()))
             )
 
     def _get(self, conn, combat_id: str) -> dict | None:

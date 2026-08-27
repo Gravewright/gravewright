@@ -68,6 +68,11 @@ def _get_or_create_user() -> str:
     users = UserRepository()
     existing = users.get_by_email(LIVE_EMAIL)
     if existing is not None:
+        # Benchmark fixtures must remain reproducible after a previous local run
+        # changed or invalidated the dedicated test account credentials.
+        users.update_password(
+            user_id=existing["id"], password_hash=hash_password(LIVE_PASSWORD)
+        )
         return existing["id"]
 
     return users.create_with_auto_role(

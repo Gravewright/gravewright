@@ -5,6 +5,7 @@
     const transitions = new Map();
     const projections = new Map();
     let unlocked = false;
+    let resumeInterval = 0;
     const storedPreference = (channel) => {
         const value = Number(localStorage.getItem(`gravewright.audio.volume.${channel}`) ?? 1);
         return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1;
@@ -18,6 +19,10 @@
     const master=()=>preference("master"), muted=()=>localStorage.getItem("gravewright.audio.muted")==="1";
     const effective=(logical,channel,id)=>Math.max(0,Math.min(1,logical))*Math.min(preference(channel),master())*(muted()?0:1)*(projections.get(id)??1);
     const isNativeSpatial=playback=>playback?.ownerPackageId==="core.sound"&&playback?.channel==="sfx"&&Boolean(playback?.sceneId);
+    const shouldBePlaying=(playback,id)=>Boolean(playback&&playback.state!=="paused"&&playback.state!=="stopped"&&(projections.get(id)??1)>0);
+    const pauseIntentionally=(audio)=>{audio.__gravewrightIntentionalPauseUntil=performance.now()+750;audio.pause();};
+    async function resume(id){const audio=instances.get(id),playback=audio?.__gravewrightPlayback;if(!audio||!shouldBePlaying(playback,id))return;try{await audio.play();pending.delete(id);}catch{pending.add(id);}}
+    const scheduleResume=(id,delay=180)=>window.setTimeout(()=>void resume(id),delay);
     const seekToTimeline=(audio,playback)=>{const elapsed=Math.max(0,Date.now()/1000-Number(playback.startedAt||Date.now()/1000));if(Number.isFinite(audio.duration)&&audio.duration>0)audio.currentTime=playback.loop?elapsed%audio.duration:Math.min(elapsed,Math.max(0,audio.duration-.05));};
     const cancelTransition=(id)=>{const prior=transitions.get(id);if(prior)cancelAnimationFrame(prior.frame);transitions.delete(id);};
     function fade(audio,playback){
@@ -26,33 +31,46 @@
         const now=Date.now(),started=Number(spec.startedAt||playback.updatedAt||playback.startedAt*1000||now);
         const duration=Math.max(0,Number(spec.durationMs));const from=Number.isFinite(Number(spec.fromGain))?Number(spec.fromGain):(spec.direction==="out"?Number(playback.gain):0);
         const to=spec.direction==="out"?0:Number(playback.gain);const state={from,to,started,duration,effectiveGain:from,frame:0};
-        const tick=()=>{const ratio=Math.max(0,Math.min(1,(Date.now()-started)/duration));const eased=spec.curve==="ease-in"?ratio*ratio:spec.curve==="ease-out"?1-(1-ratio)*(1-ratio):ratio;state.effectiveGain=from+(to-from)*eased;audio.volume=effective(state.effectiveGain,playback.channel,playback.id);if(ratio<1){state.frame=requestAnimationFrame(tick);}else{transitions.delete(playback.id);if(spec.direction==="out"){audio.pause();instances.delete(playback.id);}}};
+        const tick=()=>{const ratio=Math.max(0,Math.min(1,(Date.now()-started)/duration));const eased=spec.curve==="ease-in"?ratio*ratio:spec.curve==="ease-out"?1-(1-ratio)*(1-ratio):ratio;state.effectiveGain=from+(to-from)*eased;audio.volume=effective(state.effectiveGain,playback.channel,playback.id);if(ratio<1){state.frame=requestAnimationFrame(tick);}else{transitions.delete(playback.id);if(spec.direction==="out"){pauseIntentionally(audio);instances.delete(playback.id);pending.delete(playback.id);}}};
         transitions.set(playback.id,state);tick();
     }
     async function project(playback) {
         if (!playback?.id) return;
         if(isNativeSpatial(playback)&&!projections.has(playback.id))projections.set(playback.id,0);
         let audio = instances.get(playback.id);
-        if (playback.state === "stopped") { cancelTransition(playback.id); if (audio) { audio.pause(); instances.delete(playback.id); } pending.delete(playback.id); return; }
+        if (playback.state === "stopped") { cancelTransition(playback.id); if (audio) { pauseIntentionally(audio); instances.delete(playback.id); } pending.delete(playback.id); return; }
         if (!audio) {
             audio = new Audio(assetUrl({ ...playback.asset, ownerPackageId: playback.ownerPackageId })); audio.preload="auto"; instances.set(playback.id, audio);
             const seek=()=>seekToTimeline(audio,playback);
             if(typeof audio.addEventListener==="function") audio.addEventListener("loadedmetadata",seek,{once:true}); else seek();
+            if(typeof audio.addEventListener==="function"){
+                audio.addEventListener("pause",()=>{if(performance.now()>Number(audio.__gravewrightIntentionalPauseUntil||0)&&shouldBePlaying(audio.__gravewrightPlayback,playback.id)){pending.add(playback.id);scheduleResume(playback.id);}});
+                audio.addEventListener("ended",()=>{if(shouldBePlaying(audio.__gravewrightPlayback,playback.id)){pending.add(playback.id);seekToTimeline(audio,audio.__gravewrightPlayback);scheduleResume(playback.id);}});
+                audio.addEventListener("error",()=>{if(shouldBePlaying(audio.__gravewrightPlayback,playback.id)){pending.add(playback.id);scheduleResume(playback.id,750);}});
+            }
         }
         audio.loop = Boolean(playback.loop);
         audio.__gravewrightPlayback = playback;
         // Logical gain composes with, and can never overwrite, the user's preference.
         fade(audio,playback);
-        if((projections.get(playback.id)??1)<=0){audio.pause();pending.delete(playback.id);return;}
+        if((projections.get(playback.id)??1)<=0){pauseIntentionally(audio);pending.delete(playback.id);return;}
         if (!unlocked) { pending.add(playback.id); return; }
-        if (playback.state === "paused") audio.pause(); else { try { await audio.play(); } catch { pending.add(playback.id); } }
+        if (playback.state === "paused") { pauseIntentionally(audio); pending.delete(playback.id); } else await resume(playback.id);
     }
     async function unlock() {
         unlocked = true;
-        for (const id of [...pending]) { pending.delete(id); const audio = instances.get(id); if (audio) { try { await audio.play(); } catch { pending.add(id); } } }
+        for (const id of [...pending]) { pending.delete(id); await resume(id); }
     }
-    addEventListener("pointerdown", unlock, { once: true, capture: true });
-    addEventListener("keydown", unlock, { once: true, capture: true });
+    // Autoplay pode continuar bloqueado mesmo depois da primeira interação
+    // (troca de aba, webview e alguns navegadores móveis fazem isso). Mantemos
+    // a ponte ativa para que qualquer nova interação tente novamente os sons
+    // recebidos da mesa que ficaram pendentes.
+    addEventListener("pointerdown", unlock, { capture: true });
+    addEventListener("keydown", unlock, { capture: true });
+    addEventListener("online",()=>instances.forEach((_audio,id)=>void resume(id)));
+    addEventListener("pageshow",()=>instances.forEach((_audio,id)=>void resume(id)));
+    document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")instances.forEach((_audio,id)=>void resume(id));});
+    resumeInterval=window.setInterval(()=>{if(!unlocked)return;instances.forEach((audio,id)=>{if(audio.paused&&shouldBePlaying(audio.__gravewrightPlayback,id))void resume(id);});},3000);
     document.addEventListener("vtt:transport-event", async (event) => {
         const detail = event.detail || {};
         if (detail.event !== "audio.changed" || !detail.payload?.playback_id) return;
@@ -75,9 +93,19 @@
     }
     function setMuted(value){localStorage.setItem("gravewright.audio.muted",value?"1":"0");document.dispatchEvent(new CustomEvent("audio:preference-changed"));}
     document.addEventListener("audio:preference-changed",()=>instances.forEach((audio,id)=>{const playback=audio.__gravewrightPlayback;if(playback)audio.volume=effective(playback.gain,playback.channel,id);}));
-    function setAcousticProjection(id,value){const prior=projections.get(id)??0,scalar=Math.max(0,Math.min(1,Number(value)));projections.set(id,scalar);const audio=instances.get(id),playback=audio?.__gravewrightPlayback;if(!audio||!playback)return;audio.volume=effective(playback.gain,playback.channel,id);if(scalar<=0){audio.pause();pending.delete(id);return;}if(prior<=0)seekToTimeline(audio,playback);if(!unlocked){pending.add(id);return;}if(playback.state!=="paused"&&playback.state!=="stopped")audio.play().catch(()=>pending.add(id));}
-    window.GravewrightAudioRuntime = Object.freeze({ project, unlock, preference, setPreference, setMuted, muted, inspect, setAcousticProjection });
-    addEventListener("DOMContentLoaded",()=>{
+    function setAcousticProjection(id,value){const prior=projections.get(id)??0,scalar=Math.max(0,Math.min(1,Number(value)));projections.set(id,scalar);const audio=instances.get(id),playback=audio?.__gravewrightPlayback;if(!audio||!playback)return;audio.volume=effective(playback.gain,playback.channel,id);if(scalar<=0){pauseIntentionally(audio);pending.delete(id);return;}if(prior<=0)seekToTimeline(audio,playback);if(!unlocked){pending.add(id);return;}void resume(id);}
+    function teardown(){
+        if(resumeInterval){clearInterval(resumeInterval);resumeInterval=0;}
+        transitions.forEach((_transition,id)=>cancelTransition(id));
+        instances.forEach((audio)=>{pauseIntentionally(audio);audio.removeAttribute?.("src");audio.load?.();});
+        instances.clear();pending.clear();projections.clear();unlocked=false;
+    }
+    function projectBootstrap(){
         try { const context=JSON.parse(document.getElementById("gravewright-game-context")?.textContent||"{}"); for(const playback of context.audioPlaybacks||[]) void project(playback); } catch { /* malformed bootstrap fails closed */ }
-    });
+    }
+    window.GravewrightAudioRuntime = Object.freeze({ project, unlock, preference, setPreference, setMuted, muted, inspect, setAcousticProjection, teardown });
+    addEventListener("DOMContentLoaded",projectBootstrap);
+    addEventListener("pagehide",teardown);
+    addEventListener("vtt:game-exit",teardown);
+    addEventListener("pageshow",event=>{if(event.persisted){if(!resumeInterval)resumeInterval=window.setInterval(()=>{if(!unlocked)return;instances.forEach((_audio,id)=>void resume(id));},3000);projectBootstrap();}});
 })();

@@ -203,7 +203,7 @@ def _error(error_key: str, status_code: int, details: Any = None) -> Response[di
         400: "VALIDATION_FAILED", 403: "PERMISSION_DENIED", 404: "NOT_FOUND", 409: "STALE_VERSION"
     }
     code = codes.get(status_code, "UNSUPPORTED")
-    if error_key in {"UNSUPPORTED_MEDIA_TYPE", "RATE_LIMITED", "VALIDATION_FAILED", "PERMISSION_DENIED", "NOT_FOUND"}:
+    if error_key in {"UNSUPPORTED_MEDIA_TYPE", "RATE_LIMITED", "QUOTA_EXCEEDED", "VALIDATION_FAILED", "PERMISSION_DENIED", "NOT_FOUND"}:
         code = error_key
     elif "in_use" in error_key:
         code = "RESOURCE_IN_USE"
@@ -544,10 +544,24 @@ def sdk_runtime_read(
 
     if resource_name == "actors":
         service = ActorService()
+        role = CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=user_id)
+        may_inspect_owners = role in {"gm", "assistant_gm"}
+        owners = ActorRepository().list_owners_for_campaign_actors(campaign_id=campaign_id)
+
+        def public_actor(actor):
+            projected = dict(actor)
+            actor_owners = owners.get(str(actor.get("id") or ""), [])
+            projected["owner_user_ids"] = [
+                str(owner.get("id") or owner.get("user_id") or "")
+                for owner in actor_owners
+                if may_inspect_owners or str(owner.get("id") or owner.get("user_id") or "") == user_id
+            ]
+            return actor_snapshot(projected)
+
         if entity_id:
             actor = service.get_actor(actor_id=entity_id, user_id=user_id)
-            return Response({"actor": actor_snapshot(actor)}) if actor else _error("sdk.runtime.not_found", 404)
-        actors = [actor_snapshot(actor) for actor in service.list_for_campaign(campaign_id=campaign_id, user_id=user_id)]
+            return Response({"actor": public_actor(actor)}) if actor else _error("sdk.runtime.not_found", 404)
+        actors = [public_actor(actor) for actor in service.list_for_campaign(campaign_id=campaign_id, user_id=user_id)]
         if entity_type: actors = [actor for actor in actors if actor.get("type") == entity_type]
         if folder_id is not None: actors = [actor for actor in actors if (actor.get("folder_id") or "") == folder_id]
         if cursor: actors = actors[next((index + 1 for index, actor in enumerate(actors) if actor.get("id") == cursor), 0):]
@@ -770,7 +784,7 @@ async def sdk_runtime_command(
         "templates.create": "scene.templates.write", "templates.update": "scene.templates.write", "templates.delete": "scene.templates.write",
         "sceneImages.place": "scene.images.write", "sceneImages.update": "scene.images.write", "sceneImages.delete": "scene.images.write",
         "combat.start": "combat.manage", "combat.end": "combat.manage", "combat.advance": "combat.manage", "combat.advanceRound": "combat.manage",
-        "combat.setTurn": "combat.manage", "combat.add": "combat.manage", "combat.remove": "combat.manage", "combat.setFlags": "combat.manage", "combat.rollInitiative": "combat.manage",
+        "combat.setTurn": "combat.manage", "combat.interruptTurn": "combat.manage", "combat.resumeTurn": "combat.manage", "combat.setHolding": "combat.manage", "combat.add": "combat.manage", "combat.remove": "combat.manage", "combat.setFlags": "combat.manage", "combat.rollInitiative": "combat.manage",
         "rules.action.execute": "rules.actions",
         "actorItems.insertCopy": "actors.items.write", "actorItems.removeCopy": "actors.items.write",
         "pdf.annotations.create": "pdf.annotations.write", "pdf.annotations.update": "pdf.annotations.write", "pdf.annotations.delete": "pdf.annotations.write",
@@ -1423,6 +1437,9 @@ async def sdk_runtime_command(
         elif command_name == "combat.end": result = service.end(campaign_id=campaign_id, user_id=user_id)
         elif command_name == "combat.advance": result = service.advance_turn(campaign_id=campaign_id, user_id=user_id, delta=_int(payload.get("delta"), 1))
         elif command_name == "combat.setTurn": result = service.set_turn(campaign_id=campaign_id, user_id=user_id, combatant_id=str(payload.get("combatantId") or ""))
+        elif command_name == "combat.interruptTurn": result = service.interrupt_turn(campaign_id=campaign_id, user_id=user_id, combatant_id=str(payload.get("combatantId") or ""))
+        elif command_name == "combat.resumeTurn": result = service.resume_turn(campaign_id=campaign_id, user_id=user_id)
+        elif command_name == "combat.setHolding": result = service.set_holding(campaign_id=campaign_id, user_id=user_id, combatant_id=str(payload.get("combatantId") or ""), holding=payload.get("holding") is not False)
         elif command_name == "combat.add": result = service.add_combatants(campaign_id=campaign_id, user_id=user_id, actor_ids=[str(v) for v in payload.get("actorIds", [])][:64], token_ids=[str(v) for v in payload.get("tokenIds", [])][:64])
         else: result = service.remove_combatant(campaign_id=campaign_id, user_id=user_id, combatant_id=str(payload.get("combatantId") or ""))
         if not result.success:

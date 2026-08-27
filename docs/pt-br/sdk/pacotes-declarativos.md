@@ -273,6 +273,47 @@ Diálogos de rolagem podem pedir input com tipos como `boolean`, `number`,
 `text`, `select`, `segmented`, `radio`, `dice`, `diceList`, `formula` e
 `visibility`.
 
+Rolagens de ataque publicam `roll.attack` e também um alvo especializado de
+efeito: `roll.attack.melee`, `roll.attack.ranged` ou `roll.attack.spell`. A
+classificação usa, nesta ordem, o input `attackMode` do diálogo, o
+`attackClass` da ação, os dados do item (`attackMode` ou `attackType`), tipos ou
+tags de magia/poder e, por fim, a presença de `item.data.range`. Os valores
+explícitos válidos são `melee`, `ranged` e `spell`. Assim efeitos podem atingir
+uma classe de ataque sem colocar regras específicas do sistema no motor.
+
+Efeitos no alvo selecionado podem usar o namespace `incoming.`, por exemplo
+`incoming.roll.attack` ou `incoming.roll.attack.ranged.distant`. Esses
+modificadores entram na rolagem de quem está agindo somente quando aquele ator
+for selecionado como alvo.
+
+Efeitos ativos e condições declaradas também podem expor `restrictions`
+semânticas. Diferentemente de modificadores numéricos, uma restrição compatível
+recusa a operação no servidor. `token.movement` bloqueia o movimento feito por
+jogadores, preservando o reposicionamento de cena pelo GM; alvos como
+`action.roll.attack` ou `action.roll.skill.attribute.agility` bloqueiam ações
+correspondentes da ficha.
+
+```json
+{
+  "restrictions": [
+    { "target": "token.movement" },
+    { "target": "action.roll.attack" }
+  ]
+}
+```
+
+Predicados de transformação de rolagem podem ler `input.*`, `item.*` e
+`sheet.*`, combinando comparações seguras com `&&`. Ações de dano podem publicar
+`roll.damage.direct` ou `roll.damage.area` pelo input `damageMode`, permitindo
+que efeitos do alvo diferenciem acertos diretos de dano de área.
+
+```json
+{
+  "attackClass": "spell",
+  "chatCard": "attack"
+}
+```
+
 ## Token mappings
 
 Token mappings dizem à mesa quais campos do actor alimentam a UI do token:

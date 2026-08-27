@@ -225,7 +225,13 @@ class RealtimeTransport(RealtimeGatewayContract):
         event: TransportEvent,
         payload: Payload,
     ) -> None:
-        await self._deliver(user_ids=player_ids, room_id=None, event=event, payload=payload)
+        # Targeted campaign events still need their room in the envelope.  A
+        # number of browser reconcilers deliberately scope updates by room;
+        # dropping it here made persisted items/presentations appear only after
+        # a full page reload.
+        payload_room_id = payload.get("room_id")
+        room_id = payload_room_id if isinstance(payload_room_id, str) and payload_room_id else None
+        await self._deliver(user_ids=player_ids, room_id=room_id, event=event, payload=payload)
 
     async def to_room(
         self,

@@ -30,7 +30,7 @@
         </div>
         {% endif %}
         <div class="game-modal-controls">
-            {% if can_edit and journal.type in ("quest", "quest_board") %}
+            {% if can_edit and journal.type in ("quest", "quest_board", "roll_table") %}
             <button type="button" class="board-titlebar-edit" data-journal-edit-toggle
                     data-label-edit="{{ t('game.journal.edit') }}"
                     data-label-back="{{ t('game.journal.back') }}">
@@ -72,7 +72,7 @@
                     <span>{{ t(journal.type_label_key) }}</span>
                     <h2>{{ journal.title }}</h2>
                 </div>
-                {% if can_edit and journal.type not in ("quest", "quest_board") %}
+                {% if can_edit and journal.type not in ("quest", "quest_board", "roll_table") %}
                 <button type="button" class="journal-edit-btn" data-journal-edit-toggle>
                     <i class="ph ph-pencil-simple" aria-hidden="true"></i>
                     <span>{{ t("game.journal.edit") }}</span>
@@ -202,6 +202,28 @@
             <div class="board-sheet{% if not view.board_display_entries %} is-empty{% endif %}">
                 {% include "pages/game/_journal_board_cards.html" %}
             </div>
+            {% elif journal.type == "roll_table" %}
+            <section class="roll-table-reader">
+                <header class="roll-table-summary">
+                    <div><strong>{{ view.roll_table.entries | length }}</strong><span>{{ t("game.journal.roll_table.entries") }}</span></div>
+                    <div><strong>{{ view.roll_table.totalWeight }}</strong><span>{{ t("game.journal.roll_table.total_weight") }}</span></div>
+                    <div><strong>{% if view.roll_table.withReplacement %}∞{% else %}1×{% endif %}</strong><span>{{ t("game.journal.roll_table.replacement") }}</span></div>
+                    {% if is_gm %}
+                    <div class="roll-table-actions">
+                        <button type="button" class="dialog-submit" data-roll-table-roll><i class="ph ph-dice-five"></i>{{ t("game.journal.roll_table.roll") }}</button>
+                        {% if not view.roll_table.withReplacement %}<button type="button" data-roll-table-reset><i class="ph ph-arrow-counter-clockwise"></i>{{ t("game.journal.roll_table.reset") }}</button>{% endif %}
+                    </div>
+                    {% endif %}
+                </header>
+                <div class="roll-table-results">
+                    {% for entry in view.roll_table.entries %}
+                    <article class="roll-table-result{% if not entry.active %} is-inactive{% endif %}{% if entry.drawn %} is-drawn{% endif %}" data-roll-table-entry-id="{{ entry.id }}">
+                        <div><strong>{{ entry.name }}</strong>{% if entry.result %}<p>{{ entry.result }}</p>{% endif %}</div>
+                        <span>{{ entry.weight }} · {{ "%.1f" | format(entry.probability) }}%</span>
+                    </article>
+                    {% else %}<p class="journal-page-missing">{{ t("game.journal.roll_table.empty") }}</p>{% endfor %}
+                </div>
+            </section>
             {% endif %}
         </div>
 
@@ -520,6 +542,25 @@
 
             {% elif journal.type == "quest_board" %}
             {# Board content is managed by the linked-quests workspace below. #}
+            {% elif journal.type == "roll_table" %}
+            <section class="roll-table-editor" data-roll-table-editor>
+                <header class="roll-table-options">
+                    <label><input type="checkbox" name="roll_table_with_replacement" {% if view.roll_table.withReplacement %}checked{% endif %}> {{ t("game.journal.roll_table.with_replacement") }}</label>
+                    <label>{{ t("game.journal.roll_table.visibility") }}
+                        <select name="roll_table_result_visibility">
+                            <option value="public" {% if view.roll_table.resultVisibility == 'public' %}selected{% endif %}>{{ t("game.journal.roll_table.public") }}</option>
+                            <option value="gm" {% if view.roll_table.resultVisibility == 'gm' %}selected{% endif %}>{{ t("game.journal.roll_table.gm_only") }}</option>
+                        </select>
+                    </label>
+                    <span class="roll-table-available"><strong data-roll-table-active-count>0</strong> disponíveis</span>
+                    <button type="button" class="dialog-submit roll-table-roll-primary" data-roll-table-roll><i class="ph ph-dice-five"></i>{{ t("game.journal.roll_table.roll") }}</button>
+                    <button type="button" class="roll-table-reset-button" data-roll-table-reset {% if view.roll_table.withReplacement %}hidden{% endif %}><i class="ph ph-arrow-counter-clockwise"></i></button>
+                </header>
+                <button type="button" class="journal-list-add" data-roll-table-add><i class="ph ph-plus"></i>{{ t("game.journal.roll_table.add") }}</button>
+                <div class="roll-table-editor-head"><span></span><span>{{ t("game.journal.roll_table.name") }}</span><span>{{ t("game.journal.roll_table.weight") }}</span><span>{{ t("game.journal.roll_table.chance") }}</span><span>{{ t("game.journal.roll_table.result") }}</span><span>{{ t("game.journal.roll_table.active") }}</span><span></span></div>
+                <div data-roll-table-rows></div>
+                <textarea name="roll_table_entries_json" data-roll-table-json hidden>{{ view.roll_table.entries | tojson }}</textarea>
+            </section>
             {% endif %}
 
         </form>

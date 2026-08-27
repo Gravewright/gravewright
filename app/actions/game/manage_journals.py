@@ -16,6 +16,7 @@ from app.engine.journals.journal_asset_service import JournalAssetService
 from app.engine.journals.journal_asset_read_service import JournalAssetReadService
 from app.engine.journals.journal_page_service import JournalPageService
 from app.engine.journals.journal_service import JournalResult, JournalService
+from app.engine.chat.chat_service import ChatService
 from app.business.game_page_service import GamePageService
 from app.helpers.env import PROJECT_ROOT
 from app.helpers.view import view_context
@@ -122,6 +123,14 @@ def _build_data(form: Any, journal_type: str) -> dict | None:
         }
     if journal_type == "quest_board":
         return {}
+    if journal_type == "roll_table":
+        if not _has_field(form, "roll_table_entries_json"):
+            return {"entries": [], "withReplacement": True, "resultVisibility": "public"}
+        return {
+            "entries": _json_field(form, "roll_table_entries_json"),
+            "withReplacement": _bool(form, "roll_table_with_replacement"),
+            "resultVisibility": _str(form, "roll_table_result_visibility", "public"),
+        }
     return None
 
 
@@ -258,6 +267,74 @@ async def update_journal(
 
     campaign_id = result.campaign_id or _str(form, "campaign_id")
     return _journal_redirect(campaign_id)
+
+
+@post("/game/journal/roll-table/roll")
+async def roll_journal_table(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    journal_service: JournalService,
+    chat_service: ChatService,
+) -> Response[dict[str, Any]]:
+    user, form, early_response = await _authenticated_form(request, cookies, current_user)
+    if early_response is not None:
+        return Response({"error_key": "game.auth.required"}, status_code=401)
+    assert user is not None
+    result = journal_service.roll_table(journal_id=_str(form, "journal_id"), user_id=user["id"])
+    if not result.success or not result.entry:
+        return Response({"error_key": result.error_key}, status_code=400)
+    entry = result.entry
+    metadata = {
+        "type": "journal.roll_table",
+        "journalId": result.journal_id,
+        "entryId": entry["id"],
+        "weight": entry["weight"],
+        "rendered": {"chatCard": {
+            "id": "journal-roll-table", "title": result.title,
+            "subtitle": "Tabela de rolagem", "total": entry["name"],
+            "lines": ([{"label": "Resultado", "value": entry["result"]}] if entry["result"] else []),
+            "groups": [{"notation": f"1d{result.total_weight}", "results": [result.ticket], "subtotal": result.ticket}],
+            "modifier": 0,
+        }},
+    }
+    message = chat_service.create_roll_message(
+        campaign_id=result.campaign_id or "", author_user_id=user["id"], author_name=user["name"],
+        actor_name=None, label=result.title, expression=f"1d{result.total_weight}",
+        groups=[{"notation": f"1d{result.total_weight}", "results": [result.ticket], "subtotal": result.ticket}],
+        modifier=0, total=result.ticket, visibility=result.visibility, metadata=metadata,
+    )
+    if message:
+        gm_only = bool(message.pop("gm_only", False))
+        transport = RealtimeTransport()
+        if gm_only:
+            await transport.chat_to_gm(room_id=result.campaign_id or "", message=message)
+        else:
+            await transport.chat_to_room(room_id=result.campaign_id or "", message=message)
+    if result.version is not None:
+        await _emit(TransportEvent.JOURNAL_UPDATED, JournalResult(
+            success=True, journal_id=result.journal_id, campaign_id=result.campaign_id,
+            journal_type="roll_table", version=result.version, changed_paths=["entries.*.drawn"],
+        ), user_id=user["id"])
+    return Response({"entry": entry, "version": result.version}, status_code=200)
+
+
+@post("/game/journal/roll-table/reset")
+async def reset_journal_table(
+    request: Request,
+    cookies: dict[str, str],
+    current_user: Row,
+    journal_service: JournalService,
+) -> Response[dict[str, Any]]:
+    user, form, early_response = await _authenticated_form(request, cookies, current_user)
+    if early_response is not None:
+        return Response({"error_key": "game.auth.required"}, status_code=401)
+    assert user is not None
+    result = journal_service.reset_roll_table(journal_id=_str(form, "journal_id"), user_id=user["id"])
+    if not result.success:
+        return Response({"error_key": result.error_key}, status_code=400)
+    await _emit(TransportEvent.JOURNAL_UPDATED, result, user_id=user["id"])
+    return Response({"ok": True, "version": result.version}, status_code=200)
 
 
 @post("/game/journal/delete")
@@ -662,7 +739,7 @@ async def show_journal_create_modal(
 
     folder_id = request.query_params.get("folder_id", "") or ""
     default_type = request.query_params.get("type", "diary") or "diary"
-    if default_type not in {"diary", "quest", "quest_board"}:
+    if default_type not in {"diary", "quest", "quest_board", "roll_table"}:
         default_type = "diary"
 
     context = view_context(

@@ -1002,12 +1002,23 @@
       onItemChange: async (itemId, path, value) => {
         const meta = contexts.get(root);
         if (!meta || !itemId || !path) return;
-        await postJSON("/game/actor/item/patch", {
-          csrf_token: meta.csrf,
-          actor_id: meta.actorId,
-          item_instance_id: itemId,
-          patch: { [path]: value },
-        });
+        const tokenOwned = meta.tokenId && meta.tokenLinkMode !== "linked";
+        await postJSON(
+          tokenOwned ? "/game/token/item/patch" : "/game/actor/item/patch",
+          tokenOwned
+            ? {
+                csrf_token: meta.csrf,
+                token_id: meta.tokenId,
+                item_instance_id: itemId,
+                patch: { [path]: value },
+              }
+            : {
+                csrf_token: meta.csrf,
+                actor_id: meta.actorId,
+                item_instance_id: itemId,
+                patch: { [path]: value },
+              }
+        );
       },
       onItemAction: (itemId, name, detail) => {
         const dialog = bundle.dialogs?.[name];

@@ -19,6 +19,7 @@ from app.persistence.database import engine_begin
 from app.persistence.tables import scene_spatial_sounds, sound_playlists, soundscapes, sounds
 
 MAX_ASSET_BYTES = 10 * 1024 * 1024
+MAX_AUDIO_BYTES = 100 * 1024 * 1024
 MAX_ASSET_DIMENSION = 8_000
 
 
@@ -266,7 +267,8 @@ class AssetLibraryService:
                 return "game.assets.errors.unsupported_type"
             return None
 
-        if len(data) > MAX_ASSET_BYTES:
+        max_bytes = MAX_AUDIO_BYTES if content_type.startswith("audio/") else MAX_ASSET_BYTES
+        if len(data) > max_bytes:
             return "game.assets.errors.too_large"
         if content_type not in ALLOWED_CONTENT_TYPES:
             return "game.assets.errors.unsupported_type"

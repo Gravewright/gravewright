@@ -846,6 +846,23 @@ Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap 
 Durability: Only declared server resources are durable; local registrations end on package unload.
 Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
 
+## `sdk.combat.interruptTurn(combatantId)`
+
+Capability: `combat.manage`
+Returns: `Promise<CombatStateDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `combatantId` | `string` | Yes | `None` |
+
 ## `sdk.combat.moveCombatant(combatantId, delta)`
 
 Capability: `combat.manage`
@@ -933,6 +950,17 @@ Parameters:
 | `name` | `string` | Yes | `None` |
 | `payload` | `CombatProtocolPayload` | Yes | `None` |
 
+## `sdk.combat.resumeTurn()`
+
+Capability: `combat.manage`
+Returns: `Promise<CombatStateDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
 ## `sdk.combat.rollInitiative(options = {})`
 
 Capability: `combat.manage`
@@ -967,6 +995,24 @@ Parameters:
 |---|---|:---:|---|
 | `combatantId` | `string` | Yes | `None` |
 | `flags` | `CombatFlagsPatch` | No | `{}` |
+
+## `sdk.combat.setHolding(combatantId, holding = true)`
+
+Capability: `combat.manage`
+Returns: `Promise<CombatStateDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `combatantId` | `string` | Yes | `None` |
+| `holding` | `boolean` | No | `true` |
 
 ## `sdk.combat.setInitiative(combatantId, value)`
 
@@ -2128,6 +2174,24 @@ Parameters:
 | `action` | `string` | Yes | `None` |
 | `resource` | `PermissionResource` | No | `{}` |
 
+## `sdk.rolls.actions.register(definition, handler)`
+
+Capability: `rolls.actions`
+Returns: `boolean`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `RollActionDefinition` | Yes | `None` |
+| `handler` | `RollActionHandler` | Yes | `None` |
+
 ## `sdk.rolls.intent(payload = {})`
 
 Capability: `rolls.intent`
@@ -2144,6 +2208,23 @@ Parameters:
 | Parameter | Type | Required | Default |
 |---|---|:---:|---|
 | `payload` | `RollIntentInput` | No | `{}` |
+
+## `sdk.rolls.reroll(messageId)`
+
+Capability: `rolls.reroll`
+Returns: `Promise<RollResultDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `messageId` | `string` | Yes | `None` |
 
 ## `sdk.rules.actions.execute(actionId, input = {}, options = {})`
 
@@ -4391,6 +4472,34 @@ Parameters:
 |---|---|:---:|---|
 | `message` | `string` | Yes | `None` |
 | `options` | `ToastOptions` | Yes | `None` |
+
+## `sdk.users.presentation.get(userId)`
+
+Capability: `users.presentation.read`
+Returns: `Promise<UserPresentationDTO>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+
+Parameters:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `userId` | `string` | Yes | `None` |
+
+## `sdk.users.presentation.list()`
+
+Capability: `users.presentation.read`
+Returns: `Promise<UserPresentationDTO[]>`
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
 
 ## `sdk.workflows.cancel(id, options = {})`
 

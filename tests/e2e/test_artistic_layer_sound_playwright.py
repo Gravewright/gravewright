@@ -172,6 +172,57 @@ def test_upload_once_asset_becomes_reusable_native_sound(sound_server):
         finally:_close(ctx);browser.close()
 
 
+def test_ambient_sound_is_broadcast_to_players(sound_server):
+    """O botão do GM projeta o mesmo playback de ambiente em toda a mesa."""
+    s = sound_server
+    audio_double = """window.Audio=class{constructor(src){this.src=src;this.paused=true;this.volume=1;this.loop=false;this.duration=60;this.currentTime=0;}addEventListener(name,callback){if(name==='loadedmetadata')queueMicrotask(callback);}play(){this.paused=false;return Promise.resolve();}pause(){this.paused=true;}}"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        gm_ctx = browser.new_context()
+        player_ctx = browser.new_context()
+        gm_ctx.add_init_script(audio_double)
+        player_ctx.add_init_script(audio_double)
+        gm = gm_ctx.new_page()
+        player = player_ctx.new_page()
+        try:
+            _login(gm, s["base_url"], GM_EMAIL, GM_PASSWORD)
+            _login(player, s["base_url"], PLAYER_EMAIL, PLAYER_PASSWORD)
+            gm.goto(f"{s['base_url']}/game?room={s['campaign_id']}")
+            player.goto(f"{s['base_url']}/game?room={s['campaign_id']}")
+            for page in (gm, player):
+                close = page.locator("[data-onboarding-close]")
+                close.first.click() if close.count() else page.mouse.click(5, 5)
+                page.wait_for_function("()=>GravewrightRealtime?.isOpen()")
+
+            playback = gm.evaluate(
+                """async d=>{const r=await fetch('/game/sounds/play',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}""",
+                {"campaignId": s["campaign_id"], "soundId": s["ambient_sound_id"]},
+            )
+            for page in (gm, player):
+                page.wait_for_function(
+                    "id=>{const value=GravewrightAudioRuntime.inspect(id);return value?.playing===true}",
+                    arg=playback["id"],
+                )
+                assert page.evaluate(
+                    "id=>GravewrightAudioRuntime.inspect(id).volume>0", playback["id"]
+                )
+
+            paused = gm.evaluate(
+                """async d=>{const r=await fetch('/game/sounds/pause',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}""",
+                {"campaignId": s["campaign_id"], "soundId": s["ambient_sound_id"]},
+            )
+            assert paused["id"] == playback["id"]
+            for page in (gm, player):
+                page.wait_for_function(
+                    "id=>GravewrightAudioRuntime.inspect(id)?.playing===false",
+                    arg=playback["id"],
+                )
+        finally:
+            _close(gm_ctx)
+            _close(player_ctx)
+            browser.close()
+
+
 def test_player_hears_spatial_effect_only_through_controlled_token(sound_server):
     s=sound_server
     audio_double="""window.Audio=class{constructor(src){this.src=src;this.paused=true;this.volume=1;this.loop=false;this.duration=60;this.currentTime=0;}addEventListener(name,callback){if(name==='loadedmetadata')queueMicrotask(callback);}play(){this.paused=false;return Promise.resolve();}pause(){this.paused=true;}}"""

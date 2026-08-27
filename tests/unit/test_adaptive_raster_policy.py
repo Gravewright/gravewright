@@ -26,6 +26,13 @@ def test_policy_handles_partial_edges_extreme_aspect_and_small_images() -> None:
     assert all(item.tile_count >= 1 for item in tiny.candidates)
 
 
+def test_policy_never_selects_decode_heavy_legacy_tile_sizes() -> None:
+    decision = choose_raster_granularity(width=1_672, height=941, source_bytes=300_000)
+
+    assert min(item.tile_size for item in decision.candidates) == 256
+    assert decision.tile_size >= 256
+
+
 @pytest.mark.parametrize("field", ["width", "height", "source_bytes", "chunk_span"])
 def test_policy_rejects_invalid_inputs(field: str) -> None:
     values = {"width": 100, "height": 100, "source_bytes": 100, "chunk_span": 16}

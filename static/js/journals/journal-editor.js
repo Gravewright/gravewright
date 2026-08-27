@@ -54,7 +54,12 @@
   }
 
   function initRichTextIn(root) {
-    if (!window.EasyMDE) return;
+    if (!window.EasyMDE) {
+      window.GravewrightJournalEditorAssets?.loadEasyMDE?.()
+        .then(() => initRichTextIn(root))
+        .catch(() => {});
+      return;
+    }
     root.querySelectorAll("[data-journal-rich-text]").forEach((textarea) => {
       if (editors.has(textarea)) return;
       const editor = new window.EasyMDE({
@@ -90,7 +95,10 @@
 
   function whenBlockEditorReady(cb) {
     if (window.GWBlockEditor) cb();
-    else document.addEventListener("gw:block-editor-ready", () => cb(), { once: true });
+    else {
+      document.addEventListener("gw:block-editor-ready", () => cb(), { once: true });
+      window.GravewrightJournalEditorAssets?.loadBlockEditor?.().catch(() => {});
+    }
   }
 
   function modalLabels(host) {

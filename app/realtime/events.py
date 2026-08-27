@@ -10,6 +10,7 @@ class TransportEvent(StrEnum):
     MEMBER_REMOVED = "member.removed"
     PRESENCE_UPDATED = "presence.updated"
     PRESENCE_SNAPSHOT = "presence.snapshot"
+    USER_PRESENTATION_CHANGED = "user.presentation.changed"
     LOBBY_UPDATED = "lobby.updated"
 
     CAMPAIGN_SYSTEM_CHANGED = "campaign.system.changed"

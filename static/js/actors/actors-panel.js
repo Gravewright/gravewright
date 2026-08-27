@@ -8,6 +8,7 @@
     const closeDialog = FI.closeDialog;
     const postJson = FI.postJson;
     const refreshPanel = FI.refreshPanel;
+    const treeHostFor = FI.treeHostFor;
 
 
     document.addEventListener("submit", async (event) => {
@@ -95,20 +96,20 @@
         const env = event.detail || {};
         if (!["actor.created", "actor.deleted", "actor.updated"].includes(env.event)) return;
         const roomId = env.payload?.room_id;
-        if (roomId && panelFor(roomId)) refreshPanel(roomId);
+        if (roomId && treeHostFor(roomId)?.dataset.directoryLoaded === "true") refreshPanel(roomId);
     });
 
     document.addEventListener("vtt:resource-permissions-saved", (event) => {
         if (event.detail?.resourceType !== "actor") return;
 
         document.querySelectorAll("[data-actor-panel]").forEach((p) => {
-            if (p.dataset.roomId) refreshPanel(p.dataset.roomId);
+            if (p.dataset.roomId && treeHostFor(p.dataset.roomId)?.dataset.directoryLoaded === "true") refreshPanel(p.dataset.roomId);
         });
     });
 
     document.addEventListener("vtt:ws-open", () => {
         document.querySelectorAll("[data-actor-panel][data-room-id]").forEach((panel) => {
-            if (panel.dataset.roomId) refreshPanel(panel.dataset.roomId);
+            if (panel.dataset.roomId && treeHostFor(panel.dataset.roomId)?.dataset.directoryLoaded === "true") refreshPanel(panel.dataset.roomId);
         });
     });
 })();

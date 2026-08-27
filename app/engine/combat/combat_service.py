@@ -38,23 +38,37 @@ class CombatResult:
 
     @property
     def active(self) -> bool:
-        return bool(self.combat and self.combat.get("status") == "active")
+        return bool(
+            self.combat
+            and self.combat.get("status") == "active"
+            and self.combat.get("started_at") is not None
+            and int(self.combat.get("round_number") or 0) >= 1
+        )
 
     def state_payload(self) -> dict:
         combat = self.combat or {}
         current = next((c for c in self.combatants if c["is_current"]), {})
         upcoming = next((c for c in self.combatants if c["is_next"]), {})
+        interrupted_index = combat.get("interrupted_turn_index")
+        interrupted = (
+            self.combatants[int(interrupted_index)]
+            if interrupted_index is not None and 0 <= int(interrupted_index) < len(self.combatants)
+            else {}
+        )
         return {
             "campaign_id": self.campaign_id or combat.get("campaign_id", ""),
             "combat_id": combat.get("id", ""),
             "active": self.active,
-            "round": int(combat.get("round_number") or 0),
+            "round": int(combat.get("round_number") or 0) if self.active else 0,
             "turn": int(combat.get("turn_index") or 0),
             "combatants": self.combatants,
             "current_id": current.get("id", ""),
             "current_name": current.get("name", ""),
             "next_id": upcoming.get("id", ""),
             "next_name": upcoming.get("name", ""),
+            "interrupted": bool(interrupted),
+            "interrupted_id": interrupted.get("id", ""),
+            "interrupted_name": interrupted.get("name", ""),
             "config": self.config,
             "updated_actors": self.updated_actors,
             "expired_effects": self.expired_effects,
@@ -125,9 +139,16 @@ class CombatService:
             return CombatResult(success=False, error_key="game.combat.errors.gm_required")
         if self._campaign(campaign_id=campaign_id, user_id=user_id) is None:
             return CombatResult(success=False, error_key="game.combat.errors.not_found")
-        self.encounters.create(
-            campaign_id=campaign_id, scene_id=scene_id, created_by_user_id=user_id
-        )
+        existing = self.encounters.get_active(campaign_id=campaign_id)
+        if existing is not None and existing.get("started_at") is None:
+            self.encounters.start(combat_id=existing["id"])
+        else:
+            self.encounters.create(
+                campaign_id=campaign_id,
+                scene_id=scene_id,
+                created_by_user_id=user_id,
+                started=True,
+            )
         if actor_ids or token_ids:
             return self.add_combatants(
                 campaign_id=campaign_id,
@@ -159,10 +180,12 @@ class CombatService:
             return CombatResult(success=False, error_key="game.combat.errors.gm_required")
         combat = self.encounters.get_active(campaign_id=campaign_id)
         if combat is None:
-            started = self.start(campaign_id=campaign_id, user_id=user_id)
-            if not started.success:
-                return started
-            combat = started.combat
+            combat = self.encounters.create(
+                campaign_id=campaign_id,
+                scene_id=None,
+                created_by_user_id=user_id,
+                started=False,
+            )
         assert combat is not None
 
         existing = self.encounters.list_combatants(combat_id=combat["id"])
@@ -457,8 +480,21 @@ class CombatService:
         order = state.combatants
         if not order:
             return state
+        if state.combat.get("interrupted_turn_index") is not None:
+            current = next((row for row in order if row.get("is_current")), None)
+            if current is not None:
+                self.encounters.set_turn_state(
+                    combatant_id=current["id"], acted_round=int(state.combat["round_number"]), holding=False
+                )
+            self.encounters.resume_turn(combat_id=state.combat["id"])
+            return self.get_state(campaign_id=campaign_id, user_id=user_id)
 
         round_number = int(state.combat["round_number"])
+        current = next((row for row in order if row.get("is_current")), None)
+        if current is not None and not current.get("holding"):
+            self.encounters.set_turn_state(
+                combatant_id=current["id"], acted_round=round_number, holding=False
+            )
         turn = int(state.combat["turn_index"]) + (1 if delta >= 0 else -1)
         wrapped_forward = turn >= len(order)
         if wrapped_forward:
@@ -477,6 +513,7 @@ class CombatService:
         expired: list[dict] = []
         ticks: list[dict] = []
         if wrapped_forward:
+            self.encounters.clear_holding(combat_id=state.combat["id"])
             updated, expired = self.effects.tick_round(campaign_id=campaign_id)
         if delta >= 0:
             actor_update, ticks = self.effects.tick_turn(
@@ -506,6 +543,67 @@ class CombatService:
         self.encounters.set_position(
             combat_id=combat["id"], round_number=int(combat["round_number"]), turn_index=index
         )
+        return self.get_state(campaign_id=campaign_id, user_id=user_id)
+
+    def interrupt_turn(
+        self, *, campaign_id: str, user_id: str, combatant_id: str
+    ) -> CombatResult:
+        """Temporarily hand control to another combatant and retain the current turn."""
+        if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
+            return CombatResult(success=False, error_key="game.combat.errors.gm_required")
+        combat = self.encounters.get_active(campaign_id=campaign_id)
+        if combat is None or combat.get("started_at") is None:
+            return CombatResult(success=False, error_key="game.combat.errors.inactive")
+        if combat.get("interrupted_turn_index") is not None:
+            return CombatResult(success=False, error_key="game.combat.errors.interruption_active")
+        config = self._config_for(campaign_id=campaign_id, user_id=user_id)
+        order = self._ordered(combat=combat, config=config)
+        index = next((i for i, row in enumerate(order) if row["id"] == combatant_id), None)
+        if index is None:
+            return CombatResult(success=False, error_key="game.combat.errors.combatant_not_found")
+        if int(order[index].get("acted_round") or 0) == int(combat.get("round_number") or 0):
+            return CombatResult(success=False, error_key="game.combat.errors.already_acted")
+        if index == int(combat.get("turn_index") or 0):
+            return self.get_state(campaign_id=campaign_id, user_id=user_id)
+        self.encounters.interrupt_turn(combat_id=combat["id"], turn_index=index)
+        return self.get_state(campaign_id=campaign_id, user_id=user_id)
+
+    def resume_turn(self, *, campaign_id: str, user_id: str) -> CombatResult:
+        if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
+            return CombatResult(success=False, error_key="game.combat.errors.gm_required")
+        combat = self.encounters.get_active(campaign_id=campaign_id)
+        if combat is None or combat.get("started_at") is None:
+            return CombatResult(success=False, error_key="game.combat.errors.inactive")
+        config = self._config_for(campaign_id=campaign_id, user_id=user_id)
+        order = self._ordered(combat=combat, config=config)
+        current_index = max(0, min(len(order) - 1, int(combat.get("turn_index") or 0))) if order else -1
+        if current_index >= 0 and combat.get("interrupted_turn_index") is not None:
+            self.encounters.set_turn_state(
+                combatant_id=order[current_index]["id"],
+                acted_round=int(combat["round_number"]),
+                holding=False,
+            )
+        self.encounters.resume_turn(combat_id=combat["id"])
+        return self.get_state(campaign_id=campaign_id, user_id=user_id)
+
+    def set_holding(
+        self, *, campaign_id: str, user_id: str, combatant_id: str, holding: bool
+    ) -> CombatResult:
+        if not self._can_manage(campaign_id=campaign_id, user_id=user_id):
+            return CombatResult(success=False, error_key="game.combat.errors.gm_required")
+        combat = self.encounters.get_active(campaign_id=campaign_id)
+        if combat is None or combat.get("started_at") is None:
+            return CombatResult(success=False, error_key="game.combat.errors.inactive")
+        config = self._config_for(campaign_id=campaign_id, user_id=user_id)
+        order = self._ordered(combat=combat, config=config)
+        index = next((i for i, row in enumerate(order) if row["id"] == combatant_id), None)
+        if index is None:
+            return CombatResult(success=False, error_key="game.combat.errors.combatant_not_found")
+        if holding and index != int(combat.get("turn_index") or 0):
+            return CombatResult(success=False, error_key="game.combat.errors.not_current_turn")
+        if holding and int(order[index].get("acted_round") or 0) == int(combat["round_number"]):
+            return CombatResult(success=False, error_key="game.combat.errors.already_acted")
+        self.encounters.set_turn_state(combatant_id=combatant_id, holding=holding)
         return self.get_state(campaign_id=campaign_id, user_id=user_id)
 
     def advance_round(self, *, campaign_id: str, user_id: str, delta: int) -> CombatResult:
@@ -575,8 +673,9 @@ class CombatService:
         order = self._ordered(combat=combat, config=config)
         if not order:
             return []
-        current_index = max(0, min(len(order) - 1, int(combat["turn_index"])))
-        next_index = (current_index + 1) % len(order) if len(order) > 1 else -1
+        started = combat.get("started_at") is not None and int(combat.get("round_number") or 0) >= 1
+        current_index = max(0, min(len(order) - 1, int(combat["turn_index"]))) if started else -1
+        next_index = (current_index + 1) % len(order) if started and len(order) > 1 else -1
 
         token_ids = [str(c["token_id"]) for c in order if c.get("token_id")]
         conditions_by_token = self.conditions.list_by_tokens(token_ids)
@@ -595,7 +694,8 @@ class CombatService:
                 "position": index + 1,
                 "is_current": index == current_index,
                 "is_next": index == next_index,
-                "has_acted": index < current_index,
+                "has_acted": int(combatant.get("acted_round") or 0) == int(combat.get("round_number") or 0),
+                "holding": bool(combatant.get("holding")),
                 "can_move_up": config.is_manual_order and index > 0,
                 "can_move_down": config.is_manual_order and index < len(order) - 1,
                 "portrait_url": "",

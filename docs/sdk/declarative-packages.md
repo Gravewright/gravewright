@@ -271,6 +271,46 @@ Roll dialogs can request user input with field types such as `boolean`,
 `number`, `text`, `select`, `segmented`, `radio`, `dice`, `diceList`, `formula`,
 and `visibility`.
 
+Attack rolls publish `roll.attack` plus one specialized effect target:
+`roll.attack.melee`, `roll.attack.ranged`, or `roll.attack.spell`. Classification
+uses, in order, the dialog input `attackMode`, the action's `attackClass`, item
+data (`attackMode` or `attackType`), spell/power item types or tags, and finally
+the presence of `item.data.range`. Valid explicit values are `melee`, `ranged`,
+and `spell`. This lets effects target an attack class without embedding a
+ruleset's modifiers in the engine.
+
+Effects on the selected target may use the `incoming.` namespace, such as
+`incoming.roll.attack` or `incoming.roll.attack.ranged.distant`. These
+modifiers are applied to the acting character's roll only when that actor is
+selected as its target.
+
+Active effects and declared conditions may also expose semantic
+`restrictions`. Unlike numeric modifiers, a matching restriction rejects the
+operation server-side. `token.movement` blocks player movement while preserving
+GM scene repositioning; action targets such as `action.roll.attack` or
+`action.roll.skill.attribute.agility` block matching sheet actions.
+
+```json
+{
+  "restrictions": [
+    { "target": "token.movement" },
+    { "target": "action.roll.attack" }
+  ]
+}
+```
+
+Roll transform predicates may read `input.*`, `item.*`, and `sheet.*`, and may
+combine safe comparisons with `&&`. Damage actions can publish
+`roll.damage.direct` or `roll.damage.area` through the `damageMode` input, so
+target effects may distinguish direct hits from area damage.
+
+```json
+{
+  "attackClass": "spell",
+  "chatCard": "attack"
+}
+```
+
 ## Token mappings
 
 Token mappings tell the table which actor fields drive token UI:

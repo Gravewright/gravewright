@@ -74,6 +74,19 @@ def test_the_tray_rolls_through_the_chat_command():
     assert "csrf_token" in envio
 
 
+def test_clicking_roll_closes_the_tray_window_immediately():
+    """A janela de controles some no clique; não espera o chat nem a animação 3D."""
+    source = SCRIPT.read_text(encoding="utf-8")
+    fluxo = source.split("function rolarEFechar", 1)[1].split("\n  }", 1)[0]
+
+    assert "tray.rolar(paraGm)" in fluxo, "a rolagem ainda precisa ser enviada"
+    assert '[data-modal-window]' in fluxo and '[data-modal-close]' in fluxo
+    assert fluxo.index("tray.rolar(paraGm)") < fluxo.index(".click()"), (
+        "o envio deve ser disparado antes de fechar a janela"
+    )
+    assert "await tray.rolar" not in fluxo, "o fechamento não pode esperar a resposta HTTP"
+
+
 def test_the_tray_opens_from_the_chat_composer():
     """Pedido explícito: não é aba no dock, é um botão acima de enviar e apagar."""
     html = TEMPLATE.read_text(encoding="utf-8")

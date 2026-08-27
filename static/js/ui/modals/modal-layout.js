@@ -14,6 +14,9 @@
             defaultX,
             defaultY,
             isClassicPanel,
+            isGravewrightPanel,
+            gravewrightPanelHeightOffset,
+            gravewrightPanelWidth,
             minWindowHeight,
             minWindowWidth,
             windowStoragePrefix,
@@ -202,8 +205,15 @@
             if (!options.preserveWidth) modal.style.width = "max-content";
             modal.style.height = "max-content";
 
-            const preferredWidth = Number(modal.dataset.autoFitWidth);
-            const preferredHeight = Number(modal.dataset.autoFitHeight);
+            const gravewrightPanel = isGravewrightPanel(modal);
+            const declaredPreferredWidth = Number(modal.dataset.autoFitWidth);
+            const declaredPreferredHeight = Number(modal.dataset.autoFitHeight);
+            const preferredWidth = Number.isFinite(declaredPreferredWidth)
+                ? declaredPreferredWidth
+                : (gravewrightPanel ? gravewrightPanelWidth : NaN);
+            const preferredHeight = Number.isFinite(declaredPreferredHeight)
+                ? declaredPreferredHeight
+                : (gravewrightPanel ? layerRect.height - gravewrightPanelHeightOffset : NaN);
             const minFitWidth = dataNumber(modal, "autoFitMinWidth") || minWindowWidth;
             // Content-sized windows must not inherit an arbitrary tall floor.
             // Editors that genuinely need room declare data-auto-fit-min-height.
@@ -215,7 +225,9 @@
                 ? clamp(modal.offsetWidth, widthFloor, availableWidth)
                 : clamp(
                     Number.isFinite(preferredWidth)
-                        ? Math.min(Math.ceil(modal.scrollWidth + autoFitPadding), preferredWidth)
+                        ? (gravewrightPanel
+                            ? preferredWidth
+                            : Math.min(Math.ceil(modal.scrollWidth + autoFitPadding), preferredWidth))
                         : Math.ceil(modal.scrollWidth + autoFitPadding),
                     widthFloor,
                     availableWidth

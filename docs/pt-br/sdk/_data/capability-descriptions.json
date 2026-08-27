@@ -114,5 +114,6 @@
   "tokens.transfer": "Transfere atomicamente identidades estáveis de tokens entre Scenes autorizadas.",
   "timelines.read": "Lê timelines semânticas autorizadas temporizadas pelo core.",
   "timelines.start": "Registra e inicia timelines semânticas limitadas.",
-  "timelines.control": "Cancela cues futuros de uma timeline semântica autorizada."
+  "timelines.control": "Cancela cues futuros de uma timeline semântica autorizada.",
+  "users.presentation.read": "Lê a cor pública e limitada de apresentação dos participantes visíveis na campanha ativa."
 }

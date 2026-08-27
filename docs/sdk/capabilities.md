@@ -126,6 +126,7 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `ui.dragDrop` | Register typed semantic drag sources and concrete authority-revalidated destinations. |
 | `ui.presentations` | Show bounded core-rendered ephemeral presentations to authorized audiences. |
 | `ui.slots` | Mount package-owned UI in documented host slots. |
+| `users.presentation.read` | Read the bounded public presentation color of participants visible in the active campaign. |
 | `workflows.control` | Cancel authorized workflows without implicit rollback. |
 | `workflows.read` | Read authorized durable workflow instances. |
 | `workflows.start` | Register bounded definitions and start core-owned durable workflows. |
@@ -413,6 +414,8 @@ There is no backend plugin execution in SDK v1. Packages are declarative plus br
 | `sdk.ui.slots.available` | `ui.slots` |
 | `sdk.ui.slots.register` | `ui.slots` |
 | `sdk.ui.toast` | `assets.ui` |
+| `sdk.users.presentation.get` | `users.presentation.read` |
+| `sdk.users.presentation.list` | `users.presentation.read` |
 | `sdk.workflows.cancel` | `workflows.control` |
 | `sdk.workflows.get` | `workflows.read` |
 | `sdk.workflows.list` | `workflows.read` |

@@ -9,7 +9,12 @@
   const blockControllers = FI.blockControllers;
 
   function renderMarkdownIn(root) {
-    if (!window.marked) return;
+    if (!window.marked || !window.DOMPurify) {
+      window.GravewrightJournalEditorAssets?.loadMarkdown?.()
+        .then(() => renderMarkdownIn(root))
+        .catch(() => {});
+      return;
+    }
 
 
 

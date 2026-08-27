@@ -46,6 +46,7 @@ _CONTENT_TYPES = {
     ".mp3": "audio/mpeg",
     ".ogg": "audio/ogg",
     ".wav": "audio/wav",
+    ".woff2": "font/woff2",
 }
 
 
@@ -162,6 +163,7 @@ class PackageAssetService:
             out.append(
                 {
                     "id": manifest.id,
+                    "name": getattr(manifest, "name", "") or manifest.id,
                     "kind": manifest.kind,
                     "version": manifest.version or "0",
                     "capabilities": list(manifest.capabilities),

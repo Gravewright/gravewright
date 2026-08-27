@@ -89,6 +89,18 @@ class UserPreferenceService:
         value = (self.preferences.get_ping_color(user_id) or "").strip().lower()
         return value if self._valid_ping_color(value) else DEFAULT_PING_COLOR
 
+    def get_ping_colors(self, user_ids: list[str]) -> dict[str, str]:
+        stored = self.preferences.get_ping_colors(user_ids)
+        return {
+            user_id: (
+                value.strip().lower()
+                if self._valid_ping_color(value.strip().lower())
+                else DEFAULT_PING_COLOR
+            )
+            for user_id in dict.fromkeys(str(user_id) for user_id in user_ids if user_id)
+            for value in [stored.get(user_id, "")]
+        }
+
     def set_ping_color(self, *, user_id: str, ping_color: str) -> PingColorResult:
         normalized = (ping_color or "").strip().lower()
         if not self._valid_ping_color(normalized):

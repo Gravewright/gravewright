@@ -414,7 +414,7 @@ Security boundary: No raw filesystem, database, transport, renderer, ACL interna
 
 Status: `stable`
 Package kinds: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
-Methods: `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.advanceRound`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`, `sdk.combat.setFlags`, `sdk.combat.rollInitiative`, `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`
+Methods: `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.advanceRound`, `sdk.combat.setTurn`, `sdk.combat.interruptTurn`, `sdk.combat.resumeTurn`, `sdk.combat.setHolding`, `sdk.combat.add`, `sdk.combat.remove`, `sdk.combat.setFlags`, `sdk.combat.rollInitiative`, `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`
 Events: [Events](#events)
 Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
@@ -844,11 +844,39 @@ Durability: Only declared server resources are durable; local registrations end 
 Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
 Security boundary: No raw filesystem, database, transport, renderer, ACL internals, or permission override is exposed.
 
+### `rolls.actions`
+
+Status: `stable`
+Package kinds: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
+Methods: `sdk.rolls.actions.register`
+Events: [Events](#events)
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+Security boundary: No raw filesystem, database, transport, renderer, ACL internals, or permission override is exposed.
+
 ### `rolls.intent`
 
 Status: `stable`
 Package kinds: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
 Methods: `sdk.rolls.intent`
+Events: [Events](#events)
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+Security boundary: No raw filesystem, database, transport, renderer, ACL internals, or permission override is exposed.
+
+### `rolls.reroll`
+
+Status: `stable`
+Package kinds: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
+Methods: `sdk.rolls.reroll`
 Events: [Events](#events)
 Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
@@ -1586,6 +1614,20 @@ Durability: Only declared server resources are durable; local registrations end 
 Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
 Security boundary: No raw filesystem, database, transport, renderer, ACL internals, or permission override is exposed.
 
+### `users.presentation.read`
+
+Status: `stable`
+Package kinds: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
+Methods: `sdk.users.presentation.get`, `sdk.users.presentation.list`
+Events: [Events](#events)
+Errors: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Authority: Declared capability plus current-user resource authority; capabilities never elevate permissions.
+Visibility: Current-user projection; hidden resources are indistinguishable from missing resources.
+Concurrency: Server-authoritative; `expectedVersion` is atomic compare-and-swap when declared.
+Durability: Only declared server resources are durable; local registrations end on package unload.
+Lifecycle: The package must be installed, enabled, and active; registrations return a disposer.
+Security boundary: No raw filesystem, database, transport, renderer, ACL internals, or permission override is exposed.
+
 ### `workflows.control`
 
 Status: `stable`
@@ -1815,6 +1857,10 @@ Delivery: Authorized, schema-versioned event; re-read current state.
 Delivery: Authorized, schema-versioned event; re-read current state.
 
 ### `ui.presentation.changed`
+
+Delivery: Authorized, schema-versioned event; re-read current state.
+
+### `user.presentation.changed`
 
 Delivery: Authorized, schema-versioned event; re-read current state.
 

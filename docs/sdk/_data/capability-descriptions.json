@@ -114,5 +114,6 @@
   "tokens.transfer": "Atomically transfer stable token identities between authorized scenes.",
   "timelines.read": "Read authorized core-timed semantic timelines.",
   "timelines.start": "Register and start bounded semantic timelines.",
-  "timelines.control": "Cancel future cues of an authorized semantic timeline."
+  "timelines.control": "Cancel future cues of an authorized semantic timeline.",
+  "users.presentation.read": "Read the bounded public presentation color of participants visible in the active campaign."
 }

@@ -21,6 +21,15 @@
   }
 
   let ready = false;
+  let leavingGame = false;
+
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest?.('a[href="/inside"]');
+    if (!link || leavingGame || event.defaultPrevented || event.button !== 0
+        || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    leavingGame = true;
+    window.dispatchEvent(new CustomEvent("vtt:game-exit"));
+  }, { capture: true });
 
   function bootstrap() {
     if (ready) {

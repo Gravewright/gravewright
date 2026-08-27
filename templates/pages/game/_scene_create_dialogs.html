@@ -1,0 +1,50 @@
+{% macro titlebar(title) %}
+<header class="game-modal-titlebar" data-modal-drag-handle><span class="game-modal-drag-grip" aria-hidden="true"></span>
+    <div class="game-modal-sheet-title"><span class="sheet-modal-name">{{ title }}</span></div>
+    <div class="game-modal-controls"><button class="game-modal-control" type="button" data-modal-close aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x" aria-hidden="true"></i></button></div>
+</header>
+{% endmacro %}
+
+<article class="game-modal-window dialog-modal scene-create-modal" data-modal-window
+    data-modal-id="scene-create-{{ room.id }}" data-window-key="scene-create-{{ room.id }}" hidden>
+    {{ titlebar(t("game.scenes.create_scene_title")) }}
+    <div class="game-modal-body scene-create-body"><p class="scene-create-meta">{{ t("game.scenes.upload_meta") }}</p>
+        <form class="scene-upload-form" method="post" action="/game/scenes/upload-map" enctype="multipart/form-data"
+            data-scene-ajax-form data-upload-progress-form>
+            {{ csrf_input | safe }}<input type="hidden" name="campaign_id" value="{{ room.id }}" /><input type="hidden" name="upload_id" value="" />
+            <div class="scene-two-col">
+                <label class="game-field"><span>{{ t("game.scenes.scene_name") }}</span><input type="text" name="name" maxlength="120" required data-modal-autofocus /></label>
+                <label class="game-field"><span>{{ t("game.scenes.grid_size") }}</span><input type="number" name="tile_size" min="8" max="1024" value="70" required /></label>
+            </div>
+            <label class="game-field scene-file-field"><span>{{ t("game.scenes.map_file") }}</span><input type="file" name="map_file" accept="image/png,image/jpeg,image/webp" required /></label>
+            <div class="scene-two-col">
+                <label class="game-field"><span>{{ t("game.scenes.group") }}</span><select name="group_id"><option value="">{{ t("game.scenes.ungrouped") }}</option>{% for group in room.scene_groups %}<option value="{{ group.id }}">{{ group.name }}</option>{% endfor %}</select></label>
+                <label class="game-field"><span>{{ t("game.scenes.visibility") }}</span><select name="visibility"><option value="players">{{ t("game.scenes.visibility.players") }}</option><option value="gm_only">{{ t("game.scenes.visibility.gm_only") }}</option><option value="hidden">{{ t("game.scenes.visibility.hidden") }}</option></select></label>
+            </div>
+            <div class="scene-grid-row scene-grid-row--boxed">
+                <label class="scene-check"><input type="checkbox" name="grid_visible" checked /><span>{{ t("game.scenes.grid_visible") }}</span></label>
+                <label class="scene-color-field"><span>{{ t("game.scenes.grid_color") }}</span><input type="color" name="grid_color" value="#6fddb4" /></label>
+                <label class="scene-opacity-field"><span>{{ t("game.scenes.grid_opacity") }}</span><input type="range" name="grid_opacity" min="0" max="1" step="0.05" value="0.4" data-grid-opacity-input /><output data-grid-opacity-output>0.4</output></label>
+            </div>
+            <label class="scene-check"><input type="checkbox" name="activate_after_upload" checked /><span>{{ t("game.scenes.activate_after_upload") }}</span></label>
+            <button class="primary-action" type="submit"><i class="ph ph-upload-simple" aria-hidden="true"></i><span>{{ t("game.scenes.upload") }}</span></button>
+            <div class="scene-upload-progress" data-upload-progress hidden
+                data-label-uploading="{{ t('game.maps.progress.uploading') }}" data-label-preparing="{{ t('game.maps.progress.preparing') }}"
+                data-label-tiling="{{ t('game.maps.progress.tiling') }}" data-label-chunking="{{ t('game.maps.progress.chunking') }}"
+                data-label-complete="{{ t('game.maps.progress.complete') }}">
+                <div class="scene-upload-progress__head"><span class="scene-upload-progress__label" data-upload-progress-label></span><span class="scene-upload-progress__pct" data-upload-progress-pct>0%</span></div>
+                <div class="scene-upload-progress__track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="scene-upload-progress__bar" data-upload-progress-bar style="width: 0%"></div></div>
+            </div>
+        </form>
+    </div>
+</article>
+
+<article class="game-modal-window dialog-modal" data-modal-window data-modal-id="scene-group-create-{{ room.id }}" data-window-key="scene-group-create-{{ room.id }}" hidden>
+    {{ titlebar(t("game.scenes.create_group")) }}
+    <div class="game-modal-body"><form class="scene-group-form" method="post" action="/game/scenes/group" data-scene-ajax-form>
+        {{ csrf_input | safe }}<input type="hidden" name="campaign_id" value="{{ room.id }}" />
+        <div class="scene-group-create-row"><input type="text" name="name" placeholder="{{ t('game.scenes.group_name') }}" maxlength="80" aria-label="{{ t('game.scenes.group_name') }}" required data-modal-autofocus />
+            <input type="color" name="color" value="#8ea8ff" aria-label="{{ t('game.scenes.group_color') }}" />
+            <button type="submit" class="scene-icon-button" title="{{ t('game.scenes.create_group') }}"><i class="ph ph-folder-plus" aria-hidden="true"></i></button></div>
+    </form></div>
+</article>

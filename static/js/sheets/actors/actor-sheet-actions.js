@@ -208,46 +208,48 @@
 
   function damageTargets(root) {
     const out = [];
-    const seenActors = new Set();
     const meta = contexts.get(root) || {};
+    const activeCanvas = window.GravewrightMap?.activeCanvas?.();
+    const activeSceneId = activeCanvas?.dataset?.sceneId || "";
+    if (!activeSceneId) return out;
     const roomTokens = window.GravewrightStatusZones?.tokensForRoom?.(meta.roomId) || [];
     roomTokens.forEach((token) => {
       if (!token?.token_id || !token.actor_id) return;
-      if (token.hidden) return;
-      const card = document.querySelector(`[data-actor-card="${CSS.escape(token.actor_id)}"]`);
-      const canEdit = card?.dataset.canEdit === "true" || document.querySelector(`[data-map-canvas][data-room-id="${CSS.escape(meta.roomId || "")}"]`)?.dataset.isGm === "true";
-      if (!canEdit) return;
+      if (token.scene_id !== activeSceneId || token.hidden) return;
       out.push({ tokenId: token.token_id, actorId: token.actor_id, name: token.name || token.actor_id });
-      seenActors.add(token.actor_id);
-    });
-
-
-
-
-
-
-
-    if (out.length) return out;
-
-    document.querySelectorAll('[data-actor-card][data-can-edit="true"]').forEach((card) => {
-      const id = card.getAttribute("data-actor-card");
-      if (!id || seenActors.has(id)) return;
-      const name = (card.querySelector(".actor-card-info strong")?.textContent || id || "").trim();
-      out.push({ actorId: id, name });
     });
     return out;
   }
 
 
   function buildTargetField(root, schema) {
-    if (!schema || schema.intent !== "damage") return null;
+    if (!schema || !(schema.intent === "attack" || ["damage", "heal", "support", "opposed"].includes(schema.intent))) return null;
     const targets = damageTargets(root);
     if (!targets.length) return null;
-    const wrap = el("label", "gw-roll-dialog__field");
-    wrap.appendChild(el("span", "gw-roll-dialog__label", "Target"));
+    const wrap = el(schema.intent === "attack" ? "div" : "label", "gw-roll-dialog__field");
+    if (schema.intent === "attack") {
+      wrap.dataset.rollTargetAllocations = "1";
+      wrap.appendChild(el("span", "gw-roll-dialog__label", "Distribuição dos disparos"));
+      targets.forEach((target) => {
+        const row = el("label", "gw-roll-target-allocation");
+        row.appendChild(el("span", null, target.name));
+        const input = el("input", "gw-roll-dialog__input");
+        input.type = "number";
+        input.min = "0";
+        input.step = "1";
+        input.value = "0";
+        input.dataset.targetTokenId = target.tokenId || "";
+        input.dataset.targetActorId = target.actorId || "";
+        input.dataset.targetName = target.name;
+        row.appendChild(input);
+        wrap.appendChild(row);
+      });
+      return wrap;
+    }
+    wrap.appendChild(el("span", "gw-roll-dialog__label", schema.intent === "heal" ? "Paciente" : schema.intent === "support" ? "Aliado" : "Alvo"));
     const select = el("select", "gw-roll-dialog__input");
     select.dataset.rollTarget = "1";
-    select.appendChild(el("option", null, "No target (roll only)")).value = "";
+    select.appendChild(el("option", null, schema.intent === "heal" ? "Sem paciente (apenas rolar)" : schema.intent === "support" ? "Sem aliado (apenas rolar)" : "Sem alvo (apenas rolar)")).value = "";
     targets.forEach((target) => {
       const option = el("option", null, target.name);
       option.value = target.tokenId || target.actorId || "";
@@ -262,6 +264,43 @@
   function toastApplied(applied, systemId) {
     if (!applied || !window.GravewrightToasts) return;
     const L = window.GravewrightSheets?.getLabels?.(systemId) || {};
+    if (applied.mode === "threshold-damage") {
+      const effects = [];
+      if (applied.shaken) effects.push(L.shaken || "Abalado");
+      if (Number(applied.wounds) > 0) effects.push(`${applied.wounds} ${L.wounds || "Ferimento(s)"}`);
+      if (applied.incapacitated) effects.push(L.incapacitated || "Incapacitado");
+      const outcome = effects.length ? effects.join(" · ") : (L.noEffect || "Sem efeito");
+      window.GravewrightToasts.showToast(
+        `${applied.targetName}: ${applied.rawAmount} vs ${applied.effectiveToughness ?? applied.toughness}${applied.armorPiercing ? ` (PA ${applied.armorPiercing})` : ""} — ${outcome}`,
+        { duration: 5000 }
+      );
+      return;
+    }
+    if (applied.mode === "success-raises-healing") {
+      const outcome = applied.criticalFailure
+        ? `Falha crítica · +${applied.woundsAdded || 0} Ferimento`
+        : `${applied.healed || 0} Ferimento(s) curado(s)`;
+      window.GravewrightToasts.showToast(`${applied.targetName}: ${outcome}`, { duration: 5000 });
+      return;
+    }
+    if (applied.mode === "support") {
+      const outcome = applied.criticalFailure
+        ? `falha crítica (${applied.awarded})`
+        : applied.awarded
+          ? `${applied.awarded > 0 ? "+" : ""}${applied.awarded} na próxima rolagem (total ${applied.totalBonus > 0 ? "+" : ""}${applied.totalBonus})`
+          : "nenhum bônus";
+      window.GravewrightToasts.showToast(`${applied.targetName}: Suporte — ${outcome}`, { duration: 5000 });
+      return;
+    }
+    if (applied.mode === "opposed") {
+      const defense = applied.defense || {};
+      const outcome = applied.tie ? "empate — defesa vence" : applied.success ? (applied.raise ? "vitória com ampliação" : "vitória") : "derrota";
+      window.GravewrightToasts.showToast(
+        `${applied.targetName}: ${applied.sourceTotal} × ${defense.total} (${defense.attribute || "resistência"}) — ${outcome}`,
+        { duration: 6000 }
+      );
+      return;
+    }
     const verb = applied.mode === "heal" ? (L.healed || "healed") : (L.tookDamage || "took");
     const type = applied.damageType ? ` ${applied.damageType}` : "";
     let msg = `${applied.targetName} ${verb} ${applied.amount}${type} (HP ${applied.valueAfter})`;
@@ -269,6 +308,24 @@
       msg += `: ${L.reducedFrom || "reduced from"} ${applied.rawAmount}`;
     }
     window.GravewrightToasts.showToast(msg, { duration: 5000 });
+  }
+
+  function toastSelfResolution(result) {
+    const resolution = result?.metadata?.selfResolution;
+    if (!resolution || !window.GravewrightToasts) return;
+    if (resolution.mode === "soak-pending-damage") {
+      window.GravewrightToasts.showToast(
+        `Bene gasto · ${resolution.soaked || 0} Ferimento(s) absorvido(s)${resolution.remaining ? ` · ${resolution.remaining} restante(s)` : ""}`,
+        { duration: 5000 }
+      );
+    } else if (resolution.mode === "clear-condition-on-success" && resolution.cleared) {
+      window.GravewrightToasts.showToast("Abalado removido.", { duration: 4000 });
+    } else if (resolution.mode === "recover-wounds-on-success") {
+      const message = resolution.criticalFailure
+        ? `Falha crítica · +${resolution.woundsAdded || 0} Ferimento`
+        : `${resolution.healed || 0} Ferimento(s) recuperado(s)`;
+      window.GravewrightToasts.showToast(message, { duration: 5000 });
+    }
   }
 
   function openRollDialog(root, anchor, item, context = {}) {
@@ -307,12 +364,29 @@
     roll.appendChild(el("span", null, "Roll"));
     roll.addEventListener("click", async () => {
       const rollOptions = collectRollOptions(dialog);
+      const allocationHost = dialog.querySelector("[data-roll-target-allocations]");
+      if (allocationHost) {
+        const allocations = [...allocationHost.querySelectorAll("input[data-target-token-id]")]
+          .map((input) => ({
+            targetTokenId: input.dataset.targetTokenId,
+            targetActorId: input.dataset.targetActorId,
+            amount: Math.max(0, Math.trunc(Number(input.value) || 0)),
+          }))
+          .filter((entry) => entry.amount > 0);
+        const allocated = allocations.reduce((sum, entry) => sum + entry.amount, 0);
+        const rate = Math.max(1, Math.trunc(Number(rollOptions.rateOfFire) || 1));
+        if (allocated && allocated !== rate) {
+          window.GravewrightToasts?.showToast(`Distribua exatamente ${rate} disparo(s) entre os alvos.`, { duration: 4500 });
+          return;
+        }
+        rollOptions.targetAllocations = allocations;
+      }
       const action = resolveDialogAction(dialog, schema, item.action);
       const targetSelect = dialog.querySelector("[data-roll-target]");
       const targetOption = targetSelect?.selectedOptions?.[0];
       const options = { rollOptions };
       if (targetOption?.dataset.targetTokenId) options.targetTokenId = targetOption.dataset.targetTokenId;
-      else if (targetOption?.dataset.targetActorId) options.targetActorId = targetOption.dataset.targetActorId;
+      if (targetOption?.dataset.targetActorId) options.targetActorId = targetOption.dataset.targetActorId;
       const meta = contexts.get(root) || {};
 
       // A rolagem 3D pode começar assim que o evento do chat chega. Se este
@@ -323,6 +397,7 @@
         ? await executeItemAction(root, context.itemId, action, options)
         : await executeSheetAction(root, action, options);
       if (result?.applied) toastApplied(result.applied, meta.systemId);
+      toastSelfResolution(result);
     });
     actions.appendChild(cancel);
     actions.appendChild(roll);

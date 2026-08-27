@@ -40,7 +40,10 @@ def test_single_draw_modal_supports_hand_chat_and_table_placement() -> None:
             window.__draws = [];
             window.__plays = [];
             window.__state = {campaign_id: 'room', decks: [{id: 'deck', name: 'Tarot', draw_count: 3}],
-              piles: [], cards: [], scene_placements: []};
+              piles: [{id: 'hand', kind: 'hand', owner_user_id: 'gm'}],
+              cards: [{id: 'held-card', name: 'The Moon', deck_instance_id: 'deck',
+                current_pile_id: 'hand', front_asset_id: 'front', back_asset_id: 'back'}],
+              scene_placements: []};
             window.GravewrightMap = {
               activeCanvas: () => document.querySelector('[data-map-canvas]'),
               stateFor: () => ({zoom: 1, offsetX: 0, offsetY: 0}),
@@ -63,6 +66,14 @@ def test_single_draw_modal_supports_hand_chat_and_table_placement() -> None:
         page.add_script_tag(path=str(ROOT / "static/js/cards/card-panel.js"))
         page.evaluate("document.dispatchEvent(new Event('DOMContentLoaded'))")
         page.wait_for_selector('[data-card-action="open-draw"]')
+
+        page.eval_on_selector('[data-card-action="view-hand"]', "button => button.click()")
+        preview = page.locator("dialog.card-preview-dialog")
+        expect(preview).to_be_visible()
+        expect(preview.locator("strong")).to_have_text("The Moon")
+        expect(preview.locator("img")).to_have_attribute("src", "/game/journal/asset/front")
+        preview.locator("[data-card-preview-close]").click()
+        expect(page.locator("dialog.card-preview-dialog")).to_have_count(0)
 
         page.evaluate("document.querySelector('[data-card-action=\"open-draw\"]').click()")
         expect(page.locator("dialog.card-draw-dialog")).to_be_visible()

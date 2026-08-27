@@ -57,13 +57,13 @@
 
     async function refreshPanel(roomId) {
         const host = treeHostFor(roomId);
-        if (!host) return;
+        if (!host) return false;
         try {
             const res = await fetch(`/game/actors/panel/${encodeURIComponent(roomId)}`, {
                 credentials: "same-origin",
                 headers: { Accept: "text/html" },
             });
-            if (!res.ok) return;
+            if (!res.ok) return false;
             const html = await res.text();
             const expanded = new Set(
                 Array.from(host.querySelectorAll(".actor-folder[data-open]"))
@@ -76,7 +76,9 @@
             });
             FI.applyFolderColors(host);
             FI.applySearch(panelFor(roomId));
-        } catch {  }
+            host.dataset.directoryLoaded = "true";
+            return true;
+        } catch { return false; }
     }
 
     FI.panelFor = panelFor;

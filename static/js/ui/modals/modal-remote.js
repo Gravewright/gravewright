@@ -34,6 +34,41 @@
             return Boolean(appendModalFromHtml(await response.text(), mountedEvent));
         }
 
+        async function ensureDirectoryDialogs(campaignId) {
+            const marker = `actor-folder-create-${campaignId}`;
+            if (document.querySelector(`[data-modal-id="${cssEscape(marker)}"]`)) return true;
+            const response = await fetch(`/game/directory-dialogs/${encodeURIComponent(campaignId)}`, {
+                credentials: "same-origin",
+                headers: { Accept: "text/html" },
+            });
+            if (!response.ok) return false;
+            const template = document.createElement("template");
+            template.innerHTML = (await response.text()).trim();
+            const modals = [...template.content.querySelectorAll("[data-modal-window]")];
+            if (!modals.length) return false;
+            const targetLayer = layer();
+            if (!targetLayer) return false;
+            modals.forEach((modal) => targetLayer.appendChild(modal));
+            return true;
+        }
+
+        async function ensureSceneCreateDialogs(campaignId) {
+            const marker = `scene-create-${campaignId}`;
+            if (document.querySelector(`[data-modal-id="${cssEscape(marker)}"]`)) return true;
+            const response = await fetch(`/game/scenes/create-dialogs/${encodeURIComponent(campaignId)}`, {
+                credentials: "same-origin",
+                headers: { Accept: "text/html" },
+            });
+            if (!response.ok) return false;
+            const template = document.createElement("template");
+            template.innerHTML = (await response.text()).trim();
+            const modals = [...template.content.querySelectorAll("[data-modal-window]")];
+            const targetLayer = layer();
+            if (!targetLayer || !modals.length) return false;
+            modals.forEach((modal) => targetLayer.appendChild(modal));
+            return true;
+        }
+
         async function ensureJournalModal(journalId) {
             const modalId = `journal-${journalId}`;
             if (document.querySelector(`[data-modal-id="${cssEscape(modalId)}"]`)) return true;
@@ -113,7 +148,9 @@
             ensureJournalModal,
             ensureResourcePermissionsModal,
             ensureCompendiumEntryModal,
+            ensureDirectoryDialogs,
             ensureSceneEditModal,
+            ensureSceneCreateDialogs,
             ensureTokenSheetModal,
         };
     }

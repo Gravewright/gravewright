@@ -41,13 +41,13 @@
 
   async function refreshPanel(roomId) {
     const host = treeHostFor(roomId);
-    if (!host) return;
+    if (!host) return false;
     try {
       const response = await fetch(`/game/scenes/panel/${encodeURIComponent(roomId)}`, {
         credentials: "same-origin",
         headers: { Accept: "text/html" },
       });
-      if (!response.ok) return;
+      if (!response.ok) return false;
       host.innerHTML = await response.text();
       // A arvore generica guarda o que estava aberto em localStorage, entao
       // basta reidratar: nao ha estado de expansao para carregar na mao.
@@ -56,7 +56,9 @@
       if (panel?.querySelector("[data-scene-search]")?.value) {
         window.GravewrightScenesTree?.applySearch?.(panel);
       }
-    } catch { /* Um refresh perdido nao pode derrubar a acao que ja foi gravada. */ }
+      host.dataset.directoryLoaded = "true";
+      return true;
+    } catch { return false; /* Um refresh perdido nao pode derrubar a acao que ja foi gravada. */ }
   }
 
   Object.assign(FI, { panelFor, treeHostFor, postJson, postForm, refreshPanel });

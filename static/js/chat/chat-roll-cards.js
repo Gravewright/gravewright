@@ -5,6 +5,57 @@
 (() => {
     const FI = (window.GravewrightChatInternals = window.GravewrightChatInternals || {});
     const escapeHtml = FI.escapeHtml;
+    const rollActions = new Map();
+
+    function matchesAction(entry, payload) {
+        const metadata = payload?.metadata || {};
+        if (String(metadata.systemId || "") !== entry.systemId) return false;
+        if (entry.intents.length && !entry.intents.includes(String(metadata.intent || ""))) return false;
+        if (entry.actionIds.length && !entry.actionIds.includes(String(metadata.actionId || ""))) return false;
+        if (entry.excludeActionIds.includes(String(metadata.actionId || ""))) return false;
+        return true;
+    }
+
+    function decorateRollActions(element, payload) {
+        if (!element || !payload) return;
+        element._gwRollPayload = payload;
+        element.querySelector("[data-roll-actions]")?.remove();
+        const matched = [...rollActions.values()].filter((entry) => matchesAction(entry, payload));
+        if (!matched.length) return;
+        const host = document.createElement("div");
+        host.className = "roll-card__actions";
+        host.dataset.rollActions = "";
+        matched.forEach((entry) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "roll-card__action";
+            button.textContent = entry.label;
+            button.dataset.rollAction = entry.id;
+            button.addEventListener("click", () => entry.handler(Object.freeze(structuredClone(payload))));
+            host.appendChild(button);
+        });
+        element.querySelector(".chat-message-content")?.appendChild(host);
+    }
+
+    function registerRollAction(systemId, definition, handler) {
+        const id = String(definition?.id || "").trim();
+        const label = String(definition?.label || "").trim();
+        if (!systemId || !id || !label || typeof handler !== "function") return false;
+        const key = `${systemId}:${id}`;
+        rollActions.set(key, Object.freeze({
+            id, label, systemId,
+            intents: Object.freeze((definition.intents || []).map(String)),
+            actionIds: Object.freeze((definition.actionIds || []).map(String)),
+            excludeActionIds: Object.freeze((definition.excludeActionIds || []).map(String)),
+            handler,
+        }));
+        document.querySelectorAll(".chat-message--roll[data-message-id]").forEach((element) => {
+            if (element._gwRollPayload) decorateRollActions(element, element._gwRollPayload);
+        });
+        return true;
+    }
+
+    window.GravewrightRollActions = Object.freeze({ register: registerRollAction });
 
 
 
@@ -87,10 +138,12 @@
                         </details>` : ""}
                 </div>
             `;
+            queueMicrotask(() => decorateRollActions(el, payload));
             return el;
         }
 
         el.innerHTML = rollBreakdown(payload, secretHtml);
+        queueMicrotask(() => decorateRollActions(el, payload));
         return el;
     }
 
@@ -172,10 +225,12 @@
                 return;
             }
             const rebuilt = buildRollMessage(payload);
+            rebuilt._gwRollPayload = payload;
 
 
             placeholder.querySelectorAll("[data-chat-delete]").forEach((btn) => rebuilt.appendChild(btn));
             placeholder.replaceWith(rebuilt);
+            decorateRollActions(rebuilt, payload);
         });
     }
 

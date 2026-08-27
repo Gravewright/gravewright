@@ -234,7 +234,8 @@ def test_html_item_list_opens_and_patches_embedded_item_sheet():
     assert "mountEmbeddedItemEditor" in RUNTIME
     assert "gw-item-list__open" in RUNTIME
     assert "ctx.onItemChange?.(item.id, target, value)" in RUNTIME
-    assert 'postJSON("/game/actor/item/patch"' in ACTOR_RENDERER
+    assert '"/game/actor/item/patch"' in ACTOR_RENDERER
+    assert '"/game/token/item/patch"' in ACTOR_RENDERER
 
 
 def test_block_editor_has_labels_without_journal_context():

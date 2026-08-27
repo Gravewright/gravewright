@@ -136,6 +136,40 @@ async def test_staged_retile_generation_failure_preserves_existing_scene(db, tmp
 
 
 @pytest.mark.asyncio
+async def test_staged_retile_updates_scene_raster_size(db, tmp_path):
+    gm_id = seed_user(name="GM", email="map-staging-size-gm@test.com")
+    campaign_id = seed_campaign(gm_id)
+    storage_root = tmp_path / "scenes"
+    service = MapUploadService(
+        asset_storage=LocalSceneAssetStorage(root=storage_root),
+        chunk_storage=LocalChunkStorage(root=storage_root),
+    )
+    upload = await service.upload_raster_map(
+        campaign_id=campaign_id,
+        user_id=gm_id,
+        name="Resize Raster",
+        filename="map.png",
+        content_type="image/png",
+        data=_png(140, 140),
+        tile_size=35,
+        grid_size=70,
+        chunk_size=SCENE_NATIVE_CHUNK_SIZE,
+    )
+    previous_tile_table_version = upload.scene["tile_table_version"]
+
+    result = await service.retile_scene(
+        scene_id=upload.scene["id"], user_id=gm_id, new_tile_size=70
+    )
+    migrated = SceneRepository().get_by_id(upload.scene["id"])
+
+    assert result.success is True
+    assert migrated["tile_size"] == 70
+    assert migrated["grid_size"] == 70
+    assert migrated["tile_table_version"] == previous_tile_table_version + 1
+    assert len(SceneTileRepository().list_by_layer(upload.layer["id"])) == 4
+
+
+@pytest.mark.asyncio
 async def test_staged_retile_commit_failure_restores_existing_artifacts(db, tmp_path):
     gm_id = seed_user(name="GM", email="map-staging-commit-gm@test.com")
     campaign_id = seed_campaign(gm_id)

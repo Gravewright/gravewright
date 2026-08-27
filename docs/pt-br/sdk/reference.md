@@ -655,6 +655,10 @@ chama. Não traz metadados de conta, é restrito à campanha ativa e só respond
 já é membro. É um quadro de membros, não um feed de presença: associação não é status
 online.
 
+A projeção visual limitada é separada: `sdk.users.presentation.get(userId)` e
+`sdk.users.presentation.list()` retornam apenas `{ userId, color }` dos membros
+visíveis na campanha ativa. Veja [Apresentação de usuário](user-presentation.md).
+
 `TokenDTO.controllers` informa os usuários que podem controlar aquele Token, derivado
 da mesma autoridade que decide se um movimento é permitido, então um Token com vários
 donos lista todos em vez de reduzir a um. A projeção é filtrada: quem chama vê

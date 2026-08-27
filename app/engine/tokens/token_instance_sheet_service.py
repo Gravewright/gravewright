@@ -62,6 +62,41 @@ def set_path(data: dict, dotted_path: str, value: Any) -> None:
     cursor[segments[-1]] = value
 
 
+def get_path(data: dict, dotted_path: str) -> Any:
+    cursor: Any = data
+    for segment in (part for part in dotted_path.split(".") if part):
+        if not isinstance(cursor, dict):
+            return None
+        cursor = cursor.get(segment)
+    return cursor
+
+
+def patch_embedded_item(data: dict, item_id: str, patch: dict[str, Any]) -> str | None:
+    """Patch one item snapshot and return the owning list's dotted path."""
+    if not item_id or not isinstance(patch, dict) or not patch:
+        return None
+
+    def visit(node: Any, path: list[str]) -> str | None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                found = visit(value, [*path, key])
+                if found is not None:
+                    return found
+        elif isinstance(node, list):
+            for item in node:
+                if isinstance(item, dict) and str(item.get("id") or "") == item_id:
+                    for dotted, value in patch.items():
+                        if isinstance(dotted, str) and dotted:
+                            set_path(item, dotted, value)
+                    return ".".join(path)
+                found = visit(item, path)
+                if found is not None:
+                    return found
+        return None
+
+    return visit(data, [])
+
+
 class TokenInstanceSheetService:
     def __init__(self) -> None:
         self.tokens = TokenRepository()
@@ -237,6 +272,27 @@ class TokenInstanceSheetService:
             version=updated["version"] if updated else token["version"],
             overrides=overrides,
             changed_paths=sorted([*clean.keys(), *(["core.name"] if has_core_name else [])]),
+        )
+
+    def patch_item(
+        self, *, token_id: str, user_id: str, item_instance_id: str, patch: dict[str, Any]
+    ) -> TokenSheetDataResult:
+        """Edit an item in an unlinked token's private actor snapshot."""
+        loaded = self._load(token_id=token_id, user_id=user_id, require_edit=True)
+        if loaded is None:
+            return TokenSheetDataResult(success=False, error_key="tokens.errors.not_found")
+        token, actor, _campaign = loaded
+        instance = deepcopy(self._ensure_instance(token=token, actor=actor))
+        data = instance.get("data") if isinstance(instance.get("data"), dict) else {}
+        list_path = patch_embedded_item(data, item_instance_id, patch)
+        if not list_path:
+            return TokenSheetDataResult(
+                success=False, error_key="game.sheet_items.errors.item_not_found"
+            )
+        return self.patch_data(
+            token_id=token_id,
+            user_id=user_id,
+            patch={list_path: get_path(data, list_path)},
         )
 
     def to_dict(self, bundle: ActorSheetBundle) -> dict:
