@@ -73,5 +73,5 @@ def test_game_page_context_members_have_no_email(db):
     all_members = [member for room in rooms for member in room["members"]]
     assert all_members, "expected at least the GM as a member"
     for member in all_members:
-        assert set(member) == _ALLOWED_MEMBER_KEYS
+        assert set(member) == _ALLOWED_MEMBER_KEYS | {"color"}
     _assert_no_pii([room["members"] for room in rooms], email=email)

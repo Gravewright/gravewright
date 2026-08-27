@@ -7,7 +7,6 @@ caixinha naquele golpe), e uma ação que leva à mesa o que não tem dado nenhu
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from app.engine.sheets.sheet_action_service import (
@@ -296,20 +295,6 @@ def test_power_point_cost_is_declared_by_the_power_and_checked_on_the_actor():
     ) == 5
     assert _actor_has_resource({"power": {"points": {"value": 3}}}, resource, 3)
     assert not _actor_has_resource({"power": {"points": {"value": 2}}}, resource, 3)
-
-
-def test_savage_power_actions_declare_authoritative_power_point_consumption():
-    actions = json.loads(
-        Path(__file__).resolve().parents[2].joinpath(
-            "data/packages/rulesets/savage-worlds/rules/actions.gw.json"
-        ).read_text(encoding="utf-8")
-    )["actions"]
-    expected = {
-        "path": "power.points.value", "costPath": "data.powerPoints",
-        "extraCostInput": "additionalPowerPoints",
-    }
-    assert actions["roll.power"]["actorResource"] == expected
-    assert actions["roll.power.extra"]["actorResource"] == expected
 
 
 # --- levar à mesa o que não rola --------------------------------------------

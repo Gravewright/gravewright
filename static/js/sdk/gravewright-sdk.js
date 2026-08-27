@@ -1427,10 +1427,10 @@
                     requireCap("rolls.reroll");
                     const client = window.GravewrightCore && window.GravewrightCore.http;
                     if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
-                    return client.postJson("/game/roll/reroll", {
+                    return unwrap(client.postJson("/game/roll/reroll", {
                         campaign_id: context.campaign?.id || "",
                         message_id: String(messageId || ""),
-                    });
+                    }), "sdk.rolls.reroll");
                 },
             }),
             settings: Object.freeze({

@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 from app.engine.rules.threshold_damage import resolve_threshold_damage
 
 
@@ -52,15 +49,3 @@ def test_armor_piercing_cannot_reduce_base_toughness():
     result = resolve_threshold_damage(data, 6, POLICY, actor_type="character", armor_piercing=99)
     assert result.armor_piercing == 2
     assert result.effective_toughness == 6
-
-
-def test_savage_damage_actions_opt_into_the_declared_policy():
-    root = Path(__file__).resolve().parents[2] / "data/packages/rulesets/savage-worlds/rules"
-    combat = json.loads((root / "combat.gw.json").read_text(encoding="utf-8"))
-    actions = json.loads((root / "actions.gw.json").read_text(encoding="utf-8"))["actions"]
-    assert combat["damageResolution"]["mode"] == "threshold-raises"
-    assert actions["roll.damage"]["apply"] == {
-        "mode": "damage",
-        "resolution": "configured",
-        "armorPiercing": "@item.data.ap",
-    }

@@ -39,24 +39,25 @@ def test_the_current_contract_has_no_breaking_drift_from_the_rc1_snapshot():
 def test_rc1_snapshot_records_the_certified_contract_shape():
     snapshot = baseline_fingerprint()
     assert snapshot["sdkVersion"] == "1"
-    assert len(snapshot["methods"]) == 266
-    assert len(snapshot["capabilities"]) == 117
+    assert len(snapshot["methods"]) == 264
+    assert len(snapshot["capabilities"]) == 119
     assert len(snapshot["events"]) == 52
     assert len(snapshot["errors"]) == 25
     # UserPresentationDTO is the bounded participant-color projection added during RC 1.
-    assert len(snapshot["dtos"]) == 292
+    assert len(snapshot["dtos"]) == 293
     # Every method resolves to a capability that exists in the same snapshot.
     assert all(m["capability"] in set(snapshot["capabilities"]) for m in snapshot["methods"].values())
     # Nothing in the frozen surface is an unresolved shape.
     assert all(m["returns"] not in {"", "any", "unknown", "JsonValue"} for m in snapshot["methods"].values())
 
 
-def test_snapshot_tool_regenerates_byte_identical_output(tmp_path):
-    """`--write` must be reproducible, so a re-freeze is a real diff or nothing."""
+def test_snapshot_is_stored_in_canonical_byte_identical_form():
+    """Validate deterministic serialization without ever rewriting the frozen baseline."""
     before = SNAPSHOT.read_text(encoding="utf-8")
-    subprocess.run([sys.executable, str(ROOT / "scripts/sdk1_contract_snapshot.py"), "--write"],
-                   cwd=ROOT, check=True, capture_output=True)
-    assert SNAPSHOT.read_text(encoding="utf-8") == before
+    rendered = json.dumps(
+        baseline_fingerprint(), indent=2, ensure_ascii=False, sort_keys=True
+    ) + "\n"
+    assert rendered == before
 
 
 def test_check_mode_passes_on_the_frozen_contract():

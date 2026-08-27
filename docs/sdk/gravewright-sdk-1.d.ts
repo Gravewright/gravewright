@@ -366,7 +366,7 @@ export interface ActorDTO {
   folder_id: string | null;
   portrait_asset_id: string | null;
   token_asset_id: string | null;
-  owner_user_ids: string[];
+  owner_user_ids?: string[];
   version: number;
   created_at: number;
   updated_at: number;
@@ -863,7 +863,7 @@ export interface CombatantDTO {
   is_current: boolean;
   is_next: boolean;
   has_acted: boolean;
-  holding: boolean;
+  holding?: boolean;
   can_move_up: boolean;
   can_move_down: boolean;
   portrait_url: string;
@@ -894,9 +894,9 @@ export interface CombatStateDTO {
   current_name: string;
   next_id: string;
   next_name: string;
-  interrupted: boolean;
-  interrupted_id: string;
-  interrupted_name: string;
+  interrupted?: boolean;
+  interrupted_id?: string;
+  interrupted_name?: string;
   config: CombatConfigDTO;
   updated_actors: RulesetEffectMutation[];
   expired_effects: RulesetEffectMutation[];

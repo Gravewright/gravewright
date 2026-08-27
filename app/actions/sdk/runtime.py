@@ -11,6 +11,7 @@ from litestar.params import FromPath, FromQuery
 from litestar.response import Response
 
 from app.business.permissions.permission_service import PermissionService
+from app.business.users.user_presentation_service import UserPresentationService
 from app.engine.actors.actor_service import ActorService
 from app.engine.combat.combat_service import CombatService
 from app.engine.items.item_service import ItemService
@@ -35,6 +36,7 @@ from app.engine.sdk.runtime_permissions import SdkRuntimePermissionInspector
 from app.engine.sdk.package_asset_service import PackageAssetService
 from app.engine.sdk.package_install_service import PackageInstallService
 from app.engine.sdk.runtime_dto import actor_snapshot, chat_snapshot, item_snapshot, light_snapshot, particle_snapshot, scene_snapshot, shader_metadata_snapshot, token_snapshot, wall_snapshot
+from app.engine.chat.visibility_policy import ChatVisibilityPolicy
 from app.engine.sdk.pdf_service import SdkPdfService
 from app.engine.sdk.ephemeral_domain_service import TokenTargetService, SharedMeasurementService, PdfPresentationService
 from app.engine.sdk.directed_interaction_service import DirectedInteractionService
@@ -125,6 +127,7 @@ _RESOURCE_CAPABILITIES = {
     "workflows": "workflows.read",
     "gameplay.flows": "gameplay.flows.read",
     "timelines": "timelines.read",
+    "user.presentations": "users.presentation.read",
 }
 
 
@@ -400,6 +403,24 @@ def sdk_runtime_read(
         return _error(authority.error_key or "sdk.runtime.denied", 403)
 
     user_id = current_user["id"]
+    if resource_name == "user.presentations":
+        service = UserPresentationService()
+        result = (
+            service.get(
+                campaign_id=campaign_id,
+                requester_user_id=user_id,
+                target_user_id=str(entity_id),
+            )
+            if entity_id
+            else service.list(campaign_id=campaign_id, requester_user_id=user_id)
+        )
+        if not result.success:
+            return _service_error(result.error_key)
+        return Response(
+            {"presentation": result.presentation}
+            if entity_id
+            else {"presentations": result.presentations or []}
+        )
     if resource_name == "scene.zones":
         service=SceneZoneService()
         if entity_id:
@@ -737,7 +758,9 @@ def sdk_runtime_read(
             return _error("sdk.runtime.permission_denied", 403)
         repo = ChatMessageRepository()
         role = CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=user_id)
-        visible = lambda message: role == "gm" or message.get("visibility") not in {"gm", "gm_only", "private", "self"}
+        visible = lambda message: ChatVisibilityPolicy.can_view(
+            message=message, user_id=user_id, member_role=role,
+        )
         if entity_id:
             message = repo.get_for_campaign(campaign_id=campaign_id, message_id=entity_id)
             return Response({"message": chat_snapshot(message)}) if message and visible(message) else _error("sdk.runtime.not_found", 404)

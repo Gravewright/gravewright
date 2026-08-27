@@ -29,10 +29,10 @@ def test_quota_failure_is_not_reported_as_rate_limiting(monkeypatch):
     result = service.ingest(
         campaign_id="c1",
         user_id="u1",
-        package_id="savage-worlds",
+        package_id="test-package",
         source={
             "kind": "browser-file",
-            "name": "benny.png",
+            "name": "asset.png",
             "mime": "image/png",
             "base64": base64.b64encode(PNG).decode("ascii"),
         },
