@@ -26,6 +26,8 @@
   "items.register": "Registra comportamento/dados de tipos de item via metadados do pacote.",
   "locales": "Fornece locales e usa `sdk.i18n.t`.",
   "rolls.intent": "Pede intents declarativas de rolagem/action no servidor.",
+  "rolls.actions": "Registra ações limitadas de cards de rolagem tratadas pelo runtime autoritativo de rolagens.",
+  "rolls.reroll": "Solicita a rerrolagem autoritativa de uma mensagem de rolagem persistida e elegível.",
   "rules.declarative": "Fornece documentos de regras declarativos.",
   "rules.extends": "Estende o comportamento das regras.",
   "scene.overlays": "Fornece overlays de cena.",

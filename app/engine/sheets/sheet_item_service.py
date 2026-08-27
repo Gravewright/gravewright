@@ -97,7 +97,7 @@ class SheetItemService:
         loaded = self._load_editable(actor_id=actor_id, user_id=user_id)
         if isinstance(loaded, SheetItemResult):
             return ActionResult(success=False, error_key=loaded.error_key)
-        actor, _, data = loaded
+        actor, envelope, data = loaded
         ref = _find_item_instance(data, item_instance_id)
         if ref is None:
             return ActionResult(success=False, error_key="game.sheet_items.errors.item_not_found")

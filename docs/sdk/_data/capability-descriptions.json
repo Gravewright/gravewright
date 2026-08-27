@@ -26,6 +26,8 @@
   "items.register": "Register item type behavior/data through package metadata.",
   "locales": "Provide locales and use `sdk.i18n.t`.",
   "rolls.intent": "Request server-authoritative declarative roll/action intents.",
+  "rolls.actions": "Register bounded roll-card actions handled through the authoritative roll runtime.",
+  "rolls.reroll": "Request an authoritative reroll of an eligible persisted roll message.",
   "rules.declarative": "Provide declarative rules documents.",
   "rules.extends": "Extend rule behavior.",
   "scene.overlays": "Provide scene overlays.",

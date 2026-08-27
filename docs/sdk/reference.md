@@ -219,6 +219,14 @@ await sdk.rolls.intent({
 
 See [`rolls.md`](rolls.md) for formula syntax and system patterns.
 
+### `sdk.rolls.actions.register(definition, handler)`
+
+Requires `rolls.actions`. Registers a bounded action for eligible persisted roll cards.
+
+### `sdk.rolls.reroll(messageId)`
+
+Requires `rolls.reroll`. Requests an authoritative reroll using the persisted roll's ruleset policy.
+
 ## `sdk.settings`
 
 Requires `settings`.
@@ -521,7 +529,7 @@ These SDK 1 methods apply package-capability and current-user permission gates a
 - `sdk.scene.geometry.walls`, `sdk.scene.geometry.lights`, `sdk.scene.geometry.createWall`, `sdk.scene.geometry.updateWall`, `sdk.scene.geometry.deleteWall`, `sdk.scene.geometry.createLight`, `sdk.scene.geometry.updateLight`, `sdk.scene.geometry.deleteLight`, `sdk.scene.geometry.setDoorState`.
 - `sdk.scene.effects.list`, `sdk.scene.effects.create`, `sdk.scene.effects.update`, `sdk.scene.effects.delete`.
 - `sdk.ui.slots.available`, `sdk.ui.slots.register`; `sdk.chat.list`, `sdk.chat.get`.
-- `sdk.combat.current`, `sdk.combat.combatants`, `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`.
+- `sdk.combat.current`, `sdk.combat.combatants`, `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`, `sdk.combat.interruptTurn`, `sdk.combat.resumeTurn`, `sdk.combat.setHolding`.
 - `sdk.rules.actions.list`, `sdk.rules.actions.get`, `sdk.rules.actions.resolve`, `sdk.rules.actions.execute`, `sdk.rules.actions.executeReference`.
 - `sdk.automation.schedule`, `sdk.automation.get`, `sdk.automation.list`, `sdk.automation.cancel` accept only durable-safe registered actions; `sdk.automation.audit` returns bounded, package-owned, payload-free transition records.
 - `sdk.pdf.get`, `sdk.pdf.metadata`; `sdk.pdf.viewer.open`, `sdk.pdf.viewer.goToPage`, `sdk.pdf.viewer.search`, `sdk.pdf.viewer.currentPage`.

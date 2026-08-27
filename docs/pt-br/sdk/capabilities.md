@@ -73,7 +73,9 @@ Package "x" attempted to use sdk.chat.send but does not declare capability "chat
 | `pdf.read` | Lê documentos PDF visíveis ao usuário atual e seus metadados. |
 | `pdf.viewer` | Abre e navega documentos PDF no visualizador do host. |
 | `permissions.inspect` | Consulta decisões de permissão efetivas do usuário atual. |
+| `rolls.actions` | Registra ações limitadas de cards de rolagem tratadas pelo runtime autoritativo de rolagens. |
 | `rolls.intent` | Pede intents declarativas de rolagem/action no servidor. |
+| `rolls.reroll` | Solicita a rerrolagem autoritativa de uma mensagem de rolagem persistida e elegível. |
 | `rules.actions` | Descobre e executa ações semânticas versionadas declaradas por pacotes. |
 | `rules.declarative` | Fornece documentos de regras declarativos. |
 | `rules.extends` | Estende o comportamento das regras. |
@@ -206,13 +208,16 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 | `sdk.combat.current` | `combat.read` |
 | `sdk.combat.dispatch` | `combat.runtime` |
 | `sdk.combat.end` | `combat.manage` |
+| `sdk.combat.interruptTurn` | `combat.manage` |
 | `sdk.combat.moveCombatant` | `combat.manage` |
 | `sdk.combat.register` | `combat.runtime` |
 | `sdk.combat.registerPanel` | `combat.runtime` |
 | `sdk.combat.remove` | `combat.manage` |
 | `sdk.combat.renderSlot` | `combat.runtime` |
+| `sdk.combat.resumeTurn` | `combat.manage` |
 | `sdk.combat.rollInitiative` | `combat.manage` |
 | `sdk.combat.setFlags` | `combat.manage` |
+| `sdk.combat.setHolding` | `combat.manage` |
 | `sdk.combat.setInitiative` | `combat.manage` |
 | `sdk.combat.setInitiativeOrder` | `combat.manage` |
 | `sdk.combat.setTurn` | `combat.manage` |
@@ -281,7 +286,9 @@ Não há execução de plugin de backend no SDK v1. Pacotes são declarativos ma
 | `sdk.pdf.viewer.search` | `pdf.viewer` |
 | `sdk.permissions.can` | `permissions.inspect` |
 | `sdk.permissions.check` | `permissions.inspect` |
+| `sdk.rolls.actions.register` | `rolls.actions` |
 | `sdk.rolls.intent` | `rolls.intent` |
+| `sdk.rolls.reroll` | `rolls.reroll` |
 | `sdk.rules.actions.execute` | `rules.actions` |
 | `sdk.rules.actions.executeReference` | `rules.actions` |
 | `sdk.rules.actions.get` | `rules.actions` |
