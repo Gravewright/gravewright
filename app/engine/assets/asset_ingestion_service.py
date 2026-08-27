@@ -12,7 +12,10 @@ from app.security.asset_permissions import can_manage_assets
 
 MAX_PIXELS=16_000_000
 MAX_DECODED_BYTES=64*1024*1024
-CAMPAIGN_QUOTA_BYTES=100*1024*1024
+# Campaign libraries routinely contain several maps, ambient tracks and handouts.
+# Keep a bounded quota, but do not make two valid map assets lock every later SDK
+# import out of the campaign. Per-file and decoded-image limits remain enforced.
+CAMPAIGN_QUOTA_BYTES=1024*1024*1024
 MAX_IMPORTS_PER_MINUTE=20
 SIGNATURES={"image/png":lambda b:b.startswith(b"\x89PNG\r\n\x1a\n"),"image/jpeg":lambda b:b.startswith(b"\xff\xd8\xff"),"image/webp":lambda b:len(b)>=12 and b[:4]==b"RIFF" and b[8:12]==b"WEBP","audio/ogg":lambda b:b.startswith(b"OggS"),"audio/mpeg":lambda b:b.startswith(b"ID3") or (len(b)>1 and b[0]==0xff and b[1]&0xe0==0xe0),"audio/wav":lambda b:len(b)>=12 and b[:4]==b"RIFF" and b[8:12]==b"WAVE","audio/mp4":lambda b:len(b)>=12 and b[4:8]==b"ftyp"}
 EXTENSIONS={"image/png":".png","image/jpeg":".jpg","image/webp":".webp","audio/ogg":".ogg","audio/mpeg":".mp3","audio/wav":".wav","audio/mp4":".m4a"}
@@ -46,7 +49,7 @@ class AssetIngestionService:
             pass
         except (OSError,UnidentifiedImageError,Image.DecompressionBombError):return self._failure(campaign_id,user_id,package_id,"VALIDATION_FAILED")
         rows=self.assets.list_for_campaign(campaign_id=campaign_id)
-        if sum(int(row.get("byte_size") or 0) for row in rows)+len(data)>CAMPAIGN_QUOTA_BYTES:return self._failure(campaign_id,user_id,package_id,"RATE_LIMITED")
+        if sum(int(row.get("byte_size") or 0) for row in rows)+len(data)>CAMPAIGN_QUOTA_BYTES:return self._failure(campaign_id,user_id,package_id,"QUOTA_EXCEEDED")
         import hashlib
         digest=hashlib.sha256(data).hexdigest();existing=next((row for row in rows if row.get("hash")==digest),None)
         if existing:

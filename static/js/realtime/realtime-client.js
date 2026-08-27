@@ -199,6 +199,14 @@
     }
   });
 
+  // Brave may keep /game alive in the back/forward cache. Close eagerly so a
+  // cached game cannot retain a socket (or schedule reconnects) behind /inside.
+  window.addEventListener("pagehide", disconnect);
+  window.addEventListener("vtt:game-exit", disconnect);
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) connectWebSocket();
+  });
+
   function status() {
     return {
       open: isSocketOpen,

@@ -39,10 +39,11 @@
     }
 
     const TileBlobCache = (() => {
+        const quality = window.GravewrightGraphicsQuality?.config?.() || {};
         const DB_NAME = "gravewright-map-tile-cache";
         const STORE = "tiles";
-        const MAX_ENTRIES = Math.max(1, Number(window.__gravewrightTileBlobCacheMaxEntries) || 4096);
-        const MAX_BYTES = Math.max(1, Number(window.__gravewrightTileBlobCacheMaxBytes) || 512 * 1024 * 1024);
+        const MAX_ENTRIES = Math.max(1, Number(window.__gravewrightTileBlobCacheMaxEntries) || quality.tileBlobCacheEntries || 4096);
+        const MAX_BYTES = Math.max(1, Number(window.__gravewrightTileBlobCacheMaxBytes) || quality.tileBlobCacheBytes || 512 * 1024 * 1024);
         let dbPromise = null;
         let statsPromise = null;
         let writeChain = Promise.resolve();
@@ -242,6 +243,7 @@
     class PixiBoardRenderer {
         constructor(deps) {
             this.deps = deps || {};
+            const quality = window.GravewrightGraphicsQuality?.config?.() || {};
             this.boards = new Map();
             this.textures = new Map();
             this.textureObjectUrls = new Map();
@@ -249,14 +251,23 @@
             this.textureCacheBytes = 0;
             this.textureCacheEvictions = 0;
             this.textureCacheEvictedBytes = 0;
-            this.maxTextureCacheEntries = Math.max(1, Number(window.__gravewrightTextureCacheMaxEntries) || 192);
-            this.maxTextureCacheBytes = Math.max(1, Number(window.__gravewrightTextureCacheMaxBytes) || 192 * 1024 * 1024);
+            this.maxTextureCacheEntries = Math.max(1, Number(window.__gravewrightTextureCacheMaxEntries) || quality.textureCacheEntries || 192);
+            this.maxTextureCacheBytes = Math.max(1, Number(window.__gravewrightTextureCacheMaxBytes) || quality.textureCacheBytes || 192 * 1024 * 1024);
             this.textureQueue = [];
             this.textureJobs = new Map();
             this.activeTextureJobs = new Map();
             this.textureFrameWanted = new Set();
             this.activeTextureLoads = 0;
-            this.maxTextureLoads = Math.max(1, Number(window.__gravewrightTextureConcurrency) || 8);
+            this.textureConcurrencyOverride = Number(window.__gravewrightTextureConcurrency) || 0;
+            this.textureConcurrencyCeiling = Math.max(
+                1,
+                this.textureConcurrencyOverride || quality.textureConcurrency || 5,
+            );
+            this.maxTextureLoads = this.textureConcurrencyCeiling;
+            this.textureDecodeCostEmaMs = 0;
+            this.textureDecodeHeadroomSamples = 0;
+            this.textureDecodeGovernorIncreases = 0;
+            this.textureDecodeGovernorDecreases = 0;
             this.maxTextureMaterializationsPerFrame = Math.max(
                 1,
                 Number(window.__gravewrightTextureMaterializationBudget) || 4,
@@ -284,6 +295,7 @@
             );
             this.prefetchPausedUntil = 0;
             this.latestTextureGeneration = 0;
+            this.qualityId = quality.id || "high";
             this.active = null;
 
             this.theme = {
@@ -301,6 +313,7 @@
         }
 
         attach(canvas) {
+            this.pruneDisconnectedBoards();
             this.active = canvas;
             if (!this.boards.has(canvas)) {
                 this.boards.set(canvas, this._createBoard(canvas));
@@ -309,6 +322,38 @@
 
         detach() {
             this.active = null;
+        }
+
+        destroyBoard(canvas) {
+            const board = this.boards.get(canvas);
+            if (!board) return false;
+            if (this.active === canvas) this.active = null;
+            ["fogRT", "lightingRT", "lightBufferRT"].forEach((key) => {
+                try { board[key]?.destroy?.(true); } catch { }
+                board[key] = null;
+            });
+            try {
+                board.app?.destroy?.({ removeView: false }, { children: true });
+            } catch {
+                try { board.app?.stage?.destroy?.({ children: true }); } catch { }
+                try { board.app?.renderer?.destroy?.(false); } catch { }
+            }
+            this.boards.delete(canvas);
+            return true;
+        }
+
+        pruneDisconnectedBoards() {
+            this.boards.forEach((_board, canvas) => {
+                if (!canvas.isConnected) this.destroyBoard(canvas);
+            });
+        }
+
+        destroy() {
+            [...this.boards.keys()].forEach((canvas) => this.destroyBoard(canvas));
+            [...this.textures.keys()].forEach((url) => this._forgetTexture(url));
+            this.textureQueue.length = 0;
+            this.activeTextureJobs.forEach((job) => job.controller?.abort?.());
+            this.activeTextureJobs.clear();
         }
 
         resize() {
@@ -320,7 +365,28 @@
         }
 
         setScene(scene) {
+            const previousSceneId = this.scene?.id || null;
+            const nextSceneId = scene?.id || null;
+            if (previousSceneId && previousSceneId !== nextSceneId) {
+                this._releaseSceneTiles();
+            }
             this.scene = scene;
+        }
+
+        _releaseSceneTiles() {
+            const urls = new Set();
+            this.boards.forEach((board) => {
+                board.tileSprites?.forEach((sprite) => {
+                    if (sprite.__tileUrl) urls.add(sprite.__tileUrl);
+                    try { sprite.destroy(); } catch { }
+                });
+                board.tileSprites?.clear();
+                board.tilesLayer?.removeChildren?.();
+                board.tilePlanKey = "";
+                board.tilePlan = [];
+                board.pendingPresentedTiles?.clear?.();
+            });
+            urls.forEach((url) => this._forgetTexture(url));
         }
 
         setCamera(camera) {
@@ -354,7 +420,7 @@
             const board = this.boards.get(canvas);
             if (!board) return;
             board.pings.push({ ...ping, startedAt: performance.now() });
-            this.deps.requestRender?.();
+            this.deps.requestRender?.("overlays");
         }
 
         setMeasurements(canvas, snapshot) {
@@ -366,7 +432,7 @@
             if (key === board.measureSnapshotKey) return;
             board.measureSnapshot = next;
             board.measureSnapshotKey = key;
-            this.deps.requestRender?.();
+            this.deps.requestRender?.("overlays");
         }
 
         measurementSnapshot(canvas = this.active) {
@@ -374,13 +440,19 @@
             return JSON.parse(JSON.stringify(board?.measureSnapshot || { items: [] }));
         }
 
-        render() {
+        render(requestedFlags = "all") {
             const board = this.active && this.boards.get(this.active);
             if (!board || !board.ready) return;
             const measureFrame = window.__gravewrightMeasureRender === true;
             const prepareStartedAt = performance.now();
 
             const { width: cssW, height: cssH } = this._cssSize(this.active);
+            this._syncQuality(board, cssW, cssH);
+            const flags = requestedFlags === "all"
+                ? new Set(["all"])
+                : requestedFlags instanceof Set ? requestedFlags : new Set([requestedFlags]);
+            const full = flags.has("all") || flags.has("scene") || flags.has("camera") || flags.has("viewport");
+            const wants = (...names) => full || names.some((name) => flags.has(name));
 
             if (board.cssW !== cssW || board.cssH !== cssH) {
                 board.app.renderer.resize(cssW, cssH);
@@ -396,16 +468,18 @@
             board.deferredVisibleTextureMaterializations = 0;
             board.deferredPrefetchTextureMaterializations = 0;
             board.textureMaterializationWorkMs = 0;
-            this._renderTiles(board, cssW, cssH);
-            this._renderGrid(board, cssW, cssH);
-            this._renderTokens(board, cssW, cssH);
-            this._renderGhosts(board);
-            this._renderOrigin(board);
-            this._renderSpatialSounds?.(board);
-            this._renderLighting?.(board, cssW, cssH);
-            this._renderFog(board, cssW, cssH);
-            this._renderMeasurements?.(board);
-            this._renderPings(board);
+            if (wants("tiles")) this._renderTiles(board, cssW, cssH);
+            if (wants("tokens", "overlays")) this._renderTokens(board, cssW, cssH);
+            if (wants("scene", "camera")) this._renderGrid(board, cssW, cssH);
+            if (wants("overlays")) {
+                this._renderGhosts(board);
+                this._renderOrigin(board);
+                this._renderSpatialSounds?.(board);
+                this._renderPings(board);
+            }
+            if (wants("tokens", "effects")) this._renderLighting?.(board, cssW, cssH);
+            if (wants("fog")) this._renderFog(board, cssW, cssH);
+            if (wants("overlays")) this._renderMeasurements?.(board);
             this._cancelObsoleteTextureJobs();
             this._enforceTextureBudget();
 
@@ -428,7 +502,7 @@
                 });
                 board.pendingPresentedTiles.clear();
             }
-            if (board.deferredTextureMaterializations > 0) this.deps.requestRender?.();
+            if (board.deferredTextureMaterializations > 0) this.deps.requestRender?.("tiles");
         }
 
         _createBoard(canvas) {
@@ -517,7 +591,7 @@
                 canvas,
                 width,
                 height,
-                resolution: window.devicePixelRatio || 1,
+                resolution: window.GravewrightGraphicsQuality?.renderResolution?.() || window.devicePixelRatio || 1,
                 autoDensity: true,
 
 
@@ -543,6 +617,32 @@
         _initApp(app, options) {
             const preference = PIXI.isWebGLSupported() ? "webgl" : "canvas";
             return app.init({ ...options, preference });
+        }
+
+        _syncQuality(board, cssW, cssH) {
+            const quality = window.GravewrightGraphicsQuality?.config?.();
+            if (!quality) return;
+            this.maxTextureCacheEntries = quality.textureCacheEntries;
+            this.maxTextureCacheBytes = quality.textureCacheBytes;
+            const resolution = window.GravewrightGraphicsQuality.renderResolution();
+            if (board.renderResolution === resolution && this.qualityId === quality.id) return;
+            const qualityChanged = this.qualityId !== quality.id;
+            this.qualityId = quality.id;
+            if (qualityChanged && !this.textureConcurrencyOverride) {
+                this.textureConcurrencyCeiling = Math.max(1, Number(quality.textureConcurrency) || 3);
+                this.maxTextureLoads = this.textureConcurrencyCeiling;
+                this.textureDecodeHeadroomSamples = 0;
+                this._pumpTextureQueue();
+            }
+            board.renderResolution = resolution;
+            board.app.renderer.resolution = resolution;
+            board.app.renderer.resize(cssW, cssH);
+            board.cssW = 0;
+            board.cssH = 0;
+            board.fogKey = "";
+            board.lightingKey = "";
+            board.lightBufferKey = "";
+            this._enforceTextureBudget();
         }
 
         _color(css) {
@@ -591,7 +691,7 @@
                 gfx.circle(x, y, 18 * pulse)
                     .stroke({ color, width: 3, alpha: Math.max(0.18, 0.8 - age) });
             });
-            if (board.pings.length) this.deps.requestRender?.();
+            if (board.pings.length) this.deps.requestRender?.("overlays");
         }
 
         _colorAlpha(css) {
@@ -766,7 +866,7 @@
                     if (textureStartedAt) window.__gravewrightPerfRecord?.(
                         "texture_pipeline_total", performance.now() - textureStartedAt
                     );
-                    this.deps.requestRender?.();
+                    this.deps.requestRender?.("tiles");
                 })
                 .catch((err) => {
                     if (this.textures.get(url) !== "loading") return;
@@ -827,8 +927,10 @@
                 stampTile(lifecycle, "decode_started");
                 const decodeStartedAt = performance.now();
                 const bitmap = await createImageBitmap(source.blob);
+                const decodeDuration = performance.now() - decodeStartedAt;
+                this._updateAdaptiveTextureConcurrency(decodeDuration);
                 stampTile(lifecycle, "decode_complete");
-                window.__gravewrightPerfRecord?.("image_decode", performance.now() - decodeStartedAt);
+                window.__gravewrightPerfRecord?.("image_decode", decodeDuration);
 
                 stampTile(lifecycle, "texture_create_started");
                 const createStartedAt = performance.now();
@@ -850,6 +952,36 @@
             stampTile(lifecycle, "decode_complete");
             stampTile(lifecycle, "texture_create_complete");
             return texture;
+        }
+
+        _updateAdaptiveTextureConcurrency(decodeDurationMs) {
+            const duration = Math.max(0, Number(decodeDurationMs) || 0);
+            this.textureDecodeCostEmaMs = this.textureDecodeCostEmaMs
+                ? this.textureDecodeCostEmaMs * 0.75 + duration * 0.25
+                : duration;
+
+            // Long decodes contend for CPU and memory bandwidth. Back off immediately;
+            // recovery is deliberately slower so a brief cheap tile does not restart a spike.
+            const overloaded = duration >= 180 || this.textureDecodeCostEmaMs >= 120;
+            if (overloaded) {
+                const next = Math.max(1, Math.ceil(this.maxTextureLoads / 2));
+                if (next < this.maxTextureLoads) this.textureDecodeGovernorDecreases += 1;
+                this.maxTextureLoads = next;
+                this.textureDecodeHeadroomSamples = 0;
+                this.prefetchPausedUntil = Math.max(this.prefetchPausedUntil, performance.now() + 500);
+                return;
+            }
+
+            if (duration > 45 || this.textureDecodeCostEmaMs > 60) {
+                this.textureDecodeHeadroomSamples = 0;
+                return;
+            }
+            this.textureDecodeHeadroomSamples += 1;
+            if (this.textureDecodeHeadroomSamples < 8 || this.maxTextureLoads >= this.textureConcurrencyCeiling) return;
+            this.maxTextureLoads += 1;
+            this.textureDecodeGovernorIncreases += 1;
+            this.textureDecodeHeadroomSamples = 0;
+            this._pumpTextureQueue();
         }
 
         _objectUrlFor(url, blob) {

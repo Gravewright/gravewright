@@ -20,6 +20,7 @@ _DICE_RE = re.compile(r"^[1-9][0-9]?d[1-9][0-9]{0,2}$")
 
 _GRANTING_COLLECTIONS = ("inventory", "features", "weapons")
 _D20_RE = re.compile(r"(?<![A-Za-z0-9_])1d20(?![A-Za-z0-9_])", re.IGNORECASE)
+_EFFECT_TARGET_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]*(?:\.[A-Za-z0-9_-]+)+$")
 
 
 _STAT_TARGET_PATHS = {
@@ -126,7 +127,7 @@ def effect_modifiers(sheet_data: dict, targets: set[str]) -> tuple[list[dict], l
             if not isinstance(mod, dict):
                 continue
             target = str(mod.get("target") or "").strip()
-            if not target or not _target_matches(target, targets):
+            if not _EFFECT_TARGET_RE.fullmatch(target) or not _target_matches(target, targets):
                 continue
             normalized = {
                 "effectId": str(effect.get("id") or ""),
@@ -139,6 +140,34 @@ def effect_modifiers(sheet_data: dict, targets: set[str]) -> tuple[list[dict], l
             modifiers.append(mod)
             applied.append(normalized)
     return modifiers, applied
+
+
+def effect_restrictions(sheet_data: dict, target: str) -> list[dict]:
+    """Return active declarative restrictions matching a semantic target."""
+    normalized_target = str(target or "").strip()
+    if not _EFFECT_TARGET_RE.fullmatch(normalized_target):
+        return []
+    matched: list[dict] = []
+    for effect in _effective_effects(sheet_data):
+        payload = effect.get("data") if isinstance(effect.get("data"), dict) else {}
+        restrictions = payload.get("restrictions") or effect.get("restrictions") or []
+        if not isinstance(restrictions, list):
+            continue
+        for restriction in restrictions[:16]:
+            if not isinstance(restriction, dict):
+                continue
+            restriction_target = str(restriction.get("target") or "").strip()
+            if _EFFECT_TARGET_RE.fullmatch(restriction_target) and _target_matches(
+                restriction_target, {normalized_target}
+            ):
+                matched.append(
+                    {
+                        **restriction,
+                        "effectId": str(effect.get("id") or ""),
+                        "effectName": str(effect.get("name") or payload.get("name") or "Effect"),
+                    }
+                )
+    return matched
 
 
 def apply_roll_modifiers(formula: str, modifiers: list[dict]) -> str:

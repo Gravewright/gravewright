@@ -184,6 +184,7 @@ Use:
 - Modify an actor: request `actors.read` + `actors.write`; fetch with `sdk.actors.get()` and update with `expectedVersion`.
 - React to token movement: request `events.subscribe`; use `sdk.events.on("token.moved", ...)` and fetch with `tokens.read`.
 - Add a toolbar control: request `ui.slots`; mount in `dock.actions` and retain the disposer.
+- Add a module settings panel: request `ui.slots`; mount in `settings.modules`. The core lists the package in the 3/12 navigation rail and shows its owned root in the 9/12 content pane.
 - Add a wall/light tool: request only the required `scene.geometry.read`/`scene.geometry.write` pair.
 - Apply damage authoritatively: request `rules.actions`; execute a bounded `tokens.damage` action.
 - Interact with combat: use `combat.read`; add `combat.manage` only for mutations.

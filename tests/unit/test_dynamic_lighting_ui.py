@@ -575,8 +575,8 @@ def test_door_markers_use_the_state_icons_with_a_vector_fallback():
     layers=(ROOT/"static/js/board/pixi/pixi-board-layers.js").read_text(encoding="utf-8")
 
     for state in ("closed", "open", "locked"):
-        assert f'{state}: "/static/icons/{state}-door.png"' in pixi, state
-        assert (ROOT/f"static/icons/{state}-door.png").exists(), state
+        assert f'{state}: "/static/icons/doors/{state}-door.png"' in pixi, state
+        assert (ROOT/f"static/icons/doors/{state}-door.png").exists(), state
 
     assert "PIXI.Assets.load(url)" in pixi
     # sprite precisa de container proprio e de pool reciclado por frame

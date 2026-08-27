@@ -34,7 +34,7 @@ from app.persistence.repositories.package_content_import_repository import (
 )
 
 _ITEM_PACK_TYPES = {"item_pack", "spell_pack"}
-_JOURNAL_TYPES = {"diary", "quest", "quest_board"}
+_JOURNAL_TYPES = {"diary", "quest", "quest_board", "roll_table"}
 
 
 @dataclass(frozen=True)

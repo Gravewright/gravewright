@@ -79,7 +79,11 @@
             }
             if (evtName === "scene.chunk.updated") handleChunkUpdated(payload);
             if (evtName === "tokens.snapshot") handleTokensSnapshot(payload);
-            if (evtName === "tokens.created") handleTokensCreated(payload);
+            if (evtName === "tokens.created" || evtName === "token.created") {
+                handleTokensCreated(payload?.token && !payload?.tokens
+                    ? { ...payload, tokens: [payload.token] }
+                    : payload);
+            }
             if (evtName === "tokens.moved") handleTokensMoved(payload);
             if (evtName === "tokens.updated") handleTokensUpdated(payload);
             if (evtName === "tokens.deleted") handleTokensDeleted(payload);

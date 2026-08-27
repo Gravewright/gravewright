@@ -185,6 +185,32 @@ def test_modal_auto_fit_does_not_add_a_global_empty_height() -> None:
     assert 'dataNumber(modal, "autoFitMinHeight") || defaultFitHeight' not in layout
 
 
+def test_gravewright_panels_open_with_the_classic_panel_dimensions() -> None:
+    manager = (ROOT / "static/js/ui/modals/modal-manager.js").read_text(encoding="utf-8")
+    layout = (ROOT / "static/js/ui/modals/modal-layout.js").read_text(encoding="utf-8")
+    assert "const CLASSIC_PANEL_WIDTH = 320" in manager
+    assert "const CLASSIC_PANEL_TABS_HEIGHT = 46" in manager
+    assert "gravewrightPanelWidth: CLASSIC_PANEL_WIDTH" in manager
+    assert "gravewrightPanelHeightOffset: CLASSIC_PANEL_TABS_HEIGHT" in manager
+    assert "gravewrightPanel ? gravewrightPanelWidth : NaN" in layout
+    assert "gravewrightPanel ? layerRect.height - gravewrightPanelHeightOffset : NaN" in layout
+    assert "? (gravewrightPanel" in layout
+
+
+def test_gravewright_grouped_tabs_can_detach_and_reattach_in_place() -> None:
+    docking = (ROOT / "static/js/ui/modals/modal-docking.js").read_text(encoding="utf-8")
+    manager = (ROOT / "static/js/ui/modals/modal-manager.js").read_text(encoding="utf-8")
+    css = (ROOT / "static/css/game.css").read_text(encoding="utf-8")
+    assert "detach.dataset.gravewrightPanelTabDetach = panelId" in docking
+    assert "function detachGravewrightPanel(panelId)" in docking
+    assert "function attachGravewrightPanel(panel)" in docking
+    assert 'panel.dataset.gravewrightDetached = "true"' in docking
+    assert "delete panel.dataset.gravewrightDetached" in docking
+    assert 'event.target.closest("[data-gravewright-panel-tab-detach]")' in manager
+    assert "modalDocking.toggleGravewrightPanelAttachment(modal)" in manager
+    assert ".game-panel-tab-detach" in css
+
+
 def test_diary_notebook_has_distinct_sections_and_drag_reordering() -> None:
     template = (ROOT / "templates/pages/game/_journal_modal.html").read_text(encoding="utf-8")
     script = (ROOT / "static/js/journals/journal-modal.js").read_text(encoding="utf-8")
@@ -328,6 +354,23 @@ def test_journal_editor_uses_single_window_header_and_manageable_index() -> None
     assert "data-index-drag-handle" in script
     assert ".journal-modal .journal-index-entry" in css
     assert "journal-index-manage" not in script
+
+
+def test_diary_pages_can_move_between_chapters_by_drag_and_drop() -> None:
+    script = (ROOT / "static/js/journals/journal-modal.js").read_text(encoding="utf-8")
+    assert 'event.dataTransfer.setData("application/x-gravewright-journal-page", draggedIndexId)' in script
+    assert 'event.target.closest(".journal-chapter-group")' in script
+    assert 'category.value = chapter' in script
+    assert 'targetGroup.querySelector("[data-chapter-pages]")?.appendChild(draggedEntry)' in script
+    assert 'indexList.addEventListener("drop"' in script
+
+
+def test_the_whole_diary_page_row_starts_reordering() -> None:
+    script = (ROOT / "static/js/journals/journal-modal.js").read_text(encoding="utf-8")
+    css = (ROOT / "static/css/journal-workspace.css").read_text(encoding="utf-8")
+    assert 'indexDragFromEntry = !!event.target.closest("[data-index-page-id]")' in script
+    assert "!entry?.draggable || !indexDragFromEntry" in script
+    assert 'journal-index-entry[draggable="true"] .journal-index-open' in css
 
 
 def test_journal_interaction_uses_ordered_autosave_instead_of_save_button() -> None:

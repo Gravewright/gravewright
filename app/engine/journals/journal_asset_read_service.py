@@ -38,6 +38,7 @@ class JournalAssetReadService:
         asset_id: str,
         user_id: str,
         project_root: Path = PROJECT_ROOT,
+        presentation_journal_id: str | None = None,
     ) -> JournalAssetReadResult:
         asset = self.assets.get_by_id(asset_id)
         if asset is None or not asset["storage_path"]:
@@ -53,11 +54,13 @@ class JournalAssetReadService:
         journal_id = asset["journal_id"] if "journal_id" in asset.keys() else None
         if journal_id:
             journal = self.journals.get_by_id(journal_id)
-            if journal is None or not self.journal_service.can_view_journal(
-                journal=dict(journal),
-                campaign=dict(campaign),
-                user_id=user_id,
-            ):
+            presented = bool(
+                presentation_journal_id
+                and str(journal_id) == str(presentation_journal_id)
+            )
+            if journal is None or (not presented and not self.journal_service.can_view_journal(
+                journal=dict(journal), campaign=dict(campaign), user_id=user_id,
+            )):
                 return JournalAssetReadResult(success=False, error_key="not_authorized")
 
         path = project_root / asset["storage_path"]

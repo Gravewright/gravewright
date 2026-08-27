@@ -1023,6 +1023,9 @@
         "combat.advance",
         "combat.advanceRound",
         "combat.setTurn",
+        "combat.interruptTurn",
+        "combat.resumeTurn",
+        "combat.setHolding",
         "combat.add",
         "combat.remove",
         "combat.setFlags",
@@ -1576,6 +1579,22 @@
       "securityBoundary": "never grants raw filesystem, database, transport, renderer, or permission-override authority"
     },
     {
+      "name": "rolls.actions",
+      "status": "stable",
+      "description": "Register constrained actions on roll messages.",
+      "surfaces": [
+        "manifest",
+        "frontend",
+        "doctor"
+      ],
+      "methods": [
+        "rolls.actions.register"
+      ],
+      "authority": "declared capability plus current-user visibility/mutation authority",
+      "visibility": "filtered at the server boundary",
+      "securityBoundary": "never grants raw filesystem, database, transport, renderer, or permission-override authority"
+    },
+    {
       "name": "rolls.intent",
       "status": "stable",
       "description": "Request server-authoritative declarative roll/action intents.",
@@ -1586,6 +1605,23 @@
       ],
       "methods": [
         "rolls.intent"
+      ],
+      "authority": "declared capability plus current-user visibility/mutation authority",
+      "visibility": "filtered at the server boundary",
+      "securityBoundary": "never grants raw filesystem, database, transport, renderer, or permission-override authority"
+    },
+    {
+      "name": "rolls.reroll",
+      "status": "stable",
+      "description": "Reroll one persisted roll through its authoritative ruleset policy.",
+      "surfaces": [
+        "manifest",
+        "backend",
+        "frontend",
+        "doctor"
+      ],
+      "methods": [
+        "rolls.reroll"
       ],
       "authority": "declared capability plus current-user visibility/mutation authority",
       "visibility": "filtered at the server boundary",
@@ -2512,6 +2548,24 @@
       "methods": [
         "ui.slots.available",
         "ui.slots.register"
+      ],
+      "authority": "declared capability plus current-user visibility/mutation authority",
+      "visibility": "filtered at the server boundary",
+      "securityBoundary": "never grants raw filesystem, database, transport, renderer, or permission-override authority"
+    },
+    {
+      "name": "users.presentation.read",
+      "status": "stable",
+      "description": "Read the bounded public presentation color of participants visible in the active campaign.",
+      "surfaces": [
+        "manifest",
+        "backend",
+        "frontend",
+        "doctor"
+      ],
+      "methods": [
+        "users.presentation.get",
+        "users.presentation.list"
       ],
       "authority": "declared capability plus current-user visibility/mutation authority",
       "visibility": "filtered at the server boundary",
@@ -5187,6 +5241,57 @@
       ]
     },
     {
+      "path": "combat.interruptTurn",
+      "signature": "sdk.combat.interruptTurn(combatantId)",
+      "requiredCapability": "combat.manage",
+      "parameters": [
+        {
+          "name": "combatantId",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "justifiedGenericTypes": []
+        }
+      ],
+      "returns": "CombatStateDTO",
+      "asynchronous": true,
+      "errors": [
+        "CAPABILITY_REQUIRED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "VALIDATION_FAILED",
+        "STALE_VERSION",
+        "IDEMPOTENCY_CONFLICT",
+        "ALREADY_SUBMITTED",
+        "NOT_ACTIVE_PARTICIPANT",
+        "LIMIT_EXCEEDED",
+        "UNKNOWN_ACTION",
+        "ALREADY_RESPONDED",
+        "INTERACTION_EXPIRED",
+        "INTERACTION_CANCELLED",
+        "UNKNOWN_OBJECT_TYPE",
+        "PROVIDER_UNAVAILABLE",
+        "INVALID_GEOMETRY",
+        "INVALID_OBJECT_DATA",
+        "INVALID_PRESENTATION",
+        "INVALID_ANCHOR",
+        "ANCHOR_NOT_VISIBLE",
+        "NOT_AUTHORIZED",
+        "PACKAGE_INACTIVE",
+        "UNKNOWN_INTERACTION",
+        "UNSUPPORTED_PRESENTATION_MODE",
+        "RESOURCE_IN_USE"
+      ],
+      "lifecycle": "active package only; registrations return a disposer",
+      "concurrency": "server-authoritative; expectedVersion is atomic CAS when present",
+      "visibility": "current-user authority projection; hidden resources are indistinguishable from missing resources",
+      "durability": "durable only for server resources; local registrations and presentation handles end on package unload",
+      "justifiedGenericReturn": [
+        "RulesetCombatResources",
+        "RulesetEffectMutation"
+      ]
+    },
+    {
       "path": "combat.moveCombatant",
       "signature": "sdk.combat.moveCombatant(combatantId, delta)",
       "requiredCapability": "combat.manage",
@@ -5453,6 +5558,49 @@
       "justifiedGenericReturn": []
     },
     {
+      "path": "combat.resumeTurn",
+      "signature": "sdk.combat.resumeTurn()",
+      "requiredCapability": "combat.manage",
+      "parameters": [],
+      "returns": "CombatStateDTO",
+      "asynchronous": true,
+      "errors": [
+        "CAPABILITY_REQUIRED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "VALIDATION_FAILED",
+        "STALE_VERSION",
+        "IDEMPOTENCY_CONFLICT",
+        "ALREADY_SUBMITTED",
+        "NOT_ACTIVE_PARTICIPANT",
+        "LIMIT_EXCEEDED",
+        "UNKNOWN_ACTION",
+        "ALREADY_RESPONDED",
+        "INTERACTION_EXPIRED",
+        "INTERACTION_CANCELLED",
+        "UNKNOWN_OBJECT_TYPE",
+        "PROVIDER_UNAVAILABLE",
+        "INVALID_GEOMETRY",
+        "INVALID_OBJECT_DATA",
+        "INVALID_PRESENTATION",
+        "INVALID_ANCHOR",
+        "ANCHOR_NOT_VISIBLE",
+        "NOT_AUTHORIZED",
+        "PACKAGE_INACTIVE",
+        "UNKNOWN_INTERACTION",
+        "UNSUPPORTED_PRESENTATION_MODE",
+        "RESOURCE_IN_USE"
+      ],
+      "lifecycle": "active package only; registrations return a disposer",
+      "concurrency": "server-authoritative; expectedVersion is atomic CAS when present",
+      "visibility": "current-user authority projection; hidden resources are indistinguishable from missing resources",
+      "durability": "durable only for server resources; local registrations and presentation handles end on package unload",
+      "justifiedGenericReturn": [
+        "RulesetCombatResources",
+        "RulesetEffectMutation"
+      ]
+    },
+    {
       "path": "combat.rollInitiative",
       "signature": "sdk.combat.rollInitiative(options = {})",
       "requiredCapability": "combat.manage",
@@ -5520,6 +5668,64 @@
           "type": "CombatFlagsPatch",
           "required": false,
           "default": "{}",
+          "justifiedGenericTypes": []
+        }
+      ],
+      "returns": "CombatStateDTO",
+      "asynchronous": true,
+      "errors": [
+        "CAPABILITY_REQUIRED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "VALIDATION_FAILED",
+        "STALE_VERSION",
+        "IDEMPOTENCY_CONFLICT",
+        "ALREADY_SUBMITTED",
+        "NOT_ACTIVE_PARTICIPANT",
+        "LIMIT_EXCEEDED",
+        "UNKNOWN_ACTION",
+        "ALREADY_RESPONDED",
+        "INTERACTION_EXPIRED",
+        "INTERACTION_CANCELLED",
+        "UNKNOWN_OBJECT_TYPE",
+        "PROVIDER_UNAVAILABLE",
+        "INVALID_GEOMETRY",
+        "INVALID_OBJECT_DATA",
+        "INVALID_PRESENTATION",
+        "INVALID_ANCHOR",
+        "ANCHOR_NOT_VISIBLE",
+        "NOT_AUTHORIZED",
+        "PACKAGE_INACTIVE",
+        "UNKNOWN_INTERACTION",
+        "UNSUPPORTED_PRESENTATION_MODE",
+        "RESOURCE_IN_USE"
+      ],
+      "lifecycle": "active package only; registrations return a disposer",
+      "concurrency": "server-authoritative; expectedVersion is atomic CAS when present",
+      "visibility": "current-user authority projection; hidden resources are indistinguishable from missing resources",
+      "durability": "durable only for server resources; local registrations and presentation handles end on package unload",
+      "justifiedGenericReturn": [
+        "RulesetCombatResources",
+        "RulesetEffectMutation"
+      ]
+    },
+    {
+      "path": "combat.setHolding",
+      "signature": "sdk.combat.setHolding(combatantId, holding = true)",
+      "requiredCapability": "combat.manage",
+      "parameters": [
+        {
+          "name": "combatantId",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "justifiedGenericTypes": []
+        },
+        {
+          "name": "holding",
+          "type": "boolean",
+          "required": false,
+          "default": "true",
           "justifiedGenericTypes": []
         }
       ],
@@ -9113,6 +9319,63 @@
       "justifiedGenericReturn": []
     },
     {
+      "path": "rolls.actions.register",
+      "signature": "sdk.rolls.actions.register(definition, handler)",
+      "requiredCapability": "rolls.actions",
+      "parameters": [
+        {
+          "name": "definition",
+          "type": "RollActionDefinition",
+          "required": true,
+          "default": null,
+          "justifiedGenericTypes": []
+        },
+        {
+          "name": "handler",
+          "type": "RollActionHandler",
+          "required": true,
+          "default": null,
+          "justifiedGenericTypes": [
+            "ChatMetadata"
+          ]
+        }
+      ],
+      "returns": "boolean",
+      "asynchronous": false,
+      "errors": [
+        "CAPABILITY_REQUIRED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "VALIDATION_FAILED",
+        "STALE_VERSION",
+        "IDEMPOTENCY_CONFLICT",
+        "ALREADY_SUBMITTED",
+        "NOT_ACTIVE_PARTICIPANT",
+        "LIMIT_EXCEEDED",
+        "UNKNOWN_ACTION",
+        "ALREADY_RESPONDED",
+        "INTERACTION_EXPIRED",
+        "INTERACTION_CANCELLED",
+        "UNKNOWN_OBJECT_TYPE",
+        "PROVIDER_UNAVAILABLE",
+        "INVALID_GEOMETRY",
+        "INVALID_OBJECT_DATA",
+        "INVALID_PRESENTATION",
+        "INVALID_ANCHOR",
+        "ANCHOR_NOT_VISIBLE",
+        "NOT_AUTHORIZED",
+        "PACKAGE_INACTIVE",
+        "UNKNOWN_INTERACTION",
+        "UNSUPPORTED_PRESENTATION_MODE",
+        "RESOURCE_IN_USE"
+      ],
+      "lifecycle": "active package only; registrations return a disposer",
+      "concurrency": "server-authoritative; expectedVersion is atomic CAS when present",
+      "visibility": "current-user authority projection; hidden resources are indistinguishable from missing resources",
+      "durability": "durable only for server resources; local registrations and presentation handles end on package unload",
+      "justifiedGenericReturn": []
+    },
+    {
       "path": "rolls.intent",
       "signature": "sdk.rolls.intent(payload = {})",
       "requiredCapability": "rolls.intent",
@@ -9129,6 +9392,57 @@
         }
       ],
       "returns": "Promise<RollResultDTO | SheetDataPatchResult>",
+      "asynchronous": false,
+      "errors": [
+        "CAPABILITY_REQUIRED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "VALIDATION_FAILED",
+        "STALE_VERSION",
+        "IDEMPOTENCY_CONFLICT",
+        "ALREADY_SUBMITTED",
+        "NOT_ACTIVE_PARTICIPANT",
+        "LIMIT_EXCEEDED",
+        "UNKNOWN_ACTION",
+        "ALREADY_RESPONDED",
+        "INTERACTION_EXPIRED",
+        "INTERACTION_CANCELLED",
+        "UNKNOWN_OBJECT_TYPE",
+        "PROVIDER_UNAVAILABLE",
+        "INVALID_GEOMETRY",
+        "INVALID_OBJECT_DATA",
+        "INVALID_PRESENTATION",
+        "INVALID_ANCHOR",
+        "ANCHOR_NOT_VISIBLE",
+        "NOT_AUTHORIZED",
+        "PACKAGE_INACTIVE",
+        "UNKNOWN_INTERACTION",
+        "UNSUPPORTED_PRESENTATION_MODE",
+        "RESOURCE_IN_USE"
+      ],
+      "lifecycle": "active package only; registrations return a disposer",
+      "concurrency": "server-authoritative; expectedVersion is atomic CAS when present",
+      "visibility": "current-user authority projection; hidden resources are indistinguishable from missing resources",
+      "durability": "durable only for server resources; local registrations and presentation handles end on package unload",
+      "justifiedGenericReturn": [
+        "RollAppliedMutation",
+        "RollMetadata"
+      ]
+    },
+    {
+      "path": "rolls.reroll",
+      "signature": "sdk.rolls.reroll(messageId)",
+      "requiredCapability": "rolls.reroll",
+      "parameters": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "justifiedGenericTypes": []
+        }
+      ],
+      "returns": "Promise<RollResultDTO>",
       "asynchronous": false,
       "errors": [
         "CAPABILITY_REQUIRED",
@@ -16118,6 +16432,94 @@
       "justifiedGenericReturn": []
     },
     {
+      "path": "users.presentation.get",
+      "signature": "sdk.users.presentation.get(userId)",
+      "requiredCapability": "users.presentation.read",
+      "parameters": [
+        {
+          "name": "userId",
+          "type": "string",
+          "required": true,
+          "default": null,
+          "justifiedGenericTypes": []
+        }
+      ],
+      "returns": "UserPresentationDTO",
+      "asynchronous": true,
+      "errors": [
+        "CAPABILITY_REQUIRED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "VALIDATION_FAILED",
+        "STALE_VERSION",
+        "IDEMPOTENCY_CONFLICT",
+        "ALREADY_SUBMITTED",
+        "NOT_ACTIVE_PARTICIPANT",
+        "LIMIT_EXCEEDED",
+        "UNKNOWN_ACTION",
+        "ALREADY_RESPONDED",
+        "INTERACTION_EXPIRED",
+        "INTERACTION_CANCELLED",
+        "UNKNOWN_OBJECT_TYPE",
+        "PROVIDER_UNAVAILABLE",
+        "INVALID_GEOMETRY",
+        "INVALID_OBJECT_DATA",
+        "INVALID_PRESENTATION",
+        "INVALID_ANCHOR",
+        "ANCHOR_NOT_VISIBLE",
+        "NOT_AUTHORIZED",
+        "PACKAGE_INACTIVE",
+        "UNKNOWN_INTERACTION",
+        "UNSUPPORTED_PRESENTATION_MODE",
+        "RESOURCE_IN_USE"
+      ],
+      "lifecycle": "active package only; registrations return a disposer",
+      "concurrency": "server-authoritative; expectedVersion is atomic CAS when present",
+      "visibility": "current-user authority projection; hidden resources are indistinguishable from missing resources",
+      "durability": "durable only for server resources; local registrations and presentation handles end on package unload",
+      "justifiedGenericReturn": []
+    },
+    {
+      "path": "users.presentation.list",
+      "signature": "sdk.users.presentation.list()",
+      "requiredCapability": "users.presentation.read",
+      "parameters": [],
+      "returns": "UserPresentationDTO[]",
+      "asynchronous": true,
+      "errors": [
+        "CAPABILITY_REQUIRED",
+        "PERMISSION_DENIED",
+        "NOT_FOUND",
+        "VALIDATION_FAILED",
+        "STALE_VERSION",
+        "IDEMPOTENCY_CONFLICT",
+        "ALREADY_SUBMITTED",
+        "NOT_ACTIVE_PARTICIPANT",
+        "LIMIT_EXCEEDED",
+        "UNKNOWN_ACTION",
+        "ALREADY_RESPONDED",
+        "INTERACTION_EXPIRED",
+        "INTERACTION_CANCELLED",
+        "UNKNOWN_OBJECT_TYPE",
+        "PROVIDER_UNAVAILABLE",
+        "INVALID_GEOMETRY",
+        "INVALID_OBJECT_DATA",
+        "INVALID_PRESENTATION",
+        "INVALID_ANCHOR",
+        "ANCHOR_NOT_VISIBLE",
+        "NOT_AUTHORIZED",
+        "PACKAGE_INACTIVE",
+        "UNKNOWN_INTERACTION",
+        "UNSUPPORTED_PRESENTATION_MODE",
+        "RESOURCE_IN_USE"
+      ],
+      "lifecycle": "active package only; registrations return a disposer",
+      "concurrency": "server-authoritative; expectedVersion is atomic CAS when present",
+      "visibility": "current-user authority projection; hidden resources are indistinguishable from missing resources",
+      "durability": "durable only for server resources; local registrations and presentation handles end on package unload",
+      "justifiedGenericReturn": []
+    },
+    {
       "path": "workflows.cancel",
       "signature": "sdk.workflows.cancel(id, options = {})",
       "requiredCapability": "workflows.control",
@@ -17340,6 +17742,9 @@
         "token_asset_id": {
           "typeExpression": "string | null"
         },
+        "owner_user_ids": {
+          "typeExpression": "string[]"
+        },
         "version": {
           "typeExpression": "number"
         },
@@ -17619,6 +18024,22 @@
           "typeExpression": "string"
         },
         "name": {
+          "typeExpression": "string"
+        }
+      }
+    },
+    "UserPresentationDTO": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userId",
+        "color"
+      ],
+      "properties": {
+        "userId": {
+          "typeExpression": "string"
+        },
+        "color": {
           "typeExpression": "string"
         }
       }
@@ -19008,6 +19429,9 @@
         "has_acted": {
           "typeExpression": "boolean"
         },
+        "holding": {
+          "typeExpression": "boolean"
+        },
         "can_move_up": {
           "typeExpression": "boolean"
         },
@@ -19116,6 +19540,15 @@
           "typeExpression": "string"
         },
         "next_name": {
+          "typeExpression": "string"
+        },
+        "interrupted": {
+          "typeExpression": "boolean"
+        },
+        "interrupted_id": {
+          "typeExpression": "string"
+        },
+        "interrupted_name": {
           "typeExpression": "string"
         },
         "config": {
@@ -21604,6 +22037,9 @@
         "actionId": {
           "typeExpression": "string"
         },
+        "itemInstanceId": {
+          "typeExpression": "string"
+        },
         "inputs": {
           "typeExpression": "ActionInput"
         },
@@ -21618,6 +22054,31 @@
         },
         "target": {
           "typeExpression": "RollTarget"
+        }
+      }
+    },
+    "RollActionDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "typeExpression": "string"
+        },
+        "label": {
+          "typeExpression": "string"
+        },
+        "intents": {
+          "typeExpression": "string[]"
+        },
+        "actionIds": {
+          "typeExpression": "string[]"
+        },
+        "excludeActionIds": {
+          "typeExpression": "string[]"
         }
       }
     },
@@ -23791,6 +24252,7 @@
     "SdkEventName": "string",
     "SdkEvent": "Readonly<{ type: SdkEventName; version: number; resourceId?: string; sceneId?: string }>",
     "SdkEventHandler": "(event: SdkEvent) => void",
+    "RollActionHandler": "(message: ChatMessageDTO) => void | Promise<void>",
     "InteropPayload": "JsonValue",
     "InteropHandler": "(payload: InteropPayload, context: InteropProviderContext) => InteropPayload | Promise<InteropPayload>",
     "InteropSubscriber": "(payload: InteropPayload) => void",
@@ -24149,6 +24611,13 @@
         ]
       },
       {
+        "method": "combat.interruptTurn",
+        "types": [
+          "RulesetCombatResources",
+          "RulesetEffectMutation"
+        ]
+      },
+      {
         "method": "combat.moveCombatant",
         "types": [
           "RulesetCombatResources",
@@ -24163,6 +24632,13 @@
         ]
       },
       {
+        "method": "combat.resumeTurn",
+        "types": [
+          "RulesetCombatResources",
+          "RulesetEffectMutation"
+        ]
+      },
+      {
         "method": "combat.rollInitiative",
         "types": [
           "RulesetCombatResources",
@@ -24171,6 +24647,13 @@
       },
       {
         "method": "combat.setFlags",
+        "types": [
+          "RulesetCombatResources",
+          "RulesetEffectMutation"
+        ]
+      },
+      {
+        "method": "combat.setHolding",
         "types": [
           "RulesetCombatResources",
           "RulesetEffectMutation"
@@ -24297,6 +24780,13 @@
       },
       {
         "method": "rolls.intent",
+        "types": [
+          "RollAppliedMutation",
+          "RollMetadata"
+        ]
+      },
+      {
+        "method": "rolls.reroll",
         "types": [
           "RollAppliedMutation",
           "RollMetadata"
@@ -24548,6 +25038,13 @@
         "parameter": "patch",
         "types": [
           "JournalDataInput"
+        ]
+      },
+      {
+        "method": "rolls.actions.register",
+        "parameter": "handler",
+        "types": [
+          "ChatMetadata"
         ]
       },
       {
@@ -25116,6 +25613,10 @@
     },
     {
       "name": "ui.presentation.changed",
+      "delivery": "authorized, schema-versioned event; re-read current state"
+    },
+    {
+      "name": "user.presentation.changed",
       "delivery": "authorized, schema-versioned event; re-read current state"
     },
     {

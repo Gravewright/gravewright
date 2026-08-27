@@ -18,7 +18,9 @@ from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
 from app.engine.assets.asset_read_service import AssetReadService
 from app.engine.journals.journal_page_service import JournalPageService
+from app.engine.journals.journal_asset_read_service import JournalAssetReadService
 from app.engine.sheets.item_sheet_service import ItemSheetService
+from app.helpers.env import PROJECT_ROOT
 from app.helpers.view import view_context
 
 
@@ -146,6 +148,28 @@ async def get_handout_presentation(
         "bundle_json": json.dumps(item_sheet_service.to_dict(bundle), separators=(",", ":")),
         "room_id": bundle.campaign_id, "is_gm": False, "targeted_handouts_enabled": False,
     })
+
+
+@get("/game/handouts/presentation/{ticket:str}/asset/{asset_id:str}")
+async def get_presented_journal_asset(
+    ticket: FromPath[str],
+    asset_id: FromPath[str],
+    current_user: Row,
+    journal_asset_read_service: JournalAssetReadService,
+) -> Response | File:
+    payload = verify_presentation_ticket(ticket, user_id=current_user["id"])
+    if payload is None or payload.get("resource_type") != "journal":
+        return Response({"ok": False, "error_key": "handout.errors.presentation_expired"}, status_code=403)
+    result = await run_blocking(
+        journal_asset_read_service.get_asset,
+        asset_id=asset_id,
+        user_id=current_user["id"],
+        project_root=PROJECT_ROOT,
+        presentation_journal_id=str(payload["resource_id"]),
+    )
+    if not result.success or result.path is None:
+        return Response({"ok": False, "error_key": "handout.errors.not_found"}, status_code=404)
+    return File(path=result.path, media_type=result.media_type or "image/png")
 
 
 @post("/game/handouts/grant")

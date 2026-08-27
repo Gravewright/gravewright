@@ -3,7 +3,7 @@
      data-owners-json="{{ (journal.owners | tojson) | e if journal.owners else '[]' }}"
      data-folder-id="{{ journal.folder_id or '' }}" role="button" tabindex="0"
      {% if room.member_role == 'gm' %}draggable="true"{% endif %}>
-    <i class="ph {% if journal.type == 'quest' %}ph-flag-banner{% elif journal.type == 'quest_board' %}ph-kanban{% else %}ph-book-open-text{% endif %} journal-card-icon" aria-hidden="true"></i>
+    <i class="ph {% if journal.type == 'quest' %}ph-flag-banner{% elif journal.type == 'quest_board' %}ph-kanban{% elif journal.type == 'roll_table' %}ph-dice-five{% else %}ph-book-open-text{% endif %} journal-card-icon" aria-hidden="true"></i>
     <span class="journal-card-info">
         <strong>{{ journal.title }}</strong>
         <small>{{ t(journal.type_label_key) }}</small>

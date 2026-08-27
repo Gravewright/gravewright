@@ -2697,16 +2697,26 @@
 
 
 
+    let animationFrame = 0;
+    let animationLoopActive = false;
+    function stopAnimationLoop() {
+        animationLoopActive = false;
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+    }
     function startAnimationLoop() {
+        if (animationLoopActive) return;
+        animationLoopActive = true;
         let last = 0;
         const tick = (now) => {
+            if (!animationLoopActive) return;
             if (now - last >= ANIMATION_INTERVAL_MS) {
                 last = now;
                 if ([...controllers.values()].some((controller) => controller.animated())) redraw();
             }
-            window.requestAnimationFrame(tick);
+            animationFrame = window.requestAnimationFrame(tick);
         };
-        window.requestAnimationFrame(tick);
+        animationFrame = window.requestAnimationFrame(tick);
     }
 
     function init() {
@@ -2789,6 +2799,9 @@
             controllers.forEach((controller) => void controller.removeSelected(...(toolKinds[activeTool] || [])));
         });
         startAnimationLoop();
+        window.addEventListener?.("pagehide", stopAnimationLoop);
+        window.addEventListener?.("vtt:game-exit", stopAnimationLoop);
+        window.addEventListener?.("pageshow", (event) => { if (event.persisted) startAnimationLoop(); });
     }
 
     window.GravewrightLighting = {

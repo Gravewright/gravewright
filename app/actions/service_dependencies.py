@@ -55,6 +55,7 @@ from app.engine.journals.journal_page_service import JournalPageService
 from app.engine.journals.journal_service import JournalService
 from app.engine.resources.resource_permission_page_service import ResourcePermissionPageService
 from app.engine.rolls.roll_presentation_service import RollPresentationService
+from app.engine.rolls.roll_reroll_service import RollRerollService
 from app.engine.scenes.map_upload_service import MapUploadService
 from app.engine.scenes.scene_asset_read_service import SceneAssetReadService
 from app.engine.scenes.scene_image_service import SceneImageService
@@ -137,6 +138,7 @@ SERVICE_DEPENDENCIES = {
     "presence_service": _singleton(PresenceService),
     "resource_permission_page_service": _singleton(ResourcePermissionPageService),
     "roll_presentation_service": _singleton(RollPresentationService),
+    "roll_reroll_service": _singleton(RollRerollService),
     "scene_asset_read_service": _singleton(SceneAssetReadService),
     "scene_image_service": _singleton(SceneImageService),
     "scene_wall_service": _singleton(SceneWallService),

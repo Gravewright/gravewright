@@ -47,6 +47,22 @@ class UserPreferenceRepository:
     def get_ping_color(self, user_id: str) -> str | None:
         return self._read(user_preferences.c.ping_color, user_id)
 
+    def get_ping_colors(self, user_ids: list[str]) -> dict[str, str]:
+        """Return stored presentation colors for a bounded set of users."""
+        bounded = list(dict.fromkeys(str(user_id) for user_id in user_ids if user_id))[:500]
+        if not bounded:
+            return {}
+        with engine_connect() as connection:
+            rows = connection.execute(
+                select(user_preferences.c.user_id, user_preferences.c.ping_color)
+                .where(user_preferences.c.user_id.in_(bounded))
+            ).mappings()
+            return {
+                str(row["user_id"]): str(row["ping_color"])
+                for row in rows
+                if row["ping_color"] is not None
+            }
+
     def set_ping_color(self, *, user_id: str, ping_color: str) -> None:
         self._write("ping_color", user_id=user_id, value=ping_color)
 

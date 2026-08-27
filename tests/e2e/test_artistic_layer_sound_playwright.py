@@ -47,7 +47,7 @@ def test_artistic_layer_places_and_restores_spatial_sound(sound_server):
             _login(page,s["base_url"],GM_EMAIL,GM_PASSWORD);page.goto(f"{s['base_url']}/game?room={s['campaign_id']}")
             close=page.locator("[data-onboarding-close]"); close.first.click() if close.count() else None
             personal_toggle=page.locator("[data-personal-audio-toggle]");expect(personal_toggle).to_be_visible();toggle_box=personal_toggle.bounding_box();assert toggle_box["x"]<80 and toggle_box["y"]>page.viewport_size["height"]-80,toggle_box
-            personal_toggle.click();personal=page.locator("[data-personal-audio-popover]");expect(personal).to_be_visible();personal_box=personal.bounding_box();assert personal_box["width"]<=225 and personal_box["height"]<=210,personal_box;expect(personal.locator("[data-mixer-channel]")).to_have_count(3);master=personal.locator('[data-mixer-channel="master"]');ambience=personal.locator('[data-mixer-channel="ambience"]');effects=personal.locator('[data-mixer-channel="sfx"]');master.evaluate("el=>{el.value='.9';el.dispatchEvent(new Event('input',{bubbles:true}));}");ambience.evaluate("el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));}");assert page.evaluate("[GravewrightAudioRuntime.preference('master'),GravewrightAudioRuntime.preference('ambience'),GravewrightAudioRuntime.preference('music')]")==[.9,.9,.9];master.evaluate("el=>{el.value='.3';el.dispatchEvent(new Event('input',{bubbles:true}));}");expect(personal.locator('[data-mixer-output="master"]')).to_have_text("30%");expect(ambience).to_have_value("0.3");expect(ambience).to_have_attribute("max","0.3");expect(effects).to_have_value("0.3");expect(effects).to_have_attribute("max","0.3");assert page.evaluate("[GravewrightAudioRuntime.preference('master'),GravewrightAudioRuntime.preference('ambience'),GravewrightAudioRuntime.preference('music'),GravewrightAudioRuntime.preference('sfx')]")==[.3,.3,.3,.3];personal.locator("[data-personal-audio-close]").click();expect(personal).to_be_hidden()
+            personal_toggle.click();personal=page.locator("[data-personal-audio-popover]");expect(personal).to_be_visible();personal_box=personal.bounding_box();assert personal_box["width"]<=360 and personal_box["height"]<=210,personal_box;expect(personal.locator("[data-mixer-channel]")).to_have_count(3);master=personal.locator('[data-mixer-channel="master"]');ambience=personal.locator('[data-mixer-channel="ambience"]');effects=personal.locator('[data-mixer-channel="sfx"]');master.evaluate("el=>{el.value='.9';el.dispatchEvent(new Event('input',{bubbles:true}));}");ambience.evaluate("el=>{el.value='1';el.dispatchEvent(new Event('input',{bubbles:true}));}");assert page.evaluate("[GravewrightAudioRuntime.preference('master'),GravewrightAudioRuntime.preference('ambience'),GravewrightAudioRuntime.preference('music')]")==[.9,.9,.9];master.evaluate("el=>{el.value='.3';el.dispatchEvent(new Event('input',{bubbles:true}));}");expect(personal.locator('[data-mixer-output="master"]')).to_have_text("30%");expect(ambience).to_have_value("0.3");expect(ambience).to_have_attribute("max","0.3");expect(effects).to_have_value("0.3");expect(effects).to_have_attribute("max","0.3");assert page.evaluate("[GravewrightAudioRuntime.preference('master'),GravewrightAudioRuntime.preference('ambience'),GravewrightAudioRuntime.preference('music'),GravewrightAudioRuntime.preference('sfx')]")==[.3,.3,.3,.3];personal.locator("[data-personal-audio-close]").click();expect(personal).to_be_hidden()
             artistic=page.locator('.room-workspace.is-active [data-active-layer="composition"]');expect(artistic).to_be_visible();artistic.click()
             for domain in ("images","sounds"):expect(page.locator(f'[data-artistic-domain="{domain}"]').first).to_be_attached()
             for domain in ("lights","shaders","particles"):expect(page.locator(f'[data-artistic-domain="{domain}"]')).to_have_count(0)
@@ -170,6 +170,57 @@ def test_upload_once_asset_becomes_reusable_native_sound(sound_server):
             after=page.evaluate("async id=>(await (await fetch('/game/assets/state/'+id)).json()).assets.length",s["campaign_id"]);assert after==before
             page.reload();close=page.locator("[data-onboarding-close]");close.first.click() if close.count() else None;page.locator('.room-workspace.is-active [data-active-layer="composition"]').click();page.locator('[data-artistic-domain="sounds"]:visible').click();page.locator('[data-open-sound-modal="effect"]').click();expect(page.locator('[data-sound-product-modal="effect"]:not([hidden]) [data-spatial-id]')).to_have_count(initial_emitters+1)
         finally:_close(ctx);browser.close()
+
+
+def test_ambient_sound_is_broadcast_to_players(sound_server):
+    """O botão do GM projeta o mesmo playback de ambiente em toda a mesa."""
+    s = sound_server
+    audio_double = """window.Audio=class{constructor(src){this.src=src;this.paused=true;this.volume=1;this.loop=false;this.duration=60;this.currentTime=0;}addEventListener(name,callback){if(name==='loadedmetadata')queueMicrotask(callback);}play(){this.paused=false;return Promise.resolve();}pause(){this.paused=true;}}"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        gm_ctx = browser.new_context()
+        player_ctx = browser.new_context()
+        gm_ctx.add_init_script(audio_double)
+        player_ctx.add_init_script(audio_double)
+        gm = gm_ctx.new_page()
+        player = player_ctx.new_page()
+        try:
+            _login(gm, s["base_url"], GM_EMAIL, GM_PASSWORD)
+            _login(player, s["base_url"], PLAYER_EMAIL, PLAYER_PASSWORD)
+            gm.goto(f"{s['base_url']}/game?room={s['campaign_id']}")
+            player.goto(f"{s['base_url']}/game?room={s['campaign_id']}")
+            for page in (gm, player):
+                close = page.locator("[data-onboarding-close]")
+                close.first.click() if close.count() else page.mouse.click(5, 5)
+                page.wait_for_function("()=>GravewrightRealtime?.isOpen()")
+
+            playback = gm.evaluate(
+                """async d=>{const r=await fetch('/game/sounds/play',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}""",
+                {"campaignId": s["campaign_id"], "soundId": s["ambient_sound_id"]},
+            )
+            for page in (gm, player):
+                page.wait_for_function(
+                    "id=>{const value=GravewrightAudioRuntime.inspect(id);return value?.playing===true}",
+                    arg=playback["id"],
+                )
+                assert page.evaluate(
+                    "id=>GravewrightAudioRuntime.inspect(id).volume>0", playback["id"]
+                )
+
+            paused = gm.evaluate(
+                """async d=>{const r=await fetch('/game/sounds/pause',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)});if(!r.ok)throw new Error(await r.text());return r.json();}""",
+                {"campaignId": s["campaign_id"], "soundId": s["ambient_sound_id"]},
+            )
+            assert paused["id"] == playback["id"]
+            for page in (gm, player):
+                page.wait_for_function(
+                    "id=>GravewrightAudioRuntime.inspect(id)?.playing===false",
+                    arg=playback["id"],
+                )
+        finally:
+            _close(gm_ctx)
+            _close(player_ctx)
+            browser.close()
 
 
 def test_player_hears_spatial_effect_only_through_controlled_token(sound_server):

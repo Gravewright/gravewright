@@ -846,6 +846,23 @@ Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap
 Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
 Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
 
+## `sdk.combat.interruptTurn(combatantId)`
+
+Capability: `combat.manage`
+Retorno: `Promise<CombatStateDTO>`
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+
+Parámetros:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `combatantId` | `string` | Sí | `None` |
+
 ## `sdk.combat.moveCombatant(combatantId, delta)`
 
 Capability: `combat.manage`
@@ -933,6 +950,17 @@ Parámetros:
 | `name` | `string` | Sí | `None` |
 | `payload` | `CombatProtocolPayload` | Sí | `None` |
 
+## `sdk.combat.resumeTurn()`
+
+Capability: `combat.manage`
+Retorno: `Promise<CombatStateDTO>`
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+
 ## `sdk.combat.rollInitiative(options = {})`
 
 Capability: `combat.manage`
@@ -967,6 +995,24 @@ Parámetros:
 |---|---|:---:|---|
 | `combatantId` | `string` | Sí | `None` |
 | `flags` | `CombatFlagsPatch` | No | `{}` |
+
+## `sdk.combat.setHolding(combatantId, holding = true)`
+
+Capability: `combat.manage`
+Retorno: `Promise<CombatStateDTO>`
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+
+Parámetros:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `combatantId` | `string` | Sí | `None` |
+| `holding` | `boolean` | No | `true` |
 
 ## `sdk.combat.setInitiative(combatantId, value)`
 
@@ -2128,6 +2174,24 @@ Parámetros:
 | `action` | `string` | Sí | `None` |
 | `resource` | `PermissionResource` | No | `{}` |
 
+## `sdk.rolls.actions.register(definition, handler)`
+
+Capability: `rolls.actions`
+Retorno: `boolean`
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+
+Parámetros:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `definition` | `RollActionDefinition` | Sí | `None` |
+| `handler` | `RollActionHandler` | Sí | `None` |
+
 ## `sdk.rolls.intent(payload = {})`
 
 Capability: `rolls.intent`
@@ -2144,6 +2208,23 @@ Parámetros:
 | Parameter | Type | Required | Default |
 |---|---|:---:|---|
 | `payload` | `RollIntentInput` | No | `{}` |
+
+## `sdk.rolls.reroll(messageId)`
+
+Capability: `rolls.reroll`
+Retorno: `Promise<RollResultDTO>`
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+
+Parámetros:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `messageId` | `string` | Sí | `None` |
 
 ## `sdk.rules.actions.execute(actionId, input = {}, options = {})`
 
@@ -4391,6 +4472,34 @@ Parámetros:
 |---|---|:---:|---|
 | `message` | `string` | Sí | `None` |
 | `options` | `ToastOptions` | Sí | `None` |
+
+## `sdk.users.presentation.get(userId)`
+
+Capability: `users.presentation.read`
+Retorno: `Promise<UserPresentationDTO>`
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+
+Parámetros:
+
+| Parameter | Type | Required | Default |
+|---|---|:---:|---|
+| `userId` | `string` | Sí | `None` |
+
+## `sdk.users.presentation.list()`
+
+Capability: `users.presentation.read`
+Retorno: `Promise<UserPresentationDTO[]>`
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
 
 ## `sdk.workflows.cancel(id, options = {})`
 

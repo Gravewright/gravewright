@@ -184,6 +184,7 @@
     }
 
     function emissionEffect(light) {
+        if (window.GravewrightGraphicsQuality?.config?.().expensiveFilters === false) return null;
         const animation = light.animation;
 
 
@@ -374,9 +375,9 @@
 
 
     const DOOR_ICONS = {
-        closed: "/static/icons/closed-door.png",
-        open: "/static/icons/open-door.png",
-        locked: "/static/icons/locked-door.png",
+        closed: "/static/icons/doors/closed-door.png",
+        open: "/static/icons/doors/open-door.png",
+        locked: "/static/icons/doors/locked-door.png",
     };
     const DOOR_ICON_PX = 34;
     const doorTextures = new Map();
@@ -480,7 +481,9 @@
 
 
             if (lighting.darkness > 0) {
-                const dpr = window.devicePixelRatio || 1;
+                const quality = window.GravewrightGraphicsQuality?.config?.() || {};
+                const dpr = (window.GravewrightGraphicsQuality?.renderResolution?.() || window.devicePixelRatio || 1)
+                    * (quality.lightingScale || 1);
                 const rt = this._ensureLightingRT(board, cssW, cssH, dpr);
 
 
@@ -915,9 +918,15 @@
             pool.forEach((sprite) => { sprite.visible = false; });
 
             let slot = 0;
+            const maxParticles = window.GravewrightGraphicsQuality?.config?.().maxParticles || 1200;
             (lighting.particleClouds || []).forEach((cloud) => {
                 cloud.particles.forEach((particle) => {
+                    if (slot >= maxParticles) return;
                     if (!(particle.alpha > 0) || !(particle.size > 0)) return;
+                    const at = screen(particle.x, particle.y);
+                    const radius = particle.size * cam.zoom * 2;
+                    if (at.x + radius < 0 || at.y + radius < 0
+                        || at.x - radius > board.cssW || at.y - radius > board.cssH) return;
                     let sprite = pool[slot];
                     if (!sprite) {
                         sprite = new PIXI.Sprite(particleDot());
@@ -930,7 +939,6 @@
                     sprite.texture = particleDot();
                     sprite.tint = hexToInt(particle.tint);
                     sprite.blendMode = particle.blend || "normal";
-                    const at = screen(particle.x, particle.y);
                     sprite.position.set(at.x, at.y);
                     sprite.rotation = particle.rotation || 0;
                     const diameter = particle.size * cam.zoom * 2;

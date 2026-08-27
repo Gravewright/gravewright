@@ -13,6 +13,7 @@ from app.persistence.database import engine_begin
 from app.persistence.database import engine_connect
 from app.persistence.database import one_or_none
 from app.persistence.tables import chat_messages
+from app.engine.chat.visibility_policy import INTERNAL_AUDIENCE_KEY
 
 
 class ChatMessageRepository:
@@ -21,7 +22,9 @@ class ChatMessageRepository:
     def _row_to_entry(self, row) -> dict:
         entry = dict(row)
         entry["groups"] = json.loads(row["groups_json"]) if row["groups_json"] else []
-        entry["metadata"] = json.loads(row["metadata_json"]) if row["metadata_json"] else {}
+        metadata = json.loads(row["metadata_json"]) if row["metadata_json"] else {}
+        entry[INTERNAL_AUDIENCE_KEY] = metadata.pop(INTERNAL_AUDIENCE_KEY, [])
+        entry["metadata"] = metadata
         return entry
 
     def create(

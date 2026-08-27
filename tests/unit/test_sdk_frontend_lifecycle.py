@@ -114,4 +114,4 @@ def test_frontend_rolls_require_capabilities():
     assert 'requireCap("dice.roll")' in RUNTIME
     assert 'requireCap("rolls.intent")' in RUNTIME
     assert 'postJson("/game/actor/roll"' in RUNTIME
-    assert 'postJson("/game/actor/action"' in RUNTIME
+    assert 'client.postJson(itemInstanceId ? "/game/actor/item/action" : "/game/actor/action"' in RUNTIME

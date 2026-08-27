@@ -16,6 +16,7 @@ export type Disposer = () => void;
 export type SdkEventName = string;
 export type SdkEvent = Readonly<{ type: SdkEventName; version: number; resourceId?: string; sceneId?: string }>;
 export type SdkEventHandler = (event: SdkEvent) => void;
+export type RollActionHandler = (message: ChatMessageDTO) => void | Promise<void>;
 export type InteropPayload = JsonValue;
 export type InteropHandler = (payload: InteropPayload, context: InteropProviderContext) => InteropPayload | Promise<InteropPayload>;
 export type InteropSubscriber = (payload: InteropPayload) => void;
@@ -365,6 +366,7 @@ export interface ActorDTO {
   folder_id: string | null;
   portrait_asset_id: string | null;
   token_asset_id: string | null;
+  owner_user_ids?: string[];
   version: number;
   created_at: number;
   updated_at: number;
@@ -441,6 +443,11 @@ export interface CampaignMemberDTO {
   userId: string;
   role: string;
   name: string;
+}
+
+export interface UserPresentationDTO {
+  userId: string;
+  color: string;
 }
 
 export interface TokenDTO {
@@ -856,6 +863,7 @@ export interface CombatantDTO {
   is_current: boolean;
   is_next: boolean;
   has_acted: boolean;
+  holding?: boolean;
   can_move_up: boolean;
   can_move_down: boolean;
   portrait_url: string;
@@ -886,6 +894,9 @@ export interface CombatStateDTO {
   current_name: string;
   next_id: string;
   next_name: string;
+  interrupted?: boolean;
+  interrupted_id?: string;
+  interrupted_name?: string;
   config: CombatConfigDTO;
   updated_actors: RulesetEffectMutation[];
   expired_effects: RulesetEffectMutation[];
@@ -1661,11 +1672,20 @@ export interface DiceRollInput {
 export interface RollIntentInput {
   actorId: string;
   actionId: string;
+  itemInstanceId?: string;
   inputs?: ActionInput;
   rollOptions?: RollOptions;
   targetActorId?: string;
   targetTokenId?: string;
   target?: RollTarget;
+}
+
+export interface RollActionDefinition {
+  id: string;
+  label: string;
+  intents?: string[];
+  actionIds?: string[];
+  excludeActionIds?: string[];
 }
 
 export interface RollTarget {
@@ -2411,13 +2431,16 @@ export interface GravewrightSDK {
     current(): Promise<CombatStateDTO>;
     dispatch(name: string, payload: CombatProtocolPayload): CombatProtocolPayload | undefined;
     end(): Promise<CombatStateDTO>;
+    interruptTurn(combatantId: string): Promise<CombatStateDTO>;
     moveCombatant(combatantId: string, delta: number): Promise<CombatStateDTO>;
     register(plugin: CombatPlugin): boolean;
     registerPanel(panel: CombatPanelDefinition): boolean;
     remove(combatantId: string): Promise<CombatStateDTO>;
     renderSlot(name: string, payload: CombatProtocolPayload): Node[];
+    resumeTurn(): Promise<CombatStateDTO>;
     rollInitiative(options?: CombatRollInitiativeOptions): Promise<CombatStateDTO>;
     setFlags(combatantId: string, flags?: CombatFlagsPatch): Promise<CombatStateDTO>;
+    setHolding(combatantId: string, holding?: boolean): Promise<CombatStateDTO>;
     setInitiative(combatantId: string, value: number): Promise<CombatStateDTO>;
     setInitiativeOrder(entries: CombatInitiativeOrderEntry[]): Promise<CombatStateDTO>;
     setTurn(combatantId: string): Promise<CombatStateDTO>;
@@ -2534,7 +2557,11 @@ export interface GravewrightSDK {
     check(action: string, resource?: PermissionResource): Promise<PermissionCheckDTO>;
   };
   readonly rolls: {
+    readonly actions: {
+      register(definition: RollActionDefinition, handler: RollActionHandler): boolean;
+    };
     intent(payload?: RollIntentInput): Promise<RollResultDTO | SheetDataPatchResult>;
+    reroll(messageId: string): Promise<RollResultDTO>;
   };
   readonly rules: {
     readonly actions: {
@@ -2725,6 +2752,12 @@ export interface GravewrightSDK {
       register(slotId: string, render: SlotRenderCallback): Disposer;
     };
     toast(message: string, options: ToastOptions): ToastHandle | undefined;
+  };
+  readonly users: {
+    readonly presentation: {
+      get(userId: string): Promise<UserPresentationDTO>;
+      list(): Promise<UserPresentationDTO[]>;
+    };
   };
   readonly workflows: {
     cancel(id: string, options?: ExpectedVersionOptions): Promise<WorkflowDTO>;

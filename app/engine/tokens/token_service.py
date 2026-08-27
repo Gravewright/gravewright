@@ -13,6 +13,8 @@ from app.domain.tokens import TokenActorLinkMode
 from app.domain.tokens import TokenConditionKind
 from app.domain.tokens import TokenDisposition
 from app.engine.actors.actor_permissions import can_edit_actor
+from app.engine.effects.active_effects import effect_restrictions
+from app.engine.system_storage.scoped_json_storage import ScopedJsonStorage
 from app.engine.tokens.actor_token_projector import ActorTokenProjector
 from app.engine.tokens.token_instance_sheet_service import INSTANCE_KEY
 from app.engine.tokens.token_instance_sheet_service import TokenInstanceSheetService
@@ -68,6 +70,23 @@ class TokenService:
         self.views = views or TokenViewService()
         self.projector = projector or ActorTokenProjector()
         self.token_instances = token_instances or TokenInstanceSheetService()
+        self.storage = ScopedJsonStorage()
+
+    def _movement_sheet(self, token: dict) -> dict:
+        if token.get("actor_link_mode") == TokenActorLinkMode.UNLINKED:
+            overrides = token.get("overrides") if isinstance(token.get("overrides"), dict) else {}
+            instance = overrides.get(INSTANCE_KEY)
+            if isinstance(instance, dict) and isinstance(instance.get("data"), dict):
+                return instance["data"]
+        actor = self.actors.get(str(token.get("actor_id") or ""))
+        if actor is None:
+            return {}
+        envelope = self.storage.read_actor(
+            system_id=actor["system_id"],
+            campaign_id=actor["campaign_id"],
+            actor_id=actor["id"],
+        ) or {"data": {}}
+        return envelope.get("data") if isinstance(envelope.get("data"), dict) else {}
 
     async def create_many_from_actors(
         self,
@@ -338,6 +357,16 @@ class TokenService:
         if token.get("locked"):
             return TokenResult(success=False, error_key="tokens.errors.locked")
 
+        member_role = await run_blocking(
+            self.campaigns.get_member_role, campaign_id=campaign_id, user_id=user_id
+        )
+        if member_role != PlayerRole.GM.value and effect_restrictions(
+            self._movement_sheet(token), "token.movement"
+        ):
+            return TokenResult(
+                success=False, token=token, error_key="tokens.errors.movement_restricted"
+            )
+
         from app.engine.scenes.geometry_semantics import movement_crosses_wall
         from app.persistence.repositories.scene_wall_repository import SceneWallRepository
 
@@ -350,9 +379,6 @@ class TokenService:
         offset_y = float(scene.get("grid_offset_y") or 0.0) * float(scene.get("image_scale") or 1)
         origin = (offset_x + (float(token["grid_x"]) + width / 2) * size, offset_y + (float(token["grid_y"]) + height / 2) * size)
         target = (offset_x + (float(grid_x) + width / 2) * size, offset_y + (float(grid_y) + height / 2) * size)
-        member_role = await run_blocking(
-            self.campaigns.get_member_role, campaign_id=campaign_id, user_id=user_id
-        )
         walls = await run_blocking(SceneWallRepository().list_for_scene, scene_id)
         if member_role != PlayerRole.GM.value:
             route=[(float(token["grid_x"]),float(token["grid_y"]))]

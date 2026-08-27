@@ -26,6 +26,8 @@
   "items.register": "Register item type behavior/data through package metadata.",
   "locales": "Provide locales and use `sdk.i18n.t`.",
   "rolls.intent": "Request server-authoritative declarative roll/action intents.",
+  "rolls.actions": "Register bounded roll-card actions handled through the authoritative roll runtime.",
+  "rolls.reroll": "Request an authoritative reroll of an eligible persisted roll message.",
   "rules.declarative": "Provide declarative rules documents.",
   "rules.extends": "Extend rule behavior.",
   "scene.overlays": "Provide scene overlays.",
@@ -114,5 +116,6 @@
   "tokens.transfer": "Atomically transfer stable token identities between authorized scenes.",
   "timelines.read": "Read authorized core-timed semantic timelines.",
   "timelines.start": "Register and start bounded semantic timelines.",
-  "timelines.control": "Cancel future cues of an authorized semantic timeline."
+  "timelines.control": "Cancel future cues of an authorized semantic timeline.",
+  "users.presentation.read": "Read the bounded public presentation color of participants visible in the active campaign."
 }

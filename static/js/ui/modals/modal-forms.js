@@ -85,7 +85,7 @@
             return document.querySelector(`[data-modal-id="panel-scenes-${cssEscape(campaignId)}"]`);
         }
 
-        function applySceneManagerResponse(text, { modal, modalId, form, editModal }) {
+        async function applySceneManagerResponse(text, { modal, modalId, form, editModal }) {
             const doc = new DOMParser().parseFromString(text, "text/html");
             // So a arvore e trocada: cabecalho e busca do painel ficam de pe, e o
             // que o mestre digitou na busca sobrevive ao salvamento.
@@ -96,10 +96,15 @@
 
             if (!nextTree || !currentTree) throw new Error("Scene tree missing from response");
 
+            const hadSceneEntries = Boolean(currentTree.querySelector("[data-scene-card]"));
             currentTree.innerHTML = nextTree.innerHTML;
+            const roomId = modal.dataset.panelRoom || "";
+            if (hadSceneEntries && !currentTree.querySelector("[data-scene-card]") && roomId) {
+                await window.GravewrightScenes?.refreshPanel?.(roomId);
+            }
             syncCanvasFromResponse(doc, form);
             document.dispatchEvent(new CustomEvent("vtt:scene-panel-refreshed", {
-                detail: { host: currentTree, roomId: modal.dataset.panelRoom || "" },
+                detail: { host: currentTree, roomId },
             }));
             const search = modal.querySelector("[data-scene-search]");
             if (search?.value) window.GravewrightScenesTree?.applySearch?.(modal.querySelector("[data-scene-panel]"));
@@ -145,7 +150,7 @@
                     },
                 });
                 if (!response.ok) throw new Error(`Scene action failed: ${response.status}`);
-                applySceneManagerResponse(await response.text(), { modal, modalId, form, editModal });
+                await applySceneManagerResponse(await response.text(), { modal, modalId, form, editModal });
             } catch {
                 showSceneRequestError(editModal || modal);
             } finally {

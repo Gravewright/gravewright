@@ -56,7 +56,7 @@ def test_all_p0_capabilities_are_sdk1_manifest_capabilities():
 def test_public_dtos_drop_private_fields_and_separate_scene_granularity():
     actor = actor_snapshot({"id": "a", "name": "Hero", "version": 3, "permissions_json": "secret"})
     scene = scene_snapshot({"id": "s", "tile_size": 256, "grid_size": 70, "chunk_size": 16, "private": True})
-    assert actor == {"id": "a", "name": "Hero", "version": 3}
+    assert actor == {"id": "a", "name": "Hero", "version": 3, "owner_user_ids": []}
     assert scene["raster_tile_size"] == 256
     assert scene["grid_size"] == 70
     assert scene["chunk_span"] == 16

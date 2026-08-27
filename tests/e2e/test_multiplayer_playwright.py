@@ -55,20 +55,20 @@ def test_gm_and_player_first_visit_permissions_and_live_ban(live_server) -> None
 
             gm.goto(f"{base_url}/game?room={campaign_id}")
             player.goto(f"{base_url}/game?room={campaign_id}")
-            expect(player.locator(f'[data-modal-id="settings-interface-{campaign_id}"]')).to_be_visible()
+            expect(player.locator(f'[data-modal-id="settings-general-{campaign_id}"]')).to_be_visible()
 
             # The introduction is persisted server-side and does not reopen on reload.
             player.reload()
-            expect(player.locator(f'[data-modal-id="settings-interface-{campaign_id}"]')).to_be_hidden()
+            expect(player.locator(f'[data-modal-id="settings-general-{campaign_id}"]')).to_be_hidden()
             player.wait_for_function("window.GravewrightRealtime?.isOpen?.() === true")
 
             # Switching tables gets its own first-visit state; returning to the
             # original table keeps the persisted state and reconnects realtime.
             second_campaign_id = live_server["second_campaign_id"]
             player.goto(f"{base_url}/game?room={second_campaign_id}")
-            expect(player.locator(f'[data-modal-id="settings-interface-{second_campaign_id}"]')).to_be_visible()
+            expect(player.locator(f'[data-modal-id="settings-general-{second_campaign_id}"]')).to_be_visible()
             player.goto(f"{base_url}/game?room={campaign_id}")
-            expect(player.locator(f'[data-modal-id="settings-interface-{campaign_id}"]')).to_be_hidden()
+            expect(player.locator(f'[data-modal-id="settings-general-{campaign_id}"]')).to_be_hidden()
             player.wait_for_function("window.GravewrightRealtime?.isOpen?.() === true")
 
             # GM can load the same permissions model for every supported resource.

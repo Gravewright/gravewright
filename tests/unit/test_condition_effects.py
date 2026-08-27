@@ -67,6 +67,20 @@ def test_a_ticked_flag_becomes_an_effect_instance():
     assert [e["id"] for e in data["effects"]] == ["condition:shaken"]
     assert data["effects"][0]["name"] == "Abalado", "o HUD mostra o rótulo traduzido"
     assert data["effects"][0]["data"]["category"] == "condition"
+    assert data["effects"][0]["data"]["restrictions"] == []
+
+
+def test_condition_restrictions_are_projected_into_the_effect():
+    declared = [{
+        "id": "bound",
+        "labelKey": "sw.cond.bound",
+        "kind": "negative",
+        "category": "condition",
+        "restrictions": [{"target": "token.movement"}],
+    }]
+    data = {"conditions": {"bound": True}}
+    sync_condition_effects(data, declared)
+    assert data["effects"][0]["data"]["restrictions"] == [{"target": "token.movement"}]
 
 
 def test_unticking_takes_the_effect_away():

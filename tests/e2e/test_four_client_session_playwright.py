@@ -136,10 +136,10 @@ def test_gm_plus_three_players_journal_chat_and_dice(four_client_server):
             assert status == 200
             for player in (player_a, player_b, player_c):
                 player.reload()
+                player.locator(f'[data-panel-toggle="panel-journal-{s["campaign_id"]}"]').click()
             expect(player_a.locator(journal)).to_have_count(1)
             expect(player_b.locator(journal)).to_have_count(0)
             expect(player_c.locator(journal)).to_have_count(0)
-            player_a.locator(f'[data-panel-toggle="panel-journal-{s["campaign_id"]}"]').click()
             player_a.locator(journal).click()
             expect(player_a.locator(f'[data-modal-id="journal-{s["journal_id"]}"]')).to_be_visible()
 
@@ -180,7 +180,9 @@ def test_four_clients_items_tokens_combat_lights_and_shaders(four_client_server)
                 page.goto(f"{base}/game?room={room}")
             close = gm.locator("[data-onboarding-close]")
             if close.count(): close.first.click()
-            for player in pages[1:]: player.reload()
+            for player in pages[1:]:
+                player.reload()
+                player.locator(f'[data-panel-toggle="panel-items-{room}"]').click()
             for page in pages: page.wait_for_function("window.GravewrightRealtime?.isOpen?.() === true")
 
             # Item permission is reflected in the actual player directory, and isolated to A.
@@ -188,11 +190,12 @@ def test_four_clients_items_tokens_combat_lights_and_shaders(four_client_server)
             for player in pages[1:]: expect(player.locator(item)).to_have_count(0)
             status = gm.evaluate("""async d=>{const b=new URLSearchParams({resource_type:'item',resource_id:d.item});b.set(`access__${d.player}`,'read');const r=await fetch('/game/resource-permissions',{method:'POST',credentials:'same-origin',headers:{'Accept':'application/json','Content-Type':'application/x-www-form-urlencoded','x-csrftoken':csrfToken()},body:b});return r.status}""", {"item":s["item_id"],"player":s["player_id"]})
             assert status == 200
-            for player in pages[1:]: player.reload()
+            for player in pages[1:]:
+                player.reload()
+                player.locator(f'[data-panel-toggle="panel-items-{room}"]').click()
             expect(player_a.locator(item)).to_have_count(1)
             expect(player_b.locator(item)).to_have_count(0)
             expect(player_c.locator(item)).to_have_count(0)
-            player_a.locator(f'[data-panel-toggle="panel-items-{room}"]').click()
             expect(player_a.locator(item)).to_be_visible()
 
             # Hidden GM token is in the GM projection only; normal token is visible to all.
@@ -313,8 +316,9 @@ def test_editing_scene_updates_the_same_instance(four_client_server):
             close = page.locator("[data-onboarding-close]")
             if close.count(): close.first.click()
             page.locator(f'[data-panel-toggle="panel-scenes-{room}"]').click()
-            cards = page.locator(f'[data-scene-panel][data-room-id="{room}"] .scene-card[data-scene-id]')
-            before_ids = cards.evaluate_all("nodes => nodes.map(node => node.dataset.sceneId)")
+            cards = page.locator(f'[data-scene-panel][data-room-id="{room}"] [data-scene-card]')
+            expect(cards).to_have_count(1)
+            before_ids = cards.evaluate_all("nodes => nodes.map(node => node.dataset.sceneCard)")
             before_canvases = page.locator(f'[data-map-canvas][data-room-id="{room}"]').count()
 
             page.evaluate("id => { const button=document.createElement('button'); button.dataset.sceneEdit=id; document.body.appendChild(button); button.click(); button.remove(); }", scene_id)
@@ -324,7 +328,8 @@ def test_editing_scene_updates_the_same_instance(four_client_server):
             modal.locator('button[type="submit"]').first.click()
             expect(modal).to_be_hidden()
 
-            after_ids = cards.evaluate_all("nodes => nodes.map(node => node.dataset.sceneId)")
+            expect(cards).to_have_count(len(before_ids))
+            after_ids = cards.evaluate_all("nodes => nodes.map(node => node.dataset.sceneCard)")
             assert after_ids == before_ids
             assert len(after_ids) == len(set(after_ids))
             assert page.locator(f'[data-map-canvas][data-room-id="{room}"]').count() == before_canvases

@@ -1,0 +1,50 @@
+{% macro titlebar(title) %}
+<header class="game-modal-titlebar" data-modal-drag-handle>
+    <span class="game-modal-drag-grip" aria-hidden="true"></span>
+    <div class="game-modal-sheet-title"><span class="sheet-modal-name">{{ title }}</span></div>
+    <div class="game-modal-controls"><button class="game-modal-control" type="button" data-modal-close
+        aria-label="{{ t('inside.campaigns.cancel') }}"><i class="ph ph-x" aria-hidden="true"></i></button></div>
+</header>
+{% endmacro %}
+{% macro folder_modal(kind, title, form_attr, text_attr, pick_attr) %}
+<article class="game-modal-window dialog-modal" data-modal-window data-modal-id="{{ kind }}-folder-create-{{ room.id }}"
+    data-window-key="{{ kind }}-folder-create-{{ room.id }}" hidden>
+    {{ titlebar(title) }}
+    <form class="dialog-form" {{ form_attr }} data-room-id="{{ room.id }}">
+        <input type="hidden" name="parent_id" value="" />
+        <label class="dialog-field"><span>{{ t("game.actors.folder_name_label") }}</span>
+            <input type="text" name="name" maxlength="60" placeholder="{{ t('game.actors.folder_name_placeholder') }}" data-modal-autofocus /></label>
+        <label class="dialog-field"><span>{{ t("game.actors.folder_color_label") }}</span><span class="dialog-color-row">
+            <input type="text" name="color" value="#b9995d" maxlength="9" placeholder="#b9995d" {{ text_attr }} />
+            <input type="color" value="#b9995d" {{ pick_attr }} /></span></label>
+        <button type="submit" class="dialog-submit"><i class="ph ph-check" aria-hidden="true"></i><span>{{ title }}</span></button>
+    </form>
+</article>
+{% endmacro %}
+
+{% if room.member_role == "gm" %}
+{% if room.active_system and room.active_system.item_types %}
+<article class="game-modal-window dialog-modal" data-modal-window data-modal-id="item-create-{{ room.id }}" data-window-key="item-create-{{ room.id }}" hidden>
+    {{ titlebar(t("game.items.create_item_title")) }}
+    <form class="dialog-form" data-item-create-form data-room-id="{{ room.id }}"><input type="hidden" name="folder_id" value="" />
+        <label class="dialog-field"><span>{{ t("game.items.name_label") }}</span><input type="text" data-item-create-name maxlength="120" placeholder="{{ t('game.items.name_placeholder') }}" data-modal-autofocus /></label>
+        <label class="dialog-field"><span>{{ t("game.items.type") }}</span><select data-item-create-target>{% for itype in room.active_system.item_types %}<option value="{{ room.active_system.id }}::{{ itype.id }}">{{ itype.label }}</option>{% endfor %}</select></label>
+        <button type="submit" class="dialog-submit"><i class="ph ph-check" aria-hidden="true"></i><span>{{ t("game.items.create_item_title") }}</span></button>
+    </form>
+</article>
+{% endif %}
+{{ folder_modal("item", t("game.items.create_folder_title"), "data-item-folder-create-form", "data-item-folder-color-text", "data-item-folder-color-pick") }}
+
+{% if room.active_system %}
+<article class="game-modal-window dialog-modal" data-modal-window data-modal-id="actor-create-{{ room.id }}" data-window-key="actor-create-{{ room.id }}" hidden>
+    {{ titlebar(t("game.actors.create_actor_title")) }}
+    <form class="dialog-form" data-actor-create-form data-room-id="{{ room.id }}"><input type="hidden" name="folder_id" value="" />
+        <label class="dialog-field"><span>{{ t("game.actors.name_label") }}</span><input type="text" data-actor-create-name maxlength="120" placeholder="{{ t('game.actors.name_placeholder') }}" data-modal-autofocus /></label>
+        <label class="dialog-field"><span>{{ t("game.actors.type") }}</span><select data-actor-create-target>{% for atype in room.active_system.actor_types %}<option value="{{ room.active_system.id }}::{{ atype.id }}">{{ atype.label }}</option>{% endfor %}</select></label>
+        <button type="submit" class="dialog-submit"><i class="ph ph-check" aria-hidden="true"></i><span>{{ t("game.actors.create_actor_title") }}</span></button>
+    </form>
+</article>
+{% endif %}
+{{ folder_modal("actor", t("game.actors.create_folder_title"), "data-actor-folder-create-form", "data-actor-folder-color-text", "data-actor-folder-color-pick") }}
+{{ folder_modal("journal", t("game.journal.create_folder"), "data-journal-folder-create-form", "data-journal-folder-color-text", "data-journal-folder-color-pick") }}
+{% endif %}

@@ -4,8 +4,13 @@ import math
 from dataclasses import dataclass
 
 
-SUPPORTED_RASTER_TILE_SIZES = (64, 128, 256, 512, 1024)
-ADAPTIVE_RASTER_POLICY_VERSION = 1
+# A raster page has a fixed scheduling/decoding cost in the browser even when
+# the encoded WebP is tiny. 64/128 px pages made small, screen-sized maps fan
+# out into hundreds of createImageBitmap calls and could stall low-end clients.
+# Keep manual legacy retile compatibility in MapUploadService, but never select
+# those page sizes for a new adaptive upload.
+SUPPORTED_RASTER_TILE_SIZES = (256, 512, 1024)
+ADAPTIVE_RASTER_POLICY_VERSION = 2
 
 
 @dataclass(frozen=True)

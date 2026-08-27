@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import secrets
 from dataclasses import dataclass, field
 
 from app.domain.roles import has_full_view
@@ -38,6 +39,20 @@ class JournalResult:
     version: int | None = None
     journal_type: str | None = None
     changed_paths: list[str] = field(default_factory=list)
+    error_key: str | None = None
+
+
+@dataclass(frozen=True)
+class RollTableResult:
+    success: bool
+    journal_id: str | None = None
+    campaign_id: str | None = None
+    title: str | None = None
+    entry: dict | None = None
+    ticket: int | None = None
+    total_weight: int | None = None
+    visibility: str = "public"
+    version: int | None = None
     error_key: str | None = None
 
 
@@ -330,6 +345,60 @@ class JournalService:
             journal_type=journal["type"],
         )
 
+    def roll_table(self, *, journal_id: str, user_id: str) -> RollTableResult:
+        journal = self.journals.get_by_id(journal_id)
+        if journal is None or journal["status"] != "active" or journal["type"] != "roll_table":
+            return RollTableResult(success=False, error_key="game.journal.errors.not_found")
+        campaign = self.campaigns.get_for_user(campaign_id=journal["campaign_id"], user_id=user_id)
+        if campaign is None or not _is_gm(dict(campaign)):
+            return RollTableResult(success=False, error_key="game.journal.errors.not_owner")
+        table = journal_data.normalize_roll_table_data(_decode_data(journal))
+        eligible = [
+            entry for entry in table["entries"]
+            if entry["active"] and (table["withReplacement"] or not entry["drawn"])
+        ]
+        total_weight = sum(entry["weight"] for entry in eligible)
+        if total_weight < 1:
+            return RollTableResult(success=False, error_key="game.journal.roll_table.errors.empty")
+        ticket = secrets.randbelow(total_weight) + 1
+        cursor = ticket
+        selected = eligible[-1]
+        for entry in eligible:
+            cursor -= entry["weight"]
+            if cursor <= 0:
+                selected = entry
+                break
+        version = int(journal.get("version") or 1)
+        if not table["withReplacement"]:
+            selected["drawn"] = True
+            version = self.journals.update_data(
+                journal_id=journal_id,
+                data_json=json.dumps(table, separators=(",", ":")),
+            )
+        return RollTableResult(
+            success=True, journal_id=journal_id, campaign_id=journal["campaign_id"],
+            title=journal["title"], entry=selected, ticket=ticket,
+            total_weight=total_weight, visibility=table["resultVisibility"], version=version,
+        )
+
+    def reset_roll_table(self, *, journal_id: str, user_id: str) -> JournalResult:
+        journal = self.journals.get_by_id(journal_id)
+        if journal is None or journal["status"] != "active" or journal["type"] != "roll_table":
+            return JournalResult(success=False, error_key="game.journal.errors.not_found")
+        campaign = self.campaigns.get_for_user(campaign_id=journal["campaign_id"], user_id=user_id)
+        if campaign is None or not _is_gm(dict(campaign)):
+            return JournalResult(success=False, error_key="game.journal.errors.not_owner")
+        table = journal_data.normalize_roll_table_data(_decode_data(journal))
+        for entry in table["entries"]:
+            entry["drawn"] = False
+        version = self.journals.update_data(
+            journal_id=journal_id, data_json=json.dumps(table, separators=(",", ":")),
+        )
+        return JournalResult(
+            success=True, journal_id=journal_id, campaign_id=journal["campaign_id"],
+            journal_type="roll_table", version=version, changed_paths=["entries.*.drawn"],
+        )
+
     def set_quest_status(
         self,
         *,
@@ -575,6 +644,26 @@ class JournalService:
                 for entry in view["board_entries"]
                 if entry["card"]["status"] not in {"draft", "archived"}
             ]
+            return view
+
+        if journal_type == "roll_table":
+            table = journal_data.normalize_roll_table_data(data)
+            total = sum(
+                entry["weight"] for entry in table["entries"]
+                if entry["active"] and (table["withReplacement"] or not entry["drawn"])
+            )
+            entries = table["entries"]
+            if table["resultVisibility"] == "gm" and not full_access:
+                entries = [{**entry, "result": ""} for entry in entries]
+            view["roll_table"] = {
+                **table,
+                "totalWeight": total,
+                "entries": [
+                    {**entry, "probability": (entry["weight"] / total * 100)
+                     if entry["active"] and (table["withReplacement"] or not entry["drawn"]) and total else 0}
+                    for entry in entries
+                ],
+            }
             return view
 
         return view

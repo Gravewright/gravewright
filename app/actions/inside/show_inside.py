@@ -62,7 +62,9 @@ def show_inside(
     pending_invitations = campaign_invitation_service.list_pending_for_user(user["id"])
     packages = package_install_service.list_for_tab()
     rulesets, modules = split_packages(packages)
-    marketplace = MarketplaceService().catalog_with_automatic_refresh()
+    # Entering Inside is navigation-critical. A stale remote registry must not
+    # hold the browser on the game page while DNS/TLS/download work completes.
+    marketplace = MarketplaceService().catalog()
     marketplace_bands = {
         kind: [item for item in marketplace.get("packages", []) if item.get("kind") == kind]
         for kind in ("ruleset", "addon", "library", "content", "theme", "assets")

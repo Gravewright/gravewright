@@ -88,8 +88,37 @@ def test_texture_materialization_has_a_per_frame_budget() -> None:
     assert "deferredVisibleTextureMaterializations" in tiles
 
 
+def test_texture_decoder_concurrency_adapts_to_real_decode_cost() -> None:
+    renderer = (ROOT / "static/js/board/pixi/pixi-board-renderer.js").read_text(encoding="utf-8")
+    debug = (ROOT / "static/js/board/pixi/pixi-debug.js").read_text(encoding="utf-8")
+    quality = (ROOT / "static/js/game/graphics-quality.js").read_text(encoding="utf-8")
+
+    assert "this.textureConcurrencyCeiling" in renderer
+    assert "_updateAdaptiveTextureConcurrency(decodeDuration)" in renderer
+    assert "duration >= 180 || this.textureDecodeCostEmaMs >= 120" in renderer
+    assert "Math.ceil(this.maxTextureLoads / 2)" in renderer
+    assert "this.textureDecodeHeadroomSamples < 8" in renderer
+    assert "performance.now() + 500" in renderer
+    assert "textureConcurrency: 2" in quality
+    assert "textureConcurrency: 3" in quality
+    assert "textureConcurrency: 5" in quality
+    assert "textureDecodeGovernor" in debug
+    assert "active: this.maxTextureLoads" in debug
+    assert "costEmaMs: this.textureDecodeCostEmaMs" in debug
+
+
 def test_persistent_tile_cache_is_named_as_encoded_indexeddb_blob() -> None:
     renderer = (ROOT / "static/js/board/pixi/pixi-board-renderer.js").read_text(encoding="utf-8")
 
     assert 'lifecycle.cache = "indexeddb_blob_hit"' in renderer
     assert "decoded_blob_cache_hit" not in renderer
+
+
+def test_scene_switch_releases_previous_scene_sprites_and_textures() -> None:
+    renderer = (ROOT / "static/js/board/pixi/pixi-board-renderer.js").read_text(encoding="utf-8")
+    set_scene = renderer.split("setScene(scene)", 1)[1].split("setCamera(camera)", 1)[0]
+
+    assert "previousSceneId !== nextSceneId" in set_scene
+    assert "this._releaseSceneTiles()" in set_scene
+    assert "board.tileSprites?.clear()" in set_scene
+    assert "urls.forEach((url) => this._forgetTexture(url))" in set_scene

@@ -3,6 +3,8 @@
     const DEFAULT_X = 22;
     const DEFAULT_Y = 22;
     const PANEL_DEFAULT_WIDTH = 340;
+    const CLASSIC_PANEL_WIDTH = 320;
+    const CLASSIC_PANEL_TABS_HEIGHT = 46;
     const DOCK_CLEARANCE = 64;
     const LAYOUT_STORAGE_KEY = "gravewright.game.layout";
     const DEFAULT_LAYOUT = "gravewright";
@@ -26,6 +28,8 @@
         defaultY: DEFAULT_Y,
         isClassicPanel,
         isGravewrightPanel,
+        gravewrightPanelHeightOffset: CLASSIC_PANEL_TABS_HEIGHT,
+        gravewrightPanelWidth: CLASSIC_PANEL_WIDTH,
         minWindowHeight: MIN_WINDOW_HEIGHT,
         minWindowWidth: MIN_WINDOW_WIDTH,
         windowStoragePrefix: `gravewright.game.window.${windowOwner}.`,
@@ -322,6 +326,13 @@
     }
 
     document.addEventListener("click", (event) => {
+        const panelTabDetach = event.target.closest("[data-gravewright-panel-tab-detach]");
+
+        if (panelTabDetach) {
+            modalDocking.detachGravewrightPanel(panelTabDetach.dataset.gravewrightPanelTabDetach);
+            return;
+        }
+
         const panelTabClose = event.target.closest("[data-gravewright-panel-tab-close]");
 
         if (panelTabClose) {
@@ -392,6 +403,29 @@
 
         if (openButton && !event.target.closest("[data-no-modal]")) {
             const modalId = openButton.dataset.modalOpen;
+            if (!document.querySelector(`[data-modal-id="${cssEscape(modalId)}"]`)) {
+                const directoryMatch = modalId.match(/^(?:actor|item|journal)(?:-folder)?-create-(.+)$/);
+                if (directoryMatch) {
+                    event.preventDefault();
+                    modalRemote.ensureDirectoryDialogs(directoryMatch[1]).then((ready) => {
+                        if (!ready) return;
+                        openModal(modalId);
+                        const createMatch = modalId.match(/^(actor|item)-create-(.+)$/);
+                        if (createMatch) positionModalNearPanel(modalId, createMatch[1], {
+                            campaignId: createMatch[2], trigger: openButton,
+                        });
+                    });
+                    return;
+                }
+                const sceneCreateMatch = modalId.match(/^scene(?:-group)?-create-(.+)$/);
+                if (sceneCreateMatch) {
+                    event.preventDefault();
+                    modalRemote.ensureSceneCreateDialogs(sceneCreateMatch[1]).then((ready) => {
+                        if (ready) openModal(modalId);
+                    });
+                    return;
+                }
+            }
             openModal(modalId);
             const createMatch = modalId.match(/^(actor|item)-create-(.+)$/);
             if (createMatch) {
@@ -462,6 +496,7 @@
             const modal = detachButton.closest("[data-modal-window]");
 
             if (modal) {
+                if (modalDocking.toggleGravewrightPanelAttachment(modal)) return;
                 detachModal(modal);
             }
 
@@ -648,9 +683,27 @@
         return modalRemote.ensureActorSheetModal(actorId);
     }
 
+    function uniqueActiveSceneTokenForActor(actorId) {
+        const canvas = window.GravewrightMap?.activeCanvas?.()
+            || document.querySelector(".room-workspace.is-active [data-map-canvas]");
+        if (!canvas || !actorId) return null;
+        const store = window.GravewrightMap?.tokenStoreFor?.(canvas);
+        if (!store || typeof store.values !== "function") return null;
+        const matches = Array.from(store.values()).filter(
+            (token) => String(token?.actor_id || "") === String(actorId),
+        );
+        return matches.length === 1 ? matches[0] : null;
+    }
+
     document.addEventListener("vtt:open-actor-sheet", async (e) => {
         const actorId = e.detail?.actorId;
         if (!actorId) return;
+        const token = uniqueActiveSceneTokenForActor(actorId);
+        const tokenId = token?.token_id || token?.id || "";
+        if (tokenId) {
+            if (await ensureTokenSheetModal(tokenId)) openModal(`token-${tokenId}`);
+            return;
+        }
         if (await ensureActorSheetModal(actorId)) {
             openModal(`actor-${actorId}`);
         }

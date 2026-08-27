@@ -9,6 +9,7 @@ from app.engine.dice.roll_service import RollService
 from app.helpers.async_blocking import run_blocking
 from app.domain.chat import ChatMessageKind
 from app.domain.chat import ChatVisibility
+from app.engine.chat.visibility_policy import INTERNAL_AUDIENCE_KEY
 from app.domain.permissions.permissions import TablePermission
 from app.domain.roles import PlayerRole
 from app.persistence.repositories.campaign_repository import CampaignRepository
@@ -74,11 +75,9 @@ class ChatService:
             return ChatResult(success=False, error_key="game.chat.errors.empty_message")
         content = content[: self.MAX_CONTENT_LEN]
 
-        message_id = self.messages.generate_id()
         await transport.chat_to_room(
             room_id=campaign_id,
             message={
-                "message_id": message_id,
                 "room_id": campaign_id,
                 "author": "Sistema",
                 "author_id": "",
@@ -402,6 +401,23 @@ class ChatService:
 
         members = await run_blocking(self.campaigns.list_members, campaign_id=campaign_id)
         gm_ids = [member["user_id"] for member in members if member["role"] == PlayerRole.GM.value]
+        audience_user_ids = list(dict.fromkeys([sender_user_id, *gm_ids]))
+        await run_blocking(
+            self.messages.create,
+            message_id=base["message_id"],
+            campaign_id=campaign_id,
+            author_user_id=sender_user_id,
+            author_name=base["author"],
+            author_role=base["role"],
+            kind=ChatMessageKind.ROLL,
+            content=label,
+            expression=result.expression,
+            groups=result.groups,
+            modifier=result.modifier,
+            total=result.total,
+            visibility=ChatVisibility.GM_ONLY,
+            metadata={INTERNAL_AUDIENCE_KEY: audience_user_ids},
+        )
         await transport.chat_whisper(
             room_id=campaign_id,
             sender_player_id=sender_user_id,
@@ -443,6 +459,27 @@ class ChatService:
             return ChatResult(success=False, error_key="game.chat.errors.invalid_whisper_target")
         if not text:
             return ChatResult(success=False, error_key="game.chat.errors.empty_message")
+
+        audience_user_ids = list(dict.fromkeys([sender_user_id, *target_ids]))
+        await run_blocking(
+            self.messages.create,
+            message_id=base["message_id"],
+            campaign_id=campaign_id,
+            author_user_id=sender_user_id,
+            author_name=base["author"],
+            author_role=base["role"],
+            kind=ChatMessageKind.TEXT,
+            content=text,
+            expression=None,
+            groups=None,
+            modifier=None,
+            total=None,
+            visibility=ChatVisibility.WHISPER,
+            metadata={
+                "target_names": [target_name],
+                INTERNAL_AUDIENCE_KEY: audience_user_ids,
+            },
+        )
 
         await transport.chat_whisper(
             room_id=campaign_id,

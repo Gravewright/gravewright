@@ -348,6 +348,8 @@ class RollPresentationService:
                 value = self._resolve(line.get("value", ""), context)
                 if value in (None, ""):
                     continue
+                if isinstance(value, list):
+                    value = ", ".join(str(entry) for entry in value)
                 rendered_line = {"label": str(label or ""), "value": str(value)}
                 if isinstance(line.get("labelKey"), str):
                     rendered_line["labelKey"] = line["labelKey"]

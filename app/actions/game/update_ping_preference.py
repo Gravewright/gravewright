@@ -9,7 +9,10 @@ from litestar.params import Body
 from litestar.response import Response
 
 from app.business.users import UserPreferenceService
+from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.persistence.rows import Row
+from app.realtime.events import TransportEvent
+from app.realtime.transport import RealtimeTransport
 
 
 @dataclass
@@ -28,4 +31,12 @@ async def update_ping_preference(
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
+    user_id = str(current_user["id"])
+    transport = RealtimeTransport()
+    for campaign in CampaignRepository().list_for_user(user_id):
+        await transport.to_room(
+            room_id=str(campaign["id"]),
+            event=TransportEvent.USER_PRESENTATION_CHANGED,
+            payload={"user_id": user_id, "color": result.ping_color},
+        )
     return Response({"ok": True, "ping_color": result.ping_color}, status_code=200)

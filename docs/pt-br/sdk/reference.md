@@ -219,6 +219,14 @@ await sdk.rolls.intent({
 
 Veja [`rolls.md`](rolls.md) para sintaxe de formulas e padroes de sistema.
 
+### `sdk.rolls.actions.register(definition, handler)`
+
+Requer `rolls.actions`. Registra uma ação limitada para cards de rolagens persistidas elegíveis.
+
+### `sdk.rolls.reroll(messageId)`
+
+Requer `rolls.reroll`. Solicita uma rerrolagem autoritativa usando a política do sistema da rolagem persistida.
+
 ## `sdk.settings`
 
 Requer `settings`.
@@ -523,7 +531,7 @@ Estes métodos SDK 1 aplicam gates de capability do pacote e permissão do usuá
 - `sdk.scene.geometry.walls`, `sdk.scene.geometry.lights`, `sdk.scene.geometry.createWall`, `sdk.scene.geometry.updateWall`, `sdk.scene.geometry.deleteWall`, `sdk.scene.geometry.createLight`, `sdk.scene.geometry.updateLight`, `sdk.scene.geometry.deleteLight`, `sdk.scene.geometry.setDoorState`.
 - `sdk.scene.effects.list`, `sdk.scene.effects.create`, `sdk.scene.effects.update`, `sdk.scene.effects.delete`.
 - `sdk.ui.slots.available`, `sdk.ui.slots.register`; `sdk.chat.list`, `sdk.chat.get`.
-- `sdk.combat.current`, `sdk.combat.combatants`, `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`.
+- `sdk.combat.current`, `sdk.combat.combatants`, `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`, `sdk.combat.interruptTurn`, `sdk.combat.resumeTurn`, `sdk.combat.setHolding`.
 - `sdk.rules.actions.list`, `sdk.rules.actions.get`, `sdk.rules.actions.resolve`, `sdk.rules.actions.execute`, `sdk.rules.actions.executeReference`.
 - `sdk.automation.schedule`, `sdk.automation.get`, `sdk.automation.list`, `sdk.automation.cancel` aceitam somente registered actions durable-safe; `sdk.automation.audit` retorna transições limitadas, pertencentes ao pacote e sem payload.
 - `sdk.pdf.get`, `sdk.pdf.metadata`; `sdk.pdf.viewer.open`, `sdk.pdf.viewer.goToPage`, `sdk.pdf.viewer.search`, `sdk.pdf.viewer.currentPage`.
@@ -654,6 +662,10 @@ o pacote não pode fornecê-lo nem sobrescrevê-lo.
 chama. Não traz metadados de conta, é restrito à campanha ativa e só responde a quem
 já é membro. É um quadro de membros, não um feed de presença: associação não é status
 online.
+
+A projeção visual limitada é separada: `sdk.users.presentation.get(userId)` e
+`sdk.users.presentation.list()` retornam apenas `{ userId, color }` dos membros
+visíveis na campanha ativa. Veja [Apresentação de usuário](user-presentation.md).
 
 `TokenDTO.controllers` informa os usuários que podem controlar aquele Token, derivado
 da mesma autoridade que decide se um movimento é permitido, então um Token com vários

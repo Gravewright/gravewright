@@ -70,6 +70,7 @@
         "scene.objects.changed", "scene.object.interacted", "scene.object.selected", "ui.presentation.changed",
         "audio.changed", "navigation.scene.changed", "input.binding.changed",
         "workflow.changed", "gameplay.flow.changed", "timeline.changed", "tokens.transferred",
+        "user.presentation.changed",
     ]);
     const TRANSPORT_TO_SDK_EVENT = Object.freeze({
         "actor.created": "actor.created", "actor.updated": "actor.updated", "actor.deleted": "actor.deleted",
@@ -96,21 +97,19 @@
         "scene.objects.changed": "scene.objects.changed", "scene.object.interacted": "scene.object.interacted", "ui.presentation.changed": "ui.presentation.changed",
         "audio.changed": "audio.changed", "navigation.scene.changed": "navigation.scene.changed", "input.binding.changed": "input.binding.changed",
         "workflow.changed": "workflow.changed", "gameplay.flow.changed": "gameplay.flow.changed", "timeline.changed": "timeline.changed", "tokens.transferred": "tokens.transferred",
+        "user.presentation.changed": "user.presentation.changed",
         "chat.message.created": "chat.created", "combat.started": "combat.started",
         "combat.updated": "combat.updated", "combat.ended": "combat.ended",
         "setting.changed": "setting.changed", "campaign.table_settings.changed": "setting.changed",
     });
 
     function semanticEvent(type, payload) {
-        const id = payload.actor_id || payload.item_id || payload.token_id || payload.object_id || payload.zone_id || payload.interaction_id || payload.journal_id || payload.template_id || payload.document_id || payload.scene_id
+        const id = payload.actor_id || payload.item_id || payload.token_id || payload.object_id || payload.zone_id || payload.interaction_id || payload.journal_id || payload.template_id || payload.document_id || payload.user_id || payload.scene_id
             || payload.combat_id || payload.message_id || "";
-        const resource = { id: String(id), version: Number(payload.version || 0) };
-        if (type.startsWith("token.") && Array.isArray(payload.tokens)) {
-            resource.ids = payload.tokens.map((token) => String(token.token_id || token.id || "")).filter(Boolean).slice(0, 100);
-        }
-        const changes = Array.isArray(payload.changed_paths) ? payload.changed_paths.slice(0, 32)
-            : payload.changed && typeof payload.changed === "object" ? Object.keys(payload.changed).slice(0, 32) : [];
-        return { type, version: 1, resource, changes };
+        const event = { type, version: 1 };
+        if (id) event.resourceId = String(id);
+        if (payload.scene_id) event.sceneId = String(payload.scene_id);
+        return event;
     }
 
     function createSdkEvents(pkg, requireCap, runtimeRead) {
@@ -188,13 +187,14 @@
                     if (type === "interaction.changed" && payload.interaction_id) await runtimeRead("interactions", { entity_id: payload.interaction_id }, "sdk.events.on");
                     if (type === "scene.objects.changed" && payload.object_id && !payload.deleted) await runtimeRead("scene.objects", { entity_id: payload.object_id }, "sdk.events.on");
                     if (type === "ui.presentation.changed" && payload.presentation_id && !payload.closed) await runtimeRead("ui.presentations", { entity_id: payload.presentation_id }, "sdk.events.on");
+                    if (type === "user.presentation.changed" && payload.user_id) await runtimeRead("user.presentations", { entity_id: payload.user_id }, "sdk.events.on");
                 } catch (_) {
                     return;
                 }
                 deliver(semanticEvent(type, payload));
             };
             const readyListener = () => type === "game.ready" && deliver({ type, version: 1 });
-            const selectionListener = event => type === "scene.object.selected" && deliver({ type, version: 1, resource: { id: String(event.detail?.id || ""), typeId: String(event.detail?.typeId || "") }, changes: [] });
+            const selectionListener = event => type === "scene.object.selected" && deliver({ type, version: 1, resourceId: String(event.detail?.id || ""), sceneId: String(event.detail?.sceneId || "") || undefined });
             document.addEventListener("vtt:transport-event", transportListener);
             document.addEventListener("vtt:game-ready", readyListener);
             document.addEventListener("vtt:scene-object-selected", selectionListener);
@@ -428,8 +428,10 @@
         const client = window.GravewrightCore && window.GravewrightCore.http;
         if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
         const target = payload?.target && typeof payload.target === "object" ? payload.target : {};
-        return client.postJson("/game/actor/action", {
+        const itemInstanceId = String(payload?.itemInstanceId || payload?.item_instance_id || "");
+        return client.postJson(itemInstanceId ? "/game/actor/item/action" : "/game/actor/action", {
             actor_id: String(payload?.actorId || payload?.actor_id || ""),
+            item_instance_id: itemInstanceId || undefined,
             action_id: String(payload?.actionId || payload?.action_id || ""),
             inputs: payload?.inputs && typeof payload.inputs === "object" ? payload.inputs : {},
             rollOptions:
@@ -455,6 +457,7 @@
     function whenBlockEditorReady(callback) {
         if (window.GWBlockEditor) return callback();
         document.addEventListener("gw:block-editor-ready", () => callback(), { once: true });
+        window.GravewrightJournalEditorAssets?.loadBlockEditor?.().catch(() => {});
     }
 
     function blockEditorLabels() {
@@ -1174,6 +1177,12 @@
             campaign: Object.freeze({
                 async members() { requireCap("campaign.members"); return (await runtimeRead("campaign.members", {}, "sdk.campaign.members")).members || []; },
             }),
+            users: Object.freeze({
+                presentation: Object.freeze({
+                    async get(userId) { requireCap("users.presentation.get"); return (await runtimeRead("user.presentations", { entity_id: userId }, "sdk.users.presentation.get")).presentation; },
+                    async list() { requireCap("users.presentation.list"); return (await runtimeRead("user.presentations", {}, "sdk.users.presentation.list")).presentations || []; },
+                }),
+            }),
             navigation: Object.freeze({
                 scene: Object.freeze({
                     async go(input = {}) { requireCap("navigation.scene.go"); return (await runtimeCommand("navigation.scene.go", { input }, "sdk.navigation.scene.go")).navigation; },
@@ -1404,9 +1413,24 @@
                 },
             }),
             rolls: Object.freeze({
+                actions: Object.freeze({
+                    register(definition, handler) {
+                        requireCap("rolls.actions.register");
+                        return window.GravewrightRollActions?.register?.(pkg.id, definition, handler) || false;
+                    },
+                }),
                 intent(payload = {}) {
                     requireCap("rolls.intent");
                     return postRollIntent(payload);
+                },
+                reroll(messageId) {
+                    requireCap("rolls.reroll");
+                    const client = window.GravewrightCore && window.GravewrightCore.http;
+                    if (!client?.postJson) throw new Error("GravewrightCore.http is not available");
+                    return unwrap(client.postJson("/game/roll/reroll", {
+                        campaign_id: context.campaign?.id || "",
+                        message_id: String(messageId || ""),
+                    }), "sdk.rolls.reroll");
                 },
             }),
             settings: Object.freeze({
@@ -1514,6 +1538,9 @@
                 async advance(delta = 1) { requireCap("combat.advance"); return runtimeCommand("combat.advance", { delta }, "sdk.combat.advance"); },
                 async advanceRound(delta = 1) { requireCap("combat.advanceRound"); return runtimeCommand("combat.advanceRound", { delta }, "sdk.combat.advanceRound"); },
                 async setTurn(combatantId) { requireCap("combat.setTurn"); return runtimeCommand("combat.setTurn", { combatantId }, "sdk.combat.setTurn"); },
+                async interruptTurn(combatantId) { requireCap("combat.interruptTurn"); return runtimeCommand("combat.interruptTurn", { combatantId }, "sdk.combat.interruptTurn"); },
+                async resumeTurn() { requireCap("combat.resumeTurn"); return runtimeCommand("combat.resumeTurn", {}, "sdk.combat.resumeTurn"); },
+                async setHolding(combatantId, holding = true) { requireCap("combat.setHolding"); return runtimeCommand("combat.setHolding", { combatantId, holding: Boolean(holding) }, "sdk.combat.setHolding"); },
                 async add(input = {}) { requireCap("combat.add"); return runtimeCommand("combat.add", input, "sdk.combat.add"); },
                 async remove(combatantId) { requireCap("combat.remove"); return runtimeCommand("combat.remove", { combatantId }, "sdk.combat.remove"); },
                 async setFlags(combatantId, flags = {}) { requireCap("combat.setFlags"); return runtimeCommand("combat.setFlags", { combatantId, hidden: flags.hidden, defeated: flags.defeated }, "sdk.combat.setFlags"); },
@@ -2126,9 +2153,9 @@
                 };
                 const refresh = async () => { try { objects = await sdk.scene.objects.list(context.scene?.id); draw(); } catch (_) {} };
                 const onEvent = event => { if (["scene.objects.changed","scene.changed","token.moved"].includes(event.detail?.event)) void refresh(); };
-                document.addEventListener("vtt:transport-event", onEvent); window.addEventListener("resize", draw); void refresh();
-                const timer = window.setInterval(position, 50);
-                disposers.add(() => { window.clearInterval(timer); window.removeEventListener("resize", draw); document.removeEventListener("vtt:transport-event", onEvent); layer.remove(); });
+                const onMapViewChanged = event => { if (event.detail?.canvas === canvas) position(); };
+                document.addEventListener("vtt:transport-event", onEvent); document.addEventListener("vtt:map-view-changed", onMapViewChanged); window.addEventListener("resize", draw); void refresh();
+                disposers.add(() => { window.removeEventListener("resize", draw); document.removeEventListener("vtt:map-view-changed", onMapViewChanged); document.removeEventListener("vtt:transport-event", onEvent); layer.remove(); });
             }
         }
         if (caps.hasCapability(pkg, "ui.presentations")) {
@@ -2136,7 +2163,8 @@
             Object.assign(host.style, { position: "fixed", inset: "0", pointerEvents: "none", zIndex: "10000" }); document.body.append(host);
             let timer;const acknowledged=new Set();
             const render = async () => {
-                let presentations=[]; try { presentations=await sdk.ui.presentations.list({ sceneId: context.scene?.id }); } catch (_) { return; }
+                window.clearTimeout(timer);
+                let presentations=[]; try { presentations=await sdk.ui.presentations.list({ sceneId: context.scene?.id }); } catch (_) { timer=window.setTimeout(render,60000);return; }
                 for(const p of presentations){if(p.status==="active"&&p.audience?.ids?.includes(context.user?.id)&&p.endsAt&&Date.now()>=p.endsAt&&!acknowledged.has(p.id)){acknowledged.add(p.id);void runtimeCommand("presentations.ack",{id:p.id},"core.presentations.ack").catch(()=>acknowledged.delete(p.id));}}
                 host.replaceChildren(...presentations.filter(p => p.status==="active"&&p.audience?.ids?.includes(context.user?.id)&&(!p.endsAt||Date.now()<p.endsAt)).map(p => {
                     const node=document.createElement("article"); node.dataset.presentationId=p.id; node.dataset.presentationMode=p.mode;
@@ -2158,10 +2186,13 @@
                     for (const button of p.content?.buttons || []) { const el=document.createElement("button");el.type="button";el.textContent=button.label;el.addEventListener("click",()=>void sdk.rules?.actions?.executeReference?.(button.actionReference,{},{}));node.append(el); }
                     return node;
                 }));
+                const hasLiveClock = presentations.some(p => p.status === "active"
+                    && p.audience?.ids?.includes(context.user?.id) && (p.endsAt || p.deadline));
+                timer = window.setTimeout(render, hasLiveClock ? 1000 : 60000);
             };
             const onEvent=event=>{if (["ui.presentation.changed","scene.activated","token.moved","token.updated","token.deleted","scene.objects.changed"].includes(event.detail?.event))void render();};
-            document.addEventListener("vtt:transport-event",onEvent);timer=window.setInterval(render,1000);void render();
-            disposers.add(()=>{window.clearInterval(timer);document.removeEventListener("vtt:transport-event",onEvent);host.remove();void sdk.ui.presentations.list().then(rows=>Promise.all(rows.map(row=>sdk.ui.presentations.close(row.id,{expectedVersion:row.version}).catch(()=>null)))).catch(()=>null);});
+            document.addEventListener("vtt:transport-event",onEvent);void render();
+            disposers.add(()=>{window.clearTimeout(timer);document.removeEventListener("vtt:transport-event",onEvent);host.remove();void sdk.ui.presentations.list().then(rows=>Promise.all(rows.map(row=>sdk.ui.presentations.close(row.id,{expectedVersion:row.version}).catch(()=>null)))).catch(()=>null);});
         }
     }
     function installInteractionHost(pkg, sdk) {

@@ -39,12 +39,14 @@
                         <option value="diary" {% if default_type == 'diary' %}selected{% endif %}>{{ t("game.journal.types.diary") }}</option>
                         <option value="quest" {% if default_type == 'quest' %}selected{% endif %}>{{ t("game.journal.types.quest") }}</option>
                         <option value="quest_board" {% if default_type == 'quest_board' %}selected{% endif %}>{{ t("game.journal.types.quest_board") }}</option>
+                        <option value="roll_table" {% if default_type == 'roll_table' %}selected{% endif %}>{{ t("game.journal.types.roll_table") }}</option>
                     </select>
                 </label>
                 <button type="submit" class="dialog-submit journal-editor-submit" data-journal-create-submit
                         data-label-diary="{{ t('game.journal.create_type.diary') }}"
                         data-label-quest="{{ t('game.journal.create_type.quest') }}"
-                        data-label-quest-board="{{ t('game.journal.create_type.quest_board') }}">
+                        data-label-quest-board="{{ t('game.journal.create_type.quest_board') }}"
+                        data-label-roll-table="{{ t('game.journal.create_type.roll_table') }}">
                     <i class="ph ph-plus" aria-hidden="true"></i>
                     <span>{{ t("game.journal.create_type." ~ default_type) }}</span>
                 </button>

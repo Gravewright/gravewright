@@ -184,6 +184,7 @@ Use:
 - Modificar ator: solicite `actors.read` + `actors.write`; leia com `sdk.actors.get()` e atualize com `expectedVersion`.
 - Reagir ao movimento: solicite `events.subscribe`; use `sdk.events.on("token.moved", ...)` e busque com `tokens.read`.
 - Adicionar controle no dock: solicite `ui.slots`; monte em `dock.actions` e guarde o disposer.
+- Adicionar configurações de módulo: solicite `ui.slots`; monte em `settings.modules`. O core lista o pacote na navegação 3/12 e exibe a raiz do pacote no painel de conteúdo 9/12.
 - Criar ferramenta de parede/luz: solicite apenas `scene.geometry.read`/`scene.geometry.write` necessárias.
 - Aplicar dano: solicite `rules.actions`; execute a ação limitada `tokens.damage`.
 - Interagir com combate: use `combat.read`; adicione `combat.manage` somente para mutações.

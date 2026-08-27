@@ -130,10 +130,17 @@
             img.alt = "";
             img.loading = "lazy";
             wrap.appendChild(img);
-            return wrap;
+        } else {
+            const initial = String(combatant.name || "?").trim().charAt(0).toUpperCase() || "?";
+            wrap.appendChild(el("span", "gw-combat-combatant__initial", initial));
         }
-        const initial = String(combatant.name || "?").trim().charAt(0).toUpperCase() || "?";
-        wrap.appendChild(el("span", "gw-combat-combatant__initial", initial));
+        if (combatant.defeated) {
+            const defeated = document.createElement("img");
+            defeated.className = "gw-combat-combatant__defeated-icon";
+            defeated.src = "/static/icons/base/death-skull.png";
+            defeated.alt = "";
+            wrap.appendChild(defeated);
+        }
         return wrap;
     }
 

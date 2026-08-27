@@ -77,6 +77,24 @@ def test_start_creates_an_active_encounter_at_round_one(table):
     assert names(result) == ["Aria"]
 
 
+def test_adding_combatants_prepares_a_draft_until_start_is_clicked(table):
+    service = CombatService()
+    actor_id = make_actor(table["campaign_id"], table["gm"], "Aria")
+    prepared = service.add_combatants(
+        campaign_id=table["campaign_id"], user_id=table["gm"], actor_ids=[actor_id]
+    )
+    assert prepared.success
+    assert prepared.active is False
+    assert prepared.state_payload()["round"] == 0
+    assert prepared.state_payload()["current_id"] == ""
+    assert names(prepared) == ["Aria"]
+
+    started = service.start(campaign_id=table["campaign_id"], user_id=table["gm"])
+    assert started.active is True
+    assert started.state_payload()["round"] == 1
+    assert names(started) == ["Aria"]
+
+
 def test_players_cannot_change_the_combat(table):
     service, _ = start_with(table, "Aria")
     result = service.advance_turn(
@@ -84,6 +102,74 @@ def test_players_cannot_change_the_combat(table):
     )
     assert not result.success
     assert result.error_key == "game.combat.errors.gm_required"
+
+
+def test_turn_interruption_is_durable_and_next_resumes_original_combatant(table):
+    service, _ = start_with(table, "Aria", "Bran", "Curinga")
+    state = service.get_state(campaign_id=table["campaign_id"], user_id=table["gm"])
+    bran = next(row for row in state.combatants if row["name"] == "Bran")
+    joker = next(row for row in state.combatants if row["name"] == "Curinga")
+    service.set_turn(campaign_id=table["campaign_id"], user_id=table["gm"], combatant_id=bran["id"])
+
+    interrupted = service.interrupt_turn(
+        campaign_id=table["campaign_id"], user_id=table["gm"], combatant_id=joker["id"]
+    )
+    payload = interrupted.state_payload()
+    assert payload["current_id"] == joker["id"]
+    assert payload["interrupted"] is True
+    assert payload["interrupted_id"] == bran["id"]
+
+    reloaded = CombatService().get_state(
+        campaign_id=table["campaign_id"], user_id=table["gm"]
+    )
+    assert reloaded.state_payload()["interrupted_id"] == bran["id"]
+
+    resumed = service.advance_turn(campaign_id=table["campaign_id"], user_id=table["gm"], delta=1)
+    assert resumed.state_payload()["current_id"] == bran["id"]
+    assert resumed.state_payload()["interrupted"] is False
+
+
+def test_nested_turn_interruption_is_rejected(table):
+    service, _ = start_with(table, "Aria", "Bran", "Cass")
+    state = service.get_state(campaign_id=table["campaign_id"], user_id=table["gm"])
+    service.interrupt_turn(
+        campaign_id=table["campaign_id"], user_id=table["gm"], combatant_id=state.combatants[1]["id"]
+    )
+    nested = service.interrupt_turn(
+        campaign_id=table["campaign_id"], user_id=table["gm"], combatant_id=state.combatants[2]["id"]
+    )
+    assert not nested.success
+    assert nested.error_key == "game.combat.errors.interruption_active"
+
+
+def test_holding_skips_turn_without_marking_acted_and_can_interrupt_later(table):
+    service, state = start_with(table, "Aria", "Bran")
+    aria = state.combatants[0]
+    held = service.set_holding(
+        campaign_id=table["campaign_id"], user_id=table["gm"],
+        combatant_id=aria["id"], holding=True,
+    )
+    assert next(row for row in held.combatants if row["id"] == aria["id"])["holding"] is True
+
+    advanced = service.advance_turn(campaign_id=table["campaign_id"], user_id=table["gm"], delta=1)
+    aria_after = next(row for row in advanced.combatants if row["id"] == aria["id"])
+    assert aria_after["holding"] is True
+    assert aria_after["has_acted"] is False
+
+    interrupted = service.interrupt_turn(
+        campaign_id=table["campaign_id"], user_id=table["gm"], combatant_id=aria["id"]
+    )
+    assert interrupted.state_payload()["current_id"] == aria["id"]
+    resumed = service.resume_turn(campaign_id=table["campaign_id"], user_id=table["gm"])
+    aria_done = next(row for row in resumed.combatants if row["id"] == aria["id"])
+    assert aria_done["holding"] is False
+    assert aria_done["has_acted"] is True
+
+    rejected = service.interrupt_turn(
+        campaign_id=table["campaign_id"], user_id=table["gm"], combatant_id=aria["id"]
+    )
+    assert not rejected.success
+    assert rejected.error_key == "game.combat.errors.already_acted"
 
 
 def test_higher_initiative_goes_first_and_unrolled_goes_last(table):

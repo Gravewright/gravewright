@@ -14,6 +14,7 @@ from tests.unit.test_sdk_runtime_expansion import _install_runtime_addon
 
 ROSTER = ["campaign.members.read"]
 TOKENS = ["tokens.read"]
+ACTORS = ["actors.read"]
 
 
 def _read(client, campaign, resource, **params):
@@ -133,6 +134,29 @@ def test_roster_requires_the_capability_and_tracks_membership_changes(db, tmp_pa
         CampaignRepository().remove_member(campaign_id=campaign, user_id=a)
         from app.persistence.repositories.campaign_repository import CampaignRepository as Repo
         assert a not in {m["user_id"] for m in Repo().list_members(campaign_id=campaign)}
+
+
+def test_actor_owner_projection_is_complete_for_gm_and_self_only_for_player(db, tmp_path, monkeypatch):
+    from main import app
+
+    gm = seed_user(name="GM")
+    a = seed_user(name="Player A")
+    b = seed_user(name="Player B")
+    campaign = seed_campaign(gm)
+    seed_member(campaign, a, "player")
+    seed_member(campaign, b, "player")
+    shared = _actor(campaign, gm, "Shared", owners=[a, b])
+    _install_runtime_addon(tmp_path, monkeypatch, gm, campaign, ACTORS)
+
+    with TestClient(app=app, session_config=TEST_SESSION_CONFIG) as client:
+        login(client, gm)
+        projected = _read(client, campaign, "actors", entity_id=shared).json()["actor"]
+        assert set(projected["owner_user_ids"]) == {a, b}
+
+        login(client, a)
+        projected = _read(client, campaign, "actors", entity_id=shared).json()["actor"]
+        assert projected["owner_user_ids"] == [a]
+        assert b not in str(projected)
 
 
 # --- token controllers ---------------------------------------------------------

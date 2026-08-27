@@ -27,7 +27,6 @@ DELIBERATELY_SILENT = {
     "/game/player-onboarding/claim": "marcador de primeira visita exclusivo do usuário",
     "/game/preferences/layout": "preferência por usuário",
     "/game/preferences/vision": "preferência por usuário; só muda como a tela é pintada",
-    "/game/preferences/ping": "preferência por usuário; segue no próximo evento de ping",
     "/game/streamer-link": "painel só do GM",
     "/game/streamer-link/revoke": "painel só do GM",
     "/game/scenes/group": "organização do gerenciador de cenas, só o GM vê",

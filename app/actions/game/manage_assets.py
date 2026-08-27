@@ -10,6 +10,7 @@ from litestar.params import FromPath
 from litestar.response import File
 from litestar.response import Response
 
+from app.engine.assets.asset_library_service import MAX_AUDIO_BYTES
 from app.engine.assets.asset_library_service import MAX_PDF_BYTES
 from app.engine.assets.asset_library_service import AssetLibraryService
 from app.engine.assets.asset_read_service import AssetReadService
@@ -188,7 +189,7 @@ async def delete_library_asset(
 
 
 
-    request_max_body_size=MAX_PDF_BYTES + 1024 * 1024,
+    request_max_body_size=max(MAX_AUDIO_BYTES, MAX_PDF_BYTES) + 1024 * 1024,
 )
 async def upload_asset_library_image(
     request: Request,

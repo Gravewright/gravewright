@@ -62,7 +62,7 @@ def test_input_scope():
 def test_dice_collects_groups_and_modifier():
     result = evaluate("1d20 + @sheet.attributes.dex.mod", context=CTX, roller=_fixed_roller(17))
     assert result.total == 20
-    assert result.groups == [{"notation": "1d20", "results": [17], "subtotal": 17}]
+    assert result.groups == [{"notation": "1d20", "sides": 20, "results": [17], "subtotal": 17}]
     assert result.modifier == 3
     assert result.dice_subtotal == 17
 
@@ -79,8 +79,8 @@ def test_keep_highest_and_lowest_notation():
     result = evaluate("2d20kh1 + 2d20kl1", roller=lambda count, sides: next(rolls))
     assert result.total == 21
     assert result.groups == [
-        {"notation": "2d20kh1", "results": [4, 17], "subtotal": 17},
-        {"notation": "2d20kl1", "results": [4, 17], "subtotal": 4},
+        {"notation": "2d20kh1", "sides": 20, "results": [4, 17], "subtotal": 17},
+        {"notation": "2d20kl1", "sides": 20, "results": [4, 17], "subtotal": 4},
     ]
 
 
@@ -95,7 +95,7 @@ def test_exploding_die_rerolls_until_below_threshold():
     rolls = iter((6, 6, 2))
     result = evaluate("explode(6, 6)", roller=lambda count, sides: [next(rolls)])
     assert result.total == 14
-    assert result.groups == [{"notation": "1d6!>=6", "results": [6, 6, 2], "subtotal": 14}]
+    assert result.groups == [{"notation": "1d6!>=6", "sides": 6, "results": [6, 6, 2], "subtotal": 14}]
 
 
 def test_exploding_die_supports_sheet_values():
@@ -123,13 +123,13 @@ def test_dynamic_die_accepts_count_and_sides():
         roller=_fixed_roller(5),
     )
     assert result.total == 15
-    assert result.groups == [{"notation": "3d8", "results": [5, 5, 5], "subtotal": 15}]
+    assert result.groups == [{"notation": "3d8", "sides": 8, "results": [5, 5, 5], "subtotal": 15}]
 
 
 def test_success_pool_counts_results_at_or_above_target():
     result = evaluate("successes(4, 6, 5)", roller=lambda count, sides: [1, 5, 6, 4])
     assert result.total == 2
-    assert result.groups == [{"notation": "4d6>=5", "results": [1, 5, 6, 4], "subtotal": 2}]
+    assert result.groups == [{"notation": "4d6>=5", "sides": 6, "results": [1, 5, 6, 4], "subtotal": 2}]
 
 
 def test_roll_under_counts_results_at_or_below_target():

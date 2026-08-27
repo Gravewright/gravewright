@@ -44,6 +44,7 @@ from app.helpers.view import view_context
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
 from app.engine.rolls.roll_presentation_service import RollPresentationService
+from app.engine.rolls.roll_reroll_service import RollRerollService
 
 
 async def _json_body(request: Request) -> dict[str, Any]:
@@ -347,33 +348,35 @@ async def patch_token_sheet_data(
     )
     if not result.success:
         return Response({"error_key": result.error_key}, status_code=400)
+    await _emit_token_sheet_data(result, user_id=user["id"], token_service=token_service)
+    return Response(
+        {
+            "token_id": result.token_id,
+            "version": result.version,
+            "changed_paths": result.changed_paths,
+        },
+        status_code=200,
+    )
 
-    token = token_service.tokens.get_by_id(result.token_id or "")
-    if result.campaign_id and result.scene_id and token is not None:
-        payload = {
-            "room_id": result.campaign_id,
-            "scene_id": result.scene_id,
-            "actor_id": token.get("actor_id"),
-            "updated_by": user["id"],
-            "tokens": [
-                {
-                    "token_id": result.token_id,
-                    "version": result.version or token.get("version"),
-                    "changed": {"overrides": result.overrides or {}},
-                }
-            ],
-        }
-        transport = RealtimeTransport()
-        await transport.to_gm(
-            room_id=result.campaign_id, event=TransportEvent.TOKENS_UPDATED, payload=payload
-        )
-        if not token.get("hidden"):
-            await transport.to_players_in_room(
-                room_id=result.campaign_id,
-                event=TransportEvent.TOKENS_UPDATED,
-                payload=payload,
-            )
 
+@post("/game/token/item/patch")
+async def patch_token_item_instance(
+    request: Request,
+    current_user: Row,
+    token_instance_sheet_service: TokenInstanceSheetService,
+    token_service: TokenService,
+) -> Response[dict[str, Any]]:
+    body = await _json_body(request)
+    patch = body.get("patch")
+    result = token_instance_sheet_service.patch_item(
+        token_id=str(body.get("token_id", "")),
+        user_id=current_user["id"],
+        item_instance_id=str(body.get("item_instance_id", "")),
+        patch=patch if isinstance(patch, dict) else {},
+    )
+    if not result.success:
+        return Response({"error_key": result.error_key}, status_code=400)
+    await _emit_token_sheet_data(result, user_id=current_user["id"], token_service=token_service)
     return Response(
         {
             "token_id": result.token_id,
@@ -679,6 +682,7 @@ async def execute_action(
         roll_options=roll_options if isinstance(roll_options, dict) else None,
         target_actor_id=str(body.get("target_actor_id") or "") or None,
         target_token_id=str(body.get("target_token_id") or "") or None,
+        source_token_id=str(body.get("token_id") or "") or None,
         locale=view_context(cookies)["locale"],
     )
     if not result.success:
@@ -693,6 +697,22 @@ async def execute_action(
             chat_service=chat_service,
             roll_presentation_service=roll_presentation_service,
         )
+        if result.changed_paths:
+            source_token_id = str(body.get("token_id") or "")
+            source_token = token_service.tokens.get_by_id(source_token_id) if source_token_id else None
+            if source_token is not None and source_token.get("actor_link_mode") == "unlinked":
+                await _emit_token_sheet_data(
+                    TokenSheetDataResult(
+                        success=True, token_id=source_token_id,
+                        actor_id=source_token.get("actor_id"), campaign_id=result.campaign_id,
+                        scene_id=source_token.get("scene_id"), system_id=result.system_id,
+                        version=source_token.get("version"), overrides=source_token.get("overrides"),
+                        changed_paths=result.changed_paths,
+                    ),
+                    user_id=user["id"], token_service=token_service,
+                )
+            else:
+                await _emit_action_mutation(result, user_id=user["id"], token_service=token_service)
         if (
             str(body.get("action_id", "")) == "roll.initiative"
             and result.campaign_id
@@ -759,6 +779,31 @@ async def roll_actor_formula(
     return _roll_response(result, roll_presentation_service=roll_presentation_service)
 
 
+@post("/game/roll/reroll")
+async def reroll_chat_roll(
+    request: Request,
+    current_user: Row,
+    roll_reroll_service: RollRerollService,
+    chat_service: ChatService,
+    roll_presentation_service: RollPresentationService,
+) -> Response[dict[str, Any]]:
+    body = await _json_body(request)
+    result = roll_reroll_service.reroll(
+        campaign_id=str(body.get("campaign_id") or ""),
+        message_id=str(body.get("message_id") or ""),
+        user_id=current_user["id"],
+    )
+    if not result.success or result.roll is None:
+        return Response({"error_key": result.error_key}, status_code=400)
+    await _broadcast_roll(result.roll, user=current_user, chat_service=chat_service, roll_presentation_service=roll_presentation_service)
+    await RealtimeTransport().to_room(
+        room_id=result.roll.campaign_id,
+        event=TransportEvent.SHEET_DATA_UPDATED,
+        payload={"room_id": result.roll.campaign_id, "system_id": result.roll.system_id, "actor_id": result.roll.actor_id, "version": result.version, "updated_by": current_user["id"], "changed_paths": ["bennies.value"]},
+    )
+    return _roll_response(result.roll, roll_presentation_service=roll_presentation_service)
+
+
 @post("/game/actor/item/action")
 async def execute_item_action(
     request: Request,
@@ -794,6 +839,8 @@ async def execute_item_action(
             chat_service=chat_service,
             roll_presentation_service=roll_presentation_service,
         )
+        if result.changed_paths:
+            await _emit_action_mutation(result, user_id=user["id"], token_service=token_service)
         if result.applied:
             await _emit_applied_damage(
                 result.applied, user_id=user["id"], token_service=token_service

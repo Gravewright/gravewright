@@ -70,21 +70,21 @@
 
     document.addEventListener("vtt:transport-event", (event) => {
         const env = event.detail || {};
-        if (!["item.created", "item.deleted", "item.updated", "handout.access_changed"].includes(env.event)) return;
-        const roomId = env.payload?.room_id;
-        if (roomId && panelFor(roomId)) refreshPanel(roomId);
+        if (!["item.created", "item.deleted", "item.updated", "items.created", "items.deleted", "items.updated", "handout.access_changed"].includes(env.event)) return;
+        const roomId = env.room_id || env.payload?.room_id;
+        if (roomId && FI.treeHostFor(roomId)?.dataset.directoryLoaded === "true") refreshPanel(roomId);
     });
 
     document.addEventListener("vtt:resource-permissions-saved", (event) => {
         if (event.detail?.resourceType !== "item") return;
         document.querySelectorAll("[data-item-panel]").forEach((p) => {
-            if (p.dataset.roomId) refreshPanel(p.dataset.roomId);
+            if (p.dataset.roomId && FI.treeHostFor(p.dataset.roomId)?.dataset.directoryLoaded === "true") refreshPanel(p.dataset.roomId);
         });
     });
 
     document.addEventListener("vtt:ws-open", () => {
         document.querySelectorAll("[data-item-panel][data-room-id]").forEach((panel) => {
-            if (panel.dataset.roomId) refreshPanel(panel.dataset.roomId);
+            if (panel.dataset.roomId && FI.treeHostFor(panel.dataset.roomId)?.dataset.directoryLoaded === "true") refreshPanel(panel.dataset.roomId);
         });
     });
 })();

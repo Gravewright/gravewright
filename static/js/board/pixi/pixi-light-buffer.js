@@ -24,6 +24,7 @@
 
 
     const SCALE = 0.5;
+    const scale = () => window.GravewrightGraphicsQuality?.config?.().lightBufferScale || SCALE;
 
     const hexToInt = (hex) => {
         const parsed = parseInt(String(hex || "").replace("#", ""), 16);
@@ -37,8 +38,9 @@
     let ambient = null;
 
     function ensureTexture(board, cssW, cssH) {
-        const width = Math.max(1, Math.round(cssW * SCALE));
-        const height = Math.max(1, Math.round(cssH * SCALE));
+        const activeScale = scale();
+        const width = Math.max(1, Math.round(cssW * activeScale));
+        const height = Math.max(1, Math.round(cssH * activeScale));
         if (board.lightBufferRT && board.lightBufferW === width && board.lightBufferH === height) {
             return board.lightBufferRT;
         }
@@ -129,8 +131,9 @@
         lights.forEach((light, index) => {
             const { sprite, mask } = acquire(index);
             const centre = { x: light.x * cam.zoom + cam.offsetX, y: light.y * cam.zoom + cam.offsetY };
-            sprite.position.set(centre.x * SCALE, centre.y * SCALE);
-            sprite.width = sprite.height = light.dim * cam.zoom * 2 * SCALE;
+            const activeScale = scale();
+            sprite.position.set(centre.x * activeScale, centre.y * activeScale);
+            sprite.width = sprite.height = light.dim * cam.zoom * 2 * activeScale;
             sprite.tint = hexToInt(light.color);
             sprite.alpha = Math.max(0, Math.min(1, light.alpha));
 
@@ -139,8 +142,8 @@
             if (polygon.length >= 3) {
                 const flat = [];
                 polygon.forEach((point) => flat.push(
-                    (point.x * cam.zoom + cam.offsetX) * SCALE,
-                    (point.y * cam.zoom + cam.offsetY) * SCALE,
+                    (point.x * cam.zoom + cam.offsetX) * activeScale,
+                    (point.y * cam.zoom + cam.offsetY) * activeScale,
                 ));
                 mask.poly(flat).fill({ color: 0xffffff, alpha: 1 });
                 sprite.mask = mask;

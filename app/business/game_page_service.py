@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from app.business.campaigns.campaign_service import CampaignService
 from app.business.permissions import PermissionService
 from app.business.onboarding import GmOnboardingService
+from app.business.users import UserPreferenceService
 from app.engine.actors.actor_permissions import can_edit_actor
 from app.engine.actors.actor_service import ActorService
 from app.engine.actors.folder_tree import build_actor_folder_tree
@@ -22,6 +23,7 @@ from app.domain.permissions.permissions import TablePermission
 from app.domain.roles import PlayerRole
 from app.domain.roles import has_full_view
 from app.persistence.repositories.chat_message_repository import ChatMessageRepository
+from app.engine.chat.visibility_policy import ChatVisibilityPolicy
 from app.persistence.repositories.scene_group_repository import SceneGroupRepository
 from app.persistence.repositories.scene_layer_repository import SceneLayerRepository
 from app.persistence.repositories.scene_repository import SceneRepository
@@ -73,6 +75,9 @@ class GamePageService:
         room_ids = [c["id"] for c in campaigns]
 
         members = self.campaigns.list_members_for_user_campaigns(user_id)
+        member_colors = UserPreferenceService().get_ping_colors(
+            [str(member["user_id"]) for member in members]
+        )
         online_user_ids_by_room: dict[str, set[str]] = {r: set() for r in room_ids}
 
         members_by_campaign_id: dict[str, list[dict]] = defaultdict(list)
@@ -83,6 +88,7 @@ class GamePageService:
                     "user_id": member["user_id"],
                     "name": member["name"],
                     "role": member["role"],
+                    "color": member_colors[str(member["user_id"])],
                     "is_online": member["user_id"]
                     in online_user_ids_by_room.get(campaign_id, set()),
                 }
@@ -116,6 +122,23 @@ class GamePageService:
         rooms = []
         for campaign in campaigns:
             room = dict(campaign)
+            active_package_ids = {
+                row["package_id"]
+                for row in self.system_install.campaign_packages.list_for_campaign(campaign["id"])
+                if row.get("status") == "active"
+            }
+            room["installed_modules"] = [
+                {
+                    "id": item["id"],
+                    "name": item["name"],
+                    "kind": item["kind"],
+                    "version": item.get("version") or "",
+                    "active": item["id"] in active_package_ids,
+                }
+                for item in package_items
+                if item.get("status") in {"installed", "enabled"}
+                and item.get("kind") not in {"ruleset", "library"}
+            ]
             room["is_streamer"] = room["member_role"] == PlayerRole.STREAMER.value
             room["is_readonly"] = room["is_streamer"]
             room["measure_flash_seconds"] = _measure_flash_seconds(
@@ -146,8 +169,15 @@ class GamePageService:
                 permission=TablePermission.CHAT_DELETE_ANY,
             )
             recent_messages = self.chat.list_for_campaign(campaign_id=campaign["id"])
-            if room["is_streamer"]:
-                recent_messages = [m for m in recent_messages if m.get("visibility") == "public"]
+            recent_messages = [
+                message
+                for message in recent_messages
+                if ChatVisibilityPolicy.can_view(
+                    message=message,
+                    user_id=user_id,
+                    member_role=room["member_role"],
+                )
+            ]
             room["recent_messages"] = [_with_roll_payload(m) for m in recent_messages]
             room["scene_groups"] = self.scene_groups.list_by_campaign(campaign["id"])
             room["scenes"] = self.scenes.list_by_campaign(campaign["id"])

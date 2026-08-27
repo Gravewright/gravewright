@@ -26,6 +26,8 @@
   "items.register": "Registra comportamento/dados de tipos de item via metadados do pacote.",
   "locales": "Fornece locales e usa `sdk.i18n.t`.",
   "rolls.intent": "Pede intents declarativas de rolagem/action no servidor.",
+  "rolls.actions": "Registra ações limitadas de cards de rolagem tratadas pelo runtime autoritativo de rolagens.",
+  "rolls.reroll": "Solicita a rerrolagem autoritativa de uma mensagem de rolagem persistida e elegível.",
   "rules.declarative": "Fornece documentos de regras declarativos.",
   "rules.extends": "Estende o comportamento das regras.",
   "scene.overlays": "Fornece overlays de cena.",
@@ -114,5 +116,6 @@
   "tokens.transfer": "Transfere atomicamente identidades estáveis de tokens entre Scenes autorizadas.",
   "timelines.read": "Lê timelines semânticas autorizadas temporizadas pelo core.",
   "timelines.start": "Registra e inicia timelines semânticas limitadas.",
-  "timelines.control": "Cancela cues futuros de uma timeline semântica autorizada."
+  "timelines.control": "Cancela cues futuros de uma timeline semântica autorizada.",
+  "users.presentation.read": "Lê a cor pública e limitada de apresentação dos participantes visíveis na campanha ativa."
 }

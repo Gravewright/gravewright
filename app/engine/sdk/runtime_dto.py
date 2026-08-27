@@ -10,7 +10,9 @@ def _pick(row: dict, names: tuple[str, ...]) -> dict[str, Any]:
 
 
 def actor_snapshot(row: dict) -> dict[str, Any]:
-    return _pick(row, ("id", "campaign_id", "system_id", "type", "name", "folder_id", "portrait_asset_id", "token_asset_id", "version", "created_at", "updated_at"))
+    value = _pick(row, ("id", "campaign_id", "system_id", "type", "name", "folder_id", "portrait_asset_id", "token_asset_id", "version", "created_at", "updated_at"))
+    value["owner_user_ids"] = [str(owner) for owner in row.get("owner_user_ids", [])]
+    return value
 
 
 def item_snapshot(row: dict) -> dict[str, Any]:
@@ -45,8 +47,24 @@ def shader_metadata_snapshot(row: dict) -> dict[str, Any]:
     return _pick(row, ("id", "scene_id", "name", "x", "y", "radius", "rotation", "blend_mode", "opacity", "intensity", "scale", "speed", "color", "enabled", "updated_at"))
 
 
+def roll_group_snapshot(group: dict) -> dict[str, Any]:
+    """Project an internal roll group onto the exact public RollGroupDTO."""
+    return {
+        "faces": int(group.get("sides") or 0),
+        "results": [int(result) for result in group.get("results") or []],
+        "subtotal": int(group.get("subtotal") or 0),
+    }
+
+
 def chat_snapshot(row: dict) -> dict[str, Any]:
-    return _pick(row, ("id", "campaign_id", "author_user_id", "author_name", "author_role", "kind", "content", "expression", "groups", "modifier", "total", "visibility", "metadata", "created_at"))
+    snapshot = _pick(row, ("id", "campaign_id", "author_user_id", "author_name", "author_role", "kind", "content", "expression", "modifier", "total", "visibility", "metadata", "created_at"))
+    groups = row.get("groups")
+    snapshot["groups"] = (
+        [roll_group_snapshot(group) for group in groups if isinstance(group, dict)]
+        if isinstance(groups, list)
+        else None
+    )
+    return snapshot
 
 
 def token_snapshot(row: dict, *, controllers: list[str]) -> dict[str, Any]:

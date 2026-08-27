@@ -29,7 +29,9 @@
             }
 
             const cam = this.camera;
-            const dpr = window.devicePixelRatio || 1;
+            const quality = window.GravewrightGraphicsQuality?.config?.() || {};
+            const dpr = (window.GravewrightGraphicsQuality?.renderResolution?.() || window.devicePixelRatio || 1)
+                * (quality.fogScale || 1);
             const rt = this._ensureFogRT(board, cssW, cssH, dpr);
 
 

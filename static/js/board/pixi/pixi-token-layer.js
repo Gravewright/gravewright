@@ -16,6 +16,7 @@
 
     const TOKEN_BAR_FALLBACK_COLORS = { bar_1: 0x4caf50, bar_2: 0x3b82f6 };
     const TOKEN_HIDDEN_OPACITY = 0.42;
+    const DEFEATED_ICON_URL = "/static/icons/base/death-skull.png";
     const COMBAT_RING_COLORS = {
         current: 0x28d17c,
         next: 0xef4444,
@@ -206,6 +207,7 @@
                 node = {
                     container: new PIXI.Container(),
                     sprite: new PIXI.Sprite(PIXI.Texture.EMPTY),
+                    defeatedIcon: new PIXI.Sprite(PIXI.Texture.EMPTY),
                     mask: new PIXI.Graphics(),
                     gfx: new PIXI.Graphics(),
                     label: new PIXI.Text({
@@ -222,10 +224,12 @@
                 };
 
                 node.sprite.mask = node.mask;
+                node.defeatedIcon.eventMode = "none";
+                node.defeatedIcon.anchor.set(0.5);
                 node.label.resolution = window.devicePixelRatio || 1;
                 node.label.roundPixels = true;
                 node.labelBg.roundPixels = true;
-                node.container.addChild(node.gfx, node.mask, node.sprite);
+                node.container.addChild(node.gfx, node.mask, node.sprite, node.defeatedIcon);
                 board.tokenNodes.set(token.token_id, node);
                 board.tokenAdornmentLayer.addChild(node.container);
                 board.tokenLabelLayer?.addChild(node.labelBg, node.label);
@@ -259,6 +263,21 @@
                 node.sprite.height = tokenSize;
             } else {
                 node.sprite.visible = false;
+            }
+
+            const defeated = !!token.combat_marker?.defeated;
+            const defeatedTexture = defeated ? this._texture(DEFEATED_ICON_URL, {
+                visible: true,
+                priority: -1_000_001,
+                generation: this.tiles?.generation || 0,
+            }) : null;
+            node.defeatedIcon.visible = !!defeatedTexture;
+            if (defeatedTexture) {
+                node.defeatedIcon.texture = defeatedTexture;
+                node.defeatedIcon.position.set(cx, cy);
+                node.defeatedIcon.width = tokenSize * 0.72;
+                node.defeatedIcon.height = tokenSize * 0.72;
+                node.defeatedIcon.alpha = 0.92;
             }
 
             const barsKey = JSON.stringify(token.bars || {});

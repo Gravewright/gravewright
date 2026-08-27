@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from app.realtime.events import TransportEvent
-from app.realtime.transport import WebSocketConnectionManager
+from app.realtime.transport import RealtimeTransport, WebSocketConnectionManager
 
 
 class _ClosableSocket:
@@ -74,3 +74,20 @@ async def test_send_to_users_isolates_a_dead_socket():
     assert await manager.is_user_connected("dead") is False
     assert await manager.disconnect(dead_conn_id) is None
     assert await manager.is_user_connected("alive") is True
+
+
+@pytest.mark.asyncio
+async def test_targeted_campaign_event_keeps_room_scope_from_payload():
+    manager = WebSocketConnectionManager()
+    socket = _OkSocket()
+    await manager.connect(user_id="player", room_ids=["room-1"], websocket=socket)
+
+    await RealtimeTransport(manager=manager).to_players(
+        player_ids=["player"],
+        event=TransportEvent.ITEM_CREATED,
+        payload={"room_id": "room-1", "item_id": "item-1"},
+    )
+
+    assert len(socket.messages) == 1
+    assert socket.messages[0]["room_id"] == "room-1"
+    assert socket.messages[0]["payload"]["item_id"] == "item-1"

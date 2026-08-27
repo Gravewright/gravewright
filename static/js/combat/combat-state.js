@@ -27,9 +27,10 @@
         (Array.isArray(state.combatants) ? state.combatants : []).forEach((combatant) => {
             const tokenId = combatant?.token_id;
             const role = tokenId ? roleFor(combatant) : "";
-            if (!role) return;
+            if (!tokenId || (!role && !combatant.defeated)) return;
             markers.set(tokenId, {
-                ...ROLES[role],
+                ...(ROLES[role] || {}),
+                role,
                 combatant_id: combatant.id,
                 name: combatant.name || "",
                 initiative: combatant.initiative,
@@ -60,7 +61,9 @@
             return;
         }
 
-        if (!lastFrameAt || now - lastFrameAt >= 55) {
+        const profileFps = window.GravewrightGraphicsQuality?.config?.().animationFps || 60;
+        const interval = Math.max(55, 1000 / profileFps);
+        if (!lastFrameAt || now - lastFrameAt >= interval) {
             lastFrameAt = now;
             window.GravewrightMap?.redraw?.();
         }

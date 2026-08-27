@@ -414,7 +414,7 @@ Límite de seguridad: No expone filesystem, database, transport, renderer, inter
 
 Status: `stable`
 Tipos de package: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
-Métodos: `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.advanceRound`, `sdk.combat.setTurn`, `sdk.combat.add`, `sdk.combat.remove`, `sdk.combat.setFlags`, `sdk.combat.rollInitiative`, `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`
+Métodos: `sdk.combat.start`, `sdk.combat.end`, `sdk.combat.advance`, `sdk.combat.advanceRound`, `sdk.combat.setTurn`, `sdk.combat.interruptTurn`, `sdk.combat.resumeTurn`, `sdk.combat.setHolding`, `sdk.combat.add`, `sdk.combat.remove`, `sdk.combat.setFlags`, `sdk.combat.rollInitiative`, `sdk.combat.setInitiative`, `sdk.combat.moveCombatant`, `sdk.combat.setInitiativeOrder`
 Eventos: [Eventos](#eventos)
 Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
@@ -844,11 +844,39 @@ Durabilidad: Solo los recursos de servidor declarados son durables; los registro
 Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
 Límite de seguridad: No expone filesystem, database, transport, renderer, internals de ACL ni override de permisos.
 
+### `rolls.actions`
+
+Status: `stable`
+Tipos de package: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
+Métodos: `sdk.rolls.actions.register`
+Eventos: [Eventos](#eventos)
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+Límite de seguridad: No expone filesystem, database, transport, renderer, internals de ACL ni override de permisos.
+
 ### `rolls.intent`
 
 Status: `stable`
 Tipos de package: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
 Métodos: `sdk.rolls.intent`
+Eventos: [Eventos](#eventos)
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+Límite de seguridad: No expone filesystem, database, transport, renderer, internals de ACL ni override de permisos.
+
+### `rolls.reroll`
+
+Status: `stable`
+Tipos de package: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
+Métodos: `sdk.rolls.reroll`
 Eventos: [Eventos](#eventos)
 Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
 Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
@@ -1586,6 +1614,20 @@ Durabilidad: Solo los recursos de servidor declarados son durables; los registro
 Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
 Límite de seguridad: No expone filesystem, database, transport, renderer, internals de ACL ni override de permisos.
 
+### `users.presentation.read`
+
+Status: `stable`
+Tipos de package: `ruleset`, `addon`, `library`, `content`, `theme`, `assets`
+Métodos: `sdk.users.presentation.get`, `sdk.users.presentation.list`
+Eventos: [Eventos](#eventos)
+Errores: `CAPABILITY_REQUIRED`, `PERMISSION_DENIED`, `NOT_FOUND`, `VALIDATION_FAILED`, `STALE_VERSION`, `IDEMPOTENCY_CONFLICT`, `ALREADY_SUBMITTED`, `NOT_ACTIVE_PARTICIPANT`, `LIMIT_EXCEEDED`, `UNKNOWN_ACTION`, `ALREADY_RESPONDED`, `INTERACTION_EXPIRED`, `INTERACTION_CANCELLED`, `UNKNOWN_OBJECT_TYPE`, `PROVIDER_UNAVAILABLE`, `INVALID_GEOMETRY`, `INVALID_OBJECT_DATA`, `INVALID_PRESENTATION`, `INVALID_ANCHOR`, `ANCHOR_NOT_VISIBLE`, `NOT_AUTHORIZED`, `PACKAGE_INACTIVE`, `UNKNOWN_INTERACTION`, `UNSUPPORTED_PRESENTATION_MODE`, `RESOURCE_IN_USE`
+Autoridad: Capability declarada más autoridad del usuario actual sobre el recurso; las capabilities nunca elevan permisos.
+Visibilidad: Proyección del usuario actual; los recursos ocultos no se distinguen de los inexistentes.
+Concurrencia: Autoritativo en el servidor; `expectedVersion` es compare-and-swap atómico cuando se declara.
+Durabilidad: Solo los recursos de servidor declarados son durables; los registros locales terminan al descargar el package.
+Ciclo de vida: El package debe estar instalado, habilitado y activo; los registros devuelven un disposer.
+Límite de seguridad: No expone filesystem, database, transport, renderer, internals de ACL ni override de permisos.
+
 ### `workflows.control`
 
 Status: `stable`
@@ -1815,6 +1857,10 @@ Entrega: Evento autorizado y versionado por schema; vuelva a leer el estado actu
 Entrega: Evento autorizado y versionado por schema; vuelva a leer el estado actual.
 
 ### `ui.presentation.changed`
+
+Entrega: Evento autorizado y versionado por schema; vuelva a leer el estado actual.
+
+### `user.presentation.changed`
 
 Entrega: Evento autorizado y versionado por schema; vuelva a leer el estado actual.
 

@@ -7,6 +7,7 @@ from app.engine.effects.active_effects import (
     apply_resource_delta,
     apply_stat_modifiers,
     effect_modifiers,
+    effect_restrictions,
     granted_effects,
     periodic_modifiers,
     resolve_resource_target,
@@ -150,6 +151,54 @@ def test_periodic_modifiers_ignores_non_periodic_ops():
 
 def test_periodic_modifiers_carry_target():
     assert periodic_modifiers(_dot_sheet("damage_over_time", 4))[0]["target"] == "damage.self"
+
+
+def test_incoming_target_namespace_is_accepted() -> None:
+    sheet = {
+        "effects": [
+            {
+                "id": "vulnerable",
+                "data": {
+                    "modifiers": [
+                        {"target": "incoming.roll.attack", "operation": "add", "value": 2}
+                    ]
+                },
+            }
+        ]
+    }
+    modifiers, applied = effect_modifiers(sheet, {"incoming.roll.attack.ranged"})
+    assert modifiers and applied
+
+
+def test_malformed_effect_target_is_ignored() -> None:
+    sheet = {
+        "effects": [
+            {
+                "id": "bad",
+                "data": {
+                    "modifiers": [
+                        {"target": "incoming roll.attack", "operation": "add", "value": 99}
+                    ]
+                },
+            }
+        ]
+    }
+    assert effect_modifiers(sheet, {"incoming roll.attack"}) == ([], [])
+
+
+def test_effect_restrictions_match_semantic_targets() -> None:
+    sheet = {
+        "effects": [
+            {
+                "id": "condition:bound",
+                "name": "Preso",
+                "data": {"restrictions": [{"target": "token.movement"}]},
+            }
+        ]
+    }
+    restrictions = effect_restrictions(sheet, "token.movement.walk")
+    assert restrictions[0]["effectId"] == "condition:bound"
+    assert effect_restrictions(sheet, "action.roll.attack") == []
 
 
 _HP_RESOURCES = {"hp": {"path": "sheet.hp.value", "maxPath": "sheet.hp.max", "min": 0}}

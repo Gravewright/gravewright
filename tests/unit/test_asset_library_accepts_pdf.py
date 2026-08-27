@@ -15,6 +15,8 @@ import pytest
 
 from app.engine.assets.asset_library_service import ALLOWED_CONTENT_TYPES
 from app.engine.assets.asset_library_service import AssetLibraryService
+from app.engine.assets.asset_library_service import MAX_ASSET_BYTES
+from app.engine.assets.asset_library_service import MAX_AUDIO_BYTES
 from app.engine.assets.asset_library_service import PDF_CONTENT_TYPE
 from app.infrastructure.storage.local_asset_storage import SAFE_EXTENSIONS
 
@@ -121,6 +123,24 @@ def test_pdf_is_not_in_the_image_content_types():
     assert PDF_CONTENT_TYPE not in ALLOWED_CONTENT_TYPES
 
 
+def test_audio_has_a_100_mb_limit_separate_from_images(service):
+    class _SizedAudio:
+        def __init__(self, size: int) -> None:
+            self.size = size
+
+        def __len__(self) -> int:
+            return self.size
+
+    assert MAX_AUDIO_BYTES == 100 * 1024 * 1024
+    assert MAX_AUDIO_BYTES > MAX_ASSET_BYTES
+    assert service._validate(
+        filename="ambiente.ogg", content_type="audio/ogg", data=_SizedAudio(MAX_AUDIO_BYTES)
+    ) is None
+    assert service._validate(
+        filename="ambiente.ogg", content_type="audio/ogg", data=_SizedAudio(MAX_AUDIO_BYTES + 1)
+    ) == "game.assets.errors.too_large"
+
+
 def test_a_pdf_is_presented_with_its_kind(service):
     created = service.create_asset(
         campaign_id="c1",
@@ -201,7 +221,7 @@ def test_the_route_body_limit_is_above_the_pdf_cap():
     decimais) é mais baixo até que MAX_ASSET_BYTES (10 MiB), então a faixa entre
     os dois já falhava assim antes de existir PDF."""
     import main
-    from app.engine.assets.asset_library_service import MAX_ASSET_BYTES, MAX_PDF_BYTES
+    from app.engine.assets.asset_library_service import MAX_ASSET_BYTES, MAX_AUDIO_BYTES, MAX_PDF_BYTES
 
     limits = [
         handler.request_max_body_size
@@ -211,7 +231,9 @@ def test_the_route_body_limit_is_above_the_pdf_cap():
         if isinstance(getattr(handler, "request_max_body_size", None), int)
     ]
     assert limits, "a rota de upload precisa declarar o próprio limite de corpo"
-    assert max(limits) > MAX_PDF_BYTES, "sem folga, o multipart estoura antes do arquivo"
+    assert max(limits) > max(MAX_AUDIO_BYTES, MAX_PDF_BYTES), (
+        "sem folga, o multipart estoura antes do maior arquivo permitido"
+    )
     assert MAX_PDF_BYTES > MAX_ASSET_BYTES, "ficha em PDF é maior que imagem de cena"
 
 
@@ -220,6 +242,7 @@ def test_the_client_refuses_oversized_files_before_uploading():
     script = (ROOT / "static/js/assets/asset-library.js").read_text(encoding="utf-8")
     assert "MAX_PDF_BYTES = 25 * 1024 * 1024" in script
     assert "MAX_IMAGE_BYTES = 10 * 1024 * 1024" in script
+    assert "MAX_AUDIO_BYTES = 100 * 1024 * 1024" in script
     assert "file.size > cap" in script
 
 

@@ -113,3 +113,10 @@ def test_artistic_layer_exposes_native_scene_sound_authoring():
     assert 'input.max=channel==="master"?"1":String(master)' in script
     assert 'playing?"/game/sounds/pause":"/game/sounds/play"' in script and "ph-pause" in script
     assert "sound-mixer-rail" not in script.split("function renderNativeProductModal",1)[1]
+
+
+def test_audio_unlock_can_retry_after_browser_autoplay_blocks_it():
+    runtime=open("static/js/audio/core-audio-runtime.js",encoding="utf-8").read()
+    assert 'addEventListener("pointerdown", unlock, { capture: true })' in runtime
+    assert 'addEventListener("keydown", unlock, { capture: true })' in runtime
+    assert 'addEventListener("pointerdown", unlock, { once: true' not in runtime

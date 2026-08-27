@@ -407,13 +407,14 @@ void main() {
         const zoom = camera?.zoom || 1;
         const offsetX = camera?.offsetX || 0;
         const offsetY = camera?.offsetY || 0;
+        const maxActive = window.GravewrightGraphicsQuality?.config?.().maxShaders || MAX_ACTIVE;
         const active = (shaders || []).filter((shader) => {
             const radius = Number(shader.radiusWorld || 0) * zoom;
             if (radius <= 0) return true;
             const x = Number(shader.x || 0) * zoom + offsetX;
             const y = Number(shader.y || 0) * zoom + offsetY;
             return x + radius >= 0 && y + radius >= 0 && x - radius <= cssW && y - radius <= cssH;
-        }).slice(0, MAX_ACTIVE);
+        }).slice(0, maxActive);
         const alive = new Set(active.map((shader) => shader.id));
 
         [...stage.keys()].forEach((id) => { if (!alive.has(id)) drop(id); });
@@ -498,12 +499,29 @@ void main() {
     }
 
     function requiresContinuousFrames(shaders) {
-        return (shaders || []).slice(0, MAX_ACTIVE)
+        const maxActive = window.GravewrightGraphicsQuality?.config?.().maxShaders || MAX_ACTIVE;
+        return (shaders || []).slice(0, maxActive)
             .some((shader) => Number(shader.speed ?? 1) !== 0);
     }
 
+    let animationTimer = 0;
+    let lastAnimationFrameAt = 0;
     function requestNextFrame(shaders, drawn, requestRender) {
-        if (drawn > 0 && requiresContinuousFrames(shaders)) requestRender?.();
+        if (!(drawn > 0 && requiresContinuousFrames(shaders)) || animationTimer) return;
+        const fps = window.GravewrightGraphicsQuality?.config?.().animationFps || 60;
+        const interval = 1000 / fps;
+        const elapsed = performance.now() - lastAnimationFrameAt;
+        if (!lastAnimationFrameAt || elapsed >= interval) {
+            lastAnimationFrameAt = performance.now();
+            requestRender?.("effects");
+            return;
+        }
+        const schedule = window.setTimeout || globalThis.setTimeout;
+        animationTimer = schedule(() => {
+            animationTimer = 0;
+            lastAnimationFrameAt = performance.now();
+            requestRender?.("effects");
+        }, interval - elapsed);
     }
 
     function clear() {

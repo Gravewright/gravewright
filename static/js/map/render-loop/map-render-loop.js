@@ -3,6 +3,7 @@
         const pendingCanvasFrames = new WeakSet();
         const dirtyFlags = new WeakMap();
         let pendingDrawAllFrame = false;
+        let pendingDrawAllFlags = new Set();
         const ALL_FLAGS = new Set(["scene", "camera", "tiles", "tokens", "overlays", "fog", "viewport"]);
         const {
             boardRenderer,
@@ -75,7 +76,12 @@
                     : null,
             });
             if (flags.has("fog")) boardRenderer.setFog(scene ? (window.GravewrightFog?.fogViewFor?.(canvas, scene) ?? null) : null);
-            boardRenderer.render();
+            boardRenderer.render(flags);
+            if (flags.has("camera") || flags.has("scene")) {
+                document.dispatchEvent(new CustomEvent("vtt:map-view-changed", {
+                    detail: { canvas, sceneChanged: flags.has("scene") },
+                }));
+            }
             const domStartedAt = measureFrame ? performance.now() : 0;
             measureRender(canvas);
             if (measureFrame) window.__gravewrightPerfRecord?.("dom_layout_style", performance.now() - domStartedAt);
@@ -98,12 +104,18 @@
             });
         }
 
-        function requestDrawAll() {
+        function requestDrawAll(flags = "all") {
+            normalizeFlags(flags).forEach((flag) => pendingDrawAllFlags.add(flag));
             if (pendingDrawAllFrame) return;
             pendingDrawAllFrame = true;
             window.requestAnimationFrame(() => {
                 pendingDrawAllFrame = false;
-                drawAll();
+                const requested = pendingDrawAllFlags.size ? new Set(pendingDrawAllFlags) : "all";
+                pendingDrawAllFlags = new Set();
+                document.querySelectorAll("[data-map-canvas]").forEach((canvas) => {
+                    if (!canvas.closest(".room-workspace")?.classList.contains("is-active")) return;
+                    drawGrid(canvas, requested);
+                });
             });
         }
 

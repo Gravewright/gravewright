@@ -8,6 +8,7 @@
   const AUDIO_MIME_PREFIX = "audio/";
 
   const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+  const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
   const MAX_PDF_BYTES = 25 * 1024 * 1024;
 
   function esc(value) {
@@ -461,7 +462,9 @@
 
 
 
-        const cap = file.type === PDF_MIME ? MAX_PDF_BYTES : MAX_IMAGE_BYTES;
+        const cap = file.type === PDF_MIME
+          ? MAX_PDF_BYTES
+          : file.type.startsWith(AUDIO_MIME_PREFIX) ? MAX_AUDIO_BYTES : MAX_IMAGE_BYTES;
         if (file.size > cap) {
           reportUploadFailure(file, new Error("too_large"));
           continue;

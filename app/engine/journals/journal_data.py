@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 
-JOURNAL_TYPES = {"diary", "quest", "quest_board"}
+JOURNAL_TYPES = {"diary", "quest", "quest_board", "roll_table"}
 VISIBILITIES = {"private", "shared", "handout"}
 QUEST_STATUSES = ["draft", "available", "active", "completed", "failed", "archived"]
 BOARD_ENTRY_VISIBILITIES = {"public_card"}
@@ -24,6 +24,7 @@ OBJECTIVE_LIMIT = 64
 REWARD_LIMIT = 64
 TAG_LIMIT = 32
 SECTION_LIMIT = 64
+ROLL_TABLE_ENTRY_LIMIT = 256
 
 
 def normalize_visibility(value: object) -> str:
@@ -148,6 +149,8 @@ def empty_data_for(journal_type: str) -> dict:
         return normalize_board_data({})
     if journal_type == "diary":
         return normalize_diary_data({})
+    if journal_type == "roll_table":
+        return normalize_roll_table_data({})
     return {}
 
 
@@ -226,6 +229,35 @@ def normalize_board_data(raw: object) -> dict:
     return {}
 
 
+def _normalize_roll_table_entry(raw: object, fallback_order: int) -> dict:
+    raw = raw if isinstance(raw, dict) else {}
+    return {
+        "id": _short(raw.get("id"), 40) or _gen_id("table"),
+        "name": _short(raw.get("name"), 160),
+        "weight": max(1, min(1_000_000, _int(raw.get("weight"), 1))),
+        "result": _markdown(raw.get("result")),
+        "active": _bool(raw.get("active")) if "active" in raw else True,
+        "drawn": _bool(raw.get("drawn")),
+        "sortOrder": _int(raw.get("sortOrder"), fallback_order),
+    }
+
+
+def normalize_roll_table_data(raw: object) -> dict:
+    raw = raw if isinstance(raw, dict) else {}
+    entries_raw = raw.get("entries") if isinstance(raw.get("entries"), list) else []
+    entries = [
+        _normalize_roll_table_entry(entry, (index + 1) * 10)
+        for index, entry in enumerate(entries_raw[:ROLL_TABLE_ENTRY_LIMIT])
+    ]
+    entries.sort(key=lambda entry: entry["sortOrder"])
+    visibility = str(raw.get("resultVisibility") or "public").strip().lower()
+    return {
+        "entries": entries,
+        "withReplacement": _bool(raw.get("withReplacement")) if "withReplacement" in raw else True,
+        "resultVisibility": visibility if visibility in {"public", "gm"} else "public",
+    }
+
+
 def normalize_data_for(journal_type: str, raw: object) -> dict:
     if journal_type == "quest":
         return normalize_quest_data(raw)
@@ -233,6 +265,8 @@ def normalize_data_for(journal_type: str, raw: object) -> dict:
         return normalize_board_data(raw)
     if journal_type == "diary":
         return normalize_diary_data(raw)
+    if journal_type == "roll_table":
+        return normalize_roll_table_data(raw)
     return {}
 
 
