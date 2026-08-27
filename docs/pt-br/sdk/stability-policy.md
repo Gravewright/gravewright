@@ -10,7 +10,7 @@ válido para `sdkVersion: "1"` deve continuar instalando, ativando e executando
 em releases compatíveis, salvo quando depender de capabilities `forbidden`.
 
 Autores devem usar `compatibility.minimum` e `compatibility.verified` como
-`"1"`. Versões do produto ou labels de RC, como `1.0.0-beta.3` e
+`"1"`. Versões do produto ou labels de RC, como `1.0.0-beta.4` e
 `1.0.0-rc.1`, não pertencem nesses campos de compatibilidade da SDK.
 
 ## Niveis de Estabilidade

@@ -1,6 +1,6 @@
 [project]
 name = "Gravewright"
-version = "1.0.0b3"
+version = "1.0.0b4"
 description = "Gravewright is an open-source virtual tabletop platform for tabletop RPGs, built with a focus on performance, extensibility, and full control over the gameplay experience."
 requires-python = ">=3.11"
 dependencies = [

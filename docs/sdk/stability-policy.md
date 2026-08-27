@@ -14,7 +14,7 @@ product releases unless it uses capabilities marked `forbidden`.
 
 Package authors target the SDK identifier with `compatibility.minimum` and
 `compatibility.verified` set to `"1"`. Product or RC labels such as
-`1.0.0-beta.3` and `1.0.0-rc.1` do not belong in these SDK compatibility fields.
+`1.0.0-beta.4` and `1.0.0-rc.1` do not belong in these SDK compatibility fields.
 
 ## Stability levels
 

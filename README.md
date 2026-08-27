@@ -4,12 +4,12 @@ Gravewright is an open-source virtual tabletop platform for tabletop RPGs.
 
 It is built for self-hosted tables that want server-authoritative gameplay, a documented SDK with declarative ruleset/addon/library/theme/content/asset packages, a first-class operator CLI, and predictable performance under large maps and realtime collaboration.
 
-Current release: **Gravewright 1.0.0 Beta 3**, certified against **SDK 1 RC 1**.
+Current release: **Gravewright 1.0.0 Beta 4**, certified against **SDK 1 RC 1**.
 See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the complete release history.
 
 [Website](https://gravewright.com/) ·
-[Beta 3 release](https://github.com/Gravewright/gravewright/releases/tag/v1.0.0-beta.3) ·
-[Download for Windows](https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.3/Gravewright-Windows-x64.zip) ·
+[Beta 4 release](https://github.com/Gravewright/gravewright/releases/tag/v1.0.0-beta.4) ·
+[Download for Windows](https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.4/Gravewright-Windows-x64.zip) ·
 [Documentation](https://gravewright.com/wiki/) ·
 [Issues](https://github.com/Gravewright/gravewright/issues)
 
@@ -37,7 +37,7 @@ browser. No administrator rights are needed.
 1. Download or clone Gravewright to a folder on your computer.
 2. Run the installer for your system:
    * **Windows:** download and extract the
-     [official Windows ZIP](https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.3/Gravewright-Windows-x64.zip),
+     [official Windows ZIP](https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.4/Gravewright-Windows-x64.zip),
      then double-click **`Gravewright.exe`**.
      `install-windows.bat` remains only as a transitional/debug fallback. If SmartScreen
      shows a warning, choose *More info → Run anyway*.
@@ -176,13 +176,13 @@ Restore is destructive. Gravewright keeps a `*.pre-restore` safety copy of the p
 
 ## Current Status
 
-Gravewright is currently **v1.0.0-beta.3: Beta 3**.
+Gravewright is currently **v1.0.0-beta.4: Beta 4**.
 
 SDK 1 RC 1 is the frozen public compatibility candidate. Packages still declare
 `"sdkVersion": "1"`; RC status is release metadata, not a second manifest version.
 Breaking changes require explicit contract review and, when incompatible, a future SDK line.
 
-Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, Marketplace channels, and browser SDK runtime are included in the Beta 3 line.
+Core gameplay, campaigns, realtime transport, maps, actors, items, journals, permissions, SDK packages, package tooling, diagnostics, Marketplace channels, and browser SDK runtime are included in the Beta 4 line.
 
 ## What Gravewright Includes
 

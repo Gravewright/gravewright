@@ -85,15 +85,33 @@ sdk.bus
 sdk.commands
 sdk.ui
 sdk.chat
+sdk.rolls
 sdk.settings
 sdk.sheets
 sdk.combat
+sdk.users
 sdk.tokens
 sdk.scene
 sdk.tools
 sdk.content
 sdk.i18n
 ```
+
+## Beta 4 additions
+
+Gravewright 1.0.0-beta.4 preserves `sdkVersion: "1"` and adds compatible,
+capability-gated methods to the frozen SDK 1 surface:
+
+| Capability | Methods | Purpose |
+|---|---|---|
+| `rolls.actions` | `sdk.rolls.actions.register(definition, handler)` | Register a constrained action on persisted roll messages. |
+| `rolls.reroll` | `sdk.rolls.reroll(messageId)` | Reroll through the authoritative ruleset policy attached to the original roll. |
+| `combat.manage` | `sdk.combat.interruptTurn(combatantId)`, `sdk.combat.resumeTurn()`, `sdk.combat.setHolding(combatantId, holding)` | Model interruption and holding without package-owned combat state. |
+| `users.presentation.read` | `sdk.users.presentation.get(userId)`, `sdk.users.presentation.list()` | Read bounded presentation colors for users visible in the active campaign. |
+
+The exact signatures and DTOs remain generated from the canonical registry; see
+[`method-reference.md`](method-reference.md), [`dto-reference.md`](dto-reference.md)
+and [`capabilities.md`](capabilities.md).
 
 Convenience shortcuts:
 
