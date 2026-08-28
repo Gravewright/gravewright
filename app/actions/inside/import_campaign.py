@@ -4,10 +4,7 @@ from litestar import Request, post
 from litestar.exceptions import NotFoundException
 from litestar.response import Redirect, Response
 
-from app.business.campaigns.campaign_import_service import (
-    MAX_CAMPAIGN_ARCHIVE_BYTES,
-    CampaignImportService,
-)
+from app.business.campaigns.campaign_import_service import CampaignImportService
 from app.config import config
 from app.helpers.auth import require_user
 from app.helpers.http_responses import json_error, json_ok, wants_json
@@ -17,7 +14,7 @@ from app.persistence.rows import Row
 @post(
     "/campaigns/import",
     guards=[require_user],
-    request_max_body_size=MAX_CAMPAIGN_ARCHIVE_BYTES + 1024 * 1024,
+    request_max_body_size=None,
 )
 async def import_campaign(
     request: Request,

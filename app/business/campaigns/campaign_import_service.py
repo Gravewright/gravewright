@@ -47,7 +47,6 @@ from app.persistence.tables import (
     sounds, sound_playlists, soundscapes, scene_spatial_sounds,
 )
 
-MAX_CAMPAIGN_ARCHIVE_BYTES = 50 * 1024 * 1024
 MAX_CAMPAIGN_JSON_BYTES = 100 * 1024 * 1024
 MAX_ARCHIVE_UNCOMPRESSED_BYTES = 2 * 1024 * 1024 * 1024
 MAX_ARCHIVE_ENTRIES = 100_010
@@ -68,7 +67,7 @@ class CampaignImportService:
         self, *, archive: bytes, user_id: str, title: str = ""
     ) -> CampaignImportResult:
         self.recover_incomplete_imports()
-        if not archive or len(archive) > MAX_CAMPAIGN_ARCHIVE_BYTES:
+        if not archive:
             return self._invalid()
         asset_entries=[]
         archive_version=1

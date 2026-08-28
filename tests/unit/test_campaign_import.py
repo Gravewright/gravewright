@@ -66,6 +66,19 @@ def test_import_endpoint_accepts_gwcampaign(db):
     assert response.json()["campaign_id"]
 
 
+def test_import_endpoint_has_no_request_body_size_limit():
+    from main import app
+
+    route = next(
+        route
+        for route in app.routes
+        if getattr(route, "path", None) == "/campaigns/import"
+    )
+    handler = next(iter(route.route_handler_map.values()))[0]
+
+    assert handler.resolve_request_max_body_size() is None
+
+
 def test_import_rejects_corrupt_archive(db):
     gm_id = seed_user(name="GM")
     result = CampaignImportService().import_archive(
