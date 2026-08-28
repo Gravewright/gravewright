@@ -5,7 +5,7 @@ from dataclasses import dataclass,field
 from io import BytesIO
 from PIL import Image,UnidentifiedImageError
 from app.business.audit import AuditService
-from app.engine.assets.asset_library_service import AssetLibraryService,MAX_ASSET_BYTES
+from app.engine.assets.asset_library_service import AssetLibraryService,MAX_ASSET_BYTES,MAX_AUDIO_BYTES
 from app.persistence.repositories.asset_repository import AssetRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.security.asset_permissions import can_manage_assets
@@ -70,14 +70,15 @@ class AssetIngestionService:
             if media_type_hint and media_type_hint != PDF_MIME:
                 return IngestionResult(False,error_key="UNSUPPORTED_MEDIA_TYPE")
             return IngestionResult(True,{"contentType":PDF_MIME,"extension":".pdf","width":None,"height":None})
-        if len(data)>MAX_ASSET_BYTES:
-            return IngestionResult(False,error_key="VALIDATION_FAILED")
         sniffed=next((mime for mime,check in SIGNATURES.items() if check(data)),None)
         if sniffed is None:
             return IngestionResult(False,error_key="UNSUPPORTED_MEDIA_TYPE")
         if sniffed.startswith("audio/"):
+            if len(data)>MAX_AUDIO_BYTES: return IngestionResult(False,error_key="VALIDATION_FAILED")
             if media_type_hint and media_type_hint != sniffed: return IngestionResult(False,error_key="UNSUPPORTED_MEDIA_TYPE")
             return IngestionResult(True,{"contentType":sniffed,"extension":EXTENSIONS[sniffed],"width":None,"height":None})
+        if len(data)>MAX_ASSET_BYTES:
+            return IngestionResult(False,error_key="VALIDATION_FAILED")
         try:
             with Image.open(BytesIO(data)) as image:
                 width,height=int(image.width),int(image.height);actual=(image.format or "").upper()

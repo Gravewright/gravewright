@@ -91,3 +91,4 @@ def test_inside_ajax_does_not_intercept_download_or_snapshots():
     assert "new URLSearchParams(new FormData(form))" in transfers
     assert 'Accept: "application/json"' in transfers
     assert 'document.addEventListener("submit"' in clone
+    assert "new URLSearchParams(new FormData(form))" in clone
