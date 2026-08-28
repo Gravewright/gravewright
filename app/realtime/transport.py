@@ -20,6 +20,8 @@ from app.realtime.envelopes import event_envelope
 from app.realtime.event_log import RoomEventLog
 from app.realtime.events import TransportEvent
 
+WEBSOCKET_SEND_TIMEOUT_SECONDS = 2.0
+
 
 @dataclass(frozen=True)
 class WebSocketConnection:
@@ -140,9 +142,8 @@ class WebSocketConnectionManager:
             return
 
         now = int(time.time())
-        stale_connection_ids = []
 
-        for connection in connections:
+        async def _send(connection: WebSocketConnection) -> str | None:
             try:
                 extra = {
                     "target_user_id": connection.user_id,
@@ -158,12 +159,27 @@ class WebSocketConnectionManager:
                     ts=now,
                     extra=extra,
                 )
-                await connection.websocket.send_json(envelope)
+                await asyncio.wait_for(
+                    connection.websocket.send_json(envelope),
+                    timeout=WEBSOCKET_SEND_TIMEOUT_SECONDS,
+                )
             except Exception:
-                stale_connection_ids.append(connection.id)
+                return connection.id
+
+            return None
+
+        results = await asyncio.gather(*(_send(connection) for connection in connections))
+        stale_connection_ids = [connection_id for connection_id in results if connection_id is not None]
 
         for connection_id in stale_connection_ids:
-            await self.disconnect(connection_id)
+            stale_connection = await self.disconnect(connection_id)
+            if stale_connection is None:
+                continue
+
+            try:
+                await stale_connection.websocket.close(code=1011, reason="Send timed out.")
+            except Exception:
+                pass
 
 
 websocket_manager = WebSocketConnectionManager()

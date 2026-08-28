@@ -1383,6 +1383,7 @@ CATALOG = {
     "game.sound.select": "Selecionar",
     "game.sound.preview": "Pré-visualizar",
     "game.sound.play": "Reproduzir",
+    "game.sound.pause": "Pausar",
     "game.sound.one_shot": "Uma vez",
     "game.tool_dock.layers.manage": "Gerenciar camadas",
     "game.tool_dock.layers.visibility": "Exibir ou ocultar localmente",

@@ -3,9 +3,11 @@
   const panel = () => document.querySelector("[data-sound-panel]:not([hidden])") || document.querySelector("[data-sound-panel]");
   const canvas = () => window.GravewrightMap?.activeCanvas?.() || document.querySelector(".room-workspace.is-active [data-map-canvas]") || document.querySelector("[data-map-canvas]");
   const context = () => ({ campaignId: canvas()?.dataset.roomId || "", sceneId: canvas()?.dataset.sceneId || "" });
-  let sounds = [], spatial = [], audioAssets = [], placement = null, placing = false, selected = null, selectedSpatial = [], previewTokenId = null;
+  let sounds = [], spatial = [], audioAssets = [], placement = null, placing = false, selected = null, selectedSpatial = [], previewTokenId = null, activeSoundAssetIds = new Set();
   const label=(name,fallback)=>document.body?.dataset?.[name]||fallback;
   const kindLabel=kind=>kind==="music"?label("soundLabelMusic","Music"):kind==="ambience"?label("soundLabelAmbience","Ambience"):label("soundLabelEffects","Sound Effects");
+  const isSoundPlaying=sound=>activeSoundAssetIds.has(sound.asset_id);
+  const previewButtonMarkup=(sound,playIcon,pauseIcon,titlePlay,titlePause)=>{const playing=isSoundPlaying(sound);return `<button class="sound-icon-btn" type="button" data-sound-preview data-playing="${playing}" title="${escape(playing?titlePause:titlePlay)}" aria-label="${escape(playing?titlePause:titlePlay)}"><i class="ph ${playing?pauseIcon:playIcon}"></i></button>`;};
   const placementHint=()=>document.querySelector("[data-spatial-placement-hint]");
   function showPlacementHint(visible){const hint=placementHint();if(hint)hint.hidden=!visible;}
   function setArtisticDomain(domain=""){
@@ -50,7 +52,7 @@
     const host=modal.querySelector("[data-sound-modal-content]");if(!host)return;
     if(type==="ambient"){
       const items=sounds.filter(s=>s.kind==="ambience"||s.kind==="music");
-      const rows=items.map(s=>`<article class="sound-library-row" data-sound-id="${escape(s.id)}"><span class="sound-row-icon"><i class="ph ph-music-notes"></i></span><span><strong>${escape(s.name)}</strong><small>${escape(kindLabel(s.kind))}</small></span><button class="sound-icon-btn" data-sound-preview title="${escape(label("soundLabelPlay","Play"))}"><i class="ph ph-play"></i></button><button class="sound-icon-btn" data-sound-edit title="${escape(label("soundLabelEdit","Edit"))}"><i class="ph ph-dots-three-vertical"></i></button></article>`).join('');
+      const rows=items.map(s=>`<article class="sound-library-row" data-sound-id="${escape(s.id)}"><span class="sound-row-icon"><i class="ph ph-music-notes"></i></span><span><strong>${escape(s.name)}</strong><small>${escape(kindLabel(s.kind))}</small></span>${previewButtonMarkup(s,"ph-play","ph-pause",label("soundLabelPlay","Play"),label("soundLabelPause","Pause"))}<button class="sound-icon-btn" data-sound-edit title="${escape(label("soundLabelEdit","Edit"))}"><i class="ph ph-dots-three-vertical"></i></button></article>`).join('');
       host.innerHTML=`<div class="sound-window-toolbar"><label class="asset-search"><i class="ph ph-magnifying-glass"></i><input type="search" data-ambient-sound-search placeholder="${escape(label("soundLabelSearchAmbient","Search ambient sounds"))}" aria-label="${escape(label("soundLabelSearchAmbient","Search ambient sounds"))}"></label></div><div class="ambient-sound-layout"><section class="ambient-track-list">${rows}<p class="sound-empty" data-ambient-empty ${items.length?'hidden':''}>${escape(label("soundLabelEmptyAmbient","No ambient sounds are available. Upload one in GM → Assets."))}</p><p class="sound-empty" data-ambient-no-match hidden>${escape(label("soundLabelNoAmbientMatch","No ambient sounds match your search."))}</p></section></div>`;
     }else{
       const effects=sounds.filter(s=>s.kind==="sound-effect");
@@ -60,14 +62,27 @@
   }
 
   async function refresh(kind="") {
-    const {campaignId,sceneId}=context(); if (!campaignId || !sceneId) return;
-    const [library, emitters, soundscapes, sceneSoundscape, assets] = await Promise.all([
+    // The sound library, soundscape list and asset picker are campaign-scoped,
+    // not scene-scoped - gating the whole refresh behind an active scene made
+    // every uploaded sound invisible ("no ambient sounds available") whenever
+    // no scene was open yet, even though the sounds already existed.
+    const {campaignId,sceneId}=context(); if (!campaignId) return;
+    const [library, soundscapes, assets, playbacks] = await Promise.all([
       json(`/game/sounds/${encodeURIComponent(campaignId)}?kind=${encodeURIComponent(kind)}`),
-      json(`/game/sounds/${encodeURIComponent(campaignId)}/scenes/${encodeURIComponent(sceneId)}`),
       json(`/game/sounds/${encodeURIComponent(campaignId)}/compositions/soundscape`),
-      json(`/game/sounds/${encodeURIComponent(campaignId)}/scenes/${encodeURIComponent(sceneId)}/soundscape`),
       json(`/game/assets/state/${encodeURIComponent(campaignId)}`),
+      json(`/game/audio/${encodeURIComponent(campaignId)}/playbacks`).catch(() => []),
     ]);
+    // A page reload otherwise always rendered every preview button as "not
+    // playing", even for a track the GM had already started - there was no
+    // reconciliation against the actual server-side playback state on load.
+    activeSoundAssetIds=new Set((Array.isArray(playbacks)?playbacks:[]).filter(p=>p.state==="playing"||p.state==="pending-user-unlock").map(p=>p.asset?.id).filter(Boolean));
+    const [emitters, sceneSoundscape] = sceneId
+      ? await Promise.all([
+          json(`/game/sounds/${encodeURIComponent(campaignId)}/scenes/${encodeURIComponent(sceneId)}`),
+          json(`/game/sounds/${encodeURIComponent(campaignId)}/scenes/${encodeURIComponent(sceneId)}/soundscape`),
+        ])
+      : [[], {soundscape_id:null,version:0}];
     sounds=library; spatial=emitters;audioAssets=(assets.assets||[]).filter(a=>a.kind==="audio");
     const unusedAudio=(assets.assets||[]).filter(a=>a.kind==="audio"&&!sounds.some(s=>s.asset_id===a.id));
     document.querySelectorAll("[data-spatial-sound-picker]").forEach(select => { select.innerHTML=`<optgroup label="${escape(label("soundLabelSpatial","Sounds"))}">${sounds.map(s=>`<option value="${escape(s.id)}">${escape(s.name)}</option>`).join("")}</optgroup>`+(unusedAudio.length?`<optgroup label="${escape(label("assetLabelAudio","Audio assets"))}">${unusedAudio.map(a=>`<option value="asset:${escape(a.id)}">${escape(a.filename)}</option>`).join("")}</optgroup>`:""); });
@@ -79,7 +94,7 @@
     document.querySelectorAll("[data-spatial-sound-list]").forEach(list => {
       list.innerHTML=spatialListMarkup();
     });
-    document.querySelectorAll("[data-sound-library-list]").forEach(list=>{list.innerHTML=sounds.length?sounds.map(sound=>`<article class="sound-library-row" data-sound-id="${escape(sound.id)}"><i class="ph ${sound.kind==='music'?'ph-music-notes':sound.kind==='ambience'?'ph-cloud-rain':'ph-waveform'}"></i><span><strong>${escape(sound.name)}</strong><small>${escape(sound.kind||'sound')} ${sound.default_loop?' · Loop':''}</small></span><button class="sound-icon-btn" type="button" data-sound-preview aria-label="Preview"><i class="ph ph-play"></i></button><button class="sound-icon-btn" type="button" data-sound-edit aria-label="Edit"><i class="ph ph-dots-three"></i></button></article>`).join(''):`<p class="sound-empty">${escape(label("soundLabelEmptyLibrary","No sounds are available."))}</p>`;});
+    document.querySelectorAll("[data-sound-library-list]").forEach(list=>{list.innerHTML=sounds.length?sounds.map(sound=>`<article class="sound-library-row" data-sound-id="${escape(sound.id)}"><i class="ph ${sound.kind==='music'?'ph-music-notes':sound.kind==='ambience'?'ph-cloud-rain':'ph-waveform'}"></i><span><strong>${escape(sound.name)}</strong><small>${escape(sound.kind||'sound')} ${sound.default_loop?' · Loop':''}</small></span>${previewButtonMarkup(sound,"ph-play","ph-pause",label("soundLabelPlay","Play"),label("soundLabelPause","Pause"))}<button class="sound-icon-btn" type="button" data-sound-edit aria-label="Edit"><i class="ph ph-dots-three"></i></button></article>`).join(''):`<p class="sound-empty">${escape(label("soundLabelEmptyLibrary","No sounds are available."))}</p>`;});
     document.dispatchEvent(new CustomEvent("sound:spatial-state",{detail:{emitters:spatial,sounds,campaignId,sceneId}}));
     await refreshAcoustics().catch(()=>{});
   }
@@ -121,7 +136,7 @@
     const library=event.target.closest("[data-sound-library]");if(library)document.dispatchEvent(new CustomEvent("artistic:asset-library",{detail:{roomId:context().campaignId,kind:"audio"}}));
     if(event.target.closest("[data-new-sound]"))openSoundEditor();
     const soundEdit=event.target.closest("[data-sound-edit]")?.closest("[data-sound-id]");if(soundEdit)openSoundEditor(sounds.find(value=>value.id===soundEdit.dataset.soundId));
-    const preview=event.target.closest("[data-sound-preview]");if(preview){const row=preview.closest("[data-sound-id]"),playing=preview.dataset.playing==="true";await post(playing?"/game/sounds/pause":"/game/sounds/play",{campaignId:context().campaignId,soundId:row.dataset.soundId});preview.dataset.playing=String(!playing);preview.innerHTML=`<i class="ph ${playing?'ph-play':'ph-pause'}"></i>`;}
+    const preview=event.target.closest("[data-sound-preview]");if(preview){const row=preview.closest("[data-sound-id]"),playing=preview.dataset.playing==="true",nowPlaying=!playing;await post(playing?"/game/sounds/pause":"/game/sounds/play",{campaignId:context().campaignId,soundId:row.dataset.soundId});preview.dataset.playing=String(nowPlaying);const title=nowPlaying?label("soundLabelPause","Pause"):label("soundLabelPlay","Play");preview.title=title;preview.setAttribute("aria-label",title);preview.innerHTML=`<i class="ph ${nowPlaying?'ph-pause':'ph-play'}"></i>`;}
   });
 
   document.addEventListener("pointerup", async event => {

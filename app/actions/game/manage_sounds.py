@@ -1,17 +1,48 @@
 """Native Sound product endpoints. Audio bytes deliberately use a separate data plane."""
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from email.utils import formatdate
+from pathlib import Path
 from typing import Any
 from litestar import Request, get, post
 from litestar.params import FromPath, FromQuery
-from litestar.response import Response
+from litestar.response import Response, Stream
 
+from app.engine.audio.audio_runtime_service import AudioRuntimeService
 from app.engine.audio.sound_domain_service import SoundDomainService, SoundResult
+from app.helpers.async_blocking import run_blocking
 from app.helpers.env import PROJECT_ROOT
 from app.persistence.repositories.asset_repository import AssetRepository
 from app.persistence.repositories.campaign_repository import CampaignRepository
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport
+
+_STREAM_CHUNK_SIZE = 256 * 1024
+
+
+def _asset_etag(*, asset_id: str, size: int, mtime: float) -> str:
+    return f'"{asset_id}-{size}-{int(mtime)}"'
+
+
+async def _stream_file_range(path: Path, *, start: int, end: int) -> AsyncIterator[bytes]:
+    remaining = end - start + 1
+
+    def _open_and_seek() -> Any:
+        handle = path.open("rb")
+        handle.seek(start)
+        return handle
+
+    handle = await run_blocking(_open_and_seek)
+    try:
+        while remaining > 0:
+            chunk = await run_blocking(handle.read, min(_STREAM_CHUNK_SIZE, remaining))
+            if not chunk:
+                break
+            remaining -= len(chunk)
+            yield chunk
+    finally:
+        await run_blocking(handle.close)
 
 
 async def _body(request: Request) -> dict[str, Any]:
@@ -39,6 +70,20 @@ async def _broadcast(campaign_id: str, result: SoundResult) -> None:
 @get("/game/sounds/{campaign_id:str}", sync_to_thread=True)
 def list_sounds(campaign_id: FromPath[str], current_user: dict, q: FromQuery[str] = "", kind: FromQuery[str] = "", cursor: FromQuery[int] = 0, limit: FromQuery[int] = 50) -> Response:
     return _response(SoundDomainService().list_sounds(campaign_id=campaign_id,user_id=current_user["id"],q=q,kind=kind or None,cursor=cursor,limit=limit))
+
+
+@get("/game/audio/{campaign_id:str}/playbacks", sync_to_thread=True)
+def list_audio_playbacks(campaign_id: FromPath[str], current_user: dict) -> Response:
+    """Authoritative playback snapshot for reconnect reconciliation.
+
+    The realtime event log only replays a short TTL window, so a client that
+    was offline long enough (or missed a broadcast) reconciles against this
+    snapshot by playback id/version instead of trusting the replay alone.
+    """
+    if not CampaignRepository().get_member_role(campaign_id=campaign_id, user_id=current_user["id"]):
+        return Response({"error_key": "not_authorized"}, status_code=403)
+    result = AudioRuntimeService().list(campaign_id=campaign_id, user_id=current_user["id"])
+    return _response(result)
 
 
 @post("/game/sounds")
@@ -111,21 +156,35 @@ async def delete_spatial_sound(request: Request, current_user: dict) -> Response
 
 
 @get("/game/sounds/assets/{asset_id:str}/stream")
-async def stream_sound_asset(asset_id: FromPath[str], request: Request, current_user: dict) -> Response:
+async def stream_sound_asset(asset_id: FromPath[str], request: Request, current_user: dict) -> Response | Stream:
     asset=AssetRepository().get_by_id(asset_id)
     if not asset: return Response({"error_key":"not_found"},status_code=404)
     if not CampaignRepository().get_member_role(campaign_id=asset["campaign_id"],user_id=current_user["id"]): return Response({"error_key":"not_authorized"},status_code=403)
     path=PROJECT_ROOT / str(asset.get("storage_path") or "")
     if not path.is_file() or not str(asset.get("content_type") or "").startswith("audio/"): return Response({"error_key":"not_found"},status_code=404)
-    size=path.stat().st_size; start=0; end=size-1; status=200
+    file_stat=path.stat(); size=file_stat.st_size; start=0; end=size-1; status=200
     raw=request.headers.get("range","")
     if raw.startswith("bytes="):
+        range_spec=raw[6:]
+        if "," in range_spec: return Response(status_code=416,headers={"Content-Range":f"bytes */{size}"})
         try:
-            left,right=raw[6:].split("-",1); start=int(left) if left else max(0,size-int(right)); end=min(size-1,int(right)) if right else size-1
+            left,right=range_spec.split("-",1); start=int(left) if left else max(0,size-int(right)); end=min(size-1,int(right)) if right else size-1
             if start<0 or start>end or start>=size: raise ValueError
             status=206
         except ValueError: return Response(status_code=416,headers={"Content-Range":f"bytes */{size}"})
-    with path.open("rb") as stream: stream.seek(start); data=stream.read(end-start+1)
-    headers={"Accept-Ranges":"bytes","Content-Length":str(len(data)),"Cache-Control":"private, max-age=3600"}
+    etag=_asset_etag(asset_id=asset_id,size=size,mtime=file_stat.st_mtime)
+    headers={
+        "Accept-Ranges":"bytes",
+        "Content-Length":str(end-start+1),
+        "Cache-Control":"private, max-age=3600",
+        "Content-Disposition":"inline",
+        "ETag":etag,
+        "Last-Modified":formatdate(file_stat.st_mtime,usegmt=True),
+    }
     if status==206: headers["Content-Range"]=f"bytes {start}-{end}/{size}"
-    return Response(data,status_code=status,media_type=asset.get("content_type") or "application/octet-stream",headers=headers)
+    return Stream(
+        _stream_file_range(path,start=start,end=end),
+        status_code=status,
+        media_type=asset.get("content_type") or "application/octet-stream",
+        headers=headers,
+    )
