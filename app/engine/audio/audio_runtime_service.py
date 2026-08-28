@@ -130,6 +130,12 @@ class AudioRuntimeService:
                 if patch["state"] not in {"playing","paused"}:raise ValueError
                 values["state"]=patch["state"]
                 values["expires_at"]=None
+                if patch["state"]=="playing" and row["state"]=="pending-user-unlock":
+                    # The timeline anchor must start counting from the first confirmed
+                    # playback, not from creation - otherwise a listener blocked by the
+                    # browser's autoplay policy can unlock into a track that already
+                    # looks finished, even though nobody has actually heard it yet.
+                    values["started_at"]=int(time.time())
             if "loop" in patch:values["loop"]=int(bool(patch["loop"]))
             if "fade" in patch:
                 fade=self._fade(patch["fade"])

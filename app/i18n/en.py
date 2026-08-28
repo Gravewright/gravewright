@@ -1383,6 +1383,7 @@ CATALOG = {
     "game.sound.select": "Select",
     "game.sound.preview": "Preview",
     "game.sound.play": "Play",
+    "game.sound.pause": "Pause",
     "game.sound.one_shot": "One shot",
     "game.tool_dock.layers.manage": "Manage layers",
     "game.tool_dock.layers.visibility": "Show or hide locally",

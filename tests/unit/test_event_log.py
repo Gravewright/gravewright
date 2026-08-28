@@ -42,6 +42,33 @@ def test_room_event_log_replays_events_after_sequence(db):
     assert replay.events[0]["payload"]["version"] == 2
 
 
+def test_room_event_log_replays_audio_changed_events(db):
+    """A client that reconnects mid play/pause/update must see the change on replay.
+
+    ``audio.changed`` used to be excluded from ``REPLAYABLE_TRANSPORT_EVENTS``, so a
+    socket that dropped during a playback command never recovered it on reconnect.
+    """
+    gm_id = seed_user(name="GM", email="event-log-audio@test.com")
+    campaign_id = seed_campaign(gm_id)
+    event_log = RoomEventLog()
+
+    baseline_seq = event_log.append(
+        room_id=campaign_id,
+        event=TransportEvent.SCENE_UPDATED,
+        payload={"room_id": campaign_id, "scene_id": "scene-1"},
+    )
+    seq = event_log.append(
+        room_id=campaign_id,
+        event=TransportEvent.AUDIO_CHANGED,
+        payload={"room_id": campaign_id, "playback_id": "pb-1", "native_sound_changed": True},
+    )
+
+    assert seq is not None
+    replay = event_log.replay_since(room_id=campaign_id, after_seq=baseline_seq)
+    assert [event["event"] for event in replay.events] == [TransportEvent.AUDIO_CHANGED.value]
+    assert replay.events[0]["payload"]["playback_id"] == "pb-1"
+
+
 def test_room_event_log_skips_non_replayable_events(db):
     gm_id = seed_user(name="GM", email="event-log-presence@test.com")
     campaign_id = seed_campaign(gm_id)

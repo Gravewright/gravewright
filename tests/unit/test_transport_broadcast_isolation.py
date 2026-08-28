@@ -8,8 +8,12 @@ gets the event.
 
 from __future__ import annotations
 
+import asyncio
+import time
+
 import pytest
 
+import app.realtime.transport as transport_module
 from app.realtime.events import TransportEvent
 from app.realtime.transport import RealtimeTransport, WebSocketConnectionManager
 
@@ -74,6 +78,44 @@ async def test_send_to_users_isolates_a_dead_socket():
     assert await manager.is_user_connected("dead") is False
     assert await manager.disconnect(dead_conn_id) is None
     assert await manager.is_user_connected("alive") is True
+
+
+class _SlowSocket:
+    def __init__(self) -> None:
+        self.messages: list[dict] = []
+        self.closed: list[tuple[int, str]] = []
+
+    async def send_json(self, message: dict) -> None:
+        await asyncio.sleep(10)
+        self.messages.append(message)
+
+    async def close(self, *, code: int, reason: str) -> None:
+        self.closed.append((code, reason))
+
+
+@pytest.mark.asyncio
+async def test_send_to_users_does_not_block_on_a_slow_socket(monkeypatch):
+    monkeypatch.setattr(transport_module, "WEBSOCKET_SEND_TIMEOUT_SECONDS", 0.05)
+    manager = WebSocketConnectionManager()
+    ok = _OkSocket()
+    slow = _SlowSocket()
+
+    await manager.connect(user_id="fast", room_ids=["room-1"], websocket=ok)
+    await manager.connect(user_id="slow", room_ids=["room-1"], websocket=slow)
+
+    started = time.monotonic()
+    await manager.send_to_users(
+        user_ids=["slow", "fast"],
+        room_id="room-1",
+        event=TransportEvent.SCENE_UPDATED,
+        payload={"room_id": "room-1", "scene_id": "scene-1"},
+    )
+    elapsed = time.monotonic() - started
+
+    assert elapsed < 1.0
+    assert len(ok.messages) == 1
+    assert await manager.is_user_connected("slow") is False
+    assert slow.closed and slow.closed[0][0] == 1011
 
 
 @pytest.mark.asyncio

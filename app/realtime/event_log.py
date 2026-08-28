@@ -31,6 +31,7 @@ REPLAYABLE_TRANSPORT_EVENTS = frozenset(
         TransportEvent.COMBAT_STARTED.value,
         TransportEvent.COMBAT_UPDATED.value,
         TransportEvent.COMBAT_ENDED.value,
+        TransportEvent.AUDIO_CHANGED.value,
     }
 )
 

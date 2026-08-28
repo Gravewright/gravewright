@@ -1,3 +1,4 @@
+from app.actions.game.manage_sounds import list_audio_playbacks
 from app.engine.audio.sound_domain_service import SoundDomainService
 from app.engine.assets.asset_library_service import AssetLibraryService
 from app.engine.scenes.geometry_semantics import sound_attenuation
@@ -5,6 +6,44 @@ from app.persistence.repositories.asset_repository import AssetRepository
 from app.persistence.repositories.scene_wall_repository import SceneWallRepository
 from app.persistence.repositories.token_repository import TokenRepository
 from tests.conftest import seed_campaign, seed_member, seed_scene, seed_user
+
+
+def test_audio_playback_snapshot_lets_a_reconnecting_client_recover_state(db, tmp_path):
+    """A socket that was offline through a play/pause/update must be able to
+    reconcile against the authoritative playback list on reconnect, not just
+    whatever the short-TTL event replay still happens to hold.
+    """
+    gm = seed_user(name="GM")
+    player = seed_user(name="Player")
+    campaign = seed_campaign(gm)
+    seed_member(campaign, player, "player")
+    audio = tmp_path / "storm.ogg"
+    audio.write_bytes(b"OggS" + b"x" * 64)
+    asset = AssetRepository().create(
+        campaign_id=campaign,
+        owner_user_id=gm,
+        filename="storm.ogg",
+        content_type="audio/ogg",
+        byte_size=audio.stat().st_size,
+        storage_path=str(audio),
+        hash="storm",
+    )
+    service = SoundDomainService()
+    sound = service.create_sound(
+        campaign_id=campaign,
+        user_id=gm,
+        values={"name": "Storm", "assetId": asset["id"], "kind": "ambience", "defaultLoop": True},
+    )
+    started = service.play_ambient(campaign_id=campaign, user_id=gm, sound_id=sound.value["id"])
+    assert started.success
+
+    denied = list_audio_playbacks.fn(campaign_id=campaign, current_user={"id": seed_user(name="Outsider")})
+    assert denied.status_code == 403
+
+    snapshot = list_audio_playbacks.fn(campaign_id=campaign, current_user={"id": player})
+    assert snapshot.status_code == 200
+    assert [row["id"] for row in snapshot.content] == [started.value["id"]]
+    assert snapshot.content[0]["state"] == started.value["state"]
 
 
 def test_sound_library_and_spatial_emitters_are_core_owned_with_cas(db, tmp_path):

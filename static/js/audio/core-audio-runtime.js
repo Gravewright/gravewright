@@ -23,7 +23,15 @@
     const pauseIntentionally=(audio)=>{audio.__gravewrightIntentionalPauseUntil=performance.now()+750;audio.pause();};
     async function resume(id){const audio=instances.get(id),playback=audio?.__gravewrightPlayback;if(!audio||!shouldBePlaying(playback,id))return;try{await audio.play();pending.delete(id);}catch{pending.add(id);}}
     const scheduleResume=(id,delay=180)=>window.setTimeout(()=>void resume(id),delay);
-    const seekToTimeline=(audio,playback)=>{const elapsed=Math.max(0,Date.now()/1000-Number(playback.startedAt||Date.now()/1000));if(Number.isFinite(audio.duration)&&audio.duration>0)audio.currentTime=playback.loop?elapsed%audio.duration:Math.min(elapsed,Math.max(0,audio.duration-.05));};
+    const seekToTimeline=(audio,playback)=>{
+        // A playback still pending the browser's autoplay unlock has never actually
+        // sounded for anyone yet, so the wall-clock elapsed since startedAt is not a
+        // real position - seeking to it could land past the track's end. Once the
+        // server confirms first playback it resets startedAt, and this becomes a
+        // true shared timeline for clients joining an already-playing track.
+        if(playback.state==="pending-user-unlock")return;
+        const elapsed=Math.max(0,Date.now()/1000-Number(playback.startedAt||Date.now()/1000));if(Number.isFinite(audio.duration)&&audio.duration>0)audio.currentTime=playback.loop?elapsed%audio.duration:Math.min(elapsed,Math.max(0,audio.duration-.05));
+    };
     const cancelTransition=(id)=>{const prior=transitions.get(id);if(prior)cancelAnimationFrame(prior.frame);transitions.delete(id);};
     function fade(audio,playback){
         cancelTransition(playback.id);
@@ -103,8 +111,27 @@
     function projectBootstrap(){
         try { const context=JSON.parse(document.getElementById("gravewright-game-context")?.textContent||"{}"); for(const playback of context.audioPlaybacks||[]) void project(playback); } catch { /* malformed bootstrap fails closed */ }
     }
+    async function resyncFromSnapshot(){
+        // The realtime event log only replays a short TTL window, so a socket that
+        // was offline longer than that (or just missed a broadcast) needs the
+        // authoritative playback list, not just whatever replays land after reconnect.
+        let campaignId="";
+        try { campaignId=JSON.parse(document.getElementById("gravewright-game-context")?.textContent||"{}").campaign?.id||""; } catch { return; }
+        if(!campaignId)return;
+        let playbacks;
+        try {
+            const response=await fetch(`/game/audio/${encodeURIComponent(campaignId)}/playbacks`,{credentials:"same-origin"});
+            if(!response.ok)return;
+            playbacks=await response.json();
+        } catch { return; }
+        if(!Array.isArray(playbacks))return;
+        const seen=new Set();
+        for(const playback of playbacks){ if(!playback?.id)continue; seen.add(playback.id); void project(playback); }
+        for(const id of [...instances.keys()]) if(!seen.has(id)) void project({id,state:"stopped"});
+    }
     window.GravewrightAudioRuntime = Object.freeze({ project, unlock, preference, setPreference, setMuted, muted, inspect, setAcousticProjection, teardown });
     addEventListener("DOMContentLoaded",projectBootstrap);
+    addEventListener("vtt:ws-open",()=>void resyncFromSnapshot());
     addEventListener("pagehide",teardown);
     addEventListener("vtt:game-exit",teardown);
     addEventListener("pageshow",event=>{if(event.persisted){if(!resumeInterval)resumeInterval=window.setInterval(()=>{if(!unlocked)return;instances.forEach((_audio,id)=>void resume(id));},3000);projectBootstrap();}});

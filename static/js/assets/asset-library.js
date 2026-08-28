@@ -11,6 +11,25 @@
   const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
   const MAX_PDF_BYTES = 25 * 1024 * 1024;
 
+  // Some browsers report an empty File.type for formats they don't recognize
+  // out of the box (.flac, .m4a and even .wav are common offenders). Without
+  // this fallback those uploads were silently dropped before ever reaching
+  // the server - no request, no error, the file just never showed up.
+  const AUDIO_EXTENSION_MIME = {
+    ".ogg": "audio/ogg",
+    ".opus": "audio/opus",
+    ".mp3": "audio/mpeg",
+    ".m4a": "audio/mp4",
+    ".wav": "audio/wav",
+  };
+
+  function normalizeUploadFile(file) {
+    if (file.type) return file;
+    const dot = file.name?.lastIndexOf(".") ?? -1;
+    const mime = dot === -1 ? undefined : AUDIO_EXTENSION_MIME[file.name.slice(dot).toLowerCase()];
+    return mime ? new File([file], file.name, { type: mime, lastModified: file.lastModified }) : file;
+  }
+
   function esc(value) {
     return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
       "&": "&amp;",
@@ -454,9 +473,14 @@
     }
 
     async uploadFiles(files, purpose="") {
-      const accepted = Array.from(files || []).filter(
-        (file) => file.type.startsWith(IMAGE_MIME_PREFIX) || file.type.startsWith(AUDIO_MIME_PREFIX) || file.type === PDF_MIME,
-      );
+      const accepted = [];
+      for (const file of Array.from(files || []).map(normalizeUploadFile)) {
+        if (file.type.startsWith(IMAGE_MIME_PREFIX) || file.type.startsWith(AUDIO_MIME_PREFIX) || file.type === PDF_MIME) {
+          accepted.push(file);
+        } else {
+          reportUploadFailure(file, new Error("unsupported_type"));
+        }
+      }
       if (!accepted.length) return false;
       for (const file of accepted) {
 

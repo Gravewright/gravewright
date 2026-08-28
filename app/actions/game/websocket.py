@@ -13,6 +13,7 @@ from uvicorn.protocols.utils import ClientDisconnected
 
 from app.business.campaigns.campaign_service import CampaignService
 from app.config import config
+from app.helpers.background_tasks import spawn_detached
 from app.realtime.command_dispatcher import ClientCommandContext
 from app.realtime.command_dispatcher import CommandDispatcher
 from app.realtime.board_command_handler import BoardCommandHandler
@@ -295,10 +296,13 @@ async def game_websocket(
         realtime_metrics.gauge_add("ws.connections.active", -1)
 
         if not await websocket_manager.is_user_connected(user["id"]):
-            await presence_service.leave(
-                user_id=user["id"],
-                room_ids=room_ids,
-                transport=transport,
+            spawn_detached(
+                presence_service.leave(
+                    user_id=user["id"],
+                    room_ids=room_ids,
+                    transport=transport,
+                ),
+                name=f"presence-leave-{connection_id}",
             )
 
 
