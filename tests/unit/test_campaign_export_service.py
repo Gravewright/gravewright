@@ -11,6 +11,8 @@ from sqlalchemy import insert
 from app.business.campaigns.campaign_export_service import (
     CampaignExportOptions, CampaignExportService,
 )
+from app.business.campaigns.portable_asset_archive import _validate_payload
+from app.engine.assets.asset_ingestion_service import AssetIngestionService
 from app.persistence.database import engine_begin
 from app.persistence.tables import actors_core
 from tests.conftest import seed_campaign, seed_user
@@ -72,3 +74,20 @@ def test_export_rejects_non_gm_and_tampered_archive(db):
         changed.writestr("manifest.json", manifest)
         changed.writestr("campaign.json", b"{}")
     assert not service.validate(output.getvalue())
+
+
+def test_portable_export_accepts_legacy_mislabeled_audio_container():
+    data = b"\x00\x00\x00\x18ftypM4A \x00\x00\x00\x00M4A mp42"
+    checked = _validate_payload(
+        AssetIngestionService(), data=data, media_type_hint="audio/mpeg"
+    )
+    assert checked.success
+    assert checked.payload["contentType"] == "audio/mp4"
+
+
+def test_portable_validation_uses_audio_size_limit():
+    data = b"ID3" + bytes(10 * 1024 * 1024)
+    checked = AssetIngestionService().validate_portable_payload(
+        data=data, media_type_hint="audio/mpeg"
+    )
+    assert checked.success

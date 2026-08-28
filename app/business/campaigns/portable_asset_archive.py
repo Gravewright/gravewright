@@ -48,6 +48,16 @@ class PortableAssetError(ValueError):
     pass
 
 
+def _validate_payload(validator: AssetIngestionService, *, data: bytes, media_type_hint: str):
+    """Accept legacy audio rows whose browser-provided MIME mislabeled the container."""
+    checked = validator.validate_portable_payload(data=data, media_type_hint=media_type_hint)
+    if not checked.success and media_type_hint.startswith("audio/"):
+        detected = validator.validate_portable_payload(data=data)
+        if detected.success and str(detected.payload.get("contentType") or "").startswith("audio/"):
+            return detected
+    return checked
+
+
 def _registered_path(storage_path: str) -> Path:
     path = Path(storage_path)
     resolved = path.resolve() if path.is_absolute() else (PROJECT_ROOT / path).resolve()
@@ -112,7 +122,7 @@ class PortableAssetGraph:
             total += len(data)
             if total > MAX_TOTAL_BYTES or len(data) != int(row["byte_size"]):
                 raise PortableAssetError("asset size mismatch")
-            validated = validator.validate_portable_payload(data=data, media_type_hint=str(row["content_type"] or ""))
+            validated = _validate_payload(validator, data=data, media_type_hint=str(row["content_type"] or ""))
             digest = hashlib.sha256(data).hexdigest()
             if not validated.success or digest != str(row["hash"]):
                 raise PortableAssetError("asset validation failed")
@@ -148,7 +158,7 @@ class PortableAssetGraph:
             runtime_id = str(row["id"])
             export_id = id_map[runtime_id]
             data = _registered_path(str(row["storage_path"])).read_bytes()
-            checked = validator.validate_portable_payload(data=data, media_type_hint=str(row["content_type"] or ""))
+            checked = _validate_payload(validator, data=data, media_type_hint=str(row["content_type"] or ""))
             digest = hashlib.sha256(data).hexdigest()
             if not checked.success or digest != str(row["hash"]) or len(data) != int(row["byte_size"]):
                 raise PortableAssetError("journal attachment validation failed")
@@ -235,7 +245,7 @@ class PortableAssetGraph:
             for row in sorted(physical, key=lambda r: str(r["id"])):
                 component_id = asset_map[str(row["id"])]
                 data = _registered_path(str(row["storage_path"])).read_bytes()
-                checked = validator.validate_portable_payload(data=data, media_type_hint=str(row.get("content_type") or ""))
+                checked = _validate_payload(validator, data=data, media_type_hint=str(row.get("content_type") or ""))
                 digest = hashlib.sha256(data).hexdigest()
                 if not checked.success or digest != str(row["hash"]) or len(data) != int(row["byte_size"]):
                     raise PortableAssetError("raster component validation failed")

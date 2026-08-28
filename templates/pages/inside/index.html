@@ -466,7 +466,7 @@
                                                     <span>{{ t("campaign.clone.new_title") }}</span>
                                                     <input type="text" name="title"
                                                         value="{{ t('campaign.clone.default_title', title=campaign.title) }}"
-                                                        maxlength="120" required />
+                                                        minlength="2" maxlength="120" required />
                                                 </label>
                                                 <fieldset class="campaign-clone-options">
                                                     <legend>{{ t("campaign.clone.copy") }}</legend>

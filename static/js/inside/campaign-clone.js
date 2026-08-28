@@ -6,6 +6,9 @@
       .map((key) => `${labels[`clone${key[0].toUpperCase()}${key.slice(1)}`] || key}: ${summary[key] || 0}`)
       .join(" \u00b7 ");
   }
+  function encodedForm(form) {
+    return new URLSearchParams(new FormData(form));
+  }
   document.addEventListener("click", async (event) => {
     const button = event.target.closest("[data-campaign-clone-dry-run]");
     if (!button) return;
@@ -13,7 +16,7 @@
     const preview = form.querySelector("[data-campaign-clone-preview]");
     button.disabled = true;
     const result = await window.GravewrightCore.http.postForm(
-      "/campaigns/clone/preview", new FormData(form),
+      "/campaigns/clone/preview", encodedForm(form),
       { headers: { "X-Requested-With": "XMLHttpRequest" } }
     );
     button.disabled = false;
@@ -33,7 +36,7 @@
     event.preventDefault();
     form.setAttribute("aria-busy", "true");
     const result = await window.GravewrightCore.http.postForm(
-      form.action, new FormData(form),
+      form.action, encodedForm(form),
       { headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" } }
     );
     form.removeAttribute("aria-busy");
