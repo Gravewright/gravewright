@@ -9,28 +9,28 @@ candidate; packages continue to declare `sdkVersion: "1"`.
 
 ## Current release at a glance
 
-### Gravewright v1.0.0-beta.3
+### Gravewright v1.0.0-beta.4
 
-Beta 3 aligns the operator CLI, package authoring tools, Marketplace channels,
-and public documentation with the certified SDK 1 RC 1 contract.
+Beta 4 consolidates the VTT runtime, interface, gameplay automation and
+low-end-device performance work while preserving the frozen SDK 1 contract.
 
 Highlights:
 
-- Certified SDK 1 RC 1 structural contract, generated references, declarations,
-  semantic snapshot, authority boundaries, and lifecycle coverage.
-- CLI parity for all six package kinds, guided wizard, ruleset templates,
-  validation, Package Doctor, stable JSON output, and bounded AI diagnostics.
-- Content pack format 2 scaffolds with explicit document domains, bounded index
-  fields, and indexed inline or lazy documents.
-- Marketplace v2 with repository-published Core/package channels, Debian-style
-  downward fallback, provenance, integrity, and local/remote package updates.
-- Native Windows launcher and source-install fallback documented as separate
-  distribution paths.
+- Reworked Gravewright Mode with dockable and detachable windows, compact
+  settings, a system tray, lazy directories, and consistent panel dimensions.
+- Roll tables, explicit combat start, holding/interruption/resume state,
+  authoritative rerolls, and constrained roll-message actions.
+- Runtime cleanup, idle suspension, render batching, asset versioning and safer
+  transitions between the dashboard and a running table.
+- Capability-gated public user presentation colors and updated generated SDK
+  reference, declarations, DTOs and capability documentation.
+- Expanded automated coverage for multiplayer projection, semantic drag/drop,
+  package isolation, resource visibility and low-end performance behavior.
 
 Versions:
 
-- Product: `1.0.0-beta.3`
-- Python package target: `1.0.0b3`
+- Product: `1.0.0-beta.4`
+- Python package target: `1.0.0b4`
 - Public extension line: `SDK 1 RC 1` (`sdkVersion: "1"`)
 
 Benchmark methodology and workload boundaries are documented in
@@ -70,6 +70,58 @@ relevant campaign and map dimensions, player count, and GPU/browser information
 for rendering problems.
 
 ## Detailed release history
+
+## v1.0.0-beta.4
+
+### VTT and interface
+
+- Reordered the primary directories to Chat, Scenes, Actors, Journals, Combat,
+  Items, Compendiums and Settings.
+- Added Qt-inspired dock/undock behavior in Gravewright Mode while retaining
+  Classic Mode dimensions and behavior.
+- Reorganized General, System and Modules settings into compact, consistent
+  two-pane layouts and moved connected users and audio into the system tray.
+- Added per-user presentation colors and compact connected-user controls.
+- Added lazy resource directories and deterministic scene-directory refreshes.
+- Added journal roll tables with weighted, enabled and non-repeating results.
+
+### Runtime and performance
+
+- Reduced repeated requests, listener duplication and unnecessary repaint work.
+- Added idle runtime suspension, render batching and versioned asset-cache
+  invalidation, and tightened cleanup after rolls and table transitions.
+- Hardened map upload, adaptive raster selection, free token movement and grid
+  calibration, including fractional grid sizes and offsets.
+- Improved low-end browser behavior for tokens, popups, audio and scene changes.
+
+### Gameplay and combat
+
+- Combatants no longer receive initiative merely by joining the tracker; the GM
+  starts combat explicitly.
+- Added persisted holding, turn interruption and resume state.
+- Added defeated-token presentation in the scene and combat order.
+- Added authoritative threshold damage, attack classification, condition effects,
+  target filtering and roll rerolls.
+
+### SDK 1
+
+- Added stable `rolls.actions` and `rolls.reroll` capabilities through
+  `sdk.rolls.actions.register(...)` and `sdk.rolls.reroll(...)`.
+- Extended `combat.manage` with `sdk.combat.interruptTurn(...)`,
+  `sdk.combat.resumeTurn()` and `sdk.combat.setHolding(...)`.
+- Added `users.presentation.read` with `sdk.users.presentation.get(...)` and
+  `sdk.users.presentation.list()` for bounded campaign-visible user colors.
+- Updated generated JSON, TypeScript declarations, method/DTO references,
+  capability descriptions and English, Portuguese and Spanish indexes.
+- The compatibility line remains SDK 1 RC 1 and package manifests continue to
+  declare `sdkVersion: "1"`; no new SDK version was introduced.
+
+### Reliability
+
+- Isolated package/ruleset fixtures from core CI and expanded multiplayer E2E
+  coverage for lazy directories, permissions and semantic drag/drop.
+- Fixed scene refresh races, duplicate attack requests, reroll routing and
+  stale window/panel state exposed by the interface refactor.
 
 ## v1.0.0-beta.3
 

@@ -1,6 +1,6 @@
 # Core and SDK 1 Coverage Audit
 
-Audit date: 2026-08-14. This document compares the user-facing domain services
+Audit date: 2026-08-27. This document compares the user-facing domain services
 implemented by the Gravewright core with the public, capability-gated browser
 SDK. It does not treat every internal service as a candidate public API:
 administration, persistence, transport, rendering, and package installation
@@ -21,8 +21,8 @@ bridge, and their contract tests agree on the currently exposed surface.
 | Items | Read/list, core-field CRUD and validated item-data patching | Good |
 | Tokens | Read/list, CRUD and movement | Good; HP and conditions exist indirectly through rule actions |
 | Scenes | Read/list/active, geometry, effects, fog and image placements | Good for gameplay tools |
-| Combat | State, lifecycle, turns/rounds, flags, rolling and manual/numeric initiative | Good |
-| Chat and dice | Send/read messages, authoritative dice and roll intents | Good |
+| Combat | State, explicit lifecycle, turns/rounds, holding, interruption/resume, flags and initiative | Good |
+| Chat and dice | Send/read messages, authoritative dice, roll intents, constrained roll actions and rerolls | Good |
 | Rules | Validate and execute a bounded semantic action graph | Good |
 | Cards | State, shuffle, reset, draw, reveal, discard and scene placement | Good |
 | PDFs | Read, viewer navigation and complete annotation CRUD | Good |
@@ -32,8 +32,19 @@ bridge, and their contract tests agree on the currently exposed surface.
 | Package runtime | Settings, scoped SQLite, events, inter-package bus and localization | Good |
 | Journals and handouts | Runtime journal CRUD and transient presentation | Good |
 | Fog and scene images | Bounded fog operations and authorized placements | Good |
+| User presentation | Campaign-visible bounded user colors through read-only projection | Good |
 
 ## Implemented additions
+
+### Beta 4 compatible additions
+
+- `rolls.actions` registers bounded actions on roll messages without exposing a
+  general chat hook.
+- `rolls.reroll` replays a persisted roll through its authoritative ruleset
+  policy rather than trusting a replacement formula from the browser.
+- `combat.manage` includes holding, turn interruption and authoritative resume.
+- `users.presentation.read` exposes only the public presentation projection of
+  users visible in the active campaign.
 
 ### Priority 0: complete cards
 

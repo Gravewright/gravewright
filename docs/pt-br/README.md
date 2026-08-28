@@ -2,7 +2,7 @@
 
 Este diretório reúne a documentação pública em português brasileiro.
 
-Versão atual: **Gravewright v1.0.0-beta.3**, certificada contra a **SDK 1 RC 1**. Consulte as
+Versão atual: **Gravewright v1.0.0-beta.4**, certificada contra a **SDK 1 RC 1**. Consulte as
 [notas da versão e histórico completo](../../RELEASE_NOTES.md).
 
 - [`inicio.md`](inicio.md): instalação e primeiro uso.

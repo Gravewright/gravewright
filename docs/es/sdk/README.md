@@ -19,3 +19,17 @@ Para adaptar proyectos existentes, consulte
 [Portar módulos a Gravewright](portar-modulos.md).
 Los nombres de methods, capabilities, DTOs, events y
 error codes no se traducen.
+
+## Adiciones de Beta 4
+
+Gravewright 1.0.0-beta.4 mantiene `sdkVersion: "1"` y suma extensiones
+compatibles a la superficie congelada de SDK 1:
+
+- `rolls.actions`: `sdk.rolls.actions.register(definition, handler)`;
+- `rolls.reroll`: `sdk.rolls.reroll(messageId)`;
+- `combat.manage`: `sdk.combat.interruptTurn(combatantId)`,
+  `sdk.combat.resumeTurn()` y `sdk.combat.setHolding(combatantId, holding)`;
+- `users.presentation.read`: `sdk.users.presentation.get(userId)` y
+  `sdk.users.presentation.list()`.
+
+Las firmas, DTOs y gates exactos se mantienen en las referencias generadas.

@@ -85,15 +85,33 @@ sdk.bus
 sdk.commands
 sdk.ui
 sdk.chat
+sdk.rolls
 sdk.settings
 sdk.sheets
 sdk.combat
+sdk.users
 sdk.tokens
 sdk.scene
 sdk.tools
 sdk.content
 sdk.i18n
 ```
+
+## Adições da Beta 4
+
+O Gravewright 1.0.0-beta.4 preserva `sdkVersion: "1"` e adiciona métodos
+compatíveis, protegidos por capability, à superfície congelada da SDK 1:
+
+| Capability | Métodos | Finalidade |
+|---|---|---|
+| `rolls.actions` | `sdk.rolls.actions.register(definition, handler)` | Registrar uma ação limitada em mensagens de rolagem persistidas. |
+| `rolls.reroll` | `sdk.rolls.reroll(messageId)` | Rolar novamente pela política autoritativa do ruleset da rolagem original. |
+| `combat.manage` | `sdk.combat.interruptTurn(combatantId)`, `sdk.combat.resumeTurn()`, `sdk.combat.setHolding(combatantId, holding)` | Modelar interrupção e espera sem estado de combate controlado pelo pacote. |
+| `users.presentation.read` | `sdk.users.presentation.get(userId)`, `sdk.users.presentation.list()` | Ler cores públicas de usuários visíveis na campanha ativa. |
+
+As assinaturas e DTOs exatos continuam sendo gerados pelo registro canônico;
+consulte [`method-reference.md`](method-reference.md),
+[`dto-reference.md`](dto-reference.md) e [`capabilities.md`](capabilities.md).
 
 Atalhos:
 
