@@ -24,7 +24,6 @@ htmlcov/
 /temp/
 /.test-tmp/
 /diagnostics/
-/site/
 
 # ``data/`` mistura dados de execução e pacotes instalados localmente. Nenhum
 # módulo/addon entra no repositório; a única exceção versionada é o ruleset PDF
