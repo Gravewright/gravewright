@@ -43,6 +43,7 @@ The only structural requirement is exactly one active `server` module. Gravewrig
 
 ```bash
 npm install
+cp gravewright.modules.example.json gravewright.modules.json
 npm test
 npm run typecheck
 npm run grave -- doctor
