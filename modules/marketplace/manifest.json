@@ -1,0 +1,14 @@
+{
+  "name": "marketplace",
+  "kind": "marketplace",
+  "provider": "core",
+  "version": "0.2.0",
+  "entry": "./index.ts",
+  "types": "./types.ts",
+  "routes": {
+    "/marketplace": "marketplace"
+  },
+  "exports": {
+    "get": ["marketplace", "list", "install"]
+  }
+}

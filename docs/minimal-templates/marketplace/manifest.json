@@ -1,0 +1,11 @@
+{
+  "name": "my-marketplace",
+  "kind": "marketplace",
+  "provider": "community",
+  "version": "0.1.0",
+  "entry": "./index.ts",
+  "types": "./types.ts",
+  "exports": {
+    "get": []
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "dice-roller",
+  "kind": "addon",
+  "provider": "community",
+  "version": "1.0.0",
+  "entry": "./index.ts",
+  "types": "./types.ts",
+  "exports": {
+    "get": ["roll"]
+  }
+}

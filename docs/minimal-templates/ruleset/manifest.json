@@ -1,0 +1,11 @@
+{
+  "name": "my-ruleset",
+  "kind": "ruleset",
+  "provider": "community",
+  "version": "0.1.0",
+  "entry": "./index.ts",
+  "types": "./types.ts",
+  "exports": {
+    "get": []
+  }
+}

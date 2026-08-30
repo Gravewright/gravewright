@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Compiled packages and generated declarations
+dist/
+packages/*/dist/
+src/generated/
+*.tsbuildinfo
+
+# Tests and coverage
+coverage/
+.nyc_output/
+
+# Gravewright runtime data
+.gravewright/
+modules/.install-*/
+
+# Environment and local configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+gravewright.marketplace.local.json
+
+# Logs and process files
+*.log
+*.pid
+*.pid.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Package artifacts
+*.tgz
+*.tar.gz
+
+# Tool caches
+.cache/
+.eslintcache
+.parcel-cache/
+.turbo/
+.vite/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating systems
+.DS_Store
+Thumbs.db
+Desktop.ini

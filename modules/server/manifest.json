@@ -1,0 +1,11 @@
+{
+  "name": "server",
+  "kind": "server",
+  "provider": "core",
+  "version": "0.1.0",
+  "entry": "./index.ts",
+  "types": "./types.ts",
+  "exports": {
+    "get": ["start", "stop", "route", "middleware", "slot", "port"]
+  }
+}
