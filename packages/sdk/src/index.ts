@@ -1,5 +1,5 @@
 export const MODULE_KINDS = [
-  "server", "campaign", "room", "marketplace", "ruleset", "addon", "asset", "ui", "system",
+  "server", "campaign", "room", "marketplace", "ruleset", "addon", "asset", "ui",
 ] as const;
 
 export type ModuleKind = (typeof MODULE_KINDS)[number];

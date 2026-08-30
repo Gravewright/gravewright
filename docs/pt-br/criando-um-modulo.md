@@ -20,9 +20,10 @@ Kinds descrevem o papel do módulo. Eles não selecionam uma implementação nem
 | `addon` | Capacidade opcional e transversal |
 | `asset` | Armazenamento, índice ou entrega de assets |
 | `ui` | Capacidade de interface |
-| `system` | Integração de um sistema de jogo |
 
 Somente `server` possui contrato mínimo no kernel. O projeto precisa de exatamente um server ativo. Todos os outros kinds são opcionais.
+
+Um sistema de jogo completo é uma recipe composta por `ruleset`, UI, assets e addons opcionais. `ruleset` cuida das mecânicas e da resolução, sem absorver apresentação ou distribuição.
 
 ## 2. Gere o scaffold
 
