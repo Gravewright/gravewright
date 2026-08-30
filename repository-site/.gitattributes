@@ -1,0 +1,2 @@
+# Keep text files on LF regardless of the contributor's core.autocrlf setting.
+*       text=auto eol=lf

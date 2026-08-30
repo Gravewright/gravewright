@@ -1,0 +1,32 @@
+name: Site CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Checkout Gravewright core
+        uses: actions/checkout@v7
+        with:
+          repository: Gravewright/gravewright
+          path: gravewright-core
+          ref: f1f7f31634d7714e97e05cf1dd7a192bfc381459
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+        env:
+          GRAVEWRIGHT_CAPABILITIES_PATH: ${{ github.workspace }}/gravewright-core/app/engine/sdk/capabilities.json
+      - name: Ensure generated wiki is committed
+        run: git diff --exit-code -- wiki/pages wiki/translations wiki/data/translation-freshness.json

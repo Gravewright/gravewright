@@ -1,0 +1,19 @@
+{
+  "conditions": [
+    {
+      "id": "blinded",
+      "label": "dnd5e.ui.cego",
+      "kind": "negative"
+    },
+    {
+      "id": "poisoned",
+      "label": "dnd5e.ui.envenenado",
+      "kind": "negative"
+    },
+    {
+      "id": "inspired",
+      "label": "dnd5e.ui.inspirado",
+      "kind": "positive"
+    }
+  ]
+}

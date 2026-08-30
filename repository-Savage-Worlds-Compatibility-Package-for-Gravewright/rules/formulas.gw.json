@@ -1,0 +1,64 @@
+{
+  "helpers": {
+    "acing": {
+      "args": [
+        "sides"
+      ],
+      "expression": "explode(sides, sides)"
+    },
+    "halfDie": {
+      "args": [
+        "sides",
+        "modifier"
+      ],
+      "expression": "floor(sides / 2) + floor(modifier / 2)"
+    },
+    "raises": {
+      "args": [
+        "total",
+        "target"
+      ],
+      "expression": "max(0, floor((total - target) / 4))"
+    },
+    "woundPenalty": {
+      "args": [
+        "wounds",
+        "fatigue"
+      ],
+      "expression": "min(3, wounds) + min(2, fatigue)"
+    },
+    "parry": {
+      "args": [
+        "fightingSides",
+        "fightingModifier",
+        "shield",
+        "modifier"
+      ],
+      "expression": "2 + halfDie(fightingSides, fightingModifier) + shield + modifier"
+    },
+    "toughness": {
+      "args": [
+        "vigorSides",
+        "vigorModifier",
+        "armor",
+        "size",
+        "modifier"
+      ],
+      "expression": "2 + halfDie(vigorSides, vigorModifier) + armor + size + modifier"
+    },
+    "loadLimit": {
+      "args": [
+        "strengthSides",
+        "strengthModifier"
+      ],
+      "expression": "max(0, (strengthSides - 2) * 5 + strengthModifier * 10)"
+    },
+    "encumbrance": {
+      "args": [
+        "load",
+        "limit"
+      ],
+      "expression": "if(load > limit, 2, 0)"
+    }
+  }
+}

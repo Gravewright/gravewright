@@ -1,0 +1,244 @@
+{
+  "savage-worlds.abbr.agi": "AGI",
+  "savage-worlds.abbr.ast": "SMA",
+  "savage-worlds.abbr.esp": "SPI",
+  "savage-worlds.abbr.for": "STR",
+  "savage-worlds.abbr.vig": "VIG",
+  "savage-worlds.cond.abalado": "Shaken",
+  "savage-worlds.cond.atordoado": "Stunned",
+  "savage-worlds.cond.caido": "Prone",
+  "savage-worlds.cond.defendendo": "Defending",
+  "savage-worlds.cond.descontrolado": "Out of control",
+  "savage-worlds.cond.destrocado": "Wrecked",
+  "savage-worlds.cond.distraido": "Distracted",
+  "savage-worlds.cond.em.chamas": "On fire",
+  "savage-worlds.cond.enredado": "Entangled",
+  "savage-worlds.cond.esperando": "Holding",
+  "savage-worlds.cond.fatigado": "Fatigued",
+  "savage-worlds.cond.imobilizado": "Bound",
+  "savage-worlds.cond.incapacitado": "Incapacitated",
+  "savage-worlds.cond.mirando": "Aiming",
+  "savage-worlds.cond.sobrecarregado": "Encumbered",
+  "savage-worlds.cond.vulneravel": "Vulnerable",
+  "savage-worlds.die.d10": "d10",
+  "savage-worlds.die.d12": "d12",
+  "savage-worlds.die.d4": "d4",
+  "savage-worlds.die.d6": "d6",
+  "savage-worlds.die.d8": "d8",
+  "savage-worlds.rank.heroic": "Heroic",
+  "savage-worlds.rank.legendary": "Legendary",
+  "savage-worlds.rank.novice": "Novice",
+  "savage-worlds.rank.seasoned": "Seasoned",
+  "savage-worlds.rank.veteran": "Veteran",
+  "savage-worlds.ui.absorver": "Soak",
+  "savage-worlds.ui.acoes": "Combat",
+  "savage-worlds.ui.acertos": "Hits",
+  "savage-worlds.ui.agilidade": "Agility",
+  "savage-worlds.ui.alcance": "Range",
+  "savage-worlds.ui.alcance.curto": "Short",
+  "savage-worlds.ui.alcance.extremo": "Extreme (−8)",
+  "savage-worlds.ui.alcance.longo": "Long (−4)",
+  "savage-worlds.ui.alcance.medio": "Medium (−2)",
+  "savage-worlds.ui.alvos.declarados": "Declared targets",
+  "savage-worlds.ui.ancestralidade": "Ancestry",
+  "savage-worlds.ui.anotacoes": "Notes",
+  "savage-worlds.ui.arma": "Weapon",
+  "savage-worlds.ui.armadura": "Armour",
+  "savage-worlds.ui.armas": "Weapons",
+  "savage-worlds.ui.astucia": "Smarts",
+  "savage-worlds.ui.atacar": "Attack",
+  "savage-worlds.ui.aplicar.dano": "Apply damage",
+  "savage-worlds.ui.atalhos": "Shortcuts",
+  "savage-worlds.ui.atalhos.vazio": "Equip a weapon or prepare a power to create a shortcut.",
+  "savage-worlds.ui.atalho.indisponivel": "Shortcut unavailable.",
+  "savage-worlds.ui.preparado": "Prepared",
+  "savage-worlds.ui.ataque": "Attack",
+  "savage-worlds.ui.atributo": "Attribute",
+  "savage-worlds.ui.atributos": "Attributes",
+  "savage-worlds.ui.aumentos": "Raises",
+  "savage-worlds.ui.avancos": "Advances",
+  "savage-worlds.ui.avarias": "Wounds",
+  "savage-worlds.ui.bennies": "Bennies",
+  "savage-worlds.ui.bennies.ganhar": "Gain Bennie",
+  "savage-worlds.ui.bennies.gastar": "Spend Bennie",
+  "savage-worlds.ui.bonus.de.cobertura": "Cover bonus",
+  "savage-worlds.ui.bonus.de.escudo": "Shield bonus",
+  "savage-worlds.ui.cadencia": "Rate of fire",
+  "savage-worlds.ui.cadencia.usada": "Rate of fire used",
+  "savage-worlds.ui.municao.atual": "Current ammunition",
+  "savage-worlds.ui.municao.capacidade": "Capacity",
+  "savage-worlds.ui.recarga.acoes": "Reload actions",
+  "savage-worlds.ui.recarregar": "Reload",
+  "savage-worlds.ui.carga": "Load",
+  "savage-worlds.ui.carta.de.acao": "Action Card",
+  "savage-worlds.ui.cobertura": "Covers",
+  "savage-worlds.ui.com.raise": "With a raise (+1d6)",
+  "savage-worlds.ui.combate": "Combat",
+  "savage-worlds.ui.conceito": "Concept",
+  "savage-worlds.ui.condicoes": "Conditions",
+  "savage-worlds.ui.estado": "Status",
+  "savage-worlds.ui.fechar": "Close",
+  "savage-worlds.ui.conjurar": "Cast",
+  "savage-worlds.ui.corrida": "Running",
+  "savage-worlds.ui.custo": "Cost",
+  "savage-worlds.ui.dado": "Die",
+  "savage-worlds.ui.dado.de.fighting": "Fighting die",
+  "savage-worlds.ui.dados": "Dice",
+  "savage-worlds.ui.dados.extras": "Extra dice",
+  "savage-worlds.ui.dano": "Damage",
+  "savage-worlds.ui.dano.de.forca": "Strength damage",
+  "savage-worlds.ui.dano.formula": "Damage (formula)",
+  "savage-worlds.ui.derivados": "Derived",
+  "savage-worlds.ui.descricao": "Description",
+  "savage-worlds.ui.dificil": "Hard (−2)",
+  "savage-worlds.ui.duas.maos": "Two-handed",
+  "savage-worlds.ui.duracao": "Duration",
+  "savage-worlds.ui.edge": "Edge",
+  "savage-worlds.ui.edges": "Edges",
+  "savage-worlds.ui.edges.e.hindrances": "Edges & Hindrances",
+  "savage-worlds.ui.editar": "Edit",
+  "savage-worlds.ui.concluir": "Done",
+  "savage-worlds.ui.confirmar.remocao": "Remove {name} from the sheet?",
+  "savage-worlds.ui.equipado": "Equipped",
+  "savage-worlds.ui.equipamento": "Gear",
+  "savage-worlds.ui.escudo": "Shield",
+  "savage-worlds.ui.especializacao": "Specialisation",
+  "savage-worlds.ui.espirito": "Spirit",
+  "savage-worlds.ui.exemplo.dados": "1d6, 1d4",
+  "savage-worlds.ui.extensao": "Reach",
+  "savage-worlds.ui.extra": "Extra",
+  "savage-worlds.ui.facil": "Easy (+2)",
+  "savage-worlds.ui.fadiga": "Fatigue",
+  "savage-worlds.ui.faixa.de.alcance": "Range band",
+  "savage-worlds.ui.ferimentos": "Wounds",
+  "savage-worlds.ui.forca": "Strength",
+  "savage-worlds.ui.forca.minima": "Minimum Strength",
+  "savage-worlds.ui.fundo.arcano": "Arcane Background",
+  "savage-worlds.ui.gravidade": "Severity",
+  "savage-worlds.ui.grupo": "Group",
+  "savage-worlds.ui.hindrance": "Hindrance",
+  "savage-worlds.ui.hindrances": "Hindrances",
+  "savage-worlds.ui.historia": "Background",
+  "savage-worlds.ui.inventario": "Inventory",
+  "savage-worlds.ui.maior": "Major",
+  "savage-worlds.ui.manifestacao": "Trapping",
+  "savage-worlds.ui.manobra": "Handling",
+  "savage-worlds.ui.menor": "Minor",
+  "savage-worlds.ui.modificador": "Modifier",
+  "savage-worlds.ui.modificador.extra": "Extra modifier",
+  "savage-worlds.ui.mostrar": "Post to chat",
+  "savage-worlds.ui.muito.dificil": "Very hard (−4)",
+  "savage-worlds.ui.multiacao": "Multi-Action",
+  "savage-worlds.ui.multiacao.duas": "Two actions (−2)",
+  "savage-worlds.ui.multiacao.tres": "Three actions (−4)",
+  "savage-worlds.ui.multiacao.uma": "One action",
+  "savage-worlds.ui.nome": "Name",
+  "savage-worlds.ui.normal": "Normal",
+  "savage-worlds.ui.origem.da.toughness": "Toughness source",
+  "savage-worlds.ui.origem.do.parry": "Parry source",
+  "savage-worlds.ui.pace": "Pace",
+  "savage-worlds.ui.para.que": "Purpose",
+  "savage-worlds.ui.parry": "Parry",
+  "savage-worlds.ui.patente": "Rank",
+  "savage-worlds.ui.penalidade": "Penalty",
+  "savage-worlds.ui.perfuracao": "Armour piercing",
+  "savage-worlds.ui.pericia": "Skill",
+  "savage-worlds.ui.pericia.basica": "Core skill",
+  "savage-worlds.ui.pericia.de.conjuracao": "Arcane skill",
+  "savage-worlds.ui.pericias": "Skills",
+  "savage-worlds.ui.peso": "Weight",
+  "savage-worlds.ui.poder": "Power",
+  "savage-worlds.ui.pp.adicionais": "Additional PP (modifiers)",
+  "savage-worlds.ui.poderes": "Powers",
+  "savage-worlds.ui.pontos.de.poder": "Power Points",
+  "savage-worlds.ui.principal": "Main",
+  "savage-worlds.ui.protecao": "Protection",
+  "savage-worlds.ui.quantidade": "Quantity",
+  "savage-worlds.ui.recursos": "Resources",
+  "savage-worlds.ui.remover": "Remove",
+  "savage-worlds.ui.requisitos": "Requirements",
+  "savage-worlds.ui.resumo": "Summary",
+  "savage-worlds.ui.rolagens.rapidas": "Quick rolls",
+  "savage-worlds.ui.rolar": "Roll",
+  "savage-worlds.ui.sair.do.abalado": "Unshake",
+  "savage-worlds.ui.sem.pericia": "Unskilled",
+  "savage-worlds.ui.situacao": "Situation",
+  "savage-worlds.ui.sobre": "About",
+  "savage-worlds.ui.sobrecarga": "Encumbrance",
+  "savage-worlds.ui.soma.forca": "Adds Strength",
+  "savage-worlds.ui.tamanho": "Size",
+  "savage-worlds.ui.teste": "Trait roll",
+  "savage-worlds.ui.teste.de.agilidade": "Agility roll",
+  "savage-worlds.ui.teste.de.astucia": "Smarts roll",
+  "savage-worlds.ui.teste.de.espirito": "Spirit roll",
+  "savage-worlds.ui.teste.de.forca": "Strength roll",
+  "savage-worlds.ui.teste.de.pericia": "Skill roll",
+  "savage-worlds.ui.teste.de.vigor": "Vigor roll",
+  "savage-worlds.ui.teste.sem.pericia": "Unskilled roll",
+  "savage-worlds.ui.toughness": "Toughness",
+  "savage-worlds.ui.tripulacao": "Crew",
+  "savage-worlds.ui.veiculo": "Vehicle",
+  "savage-worlds.ui.velocidade": "Top speed",
+  "savage-worlds.ui.vigor": "Vigor",
+  "savage-worlds.ui.visibilidade": "Visibility",
+  "savage-worlds.ui.wild.card": "Wild Card",
+  "savage-worlds.ui.wild.die": "Wild Die",
+  "savage-worlds.roll.item.test": "{name} Test",
+  "savage-worlds.roll.primary.die": "Primary Die",
+  "savage-worlds.roll.success": "Success",
+  "savage-worlds.roll.failure": "Failure",
+  "savage-worlds.roll.critical.failure": "Critical Failure",
+  "savage-worlds.toast.bennies.gained": "You gained {count} Bennie.",
+  "savage-worlds.toast.bennies.spent": "You spent {count} Bennie.",
+  "savage-worlds.roll.reroll": "Spend a Bennie and reroll"
+  ,"savage-worlds.initiative.deal": "Deal Action Cards"
+  ,"savage-worlds.initiative.dealt": "Action Cards dealt and initiative ordered."
+  ,"savage-worlds.initiative.act.now": "Act now with the Joker"
+  ,"savage-worlds.initiative.resume": "Resume interrupted turn"
+  ,"savage-worlds.initiative.hold": "Hold"
+  ,"savage-worlds.initiative.holding": "Holding"
+  ,"savage-worlds.initiative.no.deck": "No deck is available in this campaign."
+  ,"savage-worlds.ui.atual": "Current"
+  ,"savage-worlds.ui.max.abbr": "Max."
+  ,"savage-worlds.ui.maxima": "Maximum"
+  ,"savage-worlds.ui.maximo": "Maximum"
+  ,"savage-worlds.ui.minima": "Minimum"
+  ,"savage-worlds.ui.modificador.abbr": "Mod."
+  ,"savage-worlds.ui.pontos": "Points"
+  ,"savage-worlds.ui.nome.grupo": "Group name"
+  ,"savage-worlds.ui.nome.veiculo": "Vehicle name"
+  ,"savage-worlds.ui.grupo.placeholder": "Allies, troops, or organization"
+  ,"savage-worlds.ui.perfil.unidade": "Unit profile"
+  ,"savage-worlds.ui.estrutura": "Structure"
+  ,"savage-worlds.ui.escala": "Scale"
+  ,"savage-worlds.ui.empty.pericia": "Drop a skill here to add it"
+  ,"savage-worlds.ui.empty.arma": "Drop a weapon onto the sheet"
+  ,"savage-worlds.ui.empty.vantagem": "Drop an Edge onto the sheet"
+  ,"savage-worlds.ui.empty.complicacao": "Drop a Hindrance onto the sheet"
+  ,"savage-worlds.ui.empty.protecao": "Drop armour or a shield onto the sheet"
+  ,"savage-worlds.ui.empty.equipamento": "Drop gear onto the sheet"
+  ,"savage-worlds.ui.empty.poder": "Drop a power onto the sheet"
+  ,"savage-worlds.ui.grupo.ajuda": "Manage the group's abstract strength as a single resource during the scene."
+  ,"savage-worlds.ui.ficha": "Sheet"
+  ,"savage-worlds.ui.dado.de.agilidade": "Agility die"
+  ,"savage-worlds.ui.dado.de.astucia": "Smarts die"
+  ,"savage-worlds.ui.dado.de.espirito": "Spirit die"
+  ,"savage-worlds.ui.dado.de.forca": "Strength die"
+  ,"savage-worlds.ui.dado.de.vigor": "Vigor die"
+  ,"savage-worlds.ui.modificador.de.agilidade": "Agility modifier"
+  ,"savage-worlds.ui.modificador.de.astucia": "Smarts modifier"
+  ,"savage-worlds.ui.modificador.de.espirito": "Spirit modifier"
+  ,"savage-worlds.ui.modificador.de.forca": "Strength modifier"
+  ,"savage-worlds.ui.modificador.de.vigor": "Vigor modifier"
+  ,"savage-worlds.settings.initiative.deck.label": "Initiative deck"
+  ,"savage-worlds.settings.initiative.deck.hint": "Deck instance used to deal action cards in the combat tracker."
+  ,"savage-worlds.initiative.deck.loading": "Loading decks…"
+  ,"savage-worlds.ui.curar": "Healing"
+  ,"savage-worlds.ui.cura.natural": "Natural healing"
+  ,"savage-worlds.ui.cura.natural.aviso": "Use this roll once every five days of recovery."
+  ,"savage-worlds.ui.kit.primeiros.socorros": "Has a first aid kit"
+  ,"savage-worlds.ui.recuperar.fadiga": "Recover one Fatigue level"
+  ,"savage-worlds.ui.suporte": "Support"
+  ,"savage-worlds.ui.teste.resistido": "Opposed Roll"
+  ,"savage-worlds.ui.atributo.resistente": "Resisting attribute"
+}

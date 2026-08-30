@@ -1,0 +1,274 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-effect",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.category",
+            "options": [
+              {
+                "value": "condition",
+                "labelKey": "dnd5e.ui.condicao"
+              },
+              {
+                "value": "buff",
+                "labelKey": "dnd5e.ui.buff"
+              },
+              {
+                "value": "debuff",
+                "labelKey": "dnd5e.ui.debuff"
+              },
+              {
+                "value": "stance",
+                "labelKey": "dnd5e.ui.postura"
+              }
+            ],
+            "labelKey": "dnd5e.ui.categoria"
+          },
+          {
+            "type": "checkboxField",
+            "path": "sheet.concentration",
+            "labelKey": "dnd5e.ui.concentracao"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "selectField",
+            "path": "sheet.duration.type",
+            "options": [
+              {
+                "value": "permanent",
+                "labelKey": "dnd5e.ui.permanente"
+              },
+              {
+                "value": "rounds",
+                "labelKey": "dnd5e.ui.rodadas"
+              },
+              {
+                "value": "minutes",
+                "labelKey": "dnd5e.ui.minutos"
+              },
+              {
+                "value": "session",
+                "labelKey": "dnd5e.ui.sessao"
+              }
+            ],
+            "labelKey": "dnd5e.ui.duracao"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.duration.value",
+            "labelKey": "dnd5e.ui.valor"
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      },
+      {
+        "type": "modifierBuilder",
+        "path": "sheet.modifiers",
+        "targets": [
+          {
+            "id": "roll.attack",
+            "operations": [
+              {
+                "id": "add",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.adicionar.numero"
+              },
+              {
+                "id": "subtract",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.subtrair.numero"
+              },
+              {
+                "id": "add_dice",
+                "valueType": "dice",
+                "labelKey": "dnd5e.ui.adicionar.dado"
+              },
+              {
+                "id": "advantage",
+                "valueType": "none",
+                "labelKey": "dnd5e.ui.vantagem"
+              },
+              {
+                "id": "disadvantage",
+                "valueType": "none",
+                "labelKey": "dnd5e.ui.desvantagem"
+              }
+            ],
+            "labelKey": "dnd5e.ui.ataques"
+          },
+          {
+            "id": "roll.save",
+            "operations": [
+              {
+                "id": "add",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.adicionar.numero"
+              },
+              {
+                "id": "subtract",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.subtrair.numero"
+              },
+              {
+                "id": "add_dice",
+                "valueType": "dice",
+                "labelKey": "dnd5e.ui.adicionar.dado"
+              },
+              {
+                "id": "advantage",
+                "valueType": "none",
+                "labelKey": "dnd5e.ui.vantagem"
+              },
+              {
+                "id": "disadvantage",
+                "valueType": "none",
+                "labelKey": "dnd5e.ui.desvantagem"
+              }
+            ],
+            "labelKey": "dnd5e.ui.salvaguardas"
+          },
+          {
+            "id": "roll.check",
+            "operations": [
+              {
+                "id": "add",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.adicionar.numero"
+              },
+              {
+                "id": "subtract",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.subtrair.numero"
+              },
+              {
+                "id": "add_dice",
+                "valueType": "dice",
+                "labelKey": "dnd5e.ui.adicionar.dado"
+              },
+              {
+                "id": "advantage",
+                "valueType": "none",
+                "labelKey": "dnd5e.ui.vantagem"
+              },
+              {
+                "id": "disadvantage",
+                "valueType": "none",
+                "labelKey": "dnd5e.ui.desvantagem"
+              }
+            ],
+            "labelKey": "dnd5e.ui.testes.de.atributo"
+          },
+          {
+            "id": "roll.damage",
+            "operations": [
+              {
+                "id": "add",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.adicionar.numero"
+              },
+              {
+                "id": "subtract",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.subtrair.numero"
+              },
+              {
+                "id": "add_dice",
+                "valueType": "dice",
+                "labelKey": "dnd5e.ui.adicionar.dado"
+              }
+            ],
+            "labelKey": "dnd5e.ui.dano.causado"
+          },
+          {
+            "id": "stat.ac",
+            "operations": [
+              {
+                "id": "add",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.adicionar.numero"
+              },
+              {
+                "id": "subtract",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.subtrair.numero"
+              },
+              {
+                "id": "set",
+                "valueType": "number",
+                "labelKey": "dnd5e.ui.definir.valor"
+              }
+            ],
+            "labelKey": "dnd5e.ui.classe.de.armadura"
+          },
+          {
+            "id": "damage.received",
+            "operations": [
+              {
+                "id": "resistance",
+                "valueType": "text",
+                "labelKey": "dnd5e.ui.resistencia"
+              },
+              {
+                "id": "vulnerability",
+                "valueType": "text",
+                "labelKey": "dnd5e.ui.vulnerabilidade"
+              },
+              {
+                "id": "immunity",
+                "valueType": "text",
+                "labelKey": "dnd5e.ui.imunidade"
+              },
+              {
+                "id": "reduce",
+                "valueType": "formula",
+                "labelKey": "dnd5e.ui.reduzir.dano"
+              }
+            ],
+            "labelKey": "dnd5e.ui.dano.recebido"
+          },
+          {
+            "id": "damage.self",
+            "operations": [
+              {
+                "id": "damage_over_time",
+                "valueType": "dice",
+                "labelKey": "dnd5e.ui.sofrer.dano.rolar.dado"
+              },
+              {
+                "id": "heal_over_time",
+                "valueType": "dice",
+                "labelKey": "dnd5e.ui.curar.rolar.dado"
+              }
+            ],
+            "labelKey": "dnd5e.ui.dano.cura.por.turno"
+          }
+        ],
+        "labelKey": "dnd5e.ui.modificadores"
+      }
+    ],
+    "labelKey": "dnd5e.ui.efeito"
+  }
+}

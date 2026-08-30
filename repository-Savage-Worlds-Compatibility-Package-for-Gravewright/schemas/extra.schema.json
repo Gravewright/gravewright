@@ -1,0 +1,458 @@
+{
+  "type": "object",
+  "description": "Extra: a mesma ficha, sem Dado Selvagem e sem Benes.",
+  "properties": {
+    "ancestry": {
+      "type": "string",
+      "default": ""
+    },
+    "concept": {
+      "type": "string",
+      "default": ""
+    },
+    "rank": {
+      "type": "string",
+      "default": "novice",
+      "enum": [
+        "novice",
+        "seasoned",
+        "veteran",
+        "heroic",
+        "legendary"
+      ]
+    },
+    "advances": {
+      "type": "number",
+      "default": 0,
+      "minimum": 0
+    },
+    "attributes": {
+      "type": "object",
+      "properties": {
+        "agility": {
+          "type": "object",
+          "properties": {
+            "sides": {
+              "type": "number",
+              "default": 4,
+              "enum": [
+                4,
+                6,
+                8,
+                10,
+                12
+              ]
+            },
+            "modifier": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "smarts": {
+          "type": "object",
+          "properties": {
+            "sides": {
+              "type": "number",
+              "default": 4,
+              "enum": [
+                4,
+                6,
+                8,
+                10,
+                12
+              ]
+            },
+            "modifier": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "spirit": {
+          "type": "object",
+          "properties": {
+            "sides": {
+              "type": "number",
+              "default": 4,
+              "enum": [
+                4,
+                6,
+                8,
+                10,
+                12
+              ]
+            },
+            "modifier": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "strength": {
+          "type": "object",
+          "properties": {
+            "sides": {
+              "type": "number",
+              "default": 4,
+              "enum": [
+                4,
+                6,
+                8,
+                10,
+                12
+              ]
+            },
+            "modifier": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "vigor": {
+          "type": "object",
+          "properties": {
+            "sides": {
+              "type": "number",
+              "default": 4,
+              "enum": [
+                4,
+                6,
+                8,
+                10,
+                12
+              ]
+            },
+            "modifier": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "parry": {
+          "type": "object",
+          "description": "Lutar é um item, e o campo derivado só enxerga a ficha — daí o espelho do dado aqui.",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 2,
+              "readOnly": true
+            },
+            "modifier": {
+              "type": "number",
+              "default": 0
+            },
+            "fightingSides": {
+              "type": "number",
+              "default": 4,
+              "enum": [
+                0,
+                4,
+                6,
+                8,
+                10,
+                12
+              ]
+            },
+            "fightingModifier": {
+              "type": "number",
+              "default": 0
+            },
+            "shield": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "toughness": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 2,
+              "readOnly": true
+            },
+            "modifier": {
+              "type": "number",
+              "default": 0
+            },
+            "armor": {
+              "type": "number",
+              "default": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "pace": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 6,
+              "minimum": 0
+            },
+            "running": {
+              "type": "number",
+              "default": 6,
+              "enum": [
+                4,
+                6,
+                8,
+                10,
+                12
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "size": {
+          "type": "number",
+          "default": 0
+        },
+        "load": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 0,
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "default": 0,
+              "readOnly": true
+            },
+            "encumbrance": {
+              "type": "number",
+              "default": 0,
+              "readOnly": true,
+              "description": "Niveis de Sobrecarga: -1 em Agilidade e Forca por multiplo do limite."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "wounds": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0
+        },
+        "max": {
+          "type": "number",
+          "default": 1,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "fatigue": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0
+        },
+        "max": {
+          "type": "number",
+          "default": 2,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "conditions": {
+      "type": "object",
+      "properties": {
+        "shaken": {
+          "type": "boolean",
+          "default": false
+        },
+        "distracted": {
+          "type": "boolean",
+          "default": false
+        },
+        "vulnerable": {
+          "type": "boolean",
+          "default": false
+        },
+        "stunned": {
+          "type": "boolean",
+          "default": false
+        },
+        "entangled": {
+          "type": "boolean",
+          "default": false
+        },
+        "bound": {
+          "type": "boolean",
+          "default": false
+        },
+        "prone": {
+          "type": "boolean",
+          "default": false
+        },
+        "encumbered": {
+          "type": "boolean",
+          "default": false
+        },
+        "fatigued": {
+          "type": "boolean",
+          "default": false
+        },
+        "incapacitated": {
+          "type": "boolean",
+          "default": false
+        },
+        "holding": {
+          "type": "boolean",
+          "default": false
+        },
+        "aiming": {
+          "type": "boolean",
+          "default": false
+        },
+        "defending": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "bars": {
+      "type": "object",
+      "description": "O que as barras do token contam.",
+      "properties": {
+        "bar_1": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 0,
+              "readOnly": true
+            },
+            "max": {
+              "type": "number",
+              "default": 1,
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "bar_2": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 0,
+              "readOnly": true
+            },
+            "max": {
+              "type": "number",
+              "default": 3,
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "power": {
+      "type": "object",
+      "properties": {
+        "points": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 0,
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "arcane": {
+          "type": "string",
+          "default": ""
+        },
+        "skill": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "additionalProperties": false
+    },
+    "penalty": {
+      "type": "object",
+      "description": "O que ferimentos e fadiga já descontam sozinhos dos testes.",
+      "properties": {
+        "wounds": {
+          "type": "number",
+          "default": 0,
+          "readOnly": true
+        },
+        "fatigue": {
+          "type": "number",
+          "default": 0,
+          "readOnly": true
+        },
+        "total": {
+          "type": "number",
+          "default": 0,
+          "readOnly": true
+        },
+        "physical": {
+          "type": "number",
+          "default": 0,
+          "readOnly": true,
+          "description": "Ferimentos, Fadiga e Sobrecarga: o que pesa em Agilidade e Força."
+        }
+      },
+      "additionalProperties": false
+    },
+    "bio": {
+      "type": "object",
+      "default": {}
+    },
+    "notes": {
+      "type": "object",
+      "default": {}
+    },
+    "skills": { "type": "array", "default": [], "items": { "type": "object" } },
+    "weapons": { "type": "array", "default": [], "items": { "type": "object" } },
+    "protection": { "type": "array", "default": [], "items": { "type": "object" } },
+    "gear": { "type": "array", "default": [], "items": { "type": "object" } },
+    "edges": { "type": "array", "default": [], "items": { "type": "object" } },
+    "hindrances": { "type": "array", "default": [], "items": { "type": "object" } },
+    "powers": { "type": "array", "default": [], "items": { "type": "object" } },
+    "effects": {
+      "type": "array",
+      "default": [],
+      "description": "Efeitos ativos. As condições marcadas na ficha são projetadas aqui pelo motor; é desta lista que o HUD lê e que os modificadores saem."
+    }
+  },
+  "additionalProperties": false
+}

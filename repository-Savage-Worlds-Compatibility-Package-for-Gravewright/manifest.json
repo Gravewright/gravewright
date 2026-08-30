@@ -1,0 +1,313 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "ruleset",
+  "id": "savage-worlds",
+  "name": "Savage Worlds Compatibility Package for Gravewright",
+  "version": "1.1.1",
+  "description": "Character sheets, rolls, and automation for the Savage Worlds system. Compatibility features only; no rules text, artwork, or setting material is included.",
+  "authors": [
+    "Ricardo Tristão Porfirio"
+  ],
+  "license": "Apache-2.0",
+  "compatibility": {
+    "minimum": "1",
+    "verified": "1",
+    "maximum": "1.x"
+  },
+  "capabilities": [
+    "events.subscribe",
+    "actors.register",
+    "items.register",
+    "sheets.declarative",
+    "sheets.html",
+    "sheets.controller",
+    "sheets.richText",
+    "rules.declarative",
+    "dice.roll",
+    "rolls.intent",
+    "rolls.actions",
+    "rolls.reroll",
+    "chat.cards",
+    "combat.config",
+    "combat.runtime",
+    "tokens.mappings",
+    "assets.styles",
+    "assets.scripts",
+    "assets.ui",
+    "assets.import",
+    "locales",
+    "sheets.runtime"
+    ,"cards.read"
+    ,"cards.manage"
+    ,"combat.manage"
+    ,"combat.read"
+    ,"settings"
+    ,"ui.slots"
+    ,"actors.read"
+    ,"actors.data.write"
+    ,"campaign.members.read"
+  ],
+  "activation": {
+    "scope": "campaign",
+    "mode": "exclusive"
+  },
+  "display": {
+    "color": "#176b72"
+  },
+  "entrypoints": {
+    "game": {
+      "scripts": [
+        "scripts/dice-tray.js",
+        "scripts/character-sheet.js"
+      ],
+      "styles": [
+        "assets/savage-worlds.css"
+      ]
+    }
+  },
+  "provides": {
+    "storage": {
+      "model": "scoped-json-v1"
+    },
+    "actorTypes": [
+      {
+        "id": "character",
+        "labelKey": "savage-worlds.ui.wild.card",
+        "schema": "schemas/character.schema.json",
+        "sheet": {
+          "mode": "html",
+          "template": "sheets/character.html",
+          "controller": "scripts/character-sheet.js",
+          "style": "assets/savage-worlds.css",
+          "dropZones": [
+            {
+              "list": "skills",
+              "accepts": [
+                "item.skill"
+              ]
+            },
+            {
+              "list": "weapons",
+              "accepts": [
+                "item.weapon"
+              ]
+            },
+            {
+              "list": "protection",
+              "accepts": [
+                "item.armor",
+                "item.shield"
+              ]
+            },
+            {
+              "list": "gear",
+              "accepts": [
+                "item.gear"
+              ]
+            },
+            {
+              "list": "edges",
+              "accepts": [
+                "item.edge"
+              ]
+            },
+            {
+              "list": "hindrances",
+              "accepts": [
+                "item.hindrance"
+              ]
+            },
+            {
+              "list": "powers",
+              "accepts": [
+                "item.power"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "extra",
+        "labelKey": "savage-worlds.ui.extra",
+        "schema": "schemas/extra.schema.json",
+        "sheet": {
+          "mode": "html",
+          "template": "sheets/extra.html",
+          "controller": "scripts/character-sheet.js",
+          "style": "assets/savage-worlds.css",
+          "dropZones": [
+            { "list": "skills", "accepts": ["item.skill"] },
+            { "list": "weapons", "accepts": ["item.weapon"] },
+            { "list": "protection", "accepts": ["item.armor", "item.shield"] },
+            { "list": "gear", "accepts": ["item.gear"] },
+            { "list": "edges", "accepts": ["item.edge"] },
+            { "list": "hindrances", "accepts": ["item.hindrance"] },
+            { "list": "powers", "accepts": ["item.power"] }
+          ]
+        }
+      },
+      {
+        "id": "vehicle",
+        "labelKey": "savage-worlds.ui.veiculo",
+        "schema": "schemas/vehicle.schema.json",
+        "sheet": {
+          "mode": "html",
+          "template": "sheets/vehicle.html",
+          "style": "assets/savage-worlds.css"
+        }
+      },
+      {
+        "id": "group",
+        "labelKey": "savage-worlds.ui.grupo",
+        "schema": "schemas/group.schema.json",
+        "sheet": {
+          "mode": "html",
+          "template": "sheets/group.html",
+          "style": "assets/savage-worlds.css"
+        }
+      }
+    ],
+    "itemTypes": [
+      {
+        "id": "skill",
+        "labelKey": "savage-worlds.ui.pericia",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/skill.sheet.gw.json"
+      },
+      {
+        "id": "weapon",
+        "labelKey": "savage-worlds.ui.arma",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/weapon.sheet.gw.json"
+      },
+      {
+        "id": "armor",
+        "labelKey": "savage-worlds.ui.armadura",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/armor.sheet.gw.json"
+      },
+      {
+        "id": "shield",
+        "labelKey": "savage-worlds.ui.escudo",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/shield.sheet.gw.json"
+      },
+      {
+        "id": "gear",
+        "labelKey": "savage-worlds.ui.equipamento",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/gear.sheet.gw.json"
+      },
+      {
+        "id": "edge",
+        "labelKey": "savage-worlds.ui.edge",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/edge.sheet.gw.json"
+      },
+      {
+        "id": "hindrance",
+        "labelKey": "savage-worlds.ui.hindrance",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/hindrance.sheet.gw.json"
+      },
+      {
+        "id": "power",
+        "labelKey": "savage-worlds.ui.poder",
+        "schema": "schemas/item.schema.json",
+        "sheet": "layouts/items/power.sheet.gw.json"
+      }
+    ],
+    "rules": {
+      "formulas": "rules/formulas.gw.json",
+      "derived": "rules/derived.gw.json",
+      "actions": "rules/actions.gw.json",
+      "validation": "rules/validation.gw.json",
+      "conditions": "rules/conditions.gw.json",
+      "combat": "rules/combat.gw.json"
+    },
+    "mappings": {
+      "tokens": "mappings/token.gw.json",
+      "chatCards": "mappings/chat-cards.gw.json",
+      "rollToast": "mappings/roll-toast.gw.json"
+    },
+    "locales": {
+      "en": "locales/en.json",
+      "pt-BR": "locales/pt-BR.json"
+    }
+  },
+  "distribution": {
+    "type": "zip",
+    "url": "https://github.com/Gravewright/Savage-Worlds-Compatibility-Package-for-Gravewright/archive/refs/tags/v1.1.1.zip",
+    "sha256": "ac17bbf69f2d5a806565d0e46823533c57eb4afdc926052fcb934658b9a642d0",
+    "source": "partner"
+  },
+  "dependencies": [],
+  "conflicts": [],
+  "settings": [
+    {
+      "key": "attributes_json",
+      "type": "string",
+      "scope": "campaign",
+      "default": "[{\"key\":\"agility\",\"label\":\"Agilidade\",\"abbr\":\"AGI\"},{\"key\":\"smarts\",\"label\":\"Astúcia\",\"abbr\":\"AST\"},{\"key\":\"spirit\",\"label\":\"Espírito\",\"abbr\":\"ESP\"},{\"key\":\"strength\",\"label\":\"Força\",\"abbr\":\"FOR\"},{\"key\":\"vigor\",\"label\":\"Vigor\",\"abbr\":\"VIG\"}]"
+    },
+    {
+      "key": "core_skills_json",
+      "type": "string",
+      "scope": "campaign",
+      "default": "[{\"key\":\"athletics\",\"label\":\"Atletismo\",\"attribute\":\"agility\",\"isCore\":true},{\"key\":\"common_knowledge\",\"label\":\"Conhecimento Geral\",\"attribute\":\"smarts\",\"isCore\":true},{\"key\":\"notice\",\"label\":\"Perceber\",\"attribute\":\"smarts\",\"isCore\":true},{\"key\":\"persuasion\",\"label\":\"Persuasão\",\"attribute\":\"spirit\",\"isCore\":true},{\"key\":\"stealth\",\"label\":\"Furtividade\",\"attribute\":\"agility\",\"isCore\":true},{\"key\":\"fighting\",\"label\":\"Lutar\",\"attribute\":\"agility\",\"isCore\":false}]"
+    },
+    {
+      "key": "parry_skill_key",
+      "type": "string",
+      "scope": "campaign",
+      "default": "fighting"
+    },
+    {
+      "key": "initiative_deck_id",
+      "type": "string",
+      "scope": "campaign",
+      "default": "",
+      "labelKey": "savage-worlds.settings.initiative.deck.label",
+      "hintKey": "savage-worlds.settings.initiative.deck.hint"
+    },
+    {
+      "key": "currency_singular",
+      "type": "string",
+      "scope": "campaign",
+      "default": "Ouro"
+    },
+    {
+      "key": "currency_plural",
+      "type": "string",
+      "scope": "campaign",
+      "default": "Ouro"
+    },
+    {
+      "key": "currency_abbreviation",
+      "type": "string",
+      "scope": "campaign",
+      "default": "$"
+    },
+    {
+      "key": "benny_asset_src",
+      "type": "string",
+      "scope": "campaign",
+      "default": ""
+    },
+    {
+      "key": "benny_asset_id",
+      "type": "string",
+      "scope": "campaign",
+      "default": ""
+    },
+    {
+      "key": "setup_version",
+      "type": "integer",
+      "scope": "campaign",
+      "default": 0,
+      "minimum": 0
+    }
+  ]
+}

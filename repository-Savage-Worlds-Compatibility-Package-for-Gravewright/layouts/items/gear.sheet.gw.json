@@ -1,0 +1,74 @@
+{
+  "kind": "itemSheet",
+  "system": "savage-worlds",
+  "id": "savage-worlds-gear",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "item",
+    "labelKey": "savage-worlds.ui.equipamento",
+    "children": [
+      {
+        "type": "grid",
+        "columns": 2,
+        "variant": "identity",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "savage-worlds.ui.nome",
+            "variant": "name"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.summary",
+            "labelKey": "savage-worlds.ui.resumo"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "variant": "market",
+        "labelKey": "savage-worlds.ui.inventario",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 3,
+            "variant": "market",
+            "children": [
+              {
+                "type": "numberField",
+                "path": "sheet.quantity",
+                "labelKey": "savage-worlds.ui.quantidade"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.weight",
+                "labelKey": "savage-worlds.ui.peso"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.cost",
+                "labelKey": "savage-worlds.ui.custo"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.equipped",
+                "variant": "flag",
+                "labelKey": "savage-worlds.ui.equipado"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "variant": "notes",
+        "labelKey": "savage-worlds.ui.descricao"
+      }
+    ]
+  }
+}

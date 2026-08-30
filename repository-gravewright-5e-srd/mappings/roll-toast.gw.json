@@ -1,0 +1,51 @@
+{
+  "check": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "save": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "attack": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "death-save": {
+    "title": "@actor.name",
+    "subtitle": "@action.label",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "weapon-attack": {
+    "title": "@action.label",
+    "subtitleKey": "dnd5e.ui.ataque",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "weapon-damage": {
+    "title": "@action.label",
+    "subtitleKey": "dnd5e.ui.dano",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  },
+  "spell-damage": {
+    "title": "@action.label",
+    "subtitleKey": "dnd5e.ui.dano.de.magia",
+    "formula": "@roll.formula",
+    "total": "@roll.total",
+    "kind": "@roll.kind"
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "kind": "itemSheet",
+  "system": "savage-worlds",
+  "id": "savage-worlds-hindrance",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "item",
+    "labelKey": "savage-worlds.ui.hindrance",
+    "children": [
+      {
+        "type": "grid",
+        "columns": 2,
+        "variant": "identity",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "savage-worlds.ui.nome",
+            "variant": "name"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.severity",
+            "options": [
+              {
+                "value": "minor",
+                "labelKey": "savage-worlds.ui.menor"
+              },
+              {
+                "value": "major",
+                "labelKey": "savage-worlds.ui.maior"
+              }
+            ],
+            "labelKey": "savage-worlds.ui.gravidade"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "variant": "mechanics",
+        "labelKey": "savage-worlds.ui.resumo",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 1,
+            "variant": "mechanics",
+            "children": [
+              {
+                "type": "textField",
+                "path": "sheet.summary",
+                "labelKey": "savage-worlds.ui.resumo",
+                "variant": "wide"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "variant": "notes",
+        "labelKey": "savage-worlds.ui.descricao"
+      }
+    ]
+  }
+}

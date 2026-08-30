@@ -1,0 +1,124 @@
+{
+  "$comment": "A face do cartão só mostra resultado: total, se passou, quantos aumentos e o que os dados deram. A notação e a expressão montada ficam atrás do detalhe recolhido — é lá que se confere qual dado explodiu e qual deu 1.",
+  "cards": {
+    "trait": {
+      "titleTemplateKey": "savage-worlds.roll.item.test",
+      "titleTemplateArgs": {
+        "name": "@item.name"
+      },
+      "subtitle": "@actor.name",
+      "accent": "#a3232b",
+      "outcome": {
+        "target": 4,
+        "step": 4
+      },
+      "statusKeys": {
+        "success": "savage-worlds.roll.success",
+        "failure": "savage-worlds.roll.failure",
+        "criticalFailure": "savage-worlds.roll.critical.failure"
+      },
+      "lines": [
+        {
+          "labelKey": "savage-worlds.ui.aumentos",
+          "value": "@outcome.steps"
+        },
+        {
+          "labelKey": "savage-worlds.roll.primary.die",
+          "value": "@roll.groupResults.0"
+        },
+        {
+          "labelKey": "savage-worlds.ui.wild.die",
+          "value": "@roll.groupResults.1"
+        }
+      ]
+    },
+    "attack": {
+      "titleKey": "savage-worlds.ui.ataque",
+      "subtitle": "@actor.name",
+      "accent": "#7d1a20",
+      "outcome": {
+        "target": 4,
+        "step": 4
+      },
+      "statusKeys": {
+        "success": "savage-worlds.roll.success",
+        "failure": "savage-worlds.roll.failure",
+        "criticalFailure": "savage-worlds.roll.critical.failure"
+      },
+      "lines": [
+        {
+          "labelKey": "savage-worlds.ui.cadencia.usada",
+          "value": "@metadata.pool.count"
+        },
+        {
+          "labelKey": "savage-worlds.ui.alvos.declarados",
+          "value": "@metadata.pool.targetSummary"
+        },
+        {
+          "labelKey": "savage-worlds.ui.acertos",
+          "value": "@metadata.pool.hits"
+        },
+        {
+          "labelKey": "savage-worlds.ui.aumentos",
+          "value": "@metadata.pool.raises"
+        },
+        {
+          "labelKey": "savage-worlds.roll.primary.die",
+          "value": "@metadata.pool.trait"
+        },
+        {
+          "labelKey": "savage-worlds.ui.wild.die",
+          "value": "@metadata.pool.wild"
+        }
+      ]
+    },
+    "damage": {
+      "$comment": "Dano não tem alvo fixo: mede-se contra a Resistência de quem levou, que o cartão não conhece. Sem `outcome`, então — inventar um 4 aqui seria mentira.",
+      "titleKey": "savage-worlds.ui.dano",
+      "subtitle": "@actor.name",
+      "accent": "#5a1216",
+      "lines": [
+        {
+          "labelKey": "savage-worlds.ui.dados",
+          "value": "@roll.results"
+        }
+      ]
+    },
+    "item": {
+      "$comment": "Cartão sem dado: o nome do item, o resumo e a descrição. É o que a mesa leria em voz alta.",
+      "title": "@item.name",
+      "subtitle": "@actor.name",
+      "accent": "#176b72",
+      "lines": [
+        {
+          "labelKey": "savage-worlds.ui.descricao",
+          "value": "@item.descriptionText"
+        },
+        {
+          "labelKey": "savage-worlds.ui.resumo",
+          "value": "@item.data.summary"
+        },
+        {
+          "labelKey": "savage-worlds.ui.requisitos",
+          "value": "@item.data.requirements"
+        },
+        {
+          "labelKey": "savage-worlds.ui.protecao",
+          "value": "@item.data.armor"
+        },
+        {
+          "labelKey": "savage-worlds.ui.alcance",
+          "value": "@item.data.range"
+        },
+        {
+          "labelKey": "savage-worlds.ui.duracao",
+          "value": "@item.data.duration"
+        },
+        {
+          "labelKey": "savage-worlds.ui.manifestacao",
+          "value": "@item.data.trapping"
+        }
+      ]
+    }
+  }
+}

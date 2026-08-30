@@ -1,0 +1,186 @@
+{
+  "type": "object",
+  "description": "Um schema para todo item: cada tipo usa o subconjunto que lhe cabe.",
+  "properties": {
+    "key": {
+      "type": "string",
+      "default": ""
+    },
+    "description": {
+      "type": "object",
+      "default": {}
+    },
+    "summary": {
+      "type": "string",
+      "default": ""
+    },
+    "attribute": {
+      "type": "string",
+      "default": "agility",
+      "enum": [
+        "agility",
+        "smarts",
+        "spirit",
+        "strength",
+        "vigor"
+      ]
+    },
+    "die": {
+      "type": "object",
+      "properties": {
+        "sides": {
+          "type": "number",
+          "default": 4,
+          "enum": [
+            4,
+            6,
+            8,
+            10,
+            12
+          ]
+        },
+        "modifier": {
+          "type": "number",
+          "default": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "isCore": {
+      "type": "boolean",
+      "default": false
+    },
+    "specialization": {
+      "type": "string",
+      "default": ""
+    },
+    "damage": {
+      "type": "string",
+      "default": ""
+    },
+    "skill": {
+      "type": "string",
+      "default": ""
+    },
+    "ap": {
+      "type": "number",
+      "default": 0,
+      "minimum": 0
+    },
+    "rof": {
+      "type": "number",
+      "default": 1,
+      "minimum": 1
+    },
+    "ammo": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "number", "default": 0, "minimum": 0 },
+        "max": { "type": "number", "default": 0, "minimum": 0 },
+        "reloadActions": { "type": "number", "default": 1, "minimum": 1 }
+      },
+      "additionalProperties": false,
+      "default": { "value": 0, "max": 0, "reloadActions": 1 }
+    },
+    "range": {
+      "type": "string",
+      "default": ""
+    },
+    "reach": {
+      "type": "number",
+      "default": 0
+    },
+    "twoHanded": {
+      "type": "boolean",
+      "default": false
+    },
+    "minStrength": {
+      "type": "number",
+      "default": 4,
+      "enum": [
+        4,
+        6,
+        8,
+        10,
+        12
+      ]
+    },
+    "armor": {
+      "type": "number",
+      "default": 0
+    },
+    "parryBonus": {
+      "type": "number",
+      "default": 0
+    },
+    "coverBonus": {
+      "type": "number",
+      "default": 0
+    },
+    "locations": {
+      "type": "string",
+      "default": "torso"
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1,
+      "minimum": 0
+    },
+    "weight": {
+      "type": "number",
+      "default": 0,
+      "minimum": 0
+    },
+    "cost": {
+      "type": "number",
+      "default": 0,
+      "minimum": 0
+    },
+    "equipped": {
+      "type": "boolean",
+      "default": false
+    },
+    "requirements": {
+      "type": "string",
+      "default": ""
+    },
+    "rank": {
+      "type": "string",
+      "default": "novice",
+      "enum": [
+        "novice",
+        "seasoned",
+        "veteran",
+        "heroic",
+        "legendary"
+      ]
+    },
+    "severity": {
+      "type": "string",
+      "default": "minor",
+      "enum": [
+        "minor",
+        "major"
+      ]
+    },
+    "powerPoints": {
+      "type": "number",
+      "default": 1,
+      "minimum": 0
+    },
+    "duration": {
+      "type": "string",
+      "default": ""
+    },
+    "trapping": {
+      "type": "string",
+      "default": ""
+    },
+    "addStrength": {
+      "type": "boolean",
+      "default": false,
+      "description": "Arma corpo a corpo: o dano soma o dado de Força de quem empunha. É propriedade da arma, não escolha do golpe."
+    }
+  },
+  "additionalProperties": false
+}

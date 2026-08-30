@@ -1,0 +1,2908 @@
+/* Savage Worlds Compatibility Package for Gravewright — the look.
+ *
+ * Built entirely out of colour, type and geometry. No image files: every
+ * texture here is a gradient, a shadow or a border, so the sheet weighs a few
+ * kilobytes, survives any zoom, and asks the server for nothing.
+ *
+ * Everything is scoped under the system's own root classes, so a table running
+ * a different ruleset never sees a byte of this.
+ */
+
+.actor-sheet--savage-worlds,
+.item-sheet--savage-worlds {
+    /* Pulp paperback: oxblood and brass on near-black. */
+    --sw-ink: #f4ece2;
+    --sw-ink-soft: #c3b3a2;
+    --sw-ink-faint: #8b7c6d;
+    --sw-bg: #131114;
+    --sw-panel: #1c191d;
+    --sw-panel-raised: #241f25;
+    --sw-line: #3a3138;
+    --sw-red: #a3232b;
+    --sw-red-bright: #d8434a;
+    --sw-brass: #d8a24a;
+    --sw-brass-soft: #b0803a;
+    --sw-good: #4f8a63;
+
+    --sw-radius: 10px;
+    --sw-radius-sm: 6px;
+    /* One depth recipe, reused, so the whole sheet reads as a single object. */
+    --sw-lift: 0 1px 0 rgba(255, 255, 255, 0.055) inset, 0 8px 20px rgba(0, 0, 0, 0.45);
+
+    color: var(--sw-ink);
+    background:
+        radial-gradient(130% 90% at 50% -15%, rgba(163, 35, 43, 0.2), transparent 62%),
+        linear-gradient(180deg, #191519, var(--sw-bg));
+}
+
+/* ---- section headings -------------------------------------------------- */
+
+.actor-sheet--savage-worlds .actor-section-title,
+.item-sheet--savage-worlds .actor-section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 10px;
+    color: var(--sw-brass);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+/* The rule trailing each heading — the cheapest way to look stamped. */
+.actor-sheet--savage-worlds .actor-section-title::after,
+.item-sheet--savage-worlds .actor-section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--sw-brass-soft), transparent);
+    opacity: 0.5;
+}
+
+.actor-sheet--savage-worlds .actor-section {
+    margin-bottom: 16px;
+}
+
+/* ---- the page ---------------------------------------------------------- */
+/* The sheet is a header, a tab strip and a tab body — the body is where the
+ * two-column work happens. Nothing here stacks when it does not have to. */
+
+.actor-sheet--savage-worlds .actor-column--sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+}
+
+/* ---- header ------------------------------------------------------------ */
+/* Name and rank sit above the tabs, so they never scroll away. */
+
+.actor-sheet--savage-worlds .actor-section--header {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--sw-line);
+    border-left: 3px solid var(--sw-red);
+    border-radius: var(--sw-radius);
+    background: linear-gradient(90deg, rgba(163, 35, 43, 0.16), transparent 65%), var(--sw-panel);
+}
+
+.actor-sheet--savage-worlds .actor-grid--header {
+    display: grid;
+    /* Wide enough for six fields, but it folds rather than squeezing them. */
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px 14px;
+}
+
+.actor-sheet--savage-worlds .actor-grid--header label,
+.actor-sheet--savage-worlds .actor-grid--header .actor-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+/* ---- the summary body -------------------------------------------------- */
+/* A status strip across the top, then two columns: what you are on the left,
+ * what you can do on the right. */
+
+.actor-sheet--savage-worlds .actor-section--status-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    align-items: stretch;
+    margin-bottom: 12px;
+}
+
+/* The conditions block is the wide one in the strip: let it take the slack. */
+.actor-sheet--savage-worlds .actor-section--status-strip .actor-section--conditions {
+    grid-column: span 2;
+    margin: 0;
+    align-content: flex-start;
+}
+
+.actor-sheet--savage-worlds .actor-grid--summary,
+.actor-sheet--savage-worlds .actor-grid--inventory,
+.actor-sheet--savage-worlds .actor-grid--edges {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.actor-sheet--savage-worlds .actor-column--left,
+.actor-sheet--savage-worlds .actor-column--right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+/* A narrow window is a single column — better one honest column than two
+ * squeezed ones. */
+@container (max-width: 700px) {
+    .actor-sheet--savage-worlds .actor-grid--summary,
+    .actor-sheet--savage-worlds .actor-grid--inventory,
+    .actor-sheet--savage-worlds .actor-grid--edges {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 720px) {
+    .actor-sheet--savage-worlds .actor-grid--summary,
+    .actor-sheet--savage-worlds .actor-grid--inventory,
+    .actor-sheet--savage-worlds .actor-grid--edges {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* ---- trait dice -------------------------------------------------------- */
+/* A trait is a die, so the card shows the die. Nothing here pretends the
+ * number is a score you add. */
+
+.actor-sheet--savage-worlds .actor-section--traits {
+    display: grid;
+    /* Five dice, one row, down to a fairly narrow column. */
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+@media (max-width: 560px) {
+    .actor-sheet--savage-worlds .actor-section--traits {
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+    }
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 15px 8px 11px;
+    overflow: hidden;
+    border: 1px solid var(--sw-line);
+    border-radius: var(--sw-radius);
+    background: linear-gradient(180deg, var(--sw-panel-raised), var(--sw-panel));
+    box-shadow: var(--sw-lift);
+    cursor: pointer;
+    transition: transform 130ms ease, border-color 130ms ease;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--sw-red), transparent);
+    opacity: 0.6;
+    transition: opacity 130ms ease;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade:hover {
+    transform: translateY(-2px);
+    border-color: var(--sw-red);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade:hover::before {
+    opacity: 1;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-abbr {
+    color: var(--sw-ink-faint);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-score,
+.actor-sheet--savage-worlds .actor-ability-card--swade input[type="number"] {
+    width: 100%;
+    border: 0;
+    background: none;
+    color: var(--sw-ink);
+    font-size: 2rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 300;
+    line-height: 1.05;
+    text-align: center;
+}
+
+/* The "d" that turns a number into a die — drawn, not typed, so the input
+ * still holds a plain number the server can validate. */
+.actor-sheet--savage-worlds .actor-ability-card--swade::after {
+    content: "d";
+    position: absolute;
+    top: 26px;
+    left: 50%;
+    transform: translateX(-2.05em);
+    color: var(--sw-red-bright);
+    font-size: 0.95rem;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-mod {
+    padding: 1px 9px;
+    border: 1px solid var(--sw-line);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--sw-brass);
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-label {
+    color: var(--sw-ink-soft);
+    font-size: 0.68rem;
+}
+
+/* ---- derived numbers --------------------------------------------------- */
+/* Parry, Toughness and Pace sit on the first tab so a fight never needs a
+ * tab change. */
+
+.actor-sheet--savage-worlds .actor-section--derived {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+@media (max-width: 560px) {
+    .actor-sheet--savage-worlds .actor-section--derived {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 11px 10px;
+    border: 1px solid var(--sw-line);
+    border-radius: var(--sw-radius);
+    background:
+        radial-gradient(90% 60% at 50% 0%, rgba(216, 162, 74, 0.1), transparent 70%),
+        linear-gradient(180deg, var(--sw-panel-raised), var(--sw-panel));
+    box-shadow: var(--sw-lift);
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-icon {
+    color: var(--sw-brass-soft);
+    font-size: 15px;
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-value {
+    border: 0;
+    background: none;
+    color: var(--sw-ink);
+    font-size: 1.6rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 300;
+    text-align: center;
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-label,
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-abbr {
+    color: var(--sw-ink-faint);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+/* ---- wound and fatigue boxes ------------------------------------------- */
+/* Ticked boxes, the way the table actually reads them. */
+
+.actor-sheet--savage-worlds .actor-field--check-track {
+    padding: 10px 12px;
+    border: 1px solid var(--sw-line);
+    border-radius: var(--sw-radius);
+    background: linear-gradient(180deg, var(--sw-panel-raised), var(--sw-panel));
+    box-shadow: var(--sw-lift);
+}
+
+.actor-sheet--savage-worlds .actor-field--check-track .actor-field-label {
+    color: var(--sw-ink-faint);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.actor-sheet--savage-worlds .actor-check-track {
+    justify-content: flex-start;
+}
+
+.actor-sheet--savage-worlds .actor-check-track__box {
+    width: 30px;
+    height: 30px;
+    border-color: var(--sw-line);
+    border-radius: var(--sw-radius-sm);
+    background: rgba(0, 0, 0, 0.42);
+}
+
+/* Wounds fill oxblood; fatigue fills brass — different costs, different ink. */
+.actor-sheet--savage-worlds .actor-field--wounds .actor-check-track__box:has(input:checked) {
+    border-color: var(--sw-red);
+    background: rgba(163, 35, 43, 0.42);
+    color: #f6c3c0;
+}
+
+.actor-sheet--savage-worlds .actor-field--fatigue .actor-check-track__box:has(input:checked) {
+    border-color: var(--sw-brass-soft);
+    background: rgba(216, 162, 74, 0.3);
+    color: #f6e2bb;
+}
+
+/* ---- bennies and power points ------------------------------------------ */
+
+.actor-sheet--savage-worlds .actor-resource-box--swade {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 1px solid var(--sw-brass-soft);
+    border-radius: var(--sw-radius);
+    background:
+        linear-gradient(90deg, rgba(216, 162, 74, 0.16), transparent 65%),
+        var(--sw-panel);
+    box-shadow: var(--sw-lift);
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade .actor-resource-label {
+    color: var(--sw-brass);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade input {
+    border: 0;
+    background: none;
+    color: var(--sw-ink);
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 300;
+}
+
+/* ---- conditions -------------------------------------------------------- */
+/* Chips, not tickboxes: a lit chip reads across the table. */
+
+.actor-sheet--savage-worlds .actor-section--conditions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid var(--sw-line);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.26);
+    color: var(--sw-ink-faint);
+    cursor: pointer;
+    font-size: 0.74rem;
+    transition: color 130ms ease, border-color 130ms ease, background 130ms ease;
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label:hover {
+    border-color: var(--sw-ink-faint);
+    color: var(--sw-ink-soft);
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label:has(input:checked) {
+    border-color: var(--sw-red);
+    background: rgba(163, 35, 43, 0.26);
+    color: #f2b4b1;
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions input {
+    accent-color: var(--sw-red);
+}
+
+/* ---- quick rolls ------------------------------------------------------- */
+
+.actor-sheet--savage-worlds .actor-section--quick-rolls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.actor-sheet--savage-worlds .actor-roll-button {
+    padding: 8px 14px;
+    border: 1px solid rgba(163, 35, 43, 0.55);
+    border-radius: var(--sw-radius-sm);
+    background: linear-gradient(180deg, rgba(163, 35, 43, 0.22), rgba(163, 35, 43, 0.08));
+    color: #f0c0bd;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.actor-sheet--savage-worlds .actor-roll-button:hover {
+    border-color: var(--sw-red-bright);
+    color: #ffdedb;
+}
+
+/* ---- item lists -------------------------------------------------------- */
+
+.actor-sheet--savage-worlds .actor-itemlist {
+    margin-bottom: 0;
+    border: 1px solid var(--sw-line);
+    border-radius: var(--sw-radius);
+    background: rgba(0, 0, 0, 0.22);
+    overflow: hidden;
+}
+
+.actor-sheet--savage-worlds .actor-itemlist-title {
+    margin: 0;
+    padding: 9px 12px;
+    background: linear-gradient(90deg, rgba(163, 35, 43, 0.16), transparent);
+    color: var(--sw-brass);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.actor-sheet--savage-worlds .actor-item-row,
+.actor-sheet--savage-worlds .actor-item-row-list > * {
+    border-top: 1px solid var(--sw-line);
+    transition: background 130ms ease;
+}
+
+.actor-sheet--savage-worlds .actor-item-row:hover,
+.actor-sheet--savage-worlds .actor-item-row-list > *:hover {
+    background: rgba(163, 35, 43, 0.1);
+}
+
+/* ---- tabs -------------------------------------------------------------- */
+
+.actor-sheet--savage-worlds .actor-tabs {
+    gap: 2px;
+    border-bottom: 1px solid var(--sw-line);
+}
+
+.actor-sheet--savage-worlds .actor-tab {
+    position: relative;
+    border: 0;
+    border-radius: var(--sw-radius-sm) var(--sw-radius-sm) 0 0;
+    background: none;
+    color: var(--sw-ink-faint);
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+}
+
+.actor-sheet--savage-worlds .actor-tab:hover {
+    color: var(--sw-ink-soft);
+}
+
+.actor-sheet--savage-worlds .actor-tab.is-active {
+    background: rgba(163, 35, 43, 0.14);
+    color: #f0c0bd;
+}
+
+/* Sits on the shared border, not below it. */
+.actor-sheet--savage-worlds .actor-tab.is-active::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 2px;
+    background: var(--sw-red);
+}
+
+/* ---- inputs ------------------------------------------------------------ */
+
+.actor-sheet--savage-worlds input[type="text"],
+.actor-sheet--savage-worlds input[type="number"],
+.actor-sheet--savage-worlds select,
+.actor-sheet--savage-worlds textarea,
+.item-sheet--savage-worlds input[type="text"],
+.item-sheet--savage-worlds input[type="number"],
+.item-sheet--savage-worlds select,
+.item-sheet--savage-worlds textarea {
+    border: 1px solid var(--sw-line);
+    border-radius: var(--sw-radius-sm);
+    background: rgba(0, 0, 0, 0.32);
+    color: var(--sw-ink);
+}
+
+.actor-sheet--savage-worlds input:focus,
+.actor-sheet--savage-worlds select:focus,
+.actor-sheet--savage-worlds textarea:focus,
+.item-sheet--savage-worlds input:focus,
+.item-sheet--savage-worlds select:focus,
+.item-sheet--savage-worlds textarea:focus {
+    border-color: var(--sw-brass);
+    outline: none;
+}
+
+.actor-sheet--savage-worlds .actor-field-label,
+.item-sheet--savage-worlds .actor-field-label {
+    color: var(--sw-ink-faint);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+.actor-sheet--savage-worlds button,
+.item-sheet--savage-worlds button {
+    border: 1px solid var(--sw-line);
+    border-radius: var(--sw-radius-sm);
+    background: linear-gradient(180deg, var(--sw-panel-raised), var(--sw-panel));
+    color: var(--sw-ink-soft);
+    cursor: pointer;
+    font-size: 0.74rem;
+    transition: color 130ms ease, border-color 130ms ease, transform 90ms ease;
+}
+
+.actor-sheet--savage-worlds button:hover,
+.item-sheet--savage-worlds button:hover {
+    border-color: var(--sw-brass);
+    color: var(--sw-brass);
+}
+
+.actor-sheet--savage-worlds button:active,
+.item-sheet--savage-worlds button:active {
+    transform: translateY(1px);
+}
+
+/* ---- item sheets ------------------------------------------------------- */
+
+.item-sheet--savage-worlds {
+    padding: 16px;
+}
+
+.item-sheet--savage-worlds .actor-grid--item {
+    display: grid;
+    grid-template-columns: repeat(var(--gw-grid-columns, 2), minmax(0, 1fr));
+    gap: 10px 14px;
+}
+
+.item-sheet--savage-worlds .actor-section--item {
+    padding: 14px;
+    border: 1px solid var(--sw-line);
+    border-left: 3px solid var(--sw-red);
+    border-radius: var(--sw-radius);
+    background: var(--sw-panel);
+}
+
+.actor-sheet--savage-worlds .actor-divider,
+.item-sheet--savage-worlds .actor-divider {
+    height: 1px;
+    margin: 14px 0;
+    border: 0;
+    background: linear-gradient(90deg, transparent, var(--sw-line), transparent);
+}
+
+/* ---- respect the reader ------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+    .actor-sheet--savage-worlds *,
+    .item-sheet--savage-worlds * {
+        transition: none !important;
+    }
+}
+
+/* ========================================================================
+ * FIELD DOSSIER — v1.1
+ *
+ * A clean, original visual system informed by SWADE's information hierarchy:
+ * identity first, vitals always close, traits as the primary controls and
+ * compact equipment records. It deliberately does not reproduce SWADE art,
+ * ornament or component shapes.
+ * ===================================================================== */
+
+.actor-sheet--savage-worlds,
+.item-sheet--savage-worlds {
+    --sw-paper: #e9e5da;
+    --sw-paper-deep: #d8d1c1;
+    --sw-paper-bright: #f7f3e9;
+    --sw-navy: #102c35;
+    --sw-navy-soft: #1d4650;
+    --sw-teal: #176b72;
+    --sw-teal-bright: #208c91;
+    --sw-copper: #b36a3c;
+    --sw-alert: #a63834;
+    --sw-graphite: #263336;
+    --sw-muted: #677376;
+    --sw-hairline: rgba(16, 44, 53, 0.18);
+    --sw-shadow: 0 16px 36px rgba(8, 25, 30, 0.18);
+    --sw-radius: 4px;
+    --sw-radius-sm: 2px;
+
+    color: var(--sw-graphite);
+    background:
+        linear-gradient(90deg, transparent 0 49px, rgba(166, 56, 52, 0.09) 49px 50px, transparent 50px),
+        repeating-linear-gradient(0deg, rgba(16, 44, 53, 0.026) 0 1px, transparent 1px 28px),
+        var(--sw-paper);
+    font-family: Inter, "Segoe UI", sans-serif;
+}
+
+/* The host header becomes the dossier cover: portrait, callsign and token. */
+.actor-sheet--savage-worlds .actor-sheet-header {
+    position: relative;
+    min-height: 132px;
+    padding: 18px 22px 16px;
+    border: 0;
+    border-bottom: 5px solid var(--sw-teal);
+    background:
+        linear-gradient(120deg, transparent 0 68%, rgba(255, 255, 255, 0.04) 68% 69%, transparent 69%),
+        var(--sw-navy);
+    color: var(--sw-paper-bright);
+    box-shadow: 0 8px 20px rgba(8, 25, 30, 0.2);
+}
+
+.actor-sheet--savage-worlds .actor-sheet-header::after {
+    content: "DOSSIÊ DE CAMPO  •  SAVAGE WORLDS";
+    position: absolute;
+    right: 22px;
+    bottom: 12px;
+    color: rgba(233, 229, 218, 0.5);
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+}
+
+.actor-sheet--savage-worlds .ash-frame {
+    border: 2px solid rgba(233, 229, 218, 0.34);
+    border-radius: 2px;
+    background: #091e25;
+    box-shadow: 7px 7px 0 var(--sw-copper);
+}
+
+.actor-sheet--savage-worlds .ash-frame--portrait {
+    width: 96px;
+    height: 96px;
+}
+
+.actor-sheet--savage-worlds .ash-frame--token {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--sw-copper);
+}
+
+.actor-sheet--savage-worlds .ash-name-input {
+    height: auto;
+    padding: 0 0 5px;
+    border: 0;
+    border-bottom: 1px solid rgba(233, 229, 218, 0.3);
+    border-radius: 0;
+    background: transparent;
+    color: var(--sw-paper-bright);
+    font-family: "Roboto Slab", Georgia, serif;
+    font-size: clamp(1.55rem, 4vw, 2.35rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+}
+
+/* The declarative header supplies metadata; the duplicate name is hidden. */
+.actor-sheet--savage-worlds .actor-section--header {
+    margin: 14px 18px 0;
+    padding: 10px 12px 11px;
+    border: 1px solid var(--sw-hairline);
+    border-left: 4px solid var(--sw-copper);
+    border-radius: var(--sw-radius);
+    background: rgba(247, 243, 233, 0.62);
+    box-shadow: none;
+}
+
+.actor-sheet--savage-worlds .actor-section--header .actor-grid--header > .actor-field:first-child {
+    display: none;
+}
+
+.actor-sheet--savage-worlds .actor-grid--header {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px 18px;
+}
+
+.actor-sheet--savage-worlds .actor-column--sheet {
+    gap: 10px;
+}
+
+/* Tab rail: compact like a working tool, not decorative navigation. */
+.actor-sheet--savage-worlds .actor-tabs {
+    gap: 0;
+    border: 0;
+}
+
+.actor-sheet--savage-worlds .actor-tab-bar {
+    display: flex;
+    gap: 2px;
+    margin: 0 18px;
+    padding: 0;
+    border-bottom: 1px solid var(--sw-navy);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn {
+    min-width: 0;
+    padding: 10px 13px 9px;
+    border: 0;
+    border-radius: 3px 3px 0 0;
+    background: rgba(16, 44, 53, 0.08);
+    color: var(--sw-navy-soft);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn:hover {
+    background: rgba(23, 107, 114, 0.14);
+    color: var(--sw-teal);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn.is-active {
+    background: var(--sw-navy);
+    color: var(--sw-paper-bright);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn.is-active::after {
+    display: none;
+}
+
+.actor-sheet--savage-worlds .actor-tab-icon {
+    color: var(--sw-copper);
+}
+
+.actor-sheet--savage-worlds .actor-tab-panels {
+    padding: 16px 18px 20px;
+}
+
+/* Section language: numbered-report rules and restrained surface treatment. */
+.actor-sheet--savage-worlds .actor-section,
+.item-sheet--savage-worlds .actor-section {
+    margin-bottom: 14px;
+}
+
+.actor-sheet--savage-worlds .actor-section-title,
+.item-sheet--savage-worlds .actor-section-title {
+    gap: 9px;
+    margin: 0 0 9px;
+    color: var(--sw-navy);
+    font-size: 0.66rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+}
+
+.actor-sheet--savage-worlds .actor-section-title::before,
+.item-sheet--savage-worlds .actor-section-title::before {
+    content: "";
+    width: 18px;
+    height: 4px;
+    flex: 0 0 18px;
+    background: var(--sw-copper);
+}
+
+.actor-sheet--savage-worlds .actor-section-title::after,
+.item-sheet--savage-worlds .actor-section-title::after {
+    background: var(--sw-hairline);
+    opacity: 1;
+}
+
+.actor-sheet--savage-worlds .actor-grid--summary,
+.actor-sheet--savage-worlds .actor-grid--inventory,
+.actor-sheet--savage-worlds .actor-grid--edges {
+    grid-template-columns: minmax(280px, 0.88fr) minmax(340px, 1.12fr);
+    gap: 18px;
+}
+
+/* Vitals read as a single instrument strip. */
+.actor-sheet--savage-worlds .actor-section--status-strip {
+    grid-template-columns: minmax(150px, 0.7fr) minmax(150px, 0.7fr) minmax(280px, 2fr);
+    gap: 0;
+    margin: 0 0 18px;
+    border: 1px solid var(--sw-navy);
+    border-top: 4px solid var(--sw-navy);
+    background: rgba(247, 243, 233, 0.76);
+    box-shadow: 5px 5px 0 rgba(16, 44, 53, 0.09);
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip > * {
+    min-width: 0;
+    border: 0;
+    border-right: 1px solid var(--sw-hairline);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip > *:last-child {
+    border-right: 0;
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip .actor-section--conditions {
+    grid-column: auto;
+    padding: 10px 12px;
+}
+
+.actor-sheet--savage-worlds .actor-field--check-track {
+    padding: 10px 12px;
+    background: transparent;
+}
+
+.actor-sheet--savage-worlds .actor-check-track__box {
+    width: 27px;
+    height: 27px;
+    border: 1px solid var(--sw-hairline);
+    border-radius: 50%;
+    background: var(--sw-paper-bright);
+    color: var(--sw-muted);
+}
+
+.actor-sheet--savage-worlds .actor-field--wounds .actor-check-track__box:has(input:checked) {
+    border-color: var(--sw-alert);
+    background: var(--sw-alert);
+    color: white;
+}
+
+.actor-sheet--savage-worlds .actor-field--fatigue .actor-check-track__box:has(input:checked) {
+    border-color: var(--sw-copper);
+    background: var(--sw-copper);
+    color: white;
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label {
+    padding: 4px 9px;
+    border-color: var(--sw-hairline);
+    border-radius: 2px;
+    background: rgba(16, 44, 53, 0.045);
+    color: var(--sw-muted);
+    font-size: 0.67rem;
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label:has(input:checked) {
+    border-color: var(--sw-alert);
+    background: var(--sw-alert);
+    color: white;
+}
+
+/* Trait controls are the visual centre. The clipped corners hint at dice
+ * without imitating the official die artwork. */
+.actor-sheet--savage-worlds .actor-section--traits {
+    grid-template-columns: repeat(5, minmax(82px, 1fr));
+    gap: 7px;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade {
+    min-height: 118px;
+    justify-content: center;
+    padding: 13px 7px 10px;
+    border: 0;
+    border-radius: 0;
+    clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+    background: var(--sw-navy);
+    box-shadow: none;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade::before {
+    inset: 0 0 auto;
+    height: 4px;
+    background: var(--sw-copper);
+    opacity: 1;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade::after {
+    top: 51px;
+    left: calc(50% - 1.15em);
+    transform: none;
+    color: var(--sw-copper);
+    font-family: "Roboto Slab", Georgia, serif;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade:hover {
+    transform: translateY(-3px);
+    background: var(--sw-navy-soft);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-abbr {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: rgba(233, 229, 218, 0.5);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-label {
+    order: 3;
+    color: rgba(247, 243, 233, 0.76);
+    font-size: 0.64rem;
+    font-weight: 700;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-score {
+    order: 1;
+    color: var(--sw-paper-bright);
+    font-family: "Roboto Slab", Georgia, serif;
+    font-size: 2.15rem;
+    font-weight: 700;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-mod {
+    order: 2;
+    border-color: rgba(233, 229, 218, 0.2);
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--sw-copper);
+}
+
+/* Derived stats echo a gauge panel and remain distinct from editable traits. */
+.actor-sheet--savage-worlds .actor-section--derived {
+    gap: 7px;
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade {
+    min-height: 104px;
+    justify-content: center;
+    padding: 10px 7px;
+    border: 1px solid var(--sw-hairline);
+    border-bottom: 3px solid var(--sw-teal);
+    border-radius: var(--sw-radius);
+    background: rgba(247, 243, 233, 0.74);
+    box-shadow: none;
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-icon {
+    color: var(--sw-copper);
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-value {
+    color: var(--sw-navy);
+    font-family: "Roboto Slab", Georgia, serif;
+    font-weight: 800;
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-label,
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-abbr {
+    color: var(--sw-muted);
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade {
+    border: 1px solid var(--sw-teal);
+    border-left: 5px solid var(--sw-teal);
+    border-radius: var(--sw-radius);
+    background: rgba(247, 243, 233, 0.78);
+    box-shadow: none;
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade .actor-resource-box-label,
+.actor-sheet--savage-worlds .actor-resource-box--swade .actor-resource-label {
+    color: var(--sw-teal);
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade input {
+    color: var(--sw-navy);
+}
+
+/* Roll actions use a deliberate high-contrast affordance. */
+.actor-sheet--savage-worlds .actor-section--quick-rolls {
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+}
+
+.actor-sheet--savage-worlds .actor-roll-button,
+.actor-sheet--savage-worlds .actor-roll-btn {
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid var(--sw-teal);
+    border-radius: 2px;
+    background: var(--sw-teal);
+    color: white;
+    font-weight: 800;
+    letter-spacing: 0.045em;
+    box-shadow: 3px 3px 0 rgba(16, 44, 53, 0.16);
+}
+
+.actor-sheet--savage-worlds .actor-roll-button:hover,
+.actor-sheet--savage-worlds .actor-roll-btn:hover {
+    border-color: var(--sw-navy);
+    background: var(--sw-navy);
+    color: white;
+}
+
+/* Equipment records: clean ledger rows with actions revealed at the edge. */
+.actor-sheet--savage-worlds .actor-itemlist {
+    border: 1px solid var(--sw-hairline);
+    border-radius: var(--sw-radius);
+    background: rgba(247, 243, 233, 0.62);
+}
+
+.actor-sheet--savage-worlds .actor-itemlist-title {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--sw-navy);
+    background: transparent;
+    color: var(--sw-navy);
+    font-size: 0.68rem;
+}
+
+.actor-sheet--savage-worlds .actor-item-row,
+.actor-sheet--savage-worlds .actor-item-row-list > * {
+    border-color: var(--sw-hairline);
+}
+
+.actor-sheet--savage-worlds .actor-item-row:nth-child(even) {
+    background: rgba(16, 44, 53, 0.035);
+}
+
+.actor-sheet--savage-worlds .actor-item-row:hover,
+.actor-sheet--savage-worlds .actor-item-row-list > *:hover {
+    background: rgba(23, 107, 114, 0.1);
+}
+
+.actor-sheet--savage-worlds .actor-item-row-icon {
+    color: var(--sw-copper);
+}
+
+.actor-sheet--savage-worlds .actor-item-row-title {
+    color: var(--sw-navy);
+}
+
+.actor-sheet--savage-worlds .actor-item-action-btn {
+    border-color: var(--sw-hairline);
+    background: var(--sw-paper-bright);
+    color: var(--sw-teal);
+}
+
+/* Shared form treatment, including every item editor. */
+.actor-sheet--savage-worlds input[type="text"],
+.actor-sheet--savage-worlds input[type="number"],
+.actor-sheet--savage-worlds select,
+.actor-sheet--savage-worlds textarea,
+.item-sheet--savage-worlds input[type="text"],
+.item-sheet--savage-worlds input[type="number"],
+.item-sheet--savage-worlds select,
+.item-sheet--savage-worlds textarea {
+    border: 1px solid var(--sw-hairline);
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.48);
+    color: var(--sw-graphite);
+}
+
+.actor-sheet--savage-worlds input:focus,
+.actor-sheet--savage-worlds select:focus,
+.actor-sheet--savage-worlds textarea:focus,
+.item-sheet--savage-worlds input:focus,
+.item-sheet--savage-worlds select:focus,
+.item-sheet--savage-worlds textarea:focus {
+    border-color: var(--sw-teal);
+    box-shadow: 0 0 0 2px rgba(23, 107, 114, 0.14);
+}
+
+.actor-sheet--savage-worlds .actor-field-label,
+.item-sheet--savage-worlds .actor-field-label {
+    color: var(--sw-muted);
+    font-size: 0.58rem;
+    font-weight: 800;
+}
+
+.item-sheet--savage-worlds {
+    padding: 18px;
+}
+
+.item-sheet--savage-worlds .actor-section--item {
+    position: relative;
+    padding: 18px;
+    border: 1px solid var(--sw-navy);
+    border-top: 6px solid var(--sw-navy);
+    border-left: 1px solid var(--sw-navy);
+    border-radius: var(--sw-radius);
+    background: rgba(247, 243, 233, 0.7);
+    box-shadow: var(--sw-shadow);
+}
+
+.item-sheet--savage-worlds .actor-grid--item {
+    gap: 12px 16px;
+}
+
+.actor-sheet--savage-worlds .actor-divider,
+.item-sheet--savage-worlds .actor-divider {
+    background: var(--sw-hairline);
+}
+
+@container (max-width: 720px) {
+    .actor-sheet--savage-worlds .actor-grid--summary,
+    .actor-sheet--savage-worlds .actor-grid--inventory,
+    .actor-sheet--savage-worlds .actor-grid--edges {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .actor-sheet--savage-worlds .actor-section--status-strip {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .actor-sheet--savage-worlds .actor-section--status-strip .actor-section--conditions {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--sw-hairline);
+    }
+}
+
+@media (max-width: 620px) {
+    .actor-sheet--savage-worlds .actor-sheet-header {
+        min-height: 112px;
+        padding: 14px;
+    }
+
+    .actor-sheet--savage-worlds .actor-sheet-header::after {
+        display: none;
+    }
+
+    .actor-sheet--savage-worlds .ash-frame--portrait {
+        width: 76px;
+        height: 76px;
+    }
+
+    .actor-sheet--savage-worlds .actor-section--header,
+    .actor-sheet--savage-worlds .actor-tab-bar {
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+
+    .actor-sheet--savage-worlds .actor-tab-panels {
+        padding: 12px 10px 16px;
+    }
+
+    .actor-sheet--savage-worlds .actor-tab-label {
+        display: none;
+    }
+
+    .actor-sheet--savage-worlds .actor-tab-btn {
+        flex: 1;
+        padding-inline: 8px;
+    }
+
+    .actor-sheet--savage-worlds .actor-section--traits {
+        grid-template-columns: repeat(3, minmax(84px, 1fr));
+    }
+
+    .item-sheet--savage-worlds .actor-grid--item {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* HTML character sheet (sheets.html). This is intentionally independent from
+ * the declarative-sheet rules above, which still serve Extras and Vehicles. */
+.actor-sheet--savage-worlds:has(.sw-html-sheet) {
+    padding: 0;
+    color: #e7e4dc;
+    background: #111315;
+    container-type: inline-size;
+    container-name: swade-sheet;
+}
+
+.sw-html-sheet {
+    --sw-bg: #111315;
+    --sw-panel: #1a1d20;
+    --sw-raised: #22262a;
+    --sw-line: #3b4045;
+    --sw-gold: #c7a35a;
+    --sw-gold-hi: #e0bd72;
+    --sw-text: #e7e4dc;
+    --sw-muted: #9da1a3;
+    min-height: 100%;
+    padding: 12px;
+    color: var(--sw-text);
+    background: radial-gradient(100% 55% at 50% -15%, #292d30 0, transparent 65%), var(--sw-bg);
+    /* A ficha tem escala própria: 13px de base contra os 15px da página. Uma
+     * ficha é densa por natureza — dezenas de campos pequenos —, e herdar o
+     * corpo de texto do resto do app deixava tudo grosso demais. */
+    font: 13px/1.4 Inter, "Segoe UI", sans-serif;
+}
+
+.sw-html-sheet *, .sw-html-sheet *::before, .sw-html-sheet *::after { box-sizing: border-box; }
+.sw-html-sheet input, .sw-html-sheet select, .sw-html-sheet textarea, .sw-html-sheet button { font: inherit; }
+.sw-html-sheet input, .sw-html-sheet select, .sw-html-sheet textarea { width: 100%; border: 1px solid var(--sw-line); border-radius: 3px; background: #0b0d0e; color: var(--sw-text); color-scheme: dark; }
+.sw-html-sheet input, .sw-html-sheet select { min-height: 27px; padding: 4px 7px; font-size: 12px; }
+.sw-html-sheet textarea { min-height: 150px; padding: 9px; resize: vertical; }
+.sw-html-sheet label > span, .sw-html-sheet label { color: var(--sw-muted); font-size: 9.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+
+.sw-sheet-head { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 20px; align-items: center; padding: 16px 18px; border: 1px solid var(--sw-line); border-bottom: 3px solid var(--sw-gold); background: linear-gradient(135deg, #262a2d, #151719); }
+.sw-identity { min-width: 0; }
+
+/* `[class*="ash-frame"]` casava por substring: pegava ash-frame-img,
+ * ash-frame-placeholder e ash-frame-upload junto. O botão de enviar virava um
+ * disco do tamanho do quadro em cima da arte — era o borrão no retrato.
+ * O quadro é `.ash-frame`; o conteúdo dele tem tamanho próprio. */
+.sw-html-sheet .sw-image.sw-image--token > .ash-frame.ash-frame--token {
+    width: 180px !important;
+    height: 180px !important;
+    max-width: none;
+    max-height: none;
+    aspect-ratio: 1;
+    border: 1px solid var(--sw-gold);
+    border-radius: 8px !important;
+    background: #0b0d0e;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .55);
+    overflow: hidden;
+}
+
+/* Arte de personagem quase sempre tem o rosto no terço de cima; um recorte
+ * centralizado corta a cabeça e deixa o peito no meio do quadro. */
+.sw-html-sheet .sw-image > .ash-frame .ash-frame-img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.sw-html-sheet .sw-image > .ash-frame .ash-frame-placeholder { color: var(--sw-muted); font-size: 9px; letter-spacing: .1em; }
+.sw-html-sheet .sw-image > .ash-frame.is-empty { border-style: dashed; border-color: var(--sw-line); }
+
+/* O botão de enviar é uma marca no canto, não o quadro inteiro, e só aparece
+ * quando a pessoa vai usá-lo. */
+.sw-image > .ash-frame .ash-frame-upload {
+    right: 4px;
+    bottom: 4px;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--sw-line);
+    border-radius: 4px;
+    background: rgba(11, 13, 14, .88);
+    color: var(--sw-gold-hi);
+    font-size: 11px;
+    opacity: 0;
+    transition: opacity 120ms ease;
+}
+
+.sw-image > .ash-frame:hover .ash-frame-upload,
+.sw-image > .ash-frame:focus-within .ash-frame-upload { opacity: 1; }
+.sw-name { height: 34px; margin-bottom: 6px; border: 0 !important; border-bottom: 1px solid var(--sw-gold) !important; border-radius: 0 !important; background: transparent !important; font: 700 21px Georgia, serif !important; }
+.sw-meta { display: grid; grid-template-columns: 1fr 1fr 118px 74px; gap: 7px; }
+.sw-meta label { display: grid; gap: 2px; }
+
+.sw-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 2px; margin-top: 9px; border-bottom: 1px solid var(--sw-gold); }
+.sw-tabs button { min-width: 0; padding: 7px 5px; overflow: hidden; border: 1px solid var(--sw-line); border-bottom: 0; background: #202326; color: var(--sw-muted); font-size: 10px; font-weight: 700; letter-spacing: .06em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.sw-tabs button.is-active { border-color: var(--sw-gold); background: #302d27; color: var(--sw-gold-hi); box-shadow: inset 0 2px var(--sw-gold); }
+.sw-panel { padding-top: 10px; }
+.sw-panel[data-tab-panel] { min-height: 430px; }
+
+/* Ferimentos e Fadiga são trilhas curtas: pedem a largura dos próprios pips e
+ * nada mais. O espaço que sobra vai para os derivados, que são o que a mesa
+ * consulta o tempo todo. */
+.sw-vitals { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: stretch; }
+.sw-vitals--primary { margin-top: 8px; }
+.sw-sheet-head .sw-vitals--primary { grid-template-columns: auto minmax(0, 1fr) auto; }
+
+/* Ferimentos e Fadiga são a mesma coisa — o que o personagem já gastou — e
+ * ocupavam duas caixas inteiras para mostrar cinco bolinhas. Uma caixa, duas
+ * linhas: o rótulo à esquerda e a trilha à direita. */
+.sw-track { display: grid; align-content: start; gap: 4px; }
+.sw-track-row { display: grid; grid-template-columns: 62px auto; gap: 8px; align-items: center; }
+.sw-track-row > span { color: var(--sw-muted); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.sw-conditions-trigger { display: flex; gap: 6px; align-items: center; justify-content: center; min-height: 27px; margin-top: 3px; border: 1px solid var(--sw-gold); border-radius: 4px; background: #302d27; color: var(--sw-gold-hi); font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.sw-track-actions { display: grid; grid-template-columns: minmax(0, 1fr) 29px 29px; gap: 4px; }
+.sw-track-actions .sw-conditions-trigger { margin-top: 3px; }
+.sw-natural-healing { display: grid; min-height: 27px; margin-top: 3px; place-items: center; border: 1px solid var(--sw-line); border-radius: 4px; background: var(--sw-raised); color: var(--sw-gold-hi); }
+.sw-natural-healing:hover { border-color: var(--sw-gold); }
+.sw-fatigue-recovery { display: grid; min-height: 27px; margin-top: 3px; place-items: center; border: 1px solid var(--sw-line); border-radius: 4px; background: var(--sw-raised); color: var(--sw-gold-hi); }
+.sw-fatigue-recovery:hover:not(:disabled) { border-color: var(--sw-gold); }
+.sw-fatigue-recovery:disabled { opacity: .35; }
+.sw-pip--incapacitated { border-color: #8e3036; }
+.sw-pip--incapacitated.is-on { background: #a3232b; box-shadow: 0 0 0 2px rgba(163,35,43,.18); }
+.sw-conditions-trigger:hover { background: rgba(199, 163, 90, .18); }
+.sw-conditions-trigger i { font-size: 13px; }
+.sw-vitals fieldset, .sw-card, .sw-conditions { min-width: 0; margin: 0; padding: 9px; border: 1px solid var(--sw-line); border-radius: 5px; background: var(--sw-panel); }
+.sw-vitals legend, .sw-card h2, .sw-conditions legend { margin: 0; padding: 0 6px; color: var(--sw-gold-hi); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.sw-counter { display: flex; gap: 6px; align-items: end; }
+.sw-counter label { display: grid; gap: 2px; }
+.sw-counter input { width: 46px; text-align: center; }
+.sw-counter strong, .sw-counter > span { padding-bottom: 7px; color: var(--sw-muted); }
+.sw-bennies { display: grid; align-content: center; min-width: 126px !important; }
+.sw-bennies-control { display: grid; grid-template-columns: 25px 52px 25px; grid-template-rows: 52px auto; gap: 5px 4px; align-items: center; justify-content: center; }
+.sw-bennies-control > button { width: 25px; height: 25px; padding: 0; border: 1px solid var(--sw-line); border-radius: 50%; background: #0b0d0e; color: var(--sw-gold-hi); font-size: 17px; line-height: 1; }
+.sw-bennies-control > button:hover { border-color: var(--sw-gold); background: rgba(199, 163, 90, .14); }
+.sw-bennies-coin { position: relative; display: grid !important; width: 52px; height: 52px; place-items: center; overflow: hidden; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 28%, #49391f, #17130d 72%); box-shadow: 0 2px 8px rgba(0, 0, 0, .45); }
+.sw-bennies-coin.has-custom-image { background-position: center; background-size: cover; }
+.sw-bennies-coin.has-custom-image i { opacity: 0; }
+.sw-bennies-coin i { position: absolute; color: rgba(224, 189, 114, .2); font-size: 39px; }
+.sw-bennies-values { grid-column: 1 / -1; display: flex; gap: 5px; align-items: end; justify-content: center; }
+.sw-bennies-values label { display: grid; gap: 1px; }
+.sw-bennies-values label > span { color: var(--sw-muted); font-size: 7px; text-align: center; }
+.sw-bennies-values > span { padding-bottom: 4px; color: var(--sw-muted); }
+.sw-bennies-values input { width: 38px !important; min-height: 22px !important; padding: 1px 4px !important; border-style: dashed !important; background: #111315 !important; color: var(--sw-text) !important; font-size: 10px !important; text-align: center; appearance: textfield; cursor: default; }
+.sw-bennies-values input::-webkit-inner-spin-button, .sw-bennies-values input::-webkit-outer-spin-button { margin: 0; appearance: none; }
+
+/* Trilhas de Ferimentos e Fadiga: a escala inteira cabe na tela, então ela é
+ * clicável em vez de digitável. */
+.sw-pips { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; padding-top: 3px; }
+.sw-pip { width: 23px; height: 23px; flex: none; padding: 0; border: 1px solid var(--sw-line); border-radius: 50%; background: #0b0d0e; cursor: pointer; transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease; }
+.sw-pip:hover { border-color: var(--sw-gold); }
+.sw-pip.is-on { border-color: var(--sw-ruby, #a3232b); background: radial-gradient(circle at 35% 30%, #d8434a, #7d1a20); box-shadow: 0 0 8px rgba(163, 35, 43, .45); }
+.sw-pips[data-sw-full="1"] .sw-pip.is-on { box-shadow: 0 0 10px rgba(216, 67, 74, .7); }
+.sw-pip-over { color: #d8434a; font-size: 11px; font-weight: 800; }
+
+/* A penalidade não ocupa espaço na tela: ela já entra descontada em toda
+ * rolagem, então mostrá-la era repetir o que a fórmula faz sozinha. Continua
+ * no DOM como campo oculto. */
+
+/* Condições: uma faixa de pastilhas, e as que custam um número mostram qual. */
+.sw-conditions { margin-top: 8px; }
+.sw-conditions-dialog { width: min(720px, calc(100vw - 32px)); max-width: none; padding: 0; overflow: hidden; border: 1px solid var(--sw-gold); border-radius: 6px; background: #111315; color: var(--sw-text); box-shadow: 0 18px 60px rgba(0, 0, 0, .72); }
+.sw-conditions-dialog::backdrop { background: rgba(3, 4, 5, .72); backdrop-filter: blur(2px); }
+.sw-conditions-dialog > header { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; border-bottom: 1px solid var(--sw-line); background: #17191b; }
+.sw-conditions-dialog > header small { color: var(--sw-muted); font-size: 8px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.sw-conditions-dialog > header h2 { margin: 1px 0 0; color: var(--sw-gold-hi); font: 700 17px Georgia, serif; }
+.sw-conditions-dialog > header button { display: grid; width: 30px; height: 30px; place-items: center; padding: 0; border: 1px solid var(--sw-line); border-radius: 4px; background: transparent; color: var(--sw-muted); }
+.sw-conditions-dialog > header button:hover { border-color: var(--sw-gold); color: var(--sw-gold-hi); }
+.sw-conditions-dialog .sw-conditions { margin: 0; padding: 14px; border: 0; background: transparent; }
+.sw-conditions-dialog .sw-cond-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 7px; padding: 0; }
+.sw-cond-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 4px; padding-top: 3px; }
+.sw-cond { display: flex; gap: 6px; align-items: center; min-width: 0; padding: 4px 8px; border: 1px solid var(--sw-line); border-radius: 999px; background: #0c0e0f; cursor: pointer; white-space: nowrap; transition: border-color 120ms ease, background 120ms ease; }
+.sw-cond span { overflow: hidden; color: var(--sw-muted); font-size: 9.5px; text-overflow: ellipsis; }
+.sw-cond input { width: 12px; min-height: 12px; flex: none; accent-color: var(--sw-gold); }
+.sw-cond[data-sw-cost]::after { margin-left: auto; padding-left: 5px; color: var(--sw-muted); content: attr(data-sw-cost); font-size: 10px; font-weight: 800; }
+.sw-cond:hover { border-color: var(--sw-gold); }
+.sw-cond:has(input:checked) span, .sw-cond:has(input:checked)::after { color: var(--sw-text); }
+.sw-cond--negative:has(input:checked) { border-color: #a3232b; background: rgba(163, 35, 43, .18); }
+.sw-cond--negative:has(input:checked)::after { color: #e2686d; }
+.sw-cond--positive:has(input:checked) { border-color: var(--sw-gold); background: rgba(199, 163, 90, .16); }
+.sw-cond--positive:has(input:checked)::after { color: var(--sw-gold-hi); }
+
+.sw-readonly { display: block; min-height: 27px; padding: 4px 7px; border: 1px dashed var(--sw-line); border-radius: 3px; background: #0b0d0e; color: var(--sw-muted); font-size: 12px; text-align: center; }
+
+.sw-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; align-items: start; }
+.sw-summary-column { display: grid; gap: 8px; min-width: 0; }
+.sw-shortcuts [data-sw-weapon-shortcuts] { display: grid; gap: 5px; }
+.sw-shortcut-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 7px 5px; border-bottom: 1px solid var(--sw-line); }
+.sw-shortcut-identity { display: grid; min-width: 0; }
+.sw-shortcut-identity strong { overflow: hidden; color: var(--sw-text); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.sw-shortcut-identity small { overflow: hidden; color: var(--sw-muted); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.sw-shortcut-actions { display: flex; gap: 4px; }
+.sw-shortcut-actions button { min-width: 58px; padding: 5px 8px; border: 1px solid var(--sw-gold); border-radius: 4px; background: #302d27; color: var(--sw-gold-hi); font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.sw-shortcut-actions button:hover { background: rgba(199, 163, 90, .18); }
+.sw-shortcuts-empty { margin: 0; padding: 12px 6px; color: var(--sw-muted); font-size: 10px; text-align: center; }
+.sw-inventory-secondary { margin-top: 8px; }
+.sw-inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+.sw-load-card > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.sw-load-card label { display: grid; gap: 3px; }
+.sw-card h2 { margin: -2px 0 8px; border-bottom: 1px solid var(--sw-gold); padding: 0 0 6px; }
+.sw-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -2px 0 8px; border-bottom: 1px solid var(--sw-gold); padding-bottom: 5px; }
+.sw-card-heading h2 { margin: 0; border: 0; padding: 0; }
+.sw-card-heading button { min-height: 24px; padding: 3px 9px; border: 1px solid var(--sw-line); border-radius: 4px; background: var(--sw-raised); color: var(--sw-muted); font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.sw-card-heading button:hover, .sw-card-heading button[aria-pressed="true"] { border-color: var(--sw-gold); color: var(--sw-gold-hi); }
+.sw-attributes-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.sw-attribute-card { display: grid; place-items: center; align-content: center; gap: 2px; min-width: 0; min-height: 76px; padding: 4px 3px; border: 1px solid var(--sw-line); border-radius: 4px; border-bottom: 2px solid var(--sw-gold); background: var(--sw-raised); color: var(--sw-gold-hi); }
+.sw-attribute-card:hover { border-color: var(--sw-gold); background: rgba(199, 163, 90, .09); }
+.sw-attribute-abbr { color: var(--sw-text); font-size: 10px; letter-spacing: .12em; }
+.sw-attribute-die { width: 30px; height: 30px; overflow: visible; filter: drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+.sw-attribute-die polygon { fill: rgba(199, 163, 90, .08); stroke: var(--sw-gold); stroke-linejoin: round; stroke-width: 2; }
+.sw-attribute-value { color: var(--sw-gold-hi); font: 700 15px Georgia, serif; white-space: nowrap; }
+.sw-attributes-editor { min-height: 76px; }
+.sw-wild-die-editor { margin-top: 3px; border-top: 1px solid var(--sw-gold); }
+.sw-wild-die-label { min-width: 0; padding: 3px 5px; color: var(--sw-text); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.sw-traits { display: grid; gap: 0; }
+.sw-trait { display: grid; grid-template-columns: minmax(104px, 1fr) 36px 88px 60px; gap: 7px; align-items: center; min-width: 0; padding: 4px 3px; border-bottom: 1px solid var(--sw-line); }
+.sw-traits button { min-width: 0; padding: 3px 5px; border: 0; background: transparent; color: var(--sw-text); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-align: left; text-transform: uppercase; }
+.sw-traits button:hover, .sw-action-grid button:hover, .sw-skill-roll:hover { color: var(--sw-gold-hi); text-decoration: underline; }
+.sw-traits select { color: var(--sw-text); text-align: center; }
+.sw-traits input { min-width: 0; text-align: center; }
+.sw-traits small { color: var(--sw-muted); font-size: 9.5px; font-weight: 800; }
+.sw-traits b { color: var(--sw-gold-hi); font: 700 19px Georgia, serif; }
+.sw-traits em { color: var(--sw-text); font-size: 9.5px; font-style: normal; font-weight: 700; text-transform: uppercase; }
+/* Os derivados agora dividem a fileira com as trilhas, então cada um é uma
+ * coluna estreita: ícone, rótulo, número. O ícone é o que deixa achar o Aparar
+ * de relance sem ler os quatro rótulos. */
+.sw-derived-strip { display: grid; grid-template-rows: auto 1fr; }
+.sw-derived { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-top: 3px; }
+.sw-derived div { display: grid; place-items: center; align-content: center; gap: 0; min-height: 0; padding: 5px 4px; border: 1px solid var(--sw-line); border-radius: 4px; border-bottom: 2px solid var(--sw-gold); background: var(--sw-raised); }
+.sw-derived i { color: var(--sw-gold); font-size: 30px; line-height: 1; }
+.sw-derived small { color: var(--sw-muted); font-size: 8.5px; letter-spacing: .06em; text-align: center; text-transform: uppercase; }
+.sw-derived b { color: var(--sw-gold-hi); font: 700 19px Georgia, serif; line-height: 1.15; }
+/* A legenda só ocupa espaço quando há o que explicar. */
+.sw-derived em { color: var(--sw-gold); font-size: 8px; font-style: normal; font-weight: 700; letter-spacing: .03em; text-align: center; text-transform: uppercase; }
+.sw-derived small, .sw-derived em { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.sw-derived b { display: block; margin-top: 4px; color: var(--sw-gold-hi); font: 700 20px Georgia, serif; line-height: 1; }
+.sw-derived div:focus-visible { outline: 2px solid var(--sw-gold-hi); outline-offset: 2px; }
+.sw-derived em:empty { display: none; }
+.sw-derived div:has(em:not(:empty)) { border-bottom-color: #d8434a; }
+.sw-parry { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sw-parry h2 { grid-column: 1 / -1; }
+.sw-two, .sw-about { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sw-action-grid, .sw-power-head { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 8px; }
+.sw-action-grid button { min-height: 32px; padding: 5px 8px; border: 1px solid var(--sw-gold); border-radius: 4px; background: #302d27; color: var(--sw-gold-hi); font-size: 11px; font-weight: 700; letter-spacing: .03em; }
+.sw-power-head { padding: 9px; border: 1px solid var(--sw-line); background: var(--sw-panel); }
+.sw-panel > .sw-card + .sw-card, .sw-panel > .sw-two + .sw-card { margin-top: 8px; }
+.sw-html-sheet .gw-item-list__row { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 6px 0; border-bottom: 1px solid #2d3135; }
+.sw-html-sheet .gw-item-list__open, .sw-html-sheet .gw-item-list__remove { border: 0; background: transparent; color: var(--sw-text); text-align: left; }
+.sw-html-sheet .gw-item-list__remove { color: var(--sw-gold); }
+.sw-html-sheet .gw-item-list__empty { color: var(--sw-muted); }
+/* A perícia passou a dividir a linha com os atributos, então tem a forma da
+ * linha de atributo: nome, o que ela usa, dado, modificador. O resumo é dado do
+ * item e mora na ficha dele. */
+.sw-skill-table-head, .sw-skill-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px 76px 52px 74px; gap: 7px; align-items: center; }
+.sw-skill-row-actions { display: grid; grid-template-columns: repeat(3, 22px); gap: 4px; }
+.sw-skill-support { min-height: 22px; padding: 0; border: 1px solid var(--sw-gold); border-radius: 3px; background: rgba(199,163,90,.1); color: var(--sw-gold-hi); font-weight: 900; }
+.sw-skill-opposed { min-height: 22px; padding: 0; border: 1px solid var(--sw-line); border-radius: 3px; background: var(--sw-raised); color: var(--sw-gold-hi); }
+.sw-skill-table-head { padding: 0 3px 5px; color: var(--sw-muted); font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.sw-skill-row { padding: 4px 3px; border-top: 1px solid var(--sw-line); }
+.sw-skill-roll, .sw-skill-remove { border: 0; background: transparent; color: var(--sw-text); }
+.sw-skill-roll { overflow: hidden; font-size: 11.5px; font-weight: 700; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.sw-skill-remove { color: var(--sw-muted); font-size: 15px; line-height: 1; }
+.sw-skill-remove:hover { color: var(--sw-gold-hi); }
+.sw-skill-row input, .sw-skill-row select { min-width: 0; }
+.sw-skill-drop { margin-top: 7px; padding: 11px; border: 1px dashed var(--sw-line); color: var(--sw-muted); font-size: 11px; text-align: center; }
+.sw-skill-drop.is-drop-active { border-color: var(--sw-gold); background: rgba(199, 163, 90, .1); color: var(--sw-gold-hi); }
+
+@container swade-sheet (max-width: 820px) {
+    .sw-meta { grid-template-columns: 1fr 1fr; }
+    /* A trilha mantém a largura dos pips; os derivados passam para a linha
+       de baixo inteiros, em vez de espremer quatro colunas num terço da ficha. */
+    .sw-vitals { grid-template-columns: auto minmax(0, 1fr); }
+    .sw-derived-strip { grid-column: 1 / -1; }
+    .sw-summary-grid { grid-template-columns: 1fr; }
+}
+
+@container swade-sheet (max-width: 560px) {
+    .sw-summary-grid, .sw-two, .sw-about { grid-template-columns: 1fr; }
+    .sw-sheet-head { grid-template-columns: 1fr; }
+    .sw-image--token { display: none; }
+    .sw-action-grid, .sw-power-head { grid-template-columns: 1fr 1fr; }
+    .sw-tabs { grid-template-columns: repeat(3, 1fr); }
+    .sw-tabs button { border-bottom: 1px solid var(--sw-line); }
+    .sw-trait { grid-template-columns: 1fr 40px 82px 58px; gap: 5px; }
+    .sw-attributes-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .sw-conditions { grid-template-columns: repeat(2, 1fr); }
+    .sw-skill-table-head { display: none; }
+    .sw-skill-row { grid-template-columns: minmax(130px, 1fr) 90px 75px 74px; }
+    .sw-skill-row input[aria-label="Notas"] { grid-column: 1 / -1; }
+    .sw-skill-row input[aria-label="Modificador"] { width: 58px; }
+    .sw-conditions-dialog .sw-cond-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 520px) {
+    .sw-conditions-dialog .sw-cond-grid { grid-template-columns: 1fr; }
+    .sw-inventory-grid { grid-template-columns: 1fr; }
+}
+
+@media not all {
+/* ========================================================================
+ * NIGHT EDITION
+ *
+ * The PDF's dense, table-first hierarchy translated to a dark interface.
+ * This final layer intentionally overrides the older light "dossier" pass
+ * above while keeping the declarative layout and its tabs untouched.
+ * ===================================================================== */
+
+.actor-sheet--savage-worlds,
+.item-sheet--savage-worlds {
+    --sw-night: #0d0c0e;
+    --sw-night-soft: #151216;
+    --sw-surface: #1c181d;
+    --sw-surface-raised: #251f25;
+    --sw-border: #4b3a3e;
+    --sw-cream: #f1e8dc;
+    --sw-cream-muted: #c2b4a5;
+    --sw-ruby: #a82830;
+    --sw-ruby-hot: #d5464d;
+    --sw-gold: #d6a553;
+    --sw-gold-muted: #9b7338;
+
+    color: var(--sw-cream);
+    background:
+        linear-gradient(90deg, transparent 0 49px, rgba(168, 40, 48, 0.12) 49px 50px, transparent 50px),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 28px),
+        radial-gradient(100% 65% at 50% 0, rgba(168, 40, 48, 0.16), transparent 62%),
+        var(--sw-night);
+}
+
+.actor-sheet--savage-worlds .actor-column--sheet {
+    gap: 10px;
+}
+
+.actor-sheet--savage-worlds .actor-sheet-header {
+    min-height: 116px;
+    padding: 14px 18px;
+    border: 1px solid var(--sw-border);
+    border-bottom: 5px solid var(--sw-ruby);
+    background:
+        linear-gradient(115deg, rgba(168, 40, 48, 0.28), transparent 46%),
+        linear-gradient(180deg, #21191e, #100e11);
+    color: var(--sw-cream);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.46);
+}
+
+.actor-sheet--savage-worlds .actor-sheet-header::after {
+    content: "CARTA SELVAGEM  \2022  SAVAGE WORLDS";
+    right: 18px;
+    bottom: 10px;
+    color: rgba(214, 165, 83, 0.62);
+}
+
+.actor-sheet--savage-worlds .ash-frame {
+    border-color: rgba(241, 232, 220, 0.35);
+    background: #09080a;
+    box-shadow: 6px 6px 0 var(--sw-ruby);
+}
+
+.actor-sheet--savage-worlds .ash-frame--portrait {
+    width: 86px;
+    height: 86px;
+}
+
+.actor-sheet--savage-worlds .ash-frame--token {
+    width: 52px;
+    height: 52px;
+    box-shadow: 0 0 0 3px var(--sw-gold-muted);
+}
+
+.actor-sheet--savage-worlds .ash-name-input {
+    border-bottom-color: rgba(214, 165, 83, 0.38);
+    color: var(--sw-cream);
+    text-shadow: 0 2px 0 #000;
+}
+
+.actor-sheet--savage-worlds .actor-section--header {
+    margin: 8px 16px 0;
+    padding: 9px 12px 10px;
+    border-color: var(--sw-border);
+    border-left-color: var(--sw-ruby);
+    background: linear-gradient(90deg, rgba(168, 40, 48, 0.13), transparent 65%), var(--sw-surface);
+}
+
+.actor-sheet--savage-worlds .actor-tab-bar {
+    gap: 3px;
+    margin: 0 16px;
+    border-bottom-color: var(--sw-ruby);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn {
+    padding: 9px 12px 8px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    background: rgba(255, 255, 255, 0.035);
+    color: var(--sw-cream-muted);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn:hover {
+    border-color: var(--sw-border);
+    background: var(--sw-surface-raised);
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn.is-active {
+    border-color: var(--sw-ruby);
+    background: linear-gradient(180deg, rgba(168, 40, 48, 0.34), rgba(168, 40, 48, 0.13));
+    color: var(--sw-cream);
+    box-shadow: 0 -2px 0 var(--sw-ruby);
+}
+
+.actor-sheet--savage-worlds .actor-tab-icon {
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-tab-panels {
+    padding: 12px 16px 18px;
+}
+
+.actor-sheet--savage-worlds .actor-section-title,
+.item-sheet--savage-worlds .actor-section-title {
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-section-title::before,
+.item-sheet--savage-worlds .actor-section-title::before {
+    background: var(--sw-ruby);
+}
+
+.actor-sheet--savage-worlds .actor-section-title::after,
+.item-sheet--savage-worlds .actor-section-title::after {
+    background: linear-gradient(90deg, var(--sw-gold-muted), transparent);
+}
+
+.actor-sheet--savage-worlds .actor-grid--summary,
+.actor-sheet--savage-worlds .actor-grid--inventory,
+.actor-sheet--savage-worlds .actor-grid--edges {
+    grid-template-columns: minmax(310px, 0.92fr) minmax(360px, 1.08fr);
+    gap: 12px;
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip {
+    grid-template-columns: minmax(130px, 0.65fr) minmax(120px, 0.6fr) minmax(220px, 1.1fr) minmax(230px, 1.25fr);
+    margin-bottom: 12px;
+    border-color: var(--sw-border);
+    border-top-color: var(--sw-ruby);
+    background: var(--sw-surface);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.32);
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip > * {
+    border-right-color: var(--sw-border);
+}
+
+.actor-sheet--savage-worlds .actor-field--check-track,
+.actor-sheet--savage-worlds .actor-section--status-strip .actor-section--conditions {
+    background: transparent;
+}
+
+.actor-sheet--savage-worlds .actor-check-track__box {
+    border-color: var(--sw-border);
+    background: #0c0a0d;
+    color: var(--sw-cream-muted);
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label {
+    border-color: var(--sw-border);
+    background: rgba(0, 0, 0, 0.28);
+    color: var(--sw-cream-muted);
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label:has(input:checked) {
+    border-color: var(--sw-ruby-hot);
+    background: rgba(168, 40, 48, 0.48);
+    color: #fff;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade {
+    min-height: 106px;
+    background: linear-gradient(180deg, #2a2329, #171317);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade::before {
+    background: var(--sw-ruby);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade::after {
+    color: var(--sw-ruby-hot);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade:hover {
+    background: linear-gradient(180deg, #35272d, #1e171b);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-abbr,
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-label {
+    color: var(--sw-cream-muted);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-score {
+    color: var(--sw-cream);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-mod {
+    border-color: var(--sw-border);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade,
+.actor-sheet--savage-worlds .actor-resource-box--swade,
+.actor-sheet--savage-worlds .actor-itemlist,
+.item-sheet--savage-worlds .actor-section--item {
+    border-color: var(--sw-border);
+    background: linear-gradient(180deg, var(--sw-surface-raised), var(--sw-surface));
+    color: var(--sw-cream);
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade {
+    min-height: 92px;
+    border-bottom-color: var(--sw-ruby);
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-icon,
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-value,
+.actor-sheet--savage-worlds .actor-resource-box--swade .actor-resource-box-label,
+.actor-sheet--savage-worlds .actor-resource-box--swade .actor-resource-label {
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-label,
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-abbr {
+    color: var(--sw-cream-muted);
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade {
+    border-left-color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade input {
+    color: var(--sw-cream);
+}
+
+.actor-sheet--savage-worlds .actor-roll-button,
+.actor-sheet--savage-worlds .actor-roll-btn {
+    border-color: var(--sw-ruby);
+    background: linear-gradient(180deg, var(--sw-ruby), #6f1a21);
+    color: #fff;
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+.actor-sheet--savage-worlds .actor-roll-button:hover,
+.actor-sheet--savage-worlds .actor-roll-btn:hover {
+    border-color: var(--sw-gold);
+    background: linear-gradient(180deg, #c3363e, #842027);
+}
+
+.actor-sheet--savage-worlds .actor-itemlist-title {
+    border-bottom-color: var(--sw-border);
+    background: rgba(168, 40, 48, 0.12);
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-item-row,
+.actor-sheet--savage-worlds .actor-item-row-list > * {
+    border-color: var(--sw-border);
+}
+
+.actor-sheet--savage-worlds .actor-item-row:nth-child(even) {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.actor-sheet--savage-worlds .actor-item-row:hover,
+.actor-sheet--savage-worlds .actor-item-row-list > *:hover {
+    background: rgba(168, 40, 48, 0.16);
+}
+
+.actor-sheet--savage-worlds .actor-item-row-title {
+    color: var(--sw-cream);
+}
+
+.actor-sheet--savage-worlds .actor-item-row-icon {
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds .actor-item-action-btn {
+    border-color: var(--sw-border);
+    background: var(--sw-night-soft);
+    color: var(--sw-gold);
+}
+
+.actor-sheet--savage-worlds input[type="text"],
+.actor-sheet--savage-worlds input[type="number"],
+.actor-sheet--savage-worlds select,
+.actor-sheet--savage-worlds textarea,
+.item-sheet--savage-worlds input[type="text"],
+.item-sheet--savage-worlds input[type="number"],
+.item-sheet--savage-worlds select,
+.item-sheet--savage-worlds textarea {
+    border-color: var(--sw-border);
+    background: rgba(0, 0, 0, 0.34);
+    color: var(--sw-cream);
+    color-scheme: dark;
+}
+
+.actor-sheet--savage-worlds input:focus,
+.actor-sheet--savage-worlds select:focus,
+.actor-sheet--savage-worlds textarea:focus,
+.item-sheet--savage-worlds input:focus,
+.item-sheet--savage-worlds select:focus,
+.item-sheet--savage-worlds textarea:focus {
+    border-color: var(--sw-gold);
+    box-shadow: 0 0 0 2px rgba(214, 165, 83, 0.16);
+}
+
+.actor-sheet--savage-worlds .actor-field-label,
+.item-sheet--savage-worlds .actor-field-label {
+    color: var(--sw-cream-muted);
+}
+
+.actor-sheet--savage-worlds .actor-divider,
+.item-sheet--savage-worlds .actor-divider {
+    background: var(--sw-border);
+}
+
+@container (max-width: 820px) {
+    .actor-sheet--savage-worlds .actor-grid--summary,
+    .actor-sheet--savage-worlds .actor-grid--inventory,
+    .actor-sheet--savage-worlds .actor-grid--edges {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .actor-sheet--savage-worlds .actor-section--status-strip {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .actor-sheet--savage-worlds .actor-section--status-strip .actor-section--conditions {
+        grid-column: 1 / -1;
+        border-top: 1px solid var(--sw-border);
+    }
+}
+
+@media (max-width: 620px) {
+    .actor-sheet--savage-worlds .actor-section--header,
+    .actor-sheet--savage-worlds .actor-tab-bar {
+        margin-right: 8px;
+        margin-left: 8px;
+    }
+
+    .actor-sheet--savage-worlds .actor-tab-panels {
+        padding: 10px 8px 14px;
+    }
+}
+}
+
+/* ========================================================================
+ * GRAVEWRIGHT VTT — compact SWADE sheet
+ * Black and graphite surfaces with the host VTT's restrained gold accent.
+ * ===================================================================== */
+
+.actor-sheet--savage-worlds,
+.item-sheet--savage-worlds {
+    --sw-vtt-bg: #111315;
+    --sw-vtt-bg-deep: #090a0b;
+    --sw-vtt-panel: #1a1d20;
+    --sw-vtt-panel-raised: #22262a;
+    --sw-vtt-line: #3d4247;
+    --sw-vtt-line-soft: #2c3034;
+    --sw-vtt-text: #e5e5e2;
+    --sw-vtt-muted: #9da1a3;
+    --sw-vtt-gold: #c7a35a;
+    --sw-vtt-gold-bright: #e0bd72;
+    --sw-vtt-gold-dim: rgba(199, 163, 90, 0.2);
+
+    color: var(--sw-vtt-text);
+    background:
+        radial-gradient(100% 70% at 50% -20%, rgba(255, 255, 255, 0.06), transparent 70%),
+        linear-gradient(180deg, #17191b, var(--sw-vtt-bg));
+    font-family: Inter, "Segoe UI", sans-serif;
+}
+
+.actor-sheet--savage-worlds .actor-column--sheet {
+    gap: 8px;
+}
+
+.actor-sheet--savage-worlds .actor-sheet-header {
+    min-height: 104px;
+    padding: 12px 16px;
+    border: 1px solid var(--sw-vtt-line);
+    border-bottom: 3px solid var(--sw-vtt-gold);
+    background: linear-gradient(135deg, #25292c, #121416 68%);
+    color: var(--sw-vtt-text);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.38);
+}
+
+.actor-sheet--savage-worlds .actor-sheet-header::after {
+    content: "SAVAGE WORLDS  •  CARTA SELVAGEM";
+    right: 16px;
+    bottom: 8px;
+    color: var(--sw-vtt-gold);
+    opacity: 0.72;
+}
+
+.actor-sheet--savage-worlds .ash-frame {
+    border-color: #555b60;
+    background: var(--sw-vtt-bg-deep);
+    box-shadow: 5px 5px 0 var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .ash-frame--portrait {
+    width: 80px;
+    height: 80px;
+}
+
+.actor-sheet--savage-worlds .ash-frame--token {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .ash-name-input {
+    border-bottom-color: var(--sw-vtt-line);
+    color: var(--sw-vtt-text);
+}
+
+.actor-sheet--savage-worlds .actor-section--header {
+    margin: 6px 14px 0;
+    padding: 9px 11px;
+    border: 1px solid var(--sw-vtt-line);
+    border-left: 3px solid var(--sw-vtt-gold);
+    background: var(--sw-vtt-panel);
+}
+
+.actor-sheet--savage-worlds .actor-grid--header {
+    grid-template-columns: repeat(5, minmax(104px, 1fr));
+    gap: 7px 10px;
+}
+
+.actor-sheet--savage-worlds .actor-tab-bar {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 2px;
+    margin: 0 14px;
+    border-bottom: 1px solid var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn {
+    min-width: 0;
+    padding: 8px 5px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    background: #202326;
+    color: var(--sw-vtt-muted);
+    font-size: 0.63rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn:hover {
+    border-color: var(--sw-vtt-line);
+    background: #292d31;
+    color: var(--sw-vtt-gold-bright);
+}
+
+.actor-sheet--savage-worlds .actor-tab-btn.is-active {
+    border-color: var(--sw-vtt-gold);
+    background: linear-gradient(180deg, #35322b, #25231f);
+    color: var(--sw-vtt-gold-bright);
+    box-shadow: inset 0 2px 0 var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-tab-icon {
+    color: var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-tab-panels {
+    padding: 10px 14px 16px;
+}
+
+.actor-sheet--savage-worlds .actor-section,
+.item-sheet--savage-worlds .actor-section {
+    margin-bottom: 9px;
+}
+
+.actor-sheet--savage-worlds .actor-section-title,
+.item-sheet--savage-worlds .actor-section-title {
+    margin-bottom: 7px;
+    color: var(--sw-vtt-gold-bright);
+}
+
+.actor-sheet--savage-worlds .actor-section-title::before,
+.item-sheet--savage-worlds .actor-section-title::before {
+    width: 14px;
+    height: 2px;
+    flex-basis: 14px;
+    background: var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-section-title::after,
+.item-sheet--savage-worlds .actor-section-title::after {
+    background: linear-gradient(90deg, var(--sw-vtt-line), transparent);
+}
+
+/* Summary remains a real two-column character sheet at normal modal widths. */
+.actor-sheet--savage-worlds .actor-grid--summary {
+    grid-template-columns: minmax(260px, 0.82fr) minmax(300px, 1.18fr);
+    gap: 10px;
+    align-items: start;
+}
+
+.actor-sheet--savage-worlds .actor-grid--inventory,
+.actor-sheet--savage-worlds .actor-grid--edges {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip {
+    grid-template-columns: 0.65fr 0.55fr 1fr;
+    gap: 0;
+    margin-bottom: 10px;
+    border: 1px solid var(--sw-vtt-line);
+    border-top: 3px solid var(--sw-vtt-gold);
+    background: var(--sw-vtt-panel);
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip > * {
+    border-right: 1px solid var(--sw-vtt-line-soft);
+}
+
+.actor-sheet--savage-worlds .actor-section--status-strip .actor-section--conditions {
+    grid-column: 1 / -1;
+    padding: 8px 10px;
+    border-top: 1px solid var(--sw-vtt-line-soft);
+    border-right: 0;
+}
+
+.actor-sheet--savage-worlds .actor-field--check-track {
+    padding: 8px 10px;
+    background: transparent;
+}
+
+.actor-sheet--savage-worlds .actor-check-track__box {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--sw-vtt-line);
+    background: var(--sw-vtt-bg-deep);
+    color: var(--sw-vtt-muted);
+}
+
+.actor-sheet--savage-worlds .actor-field--wounds .actor-check-track__box:has(input:checked),
+.actor-sheet--savage-worlds .actor-field--fatigue .actor-check-track__box:has(input:checked) {
+    border-color: var(--sw-vtt-gold);
+    background: var(--sw-vtt-gold);
+    color: #111;
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label {
+    padding: 4px 8px;
+    border-color: var(--sw-vtt-line);
+    background: var(--sw-vtt-bg-deep);
+    color: var(--sw-vtt-muted);
+}
+
+.actor-sheet--savage-worlds .actor-section--conditions label:has(input:checked) {
+    border-color: var(--sw-vtt-gold);
+    background: var(--sw-vtt-gold-dim);
+    color: var(--sw-vtt-gold-bright);
+}
+
+/* Five traits fit the left column without the overlap shown in the old sheet. */
+.actor-sheet--savage-worlds .actor-section--traits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.actor-sheet--savage-worlds .actor-section--traits > :last-child {
+    grid-column: 1 / -1;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade {
+    min-height: 78px;
+    padding: 10px 6px 7px;
+    border: 1px solid var(--sw-vtt-line);
+    clip-path: none;
+    background: linear-gradient(180deg, var(--sw-vtt-panel-raised), var(--sw-vtt-panel));
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade::before {
+    height: 2px;
+    background: var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade::after {
+    top: 35px;
+    color: var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade:hover {
+    background: #2a2e32;
+    border-color: var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-score {
+    color: var(--sw-vtt-text);
+    font-size: 1.65rem;
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-abbr,
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-label {
+    color: var(--sw-vtt-muted);
+}
+
+.actor-sheet--savage-worlds .actor-ability-card--swade .actor-ability-card-mod {
+    border-color: var(--sw-vtt-line);
+    background: var(--sw-vtt-bg-deep);
+    color: var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-section--derived {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade {
+    min-height: 78px;
+    padding: 7px 5px;
+    border-color: var(--sw-vtt-line);
+    border-bottom-color: var(--sw-vtt-gold);
+    background: linear-gradient(180deg, var(--sw-vtt-panel-raised), var(--sw-vtt-panel));
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-icon,
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-value {
+    color: var(--sw-vtt-gold-bright);
+}
+
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-label,
+.actor-sheet--savage-worlds .actor-combat-stat--swade .actor-combat-stat-abbr {
+    color: var(--sw-vtt-muted);
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade {
+    border-color: var(--sw-vtt-line);
+    border-left-color: var(--sw-vtt-gold);
+    background: var(--sw-vtt-panel-raised);
+}
+
+.actor-sheet--savage-worlds .actor-resource-box--swade .actor-resource-box-label,
+.actor-sheet--savage-worlds .actor-resource-box--swade .actor-resource-label,
+.actor-sheet--savage-worlds .actor-resource-box--swade input {
+    color: var(--sw-vtt-gold-bright);
+}
+
+.actor-sheet--savage-worlds .actor-itemlist,
+.item-sheet--savage-worlds .actor-section--item {
+    border-color: var(--sw-vtt-line);
+    background: var(--sw-vtt-panel);
+}
+
+.actor-sheet--savage-worlds .actor-itemlist-title {
+    border-bottom-color: var(--sw-vtt-gold);
+    background: #202326;
+    color: var(--sw-vtt-gold-bright);
+}
+
+.actor-sheet--savage-worlds .actor-item-row,
+.actor-sheet--savage-worlds .actor-item-row-list > * {
+    border-color: var(--sw-vtt-line-soft);
+}
+
+.actor-sheet--savage-worlds .actor-item-row:nth-child(even) {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+.actor-sheet--savage-worlds .actor-item-row:hover,
+.actor-sheet--savage-worlds .actor-item-row-list > *:hover {
+    background: var(--sw-vtt-gold-dim);
+}
+
+.actor-sheet--savage-worlds .actor-item-row-title {
+    color: var(--sw-vtt-text);
+}
+
+.actor-sheet--savage-worlds .actor-item-row-icon,
+.actor-sheet--savage-worlds .actor-item-action-btn {
+    color: var(--sw-vtt-gold);
+}
+
+.actor-sheet--savage-worlds .actor-item-action-btn {
+    border-color: var(--sw-vtt-line);
+    background: var(--sw-vtt-bg-deep);
+}
+
+.actor-sheet--savage-worlds .actor-roll-button,
+.actor-sheet--savage-worlds .actor-roll-btn {
+    border-color: var(--sw-vtt-gold);
+    background: linear-gradient(180deg, #38352e, #24231f);
+    color: var(--sw-vtt-gold-bright);
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.actor-sheet--savage-worlds .actor-roll-button:hover,
+.actor-sheet--savage-worlds .actor-roll-btn:hover {
+    background: var(--sw-vtt-gold);
+    color: #111;
+}
+
+.actor-sheet--savage-worlds input[type="text"],
+.actor-sheet--savage-worlds input[type="number"],
+.actor-sheet--savage-worlds select,
+.actor-sheet--savage-worlds textarea,
+.item-sheet--savage-worlds input[type="text"],
+.item-sheet--savage-worlds input[type="number"],
+.item-sheet--savage-worlds select,
+.item-sheet--savage-worlds textarea {
+    border-color: var(--sw-vtt-line);
+    background: var(--sw-vtt-bg-deep);
+    color: var(--sw-vtt-text);
+    color-scheme: dark;
+}
+
+.actor-sheet--savage-worlds input:focus,
+.actor-sheet--savage-worlds select:focus,
+.actor-sheet--savage-worlds textarea:focus,
+.item-sheet--savage-worlds input:focus,
+.item-sheet--savage-worlds select:focus,
+.item-sheet--savage-worlds textarea:focus {
+    border-color: var(--sw-vtt-gold);
+    box-shadow: 0 0 0 2px var(--sw-vtt-gold-dim);
+}
+
+.actor-sheet--savage-worlds .actor-field-label,
+.item-sheet--savage-worlds .actor-field-label {
+    color: var(--sw-vtt-muted);
+}
+
+/* Only genuinely narrow sheets collapse; 700px modals keep the PDF-like grid. */
+@container (max-width: 590px) {
+    .actor-sheet--savage-worlds .actor-grid--summary,
+    .actor-sheet--savage-worlds .actor-grid--inventory,
+    .actor-sheet--savage-worlds .actor-grid--edges {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 620px) {
+    .actor-sheet--savage-worlds .actor-tab-label {
+        display: none;
+    }
+
+    .actor-sheet--savage-worlds .actor-section--header,
+    .actor-sheet--savage-worlds .actor-tab-bar {
+        margin-right: 8px;
+        margin-left: 8px;
+    }
+
+    .actor-sheet--savage-worlds .actor-tab-panels {
+        padding: 9px 8px 13px;
+    }
+}
+
+
+/* ========================================================================
+ * ITEM SHEETS
+ * A ficha de item é uma verbete curto: uma faixa de identificação, um bloco
+ * de regra e um bloco de posse. Cada bloco é um `variant` do layout — a
+ * folha não sabe qual item está aberto, só qual papel o bloco cumpre.
+ * ===================================================================== */
+
+/* Sem isto a consulta de container lá embaixo não teria contra o que medir:
+ * a ficha de item não herda nenhum contexto de container do host. */
+.item-sheet--savage-worlds {
+    container-type: inline-size;
+    container-name: swade-item;
+}
+
+.item-sheet--savage-worlds .actor-section--item {
+    position: relative;
+    padding: 14px 15px 15px;
+    border: 1px solid var(--sw-vtt-line);
+    border-top: 2px solid var(--sw-vtt-gold);
+    border-radius: 10px;
+    background:
+        radial-gradient(120% 80% at 50% -30%, rgba(199, 163, 90, 0.08), transparent 70%),
+        linear-gradient(180deg, var(--sw-vtt-panel-raised), var(--sw-vtt-panel));
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* O título do verbete: o tipo do item, não o nome dele. */
+.item-sheet--savage-worlds .actor-section--item > .actor-section-title {
+    margin-bottom: 12px;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+/* --- a faixa de identificação ---------------------------------------- */
+
+.item-sheet--savage-worlds .actor-grid--identity {
+    gap: 10px 12px;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--sw-vtt-line-soft);
+    align-items: end;
+}
+
+.item-sheet--savage-worlds .actor-field--name .actor-input {
+    height: 34px;
+    border-color: var(--sw-vtt-line);
+    background: var(--sw-vtt-bg-deep);
+    color: var(--sw-vtt-gold-bright);
+    font-size: 0.95rem;
+    font-weight: 650;
+    letter-spacing: 0.01em;
+}
+
+.item-sheet--savage-worlds .actor-field--name .actor-input:focus {
+    border-color: var(--sw-vtt-gold);
+}
+
+/* --- os blocos: regra e posse ---------------------------------------- */
+
+.item-sheet--savage-worlds .actor-section--mechanics,
+.item-sheet--savage-worlds .actor-section--market {
+    margin-bottom: 11px;
+    padding: 11px 12px 12px;
+    border: 1px solid var(--sw-vtt-line-soft);
+    border-left: 3px solid var(--sw-vtt-gold);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+/* A posse é o rodapé do verbete: presente, mas nunca à frente da regra. */
+.item-sheet--savage-worlds .actor-section--market {
+    border-left-color: var(--sw-vtt-line);
+    background: rgba(0, 0, 0, 0.12);
+}
+
+.item-sheet--savage-worlds .actor-section--mechanics > .actor-section-title,
+.item-sheet--savage-worlds .actor-section--market > .actor-section-title {
+    margin-bottom: 9px;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.item-sheet--savage-worlds .actor-section--market > .actor-section-title {
+    color: var(--sw-vtt-muted);
+}
+
+.item-sheet--savage-worlds .actor-section--market > .actor-section-title::before {
+    background: var(--sw-vtt-line);
+}
+
+.item-sheet--savage-worlds .actor-grid--mechanics,
+.item-sheet--savage-worlds .actor-grid--market {
+    gap: 9px 12px;
+}
+
+/* Uma expressão de dano não cabe em meia linha. */
+.item-sheet--savage-worlds .actor-field--wide {
+    grid-column: 1 / -1;
+}
+
+/* --- as marcas: equipado, duas mãos, perícia básica ------------------- */
+
+.item-sheet--savage-worlds .actor-field--flag {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    align-self: end;
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--sw-vtt-line-soft);
+    border-radius: 999px;
+    background: var(--sw-vtt-bg-deep);
+    cursor: pointer;
+    transition: border-color 120ms ease, background 120ms ease;
+}
+
+.item-sheet--savage-worlds .actor-field--flag:hover {
+    border-color: var(--sw-vtt-gold);
+}
+
+.item-sheet--savage-worlds .actor-field--flag:has(input:checked) {
+    border-color: var(--sw-vtt-gold);
+    background: var(--sw-vtt-gold-dim);
+}
+
+.item-sheet--savage-worlds .actor-field--flag:has(input:checked) .actor-field-label {
+    color: var(--sw-vtt-gold-bright);
+}
+
+.item-sheet--savage-worlds .actor-field--flag .actor-field-label {
+    margin: 0;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+.item-sheet--savage-worlds .actor-field--flag .actor-checkbox {
+    flex: none;
+    accent-color: var(--sw-vtt-gold);
+}
+
+/* --- a descrição ------------------------------------------------------ */
+
+.item-sheet--savage-worlds .actor-field--notes .actor-textarea {
+    min-height: 108px;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+/* Um modal estreito não vale uma linha de dois campos espremidos. */
+@container swade-item (max-width: 420px) {
+    .item-sheet--savage-worlds .actor-grid--identity,
+    .item-sheet--savage-worlds .actor-grid--mechanics,
+    .item-sheet--savage-worlds .actor-grid--market {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+
+/* ========================================================================
+ * CARTÃO DE ROLAGEM
+ * O core desenha a estrutura do cartão e marca de que sistema ele é
+ * (`data-system`). Daqui para frente a aparência é deste pacote — e o escopo
+ * é o que impede estas cores de caírem no cartão de outro sistema.
+ * ===================================================================== */
+
+.roll-card[data-system="savage-worlds"] {
+    --sw-card-ruby: #a3232b;
+    --sw-card-ruby-hi: #d8434a;
+    --sw-card-good: #4f8a63;
+    --sw-card-good-hi: #6fae85;
+    --sw-card-gold: #c7a35a;
+    --sw-card-muted: #9da1a3;
+    --sw-card-line: #3d4247;
+
+    padding-left: 9px;
+    border-left: 2px solid var(--sw-card-line);
+}
+
+/* Passou ou não passou é a primeira coisa que se lê; o total ganha a cor em
+   vez de mais uma linha dizendo "sucesso". */
+.roll-card[data-system="savage-worlds"].roll-card--success {
+    border-left-color: var(--sw-card-good);
+}
+
+.roll-card[data-system="savage-worlds"].roll-card--failure {
+    border-left-color: var(--sw-card-ruby);
+}
+
+.roll-card[data-system="savage-worlds"].roll-card--critical-failure {
+    border-left-color: #ef3d48;
+    box-shadow: inset 3px 0 12px rgba(239, 61, 72, .12);
+}
+
+.roll-card[data-system="savage-worlds"].roll-card--success .roll-card__total {
+    color: var(--sw-card-good-hi);
+}
+
+.roll-card[data-system="savage-worlds"].roll-card--failure .roll-card__total {
+    color: var(--sw-card-ruby-hi);
+}
+
+.roll-card[data-system="savage-worlds"].roll-card--critical-failure .roll-card__total {
+    color: #ff5a64;
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card__status {
+    margin: 7px 0 3px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    color: var(--sw-card-muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .09em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.roll-card[data-system="savage-worlds"].roll-card--success .roll-card__status {
+    color: var(--sw-card-good-hi);
+}
+
+.roll-card[data-system="savage-worlds"].roll-card--failure .roll-card__status,
+.roll-card[data-system="savage-worlds"].roll-card--critical-failure .roll-card__status {
+    color: var(--sw-card-ruby-hi);
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card__title {
+    color: var(--sw-card-gold);
+    letter-spacing: 0.04em;
+}
+
+/* O detalhamento fica recolhido atrás de um rótulo: a face do cartão é
+   resultado, e a fórmula só aparece para quem for conferir. */
+.roll-card[data-system="savage-worlds"] .roll-card__dice {
+    margin-top: 2px;
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card__dice > .roll-summary {
+    padding: 2px 0;
+    opacity: 0.7;
+    font-size: 11px;
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card__dice[open] > .roll-summary {
+    opacity: 1;
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card__detail-label {
+    color: var(--sw-card-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* A expressão montada é a última linha do detalhe: quem abriu quer conferir os
+   dados primeiro, e só depois de onde saiu o número. */
+.roll-card[data-system="savage-worlds"] .roll-card__formula {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--sw-card-line);
+    color: var(--sw-card-muted);
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 11px;
+    opacity: 0.75;
+    overflow-wrap: anywhere;
+}
+
+/* A arma é uma unidade de combate: identidade e estatísticas de um lado,
+   comandos juntos do outro. */
+.sw-html-sheet .gw-item-list__row {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    margin: 7px 0;
+    padding: 11px 12px;
+    border: 1px solid var(--sw-line);
+    border-left: 3px solid var(--sw-gold);
+    border-radius: 8px;
+    background: linear-gradient(100deg, rgba(199, 163, 90, .08), transparent 60%), #171a1d;
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card__header {
+    padding: 5px 0 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--sw-card-gold) 30%, transparent);
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card__total {
+    min-width: 34px;
+    padding: 4px 8px;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, .22);
+    text-align: center;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card-line {
+    padding: 5px 2px;
+}
+
+.roll-card[data-system="savage-worlds"] .roll-card-line__label {
+    color: var(--sw-card-muted);
+}
+
+.sw-initiative-deal {
+    color: var(--sw-gold, #c7a35a);
+    border-color: color-mix(in srgb, var(--sw-gold, #c7a35a) 55%, transparent);
+}
+
+.sw-initiative-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 1 0 100%;
+    min-width: 0;
+}
+
+.gw-combat-toolbar:has(.sw-initiative-controls) {
+    flex-wrap: wrap;
+}
+
+.sw-initiative-deck {
+    width: auto;
+    flex: 1 1 120px;
+    min-width: 88px;
+    height: 34px;
+    padding: 0 7px;
+    color: var(--sw-ink, #e9e4d8);
+    border: 1px solid color-mix(in srgb, var(--sw-gold, #c7a35a) 45%, #26313a);
+    border-radius: 5px;
+    background: #11171b;
+    font: inherit;
+}
+
+.sw-action-card-initiative.is-image-missing {
+    display: grid;
+    place-items: center;
+    padding: 3px;
+    color: #17120b;
+    font-size: 10px;
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.sw-action-card-initiative {
+    width: 38px;
+    height: 52px;
+    flex: 0 0 38px;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--sw-gold, #c7a35a) 65%, #111);
+    border-radius: 4px;
+    background: #f3efe4;
+    box-shadow: 0 3px 9px rgba(0, 0, 0, .38);
+    cursor: default;
+}
+
+.sw-action-card-initiative img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sw-action-card-initiative__editor {
+    display: none !important;
+}
+
+.gw-combat-combatant.is-editing-action-card .sw-action-card-initiative {
+    display: none;
+}
+
+.gw-combat-combatant.is-editing-action-card .sw-action-card-initiative__editor {
+    display: block !important;
+}
+
+[data-combat-panel][data-is-gm="true"] .sw-action-card-initiative {
+    cursor: pointer;
+}
+.sw-html-sheet .gw-item-list__identity { min-width: 0; }
+.sw-html-sheet .gw-item-list__open {
+    display: block;
+    width: 100%;
+    padding: 0;
+    color: var(--sw-text);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+.sw-html-sheet .gw-item-list__open:hover { color: var(--sw-gold-hi); }
+.sw-html-sheet .gw-item-list__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+    margin-top: 7px;
+}
+.sw-html-sheet .gw-item-list__fact {
+    color: var(--sw-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .055em;
+    text-transform: uppercase;
+}
+.sw-html-sheet .gw-item-list__fact--skill::before { content: "Perícia · "; color: var(--sw-gold); }
+.sw-html-sheet .gw-item-list__fact--damage::before { content: "Dano · "; color: var(--sw-gold); }
+.sw-html-sheet .gw-item-list__fact--range::before { content: "Alcance · "; color: var(--sw-gold); }
+.sw-html-sheet .gw-item-list__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+    align-items: center;
+    max-width: min(100%, 410px);
+}
+.sw-html-sheet .gw-item-list__action {
+    flex: 0 1 auto;
+    min-height: 29px;
+    margin: 0;
+    padding: 5px 11px;
+    border: 1px solid var(--sw-line);
+    border-radius: 999px;
+    background: #0c0e0f;
+    color: var(--sw-gold-hi);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.sw-html-sheet .gw-item-list__action:hover { border-color: var(--sw-gold); background: rgba(199, 163, 90, .16); }
+.sw-html-sheet .gw-item-list__edit,
+.sw-html-sheet .gw-item-list__remove {
+    display: inline-grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
+    flex: 0 0 32px;
+    padding: 0;
+    border: 1px solid var(--sw-line);
+    border-radius: 7px;
+    background: #0c0e0f;
+    color: var(--sw-muted);
+    font-size: 16px;
+    cursor: pointer;
+}
+.sw-html-sheet .gw-item-list__edit:hover {
+    border-color: var(--sw-gold);
+    color: var(--sw-gold-hi);
+    background: rgba(199, 163, 90, .13);
+}
+.sw-html-sheet .gw-item-list__remove:hover {
+    border-color: var(--sw-red-bright, #d8434a);
+    color: var(--sw-red-bright, #d8434a);
+    background: rgba(163, 35, 43, .13);
+}
+
+/* Secondary directories keep the same compact rhythm and usable area as the
+   Principal tab. Editing remains in the item modal. */
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__row {
+    grid-template-columns: minmax(120px, 1fr) auto;
+    gap: 7px;
+    margin: 3px 0;
+    padding: 6px 7px;
+    border-left-width: 2px;
+    border-radius: 4px;
+    background: #171a1d;
+}
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__open {
+    font-family: Inter, "Segoe UI", sans-serif;
+    font-size: 11.5px;
+    line-height: 1.2;
+}
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__meta { gap: 3px 8px; margin-top: 2px; }
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__fact { font-size: 8px; }
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__actions { gap: 4px; }
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__action {
+    min-height: 25px;
+    padding: 3px 8px;
+    font-size: 8px;
+}
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__edit,
+.sw-html-sheet .sw-panel[data-tab-panel]:not([data-tab-panel="summary"]) .gw-item-list__remove {
+    width: 26px;
+    height: 26px;
+    flex-basis: 26px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+.sw-html-sheet .sw-panel[data-tab-panel="powers"] .sw-power-head { margin-bottom: 8px; padding: 7px; }
+
+.gw-embedded-item-modal[data-package="savage-worlds"] {
+    width: min(760px, calc(100vw - 32px));
+    max-height: calc(100vh - 32px);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #4a4f54;
+    border-top: 2px solid var(--sw-gold, #c7a35a);
+    border-radius: 10px;
+    background: #111416;
+    color: #e7e3da;
+    box-shadow: 0 22px 70px rgba(0, 0, 0, .72);
+}
+.gw-embedded-item-modal[data-package="savage-worlds"]::backdrop {
+    background: rgba(3, 5, 6, .72);
+    backdrop-filter: blur(3px);
+}
+.gw-embedded-item-modal[data-package="savage-worlds"] .gw-embedded-item-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    border-bottom: 1px solid #3d4247;
+    background: linear-gradient(90deg, rgba(199, 163, 90, .12), transparent 55%), #181b1e;
+    color: var(--sw-gold-hi, #e3c77c);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 18px;
+}
+.gw-embedded-item-modal[data-package="savage-worlds"] .gw-embedded-item-modal__close {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid #454b50;
+    border-radius: 7px;
+    background: #0d0f10;
+    color: #aeb2b5;
+    cursor: pointer;
+}
+.gw-embedded-item-modal[data-package="savage-worlds"] .gw-embedded-item-modal__close:hover {
+    border-color: #c7a35a;
+    color: #e3c77c;
+}
+.gw-embedded-item-modal[data-package="savage-worlds"] .gw-embedded-item-modal__body {
+    max-height: calc(100vh - 105px);
+    padding: 16px;
+    overflow: auto;
+}
+@media (max-width: 680px) {
+    .sw-html-sheet .gw-item-list__row { grid-template-columns: minmax(0, 1fr); }
+    .sw-html-sheet .gw-item-list__actions { width: 100%; max-width: none; justify-content: flex-start; }
+    .sw-html-sheet .gw-item-list__action { flex: 1 1 120px; }
+}
+
+/* A Movimentação rola a Corrida: o tile é o botão. */
+.sw-derived--rollable { cursor: pointer; transition: border-color 120ms ease, background 120ms ease; }
+.sw-derived--rollable:hover, .sw-derived--rollable:focus-visible { border-color: var(--sw-gold); background: #2a2e33; }
+
+/* "Sem perícia" é a última linha da lista e não se edita: d4−2, sempre. */
+.sw-skill-row--fixed { border-top-style: dashed; opacity: .82; }
+.sw-skill-row--fixed:hover { opacity: 1; }
+.sw-skill-fixed { color: var(--sw-muted); font-size: 11px; text-align: center; }
+
+/* Fichas secundárias: mesma composição editorial do Wild Card, não apenas as cores. */
+.sw-meta--extra { grid-template-columns: 1fr 1fr 118px 74px; }
+.sw-meta--vehicle { grid-template-columns: minmax(180px, 1fr) minmax(150px, .7fr) 90px; }
+.sw-meta--group { grid-template-columns: minmax(220px, 1fr) 90px; }
+.sw-derived--extra { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.sw-vehicle-dashboard {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+}
+.sw-damage-counter {
+    min-width: 190px;
+    margin: 0;
+    padding: 9px 12px;
+    border: 1px solid var(--sw-line);
+    border-radius: 5px;
+    background: var(--sw-panel);
+}
+.sw-damage-counter legend { padding: 0 6px; color: var(--sw-gold-hi); font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.sw-vehicle-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 0; }
+.sw-vehicle-conditions { margin: 8px 0; }
+.sw-vehicle-conditions .sw-cond-grid { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+.sw-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.sw-form-grid label,
+.sw-html-sheet--group .sw-resource-pair label {
+    display: grid;
+    gap: 4px;
+}
+.sw-group-dashboard { display: grid; grid-template-columns: minmax(280px, .9fr) minmax(320px, 1.1fr); gap: 8px; }
+.sw-group-dashboard .sw-card { min-height: 150px; }
+.sw-html-sheet--group .sw-resource-pair {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: end;
+}
+.sw-resource-bar { height: 8px; margin-top: 18px; overflow: hidden; border: 1px solid var(--sw-line); border-radius: 999px; background: #0b0d0e; }
+.sw-resource-bar span { display: block; width: 65%; height: 100%; background: linear-gradient(90deg, #8c682f, var(--sw-gold-hi)); box-shadow: 0 0 10px rgba(199, 163, 90, .35); }
+.sw-group-emblem { display: flex; gap: 14px; align-items: center; padding: 12px; border: 1px solid var(--sw-line); border-radius: 5px; background: var(--sw-raised); }
+.sw-group-emblem > i { color: var(--sw-gold); font-size: 34px; }
+.sw-group-emblem div { display: grid; gap: 2px; }
+.sw-group-emblem b { color: var(--sw-gold-hi); font: 700 19px Georgia, serif; }
+.sw-group-emblem small { color: var(--sw-muted); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.sw-group-profile p { margin: 12px 2px 0; color: var(--sw-muted); line-height: 1.55; }
+@container swade-sheet (max-width: 720px) {
+    .sw-meta--extra, .sw-meta--vehicle, .sw-meta--group { grid-template-columns: 1fr 1fr; }
+    .sw-vehicle-dashboard, .sw-group-dashboard { grid-template-columns: 1fr; }
+    .sw-vehicle-conditions .sw-cond-grid { grid-template-columns: 1fr; }
+}
+.item-sheet--embedded {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid var(--sw-line, #3a4147);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, .22);
+}
+.item-sheet--embedded .actor-section--item { margin: 0; box-shadow: none; }
+.dice-bonus {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 7px;
+    padding: 7px 8px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, .1);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, .03);
+    font-size: 11px;
+}
+.dice-bonus small { grid-column: 2; font-size: 10px; color: rgba(255, 255, 255, .4); }
+.dice-bonus:has(input:checked) {
+    border-color: color-mix(in srgb, var(--accent, #c09a5a) 55%, transparent);
+    background: color-mix(in srgb, var(--accent, #c09a5a) 10%, transparent);
+}
+/* Campaign setup mounted in the core-owned System settings modal. */
+.sw-system-setup-host { display:block; }
+.sw-system-setup { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(250px,.85fr); gap:12px; color:var(--text); }
+.sw-system-setup__header { display:grid; gap:3px; }
+.sw-system-setup__header { grid-column:1/-1; }
+.sw-system-setup__header h3,.sw-system-setup__card h4 { margin:0; color:var(--accent); }
+.sw-system-setup__header p,.sw-system-setup__card>p { margin:0; color:var(--text-muted); font-size:12px; }
+.sw-system-setup__card { display:grid; gap:9px; padding:12px; border:1px solid var(--border); border-radius:var(--radius-md); background:rgba(255,255,255,.025); }
+.sw-system-setup__card--skills { grid-row:2 / span 2; align-content:start; }
+.sw-system-setup__card--attributes { grid-column:1; align-content:start; }
+.sw-system-setup__card--rules,.sw-system-setup__card--currency { grid-column:2; align-content:start; }
+.sw-system-setup__card--appearance { grid-column:2; align-content:start; }
+.sw-system-setup__benny-preview { display:grid; width:82px; height:82px; place-items:center; justify-self:center; overflow:hidden; border:2px solid var(--accent); border-radius:50%; background:#0d1114; box-shadow:inset 0 0 0 3px rgba(0,0,0,.55); }
+.sw-system-setup__benny-preview img { width:100%; height:100%; object-fit:cover; }
+.sw-system-setup__benny-preview i { color:var(--accent); font-size:44px; }
+.sw-system-setup__skills { display:grid; gap:6px; }
+.sw-system-setup__attributes { display:grid; gap:6px; }
+.sw-system-setup__attribute-row { display:grid; grid-template-columns:minmax(0,1fr) 72px; gap:6px; }
+.sw-system-setup__attribute-row input:last-child { text-align:center; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+.sw-system-setup__skill-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(120px,.65fr) 30px; gap:6px; }
+.sw-system-setup input,.sw-system-setup select { width:100%; min-width:0; min-height:34px; padding:6px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:#0d1114; color:var(--text); color-scheme:dark; }
+.sw-system-setup__remove { min-height:30px; border:1px solid rgba(225,95,95,.35); border-radius:var(--radius-sm); background:rgba(225,95,95,.08); color:#ef9b9b; }
+.sw-system-setup__field { display:grid; grid-template-columns:minmax(140px,.7fr) minmax(0,1fr); align-items:center; gap:8px; font-size:12px; }
+.sw-system-setup__field small { grid-column:2; color:var(--text-muted); }
+.sw-system-setup__save { grid-column:1/-1; justify-self:end; min-height:36px; padding:7px 14px; border:1px solid var(--border-accent-strong); border-radius:var(--radius-md); background:rgba(192,154,90,.16); color:var(--accent-hover); font-weight:800; }
+.sw-system-setup :disabled { opacity:.58; cursor:not-allowed; }
+@media (max-width:720px) { .sw-system-setup { grid-template-columns:minmax(0,1fr); } .sw-system-setup__header,.sw-system-setup__card--skills,.sw-system-setup__card--attributes,.sw-system-setup__card--rules,.sw-system-setup__card--currency,.sw-system-setup__card--appearance,.sw-system-setup__save { grid-column:1; grid-row:auto; } }
+@media (max-width:560px) { .sw-system-setup__skill-row,.sw-system-setup__field { grid-template-columns:minmax(0,1fr); } .sw-system-setup__field small { grid-column:1; } }

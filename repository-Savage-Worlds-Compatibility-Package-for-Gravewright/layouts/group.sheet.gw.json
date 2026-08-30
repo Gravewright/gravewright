@@ -1,0 +1,60 @@
+{
+  "kind": "actorSheet",
+  "system": "savage-worlds",
+  "actorType": "group",
+  "id": "savage-worlds-group",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "column",
+    "variant": "sheet",
+    "children": [
+      {
+        "type": "section",
+        "variant": "header",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 3,
+            "variant": "header",
+            "children": [
+              {
+                "type": "textField",
+                "path": "core.name",
+                "labelKey": "savage-worlds.ui.nome"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.concept",
+                "labelKey": "savage-worlds.ui.conceito"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.size",
+                "labelKey": "savage-worlds.ui.tamanho"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "variant": "load",
+        "children": [
+          {
+            "type": "resourceField",
+            "valuePath": "sheet.resources.value",
+            "maxPath": "sheet.resources.max",
+            "labelKey": "savage-worlds.ui.recursos"
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.notes",
+        "labelKey": "savage-worlds.ui.anotacoes"
+      }
+    ]
+  }
+}

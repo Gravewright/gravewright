@@ -1,0 +1,43 @@
+{
+  "$comment": "As barras contam o que resta: cheia é ileso. bar_1 Ferimentos, bar_2 Fadiga.",
+  "character": {
+    "name": "core.name",
+    "bars": {
+      "bar_1": {
+        "value": "sheet.bars.bar_1.value",
+        "max": "sheet.bars.bar_1.max"
+      },
+      "bar_2": {
+        "value": "sheet.bars.bar_2.value",
+        "max": "sheet.bars.bar_2.max",
+        "color": "#d8a24a"
+      }
+    },
+    "defense": "sheet.stats.parry.value"
+  },
+  "extra": {
+    "name": "core.name",
+    "bars": {
+      "bar_1": {
+        "value": "sheet.bars.bar_1.value",
+        "max": "sheet.bars.bar_1.max"
+      },
+      "bar_2": {
+        "value": "sheet.bars.bar_2.value",
+        "max": "sheet.bars.bar_2.max",
+        "color": "#d8a24a"
+      }
+    },
+    "defense": "sheet.stats.parry.value"
+  },
+  "vehicle": {
+    "name": "core.name",
+    "bars": {
+      "bar_1": {
+        "value": "sheet.bars.bar_1.value",
+        "max": "sheet.bars.bar_1.max"
+      }
+    },
+    "defense": "sheet.stats.parry.value"
+  }
+}

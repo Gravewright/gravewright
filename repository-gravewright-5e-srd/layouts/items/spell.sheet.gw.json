@@ -1,0 +1,202 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-spell",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "dnd5e.ui.nome"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.level",
+            "labelKey": "dnd5e.ui.circulo.0.truque"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.school",
+            "options": [
+              {
+                "value": "abjuration",
+                "labelKey": "dnd5e.ui.abjuracao"
+              },
+              {
+                "value": "conjuration",
+                "labelKey": "dnd5e.ui.conjuracao"
+              },
+              {
+                "value": "divination",
+                "labelKey": "dnd5e.ui.adivinhacao"
+              },
+              {
+                "value": "enchantment",
+                "labelKey": "dnd5e.ui.encantamento"
+              },
+              {
+                "value": "evocation",
+                "labelKey": "dnd5e.ui.evocacao"
+              },
+              {
+                "value": "illusion",
+                "labelKey": "dnd5e.ui.ilusao"
+              },
+              {
+                "value": "necromancy",
+                "labelKey": "dnd5e.ui.necromancia"
+              },
+              {
+                "value": "transmutation",
+                "labelKey": "dnd5e.ui.transmutacao"
+              }
+            ],
+            "labelKey": "dnd5e.ui.escola"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "textField",
+            "path": "sheet.casting_time",
+            "labelKey": "dnd5e.ui.tempo.de.conjuracao"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.range",
+            "labelKey": "dnd5e.ui.alcance"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.duration",
+            "labelKey": "dnd5e.ui.duracao"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "children": [
+          {
+            "type": "row",
+            "children": [
+              {
+                "type": "checkboxField",
+                "path": "sheet.components.v",
+                "labelKey": "dnd5e.ui.verbal.v"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.components.s",
+                "labelKey": "dnd5e.ui.somatico.s"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.components.m",
+                "labelKey": "dnd5e.ui.material.m"
+              }
+            ]
+          },
+          {
+            "type": "textField",
+            "path": "sheet.materials",
+            "labelKey": "dnd5e.ui.materiais"
+          }
+        ],
+        "labelKey": "dnd5e.ui.componentes"
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "checkboxField",
+            "path": "sheet.concentration",
+            "labelKey": "dnd5e.ui.concentracao"
+          },
+          {
+            "type": "checkboxField",
+            "path": "sheet.ritual",
+            "labelKey": "dnd5e.ui.ritual"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "children": [
+          {
+            "type": "selectField",
+            "path": "sheet.resolution",
+            "options": [
+              {
+                "value": "none",
+                "labelKey": "dnd5e.ui.nenhum"
+              },
+              {
+                "value": "attack_melee",
+                "labelKey": "dnd5e.ui.ataque.corpo.a.corpo"
+              },
+              {
+                "value": "attack_ranged",
+                "labelKey": "dnd5e.ui.ataque.a.distancia"
+              },
+              {
+                "value": "save_str",
+                "labelKey": "dnd5e.ui.salv.forca"
+              },
+              {
+                "value": "save_dex",
+                "labelKey": "dnd5e.ui.salv.destreza"
+              },
+              {
+                "value": "save_con",
+                "labelKey": "dnd5e.ui.salv.constituicao"
+              },
+              {
+                "value": "save_int",
+                "labelKey": "dnd5e.ui.salv.inteligencia"
+              },
+              {
+                "value": "save_wis",
+                "labelKey": "dnd5e.ui.salv.sabedoria"
+              },
+              {
+                "value": "save_cha",
+                "labelKey": "dnd5e.ui.salv.carisma"
+              }
+            ],
+            "labelKey": "dnd5e.ui.ataque.resistencia"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.damage",
+            "labelKey": "dnd5e.ui.dano.efeito.ex.8d6"
+          }
+        ]
+      },
+      {
+        "type": "textField",
+        "path": "sheet.classes",
+        "labelKey": "dnd5e.ui.classes"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "labelKey": "dnd5e.ui.descricao"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.higher_levels",
+        "labelKey": "dnd5e.ui.em.circulos.superiores"
+      }
+    ],
+    "labelKey": "dnd5e.ui.magia"
+  }
+}

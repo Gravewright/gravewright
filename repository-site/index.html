@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Gravewright is a fast, open-source virtual tabletop for tabletop RPGs. Run your games, shape your scenes, and keep control of your table.">
+  <meta name="theme-color" content="#0b0d10">
+  <title>Gravewright | Open-source virtual tabletop</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <header class="site-header" data-header>
+    <div class="shell header-inner">
+      <a class="brand" href="#top" aria-label="Gravewright home">
+        <span class="brand-icon">
+          <img
+            src="assets/icon.svg"
+            alt=""
+            width="40"
+            height="40"
+            data-logo
+          >
+          <span class="brand-fallback" aria-hidden="true">G</span>
+        </span>
+        <span>Gravewright</span>
+      </a>
+
+      <button class="menu-toggle" type="button" aria-controls="main-nav" aria-expanded="false" data-menu-toggle>
+        <span></span>
+        <span></span>
+        <span class="sr-only">Toggle navigation</span>
+      </button>
+
+      <nav class="main-nav" id="main-nav" aria-label="Main navigation" data-nav>
+        <a href="#about">Why Gravewright</a>
+        <a href="#release">Beta 4</a>
+        <a href="wiki/index.html">Wiki</a>
+        <a href="#install">Get Gravewright</a>
+        <a href="#contribute">Contribute</a>
+        <a class="nav-button" href="https://github.com/Gravewright/gravewright">GitHub ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero shell" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow">Gravewright v1.0.0 Beta 4 · SDK 1 RC 1</p>
+        <div class="hero-brand">
+          <span class="hero-icon">
+            <img
+              src="assets/icon.svg"
+              alt="Gravewright logo"
+              width="116"
+              height="116"
+              data-logo
+            >
+            <span class="hero-fallback" aria-hidden="true">G</span>
+          </span>
+          <h1>Gravewright</h1>
+        </div>
+        <p class="hero-lead">Your worlds deserve more than a grid and a character sheet.</p>
+        <p class="hero-meta">Build atmospheric scenes, bring your rules to life, and keep every player focused on the story.</p>
+
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.4/Gravewright-Windows-x64.zip" aria-label="Download Gravewright Beta 4 for Windows">
+            Download for Windows
+          </a>
+          <a class="button button-secondary" href="#experience">
+            See how it plays
+          </a>
+        </div>
+
+        <div class="quick-links" aria-label="Project links">
+          <a href="https://github.com/Gravewright/gravewright/releases/tag/v1.0.0-beta.4">Beta 4 release ↗</a>
+          <a href="wiki/index.html">Documentation</a>
+          <a href="https://github.com/Gravewright/gravewright-5e-srd">5e SRD ↗</a>
+          <a href="https://github.com/Gravewright/Savage-Worlds-Compatibility-Package-for-Gravewright">Savage Worlds ↗</a>
+          <a href="https://github.com/Gravewright/gravewright/issues">Issues ↗</a>
+        </div>
+      </div>
+
+      <aside class="hero-panel" aria-label="Why Gravewright">
+        <div class="panel-topline">
+          <span>Made for memorable sessions</span>
+          <span class="status"><i></i> Beta</span>
+        </div>
+        <div class="platform-list">
+          <article>
+            <span>01</span>
+            <div>
+              <h2>Stay in the moment</h2>
+              <p>A responsive table that keeps the session moving and the interface out of the way.</p>
+            </div>
+          </article>
+          <article>
+            <span>02</span>
+            <div>
+              <h2>Make every scene feel alive</h2>
+              <p>Shape the mood with light, weather, movement, and cinematic effects.</p>
+            </div>
+          </article>
+          <article>
+            <span>03</span>
+            <div>
+              <h2>Play your game your way</h2>
+              <p>Use dedicated rulesets, flexible sheets, or familiar fillable PDFs.</p>
+            </div>
+          </article>
+          <article>
+            <span>04</span>
+            <div>
+              <h2>Own your table</h2>
+              <p>Your campaigns stay under your control on a platform that is open and built to last.</p>
+            </div>
+          </article>
+        </div>
+      </aside>
+    </section>
+
+    <section class="media-showcase shell" aria-label="Gravewright overview image">
+      <figure class="media-frame media-frame--hero">
+        <img src="assets/gravewright-at-the-table.webp"
+          alt="Gravewright game table showing a dungeon map, character tokens, lighting, layers, and the actor directory."
+          width="1914" height="906" fetchpriority="high" decoding="async" />
+      </figure>
+    </section>
+
+    <section class="section shell" id="about">
+      <div class="section-heading">
+        <p class="section-label">Why Gravewright?</p>
+        <h2>More atmosphere for the players. More freedom for the Game Master.</h2>
+      </div>
+      <div class="section-copy">
+        <p>Gravewright brings maps, characters, combat, campaign notes, and visual storytelling together in one focused space. It adapts to the identity of your RPG instead of making every game feel the same.</p>
+      </div>
+
+      <div class="focus-grid">
+        <article>
+          <h3>Turn maps into places</h3>
+          <p>Let players discover rooms, follow light through a doorway, and feel the weather change around them.</p>
+        </article>
+        <article>
+          <h3>Keep the story moving</h3>
+          <p>Characters, rolls, items, notes, cards, and combat stay together so the table spends less time searching.</p>
+        </article>
+        <article>
+          <h3>Give every session a mood</h3>
+          <p>From quiet fog to magical storms, the scene can support the feeling you want at the table.</p>
+        </article>
+        <article>
+          <h3>Keep what you create</h3>
+          <p>Your worlds, campaigns, and table data remain yours-with the freedom of an open-source project.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" id="experience">
+      <div class="section-heading">
+        <p class="section-label">Around the table</p>
+        <h2>Built for the rhythm of game night.</h2>
+      </div>
+      <div class="section-copy">
+        <p>Preparation should feel creative, play should feel effortless, and the software should never become the main character.</p>
+      </div>
+
+      <figure class="media-frame">
+        <img src="assets/a-live-session-in-progress.webp"
+          alt="A live Gravewright session with a quest journal open beside the dungeon map and character tokens."
+          width="1914" height="906" loading="lazy" decoding="async" />
+      </figure>
+
+      <div class="focus-grid beginner-grid">
+        <article>
+          <span class="step-number">FOR THE GM</span>
+          <h3>Prepare with confidence</h3>
+          <p>Organize the campaign, shape each reveal, and keep the tools you need close without crowding the table.</p>
+        </article>
+        <article>
+          <span class="step-number">FOR THE PLAYERS</span>
+          <h3>Join and start playing</h3>
+          <p>Enter through the browser, find your character, and stay connected to what is happening in the scene.</p>
+        </article>
+        <article>
+          <span class="step-number">FOR THE CAMPAIGN</span>
+          <h3>Let the world grow</h3>
+          <p>Carry characters, discoveries, missions, and consequences forward from one session to the next.</p>
+        </article>
+      </div>
+      <p class="beginner-next"><a class="text-link" href="wiki/pages/primeira-mesa.html">Ready to play? Create your first table →</a></p>
+    </section>
+
+    <section class="warning-section shell" aria-labelledby="beta-title">
+      <div class="warning-icon" aria-hidden="true">!</div>
+      <div>
+        <p class="section-label">Built for play, still growing</p>
+        <h2 id="beta-title">Beta 4 is ready for broader testing.</h2>
+        <p>Run a one-shot, explore a new system, or bring your campaign along while Gravewright continues to improve.</p>
+        <p>Your feedback during Beta helps shape a more dependable and enjoyable first LTS release.</p>
+        <p><strong>Keep verified backups of any campaign data you care about.</strong></p>
+      </div>
+    </section>
+
+    <section class="section shell" id="release">
+      <div class="section-heading">
+        <p class="section-label">What is new</p>
+        <h2>Beta 4 brings package authoring and distribution into one coherent workflow.</h2>
+      </div>
+      <div class="section-copy">
+        <p>The operator CLI and the public SDK are certified in parity against SDK 1 RC 1. Packages still declare <code>sdkVersion: "1"</code>; RC status is release metadata.</p>
+      </div>
+      <figure class="media-frame">
+        <img src="assets/workflow.webp"
+          alt="Gravewright campaign dashboard with controls to create, join, import, open, and manage a table."
+          width="1914" height="906" loading="lazy" decoding="async" />
+      </figure>
+      <div class="focus-grid">
+        <article>
+          <h3>Author with confidence</h3>
+          <p>Scaffold all six package kinds with flags, a guided wizard, ruleset templates, dry runs, JSON output, validation, and Package Doctor.</p>
+        </article>
+        <article>
+          <h3>Publish by channel</h3>
+          <p>Marketplace v2 publishes Core and packages through <strong>stable</strong>, <strong>testing</strong>, and <strong>dev</strong>, with explicit provenance and verified artifacts.</p>
+        </article>
+        <article>
+          <h3>Ship content packs v2</h3>
+          <p>Indexed inline or lazy documents give actors, items, scenes, cards, decks, journals, and other content a consistent import format.</p>
+        </article>
+        <article>
+          <h3>Automate safely</h3>
+          <p>Stable JSON errors, bounded AI diagnostics, local refresh, and verified remote updates make tooling predictable without bypassing confirmation.</p>
+        </article>
+      </div>
+      <p class="beginner-next"><a class="text-link" href="wiki/pages/release-beta-4.html">Read the Beta 4 guide →</a></p>
+    </section>
+
+    <section class="section shell" id="install">
+      <div class="section-heading">
+        <p class="section-label">Try Gravewright</p>
+        <h2>Choose the packaged release unless you plan to develop Gravewright.</h2>
+      </div>
+      <div class="section-copy link-stack">
+        <a href="https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.4/Gravewright-Windows-x64.zip">
+          <span aria-hidden="true">⊞</span> Download Gravewright for Windows ↗
+        </a>
+        <a href="https://github.com/Gravewright/gravewright/releases/tag/v1.0.0-beta.4">View the Beta 4 release notes ↗</a>
+        <a href="wiki/pages/instalacao.html">Open the step-by-step installation guide →</a>
+      </div>
+
+      <div class="install-layout">
+        <div class="install-copy">
+          <p class="section-label">Advanced: run from source</p>
+          <h3>These commands are for contributors and developers.</h3>
+          <p>Most Game Masters should use the packaged release above. Continue here only if you want to run the latest source code or contribute to the project.</p>
+          <div class="requirements">
+            <strong>For source installs</strong>
+            <span>Python 3.11 or newer</span>
+            <span>uv</span>
+          </div>
+        </div>
+
+        <div class="terminal" data-terminal>
+          <div class="terminal-header">
+            <span>Source setup</span>
+            <button type="button" data-copy="unix">Copy</button>
+          </div>
+          <pre><code data-code="unix">git clone https://github.com/Gravewright/gravewright.git
+cd gravewright
+cp .env.example .env
+uv sync
+chmod +x grave
+./grave doctor
+./grave run --open</code></pre>
+          <div class="terminal-footer">Then open: <code>http://127.0.0.1:8000</code></div>
+        </div>
+      </div>
+
+      <div class="install-layout windows-layout">
+        <div class="install-copy">
+          <p class="section-label">Windows PowerShell</p>
+          <p>This is the source-code workflow for Windows. It is not required when using the packaged Windows release.</p>
+        </div>
+        <div class="terminal" data-terminal>
+          <div class="terminal-header">
+            <span>Windows source setup</span>
+            <button type="button" data-copy="windows">Copy</button>
+          </div>
+          <pre><code data-code="windows">git clone https://github.com/Gravewright/gravewright.git
+cd gravewright
+Copy-Item .env.example .env
+uv sync
+.\grave.bat doctor
+.\grave.bat run --open</code></pre>
+          <div class="terminal-footer">Need help? See the documentation linked above.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section shell" id="cli">
+      <div class="section-heading">
+        <p class="section-label">The experience</p>
+        <h2>Set the scene. Invite the party. Let the world respond.</h2>
+      </div>
+      <div class="section-copy">
+        <p>Gravewright connects preparation, atmosphere, action, and campaign memory so every part of the session feels like the same world.</p>
+      </div>
+
+      <div class="focus-grid">
+        <article>
+          <h3>Your preferred view</h3>
+          <p>Choose a clean, lightweight presentation or a richer cinematic experience without changing it for everyone else.</p>
+        </article>
+        <article>
+          <h3>Discovery feels natural</h3>
+          <p>Doors, walls, light, and movement work together so exploring a scene feels coherent and rewarding.</p>
+        </article>
+        <article>
+          <h3>Atmosphere with purpose</h3>
+          <p>Weather, animated light, and scene effects help every location carry its own identity.</p>
+        </article>
+        <article>
+          <h3>Less table management</h3>
+          <p>Invites, ready checks, snapshots, search, and campaign tools handle the busywork around the adventure.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell audiences" id="sdk">
+      <div class="audience-grid">
+        <article>
+          <h3>For Players and Game Masters</h3>
+          <p>Gravewright is built to feel like a tabletop first. Create a scene, invite the group, move tokens, reveal the map, roll dice, use cards, track combat, and keep the session moving.</p>
+          <ul>
+            <li>maps, walls, doors, fog, and lighting</li>
+            <li>tokens, sheets, PDFs, items, and resources</li>
+            <li>chat, dice, cards, and combat</li>
+            <li>particles, weather, and cinematic effects</li>
+            <li>permissions, streamer views, and campaign tools</li>
+          </ul>
+        </article>
+
+        <article>
+          <h3>For RPG System Creators</h3>
+          <p>Want Gravewright to understand your game? Ruleset packages can define the sheets, rolls, resources, conditions, combat behavior, initiative, and presentation that make your system unique.</p>
+          <ul>
+            <li>custom actor and item types</li>
+            <li>game-specific sheets and rolls</li>
+            <li>derived values and conditions</li>
+            <li>custom combat and initiative</li>
+            <li>localization and starter content</li>
+          </ul>
+          <a href="wiki/pages/pacotes-rulesets.html">Explore the Gravewright SDK →</a>
+        </article>
+
+        <article>
+          <h3>For Tinkerers and Developers</h3>
+          <p>Gravewright stays open to experimentation. Addons, themes, libraries, content packs, and reusable assets can extend a table without changing the core project.</p>
+          <div class="tag-list" aria-label="Supported package kinds">
+            <span>ruleset</span>
+            <span>addon</span>
+            <span>library</span>
+            <span>theme</span>
+            <span>content</span>
+            <span>assets</span>
+          </div>
+          <p>The technical documentation is there when you need it, but players and GMs do not need to learn the SDK to use Gravewright.</p>
+          <a href="wiki/pages/pacotes-rulesets.html">Developer documentation →</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section shell" id="contribute">
+      <div class="section-heading">
+        <p class="section-label">Help shape Gravewright</p>
+        <h2>Play it, break it, improve it.</h2>
+      </div>
+      <div class="contribute-layout">
+        <div>
+          <p>Gravewright is still growing, and real tables are some of the best testing environments. Useful contributions include:</p>
+          <ul class="plain-list">
+            <li>bug reports</li>
+            <li>session feedback</li>
+            <li>UI and accessibility improvements</li>
+            <li>performance testing</li>
+            <li>documentation</li>
+            <li>ruleset examples</li>
+            <li>addon examples</li>
+            <li>lower-end hardware testing</li>
+            <li>backup and restore testing</li>
+            <li>translations</li>
+          </ul>
+        </div>
+        <div class="resource-card">
+          <a href="https://github.com/Gravewright/gravewright/blob/main/CONTRIBUTING.md">Contributing guide <span>↗</span></a>
+          <a href="wiki/index.html">Documentation <span>→</span></a>
+          <a href="https://github.com/Gravewright/gravewright/issues">Report an issue <span>↗</span></a>
+          <a href="https://github.com/Gravewright/gravewright/blob/main/SECURITY.md">Security <span>↗</span></a>
+          <a href="wiki/pages/pacotes-rulesets.html">SDK documentation <span>→</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="status-section shell">
+      <div>
+        <p class="section-label">Project Status</p>
+        <h2>Gravewright is currently v1.0.0 Beta 4.</h2>
+        <p>Beta 4 includes the main pieces expected from a general-purpose VTT and certifies the CLI and package workflow against SDK 1 RC 1.</p>
+        <p>The next stage is less about proving how many features Gravewright can have and more about making the whole experience dependable, polished, and easier to use.</p>
+        <p><strong>Beta software can still change. Keep backups of important campaign data.</strong></p>
+      </div>
+      <div>
+        <p class="section-label">Language</p>
+        <p>The primary project documentation is written in English.</p>
+        <p>The wiki is also available in Brazilian Portuguese and Spanish from its language selector.</p>
+        <a class="button button-secondary" href="wiki/pages/inicio.html?lang=pt-br">Português (Brasil) →</a>
+      </div>
+    </section>
+
+    <section class="final-cta shell">
+      <img
+        src="assets/icon.svg"
+        alt="Gravewright logo"
+        width="72"
+        height="72"
+        data-logo
+      >
+      <div>
+        <h2>Build worlds. Run games. Own your table.</h2>
+      </div>
+      <a class="button button-primary" href="https://github.com/Gravewright/gravewright/releases/download/v1.0.0-beta.4/Gravewright-Windows-x64.zip">Try Gravewright Beta 4</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div class="brand footer-brand">
+        <span class="brand-icon">
+          <img
+            src="assets/icon.svg"
+            alt=""
+            width="34"
+            height="34"
+            data-logo
+          >
+          <span class="brand-fallback" aria-hidden="true">G</span>
+        </span>
+        <span>Gravewright</span>
+      </div>
+      <p>Open-source virtual tabletop.</p>
+      <p>© <span data-year></span> Gravewright</p>
+    </div>
+  </footer>
+
+  <div class="toast" role="status" aria-live="polite" data-toast></div>
+</body>
+</html>

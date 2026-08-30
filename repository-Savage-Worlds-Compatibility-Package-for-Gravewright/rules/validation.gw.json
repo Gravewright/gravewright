@@ -1,0 +1,553 @@
+{
+  "validation": {
+    "character": {
+      "sheet.attributes.agility.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.agility.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.smarts.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.smarts.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.spirit.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.spirit.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.strength.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.strength.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.vigor.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.vigor.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.wounds.value": {
+        "type": "number",
+        "min": 0,
+        "max": 10
+      },
+      "sheet.wounds.max": {
+        "type": "number",
+        "min": 1,
+        "max": 10
+      },
+      "sheet.fatigue.value": {
+        "type": "number",
+        "min": 0,
+        "max": 5
+      },
+      "sheet.fatigue.max": {
+        "type": "number",
+        "min": 1,
+        "max": 5
+      },
+      "sheet.stats.pace.value": {
+        "type": "number",
+        "min": 0,
+        "max": 60
+      },
+      "sheet.stats.pace.running": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.stats.size": {
+        "type": "number",
+        "min": -4,
+        "max": 12
+      },
+      "sheet.stats.parry.fightingSides": {
+        "type": "number",
+        "enum": [
+          0,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 0,
+        "max": 12
+      },
+      "sheet.stats.parry.fightingModifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.stats.parry.modifier": {
+        "type": "number",
+        "min": -6,
+        "max": 6
+      },
+      "sheet.stats.parry.shield": {
+        "type": "number",
+        "min": 0,
+        "max": 6
+      },
+      "sheet.stats.toughness.modifier": {
+        "type": "number",
+        "min": -6,
+        "max": 20
+      },
+      "sheet.stats.toughness.armor": {
+        "type": "number",
+        "min": 0,
+        "max": 20
+      },
+      "sheet.stats.load.value": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      },
+      "sheet.power.points.value": {
+        "type": "number",
+        "min": 0,
+        "max": 100
+      },
+      "sheet.power.points.max": {
+        "type": "number",
+        "min": 0,
+        "max": 100
+      },
+      "sheet.advances": {
+        "type": "number",
+        "min": 0,
+        "max": 100
+      },
+      "sheet.bennies.value": {
+        "type": "number",
+        "min": 0,
+        "max": 20
+      },
+      "sheet.bennies.max": {
+        "type": "number",
+        "min": 0,
+        "max": 20
+      },
+      "sheet.wildDie.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      }
+    },
+    "extra": {
+      "sheet.attributes.agility.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.agility.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.smarts.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.smarts.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.spirit.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.spirit.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.strength.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.strength.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.attributes.vigor.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.attributes.vigor.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.wounds.value": {
+        "type": "number",
+        "min": 0,
+        "max": 10
+      },
+      "sheet.wounds.max": {
+        "type": "number",
+        "min": 1,
+        "max": 10
+      },
+      "sheet.fatigue.value": {
+        "type": "number",
+        "min": 0,
+        "max": 5
+      },
+      "sheet.fatigue.max": {
+        "type": "number",
+        "min": 1,
+        "max": 5
+      },
+      "sheet.stats.pace.value": {
+        "type": "number",
+        "min": 0,
+        "max": 60
+      },
+      "sheet.stats.pace.running": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "sheet.stats.size": {
+        "type": "number",
+        "min": -4,
+        "max": 12
+      },
+      "sheet.stats.parry.fightingSides": {
+        "type": "number",
+        "enum": [
+          0,
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 0,
+        "max": 12
+      },
+      "sheet.stats.parry.fightingModifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.stats.parry.modifier": {
+        "type": "number",
+        "min": -6,
+        "max": 6
+      },
+      "sheet.stats.parry.shield": {
+        "type": "number",
+        "min": 0,
+        "max": 6
+      },
+      "sheet.stats.toughness.modifier": {
+        "type": "number",
+        "min": -6,
+        "max": 20
+      },
+      "sheet.stats.toughness.armor": {
+        "type": "number",
+        "min": 0,
+        "max": 20
+      },
+      "sheet.stats.load.value": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      },
+      "sheet.power.points.value": {
+        "type": "number",
+        "min": 0,
+        "max": 100
+      },
+      "sheet.power.points.max": {
+        "type": "number",
+        "min": 0,
+        "max": 100
+      },
+      "sheet.advances": {
+        "type": "number",
+        "min": 0,
+        "max": 100
+      }
+    },
+    "vehicle": {
+      "sheet.stats.toughness.value": {
+        "type": "number",
+        "min": 0,
+        "max": 60
+      },
+      "sheet.stats.toughness.armor": {
+        "type": "number",
+        "min": 0,
+        "max": 60
+      },
+      "sheet.wounds.value": {
+        "type": "number",
+        "min": 0,
+        "max": 10
+      },
+      "sheet.wounds.max": {
+        "type": "number",
+        "min": 1,
+        "max": 10
+      },
+      "sheet.handling": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      },
+      "sheet.stats.scale": {
+        "type": "number",
+        "min": -4,
+        "max": 12
+      },
+      "sheet.stats.crew.min": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      },
+      "sheet.stats.crew.max": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      }
+    },
+    "skill": {
+      "item.die.sides": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "item.die.modifier": {
+        "type": "number",
+        "min": -4,
+        "max": 4
+      }
+    },
+    "weapon": {
+      "item.ap": {
+        "type": "number",
+        "min": 0,
+        "max": 20
+      },
+      "item.rof": {
+        "type": "number",
+        "min": 1,
+        "max": 10
+      },
+      "item.reach": {
+        "type": "number",
+        "min": 0,
+        "max": 10
+      },
+      "item.minStrength": {
+        "type": "number",
+        "enum": [
+          4,
+          6,
+          8,
+          10,
+          12
+        ],
+        "min": 4,
+        "max": 12
+      },
+      "item.quantity": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      },
+      "item.weight": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      }
+    },
+    "armor": {
+      "item.armor": {
+        "type": "number",
+        "min": 0,
+        "max": 20
+      },
+      "item.quantity": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      },
+      "item.weight": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      }
+    },
+    "shield": {
+      "item.parryBonus": {
+        "type": "number",
+        "min": 0,
+        "max": 6
+      },
+      "item.coverBonus": {
+        "type": "number",
+        "min": 0,
+        "max": 6
+      },
+      "item.weight": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      }
+    },
+    "gear": {
+      "item.quantity": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      },
+      "item.weight": {
+        "type": "number",
+        "min": 0,
+        "max": 999
+      }
+    },
+    "power": {
+      "item.powerPoints": {
+        "type": "number",
+        "min": 0,
+        "max": 100
+      }
+    }
+  }
+}

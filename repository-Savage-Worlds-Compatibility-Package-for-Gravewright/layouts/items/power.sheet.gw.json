@@ -1,0 +1,74 @@
+{
+  "kind": "itemSheet",
+  "system": "savage-worlds",
+  "id": "savage-worlds-power",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "item",
+    "labelKey": "savage-worlds.ui.poder",
+    "children": [
+      {
+        "type": "grid",
+        "columns": 2,
+        "variant": "identity",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "savage-worlds.ui.nome",
+            "variant": "name"
+          },
+          {
+            "type": "numberField",
+            "path": "sheet.powerPoints",
+            "labelKey": "savage-worlds.ui.custo"
+          },
+          {
+            "type": "checkboxField",
+            "path": "sheet.equipped",
+            "variant": "flag",
+            "labelKey": "savage-worlds.ui.preparado"
+          }
+        ]
+      },
+      {
+        "type": "grid",
+        "columns": 2,
+        "variant": "mechanics",
+        "children": [
+          {
+            "type": "textField",
+            "path": "sheet.range",
+            "labelKey": "savage-worlds.ui.alcance"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.duration",
+            "labelKey": "savage-worlds.ui.duracao"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.damage",
+            "labelKey": "savage-worlds.ui.dano.formula",
+            "variant": "wide"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.trapping",
+            "labelKey": "savage-worlds.ui.manifestacao",
+            "variant": "wide"
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "variant": "notes",
+        "labelKey": "savage-worlds.ui.descricao"
+      }
+    ]
+  }
+}

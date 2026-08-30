@@ -1,0 +1,3126 @@
+{
+  "actions": {
+    "roll.trait.agility": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.agilidade",
+      "formula": "max(acing(@sheet.attributes.agility.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.agility.modifier - @sheet.penalty.physical",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.agilidade"
+      }
+    },
+    "roll.trait.agility.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.agilidade",
+      "formula": "acing(@sheet.attributes.agility.sides) + @sheet.attributes.agility.modifier - @sheet.penalty.physical",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.agilidade"
+      }
+    },
+    "roll.trait.smarts": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.astucia",
+      "formula": "max(acing(@sheet.attributes.smarts.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.smarts.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.astucia"
+      }
+    },
+    "roll.trait.smarts.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.astucia",
+      "formula": "acing(@sheet.attributes.smarts.sides) + @sheet.attributes.smarts.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.astucia"
+      }
+    },
+    "roll.trait.spirit": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.espirito",
+      "formula": "max(acing(@sheet.attributes.spirit.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.spirit.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "purpose",
+            "type": "segmented",
+            "default": "trait",
+            "labelKey": "savage-worlds.ui.para.que",
+            "options": [
+              {
+                "value": "trait",
+                "labelKey": "savage-worlds.ui.teste.de.espirito"
+              },
+              {
+                "value": "unshake",
+                "labelKey": "savage-worlds.ui.sair.do.abalado",
+                "action": "roll.unshake"
+              }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.espirito",
+        "actionField": "purpose"
+      }
+    },
+    "roll.trait.spirit.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.espirito",
+      "formula": "acing(@sheet.attributes.spirit.sides) + @sheet.attributes.spirit.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "purpose",
+            "type": "segmented",
+            "default": "trait",
+            "labelKey": "savage-worlds.ui.para.que",
+            "options": [
+              {
+                "value": "trait",
+                "labelKey": "savage-worlds.ui.teste.de.espirito"
+              },
+              {
+                "value": "unshake",
+                "labelKey": "savage-worlds.ui.sair.do.abalado",
+                "action": "roll.unshake.extra"
+              }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.espirito",
+        "actionField": "purpose"
+      }
+    },
+    "roll.trait.strength": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.forca",
+      "formula": "max(acing(@sheet.attributes.strength.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.strength.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "purpose",
+            "type": "segmented",
+            "default": "trait",
+            "labelKey": "savage-worlds.ui.para.que",
+            "options": [
+              {
+                "value": "trait",
+                "labelKey": "savage-worlds.ui.teste.de.forca"
+              },
+              {
+                "value": "damage",
+                "labelKey": "savage-worlds.ui.dano.de.forca",
+                "action": "roll.damage.strength"
+              }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.forca",
+        "actionField": "purpose"
+      }
+    },
+    "roll.trait.strength.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.forca",
+      "formula": "acing(@sheet.attributes.strength.sides) + @sheet.attributes.strength.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "purpose",
+            "type": "segmented",
+            "default": "trait",
+            "labelKey": "savage-worlds.ui.para.que",
+            "options": [
+              {
+                "value": "trait",
+                "labelKey": "savage-worlds.ui.teste.de.forca"
+              },
+              {
+                "value": "damage",
+                "labelKey": "savage-worlds.ui.dano.de.forca",
+                "action": "roll.damage.strength"
+              }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.forca",
+        "actionField": "purpose"
+      }
+    },
+    "roll.trait.vigor": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.vigor",
+      "formula": "max(acing(@sheet.attributes.vigor.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.vigor.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "purpose",
+            "type": "segmented",
+            "default": "trait",
+            "labelKey": "savage-worlds.ui.para.que",
+            "options": [
+              {
+                "value": "trait",
+                "labelKey": "savage-worlds.ui.teste.de.vigor"
+              },
+              {
+                "value": "soak",
+                "labelKey": "savage-worlds.ui.absorver",
+                "action": "roll.soak"
+              }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.vigor",
+        "actionField": "purpose"
+      }
+    },
+    "roll.trait.vigor.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.vigor",
+      "formula": "acing(@sheet.attributes.vigor.sides) + @sheet.attributes.vigor.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "purpose",
+            "type": "segmented",
+            "default": "trait",
+            "labelKey": "savage-worlds.ui.para.que",
+            "options": [
+              {
+                "value": "trait",
+                "labelKey": "savage-worlds.ui.teste.de.vigor"
+              },
+              {
+                "value": "soak",
+                "labelKey": "savage-worlds.ui.absorver",
+                "action": "roll.soak.extra"
+              }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.vigor",
+        "actionField": "purpose"
+      }
+    },
+    "roll.skill": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.pericia",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total",
+      "pool": {
+        "countInput": "rateOfFire",
+        "wildFormula": "acing(@sheet.wildDie.sides) + @item.data.die.modifier - @sheet.penalty.total",
+        "target": 4,
+        "step": 4
+      },
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "item.data.attribute == 'agility'",
+          "append": "-@sheet.stats.load.encumbrance"
+        },
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.pericia"
+      }
+    },
+    "roll.skill.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.de.pericia",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "item.data.attribute == 'agility'",
+          "append": "-@sheet.stats.load.encumbrance"
+        },
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.pericia"
+      }
+    },
+    "roll.unskilled": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.sem.pericia",
+      "formula": "max(acing(4), acing(@sheet.wildDie.sides)) - 2 - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.sem.pericia"
+      }
+    },
+    "roll.unskilled.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.teste.sem.pericia",
+      "formula": "acing(4) - 2 - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.sem.pericia"
+      }
+    },
+    "roll.attack": {
+      "type": "roll",
+      "label": "savage-worlds.ui.ataque",
+      "formula": "max(acing(@item.data.die.sides), acing(@sheet.wildDie.sides)) + @item.data.die.modifier - @sheet.penalty.total",
+      "itemResource": {
+        "path": "data.ammo.value",
+        "capacityPath": "data.ammo.max",
+        "limitPath": "data.rof",
+        "input": "rateOfFire",
+        "default": 1,
+        "costs": { "1": 1, "2": 5, "3": 10, "4": 20, "5": 40, "6": 50 }
+      },
+      "visibility": "public",
+      "chatCard": "attack",
+      "transforms": [
+        {
+          "when": "input.rateOfFire != '1'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.rangeBand == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.rangeBand == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.rangeBand == '-8'",
+          "append": -8
+        },
+        {
+          "when": "input.coverPenalty != 0",
+          "append": "@input.coverPenalty"
+        },
+        {
+          "when": "sheet.conditions.aiming && item.data.range != '' && input.attackMode != 'melee' && input.aimingBenefit == 'bonus'",
+          "append": 2
+        },
+        {
+          "when": "sheet.conditions.aiming && item.data.range != '' && input.attackMode != 'melee' && input.aimingBenefit == 'ignore2'",
+          "append": 2
+        },
+        {
+          "when": "sheet.conditions.aiming && item.data.range != '' && input.attackMode != 'melee' && input.aimingBenefit == 'ignore4'",
+          "append": 4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "attack",
+        "fields": [
+          {
+            "id": "rateOfFire",
+            "type": "segmented",
+            "default": "1",
+            "labelKey": "savage-worlds.ui.cadencia.usada",
+            "options": [
+              { "value": "1", "label": "1" },
+              { "value": "2", "label": "2" },
+              { "value": "3", "label": "3" },
+              { "value": "4", "label": "4" },
+              { "value": "5", "label": "5" },
+              { "value": "6", "label": "6" }
+            ]
+          },
+          {
+            "id": "attackMode",
+            "type": "segmented",
+            "default": "",
+            "label": "Tipo de ataque",
+            "options": [
+              { "value": "", "label": "Automático" },
+              { "value": "melee", "label": "Corpo a corpo" },
+              { "value": "ranged", "label": "À distância" },
+              { "value": "spell", "label": "Poder" }
+            ]
+          },
+          {
+            "id": "targetDistance",
+            "type": "segmented",
+            "default": "",
+            "label": "Distância do alvo",
+            "options": [
+              { "value": "", "label": "Não informada" },
+              { "value": "close", "label": "Menos de 3 quadros" },
+              { "value": "distant", "label": "3+ quadros" }
+            ]
+          },
+          {
+            "id": "aimingBenefit",
+            "type": "segmented",
+            "default": "",
+            "label": "Benefício de Mirar",
+            "options": [
+              { "value": "", "label": "Nenhum" },
+              { "value": "bonus", "label": "+2 na rolagem" },
+              { "value": "ignore2", "label": "Ignorar 2" },
+              { "value": "ignore4", "label": "Ignorar 4" }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "rangeBand",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.faixa.de.alcance",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.alcance.curto"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.alcance.medio"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.alcance.longo"
+              },
+              {
+                "value": "-8",
+                "labelKey": "savage-worlds.ui.alcance.extremo"
+              }
+            ]
+          },
+          {
+            "id": "coverPenalty",
+            "type": "segmented",
+            "default": "0",
+            "label": "Cobertura do alvo",
+            "options": [
+              { "value": "0", "label": "Sem cobertura" },
+              { "value": "-2", "label": "−2" },
+              { "value": "-4", "label": "−4" },
+              { "value": "-6", "label": "−6" },
+              { "value": "-8", "label": "−8" }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.ataque"
+      }
+    },
+    "roll.attack.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.ataque",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total",
+      "pool": {
+        "countInput": "rateOfFire",
+        "target": 4,
+        "step": 4
+      },
+      "itemResource": {
+        "path": "data.ammo.value",
+        "capacityPath": "data.ammo.max",
+        "limitPath": "data.rof",
+        "input": "rateOfFire",
+        "default": 1,
+        "costs": { "1": 1, "2": 5, "3": 10, "4": 20, "5": 40, "6": 50 }
+      },
+      "visibility": "public",
+      "chatCard": "attack",
+      "transforms": [
+        {
+          "when": "input.rateOfFire != '1'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.rangeBand == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.rangeBand == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.rangeBand == '-8'",
+          "append": -8
+        },
+        {
+          "when": "input.coverPenalty != 0",
+          "append": "@input.coverPenalty"
+        },
+        {
+          "when": "sheet.conditions.aiming && item.data.range != '' && input.attackMode != 'melee' && input.aimingBenefit == 'bonus'",
+          "append": 2
+        },
+        {
+          "when": "sheet.conditions.aiming && item.data.range != '' && input.attackMode != 'melee' && input.aimingBenefit == 'ignore2'",
+          "append": 2
+        },
+        {
+          "when": "sheet.conditions.aiming && item.data.range != '' && input.attackMode != 'melee' && input.aimingBenefit == 'ignore4'",
+          "append": 4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "attack",
+        "fields": [
+          {
+            "id": "rateOfFire",
+            "type": "segmented",
+            "default": "1",
+            "labelKey": "savage-worlds.ui.cadencia.usada",
+            "options": [
+              { "value": "1", "label": "1" },
+              { "value": "2", "label": "2" },
+              { "value": "3", "label": "3" },
+              { "value": "4", "label": "4" },
+              { "value": "5", "label": "5" },
+              { "value": "6", "label": "6" }
+            ]
+          },
+          {
+            "id": "attackMode",
+            "type": "segmented",
+            "default": "",
+            "label": "Tipo de ataque",
+            "options": [
+              { "value": "", "label": "Automático" },
+              { "value": "melee", "label": "Corpo a corpo" },
+              { "value": "ranged", "label": "À distância" },
+              { "value": "spell", "label": "Poder" }
+            ]
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "targetDistance",
+            "type": "segmented",
+            "default": "",
+            "label": "Distância do alvo",
+            "options": [
+              { "value": "", "label": "Não informada" },
+              { "value": "close", "label": "Menos de 3 quadros" },
+              { "value": "distant", "label": "3+ quadros" }
+            ]
+          },
+          {
+            "id": "aimingBenefit",
+            "type": "segmented",
+            "default": "",
+            "label": "Benefício de Mirar",
+            "options": [
+              { "value": "", "label": "Nenhum" },
+              { "value": "bonus", "label": "+2 na rolagem" },
+              { "value": "ignore2", "label": "Ignorar 2" },
+              { "value": "ignore4", "label": "Ignorar 4" }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "rangeBand",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.faixa.de.alcance",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.alcance.curto"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.alcance.medio"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.alcance.longo"
+              },
+              {
+                "value": "-8",
+                "labelKey": "savage-worlds.ui.alcance.extremo"
+              }
+            ]
+          },
+          {
+            "id": "coverPenalty",
+            "type": "segmented",
+            "default": "0",
+            "label": "Cobertura do alvo",
+            "options": [
+              { "value": "0", "label": "Sem cobertura" },
+              { "value": "-2", "label": "−2" },
+              { "value": "-4", "label": "−4" },
+              { "value": "-6", "label": "−6" },
+              { "value": "-8", "label": "−8" }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.ataque"
+      }
+    },
+    "roll.soak": {
+      "type": "roll",
+      "selfResolution": { "mode": "soak-pending-damage" },
+      "label": "savage-worlds.ui.absorver",
+      "formula": "max(acing(@sheet.attributes.vigor.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.vigor.modifier - @sheet.penalty.total + @sheet._pendingDamage.woundPenaltyIncrease",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.absorver"
+      }
+    },
+    "roll.soak.extra": {
+      "type": "roll",
+      "selfResolution": { "mode": "soak-pending-damage" },
+      "label": "savage-worlds.ui.absorver",
+      "formula": "acing(@sheet.attributes.vigor.sides) + @sheet.attributes.vigor.modifier - @sheet.penalty.total + @sheet._pendingDamage.woundPenaltyIncrease",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.absorver"
+      }
+    },
+    "roll.unshake": {
+      "type": "roll",
+      "selfResolution": { "mode": "clear-condition-on-success", "condition": "shaken", "target": 4 },
+      "label": "savage-worlds.ui.sair.do.abalado",
+      "formula": "max(acing(@sheet.attributes.spirit.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.spirit.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.sair.do.abalado"
+      }
+    },
+    "roll.unshake.extra": {
+      "type": "roll",
+      "selfResolution": { "mode": "clear-condition-on-success", "condition": "shaken", "target": 4 },
+      "label": "savage-worlds.ui.sair.do.abalado",
+      "formula": "acing(@sheet.attributes.spirit.sides) + @sheet.attributes.spirit.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.sair.do.abalado"
+      }
+    },
+    "roll.power": {
+      "type": "roll",
+      "label": "savage-worlds.ui.conjurar",
+      "formula": "max(acing(@item.data.die.sides), acing(@sheet.wildDie.sides)) + @item.data.die.modifier - @sheet.penalty.total",
+      "actorResource": {
+        "path": "power.points.value",
+        "costPath": "data.powerPoints",
+        "extraCostInput": "additionalPowerPoints"
+      },
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "additionalPowerPoints",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.pp.adicionais"
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.conjurar"
+      }
+    },
+    "roll.power.extra": {
+      "type": "roll",
+      "label": "savage-worlds.ui.conjurar",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total",
+      "actorResource": {
+        "path": "power.points.value",
+        "costPath": "data.powerPoints",
+        "extraCostInput": "additionalPowerPoints"
+      },
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.multiAction == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.multiAction == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "additionalPowerPoints",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.pp.adicionais"
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "multiAction",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.multiacao",
+            "options": [
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.multiacao.uma"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.multiacao.duas"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.multiacao.tres"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.conjurar"
+      }
+    },
+    "roll.opposed": {
+      "type": "roll",
+      "apply": { "mode": "opposed", "resolution": "configured" },
+      "label": "savage-worlds.ui.teste.resistido",
+      "formula": "max(acing(@item.data.die.sides), acing(@sheet.wildDie.sides)) + @item.data.die.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [{ "when": "input.extraModifier != 0", "append": "@input.extraModifier" }],
+      "dialog": {
+        "enabled": true,
+        "intent": "opposed",
+        "fields": [
+          { "id": "opposedAttribute", "type": "select", "default": "spirit", "labelKey": "savage-worlds.ui.atributo.resistente", "options": [
+            { "value": "agility", "labelKey": "savage-worlds.ui.agilidade" },
+            { "value": "smarts", "labelKey": "savage-worlds.ui.astucia" },
+            { "value": "spirit", "labelKey": "savage-worlds.ui.espirito" },
+            { "value": "strength", "labelKey": "savage-worlds.ui.forca" },
+            { "value": "vigor", "labelKey": "savage-worlds.ui.vigor" }
+          ] },
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.teste.resistido"
+      }
+    },
+    "roll.opposed.extra": {
+      "type": "roll",
+      "apply": { "mode": "opposed", "resolution": "configured" },
+      "label": "savage-worlds.ui.teste.resistido",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [{ "when": "input.extraModifier != 0", "append": "@input.extraModifier" }],
+      "dialog": {
+        "enabled": true,
+        "intent": "opposed",
+        "fields": [
+          { "id": "opposedAttribute", "type": "select", "default": "spirit", "labelKey": "savage-worlds.ui.atributo.resistente", "options": [
+            { "value": "agility", "labelKey": "savage-worlds.ui.agilidade" },
+            { "value": "smarts", "labelKey": "savage-worlds.ui.astucia" },
+            { "value": "spirit", "labelKey": "savage-worlds.ui.espirito" },
+            { "value": "strength", "labelKey": "savage-worlds.ui.forca" },
+            { "value": "vigor", "labelKey": "savage-worlds.ui.vigor" }
+          ] },
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.teste.resistido"
+      }
+    },
+    "roll.support": {
+      "type": "roll",
+      "apply": { "mode": "support", "resolution": "configured" },
+      "label": "savage-worlds.ui.suporte",
+      "formula": "max(acing(@item.data.die.sides), acing(@sheet.wildDie.sides)) + @item.data.die.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        { "when": "input.extraModifier != 0", "append": "@input.extraModifier" },
+        { "when": "input.extraDice", "appendEach": "@input.extraDice" }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "support",
+        "fields": [
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "extraDice", "type": "diceList", "labelKey": "savage-worlds.ui.dados.extras", "placeholderKey": "savage-worlds.ui.exemplo.dados" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.suporte"
+      }
+    },
+    "roll.support.extra": {
+      "type": "roll",
+      "apply": { "mode": "support", "resolution": "configured" },
+      "label": "savage-worlds.ui.suporte",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [{ "when": "input.extraModifier != 0", "append": "@input.extraModifier" }],
+      "dialog": {
+        "enabled": true,
+        "intent": "support",
+        "fields": [
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.suporte"
+      }
+    },
+    "state.recover-fatigue": {
+      "type": "patch",
+      "label": "savage-worlds.ui.recuperar.fadiga",
+      "patch": {
+        "sheet.fatigue.value": "max(0, @sheet.fatigue.value - 1)",
+        "sheet.conditions.fatigued": { "expression": "@sheet.fatigue.value - 1 > 0", "valueType": "boolean" },
+        "sheet.conditions.incapacitated": { "expression": "if(@sheet.fatigue.value > @sheet.fatigue.max && @sheet.wounds.value <= @sheet.wounds.max, 0, @sheet.conditions.incapacitated)", "valueType": "boolean" }
+      }
+    },
+    "roll.healing": {
+      "type": "roll",
+      "apply": { "mode": "heal", "resolution": "configured" },
+      "label": "savage-worlds.ui.curar",
+      "formula": "max(acing(@item.data.die.sides), acing(@sheet.wildDie.sides)) + @item.data.die.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        { "when": "input.hasKit == false", "append": -1 },
+        { "when": "input.extraModifier != 0", "append": "@input.extraModifier" },
+        { "when": "input.extraDice", "appendEach": "@input.extraDice" }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "heal",
+        "fields": [
+          { "id": "hasKit", "type": "boolean", "default": true, "labelKey": "savage-worlds.ui.kit.primeiros.socorros" },
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "extraDice", "type": "diceList", "labelKey": "savage-worlds.ui.dados.extras", "placeholderKey": "savage-worlds.ui.exemplo.dados" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.curar"
+      }
+    },
+    "roll.healing.extra": {
+      "type": "roll",
+      "apply": { "mode": "heal", "resolution": "configured" },
+      "label": "savage-worlds.ui.curar",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        { "when": "input.hasKit == false", "append": -1 },
+        { "when": "input.extraModifier != 0", "append": "@input.extraModifier" }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "heal",
+        "fields": [
+          { "id": "hasKit", "type": "boolean", "default": true, "labelKey": "savage-worlds.ui.kit.primeiros.socorros" },
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.curar"
+      }
+    },
+    "roll.natural-healing": {
+      "type": "roll",
+      "selfResolution": { "mode": "recover-wounds-on-success" },
+      "label": "savage-worlds.ui.cura.natural",
+      "formula": "max(acing(@sheet.attributes.vigor.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.vigor.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          { "type": "hint", "labelKey": "savage-worlds.ui.cura.natural.aviso" },
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.cura.natural"
+      },
+      "transforms": [{ "when": "input.extraModifier != 0", "append": "@input.extraModifier" }]
+    },
+    "roll.natural-healing.extra": {
+      "type": "roll",
+      "selfResolution": { "mode": "recover-wounds-on-success" },
+      "label": "savage-worlds.ui.cura.natural",
+      "formula": "acing(@sheet.attributes.vigor.sides) + @sheet.attributes.vigor.modifier - @sheet.penalty.total",
+      "visibility": "public",
+      "chatCard": "trait",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          { "type": "hint", "labelKey": "savage-worlds.ui.cura.natural.aviso" },
+          { "id": "extraModifier", "type": "number", "default": 0, "labelKey": "savage-worlds.ui.modificador.extra" },
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "titleKey": "savage-worlds.ui.cura.natural"
+      },
+      "transforms": [{ "when": "input.extraModifier != 0", "append": "@input.extraModifier" }]
+    },
+    "roll.damage": {
+      "type": "roll",
+      "apply": { "mode": "damage", "resolution": "configured", "armorPiercing": "@item.data.ap" },
+      "label": "savage-worlds.ui.dano",
+      "formula": "@item.data.damage",
+      "visibility": "public",
+      "chatCard": "damage",
+      "transforms": [
+        {
+          "when": "item.data.addStrength",
+          "append": "explode(@sheet.attributes.strength.sides, @sheet.attributes.strength.sides) + @sheet.attributes.strength.modifier"
+        },
+        {
+          "when": "input.raise",
+          "append": "explode(6, 6)"
+        },
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "damage",
+        "fields": [
+          {
+            "id": "damageMode",
+            "type": "segmented",
+            "default": "direct",
+            "label": "Tipo de dano",
+            "options": [
+              { "value": "direct", "label": "Direto" },
+              { "value": "area", "label": "Área" }
+            ]
+          },
+          {
+            "id": "raise",
+            "type": "boolean",
+            "default": false,
+            "labelKey": "savage-worlds.ui.com.raise"
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.dano"
+      }
+    },
+    "roll.damage.strength": {
+      "type": "roll",
+      "apply": { "mode": "damage", "resolution": "configured", "armorPiercing": "@item.data.ap" },
+      "label": "savage-worlds.ui.dano.de.forca",
+      "formula": "acing(@sheet.attributes.strength.sides) + @sheet.attributes.strength.modifier",
+      "visibility": "public",
+      "chatCard": "damage",
+      "transforms": [
+        {
+          "when": "input.raise",
+          "append": "acing(6)"
+        },
+        {
+          "when": "input.situational == '2'",
+          "append": 2
+        },
+        {
+          "when": "input.situational == '-2'",
+          "append": -2
+        },
+        {
+          "when": "input.situational == '-4'",
+          "append": -4
+        },
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "damage",
+        "fields": [
+          {
+            "id": "raise",
+            "type": "boolean",
+            "default": false,
+            "labelKey": "savage-worlds.ui.com.raise"
+          },
+          {
+            "id": "situational",
+            "type": "segmented",
+            "default": "0",
+            "labelKey": "savage-worlds.ui.situacao",
+            "options": [
+              {
+                "value": "2",
+                "labelKey": "savage-worlds.ui.facil"
+              },
+              {
+                "value": "0",
+                "labelKey": "savage-worlds.ui.normal"
+              },
+              {
+                "value": "-2",
+                "labelKey": "savage-worlds.ui.dificil"
+              },
+              {
+                "value": "-4",
+                "labelKey": "savage-worlds.ui.muito.dificil"
+              }
+            ]
+          },
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.dano.de.forca"
+      }
+    },
+    "roll.escape": {
+      "type": "roll",
+      "label": "Libertar-se (Força)",
+      "formula": "max(acing(@sheet.attributes.strength.sides), acing(@sheet.wildDie.sides)) + @sheet.attributes.strength.modifier - @sheet.penalty.total - 2",
+      "visibility": "public",
+      "chatCard": "trait",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "title": "Libertar-se (Força)"
+      }
+    },
+    "roll.escape.extra": {
+      "type": "roll",
+      "label": "Libertar-se (Força)",
+      "formula": "acing(@sheet.attributes.strength.sides) + @sheet.attributes.strength.modifier - @sheet.penalty.total - 2",
+      "visibility": "public",
+      "chatCard": "trait",
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          { "id": "visibility", "type": "visibility", "default": "public", "labelKey": "savage-worlds.ui.visibilidade" }
+        ],
+        "title": "Libertar-se (Força)"
+      }
+    },
+    "roll.escape.skill": {
+      "type": "roll",
+      "label": "Libertar-se (Atletismo)",
+      "formula": "max(acing(@item.data.die.sides), acing(@sheet.wildDie.sides)) + @item.data.die.modifier - @sheet.penalty.total - 2",
+      "visibility": "public",
+      "chatCard": "trait"
+    },
+    "roll.escape.skill.extra": {
+      "type": "roll",
+      "label": "Libertar-se (Atletismo)",
+      "formula": "acing(@item.data.die.sides) + @item.data.die.modifier - @sheet.penalty.total - 2",
+      "visibility": "public",
+      "chatCard": "trait"
+    },
+    "roll.running": {
+      "type": "roll",
+      "label": "savage-worlds.ui.corrida",
+      "formula": "die(@sheet.stats.pace.running) - @sheet.stats.load.encumbrance",
+      "visibility": "public",
+      "chatCard": "trait",
+      "transforms": [
+        {
+          "when": "input.extraModifier != 0",
+          "append": "@input.extraModifier"
+        },
+        {
+          "when": "input.extraDice",
+          "appendEach": "@input.extraDice"
+        }
+      ],
+      "dialog": {
+        "enabled": true,
+        "intent": "check",
+        "fields": [
+          {
+            "id": "extraModifier",
+            "type": "number",
+            "default": 0,
+            "labelKey": "savage-worlds.ui.modificador.extra"
+          },
+          {
+            "id": "extraDice",
+            "type": "diceList",
+            "labelKey": "savage-worlds.ui.dados.extras",
+            "placeholderKey": "savage-worlds.ui.exemplo.dados"
+          },
+          {
+            "id": "visibility",
+            "type": "visibility",
+            "default": "public",
+            "labelKey": "savage-worlds.ui.visibilidade"
+          }
+        ],
+        "titleKey": "savage-worlds.ui.corrida"
+      }
+    },
+    "roll.initiative": {
+      "type": "roll",
+      "label": "savage-worlds.ui.carta.de.acao",
+      "formula": "draw(54)",
+      "visibility": "public",
+      "chatCard": "trait"
+    },
+    "item.describe": {
+      "type": "chat",
+      "label": "@item.name",
+      "visibility": "public",
+      "chatCard": "item",
+      "intent": "describe",
+      "$comment": "Sem dado: leva o item à mesa como cartão."
+    },
+    "item.reload": {
+      "type": "itemPatch",
+      "label": "savage-worlds.ui.recarregar",
+      "patch": { "data.ammo.value": { "from": "data.ammo.max" } }
+    },
+    "item.describe.edge": {
+      "type": "chat",
+      "label": "@item.name",
+      "visibility": "public",
+      "chatCard": "item",
+      "intent": "describe",
+      "$comment": "Sem dado: leva a vantagem à mesa como cartão."
+    },
+    "item.describe.hindrance": {
+      "type": "chat",
+      "label": "@item.name",
+      "visibility": "public",
+      "chatCard": "item",
+      "intent": "describe",
+      "$comment": "Sem dado: leva a complicação à mesa como cartão."
+    }
+  }
+}

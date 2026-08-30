@@ -1,0 +1,124 @@
+{
+  "kind": "itemSheet",
+  "system": "savage-worlds",
+  "id": "savage-worlds-skill",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "item",
+    "labelKey": "savage-worlds.ui.pericia",
+    "children": [
+      {
+        "type": "grid",
+        "columns": 2,
+        "variant": "identity",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "savage-worlds.ui.nome",
+            "variant": "name"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.attribute",
+            "options": [
+              {
+                "value": "agility",
+                "labelKey": "savage-worlds.ui.agilidade"
+              },
+              {
+                "value": "smarts",
+                "labelKey": "savage-worlds.ui.astucia"
+              },
+              {
+                "value": "spirit",
+                "labelKey": "savage-worlds.ui.espirito"
+              },
+              {
+                "value": "strength",
+                "labelKey": "savage-worlds.ui.forca"
+              },
+              {
+                "value": "vigor",
+                "labelKey": "savage-worlds.ui.vigor"
+              }
+            ],
+            "labelKey": "savage-worlds.ui.atributo"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "variant": "mechanics",
+        "labelKey": "savage-worlds.ui.dado",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 2,
+            "variant": "mechanics",
+            "children": [
+              {
+                "type": "selectField",
+                "path": "sheet.die.sides",
+                "options": [
+                  {
+                    "value": 4,
+                    "labelKey": "savage-worlds.die.d4"
+                  },
+                  {
+                    "value": 6,
+                    "labelKey": "savage-worlds.die.d6"
+                  },
+                  {
+                    "value": 8,
+                    "labelKey": "savage-worlds.die.d8"
+                  },
+                  {
+                    "value": 10,
+                    "labelKey": "savage-worlds.die.d10"
+                  },
+                  {
+                    "value": 12,
+                    "labelKey": "savage-worlds.die.d12"
+                  }
+                ],
+                "labelKey": "savage-worlds.ui.dado"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.die.modifier",
+                "labelKey": "savage-worlds.ui.modificador"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.specialization",
+                "labelKey": "savage-worlds.ui.especializacao"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.isCore",
+                "variant": "flag",
+                "labelKey": "savage-worlds.ui.pericia.basica"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.summary",
+                "variant": "wide",
+                "labelKey": "savage-worlds.ui.resumo"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "variant": "notes",
+        "labelKey": "savage-worlds.ui.descricao"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1235 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Detailed reference for 32 capabilities: intended use, boundaries, APIs, and anti-patterns."><meta name="theme-color" content="#0b0d10"><title>Capabilities: scenes and tokens | Gravewright Wiki</title><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../wiki.css"><script src="../page.js" defer></script></head><body class="wiki-page" data-guide-slug="sdk-capabilities-cena" data-default-locale="en"><a class="skip-link" href="#wiki-article" data-i18n="skip">Skip to documentation</a><header class="site-header is-scrolled wiki-header"><div class="shell header-inner"><a class="brand" href="../../index.html"><span class="brand-icon"><img src="../../assets/icon.svg" alt="" width="34" height="34"></span><span>Gravewright <small>Wiki</small></span></a><div class="wiki-header-actions"><label class="wiki-language"><span data-i18n="language">Language</span><select data-language-select><option value="en" selected>English</option><option value="pt-br">Português</option><option value="es">Español</option></select></label><button class="wiki-icon-button wiki-mobile-nav" type="button" data-sidebar-toggle data-i18n-aria="openNavigation" aria-label="Open navigation">☰</button><a class="nav-button" href="https://github.com/Gravewright/gravewright" data-i18n="github">GitHub ↗</a></div></div></header><main class="wiki-shell"><aside class="wiki-sidebar" data-sidebar><div class="wiki-search-wrap"><label for="wiki-search" data-i18n="searchLabel">Search guides</label><div class="wiki-search-box"><span>⌕</span><input id="wiki-search" type="search" data-search placeholder="E.g. quest, map, backup…"></div><p class="wiki-search-empty" data-search-empty hidden>No guides found.</p></div><nav class="wiki-tree" data-wiki-tree><section class="wiki-tree-section"><strong>Start here</strong><a data-search-item data-search-text="welcome to gravewright understand what gravewright is and choose your next step. choose your journey essential concepts what you should see when you&#39;re done welcome gravewright understand what and choose your next step. journey essential concepts you should see when done" href="inicio.html">Welcome to Gravewright</a><a data-search-item data-search-text="installation and first start install zip desktop on windows or checkout the source code. windows: recommended desktop package where the data lives maintenance via launcher windows: source code checkout first access diagnosis by symptom installation and first start install zip desktop windows checkout the source code. windows: recommended package where data lives maintenance via launcher code access diagnosis symptom" href="instalacao.html">Installation and first start</a><a data-search-item data-search-text="your first table create a campaign, choose the system and enter the game space. create the campaign choose the system minimum preparation for a test checklist before inviting the group your first table create campaign choose the system and enter game space. minimum preparation for test checklist before inviting group" href="primeira-mesa.html">Your first table</a><a data-search-item data-search-text="gravewright beta 4 and sdk 1 rc 1 understand the current release, its contracts, and update precautions. highlights gravewright beta and sdk understand the current release its contracts update precautions. highlights" href="release-beta-4.html">Gravewright Beta 4 and SDK 1 RC 1</a></section><section class="wiki-tree-section"><strong>Players</strong><a data-search-item data-search-text="login as a player accept an invitation, join the table, and set up your experience. join by invitation first entry before the session if you lose access login player accept invitation join the table and set your experience. first entry before session you lose access" href="jogador.html">Login as a player</a><a data-search-item data-search-text="getting to know the interface learn to navigate between map, directories, tools and windows. windows map navigation directories and tools safe shortcuts to learn recovery getting know the interface learn navigate between map directories tools and windows. windows navigation safe shortcuts recovery" href="interface.html">Getting to know the interface</a></section><section class="wiki-tree-section"><strong>Game Masters</strong><a data-search-item data-search-text="players, invitations and permissions invite the group and control reading, ownership and access. invite campaign roles permissions for actors, items and journals remove or ban players invitations and permissions invite the group control reading ownership access. campaign roles for actors items journals remove ban" href="jogadores-permissoes.html">Players, invitations and permissions</a><a data-search-item data-search-text="scenes, maps, walls and vision create a playable map and control what each character sees. create a scene walls and doors dynamic lighting and vision mist and revelation diagnosis scenes maps walls and vision create playable map control what each character sees. scene doors dynamic lighting mist revelation diagnosis" href="cenas.html">Scenes, maps, walls and vision</a><a data-search-item data-search-text="actors and tokens create characters, grant ownership, and place them on the map. create an actor give the character to the player put on map configure the token movement good practices actors and tokens create characters grant ownership place them the map. actor give character player put map configure token movement good practices" href="atores-tokens.html">Actors and tokens</a><a data-search-item data-search-text="items, sheets and pdfs use ruleset sheets, equipment and fillable pdf documents. items html and declarative sheets gravewright pdf system security and copyright when a field doesn&#39;t work items sheets and pdfs use ruleset equipment fillable pdf documents. html declarative gravewright system security copyright when field doesn work" href="itens-fichas-pdf.html">Items, sheets and PDFs</a><a data-search-item data-search-text="journals, quests, and boards organize campaign texts and publish missions for players. journals create a quest quest board status visibility journals quests and boards organize campaign texts publish missions for players. create quest board status visibility" href="diarios-missoes.html">Journals, quests, and boards</a></section><section class="wiki-tree-section"><strong>Playing</strong><a data-search-item data-search-text="chat, dice, and combat conduct rolls, initiative, turns, and communication during the session. chat rolls start combat during a turn close chat dice and combat conduct rolls initiative turns communication during the session. start turn close" href="chat-combate.html">Chat, dice, and combat</a><a data-search-item data-search-text="cards, lights and effects use decks and visual atmosphere without compromising the session. cards lights particles and shaders performance rule of thumb cards lights and effects use decks visual atmosphere without compromising the session. particles shaders performance rule thumb" href="cartas-efeitos.html">Cards, lights and effects</a></section><section class="wiki-tree-section"><strong>Administration</strong><a data-search-item data-search-text="campaigns, snapshots and backups protect table data and recover unwanted changes. snapshot and backup are not the same thing recommended routine via cli clone and export before updating campaigns snapshots and backups protect table data recover unwanted changes. snapshot backup are not the same thing recommended routine via cli clone export before updating" href="administracao.html">Campaigns, snapshots and backups</a><a data-search-item data-search-text="server, production and security publish a table with https, own secrets and protected database. production requirements variables publishing checklist server production and security publish table with https own secrets protected database. requirements variables publishing checklist" href="servidor.html">Server, production and security</a><a data-search-item data-search-text="diagnosis and troubleshooting investigate failures without putting campaigns at risk. start with the doctor screen does not load real time does not work file or map fails outdated database when asking for help diagnosis and troubleshooting investigate failures without putting campaigns risk. start with the doctor screen does not load real time work file map fails outdated database when asking for help" href="solucao-problemas.html">Diagnosis and troubleshooting</a></section><section class="wiki-tree-section"><strong>Creators</strong><a data-search-item data-search-text="gravewright cli use the command line to run, validate, and maintain the project. essential commands output for automation flow to validate a package gravewright cli use the command line run validate and maintain project. essential commands output for automation flow package" href="cli.html">Gravewright CLI</a><a data-search-item data-search-text="packages, sdk and rulesets create extensions using public capabilities without depending on the internal core. create a ruleset manifest public runtime development cycle compatibility packages sdk and rulesets create extensions using public capabilities without depending the internal core. ruleset manifest runtime development cycle compatibility" href="pacotes-rulesets.html">Packages, SDK and rulesets</a><a data-search-item data-search-text="gravewright pdf system understand the pdf ruleset included in the core and how to adapt it. what it provides use in a campaign adapt to a game core assets and user files validate gravewright pdf system understand the ruleset included core and how adapt it. what provides use campaign game assets user files validate" href="ruleset-pdf.html">Gravewright PDF System</a><a data-search-item data-search-text="cli, scaffolding, and diagnostics create, validate, and diagnose packages with the certified beta 4 workflow. three verification levels cli scaffolding and diagnostics create validate diagnose packages with the certified beta workflow. three verification levels" href="authoring-beta-4.html">CLI, scaffolding, and diagnostics</a><a data-search-item data-search-text="marketplace, channels, and updates understand publication, provenance, and local or remote updates. channels come from the registry updates marketplace channels and updates understand publication provenance local remote updates. come from the registry" href="marketplace-updates.html">Marketplace, channels, and updates</a></section><section class="wiki-tree-section"><strong>In-depth SDK</strong><a data-search-item data-search-text="manifest and cycle of a package understand each block of the manifest, activation, validation and publication. minimum package explained provides: what the core actually consumes validate, install and activate don&#39;t manifest and cycle package understand each block the activation validation publication. minimum explained provides: what core actually consumes validate install activate don" href="sdk-manifest.html">Manifest and cycle of a package</a><a data-search-item data-search-text="capabilities and javascript runtime register scripts, use authorized apis, and handle the lifecycle correctly. complete registration reading and writing are not the same permission communication between packages prohibited apis capabilities and javascript runtime register scripts use authorized apis handle the lifecycle correctly. complete registration reading writing are not same permission communication between packages prohibited" href="sdk-capabilities-runtime.html">Capabilities and JavaScript runtime</a><a data-search-item data-search-text="html sheets, bindings, and controllers build an editable, persistent and secure record from start to finish. type in manifest template that saves controller and cleaning diagnosis html sheets bindings and controllers build editable persistent secure record from start finish. type manifest template that saves controller cleaning diagnosis" href="sdk-fichas-html.html">HTML sheets, bindings, and controllers</a><a data-search-item data-search-text="storage sqlite and settings persist first-party data without raw database and choose the right scope. managed storage settings by scope storage sqlite and settings persist first-party data without raw database choose the right scope. managed scope" href="sdk-storage-settings.html">Storage SQLite and settings</a><a data-search-item data-search-text="tutorial: functional addon from scratch create, install, test and debug a real addon without modifying the core. 1. generate the structure 2. manifesto 3. script 4. validate and upload 5. change during development 6. when it fails tutorial: functional addon from scratch create install test and debug real without modifying the core. generate structure manifesto script validate upload change during development when fails" href="sdk-tutorial-addon.html">Tutorial: functional addon from scratch</a></section><section class="wiki-tree-section"><strong>Capability reference</strong><a data-search-item data-search-text="sdk power map start with the package&#39;s intent and identify the minimum capabilities it needs. tokens and actors scene combat and cards content and ui persistence and integration minimization rule sdk power map start with the package intent and identify minimum capabilities needs. tokens actors scene combat cards content persistence integration minimization rule" href="sdk-mapa-de-poder.html">SDK power map</a><a data-search-item data-search-text="capabilities: actors and items detailed reference for 10 capabilities: intended use, boundaries, apis, and anti-patterns. actors.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.data.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.data.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.items.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.items.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: actors and items detailed reference for intended use boundaries apis anti-patterns. actors.register what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities items.register actors.read items.read actors.write actors.data.write items.write items.data.write actors.items.read actors.items.write" href="sdk-capabilities-atores-itens.html">Capabilities: actors and items</a><a data-search-item data-search-text="capabilities: assets and ui detailed reference for 15 capabilities: intended use, boundaries, apis, and anti-patterns. assets.library what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.import what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.ui what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.styles what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.scripts what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.pack what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.images what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.audio what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.video what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.maps what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.icons what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.slots what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.applications what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.presentations what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.dragdrop what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: assets and detailed reference for intended use boundaries apis anti-patterns. assets.library what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities assets.import assets.ui assets.styles assets.scripts assets.pack assets.images assets.audio assets.video assets.maps assets.icons ui.slots ui.applications ui.presentations ui.dragdrop" href="sdk-capabilities-assets-ui.html">Capabilities: assets and UI</a><a data-search-item data-search-text="capabilities: bus, events, and commands detailed reference for 6 capabilities: intended use, boundaries, apis, and anti-patterns. commands.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.publish what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.subscribe what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.request what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.provide what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities events.subscribe what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: bus events and commands detailed reference for intended use boundaries apis anti-patterns. commands.register what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities bus.publish bus.subscribe bus.request bus.provide events.subscribe" href="sdk-capabilities-eventos.html">Capabilities: bus, events, and commands</a><a data-search-item data-search-text="capabilities: chat, cards, and combat detailed reference for 12 capabilities: intended use, boundaries, apis, and anti-patterns. dice.roll what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rolls.intent what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.config what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.runtime what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities chat.cards what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rolls.actions what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rolls.reroll what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities chat.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities cards.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities cards.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: chat cards and combat detailed reference for intended use boundaries apis anti-patterns. dice.roll what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities rolls.intent combat.config combat.runtime chat.cards rolls.actions rolls.reroll combat.read chat.read combat.manage cards.read cards.manage" href="sdk-capabilities-jogo.html">Capabilities: chat, cards, and combat</a><a data-search-item data-search-text="capabilities: content, journals, and pdf detailed reference for 11 capabilities: intended use, boundaries, apis, and anti-patterns. content.packs what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities content.references what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities content.index what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities journals.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities journals.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities handouts.present what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.presentation what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.viewer what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.annotations.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.annotations.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: content journals and pdf detailed reference for intended use boundaries apis anti-patterns. content.packs what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities content.references content.index journals.read journals.write handouts.present pdf.presentation pdf.read pdf.viewer pdf.annotations.read pdf.annotations.write" href="sdk-capabilities-conteudo.html">Capabilities: content, journals, and PDF</a><a data-search-item data-search-text="capabilities: scenes and tokens detailed reference for 32 capabilities: intended use, boundaries, apis, and anti-patterns. tokens.mappings what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.extends what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.tools what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.overlays what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.move what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.geometry.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.geometry.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.effects.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.effects.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.shaders.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.shaders.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.shaders.customlibrary what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.fog.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.fog.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.images.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.images.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.templates.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.templates.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.targets what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.measurements.shared what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.zones.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.zones.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objecttypes.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objects.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objects.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objects.interact what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.spatialsounds.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.spatialsounds.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.transfer what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: scenes and tokens detailed reference for intended use boundaries apis anti-patterns. tokens.mappings what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities tokens.extends scene.tools scene.overlays tokens.read scene.read tokens.move tokens.manage scene.geometry.read scene.geometry.write scene.effects.read scene.effects.write scene.shaders.read scene.shaders.write scene.shaders.customlibrary scene.fog.read scene.fog.write scene.images.read scene.images.write scene.templates.read scene.templates.write tokens.targets scene.measurements.shared scene.zones.read scene.zones.write scene.objecttypes.register scene.objects.read scene.objects.write scene.objects.interact scene.spatialsounds.read scene.spatialsounds.write tokens.transfer" href="sdk-capabilities-cena.html" class="is-active" aria-current="page">Capabilities: scenes and tokens</a><a data-search-item data-search-text="capabilities: rules, sheets, and persistence detailed reference for 13 capabilities: intended use, boundaries, apis, and anti-patterns. sheets.declarative what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.runtime what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.components what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rules.declarative what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rules.extends what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities settings what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities locales what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities storage.sqlite what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.html what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.controller what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.richtext what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities permissions.inspect what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rules.actions what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: rules sheets and persistence detailed reference for intended use boundaries apis anti-patterns. sheets.declarative what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities sheets.runtime sheets.components rules.declarative rules.extends settings locales storage.sqlite sheets.html sheets.controller sheets.richtext permissions.inspect rules.actions" href="sdk-capabilities-regras.html">Capabilities: rules, sheets, and persistence</a><a data-search-item data-search-text="capabilities: automation, interactions, and flows detailed reference for 20 capabilities: intended use, boundaries, apis, and anti-patterns. packages.inspect what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities campaign.members.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities users.presentation.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities automation.schedule what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities interactions.request what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities interactions.respond what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities audio.playback what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sounds.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sounds.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities navigation.scene what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities input.commands what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities workflows.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities workflows.start what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities workflows.control what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities gameplay.flows.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities gameplay.flows.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities gameplay.flows.participate what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities timelines.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities timelines.start what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities timelines.control what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: automation interactions and flows detailed reference for intended use boundaries apis anti-patterns. packages.inspect what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities campaign.members.read users.presentation.read automation.schedule interactions.request interactions.respond audio.playback sounds.read sounds.write navigation.scene input.commands workflows.read workflows.start workflows.control gameplay.flows.read gameplay.flows.manage gameplay.flows.participate timelines.read timelines.start timelines.control" href="sdk-capabilities-automacao.html">Capabilities: automation, interactions, and flows</a></section></nav><footer class="wiki-sidebar-footer"><a href="../../index.html" data-i18n="home">← Home page</a><a href="https://github.com/Gravewright/gravewright/issues" data-i18n="report">Report an issue ↗</a></footer></aside><section class="wiki-main"><div class="wiki-breadcrumbs" data-breadcrumbs><span>Wiki</span><span>Capability reference</span><span>Capabilities: scenes and tokens</span></div><article class="wiki-article" id="wiki-article"><h1>Capabilities: scenes and tokens</h1>
+<p>This page documents 32 capabilities individually. A capability is an API gate, not a privilege escalation: every operation remains subject to server-side authorization.</p>
+<h2 id="tokens-mappings"><code>tokens.mappings</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code></p>
+<h3 id="what-it-authorizes">What it authorizes</h3>
+<p>Provide token mappings.</p>
+<h3 id="when-to-use-it">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;tokens.mappings&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.tokens.mappings</code> method.</p>
+<h3 id="possible-errors">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#tokens-read"><code>tokens.read</code></a>, <a href="sdk-capabilities-cena.html#tokens-move"><code>tokens.move</code></a>, <a href="sdk-capabilities-cena.html#tokens-manage"><code>tokens.manage</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-read"><code>actors.read</code></a>, <a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="tokens-extends"><code>tokens.extends</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code></p>
+<h3 id="what-it-authorizes-2">What it authorizes</h3>
+<p>Interact with tokens on the active canvas.</p>
+<h3 id="when-to-use-it-2">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-2">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-2">Available methods</h3>
+<ul>
+<li><code>sdk.tokens.centerOn</code></li>
+</ul>
+<h3 id="user-permission-requirements-2">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-2">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;tokens.extends&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.tokens.centerOn(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-2">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-2">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-2">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-2">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#tokens-read"><code>tokens.read</code></a>, <a href="sdk-capabilities-cena.html#tokens-move"><code>tokens.move</code></a>, <a href="sdk-capabilities-cena.html#tokens-manage"><code>tokens.manage</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-read"><code>actors.read</code></a>, <a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="scene-tools"><code>scene.tools</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code></p>
+<h3 id="what-it-authorizes-3">What it authorizes</h3>
+<p>Read the active scene canvas, camera, and active tool.</p>
+<h3 id="when-to-use-it-3">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-3">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-3">Available methods</h3>
+<ul>
+<li><code>sdk.scene.activeCanvas</code></li>
+<li><code>sdk.scene.activeCameraForScene</code></li>
+<li><code>sdk.tools.activeTool</code></li>
+<li><code>sdk.tools.register</code></li>
+<li><code>sdk.scene.measurements.measure</code></li>
+</ul>
+<h3 id="user-permission-requirements-3">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-3">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.tools&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.activeCanvas(/* contract parameters */);
+await sdk.scene.activeCameraForScene(/* contract parameters */);
+await sdk.tools.activeTool(/* contract parameters */);
+await sdk.tools.register(/* contract parameters */);
+await sdk.scene.measurements.measure(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-3">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-3">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-3">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-3">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="scene-overlays"><code>scene.overlays</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code></p>
+<h3 id="what-it-authorizes-4">What it authorizes</h3>
+<p>Provide scene overlays.</p>
+<h3 id="when-to-use-it-4">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize-4">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-4">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements-4">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-4">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.overlays&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.scene.overlays</code> method.</p>
+<h3 id="possible-errors-4">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-4">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-4">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-4">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="tokens-read"><code>tokens.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-5">What it authorizes</h3>
+<p>Read permission-filtered token snapshots.</p>
+<h3 id="when-to-use-it-5">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-5">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-5">Available methods</h3>
+<ul>
+<li><code>sdk.tokens.get</code></li>
+<li><code>sdk.tokens.list</code></li>
+</ul>
+<h3 id="user-permission-requirements-5">User permission requirements</h3>
+<p>The user receives only visible tokens.</p>
+<h3 id="minimal-example-5">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;tokens.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.tokens.get(/* contract parameters */);
+await sdk.tokens.list(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-5">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-5">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-5">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-5">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#tokens-move"><code>tokens.move</code></a>, <a href="sdk-capabilities-cena.html#tokens-manage"><code>tokens.manage</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-read"><code>actors.read</code></a>, <a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-read"><code>scene.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-6">What it authorizes</h3>
+<p>Read scenes visible to the current user.</p>
+<h3 id="when-to-use-it-6">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-6">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-6">Available methods</h3>
+<ul>
+<li><code>sdk.scene.get</code></li>
+<li><code>sdk.scene.list</code></li>
+<li><code>sdk.scene.active</code></li>
+</ul>
+<h3 id="user-permission-requirements-6">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-6">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.get(/* contract parameters */);
+await sdk.scene.list(/* contract parameters */);
+await sdk.scene.active(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-6">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-6">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-6">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-6">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="tokens-move"><code>tokens.move</code></h2>
+<p><strong>Authority level:</strong> <code>WRITE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-7">What it authorizes</h3>
+<p>Move controlled tokens through the authoritative movement service.</p>
+<h3 id="when-to-use-it-7">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-7">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-7">Available methods</h3>
+<ul>
+<li><code>sdk.tokens.move</code></li>
+</ul>
+<h3 id="user-permission-requirements-7">User permission requirements</h3>
+<p>GMs may operate all tokens. Players may operate only tokens they control and only through permitted operations.</p>
+<h3 id="minimal-example-7">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;tokens.move&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.tokens.move(tokenId, { x: 12, y: 8 });
+</code></pre>
+<h3 id="possible-errors-7">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-7">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-7">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-7">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#tokens-read"><code>tokens.read</code></a>, <a href="sdk-capabilities-cena.html#tokens-manage"><code>tokens.manage</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-read"><code>actors.read</code></a>, <a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="tokens-manage"><code>tokens.manage</code></h2>
+<p><strong>Authority level:</strong> <code>WRITE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-8">What it authorizes</h3>
+<p>Create, update and delete tokens through validated semantic commands.</p>
+<h3 id="when-to-use-it-8">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-8">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-8">Available methods</h3>
+<ul>
+<li><code>sdk.tokens.create</code></li>
+<li><code>sdk.tokens.update</code></li>
+<li><code>sdk.tokens.delete</code></li>
+</ul>
+<h3 id="user-permission-requirements-8">User permission requirements</h3>
+<p>GMs may operate all tokens. Players may operate only tokens they control and only through permitted operations.</p>
+<h3 id="minimal-example-8">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;tokens.manage&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.tokens.create(/* contract parameters */);
+await sdk.tokens.update(/* contract parameters */);
+await sdk.tokens.delete(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-8">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-8">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-8">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-8">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#tokens-read"><code>tokens.read</code></a>, <a href="sdk-capabilities-cena.html#tokens-move"><code>tokens.move</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-read"><code>actors.read</code></a>, <a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="scene-geometry-read"><code>scene.geometry.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-9">What it authorizes</h3>
+<p>Read logical scene walls, doors and lights without renderer internals.</p>
+<h3 id="when-to-use-it-9">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-9">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-9">Available methods</h3>
+<ul>
+<li><code>sdk.scene.geometry.walls</code></li>
+<li><code>sdk.scene.geometry.lights</code></li>
+</ul>
+<h3 id="user-permission-requirements-9">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-9">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.geometry.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.geometry.walls(/* contract parameters */);
+await sdk.scene.geometry.lights(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-9">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-9">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-9">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-9">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-geometry-write"><code>scene.geometry.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-10">What it authorizes</h3>
+<p>Manage logical scene walls, doors and lights.</p>
+<h3 id="when-to-use-it-10">When to use it</h3>
+<p>Use it to create, update, split, move, or delete walls; change doors; and create, update, or delete lights as logical scene geometry.</p>
+<h3 id="what-it-does-not-authorize-10">What it does NOT authorize</h3>
+<p>It does not expose PIXI, RenderTexture, lighting layers, shaders, GPU buffers, the internal canvas, or any renderer object. It also does not bypass GM authority over the scene.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-10">Available methods</h3>
+<ul>
+<li><code>sdk.scene.geometry.createWall</code></li>
+<li><code>sdk.scene.geometry.updateWall</code></li>
+<li><code>sdk.scene.geometry.deleteWall</code></li>
+<li><code>sdk.scene.geometry.splitWall</code></li>
+<li><code>sdk.scene.geometry.moveWallNode</code></li>
+<li><code>sdk.scene.geometry.moveWalls</code></li>
+<li><code>sdk.scene.geometry.deleteWalls</code></li>
+<li><code>sdk.scene.geometry.createLight</code></li>
+<li><code>sdk.scene.geometry.updateLight</code></li>
+<li><code>sdk.scene.geometry.deleteLight</code></li>
+<li><code>sdk.scene.geometry.setDoorState</code></li>
+</ul>
+<h3 id="user-permission-requirements-10">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-10">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.geometry.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.geometry.createWall(sceneId, wallInput);
+await sdk.scene.geometry.setDoorState(sceneId, wallId, &quot;open&quot;);
+</code></pre>
+<h3 id="possible-errors-10">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-10">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-10">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-10">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not synchronize geometry by manipulating local sprites or layers. Send a logical operation to the service; the host updates persistence, realtime state, and rendering.</p>
+</blockquote>
+<h2 id="scene-effects-read"><code>scene.effects.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-11">What it authorizes</h3>
+<p>Read semantic scene particle and shader effects.</p>
+<h3 id="when-to-use-it-11">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-11">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-11">Available methods</h3>
+<ul>
+<li><code>sdk.scene.effects.list</code></li>
+<li><code>sdk.scene.effects.presets</code></li>
+</ul>
+<h3 id="user-permission-requirements-11">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-11">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.effects.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.effects.list(/* contract parameters */);
+await sdk.scene.effects.presets(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-11">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-11">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-11">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-11">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-effects-write"><code>scene.effects.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-12">What it authorizes</h3>
+<p>Manage semantic scene particle and shader effects.</p>
+<h3 id="when-to-use-it-12">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-12">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-12">Available methods</h3>
+<ul>
+<li><code>sdk.scene.effects.create</code></li>
+<li><code>sdk.scene.effects.update</code></li>
+<li><code>sdk.scene.effects.delete</code></li>
+</ul>
+<h3 id="user-permission-requirements-12">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-12">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.effects.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.effects.create(/* contract parameters */);
+await sdk.scene.effects.update(/* contract parameters */);
+await sdk.scene.effects.delete(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-12">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-12">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-12">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-12">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="scene-shaders-read"><code>scene.shaders.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-13">What it authorizes</h3>
+<p>Discover renderer-independent shader presets and read semantic scene shader instances.</p>
+<h3 id="when-to-use-it-13">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-13">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-13">Available methods</h3>
+<ul>
+<li><code>sdk.scene.shaders.presets</code></li>
+<li><code>sdk.scene.shaders.getPreset</code></li>
+<li><code>sdk.scene.shaders.list</code></li>
+</ul>
+<h3 id="user-permission-requirements-13">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-13">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.shaders.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.shaders.presets(/* contract parameters */);
+await sdk.scene.shaders.getPreset(/* contract parameters */);
+await sdk.scene.shaders.list(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-13">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-13">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-13">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-13">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-shaders-write"><code>scene.shaders.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-14">What it authorizes</h3>
+<p>Apply, update, enable, disable and remove validated semantic shader presets without raw GLSL authority.</p>
+<h3 id="when-to-use-it-14">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-14">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-14">Available methods</h3>
+<ul>
+<li><code>sdk.scene.shaders.apply</code></li>
+<li><code>sdk.scene.shaders.update</code></li>
+<li><code>sdk.scene.shaders.enable</code></li>
+<li><code>sdk.scene.shaders.remove</code></li>
+</ul>
+<h3 id="user-permission-requirements-14">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-14">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.shaders.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.shaders.apply(/* contract parameters */);
+await sdk.scene.shaders.update(/* contract parameters */);
+await sdk.scene.shaders.enable(/* contract parameters */);
+await sdk.scene.shaders.remove(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-14">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-14">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-14">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-14">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="scene-shaders-customlibrary"><code>scene.shaders.customLibrary</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-15">What it authorizes</h3>
+<p>Integrate a package-owned custom shader library with the trusted core editor and placement flow.</p>
+<h3 id="when-to-use-it-15">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-15">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-15">Available methods</h3>
+<ul>
+<li><code>sdk.scene.shaders.customLibrary.registerProvider</code></li>
+<li><code>sdk.scene.shaders.customLibrary.openEditor</code></li>
+<li><code>sdk.scene.shaders.customLibrary.preview</code></li>
+<li><code>sdk.scene.shaders.customLibrary.clearPreview</code></li>
+<li><code>sdk.scene.shaders.customLibrary.use</code></li>
+</ul>
+<h3 id="user-permission-requirements-15">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-15">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.shaders.customLibrary&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.shaders.customLibrary.registerProvider(/* contract parameters */);
+await sdk.scene.shaders.customLibrary.openEditor(/* contract parameters */);
+await sdk.scene.shaders.customLibrary.preview(/* contract parameters */);
+await sdk.scene.shaders.customLibrary.clearPreview(/* contract parameters */);
+await sdk.scene.shaders.customLibrary.use(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-15">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-15">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-15">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-15">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="scene-fog-read"><code>scene.fog.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-16">What it authorizes</h3>
+<p>Read logical fog state without renderer internals.</p>
+<h3 id="when-to-use-it-16">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-16">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-16">Available methods</h3>
+<ul>
+<li><code>sdk.scene.fog.state</code></li>
+</ul>
+<h3 id="user-permission-requirements-16">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-16">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.fog.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.fog.state(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-16">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-16">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-16">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-16">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-fog-write"><code>scene.fog.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-17">What it authorizes</h3>
+<p>Manage fog through bounded authoritative operations.</p>
+<h3 id="when-to-use-it-17">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-17">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-17">Available methods</h3>
+<ul>
+<li><code>sdk.scene.fog.enable</code></li>
+<li><code>sdk.scene.fog.disable</code></li>
+<li><code>sdk.scene.fog.reset</code></li>
+<li><code>sdk.scene.fog.paint</code></li>
+</ul>
+<h3 id="user-permission-requirements-17">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-17">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.fog.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.fog.enable(/* contract parameters */);
+await sdk.scene.fog.disable(/* contract parameters */);
+await sdk.scene.fog.reset(/* contract parameters */);
+await sdk.scene.fog.paint(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-17">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-17">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-17">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-17">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="scene-images-read"><code>scene.images.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-18">What it authorizes</h3>
+<p>Read permission-filtered scene image placements.</p>
+<h3 id="when-to-use-it-18">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-18">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-18">Available methods</h3>
+<ul>
+<li><code>sdk.scene.images.list</code></li>
+</ul>
+<h3 id="user-permission-requirements-18">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-18">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.images.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.images.list(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-18">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-18">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-18">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-18">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-images-write"><code>scene.images.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-19">What it authorizes</h3>
+<p>Place, update and remove authorized scene images.</p>
+<h3 id="when-to-use-it-19">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-19">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-19">Available methods</h3>
+<ul>
+<li><code>sdk.scene.images.place</code></li>
+<li><code>sdk.scene.images.update</code></li>
+<li><code>sdk.scene.images.delete</code></li>
+</ul>
+<h3 id="user-permission-requirements-19">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-19">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.images.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.images.place(/* contract parameters */);
+await sdk.scene.images.update(/* contract parameters */);
+await sdk.scene.images.delete(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-19">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-19">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-19">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-19">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="scene-templates-read"><code>scene.templates.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-20">What it authorizes</h3>
+<p>Read permission-filtered persistent world-space gameplay templates.</p>
+<h3 id="when-to-use-it-20">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-20">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-20">Available methods</h3>
+<ul>
+<li><code>sdk.scene.templates.list</code></li>
+<li><code>sdk.scene.templates.get</code></li>
+</ul>
+<h3 id="user-permission-requirements-20">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-20">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.templates.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.templates.list(/* contract parameters */);
+await sdk.scene.templates.get(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-20">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-20">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-20">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-20">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-templates-write"><code>scene.templates.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-21">What it authorizes</h3>
+<p>Create, update and delete bounded persistent gameplay templates.</p>
+<h3 id="when-to-use-it-21">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-21">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-21">Available methods</h3>
+<ul>
+<li><code>sdk.scene.templates.create</code></li>
+<li><code>sdk.scene.templates.update</code></li>
+<li><code>sdk.scene.templates.delete</code></li>
+</ul>
+<h3 id="user-permission-requirements-21">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-21">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.templates.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.templates.create(/* contract parameters */);
+await sdk.scene.templates.update(/* contract parameters */);
+await sdk.scene.templates.delete(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-21">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-21">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-21">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-21">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="tokens-targets"><code>tokens.targets</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-22">What it authorizes</h3>
+<p>Manage the current user&#39;s private scene-scoped token target set.</p>
+<h3 id="when-to-use-it-22">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-22">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-22">Available methods</h3>
+<ul>
+<li><code>sdk.tokens.targets.list</code></li>
+<li><code>sdk.tokens.targets.set</code></li>
+<li><code>sdk.tokens.targets.clear</code></li>
+</ul>
+<h3 id="user-permission-requirements-22">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-22">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;tokens.targets&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.tokens.targets.list(/* contract parameters */);
+await sdk.tokens.targets.set(/* contract parameters */);
+await sdk.tokens.targets.clear(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-22">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-22">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-22">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-22">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#tokens-read"><code>tokens.read</code></a>, <a href="sdk-capabilities-cena.html#tokens-move"><code>tokens.move</code></a>, <a href="sdk-capabilities-cena.html#tokens-manage"><code>tokens.manage</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-read"><code>actors.read</code></a>, <a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="scene-measurements-shared"><code>scene.measurements.shared</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-23">What it authorizes</h3>
+<p>Share bounded, audience-filtered, expiring scene measurements.</p>
+<h3 id="when-to-use-it-23">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-23">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-23">Available methods</h3>
+<ul>
+<li><code>sdk.scene.measurements.share</code></li>
+<li><code>sdk.scene.measurements.listShared</code></li>
+<li><code>sdk.scene.measurements.cancel</code></li>
+</ul>
+<h3 id="user-permission-requirements-23">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-23">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.measurements.shared&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.measurements.share(/* contract parameters */);
+await sdk.scene.measurements.listShared(/* contract parameters */);
+await sdk.scene.measurements.cancel(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-23">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-23">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-23">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-23">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="scene-zones-read"><code>scene.zones.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-24">What it authorizes</h3>
+<p>Read permission-filtered semantic scene zones and observable membership.</p>
+<h3 id="when-to-use-it-24">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-24">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-24">Available methods</h3>
+<ul>
+<li><code>sdk.scene.zones.list</code></li>
+<li><code>sdk.scene.zones.get</code></li>
+<li><code>sdk.scene.zones.members</code></li>
+</ul>
+<h3 id="user-permission-requirements-24">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-24">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.zones.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.zones.list(/* contract parameters */);
+await sdk.scene.zones.get(/* contract parameters */);
+await sdk.scene.zones.members(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-24">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-24">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-24">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-24">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-zones-write"><code>scene.zones.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-25">What it authorizes</h3>
+<p>Create, update and delete versioned campaign-owned scene zones.</p>
+<h3 id="when-to-use-it-25">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-25">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-25">Available methods</h3>
+<ul>
+<li><code>sdk.scene.zones.create</code></li>
+<li><code>sdk.scene.zones.update</code></li>
+<li><code>sdk.scene.zones.delete</code></li>
+</ul>
+<h3 id="user-permission-requirements-25">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-25">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.zones.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.zones.create(/* contract parameters */);
+await sdk.scene.zones.update(/* contract parameters */);
+await sdk.scene.zones.delete(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-25">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-25">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-25">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-25">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="scene-objecttypes-register"><code>scene.objectTypes.register</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-26">What it authorizes</h3>
+<p>Register bounded declarative scene object types owned by the active package.</p>
+<h3 id="when-to-use-it-26">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-26">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-26">Available methods</h3>
+<ul>
+<li><code>sdk.scene.objectTypes.register</code></li>
+</ul>
+<h3 id="user-permission-requirements-26">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-26">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.objectTypes.register&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.objectTypes.register(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-26">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-26">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-26">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-26">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="scene-objects-read"><code>scene.objects.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-27">What it authorizes</h3>
+<p>Read and core-hit-test audience-filtered package-defined scene objects.</p>
+<h3 id="when-to-use-it-27">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-27">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-27">Available methods</h3>
+<ul>
+<li><code>sdk.scene.objects.list</code></li>
+<li><code>sdk.scene.objects.get</code></li>
+<li><code>sdk.scene.objects.hitTest</code></li>
+</ul>
+<h3 id="user-permission-requirements-27">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-27">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.objects.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.objects.list(/* contract parameters */);
+await sdk.scene.objects.get(/* contract parameters */);
+await sdk.scene.objects.hitTest(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-27">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-27">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-27">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-27">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-objects-write"><code>scene.objects.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-28">What it authorizes</h3>
+<p>Create, update and delete authoritative versioned scene objects.</p>
+<h3 id="when-to-use-it-28">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-28">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-28">Available methods</h3>
+<ul>
+<li><code>sdk.scene.objects.create</code></li>
+<li><code>sdk.scene.objects.update</code></li>
+<li><code>sdk.scene.objects.delete</code></li>
+</ul>
+<h3 id="user-permission-requirements-28">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-28">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.objects.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.objects.create(/* contract parameters */);
+await sdk.scene.objects.update(/* contract parameters */);
+await sdk.scene.objects.delete(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-28">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-28">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-28">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-28">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="scene-objects-interact"><code>scene.objects.interact</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-29">What it authorizes</h3>
+<p>Submit an authorized semantic interaction intent for a visible scene object.</p>
+<h3 id="when-to-use-it-29">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-29">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-29">Available methods</h3>
+<ul>
+<li><code>sdk.scene.objects.interact</code></li>
+</ul>
+<h3 id="user-permission-requirements-29">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-29">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.objects.interact&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.objects.interact(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-29">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-29">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-29">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-29">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="scene-spatialsounds-read"><code>scene.spatialSounds.read</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-30">What it authorizes</h3>
+<p>Read authorized persistent native Spatial Sound configuration for a Scene.</p>
+<h3 id="when-to-use-it-30">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-30">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-30">Available methods</h3>
+<ul>
+<li><code>sdk.scene.spatialSounds.list</code></li>
+<li><code>sdk.scene.spatialSounds.get</code></li>
+</ul>
+<h3 id="user-permission-requirements-30">User permission requirements</h3>
+<p>Requires campaign membership and scene visibility. GM layers and hidden objects are filtered out for players.</p>
+<h3 id="minimal-example-30">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.spatialSounds.read&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.spatialSounds.list(/* contract parameters */);
+await sdk.scene.spatialSounds.get(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-30">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-30">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-30">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-30">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="scene-spatialsounds-write"><code>scene.spatialSounds.write</code></h2>
+<p><strong>Authority level:</strong> <code>ADMIN-LIKE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-31">What it authorizes</h3>
+<p>Create, update and delete persistent native Spatial Sounds with Scene authority and CAS.</p>
+<h3 id="when-to-use-it-31">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-31">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-31">Available methods</h3>
+<ul>
+<li><code>sdk.scene.spatialSounds.create</code></li>
+<li><code>sdk.scene.spatialSounds.update</code></li>
+<li><code>sdk.scene.spatialSounds.delete</code></li>
+</ul>
+<h3 id="user-permission-requirements-31">User permission requirements</h3>
+<p>Normally requires GM or scene-editing authority. The scene must belong to the active campaign.</p>
+<h3 id="minimal-example-31">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;scene.spatialSounds.write&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.scene.spatialSounds.create(/* contract parameters */);
+await sdk.scene.spatialSounds.update(/* contract parameters */);
+await sdk.scene.spatialSounds.delete(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-31">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+<li>STALE_VERSION / CONFLICT: version or state changed before the write</li>
+</ul>
+<h3 id="security-and-visibility-filtering-31">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-31">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-31">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-read"><code>scene.geometry.read</code></a>, <a href="sdk-capabilities-cena.html#scene-geometry-write"><code>scene.geometry.write</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-read"><code>scene.effects.read</code></a>, <a href="sdk-capabilities-cena.html#scene-effects-write"><code>scene.effects.write</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-read"><code>scene.fog.read</code></a>, <a href="sdk-capabilities-cena.html#scene-fog-write"><code>scene.fog.write</code></a>, <a href="sdk-capabilities-cena.html#scene-images-read"><code>scene.images.read</code></a>, <a href="sdk-capabilities-cena.html#scene-images-write"><code>scene.images.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+<h2 id="tokens-transfer"><code>tokens.transfer</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-32">What it authorizes</h3>
+<p>Atomically transfer controlled token identities between authorized Scenes.</p>
+<h3 id="when-to-use-it-32">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-32">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-32">Available methods</h3>
+<ul>
+<li><code>sdk.tokens.transfer</code></li>
+<li><code>sdk.tokens.transferMany</code></li>
+</ul>
+<h3 id="user-permission-requirements-32">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-32">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;tokens.transfer&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.tokens.transfer(/* contract parameters */);
+await sdk.tokens.transferMany(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-32">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>NOT_FOUND: resource missing, hidden, or outside the campaign</li>
+</ul>
+<h3 id="security-and-visibility-filtering-32">Security and visibility filtering</h3>
+<p>Yes. The backend projects the response according to campaign, role, ownership, resource visibility, and layer. An omitted resource may be hidden rather than nonexistent.</p>
+<h3 id="lifecycle-and-teardown-32">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-32">Related capabilities</h3>
+<p><a href="sdk-capabilities-cena.html#tokens-read"><code>tokens.read</code></a>, <a href="sdk-capabilities-cena.html#tokens-move"><code>tokens.move</code></a>, <a href="sdk-capabilities-cena.html#tokens-manage"><code>tokens.manage</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-read"><code>actors.read</code></a>, <a href="sdk-capabilities-cena.html#scene-read"><code>scene.read</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+</article><nav class="wiki-page-nav" data-page-nav><a href="sdk-capabilities-conteudo.html"><small>← Previous</small><strong>Capabilities: content, journals, and PDF</strong></a><a href="sdk-capabilities-regras.html"><small>Next →</small><strong>Capabilities: rules, sheets, and persistence</strong></a></nav></section><aside class="wiki-toc"><strong data-i18n="onThisPage">On this page</strong><nav data-toc><a href="#tokens-mappings" data-level="2">tokens.mappings</a><a href="#tokens-extends" data-level="2">tokens.extends</a><a href="#scene-tools" data-level="2">scene.tools</a><a href="#scene-overlays" data-level="2">scene.overlays</a><a href="#tokens-read" data-level="2">tokens.read</a><a href="#scene-read" data-level="2">scene.read</a><a href="#tokens-move" data-level="2">tokens.move</a><a href="#tokens-manage" data-level="2">tokens.manage</a><a href="#scene-geometry-read" data-level="2">scene.geometry.read</a><a href="#scene-geometry-write" data-level="2">scene.geometry.write</a><a href="#scene-effects-read" data-level="2">scene.effects.read</a><a href="#scene-effects-write" data-level="2">scene.effects.write</a><a href="#scene-shaders-read" data-level="2">scene.shaders.read</a><a href="#scene-shaders-write" data-level="2">scene.shaders.write</a><a href="#scene-shaders-customlibrary" data-level="2">scene.shaders.customLibrary</a><a href="#scene-fog-read" data-level="2">scene.fog.read</a><a href="#scene-fog-write" data-level="2">scene.fog.write</a><a href="#scene-images-read" data-level="2">scene.images.read</a><a href="#scene-images-write" data-level="2">scene.images.write</a><a href="#scene-templates-read" data-level="2">scene.templates.read</a><a href="#scene-templates-write" data-level="2">scene.templates.write</a><a href="#tokens-targets" data-level="2">tokens.targets</a><a href="#scene-measurements-shared" data-level="2">scene.measurements.shared</a><a href="#scene-zones-read" data-level="2">scene.zones.read</a><a href="#scene-zones-write" data-level="2">scene.zones.write</a><a href="#scene-objecttypes-register" data-level="2">scene.objectTypes.register</a><a href="#scene-objects-read" data-level="2">scene.objects.read</a><a href="#scene-objects-write" data-level="2">scene.objects.write</a><a href="#scene-objects-interact" data-level="2">scene.objects.interact</a><a href="#scene-spatialsounds-read" data-level="2">scene.spatialSounds.read</a><a href="#scene-spatialsounds-write" data-level="2">scene.spatialSounds.write</a><a href="#tokens-transfer" data-level="2">tokens.transfer</a></nav></aside></main><div class="wiki-overlay" data-overlay hidden></div></body></html>

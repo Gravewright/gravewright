@@ -1,0 +1,36 @@
+{
+  "derived": {
+    "character": {
+      "sheet.penalty.wounds": "min(3, @sheet.wounds.value)",
+      "sheet.penalty.fatigue": "min(2, @sheet.fatigue.value)",
+      "sheet.penalty.total": "woundPenalty(@sheet.wounds.value, @sheet.fatigue.value)",
+      "sheet.stats.toughness.value": "toughness(@sheet.attributes.vigor.sides, @sheet.attributes.vigor.modifier, @sheet.stats.toughness.armor, @sheet.stats.size, @sheet.stats.toughness.modifier)",
+      "sheet.stats.parry.value": "parry(@sheet.stats.parry.fightingSides, @sheet.stats.parry.fightingModifier, @sheet.stats.parry.shield, @sheet.stats.parry.modifier)",
+      "sheet.stats.load.max": "loadLimit(@sheet.attributes.strength.sides, @sheet.attributes.strength.modifier)",
+      "sheet.stats.load.encumbrance": "encumbrance(@sheet.stats.load.value, @sheet.stats.load.max)",
+      "sheet.bars.bar_1.value": "max(0, @sheet.wounds.max - @sheet.wounds.value)",
+      "sheet.bars.bar_1.max": "@sheet.wounds.max",
+      "sheet.bars.bar_2.value": "max(0, @sheet.fatigue.max - @sheet.fatigue.value)",
+      "sheet.bars.bar_2.max": "@sheet.fatigue.max",
+      "sheet.penalty.physical": "@sheet.penalty.total + @sheet.stats.load.encumbrance"
+    },
+    "extra": {
+      "sheet.penalty.wounds": "min(3, @sheet.wounds.value)",
+      "sheet.penalty.fatigue": "min(2, @sheet.fatigue.value)",
+      "sheet.penalty.total": "woundPenalty(@sheet.wounds.value, @sheet.fatigue.value)",
+      "sheet.stats.toughness.value": "toughness(@sheet.attributes.vigor.sides, @sheet.attributes.vigor.modifier, @sheet.stats.toughness.armor, @sheet.stats.size, @sheet.stats.toughness.modifier)",
+      "sheet.stats.parry.value": "parry(@sheet.stats.parry.fightingSides, @sheet.stats.parry.fightingModifier, @sheet.stats.parry.shield, @sheet.stats.parry.modifier)",
+      "sheet.stats.load.max": "loadLimit(@sheet.attributes.strength.sides, @sheet.attributes.strength.modifier)",
+      "sheet.stats.load.encumbrance": "encumbrance(@sheet.stats.load.value, @sheet.stats.load.max)",
+      "sheet.bars.bar_1.value": "max(0, @sheet.wounds.max - @sheet.wounds.value)",
+      "sheet.bars.bar_1.max": "@sheet.wounds.max",
+      "sheet.bars.bar_2.value": "max(0, @sheet.fatigue.max - @sheet.fatigue.value)",
+      "sheet.bars.bar_2.max": "@sheet.fatigue.max",
+      "sheet.penalty.physical": "@sheet.penalty.total + @sheet.stats.load.encumbrance"
+    },
+    "vehicle": {
+      "sheet.bars.bar_1.value": "max(0, @sheet.wounds.max - @sheet.wounds.value)",
+      "sheet.bars.bar_1.max": "@sheet.wounds.max"
+    }
+  }
+}

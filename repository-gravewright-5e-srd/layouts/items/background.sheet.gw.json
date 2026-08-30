@@ -1,0 +1,54 @@
+{
+  "kind": "itemSheet",
+  "system": "dnd5e",
+  "id": "dnd5e-background",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "children": [
+      {
+        "type": "textField",
+        "path": "core.name",
+        "labelKey": "dnd5e.ui.nome"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.skill_proficiencies",
+        "labelKey": "dnd5e.ui.proficiencias.em.pericias"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.tool_proficiencies",
+        "labelKey": "dnd5e.ui.proficiencias.em.ferramentas"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.languages",
+        "labelKey": "dnd5e.ui.idiomas"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.equipment",
+        "labelKey": "dnd5e.ui.equipamento"
+      },
+      {
+        "type": "textField",
+        "path": "sheet.feature_name",
+        "labelKey": "dnd5e.ui.caracteristica.de.antecedente"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.feature_description",
+        "labelKey": "dnd5e.ui.descricao.da.caracteristica"
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.suggested_characteristics",
+        "labelKey": "dnd5e.ui.caracteristicas.sugeridas"
+      }
+    ],
+    "labelKey": "dnd5e.ui.antecedente"
+  }
+}

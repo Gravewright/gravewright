@@ -1,0 +1,140 @@
+{
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string",
+      "default": ""
+    },
+    "category": {
+      "type": "string",
+      "default": ""
+    },
+    "subtype": {
+      "type": "string",
+      "default": ""
+    },
+    "damage": {
+      "type": "string",
+      "default": ""
+    },
+    "damage_type": {
+      "type": "string",
+      "default": ""
+    },
+    "versatile": {
+      "type": "string",
+      "default": ""
+    },
+    "attack_type": {
+      "type": "string",
+      "default": ""
+    },
+    "attack_bonus": {
+      "type": "number",
+      "default": 0
+    },
+    "damage_bonus": {
+      "type": "number",
+      "default": 0
+    },
+    "range": {
+      "type": "string",
+      "default": ""
+    },
+    "base_ac": {
+      "type": "number",
+      "default": 10
+    },
+    "armor_type": {
+      "type": "string",
+      "default": ""
+    },
+    "add_dex": {
+      "type": "boolean",
+      "default": true
+    },
+    "max_dex": {
+      "type": "number",
+      "default": 2
+    },
+    "str_req": {
+      "type": "number",
+      "default": 0
+    },
+    "stealth_disadvantage": {
+      "type": "boolean",
+      "default": false
+    },
+    "quantity": {
+      "type": "number",
+      "default": 1
+    },
+    "uses": {
+      "type": "number",
+      "default": 0
+    },
+    "weight": {
+      "type": "number",
+      "default": 0
+    },
+    "cost": {
+      "type": "string",
+      "default": ""
+    },
+    "level": {
+      "type": "number",
+      "default": 0
+    },
+    "school": {
+      "type": "string",
+      "default": ""
+    },
+    "casting_time": {
+      "type": "string",
+      "default": ""
+    },
+    "duration": {
+      "type": "string",
+      "default": ""
+    },
+    "components": {
+      "type": "object"
+    },
+    "materials": {
+      "type": "string",
+      "default": ""
+    },
+    "concentration": {
+      "type": "boolean",
+      "default": false
+    },
+    "ritual": {
+      "type": "boolean",
+      "default": false
+    },
+    "resolution": {
+      "type": "string",
+      "default": ""
+    },
+    "classes": {
+      "type": "string",
+      "default": ""
+    },
+    "higher_levels": {
+      "type": "string",
+      "default": ""
+    },
+    "source": {
+      "type": "string",
+      "default": ""
+    },
+    "prerequisite": {
+      "type": "string",
+      "default": ""
+    },
+    "benefits": {
+      "type": "string",
+      "default": ""
+    }
+  }
+}

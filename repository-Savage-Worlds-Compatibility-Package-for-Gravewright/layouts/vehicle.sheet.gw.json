@@ -1,0 +1,164 @@
+{
+  "kind": "actorSheet",
+  "system": "savage-worlds",
+  "actorType": "vehicle",
+  "id": "savage-worlds-vehicle",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "column",
+    "variant": "sheet",
+    "children": [
+      {
+        "type": "section",
+        "variant": "header",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 4,
+            "variant": "header",
+            "children": [
+              {
+                "type": "textField",
+                "path": "core.name",
+                "labelKey": "savage-worlds.ui.nome"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.concept",
+                "labelKey": "savage-worlds.ui.conceito"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.topSpeed",
+                "labelKey": "savage-worlds.ui.velocidade"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.handling",
+                "labelKey": "savage-worlds.ui.manobra"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tabs",
+        "tabs": [
+          {
+            "id": "summary",
+            "icon": "car",
+            "labelKey": "savage-worlds.ui.resumo",
+            "children": [
+              {
+                "type": "section",
+                "variant": "status-strip",
+                "children": [
+                  {
+                    "type": "checkboxTrack",
+                    "path": "sheet.wounds.value",
+                    "max": 3,
+                    "variant": "wounds",
+                    "labelKey": "savage-worlds.ui.avarias"
+                  },
+                  {
+                    "type": "section",
+                    "variant": "conditions",
+                    "children": [
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.outOfControl",
+                        "labelKey": "savage-worlds.cond.descontrolado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.wrecked",
+                        "labelKey": "savage-worlds.cond.destrocado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.onFire",
+                        "labelKey": "savage-worlds.cond.em.chamas"
+                      }
+                    ],
+                    "labelKey": "savage-worlds.ui.condicoes"
+                  }
+                ]
+              },
+              {
+                "type": "grid",
+                "columns": 2,
+                "variant": "summary",
+                "children": [
+                  {
+                    "type": "column",
+                    "variant": "left",
+                    "children": [
+                      {
+                        "type": "section",
+                        "variant": "derived",
+                        "children": [
+                          {
+                            "type": "combatStat",
+                            "icon": "heartbeat",
+                            "valuePath": "sheet.stats.toughness.value",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.toughness"
+                          },
+                          {
+                            "type": "combatStat",
+                            "icon": "steering-wheel",
+                            "valuePath": "sheet.handling",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.manobra"
+                          },
+                          {
+                            "type": "combatStat",
+                            "icon": "scales",
+                            "valuePath": "sheet.stats.size",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.tamanho"
+                          }
+                        ],
+                        "labelKey": "savage-worlds.ui.derivados"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "variant": "right",
+                    "children": [
+                      {
+                        "type": "section",
+                        "variant": "armor-source",
+                        "children": [
+                          {
+                            "type": "numberField",
+                            "path": "sheet.stats.toughness.armor",
+                            "labelKey": "savage-worlds.ui.armadura"
+                          },
+                          {
+                            "type": "numberField",
+                            "path": "sheet.stats.crew.max",
+                            "labelKey": "savage-worlds.ui.tripulacao"
+                          }
+                        ],
+                        "labelKey": "savage-worlds.ui.origem.da.toughness"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "textArea",
+                "path": "sheet.notes",
+                "labelKey": "savage-worlds.ui.anotacoes"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

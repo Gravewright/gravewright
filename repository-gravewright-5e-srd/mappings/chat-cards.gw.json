@@ -1,0 +1,98 @@
+{
+  "cards": {
+    "check": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "labelKey": "dnd5e.ui.formula",
+          "value": "@roll.formula"
+        },
+        {
+          "labelKey": "dnd5e.ui.total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "save": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "labelKey": "dnd5e.ui.formula",
+          "value": "@roll.formula"
+        },
+        {
+          "labelKey": "dnd5e.ui.total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "attack": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "labelKey": "dnd5e.ui.formula",
+          "value": "@roll.formula"
+        },
+        {
+          "labelKey": "dnd5e.ui.total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "death-save": {
+      "title": "@actor.name",
+      "subtitle": "@action.label",
+      "lines": [
+        {
+          "labelKey": "dnd5e.ui.rolagem.d20",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "weapon-attack": {
+      "title": "@actor.name",
+      "subtitleKey": "dnd5e.ui.ataque",
+      "lines": [
+        {
+          "labelKey": "dnd5e.ui.formula",
+          "value": "@roll.formula"
+        },
+        {
+          "labelKey": "dnd5e.ui.total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "weapon-damage": {
+      "title": "@actor.name",
+      "subtitleKey": "dnd5e.ui.dano",
+      "lines": [
+        {
+          "labelKey": "dnd5e.ui.formula",
+          "value": "@roll.formula"
+        },
+        {
+          "labelKey": "dnd5e.ui.total",
+          "value": "@roll.total"
+        }
+      ]
+    },
+    "spell-damage": {
+      "title": "@actor.name",
+      "subtitleKey": "dnd5e.ui.dano.de.magia",
+      "lines": [
+        {
+          "labelKey": "dnd5e.ui.formula",
+          "value": "@roll.formula"
+        },
+        {
+          "labelKey": "dnd5e.ui.total",
+          "value": "@roll.total"
+        }
+      ]
+    }
+  }
+}

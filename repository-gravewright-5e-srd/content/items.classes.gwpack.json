@@ -1,0 +1,24 @@
+{
+  "id": "dnd5e-classes",
+  "type": "item_pack",
+  "system": "dnd5e",
+  "label": "Classes",
+  "entries": [
+    {
+      "id": "template-class",
+      "type": "class",
+      "name": "Classe Modelo",
+      "data": {
+        "hit_die": "d8",
+        "primary_ability": "",
+        "saving_throws": "",
+        "armor_proficiencies": "",
+        "weapon_proficiencies": "",
+        "tool_proficiencies": "",
+        "skills": "",
+        "spellcasting_ability": "",
+        "description": "Classe de modelo."
+      }
+    }
+  ]
+}

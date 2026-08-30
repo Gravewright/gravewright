@@ -1,0 +1,168 @@
+{
+  "kind": "itemSheet",
+  "system": "savage-worlds",
+  "id": "savage-worlds-weapon",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "item",
+    "labelKey": "savage-worlds.ui.arma",
+    "children": [
+      {
+        "type": "grid",
+        "columns": 2,
+        "variant": "identity",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "savage-worlds.ui.nome",
+            "variant": "name"
+          },
+          {
+            "type": "textField",
+            "path": "sheet.skill",
+            "labelKey": "savage-worlds.ui.pericia"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "variant": "mechanics",
+        "labelKey": "savage-worlds.ui.combate",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 2,
+            "variant": "mechanics",
+            "children": [
+              {
+                "type": "textField",
+                "path": "sheet.damage",
+                "labelKey": "savage-worlds.ui.dano.formula",
+                "variant": "wide"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.addStrength",
+                "variant": "flag",
+                "labelKey": "savage-worlds.ui.soma.forca"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.ap",
+                "labelKey": "savage-worlds.ui.perfuracao"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.rof",
+                "labelKey": "savage-worlds.ui.cadencia"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.ammo.value",
+                "labelKey": "savage-worlds.ui.municao.atual"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.ammo.max",
+                "labelKey": "savage-worlds.ui.municao.capacidade"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.ammo.reloadActions",
+                "labelKey": "savage-worlds.ui.recarga.acoes"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.range",
+                "labelKey": "savage-worlds.ui.alcance"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.reach",
+                "labelKey": "savage-worlds.ui.extensao"
+              },
+              {
+                "type": "selectField",
+                "path": "sheet.minStrength",
+                "options": [
+                  {
+                    "value": 4,
+                    "labelKey": "savage-worlds.die.d4"
+                  },
+                  {
+                    "value": 6,
+                    "labelKey": "savage-worlds.die.d6"
+                  },
+                  {
+                    "value": 8,
+                    "labelKey": "savage-worlds.die.d8"
+                  },
+                  {
+                    "value": 10,
+                    "labelKey": "savage-worlds.die.d10"
+                  },
+                  {
+                    "value": 12,
+                    "labelKey": "savage-worlds.die.d12"
+                  }
+                ],
+                "labelKey": "savage-worlds.ui.forca.minima"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.twoHanded",
+                "variant": "flag",
+                "labelKey": "savage-worlds.ui.duas.maos"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "variant": "market",
+        "labelKey": "savage-worlds.ui.inventario",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 3,
+            "variant": "market",
+            "children": [
+              {
+                "type": "numberField",
+                "path": "sheet.quantity",
+                "labelKey": "savage-worlds.ui.quantidade"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.weight",
+                "labelKey": "savage-worlds.ui.peso"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.cost",
+                "labelKey": "savage-worlds.ui.custo"
+              },
+              {
+                "type": "checkboxField",
+                "path": "sheet.equipped",
+                "variant": "flag",
+                "labelKey": "savage-worlds.ui.equipado"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "variant": "notes",
+        "labelKey": "savage-worlds.ui.descricao"
+      }
+    ]
+  }
+}

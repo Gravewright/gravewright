@@ -1,0 +1,244 @@
+{
+  "savage-worlds.abbr.agi": "AGI",
+  "savage-worlds.abbr.ast": "AST",
+  "savage-worlds.abbr.esp": "ESP",
+  "savage-worlds.abbr.for": "FOR",
+  "savage-worlds.abbr.vig": "VIG",
+  "savage-worlds.cond.abalado": "Abalado",
+  "savage-worlds.cond.atordoado": "Atordoado",
+  "savage-worlds.cond.caido": "Prostrado",
+  "savage-worlds.cond.defendendo": "Defesa",
+  "savage-worlds.cond.descontrolado": "Descontrolado",
+  "savage-worlds.cond.destrocado": "Destroçado",
+  "savage-worlds.cond.distraido": "Distraído",
+  "savage-worlds.cond.em.chamas": "Em chamas",
+  "savage-worlds.cond.enredado": "Enredado",
+  "savage-worlds.cond.esperando": "Aguardando",
+  "savage-worlds.cond.fatigado": "Fatigado",
+  "savage-worlds.cond.imobilizado": "Preso",
+  "savage-worlds.cond.incapacitado": "Incapacitado",
+  "savage-worlds.cond.mirando": "Mirando",
+  "savage-worlds.cond.sobrecarregado": "Sobrecarregado",
+  "savage-worlds.cond.vulneravel": "Vulnerável",
+  "savage-worlds.die.d10": "d10",
+  "savage-worlds.die.d12": "d12",
+  "savage-worlds.die.d4": "d4",
+  "savage-worlds.die.d6": "d6",
+  "savage-worlds.die.d8": "d8",
+  "savage-worlds.rank.heroic": "Heroico",
+  "savage-worlds.rank.legendary": "Lendário",
+  "savage-worlds.rank.novice": "Novato",
+  "savage-worlds.rank.seasoned": "Experiente",
+  "savage-worlds.rank.veteran": "Veterano",
+  "savage-worlds.ui.absorver": "Absorver dano",
+  "savage-worlds.ui.acoes": "Combate",
+  "savage-worlds.ui.acertos": "Acertos",
+  "savage-worlds.ui.agilidade": "Agilidade",
+  "savage-worlds.ui.alcance": "Alcance",
+  "savage-worlds.ui.alcance.curto": "Curto",
+  "savage-worlds.ui.alcance.extremo": "Extremo (−8)",
+  "savage-worlds.ui.alcance.longo": "Longo (−4)",
+  "savage-worlds.ui.alcance.medio": "Médio (−2)",
+  "savage-worlds.ui.alvos.declarados": "Alvos declarados",
+  "savage-worlds.ui.ancestralidade": "Ancestralidade",
+  "savage-worlds.ui.anotacoes": "Anotações",
+  "savage-worlds.ui.arma": "Arma",
+  "savage-worlds.ui.armadura": "Armadura",
+  "savage-worlds.ui.armas": "Armas",
+  "savage-worlds.ui.astucia": "Astúcia",
+  "savage-worlds.ui.atacar": "Atacar",
+  "savage-worlds.ui.aplicar.dano": "Aplicar dano",
+  "savage-worlds.ui.atalhos": "Atalhos",
+  "savage-worlds.ui.atalhos.vazio": "Equipe uma arma ou prepare um poder para criar um atalho.",
+  "savage-worlds.ui.atalho.indisponivel": "Atalho indisponível.",
+  "savage-worlds.ui.preparado": "Preparado",
+  "savage-worlds.ui.ataque": "Ataque",
+  "savage-worlds.ui.atributo": "Atributo",
+  "savage-worlds.ui.atributos": "Atributos",
+  "savage-worlds.ui.aumentos": "Aumentos",
+  "savage-worlds.ui.avancos": "Avanços",
+  "savage-worlds.ui.avarias": "Avarias",
+  "savage-worlds.ui.bennies": "Benes",
+  "savage-worlds.ui.bennies.ganhar": "Ganhar Bene",
+  "savage-worlds.ui.bennies.gastar": "Gastar Bene",
+  "savage-worlds.ui.bonus.de.cobertura": "Bônus de cobertura",
+  "savage-worlds.ui.bonus.de.escudo": "Bônus de escudo",
+  "savage-worlds.ui.cadencia": "Cadência",
+  "savage-worlds.ui.cadencia.usada": "Cadência usada",
+  "savage-worlds.ui.municao.atual": "Munição atual",
+  "savage-worlds.ui.municao.capacidade": "Capacidade",
+  "savage-worlds.ui.recarga.acoes": "Ações para recarregar",
+  "savage-worlds.ui.recarregar": "Recarregar",
+  "savage-worlds.ui.carga": "Carga",
+  "savage-worlds.ui.carta.de.acao": "Carta de Ação",
+  "savage-worlds.ui.cobertura": "Cobertura",
+  "savage-worlds.ui.com.raise": "Com ampliação (+1d6)",
+  "savage-worlds.ui.combate": "Combate",
+  "savage-worlds.ui.conceito": "Conceito",
+  "savage-worlds.ui.condicoes": "Condições",
+  "savage-worlds.ui.estado": "Estado",
+  "savage-worlds.ui.fechar": "Fechar",
+  "savage-worlds.ui.conjurar": "Conjurar",
+  "savage-worlds.ui.corrida": "Corrida",
+  "savage-worlds.ui.custo": "Custo",
+  "savage-worlds.ui.dado": "Dado",
+  "savage-worlds.ui.dado.de.fighting": "Dado de Lutar",
+  "savage-worlds.ui.dados": "Dados",
+  "savage-worlds.ui.dados.extras": "Dados extras",
+  "savage-worlds.ui.dano": "Dano",
+  "savage-worlds.ui.dano.de.forca": "Dano de Força",
+  "savage-worlds.ui.dano.formula": "Dano (fórmula)",
+  "savage-worlds.ui.derivados": "Derivados",
+  "savage-worlds.ui.descricao": "Descrição",
+  "savage-worlds.ui.dificil": "Difícil (−2)",
+  "savage-worlds.ui.duas.maos": "Duas mãos",
+  "savage-worlds.ui.duracao": "Duração",
+  "savage-worlds.ui.edge": "Vantagem",
+  "savage-worlds.ui.edges": "Vantagens",
+  "savage-worlds.ui.edges.e.hindrances": "Vantagens e Complicações",
+  "savage-worlds.ui.editar": "Editar",
+  "savage-worlds.ui.concluir": "Concluir",
+  "savage-worlds.ui.confirmar.remocao": "Remover {name} da ficha?",
+  "savage-worlds.ui.equipado": "Equipado",
+  "savage-worlds.ui.equipamento": "Equipamento",
+  "savage-worlds.ui.escudo": "Escudo",
+  "savage-worlds.ui.especializacao": "Especialização",
+  "savage-worlds.ui.espirito": "Espírito",
+  "savage-worlds.ui.exemplo.dados": "1d6, 1d4",
+  "savage-worlds.ui.extensao": "Extensão",
+  "savage-worlds.ui.extra": "Extra",
+  "savage-worlds.ui.facil": "Fácil (+2)",
+  "savage-worlds.ui.fadiga": "Fadiga",
+  "savage-worlds.ui.faixa.de.alcance": "Faixa de alcance",
+  "savage-worlds.ui.ferimentos": "Ferimentos",
+  "savage-worlds.ui.forca": "Força",
+  "savage-worlds.ui.forca.minima": "Força mínima",
+  "savage-worlds.ui.fundo.arcano": "Antecedente Arcano",
+  "savage-worlds.ui.gravidade": "Gravidade",
+  "savage-worlds.ui.grupo": "Grupo",
+  "savage-worlds.ui.hindrance": "Complicação",
+  "savage-worlds.ui.hindrances": "Complicações",
+  "savage-worlds.ui.historia": "História",
+  "savage-worlds.ui.inventario": "Inventário",
+  "savage-worlds.ui.maior": "Maior",
+  "savage-worlds.ui.manifestacao": "Manifestação",
+  "savage-worlds.ui.manobra": "Manobra",
+  "savage-worlds.ui.menor": "Menor",
+  "savage-worlds.ui.modificador": "Modificador",
+  "savage-worlds.ui.modificador.extra": "Modificador extra",
+  "savage-worlds.ui.mostrar": "Mostrar no chat",
+  "savage-worlds.ui.muito.dificil": "Muito difícil (−4)",
+  "savage-worlds.ui.multiacao": "Multiação",
+  "savage-worlds.ui.multiacao.duas": "Duas ações (−2)",
+  "savage-worlds.ui.multiacao.tres": "Três ações (−4)",
+  "savage-worlds.ui.multiacao.uma": "Uma ação",
+  "savage-worlds.ui.nome": "Nome",
+  "savage-worlds.ui.normal": "Normal",
+  "savage-worlds.ui.origem.da.toughness": "Origem da Resistência",
+  "savage-worlds.ui.origem.do.parry": "Origem do Aparar",
+  "savage-worlds.ui.pace": "Movimentação",
+  "savage-worlds.ui.para.que": "Para quê",
+  "savage-worlds.ui.parry": "Aparar",
+  "savage-worlds.ui.patente": "Estágio",
+  "savage-worlds.ui.penalidade": "Penalidade",
+  "savage-worlds.ui.perfuracao": "Perfurante de Armadura (PA)",
+  "savage-worlds.ui.pericia": "Perícia",
+  "savage-worlds.ui.pericia.basica": "Perícia básica",
+  "savage-worlds.ui.pericia.de.conjuracao": "Perícia de conjuração",
+  "savage-worlds.ui.pericias": "Perícias",
+  "savage-worlds.ui.peso": "Peso",
+  "savage-worlds.ui.poder": "Poder",
+  "savage-worlds.ui.pp.adicionais": "PP adicionais (modificadores)",
+  "savage-worlds.ui.poderes": "Poderes",
+  "savage-worlds.ui.pontos.de.poder": "Pontos de Poder",
+  "savage-worlds.ui.principal": "Principal",
+  "savage-worlds.ui.protecao": "Proteção",
+  "savage-worlds.ui.quantidade": "Quantidade",
+  "savage-worlds.ui.recursos": "Recursos",
+  "savage-worlds.ui.remover": "Remover",
+  "savage-worlds.ui.requisitos": "Requisitos",
+  "savage-worlds.ui.resumo": "Resumo",
+  "savage-worlds.ui.rolagens.rapidas": "Rolagens rápidas",
+  "savage-worlds.ui.rolar": "Rolar",
+  "savage-worlds.ui.sair.do.abalado": "Sair de Abalado",
+  "savage-worlds.ui.sem.pericia": "Sem perícia",
+  "savage-worlds.ui.situacao": "Situação",
+  "savage-worlds.ui.sobre": "Sobre",
+  "savage-worlds.ui.sobrecarga": "Sobrecarga",
+  "savage-worlds.ui.soma.forca": "Soma a Força",
+  "savage-worlds.ui.tamanho": "Tamanho",
+  "savage-worlds.ui.teste": "Teste de Traço",
+  "savage-worlds.ui.teste.de.agilidade": "Teste de Agilidade",
+  "savage-worlds.ui.teste.de.astucia": "Teste de Astúcia",
+  "savage-worlds.ui.teste.de.espirito": "Teste de Espírito",
+  "savage-worlds.ui.teste.de.forca": "Teste de Força",
+  "savage-worlds.ui.teste.de.pericia": "Teste de Perícia",
+  "savage-worlds.ui.teste.de.vigor": "Teste de Vigor",
+  "savage-worlds.ui.teste.sem.pericia": "Teste sem perícia",
+  "savage-worlds.ui.toughness": "Resistência",
+  "savage-worlds.ui.tripulacao": "Tripulação",
+  "savage-worlds.ui.veiculo": "Veículo",
+  "savage-worlds.ui.velocidade": "Velocidade máxima",
+  "savage-worlds.ui.vigor": "Vigor",
+  "savage-worlds.ui.visibilidade": "Visibilidade",
+  "savage-worlds.ui.wild.card": "Carta Selvagem",
+  "savage-worlds.ui.wild.die": "Dado Selvagem",
+  "savage-worlds.roll.item.test": "Teste de {name}",
+  "savage-worlds.roll.primary.die": "Dado principal",
+  "savage-worlds.roll.success": "Sucesso",
+  "savage-worlds.roll.failure": "Falha",
+  "savage-worlds.roll.critical.failure": "Falha crítica",
+  "savage-worlds.toast.bennies.gained": "Você ganhou {count} Bene.",
+  "savage-worlds.toast.bennies.spent": "Você gastou {count} Bene.",
+  "savage-worlds.roll.reroll": "Gastar Bene e rerrolar"
+  ,"savage-worlds.initiative.deal": "Distribuir Cartas de Ação"
+  ,"savage-worlds.initiative.dealt": "Cartas de Ação distribuídas e iniciativa ordenada."
+  ,"savage-worlds.initiative.act.now": "Agir agora com o Curinga"
+  ,"savage-worlds.initiative.resume": "Retomar turno interrompido"
+  ,"savage-worlds.initiative.hold": "Aguardar"
+  ,"savage-worlds.initiative.holding": "Aguardando"
+  ,"savage-worlds.initiative.no.deck": "Nenhum baralho está disponível nesta campanha."
+  ,"savage-worlds.ui.atual": "Atual"
+  ,"savage-worlds.ui.max.abbr": "Máx."
+  ,"savage-worlds.ui.maxima": "Máxima"
+  ,"savage-worlds.ui.maximo": "Máximo"
+  ,"savage-worlds.ui.minima": "Mínima"
+  ,"savage-worlds.ui.modificador.abbr": "Mod."
+  ,"savage-worlds.ui.pontos": "Pontos"
+  ,"savage-worlds.ui.nome.grupo": "Nome do grupo"
+  ,"savage-worlds.ui.nome.veiculo": "Nome do veículo"
+  ,"savage-worlds.ui.grupo.placeholder": "Aliados, tropas ou organização"
+  ,"savage-worlds.ui.perfil.unidade": "Perfil da unidade"
+  ,"savage-worlds.ui.estrutura": "Estrutura"
+  ,"savage-worlds.ui.escala": "Escala"
+  ,"savage-worlds.ui.empty.pericia": "Arraste uma perícia para adicionar"
+  ,"savage-worlds.ui.empty.arma": "Arraste uma arma para a ficha"
+  ,"savage-worlds.ui.empty.vantagem": "Arraste uma vantagem para a ficha"
+  ,"savage-worlds.ui.empty.complicacao": "Arraste uma complicação para a ficha"
+  ,"savage-worlds.ui.empty.protecao": "Arraste armadura ou escudo para a ficha"
+  ,"savage-worlds.ui.empty.equipamento": "Arraste equipamento para a ficha"
+  ,"savage-worlds.ui.empty.poder": "Arraste um poder para a ficha"
+  ,"savage-worlds.ui.grupo.ajuda": "Gerencie o efetivo abstrato do grupo como um único recurso durante a cena."
+  ,"savage-worlds.ui.ficha": "Ficha"
+  ,"savage-worlds.ui.dado.de.agilidade": "Dado de Agilidade"
+  ,"savage-worlds.ui.dado.de.astucia": "Dado de Astúcia"
+  ,"savage-worlds.ui.dado.de.espirito": "Dado de Espírito"
+  ,"savage-worlds.ui.dado.de.forca": "Dado de Força"
+  ,"savage-worlds.ui.dado.de.vigor": "Dado de Vigor"
+  ,"savage-worlds.ui.modificador.de.agilidade": "Modificador de Agilidade"
+  ,"savage-worlds.ui.modificador.de.astucia": "Modificador de Astúcia"
+  ,"savage-worlds.ui.modificador.de.espirito": "Modificador de Espírito"
+  ,"savage-worlds.ui.modificador.de.forca": "Modificador de Força"
+  ,"savage-worlds.ui.modificador.de.vigor": "Modificador de Vigor"
+  ,"savage-worlds.settings.initiative.deck.label": "Baralho de iniciativa"
+  ,"savage-worlds.settings.initiative.deck.hint": "Instância de baralho usada para distribuir cartas no tracker de combate."
+  ,"savage-worlds.initiative.deck.loading": "Carregando baralhos…"
+  ,"savage-worlds.ui.curar": "Curar"
+  ,"savage-worlds.ui.cura.natural": "Cura natural"
+  ,"savage-worlds.ui.cura.natural.aviso": "Use esta rolagem uma vez a cada cinco dias de recuperação."
+  ,"savage-worlds.ui.kit.primeiros.socorros": "Possui kit de Primeiros Socorros"
+  ,"savage-worlds.ui.recuperar.fadiga": "Recuperar um nível de Fadiga"
+  ,"savage-worlds.ui.suporte": "Suporte"
+  ,"savage-worlds.ui.teste.resistido": "Teste Resistido"
+  ,"savage-worlds.ui.atributo.resistente": "Atributo de resistência"
+}

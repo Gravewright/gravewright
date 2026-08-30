@@ -1,0 +1,20 @@
+{
+  "toasts": {
+    "trait": {
+      "titleKey": "savage-worlds.ui.teste",
+      "icon": "dice-six"
+    },
+    "attack": {
+      "titleKey": "savage-worlds.ui.ataque",
+      "icon": "sword"
+    },
+    "damage": {
+      "titleKey": "savage-worlds.ui.dano",
+      "icon": "drop"
+    },
+    "item": {
+      "titleKey": "savage-worlds.ui.equipamento",
+      "icon": "scroll"
+    }
+  }
+}

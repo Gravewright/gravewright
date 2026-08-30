@@ -1,0 +1,35 @@
+name: Validate package
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout package
+        uses: actions/checkout@v4
+
+      - name: Checkout Gravewright
+        uses: actions/checkout@v4
+        with:
+          repository: Gravewright/gravewright
+          path: gravewright
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Copy package into Gravewright
+        run: |
+          mkdir -p gravewright/data/packages/rulesets/dnd5e
+          rsync -a --delete             --exclude ".git"             --exclude ".github"             --exclude "gravewright"             ./ gravewright/data/packages/rulesets/dnd5e/
+
+      - name: Validate package
+        working-directory: gravewright
+        run: |
+          uv run python -m app.cli package validate data/packages/rulesets/dnd5e
+          uv run python -m app.cli package install dnd5e --enable
+          uv run python -m app.cli package update dnd5e --json
+          uv run python -m app.cli doctor --strict --json

@@ -1,0 +1,58 @@
+{
+  "version": 2,
+  "$comment": "A iniciativa usa Cartas de Ação. O controlador ordena do Ás ao Dois, desempata por ECOP (Espadas, Copas, Ouros, Paus), coloca Curingas no topo como ordem padrão e reembaralha somente depois de uma rodada em que um Curinga foi sacado.",
+  "initiative": {
+    "label": "savage-worlds.ui.carta.de.acao",
+    "input": "text",
+    "icon": "ph-cards",
+    "accent": "#a3232b"
+  },
+  "resources": {
+    "hp": {
+      "label": "savage-worlds.ui.ferimentos",
+      "path": "sheet.wounds.value",
+      "maxPath": "sheet.wounds.max",
+      "min": 0
+    },
+    "fatigue": {
+      "label": "savage-worlds.ui.fadiga",
+      "path": "sheet.fatigue.value",
+      "maxPath": "sheet.fatigue.max",
+      "min": 0
+    },
+    "power": {
+      "label": "savage-worlds.ui.pontos.de.poder",
+      "path": "sheet.power.points.value",
+      "maxPath": "sheet.power.points.max",
+      "min": 0
+    }
+  },
+  "damageResolution": {
+    "mode": "threshold-raises",
+    "thresholdPath": "stats.toughness.value",
+    "armorPath": "stats.toughness.armor",
+    "raiseStep": 4,
+    "shakenPath": "conditions.shaken",
+    "woundsPath": "wounds.value",
+    "maxWoundsPath": "wounds.max",
+    "incapacitatedPath": "conditions.incapacitated",
+    "extraActorTypes": ["extra"]
+  },
+  "healingResolution": {
+    "mode": "success-raises",
+    "target": 4,
+    "raiseStep": 4,
+    "woundsPath": "wounds.value",
+    "maxWoundsPath": "wounds.max",
+    "incapacitatedPath": "conditions.incapacitated",
+    "maximumHealed": 2
+  },
+  "opposedResolution": {
+    "mode": "trait-comparison",
+    "target": 4,
+    "raiseStep": 4,
+    "attributeInput": "opposedAttribute",
+    "attributes": ["agility", "smarts", "spirit", "strength", "vigor"],
+    "wildCardActorTypes": ["character"]
+  }
+}

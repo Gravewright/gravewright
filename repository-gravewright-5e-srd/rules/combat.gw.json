@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "initiative": {
+    "label": "dnd5e.ui.iniciativa.dnd5e",
+    "input": "roll",
+    "sort": "desc",
+    "formula": "1d20 + @sheet.combat.initiative",
+    "actionId": "roll.initiative",
+    "tieBreaker": "@sheet.abilities.dex.score",
+    "icon": "ph-dice-five",
+    "accent": "#b88a44"
+  },
+  "resources": {
+    "hp": {
+      "label": "dnd5e.abbr.hp",
+      "path": "sheet.hp.value",
+      "maxPath": "sheet.hp.max",
+      "min": 0
+    }
+  }
+}

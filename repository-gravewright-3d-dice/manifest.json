@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Gravewright/gravewright/main/schemas/gravewright-package-v1.schema.json",
+  "schemaVersion": 1,
+  "sdkVersion": "1",
+  "kind": "addon",
+  "id": "gravewright-3d-dice",
+  "name": "Gravewright 3D Dice",
+  "version": "1.2.1",
+  "description": "AGPL Dice So Nice engine adaptation for authorized Gravewright rolls.",
+  "authors": ["Gravewright", "Dice So Nice contributors"],
+  "license": "AGPL-3.0",
+  "compatibility": {"minimum": "1", "verified": "1", "maximum": "1.x"},
+  "capabilities": [
+    "assets.scripts",
+    "assets.styles",
+    "events.subscribe",
+    "chat.read",
+    "ui.slots",
+    "settings"
+  ],
+  "activation": {"scope": "campaign", "mode": "multiple"},
+  "entrypoints": {
+    "game": {
+      "scripts": ["scripts/dice-core.js", "scripts/main.js"],
+      "styles": []
+    }
+  },
+  "provides": {
+    "assets": {
+      "images": [
+        {
+          "id": "dice-tray",
+          "label": "Gravewright 3D Dice Tray",
+          "path": "assets/dice-tray-top-down.png"
+        },
+        {
+          "id": "dice-resin-roughness",
+          "label": "Dice So Nice Resin Roughness Map",
+          "path": "assets/roughnessMap_resin.webp"
+        }
+      ],
+      "fonts": [
+        {
+          "id": "inter-variable",
+          "label": "Inter Variable Font",
+          "path": "assets/fonts/InterVariable.woff2"
+        }
+      ],
+      "vendor": [
+        {
+          "id": "dice-renderer-runtime",
+          "label": "Gravewright 3D Dice renderer runtime",
+          "path": "scripts/dice-renderer.js"
+        },
+        {
+          "id": "dice-ui-styles",
+          "label": "Gravewright 3D Dice styles",
+          "path": "styles/gravewright-3d-dice.css"
+        }
+      ]
+    }
+  },
+  "distribution": {
+    "type": "zip",
+    "url": "https://github.com/Gravewright/gravewright-3d-dice/archive/refs/tags/v1.2.1.zip",
+    "sha256": "c890f10594d6fad72a34cb22f8bd9b1e7403fc79eb9ac4110100fc8ffdd7ff3d",
+    "source": "partner"
+  },
+  "settings": [
+    {
+      "key": "dice_color",
+      "type": "string",
+      "scope": "campaign",
+      "default": "#6d7280"
+    },
+    {
+      "key": "font_color",
+      "type": "string",
+      "scope": "campaign",
+      "default": "#ffffff"
+    }
+  ]
+}

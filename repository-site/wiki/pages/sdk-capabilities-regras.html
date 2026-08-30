@@ -1,0 +1,441 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Detailed reference for 13 capabilities: intended use, boundaries, APIs, and anti-patterns."><meta name="theme-color" content="#0b0d10"><title>Capabilities: rules, sheets, and persistence | Gravewright Wiki</title><link rel="stylesheet" href="../../styles.css"><link rel="stylesheet" href="../wiki.css"><script src="../page.js" defer></script></head><body class="wiki-page" data-guide-slug="sdk-capabilities-regras" data-default-locale="en"><a class="skip-link" href="#wiki-article" data-i18n="skip">Skip to documentation</a><header class="site-header is-scrolled wiki-header"><div class="shell header-inner"><a class="brand" href="../../index.html"><span class="brand-icon"><img src="../../assets/icon.svg" alt="" width="34" height="34"></span><span>Gravewright <small>Wiki</small></span></a><div class="wiki-header-actions"><label class="wiki-language"><span data-i18n="language">Language</span><select data-language-select><option value="en" selected>English</option><option value="pt-br">Português</option><option value="es">Español</option></select></label><button class="wiki-icon-button wiki-mobile-nav" type="button" data-sidebar-toggle data-i18n-aria="openNavigation" aria-label="Open navigation">☰</button><a class="nav-button" href="https://github.com/Gravewright/gravewright" data-i18n="github">GitHub ↗</a></div></div></header><main class="wiki-shell"><aside class="wiki-sidebar" data-sidebar><div class="wiki-search-wrap"><label for="wiki-search" data-i18n="searchLabel">Search guides</label><div class="wiki-search-box"><span>⌕</span><input id="wiki-search" type="search" data-search placeholder="E.g. quest, map, backup…"></div><p class="wiki-search-empty" data-search-empty hidden>No guides found.</p></div><nav class="wiki-tree" data-wiki-tree><section class="wiki-tree-section"><strong>Start here</strong><a data-search-item data-search-text="welcome to gravewright understand what gravewright is and choose your next step. choose your journey essential concepts what you should see when you&#39;re done welcome gravewright understand what and choose your next step. journey essential concepts you should see when done" href="inicio.html">Welcome to Gravewright</a><a data-search-item data-search-text="installation and first start install zip desktop on windows or checkout the source code. windows: recommended desktop package where the data lives maintenance via launcher windows: source code checkout first access diagnosis by symptom installation and first start install zip desktop windows checkout the source code. windows: recommended package where data lives maintenance via launcher code access diagnosis symptom" href="instalacao.html">Installation and first start</a><a data-search-item data-search-text="your first table create a campaign, choose the system and enter the game space. create the campaign choose the system minimum preparation for a test checklist before inviting the group your first table create campaign choose the system and enter game space. minimum preparation for test checklist before inviting group" href="primeira-mesa.html">Your first table</a><a data-search-item data-search-text="gravewright beta 4 and sdk 1 rc 1 understand the current release, its contracts, and update precautions. highlights gravewright beta and sdk understand the current release its contracts update precautions. highlights" href="release-beta-4.html">Gravewright Beta 4 and SDK 1 RC 1</a></section><section class="wiki-tree-section"><strong>Players</strong><a data-search-item data-search-text="login as a player accept an invitation, join the table, and set up your experience. join by invitation first entry before the session if you lose access login player accept invitation join the table and set your experience. first entry before session you lose access" href="jogador.html">Login as a player</a><a data-search-item data-search-text="getting to know the interface learn to navigate between map, directories, tools and windows. windows map navigation directories and tools safe shortcuts to learn recovery getting know the interface learn navigate between map directories tools and windows. windows navigation safe shortcuts recovery" href="interface.html">Getting to know the interface</a></section><section class="wiki-tree-section"><strong>Game Masters</strong><a data-search-item data-search-text="players, invitations and permissions invite the group and control reading, ownership and access. invite campaign roles permissions for actors, items and journals remove or ban players invitations and permissions invite the group control reading ownership access. campaign roles for actors items journals remove ban" href="jogadores-permissoes.html">Players, invitations and permissions</a><a data-search-item data-search-text="scenes, maps, walls and vision create a playable map and control what each character sees. create a scene walls and doors dynamic lighting and vision mist and revelation diagnosis scenes maps walls and vision create playable map control what each character sees. scene doors dynamic lighting mist revelation diagnosis" href="cenas.html">Scenes, maps, walls and vision</a><a data-search-item data-search-text="actors and tokens create characters, grant ownership, and place them on the map. create an actor give the character to the player put on map configure the token movement good practices actors and tokens create characters grant ownership place them the map. actor give character player put map configure token movement good practices" href="atores-tokens.html">Actors and tokens</a><a data-search-item data-search-text="items, sheets and pdfs use ruleset sheets, equipment and fillable pdf documents. items html and declarative sheets gravewright pdf system security and copyright when a field doesn&#39;t work items sheets and pdfs use ruleset equipment fillable pdf documents. html declarative gravewright system security copyright when field doesn work" href="itens-fichas-pdf.html">Items, sheets and PDFs</a><a data-search-item data-search-text="journals, quests, and boards organize campaign texts and publish missions for players. journals create a quest quest board status visibility journals quests and boards organize campaign texts publish missions for players. create quest board status visibility" href="diarios-missoes.html">Journals, quests, and boards</a></section><section class="wiki-tree-section"><strong>Playing</strong><a data-search-item data-search-text="chat, dice, and combat conduct rolls, initiative, turns, and communication during the session. chat rolls start combat during a turn close chat dice and combat conduct rolls initiative turns communication during the session. start turn close" href="chat-combate.html">Chat, dice, and combat</a><a data-search-item data-search-text="cards, lights and effects use decks and visual atmosphere without compromising the session. cards lights particles and shaders performance rule of thumb cards lights and effects use decks visual atmosphere without compromising the session. particles shaders performance rule thumb" href="cartas-efeitos.html">Cards, lights and effects</a></section><section class="wiki-tree-section"><strong>Administration</strong><a data-search-item data-search-text="campaigns, snapshots and backups protect table data and recover unwanted changes. snapshot and backup are not the same thing recommended routine via cli clone and export before updating campaigns snapshots and backups protect table data recover unwanted changes. snapshot backup are not the same thing recommended routine via cli clone export before updating" href="administracao.html">Campaigns, snapshots and backups</a><a data-search-item data-search-text="server, production and security publish a table with https, own secrets and protected database. production requirements variables publishing checklist server production and security publish table with https own secrets protected database. requirements variables publishing checklist" href="servidor.html">Server, production and security</a><a data-search-item data-search-text="diagnosis and troubleshooting investigate failures without putting campaigns at risk. start with the doctor screen does not load real time does not work file or map fails outdated database when asking for help diagnosis and troubleshooting investigate failures without putting campaigns risk. start with the doctor screen does not load real time work file map fails outdated database when asking for help" href="solucao-problemas.html">Diagnosis and troubleshooting</a></section><section class="wiki-tree-section"><strong>Creators</strong><a data-search-item data-search-text="gravewright cli use the command line to run, validate, and maintain the project. essential commands output for automation flow to validate a package gravewright cli use the command line run validate and maintain project. essential commands output for automation flow package" href="cli.html">Gravewright CLI</a><a data-search-item data-search-text="packages, sdk and rulesets create extensions using public capabilities without depending on the internal core. create a ruleset manifest public runtime development cycle compatibility packages sdk and rulesets create extensions using public capabilities without depending the internal core. ruleset manifest runtime development cycle compatibility" href="pacotes-rulesets.html">Packages, SDK and rulesets</a><a data-search-item data-search-text="gravewright pdf system understand the pdf ruleset included in the core and how to adapt it. what it provides use in a campaign adapt to a game core assets and user files validate gravewright pdf system understand the ruleset included core and how adapt it. what provides use campaign game assets user files validate" href="ruleset-pdf.html">Gravewright PDF System</a><a data-search-item data-search-text="cli, scaffolding, and diagnostics create, validate, and diagnose packages with the certified beta 4 workflow. three verification levels cli scaffolding and diagnostics create validate diagnose packages with the certified beta workflow. three verification levels" href="authoring-beta-4.html">CLI, scaffolding, and diagnostics</a><a data-search-item data-search-text="marketplace, channels, and updates understand publication, provenance, and local or remote updates. channels come from the registry updates marketplace channels and updates understand publication provenance local remote updates. come from the registry" href="marketplace-updates.html">Marketplace, channels, and updates</a></section><section class="wiki-tree-section"><strong>In-depth SDK</strong><a data-search-item data-search-text="manifest and cycle of a package understand each block of the manifest, activation, validation and publication. minimum package explained provides: what the core actually consumes validate, install and activate don&#39;t manifest and cycle package understand each block the activation validation publication. minimum explained provides: what core actually consumes validate install activate don" href="sdk-manifest.html">Manifest and cycle of a package</a><a data-search-item data-search-text="capabilities and javascript runtime register scripts, use authorized apis, and handle the lifecycle correctly. complete registration reading and writing are not the same permission communication between packages prohibited apis capabilities and javascript runtime register scripts use authorized apis handle the lifecycle correctly. complete registration reading writing are not same permission communication between packages prohibited" href="sdk-capabilities-runtime.html">Capabilities and JavaScript runtime</a><a data-search-item data-search-text="html sheets, bindings, and controllers build an editable, persistent and secure record from start to finish. type in manifest template that saves controller and cleaning diagnosis html sheets bindings and controllers build editable persistent secure record from start finish. type manifest template that saves controller cleaning diagnosis" href="sdk-fichas-html.html">HTML sheets, bindings, and controllers</a><a data-search-item data-search-text="storage sqlite and settings persist first-party data without raw database and choose the right scope. managed storage settings by scope storage sqlite and settings persist first-party data without raw database choose the right scope. managed scope" href="sdk-storage-settings.html">Storage SQLite and settings</a><a data-search-item data-search-text="tutorial: functional addon from scratch create, install, test and debug a real addon without modifying the core. 1. generate the structure 2. manifesto 3. script 4. validate and upload 5. change during development 6. when it fails tutorial: functional addon from scratch create install test and debug real without modifying the core. generate structure manifesto script validate upload change during development when fails" href="sdk-tutorial-addon.html">Tutorial: functional addon from scratch</a></section><section class="wiki-tree-section"><strong>Capability reference</strong><a data-search-item data-search-text="sdk power map start with the package&#39;s intent and identify the minimum capabilities it needs. tokens and actors scene combat and cards content and ui persistence and integration minimization rule sdk power map start with the package intent and identify minimum capabilities needs. tokens actors scene combat cards content persistence integration minimization rule" href="sdk-mapa-de-poder.html">SDK power map</a><a data-search-item data-search-text="capabilities: actors and items detailed reference for 10 capabilities: intended use, boundaries, apis, and anti-patterns. actors.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.data.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities items.data.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.items.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities actors.items.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: actors and items detailed reference for intended use boundaries apis anti-patterns. actors.register what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities items.register actors.read items.read actors.write actors.data.write items.write items.data.write actors.items.read actors.items.write" href="sdk-capabilities-atores-itens.html">Capabilities: actors and items</a><a data-search-item data-search-text="capabilities: assets and ui detailed reference for 15 capabilities: intended use, boundaries, apis, and anti-patterns. assets.library what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.import what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.ui what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.styles what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.scripts what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.pack what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.images what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.audio what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.video what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.maps what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities assets.icons what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.slots what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.applications what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.presentations what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities ui.dragdrop what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: assets and detailed reference for intended use boundaries apis anti-patterns. assets.library what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities assets.import assets.ui assets.styles assets.scripts assets.pack assets.images assets.audio assets.video assets.maps assets.icons ui.slots ui.applications ui.presentations ui.dragdrop" href="sdk-capabilities-assets-ui.html">Capabilities: assets and UI</a><a data-search-item data-search-text="capabilities: bus, events, and commands detailed reference for 6 capabilities: intended use, boundaries, apis, and anti-patterns. commands.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.publish what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.subscribe what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.request what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities bus.provide what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities events.subscribe what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: bus events and commands detailed reference for intended use boundaries apis anti-patterns. commands.register what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities bus.publish bus.subscribe bus.request bus.provide events.subscribe" href="sdk-capabilities-eventos.html">Capabilities: bus, events, and commands</a><a data-search-item data-search-text="capabilities: chat, cards, and combat detailed reference for 12 capabilities: intended use, boundaries, apis, and anti-patterns. dice.roll what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rolls.intent what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.config what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.runtime what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities chat.cards what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rolls.actions what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rolls.reroll what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities chat.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities combat.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities cards.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities cards.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: chat cards and combat detailed reference for intended use boundaries apis anti-patterns. dice.roll what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities rolls.intent combat.config combat.runtime chat.cards rolls.actions rolls.reroll combat.read chat.read combat.manage cards.read cards.manage" href="sdk-capabilities-jogo.html">Capabilities: chat, cards, and combat</a><a data-search-item data-search-text="capabilities: content, journals, and pdf detailed reference for 11 capabilities: intended use, boundaries, apis, and anti-patterns. content.packs what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities content.references what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities content.index what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities journals.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities journals.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities handouts.present what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.presentation what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.viewer what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.annotations.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities pdf.annotations.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: content journals and pdf detailed reference for intended use boundaries apis anti-patterns. content.packs what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities content.references content.index journals.read journals.write handouts.present pdf.presentation pdf.read pdf.viewer pdf.annotations.read pdf.annotations.write" href="sdk-capabilities-conteudo.html">Capabilities: content, journals, and PDF</a><a data-search-item data-search-text="capabilities: scenes and tokens detailed reference for 32 capabilities: intended use, boundaries, apis, and anti-patterns. tokens.mappings what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.extends what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.tools what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.overlays what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.move what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.geometry.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.geometry.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.effects.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.effects.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.shaders.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.shaders.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.shaders.customlibrary what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.fog.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.fog.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.images.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.images.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.templates.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.templates.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.targets what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.measurements.shared what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.zones.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.zones.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objecttypes.register what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objects.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objects.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.objects.interact what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.spatialsounds.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities scene.spatialsounds.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities tokens.transfer what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: scenes and tokens detailed reference for intended use boundaries apis anti-patterns. tokens.mappings what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities tokens.extends scene.tools scene.overlays tokens.read scene.read tokens.move tokens.manage scene.geometry.read scene.geometry.write scene.effects.read scene.effects.write scene.shaders.read scene.shaders.write scene.shaders.customlibrary scene.fog.read scene.fog.write scene.images.read scene.images.write scene.templates.read scene.templates.write tokens.targets scene.measurements.shared scene.zones.read scene.zones.write scene.objecttypes.register scene.objects.read scene.objects.write scene.objects.interact scene.spatialsounds.read scene.spatialsounds.write tokens.transfer" href="sdk-capabilities-cena.html">Capabilities: scenes and tokens</a><a data-search-item data-search-text="capabilities: rules, sheets, and persistence detailed reference for 13 capabilities: intended use, boundaries, apis, and anti-patterns. sheets.declarative what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.runtime what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.components what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rules.declarative what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rules.extends what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities settings what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities locales what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities storage.sqlite what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.html what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.controller what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sheets.richtext what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities permissions.inspect what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities rules.actions what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: rules sheets and persistence detailed reference for intended use boundaries apis anti-patterns. sheets.declarative what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities sheets.runtime sheets.components rules.declarative rules.extends settings locales storage.sqlite sheets.html sheets.controller sheets.richtext permissions.inspect rules.actions" href="sdk-capabilities-regras.html" class="is-active" aria-current="page">Capabilities: rules, sheets, and persistence</a><a data-search-item data-search-text="capabilities: automation, interactions, and flows detailed reference for 20 capabilities: intended use, boundaries, apis, and anti-patterns. packages.inspect what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities campaign.members.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities users.presentation.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities automation.schedule what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities interactions.request what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities interactions.respond what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities audio.playback what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sounds.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities sounds.write what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities navigation.scene what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities input.commands what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities workflows.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities workflows.start what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities workflows.control what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities gameplay.flows.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities gameplay.flows.manage what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities gameplay.flows.participate what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities timelines.read what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities timelines.start what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities timelines.control what it authorizes when to use it what it does not authorize available methods user permission requirements minimal example possible errors security and visibility filtering lifecycle and teardown related capabilities capabilities: automation interactions and flows detailed reference for intended use boundaries apis anti-patterns. packages.inspect what authorizes when does not authorize available methods user permission requirements minimal example possible errors security visibility filtering lifecycle teardown related capabilities campaign.members.read users.presentation.read automation.schedule interactions.request interactions.respond audio.playback sounds.read sounds.write navigation.scene input.commands workflows.read workflows.start workflows.control gameplay.flows.read gameplay.flows.manage gameplay.flows.participate timelines.read timelines.start timelines.control" href="sdk-capabilities-automacao.html">Capabilities: automation, interactions, and flows</a></section></nav><footer class="wiki-sidebar-footer"><a href="../../index.html" data-i18n="home">← Home page</a><a href="https://github.com/Gravewright/gravewright/issues" data-i18n="report">Report an issue ↗</a></footer></aside><section class="wiki-main"><div class="wiki-breadcrumbs" data-breadcrumbs><span>Wiki</span><span>Capability reference</span><span>Capabilities: rules, sheets, and persistence</span></div><article class="wiki-article" id="wiki-article"><h1>Capabilities: rules, sheets, and persistence</h1>
+<p>This page documents 13 capabilities individually. A capability is an API gate, not a privilege escalation: every operation remains subject to server-side authorization.</p>
+<h2 id="sheets-declarative"><code>sheets.declarative</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code></p>
+<h3 id="what-it-authorizes">What it authorizes</h3>
+<p>Provide declarative actor/item sheets.</p>
+<h3 id="when-to-use-it">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;sheets.declarative&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.sheets.declarative</code> method.</p>
+<h3 id="possible-errors">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#sheets-html"><code>sheets.html</code></a>, <a href="sdk-capabilities-regras.html#sheets-controller"><code>sheets.controller</code></a>, <a href="sdk-capabilities-regras.html#sheets-runtime"><code>sheets.runtime</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-data-write"><code>actors.data.write</code></a>, <a href="sdk-capabilities-atores-itens.html#items-data-write"><code>items.data.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="sheets-runtime"><code>sheets.runtime</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code></p>
+<h3 id="what-it-authorizes-2">What it authorizes</h3>
+<p>Register sheet runtime plugins and use sheet helper APIs.</p>
+<h3 id="when-to-use-it-2">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-2">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-2">Available methods</h3>
+<ul>
+<li><code>sdk.sheets.helpers</code></li>
+<li><code>sdk.sheets.register</code></li>
+</ul>
+<h3 id="user-permission-requirements-2">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-2">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;sheets.runtime&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.sheets.helpers(/* contract parameters */);
+await sdk.sheets.register(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-2">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-2">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-2">Lifecycle and teardown</h3>
+<p>Register once during setup. Remove package-owned listeners, observers, timers, and mounts during unmount or close; do not register again on every render.</p>
+<h3 id="related-capabilities-2">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#sheets-declarative"><code>sheets.declarative</code></a>, <a href="sdk-capabilities-regras.html#sheets-html"><code>sheets.html</code></a>, <a href="sdk-capabilities-regras.html#sheets-controller"><code>sheets.controller</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-data-write"><code>actors.data.write</code></a>, <a href="sdk-capabilities-atores-itens.html#items-data-write"><code>items.data.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="sheets-components"><code>sheets.components</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code></p>
+<h3 id="what-it-authorizes-3">What it authorizes</h3>
+<p>Provide component-based sheet pieces.</p>
+<h3 id="when-to-use-it-3">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize-3">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-3">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements-3">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-3">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;sheets.components&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.sheets.components</code> method.</p>
+<h3 id="possible-errors-3">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-3">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-3">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-3">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#sheets-declarative"><code>sheets.declarative</code></a>, <a href="sdk-capabilities-regras.html#sheets-html"><code>sheets.html</code></a>, <a href="sdk-capabilities-regras.html#sheets-controller"><code>sheets.controller</code></a>, <a href="sdk-capabilities-regras.html#sheets-runtime"><code>sheets.runtime</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-data-write"><code>actors.data.write</code></a>, <a href="sdk-capabilities-atores-itens.html#items-data-write"><code>items.data.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="rules-declarative"><code>rules.declarative</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code></p>
+<h3 id="what-it-authorizes-4">What it authorizes</h3>
+<p>Provide declarative game rules.</p>
+<h3 id="when-to-use-it-4">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize-4">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-4">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements-4">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-4">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;rules.declarative&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.rules.declarative</code> method.</p>
+<h3 id="possible-errors-4">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-4">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-4">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-4">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#rules-extends"><code>rules.extends</code></a>, <a href="sdk-capabilities-regras.html#rules-actions"><code>rules.actions</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="rules-extends"><code>rules.extends</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code></p>
+<h3 id="what-it-authorizes-5">What it authorizes</h3>
+<p>Extend rules provided by another package.</p>
+<h3 id="when-to-use-it-5">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize-5">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-5">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements-5">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-5">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;rules.extends&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.rules.extends</code> method.</p>
+<h3 id="possible-errors-5">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-5">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-5">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-5">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#rules-declarative"><code>rules.declarative</code></a>, <a href="sdk-capabilities-regras.html#rules-actions"><code>rules.actions</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="settings"><code>settings</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code></p>
+<h3 id="what-it-authorizes-6">What it authorizes</h3>
+<p>Read and write package settings.</p>
+<h3 id="when-to-use-it-6">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-6">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-6">Available methods</h3>
+<ul>
+<li><code>sdk.settings.definitions</code></li>
+<li><code>sdk.settings.all</code></li>
+<li><code>sdk.settings.get</code></li>
+<li><code>sdk.settings.set</code></li>
+<li><code>sdk.settings.scope</code></li>
+<li><code>sdk.settings.onChange</code></li>
+</ul>
+<h3 id="user-permission-requirements-6">User permission requirements</h3>
+<p>Authority depends on scope: client is local, user belongs to that user, and campaign or package scopes require appropriate authority.</p>
+<h3 id="minimal-example-6">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;settings&quot;]
+</code></pre>
+<pre><code class="language-js">const value = sdk.settings.get(&quot;my-setting&quot;);
+const off = sdk.settings.onChange(&quot;my-setting&quot;, handler);
+</code></pre>
+<h3 id="possible-errors-6">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+</ul>
+<h3 id="security-and-visibility-filtering-6">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-6">Lifecycle and teardown</h3>
+<p>Keep the returned unsubscribe function and call it during teardown or unmount. Do not accumulate subscriptions when reopening sheets or applications.</p>
+<h3 id="related-capabilities-6">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#storage-sqlite"><code>storage.sqlite</code></a>, <a href="sdk-capabilities-eventos.html#events-subscribe"><code>events.subscribe</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="locales"><code>locales</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code></p>
+<h3 id="what-it-authorizes-7">What it authorizes</h3>
+<p>Provide locale catalogs and translate keys.</p>
+<h3 id="when-to-use-it-7">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-7">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-7">Available methods</h3>
+<ul>
+<li><code>sdk.i18n.t</code></li>
+</ul>
+<h3 id="user-permission-requirements-7">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-7">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;locales&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.i18n.t(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-7">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-7">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-7">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-7">Related capabilities</h3>
+<p>None directly.</p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="storage-sqlite"><code>storage.sqlite</code></h2>
+<p><strong>Authority level:</strong> <code>STORAGE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-8">What it authorizes</h3>
+<p>Use Gravewright-managed SQLite storage scoped to a package.</p>
+<h3 id="when-to-use-it-8">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-8">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-8">Available methods</h3>
+<ul>
+<li><code>sdk.storage.sqlite.query</code></li>
+<li><code>sdk.storage.sqlite.execute</code></li>
+<li><code>sdk.storage.sqlite.status</code></li>
+</ul>
+<h3 id="user-permission-requirements-8">User permission requirements</h3>
+<p>Campaign scope requires an active package and campaign context. Global scope follows host policy. A package never receives another package&#39;s database.</p>
+<h3 id="minimal-example-8">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;storage.sqlite&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.storage.sqlite.execute(&quot;campaign&quot;, &quot;saveState&quot;, params);
+const rows = await sdk.storage.sqlite.query(&quot;campaign&quot;, &quot;getState&quot;, params);
+</code></pre>
+<h3 id="possible-errors-8">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+<li>QUERY_DISALLOWED / LIMIT_EXCEEDED: forbidden SQL, timeout, row, byte, or size limit exceeded</li>
+</ul>
+<h3 id="security-and-visibility-filtering-8">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-8">Lifecycle and teardown</h3>
+<p>The host applies and versions migrations. Never edit an applied migration; create the next migration and include storage in backups.</p>
+<h3 id="related-capabilities-8">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#settings"><code>settings</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="sheets-html"><code>sheets.html</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code></p>
+<h3 id="what-it-authorizes-9">What it authorizes</h3>
+<p>Provide HTML-mode actor/item sheets.</p>
+<h3 id="when-to-use-it-9">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize-9">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-9">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements-9">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-9">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;sheets.html&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.sheets.html</code> method.</p>
+<h3 id="possible-errors-9">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-9">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-9">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-9">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#sheets-declarative"><code>sheets.declarative</code></a>, <a href="sdk-capabilities-regras.html#sheets-controller"><code>sheets.controller</code></a>, <a href="sdk-capabilities-regras.html#sheets-runtime"><code>sheets.runtime</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-data-write"><code>actors.data.write</code></a>, <a href="sdk-capabilities-atores-itens.html#items-data-write"><code>items.data.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="sheets-controller"><code>sheets.controller</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>frontend</code></p>
+<h3 id="what-it-authorizes-10">What it authorizes</h3>
+<p>Attach a controller script to an HTML sheet.</p>
+<h3 id="when-to-use-it-10">When to use it</h3>
+<p>Declare it when package runtime calls one of the public APIs listed below.</p>
+<h3 id="what-it-does-not-authorize-10">What it does NOT authorize</h3>
+<p>The gate unlocks only those public APIs and preserves host-side context validation and authorization.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-10">Available methods</h3>
+<ul>
+<li><code>sdk.sheets.registerController</code></li>
+</ul>
+<h3 id="user-permission-requirements-10">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-10">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;sheets.controller&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.sheets.registerController(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-10">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-10">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-10">Lifecycle and teardown</h3>
+<p>Register once during setup. Remove package-owned listeners, observers, timers, and mounts during unmount or close; do not register again on every render.</p>
+<h3 id="related-capabilities-10">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#sheets-declarative"><code>sheets.declarative</code></a>, <a href="sdk-capabilities-regras.html#sheets-html"><code>sheets.html</code></a>, <a href="sdk-capabilities-regras.html#sheets-runtime"><code>sheets.runtime</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-data-write"><code>actors.data.write</code></a>, <a href="sdk-capabilities-atores-itens.html#items-data-write"><code>items.data.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not replace the API with fetch calls to internal routes, private globals, or direct manipulation of the core DOM.</p>
+</blockquote>
+<h2 id="sheets-richtext"><code>sheets.richText</code></h2>
+<p><strong>Authority level:</strong> <code>UI</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code></p>
+<h3 id="what-it-authorizes-11">What it authorizes</h3>
+<p>Render sanitized rich text in an HTML sheet.</p>
+<h3 id="when-to-use-it-11">When to use it</h3>
+<p>This is a declarative capability. Use it when the corresponding block is present in the manifest or provides section.</p>
+<h3 id="what-it-does-not-authorize-11">What it does NOT authorize</h3>
+<p>It validates and enables metadata consumed by the core, but it does not create a JavaScript method on the sdk object.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-11">Available methods</h3>
+<p>No runtime method. This capability is consumed through the manifest or declarative files.</p>
+<h3 id="user-permission-requirements-11">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-11">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;sheets.richText&quot;]
+</code></pre>
+<p>This capability is consumed by the manifest or descriptor; there is no <code>sdk.sheets.richText</code> method.</p>
+<h3 id="possible-errors-11">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+</ul>
+<h3 id="security-and-visibility-filtering-11">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-11">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-11">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#sheets-declarative"><code>sheets.declarative</code></a>, <a href="sdk-capabilities-regras.html#sheets-html"><code>sheets.html</code></a>, <a href="sdk-capabilities-regras.html#sheets-controller"><code>sheets.controller</code></a>, <a href="sdk-capabilities-regras.html#sheets-runtime"><code>sheets.runtime</code></a>, <a href="sdk-capabilities-atores-itens.html#actors-data-write"><code>actors.data.write</code></a>, <a href="sdk-capabilities-atores-itens.html#items-data-write"><code>items.data.write</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not call the capability name as an sdk method, and do not declare the gate without providing its required document or descriptor.</p>
+</blockquote>
+<h2 id="permissions-inspect"><code>permissions.inspect</code></h2>
+<p><strong>Authority level:</strong> <code>READ</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-12">What it authorizes</h3>
+<p>Inspect the current user&#39;s effective permissions without overriding them.</p>
+<h3 id="when-to-use-it-12">When to use it</h3>
+<p>Declare it when the package needs to query data the current user is already allowed to see.</p>
+<h3 id="what-it-does-not-authorize-12">What it does NOT authorize</h3>
+<p>It does not widen visibility, bypass ownership, or authorize changes. The server filters responses for the current campaign and user.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-12">Available methods</h3>
+<ul>
+<li><code>sdk.permissions.can</code></li>
+<li><code>sdk.permissions.check</code></li>
+</ul>
+<h3 id="user-permission-requirements-12">User permission requirements</h3>
+<p>It inspects only the current user&#39;s effective decision; it cannot inspect or change another user&#39;s permissions.</p>
+<h3 id="minimal-example-12">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;permissions.inspect&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.permissions.can(/* contract parameters */);
+await sdk.permissions.check(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-12">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+</ul>
+<h3 id="security-and-visibility-filtering-12">Security and visibility filtering</h3>
+<p>It does not directly return game collections. Context and payload still must not be used to infer hidden data.</p>
+<h3 id="lifecycle-and-teardown-12">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-12">Related capabilities</h3>
+<p>None directly.</p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not turn reads into a permanent cache of private data or assume that GMs and players receive the same collection.</p>
+</blockquote>
+<h2 id="rules-actions"><code>rules.actions</code></h2>
+<p><strong>Authority level:</strong> <code>WRITE</code> · <strong>Status:</strong> <code>stable</code> · <strong>Surfaces:</strong> <code>manifest</code>, <code>backend</code>, <code>frontend</code>, <code>doctor</code></p>
+<h3 id="what-it-authorizes-13">What it authorizes</h3>
+<p>Execute bounded declarative authoritative action graphs.</p>
+<h3 id="when-to-use-it-13">When to use it</h3>
+<p>Declare it only when the package initiates an authoritative change in this domain.</p>
+<h3 id="what-it-does-not-authorize-13">What it does NOT authorize</h3>
+<p>The capability exposes the intent, but the server still validates role, ownership, campaign, schema, and current state.</p>
+<blockquote class="wiki-alert wiki-alert--important"><p>Declaring a capability does not elevate the user, bypass ownership, or switch context to another campaign.</p>
+</blockquote>
+<h3 id="available-methods-13">Available methods</h3>
+<ul>
+<li><code>sdk.rules.actions.list</code></li>
+<li><code>sdk.rules.actions.get</code></li>
+<li><code>sdk.rules.actions.resolve</code></li>
+<li><code>sdk.rules.actions.execute</code></li>
+<li><code>sdk.rules.actions.executeReference</code></li>
+</ul>
+<h3 id="user-permission-requirements-13">User permission requirements</h3>
+<p>The package must be installed, enabled, and active. Operations remain bounded by the current user&#39;s context and role.</p>
+<h3 id="minimal-example-13">Minimal example</h3>
+<pre><code class="language-json">&quot;capabilities&quot;: [&quot;rules.actions&quot;]
+</code></pre>
+<pre><code class="language-js">await sdk.rules.actions.list(/* contract parameters */);
+await sdk.rules.actions.get(/* contract parameters */);
+await sdk.rules.actions.resolve(/* contract parameters */);
+await sdk.rules.actions.execute(/* contract parameters */);
+await sdk.rules.actions.executeReference(/* contract parameters */);
+</code></pre>
+<h3 id="possible-errors-13">Possible errors</h3>
+<ul>
+<li>CAPABILITY_REQUIRED: capability missing or method gated</li>
+<li>PERMISSION_DENIED: user or context lacks authority</li>
+<li>VALIDATION_FAILED: invalid payload, schema, parameter, or state</li>
+</ul>
+<h3 id="security-and-visibility-filtering-13">Security and visibility filtering</h3>
+<p>A write does not expose additional private data. The server resolves the target and rejects operations outside the authorized scope.</p>
+<h3 id="lifecycle-and-teardown-13">Lifecycle and teardown</h3>
+<p>No special teardown is required. Await asynchronous runtime operations and handle the possibility that the campaign or resource changes before completion.</p>
+<h3 id="related-capabilities-13">Related capabilities</h3>
+<p><a href="sdk-capabilities-regras.html#rules-declarative"><code>rules.declarative</code></a>, <a href="sdk-capabilities-regras.html#rules-extends"><code>rules.extends</code></a></p>
+<blockquote class="wiki-alert wiki-alert--warning"><p><strong>Do not use it this way:</strong> Do not use it to bypass the UI, modify another user&#39;s resources, or replace whole documents when a narrow patch operation exists.</p>
+</blockquote>
+</article><nav class="wiki-page-nav" data-page-nav><a href="sdk-capabilities-cena.html"><small>← Previous</small><strong>Capabilities: scenes and tokens</strong></a><a href="sdk-capabilities-automacao.html"><small>Next →</small><strong>Capabilities: automation, interactions, and flows</strong></a></nav></section><aside class="wiki-toc"><strong data-i18n="onThisPage">On this page</strong><nav data-toc><a href="#sheets-declarative" data-level="2">sheets.declarative</a><a href="#sheets-runtime" data-level="2">sheets.runtime</a><a href="#sheets-components" data-level="2">sheets.components</a><a href="#rules-declarative" data-level="2">rules.declarative</a><a href="#rules-extends" data-level="2">rules.extends</a><a href="#settings" data-level="2">settings</a><a href="#locales" data-level="2">locales</a><a href="#storage-sqlite" data-level="2">storage.sqlite</a><a href="#sheets-html" data-level="2">sheets.html</a><a href="#sheets-controller" data-level="2">sheets.controller</a><a href="#sheets-richtext" data-level="2">sheets.richText</a><a href="#permissions-inspect" data-level="2">permissions.inspect</a><a href="#rules-actions" data-level="2">rules.actions</a></nav></aside></main><div class="wiki-overlay" data-overlay hidden></div></body></html>

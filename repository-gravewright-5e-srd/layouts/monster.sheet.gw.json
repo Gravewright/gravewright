@@ -1,0 +1,1022 @@
+{
+  "kind": "actorSheet",
+  "system": "dnd5e",
+  "actorType": "monster",
+  "id": "dnd5e-monster",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "tabs",
+    "tabs": [
+      {
+        "id": "main",
+        "children": [
+          {
+            "type": "section",
+            "variant": "monster-combat",
+            "children": [
+              {
+                "type": "grid",
+                "variant": "monsterVitals",
+                "children": [
+                  {
+                    "type": "combatStat",
+                    "valuePath": "sheet.ac",
+                    "variant": "monster",
+                    "labelKey": "dnd5e.ui.classe.de.armadura",
+                    "abbrKey": "dnd5e.abbr.ca"
+                  },
+                  {
+                    "type": "combatStat",
+                    "valuePath": "sheet.init",
+                    "signed": true,
+                    "variant": "monster",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.initiative",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.iniciativa"
+                    },
+                    "labelKey": "dnd5e.ui.iniciativa",
+                    "abbrKey": "dnd5e.abbr.init"
+                  },
+                  {
+                    "type": "resourceBox",
+                    "valuePath": "sheet.hp.value",
+                    "maxPath": "sheet.hp.max",
+                    "controls": true,
+                    "variant": "monster",
+                    "labelKey": "dnd5e.ui.pontos.de.vida"
+                  },
+                  {
+                    "type": "checkboxTrack",
+                    "path": "sheet.legendary_resistance",
+                    "max": 3,
+                    "labelKey": "dnd5e.ui.resistencia.lendaria"
+                  },
+                  {
+                    "type": "checkboxTrack",
+                    "path": "sheet.legendary_actions_enabled",
+                    "max": 3,
+                    "labelKey": "dnd5e.ui.acoes.lendarias"
+                  }
+                ]
+              }
+            ],
+            "labelKey": "dnd5e.ui.combate"
+          },
+          {
+            "type": "section",
+            "variant": "monster-abilities",
+            "children": [
+              {
+                "type": "row",
+                "variant": "monsterAbilityStrip",
+                "children": [
+                  {
+                    "type": "abilityCard",
+                    "scorePath": "sheet.abilities.str.score",
+                    "modPath": "sheet.abilities.str.mod",
+                    "variant": "monster",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.check.str",
+                      "dialog": {
+                        "type": "roll",
+                        "actionField": "kind",
+                        "fields": [
+                          {
+                            "id": "kind",
+                            "type": "segmented",
+                            "default": "check",
+                            "options": [
+                              {
+                                "value": "check",
+                                "action": "roll.check.str",
+                                "labelKey": "dnd5e.ui.teste"
+                              },
+                              {
+                                "value": "save",
+                                "action": "roll.save.str",
+                                "labelKey": "dnd5e.ui.salvaguarda"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.tipo.de.rolagem"
+                          },
+                          {
+                            "id": "mode",
+                            "type": "segmented",
+                            "default": "normal",
+                            "options": [
+                              {
+                                "value": "normal",
+                                "labelKey": "dnd5e.ui.normal"
+                              },
+                              {
+                                "value": "advantage",
+                                "labelKey": "dnd5e.ui.vantagem"
+                              },
+                              {
+                                "value": "disadvantage",
+                                "labelKey": "dnd5e.ui.desvantagem"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.modo"
+                          },
+                          {
+                            "id": "extraDice",
+                            "type": "diceList",
+                            "labelKey": "dnd5e.ui.dados.extras",
+                            "placeholderKey": "dnd5e.ui.1d6.1d4"
+                          },
+                          {
+                            "id": "extraModifier",
+                            "type": "number",
+                            "default": 0,
+                            "labelKey": "dnd5e.ui.modificador.extra"
+                          },
+                          {
+                            "id": "visibility",
+                            "type": "visibility",
+                            "default": "public",
+                            "labelKey": "dnd5e.ui.visibilidade"
+                          }
+                        ],
+                        "titleKey": "dnd5e.ui.forca"
+                      },
+                      "titleKey": "dnd5e.ui.forca"
+                    },
+                    "labelKey": "dnd5e.ui.forca",
+                    "abbrKey": "dnd5e.abbr.for"
+                  },
+                  {
+                    "type": "abilityCard",
+                    "scorePath": "sheet.abilities.dex.score",
+                    "modPath": "sheet.abilities.dex.mod",
+                    "variant": "monster",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.check.dex",
+                      "dialog": {
+                        "type": "roll",
+                        "actionField": "kind",
+                        "fields": [
+                          {
+                            "id": "kind",
+                            "type": "segmented",
+                            "default": "check",
+                            "options": [
+                              {
+                                "value": "check",
+                                "action": "roll.check.dex",
+                                "labelKey": "dnd5e.ui.teste"
+                              },
+                              {
+                                "value": "save",
+                                "action": "roll.save.dex",
+                                "labelKey": "dnd5e.ui.salvaguarda"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.tipo.de.rolagem"
+                          },
+                          {
+                            "id": "mode",
+                            "type": "segmented",
+                            "default": "normal",
+                            "options": [
+                              {
+                                "value": "normal",
+                                "labelKey": "dnd5e.ui.normal"
+                              },
+                              {
+                                "value": "advantage",
+                                "labelKey": "dnd5e.ui.vantagem"
+                              },
+                              {
+                                "value": "disadvantage",
+                                "labelKey": "dnd5e.ui.desvantagem"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.modo"
+                          },
+                          {
+                            "id": "extraDice",
+                            "type": "diceList",
+                            "labelKey": "dnd5e.ui.dados.extras",
+                            "placeholderKey": "dnd5e.ui.1d6.1d4"
+                          },
+                          {
+                            "id": "extraModifier",
+                            "type": "number",
+                            "default": 0,
+                            "labelKey": "dnd5e.ui.modificador.extra"
+                          },
+                          {
+                            "id": "visibility",
+                            "type": "visibility",
+                            "default": "public",
+                            "labelKey": "dnd5e.ui.visibilidade"
+                          }
+                        ],
+                        "titleKey": "dnd5e.ui.destreza"
+                      },
+                      "titleKey": "dnd5e.ui.destreza"
+                    },
+                    "labelKey": "dnd5e.ui.destreza",
+                    "abbrKey": "dnd5e.abbr.des"
+                  },
+                  {
+                    "type": "abilityCard",
+                    "scorePath": "sheet.abilities.con.score",
+                    "modPath": "sheet.abilities.con.mod",
+                    "variant": "monster",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.check.con",
+                      "dialog": {
+                        "type": "roll",
+                        "actionField": "kind",
+                        "fields": [
+                          {
+                            "id": "kind",
+                            "type": "segmented",
+                            "default": "check",
+                            "options": [
+                              {
+                                "value": "check",
+                                "action": "roll.check.con",
+                                "labelKey": "dnd5e.ui.teste"
+                              },
+                              {
+                                "value": "save",
+                                "action": "roll.save.con",
+                                "labelKey": "dnd5e.ui.salvaguarda"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.tipo.de.rolagem"
+                          },
+                          {
+                            "id": "mode",
+                            "type": "segmented",
+                            "default": "normal",
+                            "options": [
+                              {
+                                "value": "normal",
+                                "labelKey": "dnd5e.ui.normal"
+                              },
+                              {
+                                "value": "advantage",
+                                "labelKey": "dnd5e.ui.vantagem"
+                              },
+                              {
+                                "value": "disadvantage",
+                                "labelKey": "dnd5e.ui.desvantagem"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.modo"
+                          },
+                          {
+                            "id": "extraDice",
+                            "type": "diceList",
+                            "labelKey": "dnd5e.ui.dados.extras",
+                            "placeholderKey": "dnd5e.ui.1d6.1d4"
+                          },
+                          {
+                            "id": "extraModifier",
+                            "type": "number",
+                            "default": 0,
+                            "labelKey": "dnd5e.ui.modificador.extra"
+                          },
+                          {
+                            "id": "visibility",
+                            "type": "visibility",
+                            "default": "public",
+                            "labelKey": "dnd5e.ui.visibilidade"
+                          }
+                        ],
+                        "titleKey": "dnd5e.ui.constituicao"
+                      },
+                      "titleKey": "dnd5e.ui.constituicao"
+                    },
+                    "labelKey": "dnd5e.ui.constituicao",
+                    "abbrKey": "dnd5e.abbr.con"
+                  },
+                  {
+                    "type": "abilityCard",
+                    "scorePath": "sheet.abilities.int.score",
+                    "modPath": "sheet.abilities.int.mod",
+                    "variant": "monster",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.check.int",
+                      "dialog": {
+                        "type": "roll",
+                        "actionField": "kind",
+                        "fields": [
+                          {
+                            "id": "kind",
+                            "type": "segmented",
+                            "default": "check",
+                            "options": [
+                              {
+                                "value": "check",
+                                "action": "roll.check.int",
+                                "labelKey": "dnd5e.ui.teste"
+                              },
+                              {
+                                "value": "save",
+                                "action": "roll.save.int",
+                                "labelKey": "dnd5e.ui.salvaguarda"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.tipo.de.rolagem"
+                          },
+                          {
+                            "id": "mode",
+                            "type": "segmented",
+                            "default": "normal",
+                            "options": [
+                              {
+                                "value": "normal",
+                                "labelKey": "dnd5e.ui.normal"
+                              },
+                              {
+                                "value": "advantage",
+                                "labelKey": "dnd5e.ui.vantagem"
+                              },
+                              {
+                                "value": "disadvantage",
+                                "labelKey": "dnd5e.ui.desvantagem"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.modo"
+                          },
+                          {
+                            "id": "extraDice",
+                            "type": "diceList",
+                            "labelKey": "dnd5e.ui.dados.extras",
+                            "placeholderKey": "dnd5e.ui.1d6.1d4"
+                          },
+                          {
+                            "id": "extraModifier",
+                            "type": "number",
+                            "default": 0,
+                            "labelKey": "dnd5e.ui.modificador.extra"
+                          },
+                          {
+                            "id": "visibility",
+                            "type": "visibility",
+                            "default": "public",
+                            "labelKey": "dnd5e.ui.visibilidade"
+                          }
+                        ],
+                        "titleKey": "dnd5e.ui.inteligencia"
+                      },
+                      "titleKey": "dnd5e.ui.inteligencia"
+                    },
+                    "labelKey": "dnd5e.ui.inteligencia",
+                    "abbrKey": "dnd5e.abbr.int"
+                  },
+                  {
+                    "type": "abilityCard",
+                    "scorePath": "sheet.abilities.wis.score",
+                    "modPath": "sheet.abilities.wis.mod",
+                    "variant": "monster",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.check.wis",
+                      "dialog": {
+                        "type": "roll",
+                        "actionField": "kind",
+                        "fields": [
+                          {
+                            "id": "kind",
+                            "type": "segmented",
+                            "default": "check",
+                            "options": [
+                              {
+                                "value": "check",
+                                "action": "roll.check.wis",
+                                "labelKey": "dnd5e.ui.teste"
+                              },
+                              {
+                                "value": "save",
+                                "action": "roll.save.wis",
+                                "labelKey": "dnd5e.ui.salvaguarda"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.tipo.de.rolagem"
+                          },
+                          {
+                            "id": "mode",
+                            "type": "segmented",
+                            "default": "normal",
+                            "options": [
+                              {
+                                "value": "normal",
+                                "labelKey": "dnd5e.ui.normal"
+                              },
+                              {
+                                "value": "advantage",
+                                "labelKey": "dnd5e.ui.vantagem"
+                              },
+                              {
+                                "value": "disadvantage",
+                                "labelKey": "dnd5e.ui.desvantagem"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.modo"
+                          },
+                          {
+                            "id": "extraDice",
+                            "type": "diceList",
+                            "labelKey": "dnd5e.ui.dados.extras",
+                            "placeholderKey": "dnd5e.ui.1d6.1d4"
+                          },
+                          {
+                            "id": "extraModifier",
+                            "type": "number",
+                            "default": 0,
+                            "labelKey": "dnd5e.ui.modificador.extra"
+                          },
+                          {
+                            "id": "visibility",
+                            "type": "visibility",
+                            "default": "public",
+                            "labelKey": "dnd5e.ui.visibilidade"
+                          }
+                        ],
+                        "titleKey": "dnd5e.ui.sabedoria"
+                      },
+                      "titleKey": "dnd5e.ui.sabedoria"
+                    },
+                    "labelKey": "dnd5e.ui.sabedoria",
+                    "abbrKey": "dnd5e.abbr.sab"
+                  },
+                  {
+                    "type": "abilityCard",
+                    "scorePath": "sheet.abilities.cha.score",
+                    "modPath": "sheet.abilities.cha.mod",
+                    "variant": "monster",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.check.cha",
+                      "dialog": {
+                        "type": "roll",
+                        "actionField": "kind",
+                        "fields": [
+                          {
+                            "id": "kind",
+                            "type": "segmented",
+                            "default": "check",
+                            "options": [
+                              {
+                                "value": "check",
+                                "action": "roll.check.cha",
+                                "labelKey": "dnd5e.ui.teste"
+                              },
+                              {
+                                "value": "save",
+                                "action": "roll.save.cha",
+                                "labelKey": "dnd5e.ui.salvaguarda"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.tipo.de.rolagem"
+                          },
+                          {
+                            "id": "mode",
+                            "type": "segmented",
+                            "default": "normal",
+                            "options": [
+                              {
+                                "value": "normal",
+                                "labelKey": "dnd5e.ui.normal"
+                              },
+                              {
+                                "value": "advantage",
+                                "labelKey": "dnd5e.ui.vantagem"
+                              },
+                              {
+                                "value": "disadvantage",
+                                "labelKey": "dnd5e.ui.desvantagem"
+                              }
+                            ],
+                            "labelKey": "dnd5e.ui.modo"
+                          },
+                          {
+                            "id": "extraDice",
+                            "type": "diceList",
+                            "labelKey": "dnd5e.ui.dados.extras",
+                            "placeholderKey": "dnd5e.ui.1d6.1d4"
+                          },
+                          {
+                            "id": "extraModifier",
+                            "type": "number",
+                            "default": 0,
+                            "labelKey": "dnd5e.ui.modificador.extra"
+                          },
+                          {
+                            "id": "visibility",
+                            "type": "visibility",
+                            "default": "public",
+                            "labelKey": "dnd5e.ui.visibilidade"
+                          }
+                        ],
+                        "titleKey": "dnd5e.ui.carisma"
+                      },
+                      "titleKey": "dnd5e.ui.carisma"
+                    },
+                    "labelKey": "dnd5e.ui.carisma",
+                    "abbrKey": "dnd5e.abbr.car"
+                  }
+                ]
+              }
+            ],
+            "labelKey": "dnd5e.ui.atributos"
+          },
+          {
+            "type": "section",
+            "variant": "monster-aside",
+            "children": [
+              {
+                "type": "section",
+                "variant": "skills",
+                "children": [
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.acrobatics.prof",
+                    "expertPath": "sheet.skills.acrobatics.expert",
+                    "modPath": "sheet.skills.acrobatics.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.acrobatics",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.acrobacia.des"
+                    },
+                    "labelKey": "dnd5e.ui.acrobacia",
+                    "abilityKey": "dnd5e.ability.des"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.performance.prof",
+                    "expertPath": "sheet.skills.performance.expert",
+                    "modPath": "sheet.skills.performance.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.performance",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.atuacao.car"
+                    },
+                    "labelKey": "dnd5e.ui.atuacao",
+                    "abilityKey": "dnd5e.ability.car"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.arcana.prof",
+                    "expertPath": "sheet.skills.arcana.expert",
+                    "modPath": "sheet.skills.arcana.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.arcana",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.arcanismo.int"
+                    },
+                    "labelKey": "dnd5e.ui.arcanismo",
+                    "abilityKey": "dnd5e.ability.int"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.athletics.prof",
+                    "expertPath": "sheet.skills.athletics.expert",
+                    "modPath": "sheet.skills.athletics.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.athletics",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.atletismo.for"
+                    },
+                    "labelKey": "dnd5e.ui.atletismo",
+                    "abilityKey": "dnd5e.ability.for"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.deception.prof",
+                    "expertPath": "sheet.skills.deception.expert",
+                    "modPath": "sheet.skills.deception.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.deception",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.enganacao.car"
+                    },
+                    "labelKey": "dnd5e.ui.enganacao",
+                    "abilityKey": "dnd5e.ability.car"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.stealth.prof",
+                    "expertPath": "sheet.skills.stealth.expert",
+                    "modPath": "sheet.skills.stealth.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.stealth",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.furtividade.des"
+                    },
+                    "labelKey": "dnd5e.ui.furtividade",
+                    "abilityKey": "dnd5e.ability.des"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.history.prof",
+                    "expertPath": "sheet.skills.history.expert",
+                    "modPath": "sheet.skills.history.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.history",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.historia.int"
+                    },
+                    "labelKey": "dnd5e.ui.historia",
+                    "abilityKey": "dnd5e.ability.int"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.intimidation.prof",
+                    "expertPath": "sheet.skills.intimidation.expert",
+                    "modPath": "sheet.skills.intimidation.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.intimidation",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.intimidacao.car"
+                    },
+                    "labelKey": "dnd5e.ui.intimidacao",
+                    "abilityKey": "dnd5e.ability.car"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.insight.prof",
+                    "expertPath": "sheet.skills.insight.expert",
+                    "modPath": "sheet.skills.insight.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.insight",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.intuicao.sab"
+                    },
+                    "labelKey": "dnd5e.ui.intuicao",
+                    "abilityKey": "dnd5e.ability.sab"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.investigation.prof",
+                    "expertPath": "sheet.skills.investigation.expert",
+                    "modPath": "sheet.skills.investigation.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.investigation",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.investigacao.int"
+                    },
+                    "labelKey": "dnd5e.ui.investigacao",
+                    "abilityKey": "dnd5e.ability.int"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.animal_handling.prof",
+                    "expertPath": "sheet.skills.animal_handling.expert",
+                    "modPath": "sheet.skills.animal_handling.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.animal_handling",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.lidar.com.animais.sab"
+                    },
+                    "labelKey": "dnd5e.ui.lidar.com.animais",
+                    "abilityKey": "dnd5e.ability.sab"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.medicine.prof",
+                    "expertPath": "sheet.skills.medicine.expert",
+                    "modPath": "sheet.skills.medicine.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.medicine",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.medicina.sab"
+                    },
+                    "labelKey": "dnd5e.ui.medicina",
+                    "abilityKey": "dnd5e.ability.sab"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.nature.prof",
+                    "expertPath": "sheet.skills.nature.expert",
+                    "modPath": "sheet.skills.nature.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.nature",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.natureza.int"
+                    },
+                    "labelKey": "dnd5e.ui.natureza",
+                    "abilityKey": "dnd5e.ability.int"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.perception.prof",
+                    "expertPath": "sheet.skills.perception.expert",
+                    "modPath": "sheet.skills.perception.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.perception",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.percepcao.sab"
+                    },
+                    "labelKey": "dnd5e.ui.percepcao",
+                    "abilityKey": "dnd5e.ability.sab"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.persuasion.prof",
+                    "expertPath": "sheet.skills.persuasion.expert",
+                    "modPath": "sheet.skills.persuasion.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.persuasion",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.persuasao.car"
+                    },
+                    "labelKey": "dnd5e.ui.persuasao",
+                    "abilityKey": "dnd5e.ability.car"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.religion.prof",
+                    "expertPath": "sheet.skills.religion.expert",
+                    "modPath": "sheet.skills.religion.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.religion",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.religiao.int"
+                    },
+                    "labelKey": "dnd5e.ui.religiao",
+                    "abilityKey": "dnd5e.ability.int"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.sleight_of_hand.prof",
+                    "expertPath": "sheet.skills.sleight_of_hand.expert",
+                    "modPath": "sheet.skills.sleight_of_hand.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.sleight_of_hand",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.prestidigitacao.des"
+                    },
+                    "labelKey": "dnd5e.ui.prestidigitacao",
+                    "abilityKey": "dnd5e.ability.des"
+                  },
+                  {
+                    "type": "rollableStat",
+                    "variant": "skill",
+                    "profPath": "sheet.skills.survival.prof",
+                    "expertPath": "sheet.skills.survival.expert",
+                    "modPath": "sheet.skills.survival.mod",
+                    "interaction": {
+                      "type": "action",
+                      "action": "roll.skill.survival",
+                      "dialog": "roll",
+                      "titleKey": "dnd5e.ui.sobrevivencia.sab"
+                    },
+                    "labelKey": "dnd5e.ui.sobrevivencia",
+                    "abilityKey": "dnd5e.ability.sab"
+                  }
+                ],
+                "labelKey": "dnd5e.ui.pericias"
+              },
+              {
+                "type": "section",
+                "variant": "monster-senses",
+                "children": [
+                  {
+                    "type": "textField",
+                    "path": "sheet.senses",
+                    "labelKey": "dnd5e.ui.sentidos"
+                  }
+                ],
+                "labelKey": "dnd5e.ui.sentidos"
+              },
+              {
+                "type": "section",
+                "variant": "monster-languages",
+                "children": [
+                  {
+                    "type": "textField",
+                    "path": "sheet.languages",
+                    "labelKey": "dnd5e.ui.idiomas"
+                  }
+                ],
+                "labelKey": "dnd5e.ui.idiomas"
+              },
+              {
+                "type": "section",
+                "variant": "monster-resistances",
+                "children": [
+                  {
+                    "type": "textArea",
+                    "path": "sheet.resistances",
+                    "labelKey": "dnd5e.ui.resistencias.imunidades.and.vulnerabilidades"
+                  }
+                ],
+                "labelKey": "dnd5e.ui.resistencias.imunidades.and.vulnerabilidades"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "variant": "monster-actions",
+            "children": [
+              {
+                "type": "itemList",
+                "path": "sheet.attacks",
+                "columns": [
+                  {
+                    "path": "name",
+                    "labelKey": "dnd5e.ui.nome"
+                  },
+                  {
+                    "path": "data.damage",
+                    "labelKey": "dnd5e.ui.dano"
+                  },
+                  {
+                    "path": "data.damage_type",
+                    "labelKey": "dnd5e.ui.tipo"
+                  }
+                ],
+                "dropZone": {
+                  "id": "attacks",
+                  "accepts": [
+                    "item.weapon"
+                  ],
+                  "onDrop": "attacks.addItem"
+                },
+                "row": {
+                  "type": "weaponRow",
+                  "actions": [
+                    {
+                      "type": "itemAction",
+                      "action": "weapon.attack",
+                      "labelKey": "dnd5e.ui.atacar"
+                    },
+                    {
+                      "type": "itemAction",
+                      "action": "weapon.damage",
+                      "labelKey": "dnd5e.ui.dano"
+                    },
+                    {
+                      "type": "removeAction",
+                      "labelKey": "dnd5e.ui.remover"
+                    }
+                  ]
+                },
+                "labelKey": "dnd5e.ui.ataques",
+                "emptyTextKey": "dnd5e.ui.arraste.uma.arma.item.para.ca"
+              },
+              {
+                "type": "itemList",
+                "path": "sheet.features",
+                "columns": [
+                  {
+                    "path": "name",
+                    "labelKey": "dnd5e.ui.nome"
+                  },
+                  {
+                    "path": "type",
+                    "labelKey": "dnd5e.ui.tipo"
+                  }
+                ],
+                "dropZone": {
+                  "id": "features",
+                  "accepts": [
+                    "item.feat",
+                    "item.feature"
+                  ],
+                  "onDrop": "features.addFeature"
+                },
+                "row": {
+                  "type": "featureRow",
+                  "actions": [
+                    {
+                      "type": "openEmbeddedItemAction",
+                      "labelKey": "dnd5e.ui.editar"
+                    },
+                    {
+                      "type": "removeAction",
+                      "labelKey": "dnd5e.ui.remover"
+                    }
+                  ]
+                },
+                "labelKey": "dnd5e.ui.caracteristicas",
+                "emptyTextKey": "dnd5e.ui.arraste.caracteristicas.talentos.itens.para.ca"
+              },
+              {
+                "type": "textArea",
+                "path": "sheet.traits",
+                "labelKey": "dnd5e.ui.tracos.texto.livre"
+              },
+              {
+                "type": "textArea",
+                "path": "sheet.actions_text",
+                "labelKey": "dnd5e.ui.acoes.texto.livre"
+              },
+              {
+                "type": "textArea",
+                "path": "sheet.legendary",
+                "labelKey": "dnd5e.ui.acoes.lendarias"
+              }
+            ],
+            "labelKey": "dnd5e.ui.acoes.and.caracteristicas"
+          }
+        ],
+        "labelKey": "dnd5e.ui.bloco.de.estatisticas"
+      },
+      {
+        "id": "effects",
+        "icon": "circles-three",
+        "children": [
+          {
+            "type": "section",
+            "variant": "effects",
+            "children": [
+              {
+                "type": "dropZone",
+                "id": "effects",
+                "accepts": [
+                  "effect",
+                  "effect.condition",
+                  "effect.buff",
+                  "effect.debuff"
+                ],
+                "targetPath": "sheet.effects",
+                "onDrop": "effects.addEffect",
+                "labelKey": "dnd5e.ui.arraste.efeitos.condicoes.aqui"
+              },
+              {
+                "type": "itemList",
+                "path": "sheet.effects",
+                "dropZone": {
+                  "id": "effects-list",
+                  "accepts": [
+                    "effect",
+                    "effect.condition",
+                    "effect.buff",
+                    "effect.debuff"
+                  ],
+                  "onDrop": "effects.addEffect"
+                },
+                "row": {
+                  "type": "effectRow",
+                  "title": "@item.name",
+                  "categoryPath": "data.category",
+                  "durationPath": "duration.remaining",
+                  "actions": [
+                    {
+                      "type": "removeAction",
+                      "labelKey": "dnd5e.ui.remover"
+                    }
+                  ]
+                },
+                "labelKey": "dnd5e.ui.efeitos.aplicados",
+                "emptyTextKey": "dnd5e.ui.nenhum.efeito.ativo"
+              }
+            ],
+            "labelKey": "dnd5e.ui.efeitos.ativos"
+          }
+        ],
+        "labelKey": "dnd5e.ui.efeitos"
+      }
+    ]
+  }
+}

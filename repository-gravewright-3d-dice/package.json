@@ -1,0 +1,14 @@
+{
+  "name": "gravewright-3d-dice-runtime",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/dice-renderer.js --bundle --format=iife --global-name=Gravewright3DDiceRenderer --outfile=scripts/dice-renderer.js --minify"
+  },
+  "dependencies": {
+    "cannon-es": "0.20.0",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.9"
+  }
+}

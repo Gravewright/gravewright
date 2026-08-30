@@ -1,0 +1,87 @@
+{
+  "kind": "itemSheet",
+  "system": "savage-worlds",
+  "id": "savage-worlds-edge",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "section",
+    "variant": "item",
+    "labelKey": "savage-worlds.ui.edge",
+    "children": [
+      {
+        "type": "grid",
+        "columns": 2,
+        "variant": "identity",
+        "children": [
+          {
+            "type": "textField",
+            "path": "core.name",
+            "labelKey": "savage-worlds.ui.nome",
+            "variant": "name"
+          },
+          {
+            "type": "selectField",
+            "path": "sheet.rank",
+            "options": [
+              {
+                "value": "novice",
+                "labelKey": "savage-worlds.rank.novice"
+              },
+              {
+                "value": "seasoned",
+                "labelKey": "savage-worlds.rank.seasoned"
+              },
+              {
+                "value": "veteran",
+                "labelKey": "savage-worlds.rank.veteran"
+              },
+              {
+                "value": "heroic",
+                "labelKey": "savage-worlds.rank.heroic"
+              },
+              {
+                "value": "legendary",
+                "labelKey": "savage-worlds.rank.legendary"
+              }
+            ],
+            "labelKey": "savage-worlds.ui.patente"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "variant": "mechanics",
+        "labelKey": "savage-worlds.ui.requisitos",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 1,
+            "variant": "mechanics",
+            "children": [
+              {
+                "type": "textField",
+                "path": "sheet.requirements",
+                "labelKey": "savage-worlds.ui.requisitos",
+                "variant": "wide"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.summary",
+                "labelKey": "savage-worlds.ui.resumo",
+                "variant": "wide"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "textArea",
+        "path": "sheet.description",
+        "variant": "notes",
+        "labelKey": "savage-worlds.ui.descricao"
+      }
+    ]
+  }
+}

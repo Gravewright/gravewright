@@ -1,0 +1,193 @@
+{
+  "$comment": "Cada condição é um efeito: marcá-la na ficha cria uma entrada em sheet.effects, e é de lá que o HUD lê e que o motor de efeitos tira os modificadores. Só entra modificador que a condição cobra do próprio personagem — Vulnerável é bônus de quem ataca, não penalidade de quem está marcado.",
+  "conditions": [
+    {
+      "id": "shaken",
+      "labelKey": "savage-worlds.cond.abalado",
+      "kind": "negative",
+      "category": "condition"
+    },
+    {
+      "id": "distracted",
+      "labelKey": "savage-worlds.cond.distraido",
+      "kind": "negative",
+      "category": "condition",
+      "modifiers": [
+        {
+          "id": "distracted-trait",
+          "target": "roll.check",
+          "operation": "subtract",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.distraido"
+        }
+      ]
+    },
+    {
+      "id": "vulnerable",
+      "labelKey": "savage-worlds.cond.vulneravel",
+      "kind": "negative",
+      "category": "condition",
+      "modifiers": [
+        {
+          "id": "vulnerable-incoming-attack",
+          "target": "incoming.roll.attack",
+          "operation": "add",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.vulneravel"
+        }
+      ]
+    },
+    {
+      "id": "stunned",
+      "labelKey": "savage-worlds.cond.atordoado",
+      "kind": "negative",
+      "category": "condition"
+    },
+    {
+      "id": "entangled",
+      "labelKey": "savage-worlds.cond.enredado",
+      "kind": "negative",
+      "category": "condition",
+      "restrictions": [
+        { "target": "token.movement" }
+      ],
+      "modifiers": [
+        {
+          "id": "entangled-vulnerable",
+          "target": "incoming.roll.attack",
+          "operation": "add",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.enredado"
+        }
+      ]
+    },
+    {
+      "id": "bound",
+      "labelKey": "savage-worlds.cond.imobilizado",
+      "kind": "negative",
+      "category": "condition",
+      "restrictions": [
+        { "target": "token.movement" },
+        { "target": "action.roll.attack" },
+        { "target": "action.roll.running" },
+        { "target": "action.roll.trait.agility" },
+        { "target": "action.roll.trait.strength" },
+        { "target": "action.roll.skill.attribute.agility" },
+        { "target": "action.roll.skill.attribute.strength" }
+      ],
+      "modifiers": [
+        {
+          "id": "bound-distracted",
+          "target": "roll.check",
+          "operation": "subtract",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.imobilizado"
+        },
+        {
+          "id": "bound-vulnerable",
+          "target": "incoming.roll.attack",
+          "operation": "add",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.imobilizado"
+        }
+      ]
+    },
+    {
+      "id": "prone",
+      "labelKey": "savage-worlds.cond.caido",
+      "kind": "negative",
+      "category": "condition",
+      "modifiers": [
+        {
+          "id": "prone-parry",
+          "target": "sheet.stats.parry.value",
+          "operation": "subtract",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.caido"
+        },
+        {
+          "id": "prone-attack",
+          "target": "roll.attack.melee",
+          "operation": "subtract",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.caido"
+        },
+        {
+          "id": "prone-incoming-ranged-distant",
+          "target": "incoming.roll.attack.ranged.distant",
+          "operation": "subtract",
+          "value": 4,
+          "labelKey": "savage-worlds.cond.caido"
+        },
+        {
+          "id": "prone-incoming-area-damage",
+          "target": "incoming.roll.damage.area",
+          "operation": "subtract",
+          "value": 4,
+          "labelKey": "savage-worlds.cond.caido"
+        }
+      ]
+    },
+    {
+      "id": "encumbered",
+      "labelKey": "savage-worlds.cond.sobrecarregado",
+      "kind": "negative",
+      "category": "condition",
+      "modifiers": [
+        {
+          "id": "encumbered-agility",
+          "target": "action.roll.trait.agility",
+          "operation": "subtract",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.sobrecarregado"
+        },
+        {
+          "id": "encumbered-pace",
+          "target": "sheet.stats.pace.value",
+          "operation": "subtract",
+          "value": 2,
+          "labelKey": "savage-worlds.cond.sobrecarregado"
+        }
+      ]
+    },
+    {
+      "id": "fatigued",
+      "labelKey": "savage-worlds.cond.fatigado",
+      "kind": "negative",
+      "category": "condition"
+    },
+    {
+      "id": "incapacitated",
+      "labelKey": "savage-worlds.cond.incapacitado",
+      "kind": "negative",
+      "category": "condition"
+    },
+    {
+      "id": "holding",
+      "labelKey": "savage-worlds.cond.esperando",
+      "kind": "positive",
+      "category": "condition"
+    },
+    {
+      "id": "aiming",
+      "labelKey": "savage-worlds.cond.mirando",
+      "kind": "positive",
+      "category": "condition"
+    },
+    {
+      "id": "defending",
+      "labelKey": "savage-worlds.cond.defendendo",
+      "kind": "positive",
+      "category": "condition",
+      "modifiers": [
+        {
+          "id": "defending-parry",
+          "target": "sheet.stats.parry.value",
+          "operation": "add",
+          "value": 4,
+          "labelKey": "savage-worlds.cond.defendendo"
+        }
+      ]
+    }
+  ]
+}

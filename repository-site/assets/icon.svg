@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="100%" height="100%" viewBox="0 0 800 800" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="800" height="800" fill="#1e1e22"/>
+  <rect x="20" y="20" width="760" height="760" fill="none" stroke="#c8a15a" stroke-width="24"/>
+  <clipPath id="mark-clip"><rect x="32" y="32" width="736" height="736"/></clipPath>
+  <path d="M27.163 772.837 773.35 26.65" fill="none" stroke="#c8a15a" stroke-width="70" clip-path="url(#mark-clip)"/>
+</svg>

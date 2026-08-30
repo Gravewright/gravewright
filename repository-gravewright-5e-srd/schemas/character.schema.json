@@ -1,0 +1,621 @@
+{
+  "type": "object",
+  "properties": {
+    "level": {
+      "type": "number",
+      "default": 1
+    },
+    "race": {
+      "type": "string",
+      "default": ""
+    },
+    "class": {
+      "type": "string",
+      "default": ""
+    },
+    "background": {
+      "type": "string",
+      "default": ""
+    },
+    "alignment": {
+      "type": "string",
+      "default": ""
+    },
+    "xp": {
+      "type": "number",
+      "default": 0
+    },
+    "inspiration": {
+      "type": "number",
+      "default": 0
+    },
+    "prof": {
+      "type": "number",
+      "readOnly": true
+    },
+    "abilities": {
+      "type": "object",
+      "properties": {
+        "str": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "default": 10
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "dex": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "default": 10
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "con": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "default": 10
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "int": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "default": 10
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "wis": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "default": 10
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "cha": {
+          "type": "object",
+          "properties": {
+            "score": {
+              "type": "number",
+              "default": 10
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        }
+      }
+    },
+    "saves": {
+      "type": "object",
+      "properties": {
+        "str": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "dex": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "con": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "int": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "wis": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "cha": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "properties": {
+        "acrobatics": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "animal_handling": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "arcana": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "athletics": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "deception": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "history": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "insight": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "intimidation": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "investigation": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "medicine": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "nature": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "perception": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "performance": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "persuasion": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "religion": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "sleight_of_hand": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "stealth": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        },
+        "survival": {
+          "type": "object",
+          "properties": {
+            "prof": {
+              "type": "boolean",
+              "default": false
+            },
+            "expert": {
+              "type": "boolean",
+              "default": false
+            },
+            "mod": {
+              "type": "number",
+              "readOnly": true
+            }
+          }
+        }
+      }
+    },
+    "hp": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "default": 10
+        },
+        "max": {
+          "type": "number",
+          "default": 10
+        },
+        "temp": {
+          "type": "number",
+          "default": 0
+        },
+        "formula": {
+          "type": "string",
+          "default": ""
+        }
+      }
+    },
+    "ac": {
+      "type": "number",
+      "default": 10
+    },
+    "speed": {
+      "type": "number",
+      "default": 30
+    },
+    "init_misc": {
+      "type": "number",
+      "default": 0
+    },
+    "init": {
+      "type": "number",
+      "readOnly": true
+    },
+    "passive_perception": {
+      "type": "number",
+      "readOnly": true
+    },
+    "passive_investigation": {
+      "type": "number",
+      "readOnly": true
+    },
+    "passive_insight": {
+      "type": "number",
+      "readOnly": true
+    },
+    "spell": {
+      "type": "object",
+      "properties": {
+        "ability": {
+          "type": "string",
+          "default": "int"
+        },
+        "mod": {
+          "type": "number",
+          "default": 0
+        },
+        "dc": {
+          "type": "number",
+          "readOnly": true
+        },
+        "attack": {
+          "type": "number",
+          "readOnly": true
+        }
+      }
+    },
+    "slots": {
+      "type": "object"
+    },
+    "currency": {
+      "type": "object"
+    },
+    "weapons": {
+      "type": "array",
+      "default": []
+    },
+    "inventory": {
+      "type": "array",
+      "default": []
+    },
+    "spells": {
+      "type": "array",
+      "default": []
+    },
+    "features": {
+      "type": "array",
+      "default": []
+    },
+    "proficiencies": {
+      "type": "string",
+      "default": ""
+    },
+    "languages": {
+      "type": "string",
+      "default": ""
+    },
+    "personality": {
+      "type": "object"
+    },
+    "notes": {
+      "type": "string",
+      "default": ""
+    }
+  }
+}

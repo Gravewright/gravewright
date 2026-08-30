@@ -1,0 +1,15 @@
+{
+  "name": "gravewright-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:wiki": "node scripts/generate-wiki.mjs",
+    "check:site": "node scripts/check-site.mjs",
+    "check:standalone": "node scripts/check-standalone.mjs",
+    "check": "npm run check:site",
+    "test": "npm run build:wiki && npm run check:site && npm run check:standalone"
+  },
+  "devDependencies": {
+    "marked": "18.0.9"
+  }
+}

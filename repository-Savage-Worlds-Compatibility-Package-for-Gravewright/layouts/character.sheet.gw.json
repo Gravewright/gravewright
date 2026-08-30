@@ -1,0 +1,883 @@
+{
+  "kind": "actorSheet",
+  "system": "savage-worlds",
+  "actorType": "character",
+  "id": "savage-worlds-character",
+  "title": {
+    "bind": "core.name"
+  },
+  "body": {
+    "type": "column",
+    "variant": "sheet",
+    "children": [
+      {
+        "type": "section",
+        "variant": "header",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 6,
+            "variant": "header",
+            "children": [
+              {
+                "type": "textField",
+                "path": "core.name",
+                "labelKey": "savage-worlds.ui.nome"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.ancestry",
+                "labelKey": "savage-worlds.ui.ancestralidade"
+              },
+              {
+                "type": "textField",
+                "path": "sheet.concept",
+                "labelKey": "savage-worlds.ui.conceito"
+              },
+              {
+                "type": "selectField",
+                "path": "sheet.rank",
+                "options": [
+                  {
+                    "value": "novice",
+                    "labelKey": "savage-worlds.rank.novice"
+                  },
+                  {
+                    "value": "seasoned",
+                    "labelKey": "savage-worlds.rank.seasoned"
+                  },
+                  {
+                    "value": "veteran",
+                    "labelKey": "savage-worlds.rank.veteran"
+                  },
+                  {
+                    "value": "heroic",
+                    "labelKey": "savage-worlds.rank.heroic"
+                  },
+                  {
+                    "value": "legendary",
+                    "labelKey": "savage-worlds.rank.legendary"
+                  }
+                ],
+                "labelKey": "savage-worlds.ui.patente"
+              },
+              {
+                "type": "numberField",
+                "path": "sheet.advances",
+                "labelKey": "savage-worlds.ui.avancos"
+              },
+              {
+                "type": "selectField",
+                "path": "sheet.wildDie.sides",
+                "options": [
+                  {
+                    "value": 4,
+                    "labelKey": "savage-worlds.die.d4"
+                  },
+                  {
+                    "value": 6,
+                    "labelKey": "savage-worlds.die.d6"
+                  },
+                  {
+                    "value": 8,
+                    "labelKey": "savage-worlds.die.d8"
+                  },
+                  {
+                    "value": 10,
+                    "labelKey": "savage-worlds.die.d10"
+                  },
+                  {
+                    "value": 12,
+                    "labelKey": "savage-worlds.die.d12"
+                  }
+                ],
+                "labelKey": "savage-worlds.ui.wild.die"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tabs",
+        "tabs": [
+          {
+            "id": "summary",
+            "icon": "identification-card",
+            "labelKey": "savage-worlds.ui.resumo",
+            "children": [
+              {
+                "type": "section",
+                "variant": "status-strip",
+                "children": [
+                  {
+                    "type": "checkboxTrack",
+                    "path": "sheet.wounds.value",
+                    "max": 3,
+                    "variant": "wounds",
+                    "labelKey": "savage-worlds.ui.ferimentos"
+                  },
+                  {
+                    "type": "checkboxTrack",
+                    "path": "sheet.fatigue.value",
+                    "max": 2,
+                    "variant": "fatigue",
+                    "labelKey": "savage-worlds.ui.fadiga"
+                  },
+                  {
+                    "type": "resourceBox",
+                    "icon": "poker-chip",
+                    "valuePath": "sheet.bennies.value",
+                    "maxPath": "sheet.bennies.max",
+                    "controls": true,
+                    "variant": "swade",
+                    "labelKey": "savage-worlds.ui.bennies"
+                  },
+                  {
+                    "type": "section",
+                    "variant": "conditions",
+                    "children": [
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.shaken",
+                        "labelKey": "savage-worlds.cond.abalado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.distracted",
+                        "labelKey": "savage-worlds.cond.distraido"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.vulnerable",
+                        "labelKey": "savage-worlds.cond.vulneravel"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.stunned",
+                        "labelKey": "savage-worlds.cond.atordoado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.entangled",
+                        "labelKey": "savage-worlds.cond.enredado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.bound",
+                        "labelKey": "savage-worlds.cond.imobilizado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.prone",
+                        "labelKey": "savage-worlds.cond.caido"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.encumbered",
+                        "labelKey": "savage-worlds.cond.sobrecarregado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.fatigued",
+                        "labelKey": "savage-worlds.cond.fatigado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.incapacitated",
+                        "labelKey": "savage-worlds.cond.incapacitado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.holding",
+                        "labelKey": "savage-worlds.cond.esperando"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.aiming",
+                        "labelKey": "savage-worlds.cond.mirando"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.defending",
+                        "labelKey": "savage-worlds.cond.defendendo"
+                      }
+                    ],
+                    "labelKey": "savage-worlds.ui.condicoes"
+                  },
+                  {
+                    "type": "section",
+                    "variant": "conditions-secondary",
+                    "children": [
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.prone",
+                        "labelKey": "savage-worlds.cond.caido"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.holding",
+                        "labelKey": "savage-worlds.cond.esperando"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.stunned",
+                        "labelKey": "savage-worlds.cond.atordoado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.entangled",
+                        "labelKey": "savage-worlds.cond.enredado"
+                      },
+                      {
+                        "type": "checkboxField",
+                        "path": "sheet.conditions.bound",
+                        "labelKey": "savage-worlds.cond.imobilizado"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "grid",
+                "columns": 2,
+                "variant": "summary",
+                "children": [
+                  {
+                    "type": "column",
+                    "variant": "left",
+                    "children": [
+                      {
+                        "type": "section",
+                        "variant": "traits",
+                        "children": [
+                          {
+                            "type": "abilityCard",
+                            "variant": "swade",
+                            "scorePath": "sheet.attributes.agility.sides",
+                            "modPath": "sheet.attributes.agility.modifier",
+                            "interaction": {
+                              "type": "action",
+                              "action": "roll.trait.agility",
+                              "dialog": "roll",
+                              "titleKey": "savage-worlds.ui.agilidade"
+                            },
+                            "labelKey": "savage-worlds.ui.agilidade",
+                            "abbrKey": "savage-worlds.abbr.agi"
+                          },
+                          {
+                            "type": "abilityCard",
+                            "variant": "swade",
+                            "scorePath": "sheet.attributes.smarts.sides",
+                            "modPath": "sheet.attributes.smarts.modifier",
+                            "interaction": {
+                              "type": "action",
+                              "action": "roll.trait.smarts",
+                              "dialog": "roll",
+                              "titleKey": "savage-worlds.ui.astucia"
+                            },
+                            "labelKey": "savage-worlds.ui.astucia",
+                            "abbrKey": "savage-worlds.abbr.ast"
+                          },
+                          {
+                            "type": "abilityCard",
+                            "variant": "swade",
+                            "scorePath": "sheet.attributes.spirit.sides",
+                            "modPath": "sheet.attributes.spirit.modifier",
+                            "interaction": {
+                              "type": "action",
+                              "action": "roll.trait.spirit",
+                              "dialog": "roll",
+                              "titleKey": "savage-worlds.ui.espirito"
+                            },
+                            "labelKey": "savage-worlds.ui.espirito",
+                            "abbrKey": "savage-worlds.abbr.esp"
+                          },
+                          {
+                            "type": "abilityCard",
+                            "variant": "swade",
+                            "scorePath": "sheet.attributes.strength.sides",
+                            "modPath": "sheet.attributes.strength.modifier",
+                            "interaction": {
+                              "type": "action",
+                              "action": "roll.trait.strength",
+                              "dialog": "roll",
+                              "titleKey": "savage-worlds.ui.forca"
+                            },
+                            "labelKey": "savage-worlds.ui.forca",
+                            "abbrKey": "savage-worlds.abbr.for"
+                          },
+                          {
+                            "type": "abilityCard",
+                            "variant": "swade",
+                            "scorePath": "sheet.attributes.vigor.sides",
+                            "modPath": "sheet.attributes.vigor.modifier",
+                            "interaction": {
+                              "type": "action",
+                              "action": "roll.trait.vigor",
+                              "dialog": "roll",
+                              "titleKey": "savage-worlds.ui.vigor"
+                            },
+                            "labelKey": "savage-worlds.ui.vigor",
+                            "abbrKey": "savage-worlds.abbr.vig"
+                          }
+                        ],
+                        "labelKey": "savage-worlds.ui.atributos"
+                      },
+                      {
+                        "type": "section",
+                        "variant": "derived",
+                        "children": [
+                          {
+                            "type": "combatStat",
+                            "icon": "shield",
+                            "valuePath": "sheet.stats.parry.value",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.parry"
+                          },
+                          {
+                            "type": "combatStat",
+                            "icon": "heartbeat",
+                            "valuePath": "sheet.stats.toughness.value",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.toughness"
+                          },
+                          {
+                            "type": "combatStat",
+                            "icon": "boot",
+                            "valuePath": "sheet.stats.pace.value",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.pace"
+                          },
+                          {
+                            "type": "combatStat",
+                            "icon": "warning-octagon",
+                            "valuePath": "sheet.penalty.total",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.penalidade"
+                          }
+                        ],
+                        "labelKey": "savage-worlds.ui.derivados"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "variant": "right",
+                    "children": [
+                      {
+                        "type": "itemList",
+                        "path": "sheet.skills",
+                        "columns": [
+                          {
+                            "path": "name",
+                            "labelKey": "savage-worlds.ui.nome"
+                          },
+                          {
+                            "path": "data.attribute",
+                            "labelKey": "savage-worlds.ui.atributo"
+                          },
+                          {
+                            "path": "data.die.sides",
+                            "labelKey": "savage-worlds.ui.dado"
+                          },
+                          {
+                            "path": "data.die.modifier",
+                            "labelKey": "savage-worlds.ui.modificador"
+                          }
+                        ],
+                        "dropZone": {
+                          "id": "skills",
+                          "accepts": [
+                            "item.skill"
+                          ],
+                          "onDrop": "skills.addItem"
+                        },
+                        "row": {
+                          "type": "featureRow",
+                          "actions": [
+                            {
+                              "type": "itemAction",
+                              "action": "roll.skill",
+                              "labelKey": "savage-worlds.ui.rolar"
+                            },
+                            {
+                              "type": "removeAction",
+                              "labelKey": "savage-worlds.ui.remover"
+                            }
+                          ]
+                        },
+                        "labelKey": "savage-worlds.ui.pericias"
+                      },
+                      {
+                        "type": "section",
+                        "variant": "parry-source",
+                        "children": [
+                          {
+                            "type": "selectField",
+                            "path": "sheet.stats.parry.fightingSides",
+                            "options": [
+                              {
+                                "value": 4,
+                                "labelKey": "savage-worlds.die.d4"
+                              },
+                              {
+                                "value": 6,
+                                "labelKey": "savage-worlds.die.d6"
+                              },
+                              {
+                                "value": 8,
+                                "labelKey": "savage-worlds.die.d8"
+                              },
+                              {
+                                "value": 10,
+                                "labelKey": "savage-worlds.die.d10"
+                              },
+                              {
+                                "value": 12,
+                                "labelKey": "savage-worlds.die.d12"
+                              }
+                            ],
+                            "labelKey": "savage-worlds.ui.dado.de.fighting"
+                          },
+                          {
+                            "type": "numberField",
+                            "path": "sheet.stats.parry.fightingModifier",
+                            "labelKey": "savage-worlds.ui.modificador"
+                          },
+                          {
+                            "type": "numberField",
+                            "path": "sheet.stats.parry.shield",
+                            "labelKey": "savage-worlds.ui.bonus.de.escudo"
+                          }
+                        ],
+                        "labelKey": "savage-worlds.ui.origem.do.parry"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "actions",
+            "icon": "crosshair",
+            "labelKey": "savage-worlds.ui.acoes",
+            "children": [
+              {
+                "type": "section",
+                "variant": "quick-rolls",
+                "children": [
+                  {
+                    "type": "rollButton",
+                    "action": "roll.unshake",
+                    "labelKey": "savage-worlds.ui.sair.do.abalado"
+                  },
+                  {
+                    "type": "rollButton",
+                    "action": "roll.soak",
+                    "labelKey": "savage-worlds.ui.absorver"
+                  },
+                  {
+                    "type": "rollButton",
+                    "action": "roll.running",
+                    "labelKey": "savage-worlds.ui.corrida"
+                  },
+                  {
+                    "type": "rollButton",
+                    "action": "roll.unskilled",
+                    "labelKey": "savage-worlds.ui.teste.sem.pericia"
+                  },
+                  {
+                    "type": "rollButton",
+                    "action": "roll.damage.strength",
+                    "labelKey": "savage-worlds.ui.dano.de.forca"
+                  }
+                ],
+                "labelKey": "savage-worlds.ui.rolagens.rapidas"
+              },
+              {
+                "type": "itemList",
+                "path": "sheet.weapons",
+                "columns": [
+                  {
+                    "path": "name",
+                    "labelKey": "savage-worlds.ui.nome"
+                  },
+                  {
+                    "path": "data.damage",
+                    "labelKey": "savage-worlds.ui.dano"
+                  },
+                  {
+                    "path": "data.ap",
+                    "labelKey": "savage-worlds.ui.perfuracao"
+                  },
+                  {
+                    "path": "data.range",
+                    "labelKey": "savage-worlds.ui.alcance"
+                  },
+                  {
+                    "path": "data.rof",
+                    "labelKey": "savage-worlds.ui.cadencia"
+                  }
+                ],
+                "dropZone": {
+                  "id": "weapons",
+                  "accepts": [
+                    "item.weapon"
+                  ],
+                  "onDrop": "weapons.addItem"
+                },
+                "row": {
+                  "type": "weaponRow",
+                  "actions": [
+                    {
+                      "type": "itemAction",
+                      "action": "roll.attack",
+                      "labelKey": "savage-worlds.ui.atacar"
+                    },
+                    {
+                      "type": "itemAction",
+                      "action": "roll.damage",
+                      "labelKey": "savage-worlds.ui.dano"
+                    },
+                    {
+                      "type": "removeAction",
+                      "labelKey": "savage-worlds.ui.remover"
+                    }
+                  ]
+                },
+                "labelKey": "savage-worlds.ui.armas"
+              }
+            ]
+          },
+          {
+            "id": "edges",
+            "icon": "medal",
+            "labelKey": "savage-worlds.ui.edges.e.hindrances",
+            "children": [
+              {
+                "type": "grid",
+                "columns": 2,
+                "variant": "edges",
+                "children": [
+                  {
+                    "type": "column",
+                    "variant": "left",
+                    "children": [
+                      {
+                        "type": "itemList",
+                        "path": "sheet.edges",
+                        "columns": [
+                          {
+                            "path": "name",
+                            "labelKey": "savage-worlds.ui.nome"
+                          },
+                          {
+                            "path": "data.rank",
+                            "labelKey": "savage-worlds.ui.patente"
+                          }
+                        ],
+                        "dropZone": {
+                          "id": "edges",
+                          "accepts": [
+                            "item.edge"
+                          ],
+                          "onDrop": "edges.addItem"
+                        },
+                        "row": {
+                          "type": "featureRow",
+                          "actions": [
+                            {
+                              "type": "removeAction",
+                              "labelKey": "savage-worlds.ui.remover"
+                            }
+                          ]
+                        },
+                        "labelKey": "savage-worlds.ui.edges"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "variant": "right",
+                    "children": [
+                      {
+                        "type": "itemList",
+                        "path": "sheet.hindrances",
+                        "columns": [
+                          {
+                            "path": "name",
+                            "labelKey": "savage-worlds.ui.nome"
+                          },
+                          {
+                            "path": "data.severity",
+                            "labelKey": "savage-worlds.ui.gravidade"
+                          }
+                        ],
+                        "dropZone": {
+                          "id": "hindrances",
+                          "accepts": [
+                            "item.hindrance"
+                          ],
+                          "onDrop": "hindrances.addItem"
+                        },
+                        "row": {
+                          "type": "featureRow",
+                          "actions": [
+                            {
+                              "type": "removeAction",
+                              "labelKey": "savage-worlds.ui.remover"
+                            }
+                          ]
+                        },
+                        "labelKey": "savage-worlds.ui.hindrances"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "inventory",
+            "icon": "backpack",
+            "labelKey": "savage-worlds.ui.inventario",
+            "children": [
+              {
+                "type": "grid",
+                "columns": 2,
+                "variant": "inventory",
+                "children": [
+                  {
+                    "type": "column",
+                    "variant": "left",
+                    "children": [
+                      {
+                        "type": "section",
+                        "variant": "armor-source",
+                        "children": [
+                          {
+                            "type": "numberField",
+                            "path": "sheet.stats.toughness.armor",
+                            "labelKey": "savage-worlds.ui.armadura"
+                          },
+                          {
+                            "type": "numberField",
+                            "path": "sheet.stats.toughness.modifier",
+                            "labelKey": "savage-worlds.ui.modificador"
+                          }
+                        ],
+                        "labelKey": "savage-worlds.ui.origem.da.toughness"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "column",
+                    "variant": "right",
+                    "children": [
+                      {
+                        "type": "section",
+                        "variant": "load",
+                        "children": [
+                          {
+                            "type": "resourceField",
+                            "valuePath": "sheet.stats.load.value",
+                            "maxPath": "sheet.stats.load.max",
+                            "labelKey": "savage-worlds.ui.carga"
+                          },
+                          {
+                            "type": "combatStat",
+                            "icon": "barbell",
+                            "valuePath": "sheet.stats.load.encumbrance",
+                            "variant": "swade",
+                            "labelKey": "savage-worlds.ui.sobrecarga"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "itemList",
+                "path": "sheet.protection",
+                "columns": [
+                  {
+                    "path": "name",
+                    "labelKey": "savage-worlds.ui.nome"
+                  },
+                  {
+                    "path": "data.armor",
+                    "labelKey": "savage-worlds.ui.armadura"
+                  },
+                  {
+                    "path": "data.parryBonus",
+                    "labelKey": "savage-worlds.ui.parry"
+                  },
+                  {
+                    "path": "data.locations",
+                    "labelKey": "savage-worlds.ui.cobertura"
+                  }
+                ],
+                "dropZone": {
+                  "id": "protection",
+                  "accepts": [
+                    "item.armor",
+                    "item.shield"
+                  ],
+                  "onDrop": "protection.addItem"
+                },
+                "row": {
+                  "type": "inventoryRow",
+                  "actions": [
+                    {
+                      "type": "removeAction",
+                      "labelKey": "savage-worlds.ui.remover"
+                    }
+                  ]
+                },
+                "labelKey": "savage-worlds.ui.protecao"
+              },
+              {
+                "type": "itemList",
+                "path": "sheet.gear",
+                "columns": [
+                  {
+                    "path": "name",
+                    "labelKey": "savage-worlds.ui.nome"
+                  },
+                  {
+                    "path": "data.quantity",
+                    "labelKey": "savage-worlds.ui.quantidade"
+                  },
+                  {
+                    "path": "data.weight",
+                    "labelKey": "savage-worlds.ui.peso"
+                  },
+                  {
+                    "path": "data.cost",
+                    "labelKey": "savage-worlds.ui.custo"
+                  }
+                ],
+                "dropZone": {
+                  "id": "gear",
+                  "accepts": [
+                    "item.gear"
+                  ],
+                  "onDrop": "gear.addItem"
+                },
+                "row": {
+                  "type": "inventoryRow",
+                  "actions": [
+                    {
+                      "type": "removeAction",
+                      "labelKey": "savage-worlds.ui.remover"
+                    }
+                  ]
+                },
+                "labelKey": "savage-worlds.ui.equipamento"
+              }
+            ]
+          },
+          {
+            "id": "powers",
+            "icon": "sparkle",
+            "labelKey": "savage-worlds.ui.poderes",
+            "children": [
+              {
+                "type": "section",
+                "variant": "arcane",
+                "children": [
+                  {
+                    "type": "resourceBox",
+                    "icon": "lightning",
+                    "valuePath": "sheet.power.points.value",
+                    "maxPath": "sheet.power.points.max",
+                    "controls": true,
+                    "variant": "swade",
+                    "labelKey": "savage-worlds.ui.pontos.de.poder"
+                  },
+                  {
+                    "type": "textField",
+                    "path": "sheet.power.arcane",
+                    "labelKey": "savage-worlds.ui.fundo.arcano"
+                  },
+                  {
+                    "type": "textField",
+                    "path": "sheet.power.skill",
+                    "labelKey": "savage-worlds.ui.pericia.de.conjuracao"
+                  }
+                ]
+              },
+              {
+                "type": "itemList",
+                "path": "sheet.powers",
+                "columns": [
+                  {
+                    "path": "name",
+                    "labelKey": "savage-worlds.ui.nome"
+                  },
+                  {
+                    "path": "data.powerPoints",
+                    "labelKey": "savage-worlds.ui.custo"
+                  },
+                  {
+                    "path": "data.range",
+                    "labelKey": "savage-worlds.ui.alcance"
+                  },
+                  {
+                    "path": "data.duration",
+                    "labelKey": "savage-worlds.ui.duracao"
+                  },
+                  {
+                    "path": "data.trapping",
+                    "labelKey": "savage-worlds.ui.manifestacao"
+                  }
+                ],
+                "dropZone": {
+                  "id": "powers",
+                  "accepts": [
+                    "item.power"
+                  ],
+                  "onDrop": "powers.addItem"
+                },
+                "row": {
+                  "type": "spellRow",
+                  "actions": [
+                    {
+                      "type": "itemAction",
+                      "action": "roll.damage",
+                      "labelKey": "savage-worlds.ui.dano"
+                    },
+                    {
+                      "type": "removeAction",
+                      "labelKey": "savage-worlds.ui.remover"
+                    }
+                  ]
+                },
+                "labelKey": "savage-worlds.ui.poderes"
+              }
+            ]
+          },
+          {
+            "id": "about",
+            "icon": "notebook",
+            "labelKey": "savage-worlds.ui.sobre",
+            "children": [
+              {
+                "type": "textArea",
+                "path": "sheet.bio",
+                "labelKey": "savage-worlds.ui.historia"
+              },
+              {
+                "type": "textArea",
+                "path": "sheet.notes",
+                "labelKey": "savage-worlds.ui.anotacoes"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "type": "object",
+  "description": "Veículo: Resistência própria, tripulação e avarias.",
+  "properties": {
+    "concept": {
+      "type": "string",
+      "default": ""
+    },
+    "handling": {
+      "type": "number",
+      "default": 0
+    },
+    "topSpeed": {
+      "type": "string",
+      "default": ""
+    },
+    "stats": {
+      "type": "object",
+      "properties": {
+        "toughness": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 10,
+              "minimum": 0
+            },
+            "armor": {
+              "type": "number",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "size": {
+          "type": "number",
+          "default": 0
+        },
+        "scale": {
+          "type": "number",
+          "default": 0
+        },
+        "crew": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "default": 1,
+              "minimum": 0
+            },
+            "max": {
+              "type": "number",
+              "default": 1,
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "wounds": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "default": 0,
+          "minimum": 0
+        },
+        "max": {
+          "type": "number",
+          "default": 3,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "conditions": {
+      "type": "object",
+      "properties": {
+        "outOfControl": {
+          "type": "boolean",
+          "default": false
+        },
+        "wrecked": {
+          "type": "boolean",
+          "default": false
+        },
+        "onFire": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "bars": {
+      "type": "object",
+      "properties": {
+        "bar_1": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "default": 0,
+              "readOnly": true
+            },
+            "max": {
+              "type": "number",
+              "default": 3,
+              "readOnly": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "additionalProperties": false
+}

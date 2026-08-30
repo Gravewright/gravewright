@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "description": "Grupo: um punhado de fichas tratadas como uma unidade na mesa.",
+  "properties": {
+    "concept": {
+      "type": "string",
+      "default": ""
+    },
+    "size": {
+      "type": "number",
+      "default": 0,
+      "minimum": 0
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "default": 0
+        },
+        "max": {
+          "type": "number",
+          "default": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "object",
+      "default": {}
+    }
+  },
+  "additionalProperties": false
+}
