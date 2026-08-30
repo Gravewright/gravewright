@@ -176,17 +176,26 @@ function validateManifest(value: unknown): ModuleManifest {
 export class Kernel {
   readonly #definitions = new Map<string, ModuleDefinition>();
   readonly #modules = new Map<string, ModuleRecord>();
-  readonly #context: Context;
+  readonly #diagnostic: DiagnosticReporter;
   readonly #disposers = new Map<string, Dispose[]>();
   #initialized = false;
   #initializing = false;
   #operations = Promise.resolve();
 
   constructor(options: KernelOptions = {}) {
-    const diagnostic = options.diagnostic ?? Object.freeze({ record() {} });
-    this.#context = Object.freeze({
-      use: (name: string) => this.use(name),
-      diagnostic,
+    this.#diagnostic = options.diagnostic ?? Object.freeze({ record() {} });
+  }
+
+  #contextFor(manifest: ModuleManifest): Context {
+    const dependencies = new Set(Object.keys(manifest.dependencies ?? {}));
+    return Object.freeze({
+      use: (name: string) => {
+        if (!dependencies.has(name)) {
+          throw new Error(`Module "${manifest.name}" cannot use undeclared dependency "${name}"`);
+        }
+        return this.use(name);
+      },
+      diagnostic: this.#diagnostic,
     }) as Context;
   }
 
@@ -273,7 +282,7 @@ export class Kernel {
     const { manifest, entryPath } = definition;
     const entry: Record<string, unknown> = await import(pathToFileURL(entryPath).href);
     if (typeof entry.default !== "function") throw new Error(`Module entry must default-export a factory: ${manifest.name}`);
-    const instance = entry.default(this.#context) as unknown;
+    const instance = entry.default(this.#contextFor(manifest)) as unknown;
     if (!isObject(instance)) throw new Error(`Module factory must return an object: ${manifest.name}`);
 
     const names = new Set([...(manifest.exports.get ?? []), ...(manifest.exports.set ?? []), ...(manifest.exports.prop ?? [])]);

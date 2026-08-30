@@ -148,6 +148,14 @@ test("initialization requires only one active server", async () => {
   await assert.doesNotReject(kernel.initialize());
 });
 
+test("rejects the retired system kind", async () => {
+  const kernel = new Kernel();
+  await assert.rejects(
+    kernel.load(await fixture({ name: "legacy-system", kind: "system" as ModuleKind })),
+    /Invalid kind: system/,
+  );
+});
+
  test("rejects a declared export missing from the entry", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({ name: "missing-export", exports: { get: ["absent"] }, source: "export default function createModule(ctx) { return { other: 1 }; }" }));
@@ -170,6 +178,39 @@ test("factory receives Context and can use a previously loaded module", async ()
   ` }));
   await bootstrap(kernel);
   assert.equal(kernel.use("module-b").get("valueFromA"), 42);
+});
+
+test("module context rejects use of an undeclared dependency", async () => {
+  const kernel = new Kernel();
+  await kernel.load(await fixture({ name: "undeclared-consumer", source: `
+    export default function createModule(ctx) {
+      ctx.use("undeclared-library");
+      return { answer: 42 };
+    }
+  ` }));
+  await kernel.load(await fixture({ name: "undeclared-library" }));
+  await assert.rejects(
+    bootstrap(kernel),
+    /Module "undeclared-consumer" cannot use undeclared dependency "undeclared-library"/,
+  );
+});
+
+test("module context does not grant transitive dependency access", async () => {
+  const kernel = new Kernel();
+  await kernel.load(await fixture({
+    name: "transitive-consumer", dependencies: { "direct-library": "^1.0.0" }, source: `
+      export default function createModule(ctx) {
+        ctx.use("transitive-library");
+        return { answer: 42 };
+      }
+    `,
+  }));
+  await kernel.load(await fixture({ name: "direct-library", dependencies: { "transitive-library": "^1.0.0" } }));
+  await kernel.load(await fixture({ name: "transitive-library" }));
+  await assert.rejects(
+    bootstrap(kernel),
+    /Module "transitive-consumer" cannot use undeclared dependency "transitive-library"/,
+  );
 });
 
 test("factory receives a Context facade without Kernel methods", async () => {

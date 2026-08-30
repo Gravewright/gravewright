@@ -20,9 +20,10 @@ Kinds describe a module's role. They do not select an implementation or grant hi
 | `addon` | Optional cross-cutting capability |
 | `asset` | Asset storage, indexing, or delivery |
 | `ui` | User interface capability |
-| `system` | Game-system integration |
 
 Only `server` has a kernel-level minimum contract. A project must have exactly one active server. All other kinds are optional and gain behavior only through their declared exports and dependencies.
+
+A complete game system is a recipe composed from a `ruleset`, UI, assets, and optional addons. `ruleset` owns game mechanics and resolution; it should not absorb presentation or distribution concerns.
 
 ## 2. Generate the scaffold
 
