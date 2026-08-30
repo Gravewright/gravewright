@@ -126,9 +126,6 @@ AGENTS.md
 .roo/
 .continue/
 
-# The public website is maintained as its own Git repository.
-/site/
-
 # OS / editors
 .DS_Store
 Thumbs.db
