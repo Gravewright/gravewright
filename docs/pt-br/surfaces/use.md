@@ -22,8 +22,11 @@ Não retenha valores extraídos se precisar de revogação: valores JavaScript j
 // Produtor: modules/dice-roller/index.ts
 export default defineModule({
   name: "dice-roller", kind: "addon", provider: "community", version: "1.2.0",
-  exports: { get: ["roll"] },
-  create(_ctx) { return { roll: (sides: number) => Math.floor(Math.random() * sides) + 1 }; },
+  exports: { get: ["read", "write", "stat", "roll"] },
+  create(_ctx) { return {
+    read(_resource: string) { return undefined; }, write(_resource: string, _value: unknown) {}, stat() { return { ready: true }; },
+    roll: (sides: number) => Math.floor(Math.random() * sides) + 1,
+  }; },
 });
 ```
 
@@ -32,10 +35,13 @@ export default defineModule({
 export default defineModule({
   name: "combat", kind: "ruleset", provider: "community", version: "1.0.0",
   dependencies: { "dice-roller": "^1.2.0" },
-  exports: { get: ["attack"] },
+  exports: { get: ["read", "write", "stat", "attack"] },
   create(ctx) {
     const dice = ctx.use("dice-roller");
-    return { attack: () => dice.get("roll")(20) };
+    return {
+      read(_resource: string) { return undefined; }, write(_resource: string, _value: unknown) {}, stat() { return { ready: true }; },
+      attack: () => dice.get("roll")(20),
+    };
   },
 });
 ```

@@ -1,5 +1,5 @@
 export const MODULE_KINDS = [
-  "server", "campaign", "room", "marketplace", "ruleset", "addon", "asset", "ui", "system",
+  "server", "room", "ruleset", "addon", "system",
 ] as const;
 
 export type ModuleKind = (typeof MODULE_KINDS)[number];
@@ -10,6 +10,101 @@ export const MODULE_PROVIDERS = [
 
 export type ModuleProvider = (typeof MODULE_PROVIDERS)[number];
 export type ModuleState = "active" | "disabled";
+
+export const COMMON_MODULE_EXPORTS = [
+  "read", "write", "stat",
+] as const;
+
+export const ROOM_SLOT_NAMES = [
+  "gw-toolbar", "gw-main", "gw-sidebar", "gw-chat", "gw-overlay", "gw-grid",
+] as const;
+
+export type RoomSlotName = (typeof ROOM_SLOT_NAMES)[number];
+export type SlotMountCardinality = "one";
+export type SlotContributionCardinality = "one" | "many";
+
+export interface SlotExposure {
+  name: string;
+  mounts: SlotMountCardinality;
+  contributions: SlotContributionCardinality;
+}
+
+export interface SlotContribution {
+  id: string;
+  order?: number;
+  mount(container: HTMLElement): void | Dispose | Promise<void | Dispose>;
+}
+
+export interface ResolvedSlotContribution {
+  module: string;
+  slot: string;
+  contribution: SlotContribution;
+}
+
+/** Mounts visual contributions only after the room has rendered its declared regions. */
+export async function composeRoomSlots(
+  root: HTMLElement,
+  exposures: readonly SlotExposure[],
+  entries: readonly ResolvedSlotContribution[],
+): Promise<Dispose> {
+  const targets = new Map<string, HTMLElement>();
+  for (const exposure of exposures) {
+    const matches = root.querySelectorAll<HTMLElement>(`.${exposure.name}`);
+    if (matches.length !== 1) {
+      throw new Error(`Room slot '${exposure.name}' must render exactly once; found ${matches.length}`);
+    }
+    targets.set(exposure.name, matches[0]!);
+  }
+  for (const name of ROOM_SLOT_NAMES) {
+    if (!targets.has(name)) throw new Error(`Room does not expose required slot '${name}'`);
+  }
+
+  const ordered = [...entries].sort((left, right) =>
+    left.slot.localeCompare(right.slot)
+    || (left.contribution.order ?? 0) - (right.contribution.order ?? 0)
+    || left.module.localeCompare(right.module)
+    || left.contribution.id.localeCompare(right.contribution.id));
+  const seen = new Set<string>();
+  const mounted: Array<{ child: HTMLElement; dispose?: Dispose }> = [];
+  try {
+    for (const entry of ordered) {
+      const exposure = exposures.find(({ name }) => name === entry.slot);
+      const target = targets.get(entry.slot);
+      if (!exposure || !target) throw new Error(`Contribution targets unknown room slot '${entry.slot}'`);
+      if (!entry.contribution.id) throw new Error(`Contribution from '${entry.module}' must have an id`);
+      if (entry.contribution.order !== undefined && !Number.isFinite(entry.contribution.order)) {
+        throw new Error(`Contribution '${entry.module}/${entry.contribution.id}' has an invalid order`);
+      }
+      const key = `${entry.slot}\0${entry.module}\0${entry.contribution.id}`;
+      if (seen.has(key)) throw new Error(`Duplicate slot contribution '${entry.module}/${entry.contribution.id}'`);
+      seen.add(key);
+      if (exposure.contributions === "one" && mounted.some(({ child }) => child.dataset.gwSlot === entry.slot)) {
+        throw new Error(`Room slot '${entry.slot}' accepts only one contribution`);
+      }
+      const child = root.ownerDocument.createElement("div");
+      child.dataset.gwSlot = entry.slot;
+      child.dataset.gwModule = entry.module;
+      child.dataset.gwContribution = entry.contribution.id;
+      target.append(child);
+      const mountedEntry: { child: HTMLElement; dispose?: Dispose } = { child };
+      mounted.push(mountedEntry);
+      const dispose = await entry.contribution.mount(child);
+      if (typeof dispose === "function") mountedEntry.dispose = dispose;
+    }
+  } catch (error) {
+    for (const item of mounted.reverse()) { try { await item.dispose?.(); } finally { item.child.remove(); } }
+    throw error;
+  }
+  return async () => {
+    const errors: unknown[] = [];
+    for (const item of mounted.reverse()) {
+      try { await item.dispose?.(); } catch (error) { errors.push(error); }
+      item.child.remove();
+    }
+    if (errors.length === 1) throw errors[0];
+    if (errors.length > 1) throw new AggregateError(errors, "Multiple room slot contributions failed to unmount");
+  };
+}
 
 export interface ModuleAPI {
   get: object;
@@ -28,6 +123,7 @@ export interface ModuleDefinition<TInstance extends Record<string, unknown>> {
   download_url?: string;
   download_sha256?: string;
   dependencies?: Record<string, string>;
+  exposes?: { slots?: readonly SlotExposure[] };
   routes?: Record<string, keyof TInstance & string>;
   middleware?: Record<string, readonly (keyof TInstance & string)[]>;
   slots?: Record<string, readonly (keyof TInstance & string)[]>;
@@ -124,6 +220,7 @@ export interface ModuleManifest {
   entry: string;
   types?: string;
   dependencies?: Record<string, string>;
+  exposes?: { slots?: SlotExposure[] };
   routes?: Record<string, string>;
   middleware?: Record<string, string[]>;
   slots?: Record<string, string[]>;

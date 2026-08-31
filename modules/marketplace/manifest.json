@@ -1,6 +1,6 @@
 {
   "name": "marketplace",
-  "kind": "marketplace",
+  "kind": "system",
   "provider": "core",
   "version": "0.2.0",
   "entry": "./index.ts",
@@ -9,6 +9,6 @@
     "/marketplace": "marketplace"
   },
   "exports": {
-    "get": ["marketplace", "list", "install"]
+    "get": ["read", "write", "stat", "marketplace", "list", "install"]
   }
 }

@@ -1,0 +1,9 @@
+{
+  "name": "@gravewright/marketplace",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "peerDependencies": { "@gravewright/sdk": "^0.1.0" },
+  "dependencies": { "semver": "^7.7.2" }
+}

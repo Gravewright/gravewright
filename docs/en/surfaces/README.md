@@ -23,7 +23,9 @@ Each page documents one explicit boundary between a module, the SDK, and the ker
 - [Routes](routes.md) — publish final request handlers.
 - [Middleware](middleware.md) — publish chained request handlers.
 - [Slots](slots.md) — contribute values to named extension points.
-- [Server contract](server.md) — the only required module kind.
+- [Room slots](room-slots.md) — guaranteed DOM regions and isolated visual contributions.
+- [Server contract](server.md) — the required transport contract.
+- [`read`, `write`, `stat`](read-write-stat.md) — common POSIX-inspired module commands.
 
 ## Runtime
 

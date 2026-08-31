@@ -5,10 +5,12 @@ export default defineModule({
   kind: "system",
   provider: "community",
   version: "0.1.0",
-  exports: { get: [] },
+  exports: { get: ["read", "write", "stat"] },
   create(_ctx) {
     return {
-      // Declare your platform service commands here and add them to exports.get.
+      read(_resource: string) { return undefined; },
+      write(_resource: string, _value: unknown) {},
+      stat(_resource?: string) { return {}; },
     };
   },
 });

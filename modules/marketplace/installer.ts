@@ -129,6 +129,22 @@ async function packageRoot(unpacked: string): Promise<string> {
   throw new Error("ZIP deve conter manifest.json na raiz ou em um único diretório");
 }
 
+async function installNodeDependencies(root: string): Promise<void> {
+  const packageFile = path.join(root, "package.json");
+  if (!await access(packageFile).then(() => true, () => false)) return;
+  const locked = await access(path.join(root, "package-lock.json")).then(() => true, () => false);
+  const command = process.platform === "win32" ? "npm.cmd" : "npm";
+  const args = [
+    locked ? "ci" : "install",
+    "--omit=dev",
+    "--ignore-scripts",
+    "--no-audit",
+    "--no-fund",
+    "--workspaces=false",
+  ];
+  await execute(command, args, { cwd: root, timeout: 120_000, maxBuffer: 4 * 1024 * 1024 });
+}
+
 export interface RevokedRelease { name: string; version?: string; download_sha256?: string; reason?: string; }
 export interface PreparedInstall {
   readonly name: string;
@@ -166,6 +182,7 @@ export async function prepareInstall(
     if (archived.name !== manifest.name || archived.version !== manifest.version) throw new Error("manifest do ZIP não corresponde ao manifest remoto");
     const relativeEntry = path.relative(root, path.resolve(root, manifest.entry));
     if (relativeEntry.startsWith("..") || path.isAbsolute(relativeEntry) || !await access(path.join(root, relativeEntry)).then(() => true, () => false)) throw new Error("entry inválido ou ausente no pacote");
+    await installNodeDependencies(root);
     await writeFile(path.join(root, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
     return {
       name: manifest.name,

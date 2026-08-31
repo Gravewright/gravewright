@@ -37,7 +37,8 @@ Use os módulos oficiais, substitua apenas uma parte da stack ou publique uma ex
 - Scaffold, diagnóstico, verificação de ambiente e tooling pela CLI `grave`.
 - Marketplace baseado em releases verificadas e recipes reproduzíveis.
 
-O único requisito estrutural é exatamente um módulo `server` ativo. Gravewright define o contrato mínimo, não a implementação: Express, Fastify ou outro transporte pode satisfazê-lo.
+Todo projeto em execução possui exatamente um `server` ativo. Rooms, rulesets,
+addons e systems são livremente combináveis (`0..n`).
 
 ## Início rápido
 

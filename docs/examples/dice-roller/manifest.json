@@ -6,6 +6,6 @@
   "entry": "./index.ts",
   "types": "./types.ts",
   "exports": {
-    "get": ["roll"]
+    "get": ["read", "write", "stat", "roll"]
   }
 }

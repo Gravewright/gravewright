@@ -5,7 +5,17 @@
   "version": "0.1.0",
   "entry": "./index.ts",
   "types": "./types.ts",
+  "exposes": {
+    "slots": [
+      { "name": "gw-toolbar", "mounts": "one", "contributions": "many" },
+      { "name": "gw-main", "mounts": "one", "contributions": "many" },
+      { "name": "gw-sidebar", "mounts": "one", "contributions": "many" },
+      { "name": "gw-chat", "mounts": "one", "contributions": "many" },
+      { "name": "gw-overlay", "mounts": "one", "contributions": "many" },
+      { "name": "gw-grid", "mounts": "one", "contributions": "many" }
+    ]
+  },
   "exports": {
-    "get": []
+    "get": ["read", "write", "stat", "mount", "unmount"]
   }
 }

@@ -3,8 +3,10 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import semver from "semver";
 import {
+  COMMON_MODULE_EXPORTS,
   MODULE_KINDS,
   MODULE_PROVIDERS,
+  ROOM_SLOT_NAMES,
   type Context,
   type Dispose,
   type DiagnosticReporter,
@@ -12,6 +14,7 @@ import {
   type ModuleManifest,
   type ModuleRef,
   type ModuleState,
+  type SlotExposure,
 } from "@gravewright/sdk";
 
 interface ModuleRecord {
@@ -34,10 +37,15 @@ export interface KernelOptions {
 }
 
 const REQUIRED_EXPORTS: Partial<Record<ModuleKind, readonly string[]>> = {
-  server: ["start", "stop", "route", "middleware", "slot"],
+  server: [...COMMON_MODULE_EXPORTS, "start", "stop", "route", "middleware", "slot"],
+  room: [...COMMON_MODULE_EXPORTS, "mount", "unmount"],
+  ruleset: COMMON_MODULE_EXPORTS,
+  addon: COMMON_MODULE_EXPORTS,
+  system: COMMON_MODULE_EXPORTS,
 };
 
 const REQUIRED_KINDS: readonly ModuleKind[] = ["server"];
+const SINGLETON_KINDS: readonly ModuleKind[] = ["server"];
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -49,6 +57,41 @@ function stringArray(value: unknown, field: string): string[] | undefined {
     throw new Error(`Invalid manifest: ${field} must be an array of non-empty strings`);
   }
   return value as string[];
+}
+
+function slotExposures(value: unknown, kind: ModuleKind): { slots: SlotExposure[] } | undefined {
+  if (value === undefined) {
+    if (kind === "room") throw new Error("Invalid manifest: room must declare exposes.slots");
+    return undefined;
+  }
+  if (!isObject(value) || !Array.isArray(value.slots)) {
+    throw new Error("Invalid manifest: exposes.slots must be an array");
+  }
+  if (kind !== "room") throw new Error("Invalid manifest: only room modules may declare exposes.slots");
+  const slots: SlotExposure[] = [];
+  const names = new Set<string>();
+  for (const item of value.slots) {
+    if (!isObject(item) || typeof item.name !== "string" || !/^gw-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.name)) {
+      throw new Error("Invalid manifest: exposed slot names must use gw-kebab-case");
+    }
+    if (names.has(item.name)) throw new Error(`Invalid manifest: duplicate exposed slot '${item.name}'`);
+    if (item.mounts !== "one") throw new Error(`Invalid manifest: exposed slot '${item.name}' must use mounts "one"`);
+    if (item.contributions !== "one" && item.contributions !== "many") {
+      throw new Error(`Invalid manifest: exposed slot '${item.name}' has invalid contribution cardinality`);
+    }
+    names.add(item.name);
+    slots.push({ name: item.name, mounts: "one", contributions: item.contributions });
+  }
+  if (kind === "room") {
+    for (const name of ROOM_SLOT_NAMES) {
+      const slot = slots.find((candidate) => candidate.name === name);
+      if (!slot) throw new Error(`Invalid manifest: room must expose required slot '${name}'`);
+      if (slot.contributions !== "many") {
+        throw new Error(`Invalid manifest: required room slot '${name}' must accept many contributions`);
+      }
+    }
+  }
+  return { slots };
 }
 
 function validateManifest(value: unknown): ModuleManifest {
@@ -82,6 +125,7 @@ function validateManifest(value: unknown): ModuleManifest {
       dependencies[name] = range;
     }
   }
+  const exposes = slotExposures(value.exposes, value.kind as ModuleKind);
 
   let routes: Record<string, string> | undefined;
   if (value.routes !== undefined) {
@@ -130,6 +174,7 @@ function validateManifest(value: unknown): ModuleManifest {
     entry: value.entry,
     ...(value.types === undefined ? {} : { types: value.types }),
     ...(dependencies === undefined ? {} : { dependencies }),
+    ...(exposes === undefined ? {} : { exposes }),
     ...(routes === undefined ? {} : { routes }),
     ...(middleware === undefined ? {} : { middleware }),
     ...(slots === undefined ? {} : { slots }),
@@ -313,6 +358,15 @@ export class Kernel {
     for (const [slotName, exportNames] of Object.entries(manifest.slots ?? {})) {
       for (const exportName of exportNames) {
         if (!readable.has(exportName)) throw new Error(`Invalid slot '${slotName}' in ${manifest.name}: '${exportName}' must be declared in exports.get`);
+        if (slotName.startsWith("gw-")) {
+          const contribution = instance[exportName];
+          if (!isObject(contribution) || typeof contribution.id !== "string" || !contribution.id || typeof contribution.mount !== "function") {
+            throw new Error(`Invalid visual slot '${slotName}' in ${manifest.name}: '${exportName}' must provide id and mount(container)`);
+          }
+          if (contribution.order !== undefined && (typeof contribution.order !== "number" || !Number.isFinite(contribution.order))) {
+            throw new Error(`Invalid visual slot '${slotName}' in ${manifest.name}: '${exportName}' has an invalid order`);
+          }
+        }
       }
     }
     return { manifest, module: instance };
@@ -414,10 +468,13 @@ export class Kernel {
     const available = new Set([...activeDefinitions.values()].map(({ manifest }) => manifest.kind));
     const missing = REQUIRED_KINDS.filter((kind) => !available.has(kind));
     if (missing.length) throw new Error(`Missing active module for required kind "${missing.join("\", \"")}"`);
-    const servers = [...activeDefinitions.values()].filter(({ manifest }) => manifest.kind === "server");
-    if (servers.length > 1) {
-      throw new Error(`Multiple active modules implement required kind "server": ${servers.map(({ manifest }) => manifest.name).join(", ")}`);
+    for (const kind of SINGLETON_KINDS) {
+      const implementations = [...activeDefinitions.values()].filter(({ manifest }) => manifest.kind === kind);
+      if (implementations.length > 1) {
+        throw new Error(`Multiple active modules implement singleton kind "${kind}": ${implementations.map(({ manifest }) => manifest.name).join(", ")}`);
+      }
     }
+    const servers = [...activeDefinitions.values()].filter(({ manifest }) => manifest.kind === "server");
 
     this.#initializing = true;
     try {
@@ -470,6 +527,12 @@ export class Kernel {
     if (!definition) throw new Error(`Module not found: ${name}`);
     if (definition.state === "active") return;
     if (definition.manifest.kind === "server") throw new Error("Cannot activate another server while the kernel is running");
+    if ((SINGLETON_KINDS as readonly ModuleKind[]).includes(definition.manifest.kind)) {
+      const active = [...this.#definitions.values()].find(({ manifest, state }) =>
+        state === "active" && manifest.kind === definition.manifest.kind,
+      );
+      if (active) throw new Error(`Cannot activate "${name}": singleton kind "${definition.manifest.kind}" is already implemented by "${active.manifest.name}"`);
+    }
     for (const [dependencyName, range] of Object.entries(definition.manifest.dependencies ?? {})) {
       const dependency = this.#definitions.get(dependencyName);
       if (!dependency) throw new Error(`Module "${name}" requires missing dependency "${dependencyName}"`);

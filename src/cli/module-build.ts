@@ -27,6 +27,7 @@ export async function buildModuleDefinition(directory: string, options: BuildMod
     ...(definition.download_url ? { download_url: definition.download_url } : {}),
     ...(definition.download_sha256 ? { download_sha256: definition.download_sha256 } : {}),
     ...(definition.dependencies ? { dependencies: definition.dependencies } : {}),
+    ...(definition.exposes?.slots ? { exposes: { slots: definition.exposes.slots.map((slot) => ({ ...slot })) } } : {}),
     ...(definition.routes ? { routes: { ...definition.routes } } : {}),
     ...(definition.middleware ? { middleware: Object.fromEntries(Object.entries(definition.middleware).map(([key, names]) => [key, [...names]])) } : {}),
     ...(definition.slots ? { slots: Object.fromEntries(Object.entries(definition.slots).map(([key, names]) => [key, [...names]])) } : {}),

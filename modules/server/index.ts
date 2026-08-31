@@ -48,7 +48,7 @@ export default defineModule({
   kind: "server",
   provider: "core",
   version: "0.1.0",
-  exports: { get: ["start", "stop", "route", "middleware", "slot", "port"] },
+  exports: { get: ["read", "write", "stat", "start", "stop", "route", "middleware", "slot", "port"] },
   create(_ctx) {
     const app = express();
     const mounts = new Set<string>();
@@ -64,6 +64,17 @@ export default defineModule({
     app.use(express.json({ limit: "64kb", strict: true }));
 
     return {
+      read(resource: string) {
+        if (resource === "port") return port;
+        throw new Error(`Unknown server resource: ${resource}`);
+      },
+      write(resource: string, value: unknown) {
+        if (resource !== "port") throw new Error(`Unknown server resource: ${resource}`);
+        if (listener) throw new Error("Cannot change the port while the server is running");
+        if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 65535) throw new Error("Invalid server port");
+        port = value as number;
+      },
+      stat() { return { running: listener !== undefined, port }; },
       get port() { return port; },
       route(mount: string, handler: RouteHandler) {
         if (mounts.has(mount)) throw new Error(`Route mount ${JSON.stringify(mount)} is already registered`);

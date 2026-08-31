@@ -5,16 +5,14 @@ These templates contain only the files required by the current Gravewright archi
 | Kind | Template | Purpose |
 | --- | --- | --- |
 | `server` | [`server/`](server/) | Required transport and composition contract |
-| `campaign` | [`campaign/`](campaign/) | Campaign data and operations |
-| `room` | [`room/`](room/) | Shared table or room behavior |
-| `marketplace` | [`marketplace/`](marketplace/) | Module and recipe discovery |
+| `room` | [`room/`](room/) | Complete campaign interface |
 | `ruleset` | [`ruleset/`](ruleset/) | Game rules and resolution |
-| `addon` | [`addon/`](addon/) | Optional cross-cutting capability |
-| `asset` | [`asset/`](asset/) | Asset storage, indexing, or delivery |
-| `ui` | [`ui/`](ui/) | User interface capability |
-| `system` | [`system/`](system/) | Cross-cutting platform service |
+| `addon` | [`addon/`](addon/) | Optional extension |
+| `system` | [`system/`](system/) | Backend service |
 
-Only `server` has required exports. Every other template deliberately returns an empty object with a placeholder comment; add only the capabilities your module actually publishes. Use `system` for technical platform services and `ruleset` for RPG mechanics. A complete playable distribution is modeled as a recipe.
+The only runtime cardinality rule is exactly one active server. Every other kind
+is optional and may have multiple active implementations. Every kind publishes
+`read`, `write`, and `stat`.
 
 Prefer generating a fresh template with the CLI because it follows the installed SDK version:
 

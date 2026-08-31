@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { Kernel as RuntimeKernel, type LoadOptions } from "@gravewright/kernel";
-import type { ModuleKind } from "@gravewright/sdk";
+import { COMMON_MODULE_EXPORTS, ROOM_SLOT_NAMES, type ModuleKind } from "@gravewright/sdk";
 import { activateModule, disableModule } from "../src/module-admin.js";
 import type { ModuleStateStore } from "../src/module-state.js";
 
@@ -16,7 +16,10 @@ class Kernel extends RuntimeKernel {
 }
 
 const contracts: Partial<Record<ModuleKind, string[]>> = {
-  server: ["start", "stop", "route", "middleware", "slot"],
+  server: [...COMMON_MODULE_EXPORTS, "start", "stop", "route", "middleware", "slot"],
+  room: [...COMMON_MODULE_EXPORTS, "mount", "unmount"],
+  ruleset: [...COMMON_MODULE_EXPORTS],
+  system: [...COMMON_MODULE_EXPORTS],
 };
 
 async function fixture(options: {
@@ -29,28 +32,40 @@ async function fixture(options: {
   slots?: Record<string, string[]>;
   exports?: { get?: string[]; set?: string[]; prop?: string[] };
   source?: string;
+  includeCommon?: boolean;
 } = {}): Promise<string> {
   const directory = await mkdtemp(path.join(tmpdir(), "vtt-module-"));
   const name = options.name ?? path.basename(directory);
   const kind = options.kind ?? "addon";
-  const declared = options.exports ?? { get: ["answer"] };
+  const requested = options.exports ?? { get: ["answer"] };
+  const common = options.includeCommon === false ? [] : COMMON_MODULE_EXPORTS.filter((name) => !(requested.get ?? []).includes(name));
+  const declared = { ...requested, get: [...common, ...(requested.get ?? [])] };
   const all = [...(declared.get ?? []), ...(declared.set ?? []), ...(declared.prop ?? [])];
   const properties = [...new Set(all)].map((key) =>
     `${JSON.stringify(key)}: ${key === "answer" ? "42" : "() => undefined"}`,
   ).join(",\n");
-  const source = options.source ?? `export default function createModule(ctx) { return { ${properties} }; }`;
+  let source = options.source ?? `export default function createModule(ctx) { return { ${properties} }; }`;
+  if (options.source?.includes("export default function")) {
+    source = `${source.replace("export default function", "const __fixtureFactory = function")}
+      export default function(ctx) {
+        const value = __fixtureFactory(ctx);
+        if (value && typeof value === "object") return Object.assign(value, { read() {}, write() {}, stat() {} });
+        return value;
+      }`;
+  }
   await writeFile(path.join(directory, "manifest.json"), JSON.stringify({
     name, kind, provider: "community", version: options.version ?? "1.0.0", entry: "./index.ts",
     ...(options.dependencies ? { dependencies: options.dependencies } : {}),
     ...(options.routes ? { routes: options.routes } : {}),
     ...(options.middleware ? { middleware: options.middleware } : {}),
+    ...(kind === "room" ? { exposes: { slots: ROOM_SLOT_NAMES.map((slot) => ({ name: slot, mounts: "one", contributions: "many" })) } } : {}),
     ...(options.slots ? { slots: options.slots } : {}), exports: declared,
   }));
   await writeFile(path.join(directory, "index.ts"), source);
   return directory;
 }
 
-async function validKind(kind: "server" | "campaign" | "room" | "marketplace", name = `${kind}-module`) {
+async function validKind(kind: "server" | "room" | "ruleset" | "system", name = `${kind}-module`) {
   return fixture({ name, kind, exports: { get: contracts[kind] } });
 }
 
@@ -61,9 +76,6 @@ async function bootstrap(kernel: Kernel, includeBase = true): Promise<void> {
 
 async function loadRequiredKinds(kernel: Kernel, includeBase = true): Promise<void> {
   if (includeBase) await kernel.load(await validKind("server", `base-${crypto.randomUUID()}`));
-  await kernel.load(await validKind("campaign", `campaign-${crypto.randomUUID()}`));
-  await kernel.load(await validKind("room", `room-${crypto.randomUUID()}`));
-  await kernel.load(await validKind("marketplace", `marketplace-${crypto.randomUUID()}`));
 }
 
 test("loads a valid module and permits declared get", async () => {
@@ -120,7 +132,7 @@ test("functions are ordinary values obtained and called through get", async () =
 for (const kind of ["server"] as const) {
   test(`validates the minimum ${kind} contract`, async () => {
     const badKernel = new Kernel();
-    await badKernel.load(await fixture({ name: `bad-${kind}`, kind, exports: { get: contracts[kind]!.slice(1) } }));
+    await badKernel.load(await fixture({ name: `bad-${kind}`, kind, exports: { get: contracts[kind]!.slice(1) }, includeCommon: false }));
     await assert.rejects(
       bootstrap(badKernel, kind !== "server"),
       new RegExp(`Minimum contract not satisfied for ${kind}`),
@@ -131,20 +143,37 @@ for (const kind of ["server"] as const) {
   });
 }
 
-test("allows multiple implementations of one kind", async () => {
+test("allows multiple addons", async () => {
   const kernel = new Kernel();
-  await kernel.load(await fixture({ name: "room-a", kind: "room", exports: { get: ["answer"] } }));
-  await kernel.load(await fixture({ name: "room-b", kind: "room", exports: { get: ["answer"] } }));
+  await kernel.load(await fixture({ name: "addon-a", kind: "addon", exports: { get: ["answer"] } }));
+  await kernel.load(await fixture({ name: "addon-b", kind: "addon", exports: { get: ["answer"] } }));
   await bootstrap(kernel);
-  assert.equal(kernel.use("room-a").get("answer"), 42);
-  assert.equal(kernel.use("room-b").get("answer"), 42);
+  assert.equal(kernel.use("addon-a").get("answer"), 42);
+  assert.equal(kernel.use("addon-b").get("answer"), 42);
 });
 
-test("initialization requires only one active server", async () => {
+test("allows multiple systems, rooms and rulesets", async () => {
+  const systems = new Kernel();
+  await systems.load(await fixture({ name: "system-a", kind: "system" }));
+  await systems.load(await fixture({ name: "system-b", kind: "system" }));
+  await systems.load(await validKind("server"));
+  await systems.load(await validKind("room"));
+  await systems.load(await validKind("ruleset"));
+  await assert.doesNotReject(systems.initialize());
+
+  for (const kind of ["room", "ruleset"] as const) {
+    const kernel = new Kernel();
+    await loadRequiredKinds(kernel);
+    await kernel.load(await validKind(kind, `second-${kind}`));
+    await assert.doesNotReject(kernel.initialize());
+  }
+});
+
+test("initialization requires exactly one server kind", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({ name: "optional-addon" }));
   await assert.rejects(kernel.initialize(), /Missing active module for required kind "server"/);
-  await kernel.load(await validKind("server"));
+  await loadRequiredKinds(kernel);
   await assert.doesNotReject(kernel.initialize());
 });
 
@@ -276,12 +305,13 @@ for (const [kind, invalidName, invalidValue] of [
   });
 }
 
-test("optional VTT and platform kinds have no kernel-level minimum contract", async () => {
+test("all non-server kinds implement the common POSIX-inspired contract", async () => {
   const kernel = new Kernel();
-  for (const kind of ["campaign", "room", "marketplace", "ruleset", "system"] as const) {
-    await kernel.load(await fixture({ name: `optional-${kind}`, kind, exports: { get: [] } }));
+  for (const kind of ["room", "ruleset", "system"] as const) {
+    await kernel.load(await fixture({ name: `optional-${kind}`, kind, exports: { get: [...COMMON_MODULE_EXPORTS, ...(kind === "room" ? ["mount", "unmount"] : [])] } }));
   }
-  await assert.doesNotReject(bootstrap(kernel));
+  await kernel.load(await validKind("server"));
+  await assert.doesNotReject(kernel.initialize());
 });
 
 for (const operation of ["start", "stop", "route", "middleware", "slot"] as const) {
@@ -354,7 +384,7 @@ test("initialize rejects multiple server implementations before starting either"
   await loadRequiredKinds(kernel, false);
   await assert.rejects(
     kernel.initialize(),
-    /Multiple active modules implement required kind "server": express-like-base, fastify-like-base/,
+    /Multiple active modules implement singleton kind "server": express-like-base, fastify-like-base/,
   );
   assert.equal((globalThis as Record<string, unknown>)[key], 0);
   delete (globalThis as Record<string, unknown>)[key];
@@ -794,7 +824,7 @@ test("failed activation rolls back middleware, instance and partial composition"
   delete (globalThis as Record<string, unknown>)[key];
 });
 
-test("cannot disable an active dependency or active server, but optional kinds can be disabled", async () => {
+test("cannot disable an active dependency or the active server", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({ name: "library" }));
   await kernel.load(await fixture({ name: "consumer", dependencies: { library: "^1.0.0" } }));
@@ -802,8 +832,8 @@ test("cannot disable an active dependency or active server, but optional kinds c
   const roomPath = await validKind("room", "protected-room");
   await kernel.load(basePath);
   await kernel.load(roomPath);
-  await kernel.load(await validKind("campaign"));
-  await kernel.load(await validKind("marketplace"));
+  await kernel.load(await validKind("ruleset"));
+  await kernel.load(await validKind("system"));
   await kernel.initialize();
   await assert.rejects(kernel.disable("library"), /active module "consumer" depends on it/);
   await assert.doesNotReject(kernel.disable("protected-room"));
@@ -818,7 +848,7 @@ test("load defaults to disabled without importing or instantiating the module", 
     name: "default-disabled",
     source: `globalThis.${key} += 1; export default function() { globalThis.${key} += 1; return { answer: 42 }; }`,
   }));
-  for (const kind of ["server"] as const) {
+  for (const kind of ["server", "room", "ruleset", "system"] as const) {
     await kernel.load(await validKind(kind, `default-${kind}`), { state: "active" });
   }
   await kernel.initialize();

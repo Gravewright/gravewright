@@ -1,9 +1,10 @@
 # Server contract
 
-`server` is the only structurally required kind. Exactly one active module must implement it.
+`server` is the only kind with project-level cardinality. Exactly one active module must implement it.
 
 Required exports:
 
+- `read(resource)`, `write(resource, value)`, and `stat(resource?)` — the common module commands.
 - `start()` — open the host listener after composition finishes.
 - `stop()` — close resources cleanly.
 - `route(mount, handler)` — register a final handler and return a disposer.

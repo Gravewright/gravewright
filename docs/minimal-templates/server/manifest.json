@@ -6,6 +6,6 @@
   "entry": "./index.ts",
   "types": "./types.ts",
   "exports": {
-    "get": ["start", "stop", "route", "middleware", "slot"]
+    "get": ["read", "write", "stat", "start", "stop", "route", "middleware", "slot"]
   }
 }

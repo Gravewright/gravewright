@@ -5,9 +5,12 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "1.0.0",
-  exports: { get: ["roll"] },
+  exports: { get: ["read", "write", "stat", "roll"] },
   create(ctx) {
     return {
+      read(_resource: string) { return undefined; },
+      write(_resource: string, _value: unknown) {},
+      stat() { return { ready: true }; },
       roll(sides: number, actor = "Player") {
         if (!Number.isInteger(sides) || sides < 2 || sides > 10_000) {
           ctx.diagnostic.record({

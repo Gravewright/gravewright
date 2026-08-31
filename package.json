@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
   "bin": {
     "grave": "./bin/grave.js"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "modules/*"
   ],
   "scripts": {
     "types:sync": "tsx scripts/sync-module-types.ts",
@@ -32,7 +36,6 @@
   },
   "dependencies": {
     "@gravewright/kernel": "0.1.0",
-    "@gravewright/sdk": "0.1.0",
-    "express": "^5.1.0"
+    "@gravewright/sdk": "0.1.0"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@gravewright/my-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "peerDependencies": { "@gravewright/sdk": "^0.1.0" }
+}
