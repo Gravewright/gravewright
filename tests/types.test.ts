@@ -31,7 +31,7 @@ character.set("damage", () => {});
 // @ts-expect-error unknown modules require the explicit DynamicContext fallback
 ctx.use("unknown-module");
 
-const server = ctx.use("server");
+const server = ctx.use("gravewright-server");
 const start: () => Promise<void> = server.get("start");
 const port: number = server.get("port");
 void [start, port, server.get("middleware"), server.get("route"), server.get("slot")];
@@ -40,7 +40,7 @@ server.set("port", 4000);
 // @ts-expect-error unknown server export
 server.get("unknown");
 
-const marketplace = ctx.use("marketplace");
+const marketplace = ctx.use("gravewright-marketplace");
 const install: (manifestUrl: string) => Promise<{ name: string; version: string }> = marketplace.get("install");
 void [install, marketplace.get("list"), marketplace.get("marketplace")];
 // @ts-expect-error unknown marketplace export

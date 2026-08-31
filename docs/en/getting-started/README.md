@@ -17,7 +17,7 @@ to go next.
 npm install
 npm run typecheck
 npm test
-printf '{\n  "server": "active",\n  "marketplace": "active"\n}\n' > gravewright.modules.json
+printf '{\n  "gravewright-server": "active",\n  "gravewright-marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 ```
 

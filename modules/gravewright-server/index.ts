@@ -1,5 +1,6 @@
 import express, { type NextFunction, type Request, type Response } from "express";
 import type { Server } from "node:http";
+import { WebSocketServer } from "ws";
 import {
   defineModule,
   type BaseRequest,
@@ -44,13 +45,14 @@ function configuredPort(): number {
 }
 
 export default defineModule({
-  name: "server",
+  name: "gravewright-server",
   kind: "server",
   provider: "core",
   version: "0.1.0",
-  exports: { get: ["read", "write", "stat", "start", "stop", "route", "middleware", "slot", "port"] },
+  exports: { get: ["read", "write", "stat", "start", "stop", "route", "middleware", "slot", "port", "http", "ws"] },
   create(_ctx) {
     const app = express();
+    const websocketServer = new WebSocketServer({ noServer: true });
     const mounts = new Set<string>();
     const slots = new Map<string, Set<unknown>>();
     let listener: Server | undefined;
@@ -76,6 +78,8 @@ export default defineModule({
       },
       stat() { return { running: listener !== undefined, port }; },
       get port() { return port; },
+      get http() { return app; },
+      get ws() { return websocketServer; },
       route(mount: string, handler: RouteHandler) {
         if (mounts.has(mount)) throw new Error(`Route mount ${JSON.stringify(mount)} is already registered`);
         mounts.add(mount);
@@ -110,6 +114,11 @@ export default defineModule({
             if (address && typeof address === "object") port = address.port;
             resolve();
           });
+          candidate.on("upgrade", (request, socket, head) => {
+            websocketServer.handleUpgrade(request, socket, head, (websocket) => {
+              websocketServer.emit("connection", websocket, request);
+            });
+          });
           candidate.once("error", reject);
         });
       },
@@ -117,6 +126,7 @@ export default defineModule({
         const current = listener;
         listener = undefined;
         if (!current) return;
+        for (const client of websocketServer.clients) client.terminate();
         await new Promise<void>((resolve, reject) => current.close((error) => error ? reject(error) : resolve()));
       },
     };

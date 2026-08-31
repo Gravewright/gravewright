@@ -43,7 +43,7 @@ addons e systems são livremente combináveis (`0..n`).
 npm install
 npm test
 npm run typecheck
-printf '{\n  "server": "active",\n  "marketplace": "active"\n}\n' > gravewright.modules.json
+printf '{\n  "gravewright-server": "active",\n  "gravewright-marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 npm run grave -- run
 ```
@@ -81,8 +81,8 @@ gravewright/
 ├── bin/                 executável `grave`
 ├── docs/                documentação, templates e exemplos
 ├── modules/             módulos instalados
-│   ├── server/          implementação mínima de server
-│   └── marketplace/     catálogos, instalação e recipes
+│   ├── gravewright-server/       implementação mínima de server
+│   └── gravewright-marketplace/  catálogos, instalação e recipes
 ├── packages/
 │   ├── kernel/          runtime do microkernel (Apache-2.0)
 │   └── sdk/             contratos públicos (MIT)

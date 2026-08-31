@@ -1,0 +1,21 @@
+{
+  "name": "@gravewright/server",
+  "version": "0.1.0",
+  "description": "Core Gravewright transport module providing HTTP and WebSocket servers.",
+  "author": "Gravewright",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "peerDependencies": {
+    "@gravewright/sdk": "^0.1.0"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
+}

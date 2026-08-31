@@ -1,5 +1,5 @@
 {
-  "name": "marketplace",
+  "name": "gravewright-marketplace",
   "kind": "system",
   "provider": "core",
   "version": "0.2.0",
@@ -9,6 +9,13 @@
     "/marketplace": "marketplace"
   },
   "exports": {
-    "get": ["read", "write", "stat", "marketplace", "list", "install"]
+    "get": [
+      "read",
+      "write",
+      "stat",
+      "marketplace",
+      "list",
+      "install"
+    ]
   }
 }

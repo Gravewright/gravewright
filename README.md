@@ -43,7 +43,7 @@ and systems are freely composable (`0..n`).
 npm install
 npm test
 npm run typecheck
-printf '{\n  "server": "active",\n  "marketplace": "active"\n}\n' > gravewright.modules.json
+printf '{\n  "gravewright-server": "active",\n  "gravewright-marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 npm run grave -- run
 ```
@@ -81,8 +81,8 @@ gravewright/
 ├── bin/                 `grave` executable
 ├── docs/                author documentation, templates, and examples
 ├── modules/             installed modules
-│   ├── server/          minimal server implementation
-│   └── marketplace/     catalogs, installation, and recipes
+│   ├── gravewright-server/       minimal server implementation
+│   └── gravewright-marketplace/  catalogs, installation, and recipes
 ├── packages/
 │   ├── kernel/          microkernel runtime (Apache-2.0)
 │   └── sdk/             public author contracts (MIT)
