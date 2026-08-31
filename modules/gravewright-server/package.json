@@ -11,6 +11,11 @@
   "peerDependencies": {
     "@gravewright/sdk": "^0.1.0"
   },
+  "peerDependenciesMeta": {
+    "@gravewright/sdk": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "express": "^5.1.0",
     "ws": "^8.21.3"
