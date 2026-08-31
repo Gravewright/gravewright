@@ -19,9 +19,27 @@ export const ROOM_SLOT_NAMES = [
   "gw-toolbar", "gw-main", "gw-sidebar", "gw-chat", "gw-overlay", "gw-grid",
 ] as const;
 
+export const ROOM_PROTOCOL = "gravewright.room/v1" as const;
+
 export type RoomSlotName = (typeof ROOM_SLOT_NAMES)[number];
 export type SlotMountCardinality = "one";
 export type SlotContributionCardinality = "one" | "many";
+
+export interface RoomSlotContract {
+  name: RoomSlotName;
+  description: string;
+  multiplicity: "multiple";
+  ordering: "ordered";
+}
+
+export const ROOM_SLOT_CONTRACTS: readonly RoomSlotContract[] = Object.freeze([
+  { name: "gw-toolbar", description: "Primary and contextual actions", multiplicity: "multiple", ordering: "ordered" },
+  { name: "gw-main", description: "Primary room content", multiplicity: "multiple", ordering: "ordered" },
+  { name: "gw-sidebar", description: "Secondary contextual content", multiplicity: "multiple", ordering: "ordered" },
+  { name: "gw-chat", description: "Conversation and message interfaces", multiplicity: "multiple", ordering: "ordered" },
+  { name: "gw-overlay", description: "Content layered above the room", multiplicity: "multiple", ordering: "ordered" },
+  { name: "gw-grid", description: "Tabletop and spatial content", multiplicity: "multiple", ordering: "ordered" },
+]);
 
 export interface SlotExposure {
   name: string;
@@ -123,6 +141,9 @@ export interface ModuleDefinition<TInstance extends Record<string, unknown>> {
   download_url?: string;
   download_sha256?: string;
   dependencies?: Record<string, string>;
+  requires?: Record<string, string>;
+  provides?: Record<string, string>;
+  room_protocol?: typeof ROOM_PROTOCOL;
   exposes?: { slots?: readonly SlotExposure[] };
   routes?: Record<string, keyof TInstance & string>;
   middleware?: Record<string, readonly (keyof TInstance & string)[]>;
@@ -133,7 +154,7 @@ export interface ModuleDefinition<TInstance extends Record<string, unknown>> {
     set?: ExportNames<TInstance>;
     prop?: ExportNames<TInstance>;
   };
-  create(context: Context): TInstance;
+  create(context: Context): TInstance | Promise<TInstance>;
 }
 
 export type DefinedModule<
@@ -151,9 +172,9 @@ export function defineModule<
 
 export type InferModuleAPI<T> = T extends DefinedModule<infer TDefinition>
   ? {
-      get: Pick<ReturnType<TDefinition["create"]>, Extract<TDefinition["exports"]["get"] extends readonly (infer K)[] ? K : never, keyof ReturnType<TDefinition["create"]>>>;
-      set: Pick<ReturnType<TDefinition["create"]>, Extract<TDefinition["exports"]["set"] extends readonly (infer K)[] ? K : never, keyof ReturnType<TDefinition["create"]>>>;
-      prop: Pick<ReturnType<TDefinition["create"]>, Extract<TDefinition["exports"]["prop"] extends readonly (infer K)[] ? K : never, keyof ReturnType<TDefinition["create"]>>>;
+      get: Pick<Awaited<ReturnType<TDefinition["create"]>>, Extract<TDefinition["exports"]["get"] extends readonly (infer K)[] ? K : never, keyof Awaited<ReturnType<TDefinition["create"]>>>>;
+      set: Pick<Awaited<ReturnType<TDefinition["create"]>>, Extract<TDefinition["exports"]["set"] extends readonly (infer K)[] ? K : never, keyof Awaited<ReturnType<TDefinition["create"]>>>>;
+      prop: Pick<Awaited<ReturnType<TDefinition["create"]>>, Extract<TDefinition["exports"]["prop"] extends readonly (infer K)[] ? K : never, keyof Awaited<ReturnType<TDefinition["create"]>>>>;
     }
   : never;
 
@@ -161,6 +182,10 @@ export type Readable<T extends ModuleAPI> = T["get"] & T["prop"];
 export type Writable<T extends ModuleAPI> = T["set"] & T["prop"];
 
 export interface ModuleRegistry {
+}
+
+/** Capability contracts are augmented by protocol packages, independently of providers. */
+export interface CapabilityRegistry {
 }
 
 export type DiagnosticActionStatus = "success" | "failure";
@@ -220,6 +245,9 @@ export interface ModuleManifest {
   entry: string;
   types?: string;
   dependencies?: Record<string, string>;
+  requires?: Record<string, string>;
+  provides?: Record<string, string>;
+  room_protocol?: typeof ROOM_PROTOCOL;
   exposes?: { slots?: SlotExposure[] };
   routes?: Record<string, string>;
   middleware?: Record<string, string[]>;
@@ -246,8 +274,10 @@ export interface ModuleRef<T extends ModuleAPI = {
   set<K extends keyof Writable<T> & string>(name: K, value: Writable<T>[K]): void;
 }
 
-export interface Context<R extends ModuleRegistry = ModuleRegistry> {
+export interface Context<R extends ModuleRegistry = ModuleRegistry, C extends CapabilityRegistry = CapabilityRegistry> {
   use<K extends keyof R & string>(name: K): ModuleRef<R[K] extends ModuleAPI ? R[K] : never>;
+  capability<K extends keyof C & string>(name: K): ModuleRef<C[K] extends ModuleAPI ? C[K] : never>;
+  onDispose(disposer: Dispose): void;
   /** No-op quando o diário de diagnóstico não foi habilitado pelo host. */
   diagnostic: DiagnosticReporter;
 }
@@ -255,4 +285,6 @@ export interface Context<R extends ModuleRegistry = ModuleRegistry> {
 /** Fallback deliberado para hosts que resolvem módulos desconhecidos em compile time. */
 export interface DynamicContext {
   use(name: string): ModuleRef;
+  capability(name: string): ModuleRef;
+  onDispose(disposer: Dispose): void;
 }

@@ -43,3 +43,14 @@ dependencies: {
 ```
 
 The manifest uses module names as keys; URLs remain marketplace catalog concerns.
+
+## Replaceable capabilities
+
+```ts
+requires: { "gravewright.storage": "^1.0.0" }
+provides: { "gravewright.storage": "1.2.0" }
+```
+
+The consumer calls `ctx.capability("gravewright.storage")`. Exactly one compatible
+active provider must exist. Recipes choose implementations through a `capabilities`
+map. Keep `dependencies` for genuine coupling to a specific module.
