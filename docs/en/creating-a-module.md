@@ -260,7 +260,7 @@ Composition fields map mount or slot names to exports:
 ```ts
 routes: { "/characters": "characters" },
 middleware: { "/characters": ["authenticate", "audit"] },
-slots: { "room.toolbar": ["toolbarButton"] },
+slots: { "gw-toolbar": ["toolbarButton"] },
 ```
 
 Every referenced value must also be present in `exports.get`. Registrars return disposers so the kernel can reverse composition during rollback or disable.

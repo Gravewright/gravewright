@@ -249,7 +249,7 @@ Os pontos de composição mapeiam mounts ou slots para exports:
 ```ts
 routes: { "/characters": "characters" },
 middleware: { "/characters": ["authenticate", "audit"] },
-slots: { "room.toolbar": ["toolbarButton"] },
+slots: { "gw-toolbar": ["toolbarButton"] },
 ```
 
 Todo valor referenciado também precisa estar em `exports.get`. Registrars retornam disposers para rollback e desativação.

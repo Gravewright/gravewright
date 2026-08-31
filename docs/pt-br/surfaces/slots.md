@@ -3,14 +3,19 @@
 Slots são pontos de extensão nomeados que recebem valores de módulos sem criar dependências diretas entre contribuidores.
 
 ```ts
-slots: { "room.toolbar": ["toolbarButton"] },
+slots: { "gw-toolbar": ["toolbarButton"] },
 exports: { get: ["toolbarButton"] },
 ```
 
 ```ts
 const toolbarButton = {
   id: "fog-toggle",
-  label: "Fog",
+  order: 20,
+  mount(container: HTMLElement) {
+    const button = container.ownerDocument.createElement("button");
+    button.textContent = "Fog";
+    container.append(button);
+  },
 };
 ```
 
@@ -23,22 +28,27 @@ O valor deve existir e estar em `exports.get`. Nomes de slot são contratos: doc
 ```ts
 interface ToolbarContribution {
   id: string;
-  label: string;
   order?: number;
-  invoke(): void | Promise<void>;
+  mount(container: HTMLElement): void | (() => void) | Promise<void | (() => void)>;
 }
 ```
 
 ```ts
 const toolbarButton: ToolbarContribution = {
   id: "roll-d20",
-  label: "Roll d20",
   order: 20,
-  invoke: async () => { await roll(20); },
+  mount(container) {
+    const button = container.ownerDocument.createElement("button");
+    button.textContent = "Roll d20";
+    button.addEventListener("click", () => { roll(20); });
+    container.append(button);
+  },
 };
 
-slots: { "room.toolbar.v1": ["toolbarButton"] },
+slots: { "gw-toolbar": ["toolbarButton"] },
 exports: { get: ["toolbarButton"] },
 ```
 
-O sufixo `v1` torna futuras incompatibilidades explícitas em vez de quebrar contribuidores silenciosamente.
+Os slots canônicos de room são versionados em conjunto por `room_protocol`,
+atualmente `gravewright.room/v1`. Slots customizados devem versionar o nome se o
+formato de suas contribuições puder mudar de forma incompatível.

@@ -3,14 +3,19 @@
 Slots are named extension points that collect values from modules without requiring direct dependencies between contributors.
 
 ```ts
-slots: { "room.toolbar": ["toolbarButton"] },
+slots: { "gw-toolbar": ["toolbarButton"] },
 exports: { get: ["toolbarButton"] },
 ```
 
 ```ts
 const toolbarButton = {
   id: "fog-toggle",
-  label: "Fog",
+  order: 20,
+  mount(container: HTMLElement) {
+    const button = container.ownerDocument.createElement("button");
+    button.textContent = "Fog";
+    container.append(button);
+  },
 };
 ```
 
@@ -20,14 +25,13 @@ A slot value must exist and be exported through `get`. Slot names are contracts:
 
 ## Shared slot contract
 
-The UI distribution documents this value shape:
+The room protocol documents this value shape:
 
 ```ts
 interface ToolbarContribution {
   id: string;
-  label: string;
   order?: number;
-  invoke(): void | Promise<void>;
+  mount(container: HTMLElement): void | (() => void) | Promise<void | (() => void)>;
 }
 ```
 
@@ -36,13 +40,19 @@ A module contributes:
 ```ts
 const toolbarButton: ToolbarContribution = {
   id: "roll-d20",
-  label: "Roll d20",
   order: 20,
-  invoke: async () => { await roll(20); },
+  mount(container) {
+    const button = container.ownerDocument.createElement("button");
+    button.textContent = "Roll d20";
+    button.addEventListener("click", () => { roll(20); });
+    container.append(button);
+  },
 };
 
-slots: { "room.toolbar.v1": ["toolbarButton"] },
+slots: { "gw-toolbar": ["toolbarButton"] },
 exports: { get: ["toolbarButton"] },
 ```
 
-Adding `v1` to the name makes incompatible future slot formats explicit rather than silently breaking contributors.
+Canonical room slots are versioned together by `room_protocol`, currently
+`gravewright.room/v1`. Custom non-room slots should carry an explicit protocol
+version in their name when incompatible value formats may evolve.
