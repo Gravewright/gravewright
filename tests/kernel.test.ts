@@ -148,6 +148,14 @@ test("initialization requires only one active server", async () => {
   await assert.doesNotReject(kernel.initialize());
 });
 
+test("rejects the retired system kind", async () => {
+  const kernel = new Kernel();
+  await assert.rejects(
+    kernel.load(await fixture({ name: "legacy-system", kind: "system" as ModuleKind })),
+    /Invalid kind: system/,
+  );
+});
+
  test("rejects a declared export missing from the entry", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({ name: "missing-export", exports: { get: ["absent"] }, source: "export default function createModule(ctx) { return { other: 1 }; }" }));
@@ -276,9 +284,9 @@ for (const [kind, invalidName, invalidValue] of [
   });
 }
 
-test("optional VTT and platform kinds have no kernel-level minimum contract", async () => {
+test("optional VTT kinds have no kernel-level minimum contract", async () => {
   const kernel = new Kernel();
-  for (const kind of ["campaign", "room", "marketplace", "ruleset", "system"] as const) {
+  for (const kind of ["campaign", "room", "marketplace"] as const) {
     await kernel.load(await fixture({ name: `optional-${kind}`, kind, exports: { get: [] } }));
   }
   await assert.doesNotReject(bootstrap(kernel));
