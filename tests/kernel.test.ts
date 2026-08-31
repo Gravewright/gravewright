@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { Kernel as RuntimeKernel, type LoadOptions } from "@gravewright/kernel";
-import { COMMON_MODULE_EXPORTS, ROOM_SLOT_NAMES, type ModuleKind } from "@gravewright/sdk";
+import { COMMON_MODULE_EXPORTS, ROOM_PROTOCOL, ROOM_SLOT_NAMES, type ModuleKind } from "@gravewright/sdk";
 import { activateModule, disableModule } from "../src/module-admin.js";
 import type { ModuleStateStore } from "../src/module-state.js";
 
@@ -27,6 +27,8 @@ async function fixture(options: {
   kind?: ModuleKind;
   version?: string;
   dependencies?: Record<string, string>;
+  requires?: Record<string, string>;
+  provides?: Record<string, string>;
   routes?: Record<string, string>;
   middleware?: Record<string, string[]>;
   slots?: Record<string, string[]>;
@@ -72,9 +74,12 @@ async function fixture(options: {
   await writeFile(path.join(directory, "manifest.json"), JSON.stringify({
     name, kind, provider: "community", version: options.version ?? "1.0.0", entry: "./index.ts",
     ...(options.dependencies ? { dependencies: options.dependencies } : {}),
+    ...(options.requires ? { requires: options.requires } : {}),
+    ...(options.provides ? { provides: options.provides } : {}),
     ...(options.routes ? { routes: options.routes } : {}),
     ...(options.middleware ? { middleware: options.middleware } : {}),
     ...(kind === "room" ? { exposes: { slots: ROOM_SLOT_NAMES.map((slot) => ({ name: slot, mounts: "one", contributions: "many" })) } } : {}),
+    ...(kind === "room" ? { room_protocol: ROOM_PROTOCOL } : {}),
     ...(options.slots ? { slots: options.slots } : {}), exports: declared,
   }));
   await writeFile(path.join(directory, "index.ts"), source);
@@ -281,7 +286,7 @@ test("factory receives a Context facade without Kernel methods", async () => {
     hasUse: true,
     hasLoad: false,
     hasInitialize: false,
-      keys: ["use", "diagnostic"],
+      keys: ["use", "capability", "onDispose", "diagnostic"],
     frozen: true,
   });
 });
@@ -1043,4 +1048,82 @@ test("concurrent activation attempts are serialized and instantiate once", async
   assert.equal((globalThis as Record<string, unknown>)[key], 1);
   assert.equal(kernel.use("concurrent-activation").get("answer"), 42);
   delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("module resources dispose in reverse order during shutdown after server stop", async () => {
+  const key = `__gravewright_shutdown_${crypto.randomUUID().replaceAll("-", "")}`;
+  (globalThis as Record<string, unknown>)[key] = [];
+  const kernel = new Kernel();
+  await kernel.load(await fixture({
+    name: "shutdown-server", kind: "server", exports: { get: contracts.server },
+    source: `export default function(ctx) { ctx.onDispose(() => globalThis.${key}.push("server-resource")); return {
+      read() {}, write() {}, stat() {}, start() {}, stop() { globalThis.${key}.push("server-stop"); },
+      route() { return () => {}; }, middleware() { return () => {}; }, slot() { return () => {}; }
+    }; }`,
+  }));
+  await kernel.load(await fixture({ name: "resource-owner", source: `export default function(ctx) {
+    ctx.onDispose(() => globalThis.${key}.push("first"));
+    ctx.onDispose(() => globalThis.${key}.push("second"));
+    return { answer: 42 };
+  }` }));
+  await kernel.initialize();
+  await kernel.shutdown();
+  assert.deepEqual((globalThis as Record<string, unknown>)[key], ["server-stop", "second", "first", "server-resource"]);
+  delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("create failure rolls back registered resources", async () => {
+  const key = `__gravewright_create_rollback_${crypto.randomUUID().replaceAll("-", "")}`;
+  (globalThis as Record<string, unknown>)[key] = [];
+  const kernel = new Kernel();
+  await kernel.load(await validKind("server"));
+  await kernel.load(await fixture({ name: "created-first", source: `export default function(ctx) {
+    ctx.onDispose(() => globalThis.${key}.push("previous")); return { answer: 42 };
+  }` }));
+  await kernel.load(await fixture({ name: "broken-resource", source: `export default function(ctx) {
+    ctx.onDispose(() => globalThis.${key}.push("first"));
+    ctx.onDispose(() => globalThis.${key}.push("second"));
+    throw new Error("create failed");
+  }` }));
+  await assert.rejects(kernel.initialize(), /create failed/);
+  assert.deepEqual((globalThis as Record<string, unknown>)[key], ["second", "first", "previous"]);
+  delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("activation plan rejects route conflicts before factories execute", async () => {
+  const key = `__gravewright_plan_${crypto.randomUUID().replaceAll("-", "")}`;
+  (globalThis as Record<string, unknown>)[key] = 0;
+  const kernel = new Kernel();
+  await kernel.load(await validKind("server"));
+  for (const name of ["route-a", "route-b"]) await kernel.load(await fixture({
+    name, routes: { "/same": "handler" }, exports: { get: ["handler"] },
+    source: `export default function() { globalThis.${key} += 1; return { handler() {} }; }`,
+  }));
+  assert.throws(() => kernel.plan(), /Route conflict/);
+  await assert.rejects(kernel.initialize(), /Route conflict/);
+  assert.equal((globalThis as Record<string, unknown>)[key], 0);
+  delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("capabilities resolve a compatible active provider", async () => {
+  const kernel = new Kernel();
+  await kernel.load(await validKind("server"));
+  await kernel.load(await fixture({
+    name: "storage-consumer", requires: { "gravewright.storage": "^1.0.0" }, exports: { get: ["readValue"] },
+    source: `export default function(ctx) { const storage = ctx.capability("gravewright.storage"); return { readValue: () => storage.get("value") }; }`,
+  }));
+  await kernel.load(await fixture({ name: "sqlite", provides: { "gravewright.storage": "1.2.0" }, exports: { get: ["value"] }, source: "export default function() { return { value: 42 }; }" }));
+  await kernel.initialize();
+  assert.equal((kernel.use("storage-consumer").get("readValue") as () => number)(), 42);
+});
+
+test("activation plan rejects missing and ambiguous capabilities", async () => {
+  const missing = new Kernel(); await missing.load(await validKind("server"));
+  await missing.load(await fixture({ name: "consumer", requires: { "gravewright.storage": "^1.0.0" } }));
+  assert.throws(() => missing.plan(), /requires missing capability/);
+
+  const ambiguous = new Kernel(); await ambiguous.load(await validKind("server"));
+  await ambiguous.load(await fixture({ name: "sqlite", provides: { "gravewright.storage": "1.0.0" } }));
+  await ambiguous.load(await fixture({ name: "postgres", provides: { "gravewright.storage": "1.1.0" } }));
+  assert.throws(() => ambiguous.plan(), /multiple active providers/);
 });

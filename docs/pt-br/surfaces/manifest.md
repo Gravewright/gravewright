@@ -15,7 +15,10 @@
 }
 ```
 
-Ele também pode declarar `routes`, `middleware`, `slots` e campos de download da release. Paths de entry e types devem permanecer dentro do módulo.
+Ele também pode declarar `routes`, `middleware`, `slots`, `dependencies` concretas,
+capabilities `requires`/`provides` e campos de release. Uma room também declara
+`room_protocol: "gravewright.room/v1"` e seus `exposes.slots` canônicos. Paths de
+entry e types permanecem dentro do módulo.
 
 ```bash
 grave module build modules/dice-roller

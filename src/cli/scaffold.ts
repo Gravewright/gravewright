@@ -1,6 +1,6 @@
 import { access, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { COMMON_MODULE_EXPORTS, MODULE_KINDS, MODULE_PROVIDERS, ROOM_SLOT_NAMES, type ModuleKind, type ModuleProvider } from "@gravewright/sdk";
+import { COMMON_MODULE_EXPORTS, MODULE_KINDS, MODULE_PROVIDERS, ROOM_PROTOCOL, ROOM_SLOT_NAMES, type ModuleKind, type ModuleProvider } from "@gravewright/sdk";
 
 const REQUIRED: Partial<Record<ModuleKind, string[]>> = {
   server: [...COMMON_MODULE_EXPORTS, "start", "stop", "route", "middleware", "slot"],
@@ -55,6 +55,7 @@ export async function scaffoldModule(options: ScaffoldOptions): Promise<Scaffold
   const manifest = {
     name, kind: options.kind, provider, version: "0.1.0", entry: "./index.ts", types: "./types.ts",
     ...(options.kind === "room" ? { exposes: { slots: ROOM_EXPOSES } } : {}),
+    ...(options.kind === "room" ? { room_protocol: ROOM_PROTOCOL } : {}),
     exports: { get: required },
   };
   const index = [
@@ -65,6 +66,7 @@ export async function scaffoldModule(options: ScaffoldOptions): Promise<Scaffold
     `  provider: ${JSON.stringify(provider)},`,
     '  version: "0.1.0",',
     ...(options.kind === "room" ? [`  exposes: { slots: ${JSON.stringify(ROOM_EXPOSES)} },`] : []),
+    ...(options.kind === "room" ? [`  room_protocol: ${JSON.stringify(ROOM_PROTOCOL)},`] : []),
     `  exports: { get: ${JSON.stringify(required)} },`,
     `  create(${options.complete ? "ctx" : "_ctx"}: Context) {`,
     ...(options.complete ? [

@@ -13,13 +13,22 @@ discovered → validated → loaded → instantiated → composed → active
 - Discovery finds module directories with `manifest.json`.
 - Loading validates static metadata and dependency order.
 - Instantiation calls `create()` only for active modules.
+- `ctx.onDispose()` registers cleanup as soon as an external resource exists.
 - Composition registers middleware, routes, and slots.
 - Server start happens after successful composition.
 - Disable executes disposers in reverse order.
 
 `gravewright.modules.json` stores `active` or `disabled`; missing entries default to disabled. Installation changes physical presence only and does not activate a module.
 
-Kernel initialization is one-shot. Reactivation creates a new instance, so volatile closure state is not preserved. Extracted JavaScript values may outlive disable and cannot be revoked retroactively.
+`kernel.plan()` validates dependencies, capabilities, singleton rules, routes, and visual slots before any factory executes. If `create()` fails, registered resources are disposed in reverse order. `kernel.shutdown()` stops the server, then releases composition and resources in reverse topological order. Reactivation creates a fresh instance.
+
+```ts
+create(ctx) {
+  const timer = setInterval(runJob, 1_000);
+  ctx.onDispose(() => clearInterval(timer));
+  return { read, write, stat };
+}
+```
 
 ## Rollback example
 

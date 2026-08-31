@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "entry": "./index.ts",
   "types": "./types.ts",
+  "room_protocol": "gravewright.room/v1",
   "exposes": {
     "slots": [
       { "name": "gw-toolbar", "mounts": "one", "contributions": "many" },

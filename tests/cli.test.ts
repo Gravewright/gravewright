@@ -43,6 +43,15 @@ test("complete scaffold adds documentation, test and diagnostic example", async 
   assert.match(index, /ctx\.diagnostic\.record/);
 });
 
+test("room scaffold declares the versioned visual protocol", async () => {
+  const root = await workspace();
+  const result = await scaffoldModule({ root, kind: "room", name: "classic-room" });
+  const manifest = JSON.parse(await readFile(path.join(result.directory, "manifest.json"), "utf8"));
+  assert.equal(manifest.room_protocol, "gravewright.room/v1");
+  assert.equal(manifest.exposes.slots.length, 6);
+  assert.ok(manifest.exposes.slots.every((slot: { mounts: string; contributions: string }) => slot.mounts === "one" && slot.contributions === "many"));
+});
+
 test("scaffold accepts only the five current module kinds", async () => {
   const root = await workspace();
   for (const kind of ["campaign", "marketplace", "asset", "ui"]) {

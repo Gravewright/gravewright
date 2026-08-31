@@ -17,6 +17,7 @@ Each page documents one explicit boundary between a module, the SDK, and the ker
 - [`set`](set.md) — deprecated generic cross-module mutation.
 - [`prop`](prop.md) — explicitly shared readable/writable property.
 - [Dependencies](dependencies.md) — names, SemVer, ordering, and installation.
+- [Recipes](recipes.md) — reproducible compositions and capability-provider choices.
 
 ## Composition
 

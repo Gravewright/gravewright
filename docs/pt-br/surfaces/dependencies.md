@@ -41,3 +41,14 @@ dependencies: { combat: "^2.0.0" }
 ```
 
 O manifest usa nomes; URLs continuam sendo responsabilidade do catálogo.
+
+## Capabilities substituíveis
+
+```ts
+requires: { "gravewright.storage": "^1.0.0" }
+provides: { "gravewright.storage": "1.2.0" }
+```
+
+O consumidor chama `ctx.capability("gravewright.storage")`. Deve existir exatamente
+um provider ativo compatível. Recipes escolhem implementações pelo mapa
+`capabilities`. Use `dependencies` quando o acoplamento concreto for intencional.

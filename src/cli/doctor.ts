@@ -1,7 +1,7 @@
 import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import semver from "semver";
-import { COMMON_MODULE_EXPORTS, MODULE_KINDS, MODULE_PROVIDERS, ROOM_SLOT_NAMES } from "@gravewright/sdk";
+import { COMMON_MODULE_EXPORTS, MODULE_KINDS, MODULE_PROVIDERS, ROOM_PROTOCOL, ROOM_SLOT_NAMES } from "@gravewright/sdk";
 
 export type FindingStatus = "pass" | "warn" | "fail";
 export interface Finding { status: FindingStatus; label: string; detail: string; }
@@ -25,7 +25,7 @@ export async function diagnose(root: string): Promise<Finding[]> {
     findings.push({ status: "fail", label: "State", detail: error instanceof Error ? error.message : "invalid state file" });
   }
 
-  const manifests = new Map<string, { kind: string; version: string; dependencies: Record<string, string>; active: boolean }>();
+  const manifests = new Map<string, { kind: string; version: string; dependencies: Record<string, string>; requires: Record<string, string>; provides: Record<string, string>; active: boolean }>();
   for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
     const file = path.join(modulesDirectory, entry.name, "manifest.json");
     if (!await access(file).then(() => true, () => false)) continue;
@@ -45,12 +45,19 @@ export async function diagnose(root: string): Promise<Finding[]> {
         }
       }
       if (value.kind === "room") {
+        if (value.room_protocol !== ROOM_PROTOCOL) throw new Error(`room_protocol must be ${ROOM_PROTOCOL}`);
         const slots = (value.exposes as { slots?: Array<{ name?: unknown; mounts?: unknown; contributions?: unknown }> } | undefined)?.slots;
         if (!Array.isArray(slots) || ROOM_SLOT_NAMES.some((name) => !slots.some((slot) => slot.name === name && slot.mounts === "one" && slot.contributions === "many"))) {
           throw new Error(`room exposes.slots must include the canonical room slots`);
         }
       }
-      manifests.set(value.name, { kind: value.kind as string, version: value.version, dependencies: (value.dependencies as Record<string, string>) ?? {}, active: states[value.name] === "active" });
+      if (value.requires !== undefined && (!value.requires || typeof value.requires !== "object" || Array.isArray(value.requires))) throw new Error("requires must be an object");
+      if (value.provides !== undefined && (!value.provides || typeof value.provides !== "object" || Array.isArray(value.provides))) throw new Error("provides must be an object");
+      const requires = (value.requires as Record<string, string> | undefined) ?? {};
+      const provides = (value.provides as Record<string, string> | undefined) ?? {};
+      for (const [capability, range] of Object.entries(requires)) if (!capability || !semver.validRange(range)) throw new Error(`invalid required capability ${capability}`);
+      for (const [capability, version] of Object.entries(provides)) if (!capability || !semver.valid(version)) throw new Error(`invalid provided capability ${capability}`);
+      manifests.set(value.name, { kind: value.kind as string, version: value.version, dependencies: (value.dependencies as Record<string, string>) ?? {}, requires, provides, active: states[value.name] === "active" });
       findings.push({ status: "pass", label: "Manifest", detail: value.name });
     } catch (error) {
       findings.push({ status: "fail", label: "Manifest", detail: `${entry.name}: ${error instanceof Error ? error.message : "invalid"}` });
@@ -61,6 +68,16 @@ export async function diagnose(root: string): Promise<Finding[]> {
     if (!target) findings.push({ status: "fail", label: "Dependency", detail: `${name} requires missing module ${dependency}` });
     else if (manifest.active && !target.active) findings.push({ status: "fail", label: "Dependency", detail: `${name} requires disabled module ${dependency}` });
     else if (!semver.satisfies(target.version, range)) findings.push({ status: "fail", label: "Dependency", detail: `${name} requires ${dependency} ${range}, found ${target.version}` });
+  }
+  const providers = new Map<string, Array<{ name: string; version: string }>>();
+  for (const [name, manifest] of manifests) if (manifest.active) for (const [capability, version] of Object.entries(manifest.provides)) {
+    const values = providers.get(capability) ?? []; values.push({ name, version }); providers.set(capability, values);
+  }
+  for (const [capability, values] of providers) if (values.length > 1) findings.push({ status: "fail", label: "Capability", detail: `${capability} has multiple active providers: ${values.map(({ name }) => name).join(", ")}` });
+  for (const [name, manifest] of manifests) if (manifest.active) for (const [capability, range] of Object.entries(manifest.requires)) {
+    const provider = providers.get(capability)?.[0];
+    if (!provider) findings.push({ status: "fail", label: "Capability", detail: `${name} requires missing capability ${capability}` });
+    else if (!semver.satisfies(provider.version, range)) findings.push({ status: "fail", label: "Capability", detail: `${name} requires ${capability} ${range}, found ${provider.version}` });
   }
   for (const name of Object.keys(states)) if (!manifests.has(name)) findings.push({ status: "warn", label: "Orphan state", detail: `${name} is not installed` });
   const serverCount = [...manifests.values()].filter((item) => item.active && item.kind === "server").length;

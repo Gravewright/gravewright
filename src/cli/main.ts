@@ -156,9 +156,19 @@ export async function main(argv = process.argv.slice(2), options: MainOptions = 
   output.pass("Project", root);
   if (journal) output.pass("Diagnostic", `Recording safe actions at ${path.relative(root, journal.file)}`);
   try {
-    await startGravewright({ root, kernel: { diagnostic: journal } });
+    const kernel = await startGravewright({ root, kernel: { diagnostic: journal } });
     journal?.record({ event: "system.start", actor: "System", action: "VTT start", status: "success" });
     output.pass("Runtime", "Table is ready. Press Ctrl+C to stop.");
+    let stopping = false;
+    const shutdown = async (signal: string) => {
+      if (stopping) return;
+      stopping = true;
+      journal?.record({ event: "system.stop", actor: "System", action: `VTT stop (${signal})`, status: "success" });
+      try { await kernel.shutdown(); await journal?.close(); }
+      catch (error) { output.fail("Shutdown", error instanceof Error ? error.message : String(error)); process.exitCode = 1; }
+    };
+    process.once("SIGINT", () => { void shutdown("SIGINT"); });
+    process.once("SIGTERM", () => { void shutdown("SIGTERM"); });
     if (journal) {
       const close = () => { void journal.close(); };
       process.once("beforeExit", close);

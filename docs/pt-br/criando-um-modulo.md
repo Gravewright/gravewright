@@ -201,6 +201,20 @@ export default defineModule({
 
 O kernel valida presença, estado ativo, SemVer compatível e ordem de inicialização. Dependências usam o nome concreto do módulo, não apenas seu kind.
 
+Para um contrato substituível, declare `requires`, faça uma implementação declarar
+`provides` e use `ctx.capability(name)`. A recipe escolhe o provider concreto. Providers
+ausentes, incompatíveis ou ambíguos falham no planejamento, antes das factories.
+
+Registre recursos externos imediatamente:
+
+```ts
+const timer = setInterval(flush, 1_000);
+ctx.onDispose(() => clearInterval(timer));
+```
+
+O cleanup roda em ordem inversa quando `create()` falha, no disable e em
+`kernel.shutdown()`.
+
 Quando esse módulo é instalado pelo marketplace, o Gravewright procura dependências ausentes pelo nome nos catálogos configurados. Ele valida todas as faixas SemVer, rejeita ciclos e versões locais incompatíveis, prepara o grafo inteiro e instala em ordem topológica: dependências primeiro, módulo solicitado por último. A instalação não ativa módulos automaticamente.
 
 ## 8. Componha routes, middleware e slots
@@ -283,7 +297,9 @@ npm run grave -- doctor
 npm run grave -- run
 ```
 
-`grave doctor` encontra manifests inválidos, problemas de estado, dependências ausentes e configurações incorretas de server.
+`grave doctor` encontra manifests inválidos, problemas de estado, dependências
+ausentes, protocolos de room inválidos, conflitos de providers e configurações
+incorretas de server.
 
 ## 11. Teste a capacidade
 

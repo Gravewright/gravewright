@@ -17,6 +17,7 @@ Cada página documenta uma fronteira explícita entre módulo, SDK e kernel.
 - [`set`](set.md) — mutação cross-module genérica e deprecated.
 - [`prop`](prop.md) — propriedade compartilhada legível e gravável.
 - [Dependencies](dependencies.md) — nomes, SemVer, ordem e instalação.
+- [Recipes](recipes.md) — composições reproduzíveis e escolha de providers.
 
 ## Composição
 

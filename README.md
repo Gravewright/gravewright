@@ -67,6 +67,8 @@ Start with the [module authoring guide](docs/en/creating-a-module.md), copy a [m
 - **Small kernel:** mechanisms belong in the core; product policy does not.
 - **Replaceable implementations:** no renderer, rules engine, or storage model is universal.
 - **Explicit contracts:** dependencies and public capabilities are declared and validated.
+- **Transactional lifecycle:** activation is planned first; resources roll back and shut down in reverse order.
+- **Replaceable capabilities:** consumers require versioned contracts while recipes choose providers.
 - **Composition over coupling:** a VTT is a compatible set of modules.
 - **Independent evolution:** modules can be maintained and released separately.
 - **Distribution freedom:** Gravewright is a foundation, not a prescribed VTT.

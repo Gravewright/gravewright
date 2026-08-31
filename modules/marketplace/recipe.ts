@@ -1,5 +1,6 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+import semver from "semver";
 import type { ModuleManifest, ModuleState } from "@gravewright/sdk";
 import type { CatalogEntry } from "./catalog.js";
 import { resolveDependencyPlanForRoots } from "./dependency-install.js";
@@ -19,6 +20,7 @@ export interface RecipeDocument {
   version: string;
   description?: string;
   modules: RecipeModule[];
+  capabilities?: Record<string, string>;
 }
 export interface RecipePlanModule {
   name: string;
@@ -29,7 +31,7 @@ export interface RecipePlanModule {
   manifest_url: string;
   download_sha256: string;
 }
-export interface RecipePlan { recipe: Pick<RecipeDocument, "name" | "title" | "version">; modules: RecipePlanModule[]; }
+export interface RecipePlan { recipe: Pick<RecipeDocument, "name" | "title" | "version">; modules: RecipePlanModule[]; capabilities: Record<string, string>; }
 
 function parseRecipe(value: unknown): RecipeDocument {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("receita deve ser um objeto");
@@ -49,9 +51,19 @@ function parseRecipe(value: unknown): RecipeDocument {
     if (entry.state !== undefined && entry.state !== "active" && entry.state !== "disabled") throw new Error("estado inválido na receita");
     return { manifest_url: entry.manifest_url, version: (entry.version as string | undefined) ?? "*", state: (entry.state as ModuleState | undefined) ?? "active" };
   });
+  let capabilities: Record<string, string> | undefined;
+  if (object.capabilities !== undefined) {
+    if (!object.capabilities || typeof object.capabilities !== "object" || Array.isArray(object.capabilities)) throw new Error("capabilities inválido na receita");
+    capabilities = {};
+    for (const [capability, provider] of Object.entries(object.capabilities)) {
+      if (!NAME.test(capability.replaceAll(".", "-")) || typeof provider !== "string" || !NAME.test(provider)) throw new Error("capability ou provider inválido na receita");
+      capabilities[capability] = provider;
+    }
+  }
   return {
     schema_version: 1, kind: "recipe", name: object.name as string, title: object.title as string,
     version: object.version as string, ...(typeof object.description === "string" ? { description: object.description } : {}), modules,
+    ...(capabilities ? { capabilities } : {}),
   };
 }
 
@@ -108,6 +120,7 @@ export async function planRecipe(
     return explicit ? [[item.manifest.name, explicit] as const] : [];
   }));
   const active = new Set([...explicitByName].filter(([, item]) => item.state === "active").map(([name]) => name));
+  for (const provider of Object.values(recipe.capabilities ?? {})) active.add(provider);
   const pending = [...active];
   while (pending.length) {
     const current = byName.get(pending.pop()!);
@@ -128,12 +141,32 @@ export async function planRecipe(
       manifest_url: manifestUrl, download_sha256: manifest.download_sha256,
     };
   });
+  for (const [capability, providerName] of Object.entries(recipe.capabilities ?? {})) {
+    const provider = resolved.find(({ manifest }) => manifest.name === providerName)?.manifest;
+    if (!provider) throw new Error(`provider ${providerName} da capability ${capability} não está na receita`);
+    if (!provider.provides?.[capability]) throw new Error(`${providerName} não fornece a capability ${capability}`);
+    const planned = modules.find((module) => module.name === providerName)!;
+    planned.state = "active";
+    for (const other of modules) {
+      const manifest = resolved.find((item) => item.manifest.name === other.name)!.manifest;
+      if (other.name !== providerName && manifest.provides?.[capability]) other.state = "disabled";
+    }
+  }
+  for (const module of modules.filter(({ state }) => state === "active")) {
+    const manifest = resolved.find((item) => item.manifest.name === module.name)!.manifest;
+    for (const [capability, range] of Object.entries(manifest.requires ?? {})) {
+      const providerName = recipe.capabilities?.[capability];
+      const provider = providerName ? resolved.find((item) => item.manifest.name === providerName)?.manifest : undefined;
+      if (!provider) throw new Error(`${module.name} requer capability ${capability}; escolha um provider em capabilities`);
+      if (!provider.provides?.[capability] || !semver.satisfies(provider.provides[capability], range)) throw new Error(`${provider.name} não satisfaz ${capability} ${range}`);
+    }
+  }
   const states = await readStates(path.dirname(modulesDirectory));
   const installed = await installedManifests(modulesDirectory);
   const currentServers = installed.filter((manifest) => manifest.kind === "server" && states[manifest.name] === "active").length;
   const addedServers = modules.filter((module) => module.kind === "server" && module.state === "active").length;
   if (currentServers + addedServers !== 1) throw new Error("o projeto resultante deve ter exatamente um módulo server ativo");
-  return { recipe: { name: recipe.name, title: recipe.title, version: recipe.version }, modules };
+  return { recipe: { name: recipe.name, title: recipe.title, version: recipe.version }, modules, capabilities: recipe.capabilities ?? {} };
 }
 
 async function atomicJson(file: string, value: unknown): Promise<void> {
@@ -168,7 +201,7 @@ export async function installRecipe(
     }
     for (const module of prepared) await module.commit();
     await atomicJson(stateFile, { ...previousStates, ...Object.fromEntries(plan.modules.map((module) => [module.name, module.state])) });
-    await atomicJson(lockFile, { schema_version: 1, recipe: { ...plan.recipe, recipe_url: recipeUrl }, modules: plan.modules, generated_at: new Date().toISOString() });
+    await atomicJson(lockFile, { schema_version: 1, recipe: { ...plan.recipe, recipe_url: recipeUrl }, capabilities: plan.capabilities, modules: plan.modules, generated_at: new Date().toISOString() });
     return plan;
   } catch (error) {
     await Promise.allSettled(prepared.map((module) => module.rollback()));
