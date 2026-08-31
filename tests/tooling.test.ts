@@ -237,3 +237,14 @@ test("server exposes working HTTP and WebSocket providers through get", async ()
     await server.stop();
   }
 });
+
+test("core modules ship reproducible dependency locks and use the host SDK peer", async () => {
+  for (const directory of ["gravewright-server", "gravewright-marketplace"]) {
+    const moduleRoot = path.resolve("modules", directory);
+    const packageJson = JSON.parse(await readFile(path.join(moduleRoot, "package.json"), "utf8"));
+    const packageLock = JSON.parse(await readFile(path.join(moduleRoot, "package-lock.json"), "utf8"));
+    assert.equal(packageJson.peerDependenciesMeta?.["@gravewright/sdk"]?.optional, true);
+    assert.equal(packageLock.lockfileVersion, 3);
+    assert.equal(packageLock.packages[""]?.name, packageJson.name);
+  }
+});

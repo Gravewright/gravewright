@@ -11,6 +11,11 @@
   "peerDependencies": {
     "@gravewright/sdk": "^0.1.0"
   },
+  "peerDependenciesMeta": {
+    "@gravewright/sdk": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "semver": "^7.7.2",
     "yauzl": "^3.4.0"
