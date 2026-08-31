@@ -20,11 +20,10 @@ Kinds descrevem o papel do módulo. Eles não selecionam uma implementação nem
 | `addon` | Capacidade opcional e transversal |
 | `asset` | Armazenamento, índice ou entrega de assets |
 | `ui` | Capacidade de interface |
-| `system` | Serviço transversal da plataforma, como autenticação, tradução, storage, sessões ou logging |
 
 Somente `server` possui contrato mínimo no kernel. O projeto precisa de exatamente um server ativo. Todos os outros kinds são opcionais.
 
-`system` e `ruleset` possuem fronteiras diferentes de propósito. Um módulo `system` oferece serviços técnicos da plataforma, independentes das mecânicas de RPG. Um `ruleset` cuida das regras, testes, combate, condições e resolução. Uma distribuição jogável completa continua sendo uma recipe que combina ambos com UI, assets e addons opcionais.
+Um sistema de jogo completo é uma recipe composta por `ruleset`, UI, assets e addons opcionais. `ruleset` cuida das mecânicas e da resolução, sem absorver apresentação ou distribuição.
 
 ## 2. Gere o scaffold
 
