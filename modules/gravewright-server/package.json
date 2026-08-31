@@ -1,6 +1,8 @@
 {
   "name": "@gravewright/server",
   "version": "0.1.0",
+  "description": "Core Gravewright transport module providing HTTP and WebSocket servers.",
+  "author": "Gravewright",
   "private": true,
   "type": "module",
   "engines": {

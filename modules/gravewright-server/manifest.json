@@ -1,5 +1,5 @@
 {
-  "name": "server",
+  "name": "gravewright-server",
   "kind": "server",
   "provider": "core",
   "version": "0.1.0",

@@ -293,7 +293,7 @@ Set the desired state in `gravewright.modules.json`:
 
 ```json
 {
-  "server": "active",
+  "gravewright-server": "active",
   "fog-of-war": "active"
 }
 ```

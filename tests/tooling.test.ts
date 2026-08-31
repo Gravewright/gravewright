@@ -6,11 +6,11 @@ import test from "node:test";
 import { runtimeTypeSpecifier, syncModuleTypes } from "../scripts/sync-module-types.js";
 import { discoverModules } from "../src/discover-modules.js";
 import { createModuleStateStore } from "../src/module-state.js";
-import { _catalogTest } from "../modules/marketplace/catalog.js";
-import { _recipeTest } from "../modules/marketplace/recipe.js";
-import { resolveDependencyPlanForRoots } from "../modules/marketplace/dependency-install.js";
-import serverModule from "../modules/server/index.js";
-import type { CatalogEntry } from "../modules/marketplace/catalog.js";
+import { _catalogTest } from "../modules/gravewright-marketplace/catalog.js";
+import { _recipeTest } from "../modules/gravewright-marketplace/recipe.js";
+import { resolveDependencyPlanForRoots } from "../modules/gravewright-marketplace/dependency-install.js";
+import serverModule from "../modules/gravewright-server/index.js";
+import type { CatalogEntry } from "../modules/gravewright-marketplace/catalog.js";
 import type { ModuleManifest } from "@gravewright/sdk";
 import WebSocket from "ws";
 

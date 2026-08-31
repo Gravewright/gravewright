@@ -80,7 +80,7 @@ async function marketplace(request: BaseRequest, response: BaseResponse) {
 }
 
 export default defineModule({
-  name: "marketplace", kind: "system", provider: "core", version: "0.2.0",
+  name: "gravewright-marketplace", kind: "system", provider: "core", version: "0.2.0",
   routes: { "/marketplace": "marketplace" },
   exports: { get: ["read", "write", "stat", "marketplace", "list", "install"] },
   create(_ctx) {

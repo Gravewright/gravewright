@@ -45,7 +45,7 @@ function configuredPort(): number {
 }
 
 export default defineModule({
-  name: "server",
+  name: "gravewright-server",
   kind: "server",
   provider: "core",
   version: "0.1.0",
