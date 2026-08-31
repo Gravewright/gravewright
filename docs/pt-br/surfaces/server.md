@@ -4,7 +4,7 @@
 
 Exports obrigatórios:
 
-- `read(resource)`, `write(resource, value)` e `stat(resource?)` — comandos comuns dos módulos.
+- `http` expõe a implementação HTTP concreta como valor opaco.
 - `start()` — abre o listener após a composição.
 - `stop()` — fecha recursos corretamente.
 - `route(mount, handler)` — registra handler final e retorna disposer.
@@ -20,7 +20,7 @@ de streaming, headers especializados ou recursos do framework pode depender
 explicitamente da implementação, por exemplo
 `ctx.use("gravewright-server").get("http")`.
 
-`start()` é aguardado exatamente uma vez depois de middleware, routes e slots. O server ativo não pode ser desabilitado durante a execução do kernel.
+`start()` é aguardado exatamente uma vez depois de middleware e routes. O server ativo não pode ser desabilitado durante a execução do kernel. Slots visuais pertencem à room.
 
 ## Comportamento mínimo de registrar
 

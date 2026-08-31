@@ -1,5 +1,5 @@
 export const MODULE_KINDS = [
-  "server", "room", "ruleset", "addon", "system",
+  "server", "room", "ruleset", "chat", "dice-engine", "assets", "storage", "backend", "addon",
 ] as const;
 
 export type ModuleKind = (typeof MODULE_KINDS)[number];
@@ -11,9 +11,9 @@ export const MODULE_PROVIDERS = [
 export type ModuleProvider = (typeof MODULE_PROVIDERS)[number];
 export type ModuleState = "active" | "disabled";
 
-export const COMMON_MODULE_EXPORTS = [
-  "read", "write", "stat",
-] as const;
+export type KindUse = "required" | "optional";
+export type SingletonModuleKind = "server" | "room" | "ruleset" | "chat" | "dice-engine" | "assets" | "storage";
+export type PluralModuleKind = "backend" | "addon";
 
 export const ROOM_SLOT_NAMES = [
   "gw-toolbar", "gw-main", "gw-sidebar", "gw-chat", "gw-overlay", "gw-grid",
@@ -139,6 +139,7 @@ export interface ModuleDefinition<TInstance extends Record<string, unknown>> {
   download_url?: string;
   download_sha256?: string;
   dependencies?: Record<string, string>;
+  uses?: Partial<Record<ModuleKind, KindUse>>;
   requires?: Record<string, string>;
   provides?: Record<string, string>;
   room_protocol?: typeof ROOM_PROTOCOL;
@@ -146,6 +147,7 @@ export interface ModuleDefinition<TInstance extends Record<string, unknown>> {
   routes?: Record<string, keyof TInstance & string>;
   middleware?: Record<string, readonly (keyof TInstance & string)[]>;
   slots?: Record<string, readonly (keyof TInstance & string)[]>;
+  tooling?: ModuleTooling;
   exports: { get?: ExportNames<TInstance> };
   create(context: Context): TInstance | Promise<TInstance>;
 }
@@ -156,8 +158,12 @@ export type DefinedModule<
 
 /** Helper de autoria. O kernel continua validando manifest.json antes de importar esta factory. */
 export function defineModule<
+  const TKind extends ModuleKind,
   const TDefinition extends ModuleDefinition<Record<string, unknown>>,
->(definition: TDefinition): DefinedModule<TDefinition> {
+>(definition: TDefinition & {
+  kind: TKind;
+  create(context: Context): (Record<string, unknown> & KindRegistry[TKind]["get"]) | Promise<Record<string, unknown> & KindRegistry[TKind]["get"]>;
+}): DefinedModule<TDefinition> {
   const factory = ((context: Context) => definition.create(context)) as DefinedModule<TDefinition>;
   Object.defineProperty(factory, "definition", { value: Object.freeze(definition), enumerable: true });
   return factory;
@@ -224,6 +230,20 @@ export type MiddlewareHandler = (
 ) => void | Promise<void>;
 export type MiddlewareRegistrar = (mount: string, handler: MiddlewareHandler) => Dispose;
 export type SlotRegistrar = (name: string, value: unknown) => Dispose;
+export type RoomSlotRegistrar = (name: string, module: string, value: unknown) => Dispose;
+
+export interface ServerKindAPI extends ModuleAPI { get: { start: () => void | Promise<void>; stop: () => void | Promise<void>; http: unknown; route: RouteRegistrar; middleware: MiddlewareRegistrar; realtime?: unknown } }
+export interface RoomKindAPI extends ModuleAPI { get: { mount: (root: HTMLElement) => unknown; unmount: () => unknown; slots: RoomSlotRegistrar } }
+export interface RulesetKindAPI extends ModuleAPI { get: Record<string, unknown> }
+export interface ChatKindAPI extends ModuleAPI { get: { send: (message: string) => string | Promise<string>; erase: (messageId: string) => void | Promise<void> } }
+export interface DiceEngineKindAPI extends ModuleAPI { get: { roll: (expression: string) => number | Promise<number> } }
+export interface AssetInput { data: Uint8Array; mimeType: string; name?: string }
+export interface AssetsKindAPI extends ModuleAPI { get: { store: (asset: AssetInput) => string | Promise<string>; resolve: (id: string) => Uint8Array | undefined | Promise<Uint8Array | undefined>; mimeTypeAllowed: (mimeType: string) => boolean | Promise<boolean>; remove: (id: string) => void | Promise<void> } }
+export interface StorageKindAPI extends ModuleAPI { get: { create: (collection: string, value: unknown) => unknown | Promise<unknown>; find: (collection: string, id: string) => unknown | Promise<unknown>; where: (collection: string, filters: Record<string, unknown>) => unknown[] | Promise<unknown[]>; update: (collection: string, id: string, value: unknown) => unknown | Promise<unknown>; delete: (collection: string, id: string) => void | Promise<void> } }
+export interface BackendKindAPI extends ModuleAPI { get: Record<string, unknown> }
+export interface AddonKindAPI extends ModuleAPI { get: Record<string, unknown> }
+export interface KindRegistry { server: ServerKindAPI; room: RoomKindAPI; ruleset: RulesetKindAPI; chat: ChatKindAPI; "dice-engine": DiceEngineKindAPI; assets: AssetsKindAPI; storage: StorageKindAPI; backend: BackendKindAPI; addon: AddonKindAPI }
+export interface ModuleTooling { read?: boolean; write?: boolean; stat?: boolean }
 
 export interface ModuleManifest {
   name: string;
@@ -233,6 +253,7 @@ export interface ModuleManifest {
   entry: string;
   types?: string;
   dependencies?: Record<string, string>;
+  uses?: Partial<Record<ModuleKind, KindUse>>;
   requires?: Record<string, string>;
   provides?: Record<string, string>;
   room_protocol?: typeof ROOM_PROTOCOL;
@@ -240,6 +261,7 @@ export interface ModuleManifest {
   routes?: Record<string, string>;
   middleware?: Record<string, string[]>;
   slots?: Record<string, string[]>;
+  tooling?: ModuleTooling;
   exports: {
     get?: string[];
   };
@@ -254,8 +276,15 @@ export interface ModuleRef<T extends ModuleAPI = { get: Record<string, unknown> 
   get<K extends keyof T["get"] & string>(name: K): T["get"][K];
 }
 
+export type KindResolution<K extends ModuleKind> = K extends PluralModuleKind
+  ? readonly ModuleRef<KindRegistry[K]>[]
+  : K extends "server" | "room" | "ruleset"
+    ? ModuleRef<KindRegistry[K]>
+    : ModuleRef<KindRegistry[K]> | undefined;
+
 export interface Context<R extends ModuleRegistry = ModuleRegistry, C extends CapabilityRegistry = CapabilityRegistry> {
   use<K extends keyof R & string>(name: K): ModuleRef<R[K] extends ModuleAPI ? R[K] : never>;
+  kind<K extends ModuleKind>(kind: K): KindResolution<K>;
   capability<K extends keyof C & string>(name: K): ModuleRef<C[K] extends ModuleAPI ? C[K] : never>;
   onDispose(disposer: Dispose): void;
   /** No-op quando o diário de diagnóstico não foi habilitado pelo host. */
@@ -265,6 +294,7 @@ export interface Context<R extends ModuleRegistry = ModuleRegistry, C extends Ca
 /** Fallback deliberado para hosts que resolvem módulos desconhecidos em compile time. */
 export interface DynamicContext {
   use(name: string): ModuleRef;
+  kind<K extends ModuleKind>(kind: K): KindResolution<K>;
   capability(name: string): ModuleRef;
   onDispose(disposer: Dispose): void;
   /** No-op quando o diário de diagnóstico não foi habilitado pelo host. */

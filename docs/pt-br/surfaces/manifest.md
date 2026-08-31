@@ -15,7 +15,7 @@ runtime continua sendo a autoridade para regras semânticas, como faixas SemVer.
   "entry": "./index.ts",
   "types": "./types.ts",
   "dependencies": {},
-  "exports": { "get": ["read", "write", "stat", "roll"] }
+  "exports": { "get": ["roll"] }
 }
 ```
 
@@ -36,7 +36,7 @@ O manifest não é uma sandbox: o código instalado ainda executa com as permiss
 ```json
 {
   "name": "character-sheet",
-  "kind": "system",
+  "kind": "backend",
   "provider": "community",
   "version": "2.1.0",
   "entry": "./index.js",
@@ -45,7 +45,7 @@ O manifest não é uma sandbox: o código instalado ainda executa com as permiss
   "routes": { "/characters": "characters" },
   "middleware": { "/characters": ["authenticate"] },
   "slots": { "room.sidebar": ["sidebarPanel"] },
-  "exports": { "get": ["read", "write", "stat", "characters", "authenticate", "sidebarPanel"] },
+  "exports": { "get": ["characters", "authenticate", "sidebarPanel"] },
   "download_url": "https://example.org/releases/character-sheet-2.1.0.zip",
   "download_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 }

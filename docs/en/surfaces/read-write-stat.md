@@ -1,12 +1,13 @@
-# `read`, `write`, and `stat`
+# Optional administrative tooling
 
-Every module publishes these POSIX-inspired commands through `exports.get`.
+`read`, `stat`, and `write` are optional host/CLI integrations. They are not kind contracts, are not automatically listed in `exports.get`, and are never available through `Context`.
 
-- `read(resource)` returns a resource owned by the module.
-- `write(resource, value)` requests a validated change.
-- `stat(resource?)` returns lightweight metadata or current status.
+```json
+{ "tooling": { "read": true, "stat": true, "write": true } }
+```
 
-Resource names and return values belong to each module's documented API. A storage
-system might expose `read("campaigns/42")`; a server might return
-`{ running: true, port: 3000 }` from `stat()`. These are callable commands in
-`exports.get`, not direct cross-module assignments.
+- `read` feeds `grave help <module> [topic]` with structured documentation.
+- `stat` feeds `grave doctor` with module-owned health information.
+- `write` feeds `grave test [module]` with a self-test harness.
+
+If an operation is declared, the module factory must implement it. These hooks are operational conveniences, not a sandbox or a module-to-module protocol.

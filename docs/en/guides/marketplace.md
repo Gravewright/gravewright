@@ -1,6 +1,6 @@
 # Marketplace publishing and installation
 
-The marketplace is a `system` module, not a special kernel subsystem. The
+The marketplace is a `backend` module, not a special kernel subsystem. The
 included implementation serves `/marketplace` through the active server and
 reads the official catalog from the Gravewright marketplace repository.
 

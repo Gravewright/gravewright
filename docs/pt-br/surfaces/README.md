@@ -24,7 +24,7 @@ Cada página documenta uma fronteira explícita entre módulo, SDK e kernel.
 - [Slots](slots.md) — contribuições para pontos de extensão.
 - [Slots de room](room-slots.md) — regiões DOM garantidas e contribuições visuais isoladas.
 - [Contrato de server](server.md) — contrato obrigatório de transporte.
-- [`read`, `write`, `stat`](read-write-stat.md) — comandos comuns inspirados em POSIX.
+- [`read`, `write`, `stat`](read-write-stat.md) — hooks opcionais de tooling administrativo.
 
 ## Runtime
 

@@ -49,7 +49,8 @@ export default defineModule({
   kind: "server",
   provider: "core",
   version: "0.1.0",
-  exports: { get: ["read", "write", "stat", "start", "stop", "route", "middleware", "slot", "port", "http", "ws"] },
+  tooling: { read: true, write: true, stat: true },
+  exports: { get: ["start", "stop", "http", "route", "middleware", "realtime", "port"] },
   create(_ctx) {
     const app = express();
     const websocketServer = new WebSocketServer({ noServer: true });
@@ -57,7 +58,6 @@ export default defineModule({
     const routeBridges = new Set<string>();
     const middleware = new Map<string, Map<symbol, MiddlewareHandler>>();
     const middlewareBridges = new Set<string>();
-    const slots = new Map<string, Set<unknown>>();
     let listener: Server | undefined;
     let port = configuredPort();
     app.disable("x-powered-by");
@@ -97,11 +97,13 @@ export default defineModule({
     }
 
     return {
-      read(resource: string) {
+      read(resource?: string) {
+        if (resource === undefined) return { start: "Start listening", stop: "Stop listening", http: "Concrete Express application", route: "Register a route", middleware: "Register middleware", realtime: "Concrete realtime provider" };
         if (resource === "port") return port;
         throw new Error(`Unknown server resource: ${resource}`);
       },
-      write(resource: string, value: unknown) {
+      write(resource?: string, value?: unknown) {
+        if (resource === undefined) return { ok: true };
         if (resource !== "port") throw new Error(`Unknown server resource: ${resource}`);
         if (listener) throw new Error("Cannot change the port while the server is running");
         if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 65535) throw new Error("Invalid server port");
@@ -114,14 +116,13 @@ export default defineModule({
           registrations: {
             routes: routes.size,
             middleware: [...middleware.values()].reduce((total, handlers) => total + handlers.size, 0),
-            slots: [...slots.values()].reduce((total, values) => total + values.size, 0),
           },
           bridges: { routes: routeBridges.size, middleware: middlewareBridges.size },
         };
       },
       get port() { return port; },
       get http() { return app; },
-      get ws() { return websocketServer; },
+      get realtime() { return websocketServer; },
       route(mount: string, handler: RouteHandler) {
         if (routes.has(mount)) throw new Error(`Route mount ${JSON.stringify(mount)} is already registered`);
         ensureRouteBridge(mount);
@@ -147,11 +148,6 @@ export default defineModule({
           if (!handlers.size) middleware.delete(mount);
         };
       },
-      slot(name: string, value: unknown) {
-        const values = slots.get(name) ?? new Set();
-        values.add(value); slots.set(name, values);
-        return () => { values.delete(value); if (!values.size) slots.delete(name); };
-      },
       async start() {
         if (listener) return;
         await new Promise<void>((resolve, reject) => {
@@ -172,9 +168,12 @@ export default defineModule({
       async stop() {
         const current = listener;
         listener = undefined;
-        if (!current) return;
+        if (!current || !current.listening) return;
         for (const client of websocketServer.clients) client.terminate();
-        await new Promise<void>((resolve, reject) => current.close((error) => error ? reject(error) : resolve()));
+        await new Promise<void>((resolve, reject) => current.close((error) => {
+          if (!error || (error as NodeJS.ErrnoException).code === "ERR_SERVER_NOT_RUNNING") resolve();
+          else reject(error);
+        }));
       },
     };
   },

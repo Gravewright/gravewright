@@ -80,16 +80,19 @@ async function marketplace(request: BaseRequest, response: BaseResponse) {
 }
 
 export default defineModule({
-  name: "gravewright-marketplace", kind: "system", provider: "core", version: "0.2.0",
+  name: "gravewright-marketplace", kind: "backend", provider: "core", version: "0.2.0",
   routes: { "/marketplace": "marketplace" },
-  exports: { get: ["read", "write", "stat", "marketplace", "list", "install"] },
+  tooling: { read: true, write: true, stat: true },
+  exports: { get: ["marketplace", "list", "install"] },
   create(_ctx) {
     return {
-      read(resource: string) {
+      read(resource?: string) {
+        if (resource === undefined) return { marketplace: "HTTP marketplace handler", list: "List installed modules", install: "Install a catalog module or recipe" };
         if (resource === "modules") return list();
         throw new Error(`Unknown marketplace resource: ${resource}`);
       },
-      write(resource: string, value: unknown) {
+      write(resource?: string, value?: unknown) {
+        if (resource === undefined) return { ok: true };
         if (resource === "install" && typeof value === "string") return install(value);
         throw new Error(`Unknown marketplace resource: ${resource}`);
       },

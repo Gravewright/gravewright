@@ -16,6 +16,14 @@ function definition(name: string, dependencies: Record<string, string> = {}, ext
   };
 }
 
+function requiredDefinitions(): ModuleDefinition[] {
+  return [
+    definition("server", {}, { kind: "server" }),
+    definition("room", {}, { kind: "room" }),
+    definition("ruleset", {}, { kind: "ruleset" }),
+  ];
+}
+
 test("property: every generated DAG plans dependencies before consumers", () => {
   fc.assert(fc.property(
     fc.integer({ min: 1, max: 18 }),
@@ -27,7 +35,7 @@ test("property: every generated DAG plans dependencies before consumers", () => 
         const dependency = Math.min(left % count, right % count);
         if (consumer !== dependency) dependencies[consumer]!.add(dependency);
       }
-      const modules = [definition("server"), ...dependencies.map((items, index) => definition(
+      const modules = [...requiredDefinitions(), ...dependencies.map((items, index) => definition(
         `module-${index}`,
         Object.fromEntries([...items].map((dependency) => [`module-${dependency}`, "^1.0.0"])),
       ))];
@@ -42,7 +50,7 @@ test("property: every generated DAG plans dependencies before consumers", () => 
 
 test("property: generated dependency cycles are always rejected", () => {
   fc.assert(fc.property(fc.integer({ min: 2, max: 15 }), (count) => {
-    const modules = [definition("server")];
+    const modules = requiredDefinitions();
     for (let index = 0; index < count; index += 1) {
       modules.push(definition(`cycle-${index}`, { [`cycle-${(index + 1) % count}`]: "^1.0.0" }));
     }
@@ -57,10 +65,10 @@ test("property: compatible capability ranges plan and incompatible ranges fail",
       const version = `${major}.${minor}.0`;
       const provider = definition("provider", {}, { provides: { renderer: version } });
       assert.doesNotThrow(() => createActivationPlan([
-        definition("server"), provider, definition("consumer", {}, { requires: { renderer: version } }),
+        ...requiredDefinitions(), provider, definition("consumer", {}, { requires: { renderer: version } }),
       ]));
       assert.throws(() => createActivationPlan([
-        definition("server"), provider, definition("consumer", {}, { requires: { renderer: `${major + 1}.0.0` } }),
+        ...requiredDefinitions(), provider, definition("consumer", {}, { requires: { renderer: `${major + 1}.0.0` } }),
       ]), /requires capability/);
     },
   ), { numRuns: 40 });
@@ -68,7 +76,7 @@ test("property: compatible capability ranges plan and incompatible ranges fail",
 
 test("property: disabling generated leaf modules preserves graph invariants", () => {
   fc.assert(fc.property(fc.integer({ min: 1, max: 20 }), (count) => {
-    const modules = [definition("server")];
+    const modules = requiredDefinitions();
     for (let index = 0; index < count; index += 1) {
       modules.push(definition(`chain-${index}`, index === 0 ? {} : { [`chain-${index - 1}`]: "^1.0.0" }));
     }

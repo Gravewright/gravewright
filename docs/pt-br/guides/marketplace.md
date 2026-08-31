@@ -1,6 +1,6 @@
 # Publicação e instalação no marketplace
 
-O marketplace é um módulo `system`, não um subsistema especial do kernel. A
+O marketplace é um módulo `backend`, não um subsistema especial do kernel. A
 implementação incluída serve `/marketplace` pelo server ativo e lê o catálogo
 oficial do repositório Gravewright marketplace.
 

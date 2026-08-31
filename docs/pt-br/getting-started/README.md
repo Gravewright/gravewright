@@ -19,7 +19,7 @@ npm test
 npm run grave -- doctor
 ```
 
-O `gravewright.modules.json` versionado ativa o server e o system de marketplace
+O `gravewright.modules.json` versionado ativa o server e o backend de marketplace
 incluídos como composição padrão do repositório. `doctor` verifica
 essa configuração e os manifests sem modificar o workspace. Corrija todo erro
 reportado antes de iniciar o host.

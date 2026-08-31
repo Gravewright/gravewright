@@ -1,10 +1,16 @@
 import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import semver from "semver";
-import { COMMON_MODULE_EXPORTS, MODULE_KINDS, MODULE_PROVIDERS, ROOM_PROTOCOL, ROOM_SLOT_NAMES } from "@gravewright/sdk";
+import { MODULE_KINDS, MODULE_PROVIDERS, ROOM_PROTOCOL, ROOM_SLOT_NAMES, type ModuleKind } from "@gravewright/sdk";
 
 export type FindingStatus = "pass" | "warn" | "fail";
 export interface Finding { status: FindingStatus; label: string; detail: string; }
+
+const REQUIRED_EXPORTS: Partial<Record<ModuleKind, string[]>> = {
+  server: ["start", "stop", "http", "route", "middleware"], room: ["mount", "unmount", "slots"],
+  chat: ["send", "erase"], "dice-engine": ["roll"], assets: ["store", "resolve", "mimeTypeAllowed", "remove"],
+  storage: ["create", "find", "where", "update", "delete"],
+};
 
 export async function diagnose(root: string): Promise<Finding[]> {
   const findings: Finding[] = [{ status: "pass", label: "Runtime", detail: `Node.js ${process.version}` }];
@@ -25,7 +31,7 @@ export async function diagnose(root: string): Promise<Finding[]> {
     findings.push({ status: "fail", label: "State", detail: error instanceof Error ? error.message : "invalid state file" });
   }
 
-  const manifests = new Map<string, { kind: string; version: string; dependencies: Record<string, string>; requires: Record<string, string>; provides: Record<string, string>; active: boolean }>();
+  const manifests = new Map<string, { kind: ModuleKind; version: string; dependencies: Record<string, string>; uses: Partial<Record<ModuleKind, "required" | "optional">>; requires: Record<string, string>; provides: Record<string, string>; active: boolean }>();
   for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {
     const file = path.join(modulesDirectory, entry.name, "manifest.json");
     if (!await access(file).then(() => true, () => false)) continue;
@@ -41,11 +47,15 @@ export async function diagnose(root: string): Promise<Finding[]> {
         const exports = value.exports as { get?: unknown; set?: unknown; prop?: unknown } | undefined;
         if (exports?.set !== undefined || exports?.prop !== undefined) throw new Error("only exports.get is supported");
         const readable = exports?.get;
-        const required = [...COMMON_MODULE_EXPORTS, ...(value.kind === "server" ? ["start", "stop", "route", "middleware", "slot"] : value.kind === "room" ? ["mount", "unmount"] : [])];
+        const required = REQUIRED_EXPORTS[value.kind as ModuleKind] ?? [];
         if (!Array.isArray(readable) || required.some((name) => !readable.includes(name))) {
           throw new Error(`${String(value.kind)} exports.get must include ${required.join(", ")}`);
         }
       }
+      if (value.tooling !== undefined && (!value.tooling || typeof value.tooling !== "object" || Array.isArray(value.tooling)
+        || Object.entries(value.tooling).some(([name, enabled]) => !["read", "write", "stat"].includes(name) || enabled !== true))) throw new Error("invalid tooling declaration");
+      if (value.uses !== undefined && (!value.uses || typeof value.uses !== "object" || Array.isArray(value.uses)
+        || Object.entries(value.uses).some(([kind, mode]) => !MODULE_KINDS.includes(kind as ModuleKind) || (mode !== "required" && mode !== "optional")))) throw new Error("uses must map known kinds to required or optional");
       if (value.kind === "room") {
         if (value.room_protocol !== ROOM_PROTOCOL) throw new Error(`room_protocol must be ${ROOM_PROTOCOL}`);
         const slots = (value.exposes as { slots?: Array<{ name?: unknown; mounts?: unknown; contributions?: unknown }> } | undefined)?.slots;
@@ -59,7 +69,7 @@ export async function diagnose(root: string): Promise<Finding[]> {
       const provides = (value.provides as Record<string, string> | undefined) ?? {};
       for (const [capability, range] of Object.entries(requires)) if (!capability || !semver.validRange(range)) throw new Error(`invalid required capability ${capability}`);
       for (const [capability, version] of Object.entries(provides)) if (!capability || !semver.valid(version)) throw new Error(`invalid provided capability ${capability}`);
-      manifests.set(value.name, { kind: value.kind as string, version: value.version, dependencies: (value.dependencies as Record<string, string>) ?? {}, requires, provides, active: states[value.name] === "active" });
+      manifests.set(value.name, { kind: value.kind as ModuleKind, version: value.version, dependencies: (value.dependencies as Record<string, string>) ?? {}, uses: (value.uses as Partial<Record<ModuleKind, "required" | "optional">>) ?? {}, requires, provides, active: states[value.name] === "active" });
       findings.push({ status: "pass", label: "Manifest", detail: value.name });
     } catch (error) {
       findings.push({ status: "fail", label: "Manifest", detail: `${entry.name}: ${error instanceof Error ? error.message : "invalid"}` });
@@ -81,10 +91,18 @@ export async function diagnose(root: string): Promise<Finding[]> {
     if (!provider) findings.push({ status: "fail", label: "Capability", detail: `${name} requires missing capability ${capability}` });
     else if (!semver.satisfies(provider.version, range)) findings.push({ status: "fail", label: "Capability", detail: `${name} requires ${capability} ${range}, found ${provider.version}` });
   }
+  for (const [name, manifest] of manifests) if (manifest.active) for (const [kind, mode] of Object.entries(manifest.uses)) {
+    if (mode === "required" && ![...manifests.values()].some((candidate) => candidate.active && candidate.kind === kind)) {
+      findings.push({ status: "fail", label: "Kind use", detail: `${name} requires missing kind ${kind}` });
+    }
+  }
   for (const name of Object.keys(states)) if (!manifests.has(name)) findings.push({ status: "warn", label: "Orphan state", detail: `${name} is not installed` });
-  const serverCount = [...manifests.values()].filter((item) => item.active && item.kind === "server").length;
-  if (serverCount === 0) findings.push({ status: "fail", label: "Required kind", detail: "no active server module" });
-  if (serverCount > 1) findings.push({ status: "fail", label: "Required kind", detail: "multiple server modules are active" });
+  for (const kind of ["server", "room", "ruleset"]) {
+    const count = [...manifests.values()].filter((item) => item.active && item.kind === kind).length;
+    if (count === 0) findings.push({ status: "fail", label: "Required kind", detail: `no active ${kind} module` });
+    if (count > 1) findings.push({ status: "fail", label: "Required kind", detail: `multiple ${kind} modules are active` });
+  }
+  for (const kind of ["chat", "dice-engine", "assets", "storage"]) if ([...manifests.values()].filter((item) => item.active && item.kind === kind).length > 1) findings.push({ status: "fail", label: "Kind", detail: `multiple ${kind} modules are active` });
   findings.unshift({ status: manifests.size ? "pass" : "fail", label: "Modules", detail: `${manifests.size} manifest(s) found` });
   return findings;
 }

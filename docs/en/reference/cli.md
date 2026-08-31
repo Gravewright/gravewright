@@ -17,7 +17,7 @@ software action completed, not whether a game check succeeded.
 ## `grave new`
 
 ```bash
-grave new <server|room|ruleset|addon|system> [name] [--example-complete]
+grave new <server|room|ruleset|addon|backend> [name] [--example-complete]
 ```
 
 Creates a disabled module scaffold. The complete variant also includes an

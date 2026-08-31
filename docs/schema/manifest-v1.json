@@ -6,12 +6,13 @@
   "required": ["name", "kind", "provider", "version", "entry", "exports"],
   "properties": {
     "name": { "type": "string", "minLength": 1 },
-    "kind": { "enum": ["server", "room", "ruleset", "addon", "system"] },
+    "kind": { "enum": ["server", "room", "ruleset", "chat", "dice-engine", "assets", "storage", "backend", "addon"] },
     "provider": { "enum": ["core", "community", "official", "licensed", "partner"] },
     "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$" },
     "entry": { "type": "string", "minLength": 1 },
     "types": { "type": "string", "minLength": 1 },
     "dependencies": { "$ref": "#/$defs/versionMap" },
+    "uses": { "$ref": "#/$defs/kindUses" },
     "requires": { "$ref": "#/$defs/versionMap" },
     "provides": { "$ref": "#/$defs/versionMap" },
     "room_protocol": { "const": "gravewright.room/v1" },
@@ -26,6 +27,11 @@
     "routes": { "$ref": "#/$defs/stringMap" },
     "middleware": { "$ref": "#/$defs/stringArrayMap" },
     "slots": { "$ref": "#/$defs/stringArrayMap" },
+    "tooling": {
+      "type": "object",
+      "properties": { "read": { "const": true }, "write": { "const": true }, "stat": { "const": true } },
+      "additionalProperties": false
+    },
     "exports": {
       "type": "object",
       "properties": { "get": { "$ref": "#/$defs/nonEmptyStrings" } },
@@ -52,6 +58,11 @@
       "type": "object",
       "propertyNames": { "minLength": 1 },
       "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "kindUses": {
+      "type": "object",
+      "propertyNames": { "enum": ["server", "room", "ruleset", "chat", "dice-engine", "assets", "storage", "backend", "addon"] },
+      "additionalProperties": { "enum": ["required", "optional"] }
     },
     "stringMap": {
       "type": "object",

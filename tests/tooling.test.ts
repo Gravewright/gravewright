@@ -219,12 +219,12 @@ test("module state store does not commit memory and cleans temp when rename fail
 test("server exposes working HTTP and WebSocket providers through get", async () => {
   const server = await serverModule({} as never);
   assert.ok(server.http);
-  assert.ok(server.ws);
+  assert.ok(server.realtime);
   assert.ok(serverModule.definition.exports.get?.includes("http"));
-  assert.ok(serverModule.definition.exports.get?.includes("ws"));
+  assert.ok(serverModule.definition.exports.get?.includes("realtime"));
 
   server.write("port", 0);
-  server.ws.once("connection", (socket) => socket.send("ready"));
+  server.realtime.once("connection", (socket) => socket.send("ready"));
   await server.start();
   const client = new WebSocket(`ws://127.0.0.1:${server.stat().port}`);
   try {
@@ -262,7 +262,7 @@ test("server registrations stay bounded across repeated route and middleware cyc
         registrations: { routes: number; middleware: number };
         bridges: { routes: number; middleware: number };
       };
-      assert.deepEqual(status.registrations, { routes: 0, middleware: 0, slots: 0 });
+      assert.deepEqual(status.registrations, { routes: 0, middleware: 0 });
       assert.deepEqual(status.bridges, { routes: 1, middleware: 1 });
     }
     assert.equal(middlewareCalls, 100);

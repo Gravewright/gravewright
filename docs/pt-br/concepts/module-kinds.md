@@ -1,21 +1,19 @@
-# Module kinds
+# Kinds de módulo
 
-Kinds descrevem responsabilidade arquitetural. Não crie um kind para cada
-feature; escolha o papel estável mais próximo.
+Kinds definem papéis arquiteturais e contratos mínimos. Módulos implementam esses papéis; seus detalhes internos são opacos para o Gravewright.
 
-| Kind | Responsabilidade | Cardinalidade | Mínimo além de `read`/`write`/`stat` |
-| --- | --- | --- | --- |
-| `server` | Transporte, middleware, routes, slots e startup | exatamente um ativo | `start`, `stop`, `route`, `middleware`, `slot` |
-| `room` | Interface completa de campanha/mesa | `0..n` | `mount`, `unmount`, protocolo e slots canônicos |
-| `ruleset` | Regras e mecânicas do jogo | `0..n` | nenhum |
-| `addon` | Extensão opcional de comportamento | `0..n` | nenhum |
-| `system` | Serviço ou infraestrutura de backend | `0..n` | nenhum |
+| Kind | Contrato mínimo | Cardinalidade ativa |
+| --- | --- | --- |
+| `server` | `start`, `stop`, `http`, `route`, `middleware`; `realtime` opcional | exatamente 1 |
+| `room` | `mount`, `unmount`, `slots` e os slots canônicos | exatamente 1 |
+| `ruleset` | nenhuma API universal de jogo | exatamente 1 |
+| `chat` | `send`, `erase` | 0..1 |
+| `dice-engine` | `roll` | 0..1 |
+| `assets` | `store`, `resolve`, `mimeTypeAllowed`, `remove` | 0..1 |
+| `storage` | `create`, `find`, `where`, `update`, `delete` | 0..1 |
+| `backend` | exports livres | 0..N |
+| `addon` | exports livres | 0..N |
 
-SQLite storage, tradução, autorização de login, sincronização realtime e
-marketplace são exemplos de `system`. São features, não razões para ampliar o
-vocabulário de kinds.
+Use `dependencies` com `ctx.use()` quando a identidade da implementação importa, `uses` com `ctx.kind()` para um papel arquitetural substituível e `requires`/`provides` com `ctx.capability()` para um protocolo semântico opcional que não justifica um kind.
 
-Um renderer que forma a experiência de campanha/mesa pertence a `room`.
-Controles pequenos e opcionais que estendem uma room pertencem a `addon`.
-
-Kinds não concedem acesso. Dependências concretas e exports públicos concedem.
+O `server` controla transporte, routes e middleware. A `room` controla o ciclo visual e os slots. O `ruleset` deliberadamente não possui API universal de personagem, combate, iniciativa ou dados.

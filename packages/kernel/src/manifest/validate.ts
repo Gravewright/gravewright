@@ -6,11 +6,25 @@ import {
   ROOM_SLOT_NAMES,
   type ModuleKind,
   type ModuleManifest,
+  type KindUse,
   type SlotExposure,
 } from "@gravewright/sdk";
 
 export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function kindUses(value: unknown): Partial<Record<ModuleKind, KindUse>> | undefined {
+  if (value === undefined) return undefined;
+  if (!isObject(value)) throw new Error("Invalid manifest: uses must be an object");
+  const result: Partial<Record<ModuleKind, KindUse>> = {};
+  for (const [kind, mode] of Object.entries(value)) {
+    if (!MODULE_KINDS.includes(kind as ModuleKind) || (mode !== "required" && mode !== "optional")) {
+      throw new Error(`Invalid manifest: uses.${kind} must be required or optional`);
+    }
+    result[kind as ModuleKind] = mode;
+  }
+  return result;
 }
 
 function stringArray(value: unknown, field: string): string[] | undefined {
@@ -105,6 +119,7 @@ export function validateManifest(value: unknown): ModuleManifest {
     }
   }
   const exposes = slotExposures(value.exposes, value.kind as ModuleKind);
+  const uses = kindUses(value.uses);
   const requires = versionMap(value.requires, "requires", true);
   const provides = versionMap(value.provides, "provides", false);
   if (value.kind === "room" && value.room_protocol !== ROOM_PROTOCOL) {
@@ -161,6 +176,7 @@ export function validateManifest(value: unknown): ModuleManifest {
     entry: value.entry,
     ...(value.types === undefined ? {} : { types: value.types }),
     ...(dependencies === undefined ? {} : { dependencies }),
+    ...(uses === undefined ? {} : { uses }),
     ...(requires === undefined ? {} : { requires }),
     ...(provides === undefined ? {} : { provides }),
     ...(value.room_protocol === undefined ? {} : { room_protocol: value.room_protocol }),
@@ -168,6 +184,7 @@ export function validateManifest(value: unknown): ModuleManifest {
     ...(routes === undefined ? {} : { routes }),
     ...(middleware === undefined ? {} : { middleware }),
     ...(slots === undefined ? {} : { slots }),
+    ...(value.tooling === undefined ? {} : { tooling: value.tooling }),
     exports: {
       get: stringArray(value.exports.get, "exports.get"),
     },
@@ -175,6 +192,12 @@ export function validateManifest(value: unknown): ModuleManifest {
     ...(value.download_url === undefined ? {} : { download_url: value.download_url }),
     ...(value.download_sha256 === undefined ? {} : { download_sha256: value.download_sha256 }),
   } as ModuleManifest;
+
+  if (manifest.tooling !== undefined) {
+    if (!isObject(manifest.tooling) || Object.entries(manifest.tooling).some(([name, enabled]) => !["read", "write", "stat"].includes(name) || enabled !== true)) {
+      throw new Error("Invalid manifest: tooling may only enable read, write, or stat");
+    }
+  }
 
   if (manifest.manifest_url !== undefined && typeof manifest.manifest_url !== "string") {
     throw new Error("Invalid manifest: manifest_url must be a string");

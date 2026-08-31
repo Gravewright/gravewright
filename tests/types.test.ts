@@ -1,4 +1,4 @@
-import type { Context, DynamicContext, ModuleAPI } from "@gravewright/sdk";
+import { defineModule, type AssetsKindAPI, type ChatKindAPI, type Context, type DiceEngineKindAPI, type DynamicContext, type ModuleAPI, type ModuleRef, type RoomKindAPI, type RulesetKindAPI, type ServerKindAPI, type StorageKindAPI } from "@gravewright/sdk";
 
 interface CharacterAPI extends ModuleAPI {
   get: {
@@ -17,6 +17,43 @@ declare module "@gravewright/sdk" {
 
 declare const ctx: Context;
 declare const dynamicContext: DynamicContext;
+
+const serverByKind: ServerKindAPI["get"]["http"] = ctx.kind("server").get("http");
+const roomByKind: RoomKindAPI["get"]["slots"] = ctx.kind("room").get("slots");
+const rulesetByKind: ModuleRef<RulesetKindAPI> = ctx.kind("ruleset");
+const optionalChat = ctx.kind("chat");
+if (optionalChat) {
+  const send: ChatKindAPI["get"]["send"] = optionalChat.get("send");
+  const erase: ChatKindAPI["get"]["erase"] = optionalChat.get("erase");
+  void [send, erase];
+}
+const optionalDice = ctx.kind("dice-engine");
+if (optionalDice) { const roll: DiceEngineKindAPI["get"]["roll"] = optionalDice.get("roll"); void roll; }
+const optionalAssets = ctx.kind("assets");
+if (optionalAssets) {
+  const store: AssetsKindAPI["get"]["store"] = optionalAssets.get("store");
+  const resolve: AssetsKindAPI["get"]["resolve"] = optionalAssets.get("resolve");
+  void [store, resolve, optionalAssets.get("mimeTypeAllowed"), optionalAssets.get("remove")];
+}
+const optionalStorage = ctx.kind("storage");
+if (optionalStorage) {
+  const create: StorageKindAPI["get"]["create"] = optionalStorage.get("create");
+  void [create, optionalStorage.get("find"), optionalStorage.get("where"), optionalStorage.get("update"), optionalStorage.get("delete")];
+}
+const pluralBackends = ctx.kind("backend");
+void [serverByKind, roomByKind, rulesetByKind, optionalChat, optionalDice, optionalAssets, optionalStorage, pluralBackends];
+
+defineModule({
+  name: "invalid-chat-type-test", kind: "chat", provider: "community", version: "1.0.0", exports: { get: [] },
+  // @ts-expect-error chat implementations must provide send and erase
+  create() { return {}; },
+});
+
+defineModule({
+  name: "invalid-server-type-test", kind: "server", provider: "community", version: "1.0.0", exports: { get: [] },
+  // @ts-expect-error server implementations must provide the complete minimum contract
+  create() { return { start() {}, stop() {} }; },
+});
 
 const dynamicFromTypedContext: DynamicContext = ctx;
 dynamicContext.diagnostic.record({
@@ -42,7 +79,7 @@ ctx.use("unknown-module");
 const server = ctx.use("gravewright-server");
 const start: () => Promise<void> = server.get("start");
 const port: number = server.get("port");
-void [start, port, server.get("middleware"), server.get("route"), server.get("slot")];
+void [start, port, server.get("middleware"), server.get("route"), server.get("realtime")];
 // @ts-expect-error unknown server export
 server.get("unknown");
 

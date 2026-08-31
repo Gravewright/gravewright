@@ -1,21 +1,19 @@
 # Module kinds
 
-Kinds describe architectural responsibility. Do not create a new kind for every
-feature; choose the closest stable role.
+Kinds define architectural roles and minimum contracts. Modules implement those roles; their internals remain opaque to Gravewright.
 
-| Kind | Responsibility | Cardinality | Minimum beyond `read`/`write`/`stat` |
-| --- | --- | --- | --- |
-| `server` | Transport, middleware, routes, slots, startup | exactly one active | `start`, `stop`, `route`, `middleware`, `slot` |
-| `room` | Complete campaign/table interface | `0..n` | `mount`, `unmount`, room protocol and canonical slots |
-| `ruleset` | Rules and mechanics of a game | `0..n` | none |
-| `addon` | Optional extension to existing behavior | `0..n` | none |
-| `system` | Backend service or infrastructure | `0..n` | none |
+| Kind | Minimum contract | Active cardinality |
+| --- | --- | --- |
+| `server` | `start`, `stop`, `http`, `route`, `middleware`; optional `realtime` | exactly 1 |
+| `room` | `mount`, `unmount`, `slots` and the canonical room slots | exactly 1 |
+| `ruleset` | no universal game API | exactly 1 |
+| `chat` | `send`, `erase` | 0..1 |
+| `dice-engine` | `roll` | 0..1 |
+| `assets` | `store`, `resolve`, `mimeTypeAllowed`, `remove` | 0..1 |
+| `storage` | `create`, `find`, `where`, `update`, `delete` | 0..1 |
+| `backend` | free exports | 0..N |
+| `addon` | free exports | 0..N |
 
-Examples of `system` modules include SQLite storage, localization, login
-authorization, realtime synchronization, and a marketplace. These are features,
-not reasons to grow the kind vocabulary.
+Use `dependencies` with `ctx.use()` when implementation identity matters, `uses` with `ctx.kind()` for a replaceable architectural role, and `requires`/`provides` with `ctx.capability()` for an optional semantic protocol that does not justify a kind.
 
-A renderer that forms the campaign/table experience belongs to `room`.
-Small optional controls that extend an existing room belong to `addon`.
-
-Kinds do not authorize access. Concrete dependencies and public exports do.
+`server` owns transport, routes and middleware. `room` owns the visual lifecycle and slots. `ruleset` deliberately has no universal character, combat, initiative or dice API.

@@ -5,19 +5,16 @@
   "version": "0.1.0",
   "entry": "./index.ts",
   "types": "./types.ts",
+  "tooling": { "read": true, "write": true, "stat": true },
   "exports": {
     "get": [
-      "read",
-      "write",
-      "stat",
       "start",
       "stop",
+      "http",
       "route",
       "middleware",
-      "slot",
-      "port",
-      "http",
-      "ws"
+      "realtime",
+      "port"
     ]
   }
 }

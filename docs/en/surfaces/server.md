@@ -4,7 +4,7 @@
 
 Required exports:
 
-- `read(resource)`, `write(resource, value)`, and `stat(resource?)` — the common module commands.
+- `http` exposes the concrete HTTP implementation as an opaque value.
 - `start()` — open the host listener after composition finishes.
 - `stop()` — close resources cleanly.
 - `route(mount, handler)` — register a final handler and return a disposer.
@@ -19,7 +19,7 @@ HTTP. A concrete server may export additional APIs; a module that needs
 streaming, specialized headers or framework features may explicitly depend on
 that implementation, for example `ctx.use("gravewright-server").get("http")`.
 
-`start()` is awaited exactly once after middleware, routes, and slots are composed. The active server cannot be disabled while the kernel is running.
+`start()` is awaited exactly once after middleware and routes are composed. The active server cannot be disabled while the kernel is running. Visual slots belong to the room.
 
 ## Minimal registrar behavior
 

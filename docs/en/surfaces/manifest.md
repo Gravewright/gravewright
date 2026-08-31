@@ -15,7 +15,7 @@ validation remains authoritative for semantic checks such as SemVer ranges.
   "entry": "./index.ts",
   "types": "./types.ts",
   "dependencies": {},
-  "exports": { "get": ["read", "write", "stat", "roll"] }
+  "exports": { "get": ["roll"] }
 }
 ```
 
@@ -38,7 +38,7 @@ The manifest is not a sandbox: installed module code still executes with the hos
 ```json
 {
   "name": "character-sheet",
-  "kind": "system",
+  "kind": "backend",
   "provider": "community",
   "version": "2.1.0",
   "entry": "./index.js",
@@ -47,7 +47,7 @@ The manifest is not a sandbox: installed module code still executes with the hos
   "routes": { "/characters": "characters" },
   "middleware": { "/characters": ["authenticate"] },
   "slots": { "room.sidebar": ["sidebarPanel"] },
-  "exports": { "get": ["read", "write", "stat", "characters", "authenticate", "sidebarPanel"] },
+  "exports": { "get": ["characters", "authenticate", "sidebarPanel"] },
   "download_url": "https://example.org/releases/character-sheet-2.1.0.zip",
   "download_sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 }

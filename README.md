@@ -19,23 +19,24 @@ Gravewright is an open-source platform for creating Virtual Tabletops from indep
                                     │
                 ┌───────────┬───────┴───────┬───────────┐
                 │           │               │           │
-              Room       Ruleset          Addon       System
+              Room       Ruleset          Addon       Backend
          campaign/table  game rules    extensions    backend
 ```
 
-Use the official modules, replace one part of the stack, or ship a completely different experience. The kernel coordinates the system without owning its product decisions.
+Use the official modules, replace one part of the stack, or ship a completely different experience. The kernel coordinates the backend without owning its product decisions.
 
 ## What Gravewright provides
 
 - A deliberately small microkernel for validation, composition, and lifecycle.
 - Static manifests that can be inspected before module code executes.
-- Typed module APIs through `@gravewright/sdk` and `ctx.use()`.
+- Typed concrete, structural, and semantic resolution through `ctx.use()`, `ctx.kind()`, and `ctx.capability()`.
 - Routes, middleware, and slots without coupling modules to a web framework.
 - Scaffolding, diagnostics, health checks, and manifest tooling through `grave`.
 - A release-based marketplace with verified archives and reproducible recipes.
 
-Every running project has exactly one active `server`. Rooms, rulesets, addons,
-and systems are freely composable (`0..n`).
+Every running project has exactly one active `server`, `room`, and `ruleset`.
+`chat`, `dice-engine`, `assets`, and `storage` are optional singletons; `backend`
+and `addon` are plural.
 
 ## Quick start
 

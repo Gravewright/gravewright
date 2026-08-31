@@ -16,13 +16,13 @@ Kinds describe a module's role. They do not select an implementation or grant hi
 | `room` | Complete campaign and table interface |
 | `ruleset` | Game rules and resolution |
 | `addon` | Optional extension of other modules |
-| `system` | Backend service such as storage, realtime, assets, or marketplace |
+| `backend` | Backend service such as storage, realtime, assets, or marketplace |
 
 Every running project has exactly one active `server`. Every other kind is optional
 and supports multiple active implementations.
 
 `room` owns the campaign interface, including its renderer and components.
-`system` owns backend capabilities. `ruleset` owns game rules, checks, combat,
+`backend` owns backend capabilities. `ruleset` owns game rules, checks, combat,
 conditions, and resolution.
 
 ## 2. Generate the scaffold
@@ -74,7 +74,7 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "0.1.0",
-  exports: { get: ["read", "write", "stat", "reveal", "isRevealed"] },
+  exports: { get: ["reveal", "isRevealed"] },
   create(ctx) {
     const revealed = new Set<string>();
 
@@ -86,7 +86,7 @@ export default defineModule({
         revealed.add(area);
         ctx.diagnostic.record({
           event: "fog.revealed",
-          actor: "System",
+          actor: "Backend",
           action: "Reveal map area",
           status: "success",
           details: { area },
@@ -108,7 +108,7 @@ The returned object is the module instance. Only names declared under `exports` 
 
 ```ts
 exports: {
-  get: ["read", "write", "stat", "roll", "reset", "status"],
+  get: ["roll", "reset", "status"],
 }
 ```
 
@@ -142,7 +142,7 @@ A generated manifest looks like this:
   "entry": "./index.ts",
   "types": "./types.ts",
   "exports": {
-    "get": ["read", "write", "stat", "reveal", "isRevealed"]
+    "get": ["reveal", "isRevealed"]
   }
 }
 ```
@@ -194,7 +194,7 @@ export default defineModule({
   dependencies: {
     "dice-roller": "^1.0.0",
   },
-  exports: { get: ["read", "write", "stat", "rollAndLog"] },
+  exports: { get: ["rollAndLog"] },
   create(ctx) {
     const dice = ctx.use("dice-roller");
     return {
@@ -235,11 +235,11 @@ import { defineModule, type BaseRequest, type BaseResponse } from "@gravewright/
 
 export default defineModule({
   name: "character-sheet",
-  kind: "system",
+  kind: "backend",
   provider: "community",
   version: "1.0.0",
   routes: { "/characters": "characters" },
-  exports: { get: ["read", "write", "stat", "characters"] },
+  exports: { get: ["characters"] },
   create(_ctx) {
     return {
       read(_resource: string) { return []; },
@@ -344,7 +344,7 @@ The remote manifest adds release fields:
   "provider": "community",
   "version": "1.0.0",
   "entry": "./index.js",
-  "exports": { "get": ["read", "write", "stat", "reveal", "isRevealed"] },
+  "exports": { "get": ["reveal", "isRevealed"] },
   "download_url": "https://example.org/releases/fog-of-war-1.0.0.zip",
   "download_sha256": "64-lowercase-or-uppercase-hexadecimal-characters"
 }

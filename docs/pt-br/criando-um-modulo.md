@@ -16,13 +16,13 @@ Kinds descrevem o papel do módulo. Eles não selecionam uma implementação nem
 | `room` | Interface completa da campanha e da mesa |
 | `ruleset` | Regras e resolução do jogo |
 | `addon` | Extensão opcional de outros módulos |
-| `system` | Backend, como storage, realtime, assets ou marketplace |
+| `backend` | Backend, como storage, realtime, assets ou marketplace |
 
 Todo projeto em execução possui exatamente um `server` ativo. Todos os outros
 kinds são opcionais e aceitam múltiplas implementações ativas.
 
 `room` é responsável pela interface da campanha, incluindo renderer e
-componentes. `system` cuida do backend. `ruleset` cuida das regras, testes,
+componentes. `backend` cuida do backend. `ruleset` cuida das regras, testes,
 combate, condições e resolução.
 
 ## 2. Gere o scaffold
@@ -74,7 +74,7 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "0.1.0",
-  exports: { get: ["read", "write", "stat", "reveal", "isRevealed"] },
+  exports: { get: ["reveal", "isRevealed"] },
   create(ctx) {
     const revealed = new Set<string>();
     return {
@@ -85,7 +85,7 @@ export default defineModule({
         revealed.add(area);
         ctx.diagnostic.record({
           event: "fog.revealed",
-          actor: "System",
+          actor: "Backend",
           action: "Reveal map area",
           status: "success",
           details: { area },
@@ -105,7 +105,7 @@ export default defineModule({
 
 ```ts
 exports: {
-  get: ["read", "write", "stat", "roll", "reset", "status"],
+  get: ["roll", "reset", "status"],
 }
 ```
 
@@ -132,7 +132,7 @@ O segundo comando é adequado para CI e falha quando os artefatos estão desatua
   "entry": "./index.ts",
   "types": "./types.ts",
   "exports": {
-    "get": ["read", "write", "stat", "reveal", "isRevealed"]
+    "get": ["reveal", "isRevealed"]
   }
 }
 ```
@@ -182,7 +182,7 @@ export default defineModule({
   provider: "community",
   version: "1.0.0",
   dependencies: { "dice-roller": "^1.0.0" },
-  exports: { get: ["read", "write", "stat", "rollAndLog"] },
+  exports: { get: ["rollAndLog"] },
   create(ctx) {
     const dice = ctx.use("dice-roller");
     return {
@@ -224,11 +224,11 @@ import { defineModule, type BaseRequest, type BaseResponse } from "@gravewright/
 
 export default defineModule({
   name: "character-sheet",
-  kind: "system",
+  kind: "backend",
   provider: "community",
   version: "1.0.0",
   routes: { "/characters": "characters" },
-  exports: { get: ["read", "write", "stat", "characters"] },
+  exports: { get: ["characters"] },
   create(_ctx) {
     return {
       read(_resource: string) { return []; },
@@ -332,7 +332,7 @@ O manifest remoto acrescenta:
   "provider": "community",
   "version": "1.0.0",
   "entry": "./index.js",
-  "exports": { "get": ["read", "write", "stat", "reveal", "isRevealed"] },
+  "exports": { "get": ["reveal", "isRevealed"] },
   "download_url": "https://example.org/releases/fog-of-war-1.0.0.zip",
   "download_sha256": "64-caracteres-hexadecimais"
 }

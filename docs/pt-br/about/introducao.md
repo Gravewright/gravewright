@@ -19,7 +19,7 @@ projeto
 ├── zero ou mais rooms        experiências de campanha/mesa
 ├── zero ou mais rulesets     mecânicas do jogo
 ├── zero ou mais addons       extensões opcionais
-└── zero ou mais systems      serviços de backend
+└── zero ou mais backends      serviços de backend
 ```
 
 O kernel conhece esses cinco papéis e seus contratos mínimos. Ele não conhece

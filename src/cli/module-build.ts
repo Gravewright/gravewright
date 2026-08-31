@@ -27,6 +27,7 @@ export async function buildModuleDefinition(directory: string, options: BuildMod
     ...(definition.download_url ? { download_url: definition.download_url } : {}),
     ...(definition.download_sha256 ? { download_sha256: definition.download_sha256 } : {}),
     ...(definition.dependencies ? { dependencies: definition.dependencies } : {}),
+    ...(definition.uses ? { uses: definition.uses } : {}),
     ...(definition.requires ? { requires: definition.requires } : {}),
     ...(definition.provides ? { provides: definition.provides } : {}),
     ...(definition.room_protocol ? { room_protocol: definition.room_protocol } : {}),
@@ -34,6 +35,7 @@ export async function buildModuleDefinition(directory: string, options: BuildMod
     ...(definition.routes ? { routes: { ...definition.routes } } : {}),
     ...(definition.middleware ? { middleware: Object.fromEntries(Object.entries(definition.middleware).map(([key, names]) => [key, [...names]])) } : {}),
     ...(definition.slots ? { slots: Object.fromEntries(Object.entries(definition.slots).map(([key, names]) => [key, [...names]])) } : {}),
+    ...(definition.tooling ? { tooling: definition.tooling } : {}),
     exports: {
       get: [...(definition.exports.get ?? [])],
     },
