@@ -4,7 +4,7 @@
 
 Gravewright is an open-source platform for creating Virtual Tabletops from independent, replaceable modules. It provides a small TypeScript microkernel and lets each distribution decide how its table, rules, backend, extensions, and transport should work.
 
-[Português (Brasil)](README.pt-BR.md) · [Documentation](docs/README.md) · [Create a module](docs/en/creating-a-module.md)
+[Português (Brasil)](README.pt-BR.md) · [Documentation](docs/README.md) · [Create a module](docs/en/creating-a-module.md) · [Release readiness](docs/en/reference/release-readiness.md)
 
 ## One kernel, many VTTs
 
@@ -93,3 +93,6 @@ gravewright/
 ## License
 
 `@gravewright/sdk` is licensed under MIT. `@gravewright/kernel` is licensed under Apache-2.0. Third-party modules remain under their respective licenses.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) before submitting changes and
+[SECURITY.md](SECURITY.md) to report vulnerabilities privately.

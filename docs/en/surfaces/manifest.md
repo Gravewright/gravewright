@@ -2,6 +2,10 @@
 
 `manifest.json` is the static security and composition boundary. The kernel reads and validates it before importing module code.
 
+The machine-readable tooling schema is available at
+[`docs/schema/manifest-v1.json`](../../schema/manifest-v1.json). Runtime
+validation remains authoritative for semantic checks such as SemVer ranges.
+
 ```json
 {
   "name": "dice-roller",

@@ -1,5 +1,10 @@
 # Reference
 
+- [Public API status](public-api-status.md)
+- [Compatibility and versioning](compatibility.md)
+- [Release readiness](release-readiness.md)
+- [Upgrade guide](upgrade-guide.md)
+
 Reference pages describe the current contract precisely. They are organized for
 lookup, not sequential reading.
 

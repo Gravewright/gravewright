@@ -1,5 +1,10 @@
 # Referência
 
+- [Status da API pública](status-da-api-publica.md)
+- [Compatibilidade e versionamento](compatibilidade.md)
+- [Prontidão de release](prontidao-de-release.md)
+- [Guia de atualização](guia-de-atualizacao.md)
+
 Estas páginas descrevem o contrato atual com precisão. São feitas para consulta,
 não para leitura sequencial.
 

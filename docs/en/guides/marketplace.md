@@ -45,6 +45,14 @@ dependencies require a published `package-lock.json` and are installed inside
 the module with `npm ci --omit=dev --ignore-scripts`. Packages without a lockfile
 are rejected so installation cannot resolve a different tree on each machine.
 
+Node dependencies are registry-only. Package and lockfile validation rejects
+filesystem, workspace, URL, Git, shorthand repository and arbitrary tarball
+specifiers. Every external lock entry must resolve from the approved npm
+registry and carry integrity metadata. Installation uses a temporary npm config
+and cache; host tokens, user configuration and module `.npmrc` files are not
+inherited. TLS verification remains enabled. `--ignore-scripts` is a risk
+reduction measure, not a sandbox.
+
 These controls reduce transport, SSRF, and archive risks. They do not audit the
 module's JavaScript or isolate it from the host process.
 
