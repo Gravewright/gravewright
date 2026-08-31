@@ -938,7 +938,7 @@ test("activate factory failure leaves the module disabled and unregistered", asy
   assert.throws(() => kernel.use("throwing-activation"), /not active/);
 });
 
-test("disable runs every disposer and retains the active instance when cleanup fails", async () => {
+test("disable commits removal after teardown starts even when cleanup fails", async () => {
   const key = `__gravewright_dispose_failure_${crypto.randomUUID().replaceAll("-", "")}`;
   (globalThis as Record<string, unknown>)[key] = [];
   const kernel = new Kernel();
@@ -963,7 +963,31 @@ test("disable runs every disposer and retains the active instance when cleanup f
     (error: unknown) => error instanceof AggregateError && error.errors.length === 2,
   );
   assert.deepEqual((globalThis as Record<string, unknown>)[key], ["slot", "route", "middleware"]);
-  assert.equal(kernel.use("cleanup-module").get("answer"), 42);
+  assert.throws(() => kernel.use("cleanup-module"), /Module "cleanup-module" is not active/);
+  await assert.doesNotReject(kernel.shutdown());
+  assert.deepEqual((globalThis as Record<string, unknown>)[key], ["slot", "route", "middleware"]);
+  delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("failed disable removes capability providers and disposes module resources at most once", async () => {
+  const key = `__gravewright_failed_disable_${crypto.randomUUID().replaceAll("-", "")}`;
+  (globalThis as Record<string, unknown>)[key] = [];
+  const kernel = new Kernel();
+  await kernel.load(await validKind("server"));
+  await kernel.load(await fixture({
+    name: "failing-provider", provides: { "gravewright.test": "1.0.0" },
+    source: `export default function(ctx) {
+      ctx.onDispose(() => globalThis.${key}.push("resource-first"));
+      ctx.onDispose(() => { globalThis.${key}.push("resource-second"); throw new Error("resource cleanup failed"); });
+      return { answer: 42 };
+    }`,
+  }));
+  await kernel.initialize();
+  await assert.rejects(kernel.disable("failing-provider"), /resource cleanup failed/);
+  assert.throws(() => kernel.use("failing-provider"), /not active/);
+  assert.equal(kernel.plan().capabilities["gravewright.test"], undefined);
+  await assert.doesNotReject(kernel.shutdown());
+  assert.deepEqual((globalThis as Record<string, unknown>)[key], ["resource-second", "resource-first"]);
   delete (globalThis as Record<string, unknown>)[key];
 });
 

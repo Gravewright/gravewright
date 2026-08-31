@@ -35,12 +35,15 @@ version and hash.
 
 The included installer accepts public HTTPS URLs on port 443 without embedded
 credentials. It rejects private and reserved network addresses, checks each
-redirect again, limits response time and size, and limits archive file count and
-expanded size. It rejects path traversal and symbolic links.
+redirect again, pins each connection to the address that passed validation,
+limits response time and size, and limits archive file count and expanded size.
+It rejects path traversal, links, and special files before extraction begins.
 
 Before commit it verifies the archive SHA-256, the archived module name and
 version, and that the entry exists inside the package. Production npm
-dependencies are installed inside the module with lifecycle scripts disabled.
+dependencies require a published `package-lock.json` and are installed inside
+the module with `npm ci --omit=dev --ignore-scripts`. Packages without a lockfile
+are rejected so installation cannot resolve a different tree on each machine.
 
 These controls reduce transport, SSRF, and archive risks. They do not audit the
 module's JavaScript or isolate it from the host process.

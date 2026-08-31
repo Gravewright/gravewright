@@ -16,12 +16,11 @@ gerado um módulo, validado seus artefatos estáticos e saberá para onde seguir
 npm install
 npm run typecheck
 npm test
-printf '{\n  "gravewright-server": "active",\n  "gravewright-marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 ```
 
-O repositório não versiona a escolha de módulos de uma distribuição. O arquivo
-local acima ativa o server e o system de marketplace incluídos. `doctor` verifica
+O `gravewright.modules.json` versionado ativa o server e o system de marketplace
+incluídos como composição padrão do repositório. `doctor` verifica
 essa configuração e os manifests sem modificar o workspace. Corrija todo erro
 reportado antes de iniciar o host.
 

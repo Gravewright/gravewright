@@ -19,7 +19,7 @@
     "start": "tsx src/index.ts",
     "grave": "tsx src/cli/main.ts",
     "pretest": "npm run types:sync",
-    "test": "tsx --test tests/kernel.test.ts tests/tooling.test.ts tests/cli.test.ts",
+    "test": "tsx --test tests/kernel.test.ts tests/kernel-properties.test.ts tests/tooling.test.ts tests/cli.test.ts tests/marketplace-installer.test.ts",
     "pretypecheck": "npm run types:sync",
     "typecheck": "tsc --noEmit",
     "build:sdk": "npm run build -w @gravewright/sdk",
@@ -28,9 +28,11 @@
     "pack:dry": "npm pack --dry-run -w @gravewright/sdk && npm pack --dry-run -w @gravewright/kernel"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
     "@types/express": "^5.0.0",
+    "@types/node": "^24.13.3",
     "@types/semver": "^7.7.0",
+    "@types/yauzl": "^2.10.3",
+    "fast-check": "^4.9.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   },

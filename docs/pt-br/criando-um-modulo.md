@@ -59,8 +59,8 @@ Módulos novos não são ativados automaticamente.
 
 Cada módulo possui suas dependências Node no próprio `package.json`. O módulo
 que precisa da biblioteca faz o import normalmente; o kernel não carrega nem
-conhece essa dependência. O marketplace instala apenas dependências de produção,
-com scripts npm de lifecycle desabilitados.
+conhece essa dependência. Versione o `package-lock.json` do módulo; a instalação
+pelo marketplace exige esse arquivo e executa `npm ci --omit=dev --ignore-scripts`.
 
 ## 3. Implemente o módulo
 

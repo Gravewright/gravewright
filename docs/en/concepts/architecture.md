@@ -48,3 +48,15 @@ Factories register acquired resources immediately with `ctx.onDispose()`.
 Failed activation rolls those resources back in reverse order. Normal shutdown
 stops the server first, then removes composition and disposes modules in reverse
 topological order.
+
+Disabling is committed once teardown begins. Every disposer is attempted in
+reverse order and cleanup errors are reported, but a partially torn-down module
+is never restored as active and its disposers are not run again at shutdown.
+
+## Browser boundary
+
+The shared SDK includes DOM types and the `composeRoomSlots` helper so room and
+addon authors share one visual contract. Importing the SDK in Node does not read
+`document` or execute DOM work; DOM access occurs only when a browser-side room
+explicitly calls the helper. If browser APIs grow beyond this narrow surface, a
+future `@gravewright/room` package or SDK subpath can make that boundary physical.
