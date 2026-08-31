@@ -5,10 +5,12 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "0.1.0",
-  exports: { get: [] },
+  exports: { get: ["read", "write", "stat"] },
   create(_ctx) {
     return {
-      // Declare public capabilities here and add their names to exports.get.
+      read(_resource: string) { return undefined; },
+      write(_resource: string, _value: unknown) {},
+      stat(_resource?: string) { return {}; },
     };
   },
 });

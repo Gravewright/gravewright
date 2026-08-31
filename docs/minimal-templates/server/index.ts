@@ -9,9 +9,12 @@ export default defineModule({
   kind: "server",
   provider: "community",
   version: "0.1.0",
-  exports: { get: ["start", "stop", "route", "middleware", "slot"] },
+  exports: { get: ["read", "write", "stat", "start", "stop", "route", "middleware", "slot"] },
   create(_ctx) {
     return {
+      read(_resource: string) { return undefined; },
+      write(_resource: string, _value: unknown) {},
+      stat(_resource?: string) { return {}; },
       async start() {},
       async stop() {},
       route(_mount: string, _handler: RouteHandler) {

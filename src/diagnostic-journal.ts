@@ -22,7 +22,7 @@ function safeText(value: string, fallback: string, max = 120): string {
 }
 
 function allowedKeys(event: string): readonly string[] {
-  if (/^(server|campaign|room|marketplace|ruleset|addon|asset|ui|system)\.initialized$/.test(event)) return ["module"];
+  if (/^(server|room|ruleset|addon|system)\.initialized$/.test(event)) return ["module"];
   return DETAIL_CATALOG[event] ?? [];
 }
 

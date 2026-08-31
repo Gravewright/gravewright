@@ -8,9 +8,14 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "1.0.0",
-  exports: { get: ["roll"] },
+  exports: { get: ["read", "write", "stat", "roll"] },
   create(_ctx) {
-    return { roll: (sides: number) => Math.floor(Math.random() * sides) + 1 };
+    return {
+      read(_resource: string) { return undefined; },
+      write(_resource: string, _value: unknown) {},
+      stat() { return { ready: true }; },
+      roll: (sides: number) => Math.floor(Math.random() * sides) + 1,
+    };
   },
 });
 ```
@@ -31,17 +36,20 @@ Gere os artefatos com `grave module build modules/dice-roller`.
 ```ts
 export default defineModule({
   name: "campaign-api",
-  kind: "campaign",
+  kind: "system",
   provider: "community",
   version: "1.0.0",
   dependencies: { "event-log": "^2.0.0" },
   routes: { "/campaign": "campaignRoute" },
   middleware: { "/campaign": ["authorize"] },
   slots: { "home.navigation": ["navigationItem"] },
-  exports: { get: ["find", "campaignRoute", "authorize", "navigationItem"] },
+  exports: { get: ["read", "write", "stat", "find", "campaignRoute", "authorize", "navigationItem"] },
   create(ctx) {
     const log = ctx.use("event-log");
     return {
+      read: (id: string) => ({ id, title: "Exemplo" }),
+      write: (_id: string, _value: unknown) => {},
+      stat: () => ({ ready: true }),
       find: (id: string) => ({ id, title: "Example" }),
       campaignRoute: (_request, response) => response.json({ id: "demo" }),
       authorize: (_request, _response, next) => next(),

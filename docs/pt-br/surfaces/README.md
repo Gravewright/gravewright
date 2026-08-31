@@ -23,7 +23,9 @@ Cada página documenta uma fronteira explícita entre módulo, SDK e kernel.
 - [Routes](routes.md) — handlers finais de request.
 - [Middleware](middleware.md) — handlers encadeados.
 - [Slots](slots.md) — contribuições para pontos de extensão.
-- [Contrato de server](server.md) — único kind obrigatório.
+- [Slots de room](room-slots.md) — regiões DOM garantidas e contribuições visuais isoladas.
+- [Contrato de server](server.md) — contrato obrigatório de transporte.
+- [`read`, `write`, `stat`](read-write-stat.md) — comandos comuns inspirados em POSIX.
 
 ## Runtime
 

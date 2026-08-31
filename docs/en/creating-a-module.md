@@ -13,18 +13,17 @@ Kinds describe a module's role. They do not select an implementation or grant hi
 | Kind | Intended role |
 | --- | --- |
 | `server` | Host transport, routes, middleware, and slots |
-| `campaign` | Campaign data and operations |
-| `room` | Shared table or room behavior |
-| `marketplace` | Module and recipe discovery |
+| `room` | Complete campaign and table interface |
 | `ruleset` | Game rules and resolution |
-| `addon` | Optional cross-cutting capability |
-| `asset` | Asset storage, indexing, or delivery |
-| `ui` | User interface capability |
-| `system` | Cross-cutting platform service such as authentication, localization, storage, sessions, or logging |
+| `addon` | Optional extension of other modules |
+| `system` | Backend service such as storage, realtime, assets, or marketplace |
 
-Only `server` has a kernel-level minimum contract. A project must have exactly one active server. All other kinds are optional and gain behavior only through their declared exports and dependencies.
+Every running project has exactly one active `server`. Every other kind is optional
+and supports multiple active implementations.
 
-`system` and `ruleset` have deliberately different boundaries. A `system` module provides technical platform services that are independent of RPG mechanics. A `ruleset` owns game rules, checks, combat, conditions, and resolution. A complete playable distribution remains a recipe that combines both kinds with UI, assets, and optional addons.
+`room` owns the campaign interface, including its renderer and components.
+`system` owns backend capabilities. `ruleset` owns game rules, checks, combat,
+conditions, and resolution.
 
 ## 2. Generate the scaffold
 
@@ -45,6 +44,7 @@ The name is normalized to lowercase kebab-case. The command creates:
 ```text
 modules/fog-of-war/
 ├── manifest.json
+├── package.json
 ├── index.ts
 └── types.ts
 ```
@@ -56,6 +56,11 @@ grave new addon fog-of-war --example-complete
 ```
 
 New modules are not activated automatically.
+
+Each module owns its Node dependencies in `package.json`. Import the package
+normally from the module that uses it; the kernel does not load or know that
+dependency. The marketplace installs production dependencies with npm lifecycle
+scripts disabled.
 
 ## 3. Implement the module
 
@@ -69,11 +74,14 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "0.1.0",
-  exports: { get: ["reveal", "isRevealed"] },
+  exports: { get: ["read", "write", "stat", "reveal", "isRevealed"] },
   create(ctx) {
     const revealed = new Set<string>();
 
     return {
+      read(area: string) { return revealed.has(area); },
+      write(area: string, value: unknown) { value ? revealed.add(area) : revealed.delete(area); },
+      stat() { return { revealed: revealed.size }; },
       reveal(area: string) {
         revealed.add(area);
         ctx.diagnostic.record({
@@ -100,7 +108,7 @@ The returned object is the module instance. Only names declared under `exports` 
 
 ```ts
 exports: {
-  get: ["roll", "reset"],
+  get: ["read", "write", "stat", "roll", "reset"],
   prop: ["status"],
 }
 ```
@@ -136,7 +144,7 @@ A generated manifest looks like this:
   "entry": "./index.ts",
   "types": "./types.ts",
   "exports": {
-    "get": ["reveal", "isRevealed"]
+    "get": ["read", "write", "stat", "reveal", "isRevealed"]
   }
 }
 ```
@@ -188,10 +196,13 @@ export default defineModule({
   dependencies: {
     "dice-roller": "^1.0.0",
   },
-  exports: { get: ["rollAndLog"] },
+  exports: { get: ["read", "write", "stat", "rollAndLog"] },
   create(ctx) {
     const dice = ctx.use("dice-roller");
     return {
+      read(_resource: string) { return undefined; },
+      write(_resource: string, _value: unknown) {},
+      stat() { return { ready: true }; },
       rollAndLog() {
         return dice.get("roll")(20);
       },
@@ -213,13 +224,16 @@ import { defineModule, type BaseRequest, type BaseResponse } from "@gravewright/
 
 export default defineModule({
   name: "character-sheet",
-  kind: "ui",
+  kind: "system",
   provider: "community",
   version: "1.0.0",
   routes: { "/characters": "characters" },
-  exports: { get: ["characters"] },
+  exports: { get: ["read", "write", "stat", "characters"] },
   create(_ctx) {
     return {
+      read(_resource: string) { return []; },
+      write(_resource: string, _value: unknown) {},
+      stat() { return { characters: 0 }; },
       characters(_request: BaseRequest, response: BaseResponse) {
         response.json({ characters: [] });
       },
@@ -318,7 +332,7 @@ The remote manifest adds release fields:
   "provider": "community",
   "version": "1.0.0",
   "entry": "./index.js",
-  "exports": { "get": ["reveal", "isRevealed"] },
+  "exports": { "get": ["read", "write", "stat", "reveal", "isRevealed"] },
   "download_url": "https://example.org/releases/fog-of-war-1.0.0.zip",
   "download_sha256": "64-lowercase-or-uppercase-hexadecimal-characters"
 }

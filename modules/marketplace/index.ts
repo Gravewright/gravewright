@@ -80,8 +80,21 @@ async function marketplace(request: BaseRequest, response: BaseResponse) {
 }
 
 export default defineModule({
-  name: "marketplace", kind: "marketplace", provider: "core", version: "0.2.0",
+  name: "marketplace", kind: "system", provider: "core", version: "0.2.0",
   routes: { "/marketplace": "marketplace" },
-  exports: { get: ["marketplace", "list", "install"] },
-  create(_ctx) { return { marketplace, list, install }; },
+  exports: { get: ["read", "write", "stat", "marketplace", "list", "install"] },
+  create(_ctx) {
+    return {
+      read(resource: string) {
+        if (resource === "modules") return list();
+        throw new Error(`Unknown marketplace resource: ${resource}`);
+      },
+      write(resource: string, value: unknown) {
+        if (resource === "install" && typeof value === "string") return install(value);
+        throw new Error(`Unknown marketplace resource: ${resource}`);
+      },
+      async stat() { return { installed: (await list()).length }; },
+      marketplace, list, install,
+    };
+  },
 });

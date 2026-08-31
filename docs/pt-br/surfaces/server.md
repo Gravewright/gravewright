@@ -1,9 +1,10 @@
 # Contrato de server
 
-`server` é o único kind estruturalmente obrigatório. Exatamente um módulo ativo deve implementá-lo.
+`server` é o único kind com cardinalidade no projeto. Exatamente um módulo ativo deve implementá-lo.
 
 Exports obrigatórios:
 
+- `read(resource)`, `write(resource, value)` e `stat(resource?)` — comandos comuns dos módulos.
 - `start()` — abre o listener após a composição.
 - `stop()` — fecha recursos corretamente.
 - `route(mount, handler)` — registra handler final e retorna disposer.

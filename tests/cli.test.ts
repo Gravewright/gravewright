@@ -20,15 +20,15 @@ test("minimum scaffold creates a disabled-by-default valid module shape", async 
   const root = await workspace();
   const result = await scaffoldModule({ root, kind: "addon", name: "Fog of War" });
   assert.equal(path.basename(result.directory), "fog-of-war");
-  assert.deepEqual(result.files, ["manifest.json", "index.ts", "types.ts"]);
+  assert.deepEqual(result.files, ["manifest.json", "package.json", "index.ts", "types.ts"]);
   const manifest = JSON.parse(await readFile(path.join(result.directory, "manifest.json"), "utf8"));
   assert.equal(manifest.kind, "addon");
   assert.equal(manifest.provider, "community");
-  assert.deepEqual(manifest.exports.get, []);
+  assert.deepEqual(manifest.exports.get, ["read", "write", "stat"]);
   const index = await readFile(path.join(result.directory, "index.ts"), "utf8");
   const types = await readFile(path.join(result.directory, "types.ts"), "utf8");
   assert.match(index, /create\(_ctx: Context\)/);
-  assert.match(index, /\/\/ declare seus exports aqui/);
+  assert.match(index, /read\(_resource: string\)/);
   assert.match(types, /declare module "@gravewright\/sdk"/);
   assert.match(types, /"fog-of-war": FogOfWarAPI/);
 });
@@ -41,6 +41,13 @@ test("complete scaffold adds documentation, test and diagnostic example", async 
   const index = await readFile(path.join(result.directory, "index.ts"), "utf8");
   assert.match(index, /create\(ctx: Context\)/);
   assert.match(index, /ctx\.diagnostic\.record/);
+});
+
+test("scaffold accepts only the five current module kinds", async () => {
+  const root = await workspace();
+  for (const kind of ["campaign", "marketplace", "asset", "ui"]) {
+    await assert.rejects(scaffoldModule({ root, kind, name: `old-${kind}` }), /Unknown module kind/);
+  }
 });
 
 test("defineModule build reproduces scaffold artifacts and detects drift", async () => {
@@ -70,10 +77,15 @@ test("doctor reports missing required active module kinds", async () => {
   assert.ok(findings.some((item) => item.status === "fail" && item.detail.includes("no active server")));
 });
 
-test("doctor accepts a valid active server without optional VTT kinds", async () => {
+test("doctor accepts one active server with optional modules", async () => {
   const root = await workspace();
   const result = await scaffoldModule({ root, kind: "server", name: "http-server" });
-  await writeFile(path.join(root, "gravewright.modules.json"), '{"http-server":"active"}\n');
+  await scaffoldModule({ root, kind: "room", name: "campaign-room" });
+  await scaffoldModule({ root, kind: "ruleset", name: "game-rules" });
+  await scaffoldModule({ root, kind: "system", name: "storage" });
+  await writeFile(path.join(root, "gravewright.modules.json"), JSON.stringify({
+    "http-server": "active", "campaign-room": "active", "game-rules": "active", storage: "active",
+  }));
   const findings = await diagnose(root);
   assert.equal(findings.filter((item) => item.status === "fail").length, 0);
   assert.ok(findings.some((item) => item.status === "pass" && item.detail === "http-server"));

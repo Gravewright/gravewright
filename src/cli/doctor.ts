@@ -1,7 +1,7 @@
 import { access, readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import semver from "semver";
-import { MODULE_KINDS, MODULE_PROVIDERS } from "@gravewright/sdk";
+import { COMMON_MODULE_EXPORTS, MODULE_KINDS, MODULE_PROVIDERS, ROOM_SLOT_NAMES } from "@gravewright/sdk";
 
 export type FindingStatus = "pass" | "warn" | "fail";
 export interface Finding { status: FindingStatus; label: string; detail: string; }
@@ -37,11 +37,17 @@ export async function diagnose(root: string): Promise<Finding[]> {
       if (!MODULE_PROVIDERS.includes(value.provider as never)) throw new Error(`invalid provider ${String(value.provider)}`);
       if (typeof value.version !== "string" || !semver.valid(value.version)) throw new Error("invalid SemVer version");
       if (typeof value.entry !== "string" || !await access(path.resolve(path.dirname(file), value.entry)).then(() => true, () => false)) throw new Error("entry file does not exist");
-      if (value.kind === "server") {
+      {
         const readable = (value.exports as { get?: unknown } | undefined)?.get;
-        const required = ["start", "stop", "route", "middleware", "slot"];
+        const required = [...COMMON_MODULE_EXPORTS, ...(value.kind === "server" ? ["start", "stop", "route", "middleware", "slot"] : value.kind === "room" ? ["mount", "unmount"] : [])];
         if (!Array.isArray(readable) || required.some((name) => !readable.includes(name))) {
-          throw new Error(`server exports.get must include ${required.join(", ")}`);
+          throw new Error(`${String(value.kind)} exports.get must include ${required.join(", ")}`);
+        }
+      }
+      if (value.kind === "room") {
+        const slots = (value.exposes as { slots?: Array<{ name?: unknown; mounts?: unknown; contributions?: unknown }> } | undefined)?.slots;
+        if (!Array.isArray(slots) || ROOM_SLOT_NAMES.some((name) => !slots.some((slot) => slot.name === name && slot.mounts === "one" && slot.contributions === "many"))) {
+          throw new Error(`room exposes.slots must include the canonical room slots`);
         }
       }
       manifests.set(value.name, { kind: value.kind as string, version: value.version, dependencies: (value.dependencies as Record<string, string>) ?? {}, active: states[value.name] === "active" });
@@ -57,9 +63,9 @@ export async function diagnose(root: string): Promise<Finding[]> {
     else if (!semver.satisfies(target.version, range)) findings.push({ status: "fail", label: "Dependency", detail: `${name} requires ${dependency} ${range}, found ${target.version}` });
   }
   for (const name of Object.keys(states)) if (!manifests.has(name)) findings.push({ status: "warn", label: "Orphan state", detail: `${name} is not installed` });
-  const activeServers = [...manifests.values()].filter((item) => item.active && item.kind === "server").length;
-  if (activeServers === 0) findings.push({ status: "fail", label: "Required kind", detail: "no active server module" });
-  if (activeServers > 1) findings.push({ status: "fail", label: "Required kind", detail: "multiple server modules are active" });
+  const serverCount = [...manifests.values()].filter((item) => item.active && item.kind === "server").length;
+  if (serverCount === 0) findings.push({ status: "fail", label: "Required kind", detail: "no active server module" });
+  if (serverCount > 1) findings.push({ status: "fail", label: "Required kind", detail: "multiple server modules are active" });
   findings.unshift({ status: manifests.size ? "pass" : "fail", label: "Modules", detail: `${manifests.size} manifest(s) found` });
   return findings;
 }

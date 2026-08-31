@@ -37,7 +37,8 @@ Use the official modules, replace one part of the stack, or ship a completely di
 - Scaffolding, diagnostics, health checks, and manifest tooling through `grave`.
 - A release-based marketplace with verified archives and reproducible recipes.
 
-The only structural requirement is exactly one active `server` module. Gravewright defines its minimum contract, not its implementation: Express, Fastify, or another transport can satisfy it.
+Every running project has exactly one active `server`. Rooms, rulesets, addons,
+and systems are freely composable (`0..n`).
 
 ## Quick start
 
