@@ -41,8 +41,24 @@ async function fixture(options: {
   const common = options.includeCommon === false ? [] : COMMON_MODULE_EXPORTS.filter((name) => !(requested.get ?? []).includes(name));
   const declared = { ...requested, get: [...common, ...(requested.get ?? [])] };
   const all = [...(declared.get ?? []), ...(declared.set ?? []), ...(declared.prop ?? [])];
+  const unsafeCharMap: Record<string, string> = {
+    "<": "\\u003C",
+    ">": "\\u003E",
+    "/": "\\u002F",
+    "\\": "\\\\",
+    "\b": "\\b",
+    "\f": "\\f",
+    "\n": "\\n",
+    "\r": "\\r",
+    "\t": "\\t",
+    "\0": "\\0",
+    "\u2028": "\\u2028",
+    "\u2029": "\\u2029",
+  };
+  const escapeUnsafeForEmbeddedCode = (value: string): string =>
+    value.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (ch) => unsafeCharMap[ch] ?? ch);
   const properties = [...new Set(all)].map((key) =>
-    `${JSON.stringify(key)}: ${key === "answer" ? "42" : "() => undefined"}`,
+    `${escapeUnsafeForEmbeddedCode(JSON.stringify(key))}: ${key === "answer" ? "42" : "() => undefined"}`,
   ).join(",\n");
   let source = options.source ?? `export default function createModule(ctx) { return { ${properties} }; }`;
   if (options.source?.includes("export default function")) {
