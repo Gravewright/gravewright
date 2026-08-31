@@ -12,8 +12,9 @@ These templates contain only the files required by the current Gravewright archi
 | `addon` | [`addon/`](addon/) | Optional cross-cutting capability |
 | `asset` | [`asset/`](asset/) | Asset storage, indexing, or delivery |
 | `ui` | [`ui/`](ui/) | User interface capability |
+| `system` | [`system/`](system/) | Cross-cutting platform service |
 
-Only `server` has required exports. Every other template deliberately returns an empty object with a placeholder comment; add only the capabilities your module actually publishes. A complete game system is modeled as a recipe that combines a `ruleset`, UI, assets, and supporting modules—not as a monolithic module kind.
+Only `server` has required exports. Every other template deliberately returns an empty object with a placeholder comment; add only the capabilities your module actually publishes. Use `system` for technical platform services and `ruleset` for RPG mechanics. A complete playable distribution is modeled as a recipe.
 
 Prefer generating a fresh template with the CLI because it follows the installed SDK version:
 
