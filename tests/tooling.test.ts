@@ -9,8 +9,10 @@ import { createModuleStateStore } from "../src/module-state.js";
 import { _catalogTest } from "../modules/marketplace/catalog.js";
 import { _recipeTest } from "../modules/marketplace/recipe.js";
 import { resolveDependencyPlanForRoots } from "../modules/marketplace/dependency-install.js";
+import serverModule from "../modules/server/index.js";
 import type { CatalogEntry } from "../modules/marketplace/catalog.js";
 import type { ModuleManifest } from "@gravewright/sdk";
+import WebSocket from "ws";
 
 async function workspace(): Promise<{ modules: string; output: string }> {
   const root = await mkdtemp(path.join(tmpdir(), "gravewright-types-"));
@@ -211,4 +213,27 @@ test("module state store does not commit memory and cleans temp when rename fail
   assert.equal(store.get("foo"), "disabled");
   assert.equal(file.content(), '{"foo":"disabled"}');
   assert.deepEqual(file.calls, ["mkdir", "write", "rename", "unlink"]);
+});
+
+test("server exposes working HTTP and WebSocket providers through get", async () => {
+  const server = await serverModule({} as never);
+  assert.ok(server.http);
+  assert.ok(server.ws);
+  assert.ok(serverModule.definition.exports.get?.includes("http"));
+  assert.ok(serverModule.definition.exports.get?.includes("ws"));
+
+  server.write("port", 0);
+  server.ws.once("connection", (socket) => socket.send("ready"));
+  await server.start();
+  const client = new WebSocket(`ws://127.0.0.1:${server.stat().port}`);
+  try {
+    const message = await new Promise<string>((resolve, reject) => {
+      client.once("message", (data) => resolve(data.toString()));
+      client.once("error", reject);
+    });
+    assert.equal(message, "ready");
+  } finally {
+    client.close();
+    await server.stop();
+  }
 });
