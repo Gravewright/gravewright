@@ -15,7 +15,10 @@
 }
 ```
 
-It may also declare `routes`, `middleware`, `slots`, and release download fields. Entry and types paths must stay inside the module directory.
+It may also declare `routes`, `middleware`, `slots`, concrete `dependencies`,
+capability `requires`/`provides`, and release download fields. A room additionally
+declares `room_protocol: "gravewright.room/v1"` and canonical `exposes.slots`.
+Entry and types paths must stay inside the module directory.
 
 Do not hand-maintain generated fields. Use:
 

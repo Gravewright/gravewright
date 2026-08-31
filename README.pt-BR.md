@@ -67,6 +67,8 @@ Comece pelo [guia de autoria](docs/pt-br/criando-um-modulo.md), copie um [templa
 - **Kernel pequeno:** mecanismos pertencem ao núcleo; políticas de produto não.
 - **Implementações substituíveis:** nenhum renderer, ruleset ou storage é universal.
 - **Contratos explícitos:** dependências e capacidades públicas são declaradas e validadas.
+- **Lifecycle transacional:** a ativação é planejada; recursos fazem rollback e shutdown em ordem inversa.
+- **Capabilities substituíveis:** consumidores exigem contratos versionados e recipes escolhem providers.
 - **Composição em vez de acoplamento:** um VTT é um conjunto de módulos compatíveis.
 - **Evolução independente:** módulos podem ser mantidos e publicados separadamente.
 - **Liberdade de distribuição:** Gravewright é uma fundação, não um VTT prescrito.

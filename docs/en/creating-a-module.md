@@ -213,6 +213,19 @@ export default defineModule({
 
 The kernel validates presence, activation state, compatible SemVer, and initialization order. Depending on a module by kind is not supported: dependencies name the concrete module they consume.
 
+For a replaceable contract, declare `requires`, let an implementation declare
+`provides`, and call `ctx.capability(name)`. A recipe selects the concrete provider.
+Missing, incompatible, or ambiguous providers fail during planning, before factories run.
+
+Register external resources immediately:
+
+```ts
+const timer = setInterval(flush, 1_000);
+ctx.onDispose(() => clearInterval(timer));
+```
+
+Cleanup runs in reverse order after failed creation, disable, and `kernel.shutdown()`.
+
 When this module is installed from the marketplace, Gravewright resolves missing dependencies by name from the configured catalogs. It validates every SemVer constraint, rejects cycles and incompatible installed versions, then prepares and installs the graph in topological order: dependencies first, requested module last. Installation does not activate modules automatically.
 
 ## 8. Compose routes, middleware, and slots
@@ -295,7 +308,8 @@ npm run grave -- doctor
 npm run grave -- run
 ```
 
-`grave doctor` reports malformed manifests, state problems, missing dependencies, and invalid server configurations.
+`grave doctor` reports malformed manifests, state problems, missing dependencies,
+invalid room protocols, capability-provider conflicts, and invalid server configurations.
 
 ## 11. Test the capability
 

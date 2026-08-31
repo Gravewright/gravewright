@@ -1,10 +1,11 @@
-import { defineModule, ROOM_SLOT_NAMES } from "@gravewright/sdk";
+import { defineModule, ROOM_PROTOCOL, ROOM_SLOT_NAMES } from "@gravewright/sdk";
 
 export default defineModule({
   name: "my-room",
   kind: "room",
   provider: "community",
   version: "0.1.0",
+  room_protocol: ROOM_PROTOCOL,
   exposes: { slots: ROOM_SLOT_NAMES.map((name) => ({ name, mounts: "one", contributions: "many" })) },
   exports: { get: ["read", "write", "stat", "mount", "unmount"] },
   create(_ctx) {

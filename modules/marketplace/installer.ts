@@ -4,8 +4,9 @@ import { execFile } from "node:child_process";
 import { access, lstat, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { isIP } from "node:net";
 import path from "node:path";
+import semver from "semver";
 import { promisify } from "node:util";
-import type { ModuleManifest } from "@gravewright/sdk";
+import { MODULE_KINDS, ROOM_PROTOCOL, type ModuleManifest } from "@gravewright/sdk";
 
 const execute = promisify(execFile);
 const MAX_MANIFEST_BYTES = 256 * 1024;
@@ -80,6 +81,17 @@ function manifestOf(value: unknown, source: string): ModuleManifest & { download
     if (typeof manifest[field] !== "string" || !manifest[field]) throw new Error(`manifest remoto sem ${field}`);
   }
   if (!NAME.test(manifest.name as string)) throw new Error("nome de módulo remoto inválido");
+  if (!MODULE_KINDS.includes(manifest.kind as never)) throw new Error("kind remoto inválido");
+  if (!semver.valid(manifest.version as string)) throw new Error("versão remota inválida");
+  if (manifest.kind === "room" && manifest.room_protocol !== ROOM_PROTOCOL) throw new Error(`room_protocol deve ser ${ROOM_PROTOCOL}`);
+  for (const [field, ranges] of [["requires", true], ["provides", false]] as const) {
+    const entries = manifest[field];
+    if (entries === undefined) continue;
+    if (!entries || typeof entries !== "object" || Array.isArray(entries)) throw new Error(`${field} inválido no manifest remoto`);
+    for (const [name, version] of Object.entries(entries)) {
+      if (!name || typeof version !== "string" || (ranges ? !semver.validRange(version) : !semver.valid(version))) throw new Error(`${field}.${name} inválido no manifest remoto`);
+    }
+  }
   if (!SHA256.test(manifest.download_sha256 as string)) throw new Error("download_sha256 deve ser SHA-256 hexadecimal");
   if (!manifest.exports || typeof manifest.exports !== "object" || Array.isArray(manifest.exports)) throw new Error("exports inválido no manifest remoto");
   return { ...manifest, manifest_url: source } as ModuleManifest & { download_url: string; download_sha256: string };

@@ -7,6 +7,7 @@ import {
   MODULE_KINDS,
   MODULE_PROVIDERS,
   ROOM_SLOT_NAMES,
+  ROOM_PROTOCOL,
   type Context,
   type Dispose,
   type DiagnosticReporter,
@@ -20,6 +21,7 @@ import {
 interface ModuleRecord {
   manifest: ModuleManifest;
   module: Record<string, unknown>;
+  resources: Dispose[];
 }
 
 interface ModuleDefinition {
@@ -34,6 +36,13 @@ export interface LoadOptions {
 
 export interface KernelOptions {
   diagnostic?: DiagnosticReporter;
+}
+
+export interface ActivationPlan {
+  modules: readonly string[];
+  capabilities: Readonly<Record<string, string>>;
+  routes: Readonly<Record<string, string>>;
+  slots: Readonly<Record<string, readonly string[]>>;
 }
 
 const REQUIRED_EXPORTS: Partial<Record<ModuleKind, readonly string[]>> = {
@@ -57,6 +66,20 @@ function stringArray(value: unknown, field: string): string[] | undefined {
     throw new Error(`Invalid manifest: ${field} must be an array of non-empty strings`);
   }
   return value as string[];
+}
+
+function versionMap(value: unknown, field: string, ranges: boolean): Record<string, string> | undefined {
+  if (value === undefined) return undefined;
+  if (!isObject(value)) throw new Error(`Invalid manifest: ${field} must be an object`);
+  const result: Record<string, string> = {};
+  for (const [name, version] of Object.entries(value)) {
+    if (!/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(name) || typeof version !== "string"
+      || (ranges ? semver.validRange(version) === null : semver.valid(version) === null)) {
+      throw new Error(`Invalid manifest: ${field} '${name}' has invalid ${ranges ? "SemVer range" : "version"} '${String(version)}'`);
+    }
+    result[name] = version;
+  }
+  return result;
 }
 
 function slotExposures(value: unknown, kind: ModuleKind): { slots: SlotExposure[] } | undefined {
@@ -126,6 +149,14 @@ function validateManifest(value: unknown): ModuleManifest {
     }
   }
   const exposes = slotExposures(value.exposes, value.kind as ModuleKind);
+  const requires = versionMap(value.requires, "requires", true);
+  const provides = versionMap(value.provides, "provides", false);
+  if (value.kind === "room" && value.room_protocol !== ROOM_PROTOCOL) {
+    throw new Error(`Invalid manifest: room_protocol must be '${ROOM_PROTOCOL}'`);
+  }
+  if (value.kind !== "room" && value.room_protocol !== undefined) {
+    throw new Error("Invalid manifest: only room modules may declare room_protocol");
+  }
 
   let routes: Record<string, string> | undefined;
   if (value.routes !== undefined) {
@@ -174,6 +205,9 @@ function validateManifest(value: unknown): ModuleManifest {
     entry: value.entry,
     ...(value.types === undefined ? {} : { types: value.types }),
     ...(dependencies === undefined ? {} : { dependencies }),
+    ...(requires === undefined ? {} : { requires }),
+    ...(provides === undefined ? {} : { provides }),
+    ...(value.room_protocol === undefined ? {} : { room_protocol: value.room_protocol }),
     ...(exposes === undefined ? {} : { exposes }),
     ...(routes === undefined ? {} : { routes }),
     ...(middleware === undefined ? {} : { middleware }),
@@ -223,6 +257,8 @@ export class Kernel {
   readonly #modules = new Map<string, ModuleRecord>();
   readonly #diagnostic: DiagnosticReporter;
   readonly #disposers = new Map<string, Dispose[]>();
+  readonly #capabilityProviders = new Map<string, string>();
+  #moduleOrder: string[] = [];
   #initialized = false;
   #initializing = false;
   #operations = Promise.resolve();
@@ -231,14 +267,25 @@ export class Kernel {
     this.#diagnostic = options.diagnostic ?? Object.freeze({ record() {} });
   }
 
-  #contextFor(manifest: ModuleManifest): Context {
+  #contextFor(manifest: ModuleManifest, resources: Dispose[]): Context {
     const dependencies = new Set(Object.keys(manifest.dependencies ?? {}));
+    const capabilities = new Set(Object.keys(manifest.requires ?? {}));
     return Object.freeze({
       use: (name: string) => {
         if (!dependencies.has(name)) {
           throw new Error(`Module "${manifest.name}" cannot use undeclared dependency "${name}"`);
         }
         return this.use(name);
+      },
+      capability: (name: string) => {
+        if (!capabilities.has(name)) throw new Error(`Module "${manifest.name}" cannot use undeclared capability "${name}"`);
+        const provider = this.#capabilityProviders.get(name);
+        if (!provider) throw new Error(`Capability "${name}" is not available`);
+        return this.use(provider);
+      },
+      onDispose: (disposer: Dispose) => {
+        if (typeof disposer !== "function") throw new TypeError("onDispose requires a function");
+        resources.push(disposer);
       },
       diagnostic: this.#diagnostic,
     }) as Context;
@@ -327,7 +374,16 @@ export class Kernel {
     const { manifest, entryPath } = definition;
     const entry: Record<string, unknown> = await import(pathToFileURL(entryPath).href);
     if (typeof entry.default !== "function") throw new Error(`Module entry must default-export a factory: ${manifest.name}`);
-    const instance = entry.default(this.#contextFor(manifest)) as unknown;
+    const resources: Dispose[] = [];
+    let instance: unknown;
+    try {
+      instance = await entry.default(this.#contextFor(manifest, resources));
+    } catch (error) {
+      try { await this.#dispose(resources); }
+      catch (cleanup) { throw new AggregateError([error, cleanup], `Creation of "${manifest.name}" failed and cleanup also failed`, { cause: error }); }
+      throw error;
+    }
+    try {
     if (!isObject(instance)) throw new Error(`Module factory must return an object: ${manifest.name}`);
 
     const names = new Set([...(manifest.exports.get ?? []), ...(manifest.exports.set ?? []), ...(manifest.exports.prop ?? [])]);
@@ -369,7 +425,12 @@ export class Kernel {
         }
       }
     }
-    return { manifest, module: instance };
+    return { manifest, module: instance, resources };
+    } catch (error) {
+      try { await this.#dispose(resources); }
+      catch (cleanup) { throw new AggregateError([error, cleanup], `Validation of "${manifest.name}" failed and cleanup also failed`, { cause: error }); }
+      throw error;
+    }
   }
 
   #serverRef(): ModuleRef {
@@ -421,67 +482,97 @@ export class Kernel {
     if (errors.length > 1) throw new AggregateError(errors, "Multiple composition disposers failed");
   }
 
-  async initialize(): Promise<void> {
-    if (this.#initialized || this.#initializing) throw new Error("Kernel already initialized or initializing");
-    const activeDefinitions = new Map(
-      [...this.#definitions.entries()].filter(([, definition]) => definition.state === "active"),
-    );
-    for (const { manifest } of activeDefinitions.values()) {
+  async #releaseModule(name: string): Promise<void> {
+    const errors: unknown[] = [];
+    try { await this.#dispose(this.#disposers.get(name) ?? []); } catch (error) { errors.push(error); }
+    try { await this.#dispose(this.#modules.get(name)?.resources ?? []); } catch (error) { errors.push(error); }
+    if (errors.length === 1) throw errors[0];
+    if (errors.length > 1) throw new AggregateError(errors, `Multiple disposers failed for module "${name}"`);
+  }
+
+  plan(): ActivationPlan {
+    const active = new Map([...this.#definitions].filter(([, definition]) => definition.state === "active"));
+    for (const { manifest } of active.values()) {
       for (const [dependencyName, range] of Object.entries(manifest.dependencies ?? {})) {
-        if (dependencyName === manifest.name) {
-          throw new Error(`Module "${manifest.name}" cannot depend on itself`);
-        }
+        if (dependencyName === manifest.name) throw new Error(`Module "${manifest.name}" cannot depend on itself`);
         const dependency = this.#definitions.get(dependencyName);
-        if (!dependency) {
-          throw new Error(`Module "${manifest.name}" requires missing dependency "${dependencyName}"`);
-        }
-        if (dependency.state === "disabled") {
-          throw new Error(`Module "${manifest.name}" requires dependency "${dependencyName}", but "${dependencyName}" is disabled`);
-        }
-        if (!semver.satisfies(dependency.manifest.version, range)) {
-          throw new Error(`Module "${manifest.name}" requires "${dependencyName}" ${range}, but ${dependency.manifest.version} is loaded`);
-        }
+        if (!dependency) throw new Error(`Module "${manifest.name}" requires missing dependency "${dependencyName}"`);
+        if (dependency.state === "disabled") throw new Error(`Module "${manifest.name}" requires dependency "${dependencyName}", but "${dependencyName}" is disabled`);
+        if (!semver.satisfies(dependency.manifest.version, range)) throw new Error(`Module "${manifest.name}" requires "${dependencyName}" ${range}, but ${dependency.manifest.version} is loaded`);
       }
     }
-
+    const capabilities: Record<string, string> = {};
+    const capabilityVersions = new Map<string, string>();
+    for (const { manifest } of active.values()) for (const [name, version] of Object.entries(manifest.provides ?? {})) {
+      if (capabilities[name]) throw new Error(`Capability "${name}" has multiple active providers: ${capabilities[name]}, ${manifest.name}`);
+      capabilities[name] = manifest.name;
+      capabilityVersions.set(name, version);
+    }
+    for (const { manifest } of active.values()) for (const [name, range] of Object.entries(manifest.requires ?? {})) {
+      const version = capabilityVersions.get(name);
+      if (!version) throw new Error(`Module "${manifest.name}" requires missing capability "${name}"`);
+      if (!semver.satisfies(version, range)) throw new Error(`Module "${manifest.name}" requires capability "${name}" ${range}, but ${version} is provided`);
+    }
+    const routes: Record<string, string> = {};
+    for (const { manifest } of active.values()) for (const mount of Object.keys(manifest.routes ?? {})) {
+      if (routes[mount]) throw new Error(`Route conflict at ${JSON.stringify(mount)} between ${routes[mount]} and ${manifest.name}`);
+      routes[mount] = manifest.name;
+    }
+    const visualSlots = new Map<string, "one" | "many">();
+    for (const { manifest } of active.values()) for (const exposure of manifest.exposes?.slots ?? []) {
+      const previous = visualSlots.get(exposure.name);
+      if (previous && previous !== exposure.contributions) throw new Error(`Room slot '${exposure.name}' has incompatible contribution cardinality`);
+      visualSlots.set(exposure.name, exposure.contributions);
+    }
+    const contributionCounts = new Map<string, number>();
+    const slots: Record<string, string[]> = {};
+    for (const { manifest } of active.values()) for (const [slot, exports] of Object.entries(manifest.slots ?? {})) {
+      slots[slot] ??= [];
+      slots[slot].push(...exports.map((name) => `${manifest.name}.${name}`));
+      if (!slot.startsWith("gw-")) continue;
+      if (!visualSlots.has(slot)) throw new Error(`Module "${manifest.name}" contributes to unknown room slot '${slot}'`);
+      contributionCounts.set(slot, (contributionCounts.get(slot) ?? 0) + exports.length);
+    }
+    for (const [slot, count] of contributionCounts) if (visualSlots.get(slot) === "one" && count > 1) throw new Error(`Room slot '${slot}' accepts only one contribution`);
     const order: ModuleDefinition[] = [];
-    const complete = new Set<string>();
-    const visiting = new Set<string>();
-    const trail: string[] = [];
+    const complete = new Set<string>(); const visiting = new Set<string>(); const trail: string[] = [];
     const visit = (name: string): void => {
       if (complete.has(name)) return;
-      if (visiting.has(name)) {
-        const start = trail.indexOf(name);
-        throw new Error(`Circular dependency detected: ${[...trail.slice(start), name].join(" -> ")}`);
-      }
-      visiting.add(name);
-      trail.push(name);
-      const definition = activeDefinitions.get(name)!;
-      for (const dependencyName of Object.keys(definition.manifest.dependencies ?? {})) visit(dependencyName);
-      trail.pop();
-      visiting.delete(name);
-      complete.add(name);
-      order.push(definition);
+      if (visiting.has(name)) { const start = trail.indexOf(name); throw new Error(`Circular dependency detected: ${[...trail.slice(start), name].join(" -> ")}`); }
+      visiting.add(name); trail.push(name);
+      const definition = active.get(name)!;
+      for (const dependency of Object.keys(definition.manifest.dependencies ?? {})) visit(dependency);
+      for (const capability of Object.keys(definition.manifest.requires ?? {})) visit(capabilities[capability]!);
+      trail.pop(); visiting.delete(name); complete.add(name); order.push(definition);
     };
-    for (const name of activeDefinitions.keys()) visit(name);
-
-    const available = new Set([...activeDefinitions.values()].map(({ manifest }) => manifest.kind));
+    for (const name of active.keys()) visit(name);
+    const available = new Set([...active.values()].map(({ manifest }) => manifest.kind));
     const missing = REQUIRED_KINDS.filter((kind) => !available.has(kind));
     if (missing.length) throw new Error(`Missing active module for required kind "${missing.join("\", \"")}"`);
     for (const kind of SINGLETON_KINDS) {
-      const implementations = [...activeDefinitions.values()].filter(({ manifest }) => manifest.kind === kind);
-      if (implementations.length > 1) {
-        throw new Error(`Multiple active modules implement singleton kind "${kind}": ${implementations.map(({ manifest }) => manifest.name).join(", ")}`);
-      }
+      const implementations = [...active.values()].filter(({ manifest }) => manifest.kind === kind);
+      if (implementations.length > 1) throw new Error(`Multiple active modules implement singleton kind "${kind}": ${implementations.map(({ manifest }) => manifest.name).join(", ")}`);
     }
-    const servers = [...activeDefinitions.values()].filter(({ manifest }) => manifest.kind === "server");
+    const frozenSlots = Object.fromEntries(Object.entries(slots).map(([name, values]) => [name, Object.freeze(values)]));
+    return Object.freeze({ modules: Object.freeze(order.map(({ manifest }) => manifest.name)), capabilities: Object.freeze(capabilities), routes: Object.freeze(routes), slots: Object.freeze(frozenSlots) });
+  }
+
+  async initialize(): Promise<void> {
+    if (this.#initialized || this.#initializing) throw new Error("Kernel already initialized or initializing");
+    const plan = this.plan();
+    const order = plan.modules.map((name) => this.#definitions.get(name)!);
+    this.#capabilityProviders.clear();
+    for (const [name, provider] of Object.entries(plan.capabilities)) this.#capabilityProviders.set(name, provider);
+    const servers = order.filter(({ manifest }) => manifest.kind === "server");
 
     this.#initializing = true;
     try {
       this.#modules.clear();
+      this.#moduleOrder = [];
       for (const definition of order) {
         const record = await this.#instantiate(definition);
         this.#modules.set(record.manifest.name, record);
+        this.#moduleOrder.push(record.manifest.name);
       }
       const serverName = servers[0]!.manifest.name;
       const server = this.use(serverName);
@@ -497,11 +588,19 @@ export class Kernel {
       this.#initialized = true;
     } catch (error) {
       const cleanupErrors: unknown[] = [];
+      const serverRecord = this.#modules.get(servers[0]?.manifest.name ?? "");
+      if (serverRecord && typeof serverRecord.module.stop === "function") {
+        try { await (serverRecord.module.stop as () => void | Promise<void>)(); } catch (cleanupError) { cleanupErrors.push(cleanupError); }
+      }
       for (const disposers of [...this.#disposers.values()].reverse()) {
         try { await this.#dispose(disposers); } catch (cleanupError) { cleanupErrors.push(cleanupError); }
       }
+      for (const name of [...this.#moduleOrder].reverse()) {
+        try { await this.#dispose(this.#modules.get(name)?.resources ?? []); } catch (cleanupError) { cleanupErrors.push(cleanupError); }
+      }
       this.#disposers.clear();
       this.#modules.clear();
+      this.#moduleOrder = [];
       if (cleanupErrors.length) {
         throw new AggregateError([error, ...cleanupErrors], "Kernel initialization failed and cleanup also failed", { cause: error });
       }
@@ -544,21 +643,32 @@ export class Kernel {
       }
     }
 
+    definition.state = "active";
+    let plan: ActivationPlan;
+    try { plan = this.plan(); } catch (error) { definition.state = "disabled"; throw error; }
+    this.#capabilityProviders.clear();
+    for (const [capability, provider] of Object.entries(plan.capabilities)) this.#capabilityProviders.set(capability, provider);
     const disposers: Dispose[] = [];
+    let record: ModuleRecord | undefined;
     try {
-      const record = await this.#instantiate(definition);
+      record = await this.#instantiate(definition);
       this.#modules.set(name, record);
       const server = this.#serverRef();
       this.#composeMiddleware(record, server, disposers);
       this.#composeRoutes(record, server, disposers);
       this.#composeSlots(record, server, disposers);
       this.#disposers.set(name, disposers);
-      definition.state = "active";
+      this.#moduleOrder.push(name);
     } catch (error) {
       let cleanupError: unknown;
       try { await this.#dispose(disposers); } catch (caught) { cleanupError = caught; }
       this.#disposers.delete(name);
       this.#modules.delete(name);
+      if (record) { try { await this.#dispose(record.resources); } catch (caught) { cleanupError = cleanupError ? new AggregateError([cleanupError, caught]) : caught; } }
+      definition.state = "disabled";
+      const restored = this.plan();
+      this.#capabilityProviders.clear();
+      for (const [capability, provider] of Object.entries(restored.capabilities)) this.#capabilityProviders.set(capability, provider);
       if (cleanupError !== undefined) {
         throw new AggregateError([error, cleanupError], `Activation of "${name}" failed and cleanup also failed`, { cause: error });
       }
@@ -581,6 +691,10 @@ export class Kernel {
       state === "active" && Object.prototype.hasOwnProperty.call(manifest.dependencies ?? {}, name),
     );
     if (dependent) throw new Error(`Cannot disable "${name}": active module "${dependent.manifest.name}" depends on it`);
+    for (const capability of Object.keys(definition.manifest.provides ?? {})) {
+      const consumer = [...this.#definitions.values()].find(({ manifest, state }) => state === "active" && manifest.name !== name && Object.prototype.hasOwnProperty.call(manifest.requires ?? {}, capability));
+      if (consumer) throw new Error(`Cannot disable "${name}": active module "${consumer.manifest.name}" requires capability "${capability}"`);
+    }
 
     if ((REQUIRED_KINDS as readonly ModuleKind[]).includes(definition.manifest.kind)) {
       const activeOfKind = [...this.#definitions.values()].filter(({ manifest, state }) =>
@@ -591,9 +705,33 @@ export class Kernel {
       }
     }
 
-    await this.#dispose(this.#disposers.get(name) ?? []);
+    definition.state = "disabled";
+    let plan: ActivationPlan;
+    try { plan = this.plan(); } catch (error) { definition.state = "active"; throw error; }
+    try { await this.#releaseModule(name); }
+    catch (error) { definition.state = "active"; throw error; }
     this.#disposers.delete(name);
     this.#modules.delete(name);
-    definition.state = "disabled";
+    this.#moduleOrder = this.#moduleOrder.filter((moduleName) => moduleName !== name);
+    this.#capabilityProviders.clear();
+    for (const [capability, provider] of Object.entries(plan.capabilities)) this.#capabilityProviders.set(capability, provider);
+  }
+
+  shutdown(): Promise<void> {
+    return this.#enqueue(async () => {
+      if (!this.#initialized) return;
+      const errors: unknown[] = [];
+      try {
+        const stop = this.#serverRef().get("stop") as () => void | Promise<void>;
+        await stop();
+      } catch (error) { errors.push(error); }
+      for (const name of [...this.#moduleOrder].reverse()) {
+        try { await this.#releaseModule(name); } catch (error) { errors.push(error); }
+      }
+      this.#disposers.clear(); this.#modules.clear(); this.#moduleOrder = [];
+      this.#capabilityProviders.clear(); this.#initialized = false;
+      if (errors.length === 1) throw errors[0];
+      if (errors.length > 1) throw new AggregateError(errors, "Kernel shutdown completed with errors");
+    });
   }
 }

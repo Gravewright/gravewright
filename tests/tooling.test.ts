@@ -112,6 +112,8 @@ test("recipes validate shape, defaults and conservative version ranges", () => {
   });
   assert.equal(recipe.modules[0]?.state, "active");
   assert.equal(recipe.modules[0]?.version, "*");
+  const withCapability = _recipeTest.parseRecipe({ ...recipe, capabilities: { "gravewright.storage": "sqlite-storage" } });
+  assert.equal(withCapability.capabilities?.["gravewright.storage"], "sqlite-storage");
   assert.equal(_recipeTest.accepts("1.4.2", "^1.2.0"), true);
   assert.equal(_recipeTest.accepts("2.0.0", "^1.2.0"), false);
   assert.throws(() => _recipeTest.parseRecipe({ ...recipe, modules: [...recipe.modules, ...recipe.modules] }), /duplicada/);
