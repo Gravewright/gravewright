@@ -265,12 +265,19 @@ export class Kernel {
   plan(): ActivationPlan {
     return createActivationPlan(this.#definitions.values());
   }
+
+  #syncCapabilityProviders(plan: ActivationPlan): void {
+    this.#capabilityProviders.clear();
+    for (const [capability, provider] of Object.entries(plan.capabilities)) {
+      this.#capabilityProviders.set(capability, provider);
+    }
+  }
+
   async initialize(): Promise<void> {
     if (this.#initialized || this.#initializing) throw new Error("Kernel already initialized or initializing");
     const plan = this.plan();
     const order = plan.modules.map((name) => this.#definitions.get(name)!);
-    this.#capabilityProviders.clear();
-    for (const [name, provider] of Object.entries(plan.capabilities)) this.#capabilityProviders.set(name, provider);
+    this.#syncCapabilityProviders(plan);
     const servers = order.filter(({ manifest }) => manifest.kind === "server");
 
     this.#initializing = true;
@@ -354,8 +361,7 @@ export class Kernel {
     definition.state = "active";
     let plan: ActivationPlan;
     try { plan = this.plan(); } catch (error) { definition.state = "disabled"; throw error; }
-    this.#capabilityProviders.clear();
-    for (const [capability, provider] of Object.entries(plan.capabilities)) this.#capabilityProviders.set(capability, provider);
+    this.#syncCapabilityProviders(plan);
     const disposers: Dispose[] = [];
     let record: ModuleRecord | undefined;
     try {
@@ -375,8 +381,7 @@ export class Kernel {
       if (record) { try { await this.#dispose(record.resources); } catch (caught) { cleanupError = cleanupError ? new AggregateError([cleanupError, caught]) : caught; } }
       definition.state = "disabled";
       const restored = this.plan();
-      this.#capabilityProviders.clear();
-      for (const [capability, provider] of Object.entries(restored.capabilities)) this.#capabilityProviders.set(capability, provider);
+      this.#syncCapabilityProviders(restored);
       if (cleanupError !== undefined) {
         throw new AggregateError([error, cleanupError], `Activation of "${name}" failed and cleanup also failed`, { cause: error });
       }
@@ -416,8 +421,7 @@ export class Kernel {
     definition.state = "disabled";
     let plan: ActivationPlan;
     try { plan = this.plan(); } catch (error) { definition.state = "active"; throw error; }
-    this.#capabilityProviders.clear();
-    for (const [capability, provider] of Object.entries(plan.capabilities)) this.#capabilityProviders.set(capability, provider);
+    this.#syncCapabilityProviders(plan);
     let cleanupError: unknown;
     try { await this.#releaseModule(name); }
     catch (error) { cleanupError = error; }

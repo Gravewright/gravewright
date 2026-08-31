@@ -29,6 +29,7 @@ async function fixture(options: {
   dependencies?: Record<string, string>;
   requires?: Record<string, string>;
   provides?: Record<string, string>;
+  exposes?: { slots: Array<{ name: string; mounts: "one"; contributions: "one" | "many" }> };
   routes?: Record<string, string>;
   middleware?: Record<string, string[]>;
   slots?: Record<string, string[]>;
@@ -78,7 +79,7 @@ async function fixture(options: {
     ...(options.provides ? { provides: options.provides } : {}),
     ...(options.routes ? { routes: options.routes } : {}),
     ...(options.middleware ? { middleware: options.middleware } : {}),
-    ...(kind === "room" ? { exposes: { slots: ROOM_SLOT_NAMES.map((slot) => ({ name: slot, mounts: "one", contributions: "many" })) } } : {}),
+    ...(kind === "room" ? { exposes: options.exposes ?? { slots: ROOM_SLOT_NAMES.map((slot) => ({ name: slot, mounts: "one", contributions: "many" })) } } : {}),
     ...(kind === "room" ? { room_protocol: ROOM_PROTOCOL } : {}),
     ...(options.slots ? { slots: options.slots } : {}), exports: declared,
   }));
@@ -270,6 +271,24 @@ test("factory receives a Context facade without Kernel methods", async () => {
       keys: ["use", "capability", "onDispose", "diagnostic"],
     frozen: true,
   });
+});
+
+test("diagnostics are optional no-op observability and custom reporters receive events", async () => {
+  const source = `export default function createModule(ctx) {
+    ctx.diagnostic.record({ event: "module.created", actor: "System", action: "Create module", status: "success" });
+    return { answer: 42 };
+  }`;
+  const withoutReporter = new Kernel();
+  await withoutReporter.load(await fixture({ name: "diagnostic-noop", source }));
+  await bootstrap(withoutReporter);
+  assert.equal(withoutReporter.use("diagnostic-noop").get("answer"), 42);
+
+  const events: string[] = [];
+  const withReporter = new Kernel({ diagnostic: { record(action) { events.push(action.event); } } });
+  await withReporter.load(await fixture({ name: "diagnostic-reported", source }));
+  await bootstrap(withReporter);
+  assert.equal(withReporter.use("diagnostic-reported").get("answer"), 42);
+  assert.deepEqual(events, ["module.created"]);
 });
 
 test("get commands operate on the exact same module instance", async () => {
@@ -1086,6 +1105,104 @@ test("activation plan rejects route conflicts before factories execute", async (
   assert.throws(() => kernel.plan(), /Route conflict/);
   await assert.rejects(kernel.initialize(), /Route conflict/);
   assert.equal((globalThis as Record<string, unknown>)[key], 0);
+  delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("incremental activation rejects a duplicate capability provider without disturbing the active provider", async () => {
+  const key = `__gravewright_capability_activation_${crypto.randomUUID().replaceAll("-", "")}`;
+  (globalThis as Record<string, unknown>)[key] = 0;
+  const kernel = new Kernel();
+  await kernel.load(await validKind("server"));
+  await kernel.load(await fixture({
+    name: "provider-a", provides: { "gravewright.incremental": "1.0.0" }, exports: { get: ["identity"] },
+    source: `export default function() { return { identity: "A" }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "capability-consumer", requires: { "gravewright.incremental": "^1.0.0" }, exports: { get: ["provider"] },
+    source: `export default function(ctx) { const provider = ctx.capability("gravewright.incremental"); return { provider: () => provider.get("identity") }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "provider-b", provides: { "gravewright.incremental": "1.1.0" }, exports: { get: ["identity"] },
+    source: `export default function() { globalThis.${key} += 1; return { identity: "B" }; }`,
+  }), { state: "disabled" });
+  await kernel.initialize();
+
+  const provider = kernel.use("capability-consumer").get("provider") as () => string;
+  assert.equal(provider(), "A");
+  await assert.rejects(kernel.activate("provider-b"), /multiple active providers/);
+  assert.equal((globalThis as Record<string, unknown>)[key], 0);
+  assert.throws(() => kernel.use("provider-b"), /not active/);
+  assert.equal(provider(), "A");
+  delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("incremental activation rejects a route conflict before registration", async () => {
+  const key = `__gravewright_route_activation_${crypto.randomUUID().replaceAll("-", "")}`;
+  const state = { routes: new Map<string, () => string>(), createdB: 0 };
+  (globalThis as Record<string, unknown>)[key] = state;
+  const kernel = new Kernel();
+  await kernel.load(await fixture({
+    name: "route-server", kind: "server", exports: { get: contracts.server },
+    source: `export default function() { return {
+      start() {}, stop() {}, middleware() { return () => {}; }, slot() { return () => {}; },
+      route(mount, handler) { globalThis.${key}.routes.set(mount, handler); return () => globalThis.${key}.routes.delete(mount); }
+    }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "route-active", routes: { "/x": "handler" }, exports: { get: ["handler"] },
+    source: `export default function() { return { handler: () => "A" }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "route-disabled", routes: { "/x": "handler" }, exports: { get: ["handler"] },
+    source: `export default function() { globalThis.${key}.createdB += 1; return { handler: () => "B" }; }`,
+  }), { state: "disabled" });
+  await kernel.initialize();
+  assert.equal(state.routes.get("/x")?.(), "A");
+
+  await assert.rejects(kernel.activate("route-disabled"), /Route conflict/);
+  assert.equal(state.createdB, 0);
+  assert.throws(() => kernel.use("route-disabled"), /not active/);
+  assert.equal(state.routes.size, 1);
+  assert.equal(state.routes.get("/x")?.(), "A");
+  delete (globalThis as Record<string, unknown>)[key];
+});
+
+test("incremental activation rejects a single-contribution slot conflict before registration", async () => {
+  const key = `__gravewright_slot_activation_${crypto.randomUUID().replaceAll("-", "")}`;
+  const state = { slots: [] as unknown[], createdB: 0 };
+  (globalThis as Record<string, unknown>)[key] = state;
+  const kernel = new Kernel();
+  await kernel.load(await fixture({
+    name: "slot-server", kind: "server", exports: { get: contracts.server },
+    source: `export default function() { return {
+      start() {}, stop() {}, route() { return () => {}; }, middleware() { return () => {}; },
+      slot(_name, value) { globalThis.${key}.slots.push(value); return () => { const index = globalThis.${key}.slots.indexOf(value); if (index >= 0) globalThis.${key}.slots.splice(index, 1); }; }
+    }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "slot-room", kind: "room", exports: { get: contracts.room },
+    exposes: { slots: [
+      ...ROOM_SLOT_NAMES.map((name) => ({ name, mounts: "one" as const, contributions: "many" as const })),
+      { name: "gw-renderer", mounts: "one", contributions: "one" },
+    ] },
+  }));
+  await kernel.load(await fixture({
+    name: "slot-active", slots: { "gw-renderer": ["contribution"] }, exports: { get: ["contribution"] },
+    source: `export default function() { return { contribution: { id: "A", mount() {} } }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "slot-disabled", slots: { "gw-renderer": ["contribution"] }, exports: { get: ["contribution"] },
+    source: `export default function() { globalThis.${key}.createdB += 1; return { contribution: { id: "B", mount() {} } }; }`,
+  }), { state: "disabled" });
+  await kernel.initialize();
+  assert.equal(state.slots.length, 1);
+  assert.equal((state.slots[0] as { id: string }).id, "A");
+
+  await assert.rejects(kernel.activate("slot-disabled"), /accepts only one contribution/);
+  assert.equal(state.createdB, 0);
+  assert.throws(() => kernel.use("slot-disabled"), /not active/);
+  assert.equal(state.slots.length, 1);
+  assert.equal((state.slots[0] as { id: string }).id, "A");
   delete (globalThis as Record<string, unknown>)[key];
 });
 
