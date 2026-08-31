@@ -267,4 +267,6 @@ export interface DynamicContext {
   use(name: string): ModuleRef;
   capability(name: string): ModuleRef;
   onDispose(disposer: Dispose): void;
+  /** No-op quando o diário de diagnóstico não foi habilitado pelo host. */
+  diagnostic: DiagnosticReporter;
 }
