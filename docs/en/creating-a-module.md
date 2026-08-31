@@ -59,8 +59,8 @@ New modules are not activated automatically.
 
 Each module owns its Node dependencies in `package.json`. Import the package
 normally from the module that uses it; the kernel does not load or know that
-dependency. The marketplace installs production dependencies with npm lifecycle
-scripts disabled.
+dependency. Commit the module's `package-lock.json`; marketplace installation
+requires it and runs `npm ci --omit=dev --ignore-scripts`.
 
 ## 3. Implement the module
 

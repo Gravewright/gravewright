@@ -35,12 +35,15 @@ já publicados.
 
 O installer incluído aceita URLs HTTPS públicas na porta 443 e sem credenciais.
 Ele rejeita endereços privados e reservados, revalida redirects, limita tempo e
-tamanho de respostas e limita quantidade de arquivos e tamanho extraído. Path
-traversal e links simbólicos são rejeitados.
+prende cada conexão ao endereço que passou na validação, limita tamanho de
+respostas, quantidade de arquivos e tamanho extraído. Path traversal, links e
+arquivos especiais são rejeitados antes do início da extração.
 
 Antes do commit, ele verifica o SHA-256, nome e versão do manifest arquivado e se
 o entry existe dentro do pacote. Dependências npm de produção são instaladas no
-próprio módulo, com scripts de lifecycle desativados.
+próprio módulo com `npm ci --omit=dev --ignore-scripts` e exigem um
+`package-lock.json` publicado. Pacotes sem lockfile são rejeitados para evitar
+que cada máquina resolva uma árvore diferente.
 
 Esses controles reduzem riscos de transporte, SSRF e arquivos malformados. Eles
 não auditam o JavaScript do módulo nem o isolam do processo host.

@@ -1,71 +1,139 @@
 import { createHash } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { execFile } from "node:child_process";
-import { access, lstat, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
-import { isIP } from "node:net";
+import { createWriteStream } from "node:fs";
+import { access, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
+import { BlockList, isIP } from "node:net";
+import type { LookupFunction } from "node:net";
+import { request } from "node:https";
 import path from "node:path";
+import { Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import semver from "semver";
 import { promisify } from "node:util";
+import yauzl, { type Entry, type ZipFile } from "yauzl";
 import { MODULE_KINDS, ROOM_PROTOCOL, type ModuleManifest } from "@gravewright/sdk";
 
 const execute = promisify(execFile);
 const MAX_MANIFEST_BYTES = 256 * 1024;
 const MAX_ARCHIVE_BYTES = 25 * 1024 * 1024;
 const MAX_EXTRACTED_BYTES = 100 * 1024 * 1024;
+const MAX_ENTRY_BYTES = 50 * 1024 * 1024;
 const MAX_FILES = 2_000;
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SHA256 = /^[a-f0-9]{64}$/i;
 
+const blockedAddresses = new BlockList();
+for (const [network, prefix] of [
+  ["::", 128], ["::1", 128], ["fc00::", 7], ["fe80::", 10], ["ff00::", 8], ["2001:db8::", 32],
+] as const) blockedAddresses.addSubnet(network, prefix, "ipv6");
+
 function privateAddress(address: string): boolean {
-  if (address === "::1" || address === "::" || address.startsWith("fe80:") || address.startsWith("fc") || address.startsWith("fd")) return true;
+  if (isIP(address) === 6 && blockedAddresses.check(address, "ipv6")) return true;
   if (address.startsWith("::ffff:")) return privateAddress(address.slice(7));
   if (isIP(address) !== 4) return false;
-  const [a = 0, b = 0] = address.split(".").map(Number);
-  return a === 0 || a === 10 || a === 127 || a >= 224 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+  const [a = 0, b = 0, c = 0] = address.split(".").map(Number);
+  return a === 0 || a === 10 || a === 127 || a >= 224
+    || (a === 100 && b >= 64 && b <= 127)
+    || (a === 169 && b === 254)
+    || (a === 172 && b >= 16 && b <= 31)
+    || (a === 192 && (b === 0 || b === 168))
+    || (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100)))
+    || (a === 203 && b === 0 && c === 113);
 }
 
-async function safeUrl(raw: string): Promise<URL> {
+type Resolver = (hostname: string) => Promise<readonly { address: string; family: number }[]>;
+
+async function safeUrl(raw: string, resolver: Resolver = (hostname) => lookup(hostname, { all: true, verbatim: true })): Promise<{ url: URL; address: string; family: number }> {
   let url: URL;
   try { url = new URL(raw); } catch { throw new Error("URL inválida"); }
   if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443")) {
     throw new Error("somente URLs HTTPS públicas sem credenciais são aceitas");
   }
-  const addresses = await lookup(url.hostname, { all: true, verbatim: true });
+  const addresses = await resolver(url.hostname);
   if (!addresses.length || addresses.some(({ address }) => privateAddress(address))) {
     throw new Error("host privado ou reservado não é permitido");
   }
-  return url;
+  return { url, ...addresses[0]! };
+}
+
+interface DownloadResponse { status: number; location?: string; body: Uint8Array }
+type Downloader = (target: Awaited<ReturnType<typeof safeUrl>>, maximum: number) => Promise<DownloadResponse>;
+
+function pinnedLookup(address: string, family: number): LookupFunction {
+  return (_hostname, options, callback) => {
+    if (options.all) callback(null, [{ address, family }]);
+    else callback(null, address, family);
+  };
+}
+
+async function boundedBody(chunks: AsyncIterable<Uint8Array>, declaredHeader: string | undefined, maximum: number): Promise<Uint8Array> {
+  const declared = declaredHeader === undefined ? undefined : Number(declaredHeader);
+  if (declared !== undefined && (!Number.isSafeInteger(declared) || declared < 0 || declared > maximum)) {
+    throw new Error("download excede o limite permitido");
+  }
+  const collected: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of chunks) {
+    size += chunk.byteLength;
+    if (size > maximum) throw new Error("download excede o limite permitido");
+    collected.push(Buffer.from(chunk));
+  }
+  return new Uint8Array(Buffer.concat(collected, size));
+}
+
+function download({ url, address, family }: Awaited<ReturnType<typeof safeUrl>>, maximum: number): Promise<DownloadResponse> {
+  return new Promise((resolve, reject) => {
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(new Error("download remoto excedeu o tempo limite")), 15_000);
+    const req = request(url, {
+      method: "GET",
+      headers: { "user-agent": "Gravewright-Marketplace/0.1" },
+      lookup: pinnedLookup(address, family),
+      servername: isIP(url.hostname) ? undefined : url.hostname,
+      signal: abort.signal,
+    }, (response) => {
+      const status = response.statusCode ?? 0;
+      const location = response.headers.location;
+      if (status >= 300 && status < 400) {
+        response.resume();
+        clearTimeout(timer);
+        resolve({ status, location, body: new Uint8Array() });
+        return;
+      }
+      if (status < 200 || status >= 300) {
+        response.resume();
+        clearTimeout(timer);
+        reject(new Error(`download remoto falhou (${status})`));
+        return;
+      }
+      void boundedBody(response, response.headers["content-length"], maximum).then(
+        (body) => { clearTimeout(timer); resolve({ status, body }); },
+        (error: unknown) => { response.destroy(); clearTimeout(timer); reject(error); },
+      );
+    });
+    req.once("error", (error) => { clearTimeout(timer); reject(error); });
+    req.end();
+  });
+}
+
+async function safeFetchWithResolver(raw: string, maximum: number, resolver: Resolver, downloader: Downloader = download): Promise<Uint8Array> {
+  let target = await safeUrl(raw, resolver);
+  for (let redirects = 0; redirects <= 5; redirects += 1) {
+    const response = await downloader(target, maximum);
+    if (response.status >= 300 && response.status < 400) {
+      const { location } = response;
+      if (!location || redirects === 5) throw new Error("redirecionamento remoto inválido");
+      target = await safeUrl(new URL(location, target.url).href, resolver);
+      continue;
+    }
+    return response.body;
+  }
+  throw new Error("redirecionamentos demais");
 }
 
 export async function safeFetch(raw: string, maximum: number): Promise<Uint8Array> {
-  let url = await safeUrl(raw);
-  for (let redirects = 0; redirects <= 5; redirects += 1) {
-    const response = await fetch(url, { redirect: "manual", headers: { "user-agent": "Gravewright-Marketplace/0.1" }, signal: AbortSignal.timeout(15_000) });
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get("location");
-      if (!location || redirects === 5) throw new Error("redirecionamento remoto inválido");
-      url = await safeUrl(new URL(location, url).href);
-      continue;
-    }
-    if (!response.ok || !response.body) throw new Error(`download remoto falhou (${response.status})`);
-    const declared = Number(response.headers.get("content-length") ?? "0");
-    if (declared > maximum) throw new Error("download excede o limite permitido");
-    const reader = response.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      size += value.byteLength;
-      if (size > maximum) { await reader.cancel(); throw new Error("download excede o limite permitido"); }
-      chunks.push(value);
-    }
-    const body = new Uint8Array(size);
-    let offset = 0;
-    for (const chunk of chunks) { body.set(chunk, offset); offset += chunk.byteLength; }
-    return body;
-  }
-  throw new Error("redirecionamentos demais");
+  return safeFetchWithResolver(raw, maximum, (hostname) => lookup(hostname, { all: true, verbatim: true }));
 }
 
 export async function fetchRemoteJson(raw: string, maximum = MAX_MANIFEST_BYTES): Promise<unknown> {
@@ -113,24 +181,101 @@ export async function resolveManifest(
 
 function safeArchiveEntry(entry: string): boolean {
   const normalized = entry.replaceAll("\\", "/");
-  return Boolean(normalized) && !normalized.startsWith("/") && !normalized.includes("\0") && !normalized.split("/").includes("..");
+  return Boolean(normalized)
+    && !normalized.startsWith("/")
+    && !/^[a-zA-Z]:\//.test(normalized)
+    && !normalized.includes("\0")
+    && !normalized.split("/").includes("..");
 }
 
-async function validateArchive(zip: string): Promise<void> {
-  const names = (await execute("unzip", ["-Z1", zip], { maxBuffer: 4 * 1024 * 1024 })).stdout.split(/\r?\n/).filter(Boolean);
-  if (!names.length || names.length > MAX_FILES || names.some((name) => !safeArchiveEntry(name))) throw new Error("ZIP contém paths inseguros ou arquivos demais");
-  const listing = (await execute("unzip", ["-l", zip], { maxBuffer: 4 * 1024 * 1024 })).stdout;
-  const total = [...listing.matchAll(/^\s*(\d+)\s+\d{4}-\d{2}-\d{2}/gm)].reduce((sum, match) => sum + Number(match[1]), 0);
-  if (total > MAX_EXTRACTED_BYTES) throw new Error("conteúdo extraído excede o limite permitido");
+function openZip(zip: string): Promise<ZipFile> {
+  return new Promise((resolve, reject) => yauzl.open(zip, {
+    autoClose: false, lazyEntries: true, strictFileNames: true, validateEntrySizes: true,
+  }, (error, file) => error ? reject(error) : resolve(file)));
 }
 
-async function assertTreeSafe(directory: string): Promise<void> {
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const target = path.join(directory, entry.name);
-    const stat = await lstat(target);
-    if (stat.isSymbolicLink()) throw new Error("links simbólicos não são permitidos no pacote");
-    if (stat.isDirectory()) await assertTreeSafe(target);
+function entries(zip: ZipFile): AsyncIterable<Entry> {
+  return {
+    [Symbol.asyncIterator]() {
+      return {
+        next: () => new Promise<IteratorResult<Entry>>((resolve, reject) => {
+          const cleanup = () => { zip.off("entry", onEntry); zip.off("end", onEnd); zip.off("error", onError); };
+          const onEntry = (entry: Entry) => { cleanup(); resolve({ value: entry, done: false }); };
+          const onEnd = () => { cleanup(); resolve({ value: undefined, done: true }); };
+          const onError = (error: Error) => { cleanup(); reject(error); };
+          zip.once("entry", onEntry); zip.once("end", onEnd); zip.once("error", onError); zip.readEntry();
+        }),
+      };
+    },
+  };
+}
+
+function entryKind(entry: Entry): "file" | "directory" {
+  const host = entry.versionMadeBy >>> 8;
+  const unixType = (entry.externalFileAttributes >>> 16) & 0o170000;
+  if (host === 3 && unixType !== 0 && unixType !== 0o100000 && unixType !== 0o040000) {
+    throw new Error(`ZIP contém link ou arquivo especial: ${entry.fileName}`);
   }
+  if (entry.extraFields.some(({ id }) => id === 0x000d || id === 0x756e)) {
+    throw new Error(`ZIP contém metadados de link não suportados: ${entry.fileName}`);
+  }
+  const directory = entry.fileName.endsWith("/") || unixType === 0o040000;
+  if (directory && entry.uncompressedSize !== 0) throw new Error(`diretório ZIP inválido: ${entry.fileName}`);
+  return directory ? "directory" : "file";
+}
+
+function safeTarget(root: string, name: string): string {
+  const normalized = name.replaceAll("\\", "/");
+  if (!safeArchiveEntry(name)) throw new Error(`ZIP contém path inseguro: ${name}`);
+  const target = path.resolve(root, normalized);
+  if (target !== root && !target.startsWith(`${root}${path.sep}`)) throw new Error(`ZIP contém path inseguro: ${name}`);
+  return target;
+}
+
+async function inspectArchive(zipPath: string, root: string): Promise<void> {
+  const zip = await openZip(zipPath);
+  let count = 0;
+  let total = 0;
+  try {
+    for await (const entry of entries(zip)) {
+      count += 1;
+      if (count > MAX_FILES) throw new Error("ZIP contém arquivos demais");
+      safeTarget(root, entry.fileName);
+      entryKind(entry);
+      if (entry.uncompressedSize > MAX_ENTRY_BYTES) throw new Error(`entrada ZIP excede o limite: ${entry.fileName}`);
+      total += entry.uncompressedSize;
+      if (total > MAX_EXTRACTED_BYTES) throw new Error("conteúdo extraído excede o limite permitido");
+    }
+    if (count === 0) throw new Error("ZIP vazio");
+  } finally { zip.close(); }
+}
+
+function openEntry(zip: ZipFile, entry: Entry): Promise<NodeJS.ReadableStream> {
+  return new Promise((resolve, reject) => zip.openReadStream(entry, (error, stream) => error ? reject(error) : resolve(stream)));
+}
+
+async function extractArchive(zipPath: string, root: string): Promise<void> {
+  await inspectArchive(zipPath, root);
+  await mkdir(root, { recursive: true });
+  const zip = await openZip(zipPath);
+  let total = 0;
+  try {
+    for await (const entry of entries(zip)) {
+      const target = safeTarget(root, entry.fileName);
+      if (entryKind(entry) === "directory") { await mkdir(target, { recursive: true }); continue; }
+      await mkdir(path.dirname(target), { recursive: true });
+      let entryBytes = 0;
+      const limiter = new Transform({
+        transform(chunk: Buffer, _encoding, callback) {
+          entryBytes += chunk.byteLength;
+          total += chunk.byteLength;
+          if (entryBytes > MAX_ENTRY_BYTES || total > MAX_EXTRACTED_BYTES) callback(new Error("conteúdo extraído excede o limite permitido"));
+          else callback(null, chunk);
+        },
+      });
+      await pipeline(await openEntry(zip, entry), limiter, createWriteStream(target, { flags: "wx", mode: 0o600 }));
+    }
+  } finally { zip.close(); }
 }
 
 async function packageRoot(unpacked: string): Promise<string> {
@@ -147,9 +292,10 @@ async function installNodeDependencies(root: string): Promise<void> {
   const packageFile = path.join(root, "package.json");
   if (!await access(packageFile).then(() => true, () => false)) return;
   const locked = await access(path.join(root, "package-lock.json")).then(() => true, () => false);
+  if (!locked) throw new Error("módulo com package.json precisa incluir package-lock.json para instalação reproduzível");
   const command = process.platform === "win32" ? "npm.cmd" : "npm";
   const args = [
-    locked ? "ci" : "install",
+    "ci",
     "--omit=dev",
     "--ignore-scripts",
     "--no-audit",
@@ -188,9 +334,7 @@ export async function prepareInstall(
     const zip = path.join(staging, "package.zip");
     const unpacked = path.join(staging, "unpacked");
     await writeFile(zip, archive);
-    await validateArchive(zip);
-    await execute("unzip", ["-q", zip, "-d", unpacked], { maxBuffer: 4 * 1024 * 1024 });
-    await assertTreeSafe(unpacked);
+    await extractArchive(zip, unpacked);
     const root = await packageRoot(unpacked);
     const archived = JSON.parse(await readFile(path.join(root, "manifest.json"), "utf8")) as Record<string, unknown>;
     if (archived.name !== manifest.name || archived.version !== manifest.version) throw new Error("manifest do ZIP não corresponde ao manifest remoto");
@@ -228,3 +372,12 @@ export async function installFromManifest(
   try { await prepared.commit(); return { name: prepared.name, version: prepared.version }; }
   finally { await prepared.cleanup(); }
 }
+
+export const _installerTest = Object.freeze({
+  privateAddress,
+  safeUrl,
+  safeFetchWithResolver,
+  boundedBody,
+  extractArchive,
+  installNodeDependencies,
+});

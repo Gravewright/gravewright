@@ -17,12 +17,11 @@ to go next.
 npm install
 npm run typecheck
 npm test
-printf '{\n  "gravewright-server": "active",\n  "gravewright-marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 ```
 
-The repository does not commit a distribution's module-state choice. The local
-file above activates the included server and marketplace system. `doctor` checks
+The repository's tracked `gravewright.modules.json` activates the included
+server and marketplace system as its default composition. `doctor` checks
 that configuration and the manifests without modifying the workspace. Fix any
 reported error before starting the host.
 

@@ -43,13 +43,12 @@ and systems are freely composable (`0..n`).
 npm install
 npm test
 npm run typecheck
-printf '{\n  "gravewright-server": "active",\n  "gravewright-marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 npm run grave -- run
 ```
 
-`gravewright.modules.json` is local runtime state and is not shipped as a
-distribution choice by the repository. Installation never activates code.
+The tracked `gravewright.modules.json` is this repository's default composition.
+Marketplace installation never changes activation state automatically.
 
 The default marketplace is available at `http://127.0.0.1:3000/marketplace`.
 
