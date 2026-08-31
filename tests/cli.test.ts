@@ -7,6 +7,7 @@ import { DiagnosticJournal } from "../src/diagnostic-journal.js";
 import { scaffoldModule } from "../src/cli/scaffold.js";
 import { diagnose } from "../src/cli/doctor.js";
 import { buildModuleDefinition } from "../src/cli/module-build.js";
+import { validateManifest } from "../packages/kernel/src/manifest/validate.js";
 
 async function workspace(): Promise<string> {
   const root = await mkdtemp(path.join(tmpdir(), "grave-cli-"));
@@ -24,11 +25,10 @@ test("minimum scaffold creates a disabled-by-default valid module shape", async 
   const manifest = JSON.parse(await readFile(path.join(result.directory, "manifest.json"), "utf8"));
   assert.equal(manifest.kind, "addon");
   assert.equal(manifest.provider, "community");
-  assert.deepEqual(manifest.exports.get, ["read", "write", "stat"]);
+  assert.deepEqual(manifest.exports.get, []);
   const index = await readFile(path.join(result.directory, "index.ts"), "utf8");
   const types = await readFile(path.join(result.directory, "types.ts"), "utf8");
   assert.match(index, /create\(_ctx: Context\)/);
-  assert.match(index, /read\(_resource: string\)/);
   assert.match(types, /declare module "@gravewright\/sdk"/);
   assert.match(types, /"fog-of-war": FogOfWarAPI/);
 });
@@ -52,11 +52,30 @@ test("room scaffold declares the versioned visual protocol", async () => {
   assert.ok(manifest.exposes.slots.every((slot: { mounts: string; contributions: string }) => slot.mounts === "one" && slot.contributions === "many"));
 });
 
-test("scaffold accepts only the five current module kinds", async () => {
+test("scaffold accepts only the nine official module kinds", async () => {
   const root = await workspace();
   for (const kind of ["campaign", "marketplace", "asset", "ui"]) {
     await assert.rejects(scaffoldModule({ root, kind, name: `old-${kind}` }), /Unknown module kind/);
   }
+});
+
+test("minimal scaffolds for every official kind build and validate", async () => {
+  const root = await workspace();
+  for (const kind of ["server", "room", "ruleset", "chat", "dice-engine", "assets", "storage", "backend", "addon"]) {
+    const result = await scaffoldModule({ root, kind, name: `minimal-${kind}`, minimal: true });
+    const manifest = JSON.parse(await readFile(path.join(result.directory, "manifest.json"), "utf8"));
+    assert.doesNotThrow(() => validateManifest(manifest));
+    await assert.doesNotReject(buildModuleDefinition(result.directory, { check: true }), kind);
+  }
+});
+
+test("scaffold keeps optional tooling outside exports.get", async () => {
+  const root = await workspace();
+  const result = await scaffoldModule({ root, kind: "backend", name: "observable", tooling: { read: true, stat: true } });
+  const manifest = JSON.parse(await readFile(path.join(result.directory, "manifest.json"), "utf8"));
+  assert.deepEqual(manifest.tooling, { read: true, stat: true });
+  assert.deepEqual(manifest.exports.get, []);
+  await assert.doesNotReject(buildModuleDefinition(result.directory, { check: true }));
 });
 
 test("defineModule build reproduces scaffold artifacts and detects drift", async () => {
@@ -91,7 +110,7 @@ test("doctor accepts one active server with optional modules", async () => {
   const result = await scaffoldModule({ root, kind: "server", name: "http-server" });
   await scaffoldModule({ root, kind: "room", name: "campaign-room" });
   await scaffoldModule({ root, kind: "ruleset", name: "game-rules" });
-  await scaffoldModule({ root, kind: "system", name: "storage" });
+  await scaffoldModule({ root, kind: "storage", name: "storage" });
   await writeFile(path.join(root, "gravewright.modules.json"), JSON.stringify({
     "http-server": "active", "campaign-room": "active", "game-rules": "active", storage: "active",
   }));

@@ -12,7 +12,7 @@ test("manifest schema v1 and runtime validator accept every shipped manifest", a
   const files = [
     "modules/gravewright-server/manifest.json",
     "modules/gravewright-marketplace/manifest.json",
-    ...["server", "room", "ruleset", "addon", "system"].map((kind) => `docs/minimal-templates/${kind}/manifest.json`),
+    ...["server", "room", "ruleset", "chat", "dice-engine", "assets", "storage", "backend", "addon"].map((kind) => `docs/minimal-templates/${kind}/manifest.json`),
   ];
   for (const file of files) {
     const manifest = JSON.parse(await readFile(path.resolve(file), "utf8"));

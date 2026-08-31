@@ -15,6 +15,7 @@ export interface ModuleDefinition {
 export interface ActivationPlan {
   modules: readonly string[];
   capabilities: Readonly<Record<string, string>>;
+  kinds: Readonly<Record<string, readonly string[]>>;
   routes: Readonly<Record<string, string>>;
   slots: Readonly<Record<string, readonly string[]>>;
 }

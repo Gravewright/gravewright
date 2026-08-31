@@ -24,7 +24,7 @@ Each page documents one explicit boundary between a module, the SDK, and the ker
 - [Slots](slots.md) — contribute values to named extension points.
 - [Room slots](room-slots.md) — guaranteed DOM regions and isolated visual contributions.
 - [Server contract](server.md) — the required transport contract.
-- [`read`, `write`, `stat`](read-write-stat.md) — common POSIX-inspired module commands.
+- [`read`, `write`, `stat`](read-write-stat.md) — optional administrative tooling hooks.
 
 ## Runtime
 

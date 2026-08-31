@@ -8,12 +8,13 @@ import { Kernel } from "@gravewright/kernel";
 
 type Operation = "initialize" | "activate-a" | "activate-b" | "activate-fail" | "disable-a" | "disable-b" | "use-a" | "use-b" | "shutdown";
 
-async function stateModule(name: string, source: string, kind: "server" | "addon" = "addon"): Promise<string> {
+async function stateModule(name: string, source: string, kind: "server" | "room" | "ruleset" | "addon" = "addon"): Promise<string> {
   const root = await mkdtemp(path.join(tmpdir(), `grave-state-${name}-`));
-  const serverExports = ["read", "write", "stat", "start", "stop", "route", "middleware", "slot"];
+  const exportsByKind = { server: ["start", "stop", "http", "route", "middleware"], room: ["mount", "unmount", "slots"], ruleset: [], addon: ["value"] };
   await writeFile(path.join(root, "manifest.json"), JSON.stringify({
     name, kind, provider: "community", version: "1.0.0", entry: "./index.ts",
-    exports: { get: kind === "server" ? serverExports : ["read", "write", "stat", "value"] },
+    ...(kind === "room" ? { room_protocol: "gravewright.room/v1", exposes: { slots: ["toolbar", "main", "sidebar", "chat", "overlay", "grid"].map((name) => ({ name: `gw-${name}`, mounts: "one", contributions: "many" })) } } : {}),
+    exports: { get: exportsByKind[kind] },
   }));
   await writeFile(path.join(root, "index.ts"), source);
   return root;
@@ -22,15 +23,16 @@ async function stateModule(name: string, source: string, kind: "server" | "addon
 async function stateKernel(counterKey: string): Promise<Kernel> {
   const kernel = new Kernel();
   await kernel.load(await stateModule("state-server", `export default function() { return {
-    read() {}, write() {}, stat() {}, start() {}, stop() {},
-    route() { return () => {}; }, middleware() { return () => {}; }, slot() { return () => {}; }
+    http: {}, start() {}, stop() {}, route() { return () => {}; }, middleware() { return () => {}; }
   }; }`, "server"), { state: "active" });
+  await kernel.load(await stateModule("state-room", `export default function() { return { mount() {}, unmount() {}, slots() { return () => {}; } }; }`, "room"), { state: "active" });
+  await kernel.load(await stateModule("state-ruleset", `export default function() { return {}; }`, "ruleset"), { state: "active" });
   for (const name of ["state-a", "state-b"]) {
     await kernel.load(await stateModule(name, `export default function(ctx) {
       const state = globalThis[${JSON.stringify(counterKey)}];
       const id = ++state.created;
       ctx.onDispose(() => { if (state.disposed.has(id)) state.duplicates += 1; state.disposed.add(id); });
-      return { read() {}, write() {}, stat() {}, value: ${JSON.stringify(name)} };
+      return { value: ${JSON.stringify(name)} };
     }`), { state: "disabled" });
   }
   await kernel.load(await stateModule("state-fail", `export default function(ctx) {

@@ -24,7 +24,7 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "0.1.0",
-  exports: { get: ["read", "write", "stat"] },
+  exports: { get: [] },
   create(_ctx) {
     const values = new Map<string, unknown>();
     return {

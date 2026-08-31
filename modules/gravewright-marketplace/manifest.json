@@ -1,6 +1,6 @@
 {
   "name": "gravewright-marketplace",
-  "kind": "system",
+  "kind": "backend",
   "provider": "core",
   "version": "0.2.0",
   "entry": "./index.ts",
@@ -8,11 +8,9 @@
   "routes": {
     "/marketplace": "marketplace"
   },
+  "tooling": { "read": true, "write": true, "stat": true },
   "exports": {
     "get": [
-      "read",
-      "write",
-      "stat",
       "marketplace",
       "list",
       "install"

@@ -2,12 +2,17 @@ import semver from "semver";
 import type { ModuleKind } from "@gravewright/sdk";
 import type { ActivationPlan, ModuleDefinition } from "../types.js";
 
-export const REQUIRED_KINDS: readonly ModuleKind[] = ["server"];
-export const SINGLETON_KINDS: readonly ModuleKind[] = ["server"];
+export const REQUIRED_KINDS: readonly ModuleKind[] = ["server", "room", "ruleset"];
+export const SINGLETON_KINDS: readonly ModuleKind[] = ["server", "room", "ruleset", "chat", "dice-engine", "assets", "storage"];
 
 export function createActivationPlan(definitions: Iterable<ModuleDefinition>): ActivationPlan {
   const all = [...definitions];
   const active = new Map(all.filter(({ state }) => state === "active").map((definition) => [definition.manifest.name, definition]));
+  const kinds = new Map<ModuleKind, string[]>();
+  for (const { manifest } of active.values()) { const names = kinds.get(manifest.kind) ?? []; names.push(manifest.name); kinds.set(manifest.kind, names); }
+  for (const { manifest } of active.values()) for (const [kind, mode] of Object.entries(manifest.uses ?? {})) {
+    if (mode === "required" && !(kinds.get(kind as ModuleKind)?.length)) throw new Error(`Module "${manifest.name}" requires missing kind "${kind}"`);
+  }
   for (const { manifest } of active.values()) {
     for (const [dependencyName, range] of Object.entries(manifest.dependencies ?? {})) {
       if (dependencyName === manifest.name) throw new Error(`Module "${manifest.name}" cannot depend on itself`);
@@ -56,6 +61,7 @@ export function createActivationPlan(definitions: Iterable<ModuleDefinition>): A
     const definition = active.get(name)!;
     for (const dependency of Object.keys(definition.manifest.dependencies ?? {})) visit(dependency);
     for (const capability of Object.keys(definition.manifest.requires ?? {})) visit(capabilities[capability]!);
+    for (const kind of Object.keys(definition.manifest.uses ?? {}) as ModuleKind[]) for (const provider of kinds.get(kind) ?? []) visit(provider);
     trail.pop(); visiting.delete(name); complete.add(name); order.push(definition);
   };
   for (const name of active.keys()) visit(name);
@@ -67,5 +73,6 @@ export function createActivationPlan(definitions: Iterable<ModuleDefinition>): A
     if (implementations.length > 1) throw new Error(`Multiple active modules implement singleton kind "${kind}": ${implementations.map(({ manifest }) => manifest.name).join(", ")}`);
   }
   const frozenSlots = Object.fromEntries(Object.entries(slots).map(([name, values]) => [name, Object.freeze(values)]));
-  return Object.freeze({ modules: Object.freeze(order.map(({ manifest }) => manifest.name)), capabilities: Object.freeze(capabilities), routes: Object.freeze(routes), slots: Object.freeze(frozenSlots) });
+  const frozenKinds = Object.fromEntries([...kinds].map(([kind, names]) => [kind, Object.freeze([...names])]));
+  return Object.freeze({ modules: Object.freeze(order.map(({ manifest }) => manifest.name)), capabilities: Object.freeze(capabilities), kinds: Object.freeze(frozenKinds), routes: Object.freeze(routes), slots: Object.freeze(frozenSlots) });
 }

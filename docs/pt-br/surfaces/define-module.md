@@ -8,7 +8,7 @@ export default defineModule({
   kind: "addon",
   provider: "community",
   version: "1.0.0",
-  exports: { get: ["read", "write", "stat", "roll"] },
+  exports: { get: ["roll"] },
   create(_ctx) {
     return {
       read(_resource: string) { return undefined; },
@@ -36,14 +36,14 @@ Gere os artefatos com `grave module build modules/dice-roller`.
 ```ts
 export default defineModule({
   name: "campaign-api",
-  kind: "system",
+  kind: "backend",
   provider: "community",
   version: "1.0.0",
   dependencies: { "event-log": "^2.0.0" },
   routes: { "/campaign": "campaignRoute" },
   middleware: { "/campaign": ["authorize"] },
   slots: { "home.navigation": ["navigationItem"] },
-  exports: { get: ["read", "write", "stat", "find", "campaignRoute", "authorize", "navigationItem"] },
+  exports: { get: ["find", "campaignRoute", "authorize", "navigationItem"] },
   create(ctx) {
     const log = ctx.use("event-log");
     return {

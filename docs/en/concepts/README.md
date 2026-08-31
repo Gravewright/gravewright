@@ -4,7 +4,7 @@ Read these pages to build a reliable mental model before designing a public
 module contract.
 
 1. [Architecture](architecture.md) — what belongs to the kernel and what belongs to modules.
-2. [Module kinds](module-kinds.md) — the five roles and their cardinality.
+2. [Module kinds](module-kinds.md) — the nine roles and their cardinality.
 3. [Dependencies and capabilities](dependencies-and-capabilities.md) — concrete use versus replaceable contracts.
 4. [Lifecycle](../surfaces/lifecycle.md) — planning, activation, rollback, and shutdown.
 5. [Manifest](../surfaces/manifest.md) — the static validation boundary.

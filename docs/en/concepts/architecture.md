@@ -71,7 +71,7 @@ because those technologies live in modules.
 
 Gravewright is not a frontend or full-stack framework, universal transport,
 RPC or messaging framework, ORM, renderer, state manager, authentication
-system, or persistence API. It does not standardize how a module implements
+backend, or persistence API. It does not standardize how a module implements
 UI, transport, storage, rendering, or its client/server protocol.
 
 ## Security model

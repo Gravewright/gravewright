@@ -1,11 +1,9 @@
 {
-  "name": "my-system",
-  "kind": "system",
+  "name": "my-backend",
+  "kind": "backend",
   "provider": "community",
   "version": "0.1.0",
   "entry": "./index.ts",
   "types": "./types.ts",
-  "exports": {
-    "get": ["read", "write", "stat"]
-  }
+  "exports": { "get": [] }
 }

@@ -1,12 +1,13 @@
-# `read`, `write` e `stat`
+# Tooling administrativo opcional
 
-Todo módulo publica estes comandos inspirados em POSIX por `exports.get`.
+`read`, `stat` e `write` são integrações opcionais de host/CLI. Não pertencem aos contratos dos kinds, não entram automaticamente em `exports.get` e nunca ficam disponíveis no `Context`.
 
-- `read(resource)` lê um recurso pertencente ao módulo.
-- `write(resource, value)` solicita uma alteração validada.
-- `stat(resource?)` retorna metadados leves ou o estado atual.
+```json
+{ "tooling": { "read": true, "stat": true, "write": true } }
+```
 
-Os recursos e retornos pertencem à API documentada de cada módulo. Um storage pode
-oferecer `read("campaigns/42")`; um server pode retornar
-`{ running: true, port: 3000 }` em `stat()`. São comandos em `exports.get`, não
-atribuições diretas entre módulos.
+- `read` alimenta `grave help <module> [tópico]` com documentação estruturada.
+- `stat` alimenta `grave doctor` com informações de saúde do próprio módulo.
+- `write` alimenta `grave test [módulo]` com um harness de autoteste.
+
+Se uma operação for declarada, a factory precisa implementá-la. Esses hooks são conveniências operacionais, não sandbox nem protocolo entre módulos.

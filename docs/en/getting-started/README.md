@@ -21,7 +21,7 @@ npm run grave -- doctor
 ```
 
 The repository's tracked `gravewright.modules.json` activates the included
-server and marketplace system as its default composition. `doctor` checks
+server and marketplace backend as its default composition. `doctor` checks
 that configuration and the manifests without modifying the workspace. Fix any
 reported error before starting the host.
 

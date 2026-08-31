@@ -17,7 +17,7 @@ software terminou, não se uma jogada do RPG teve sucesso.
 ## `grave new`
 
 ```bash
-grave new <server|room|ruleset|addon|system> [name] [--example-complete]
+grave new <server|room|ruleset|addon|backend> [name] [--example-complete]
 ```
 
 Cria um scaffold desativado. A variante completa inclui README, teste e evento

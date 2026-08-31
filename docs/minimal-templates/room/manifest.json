@@ -17,6 +17,6 @@
     ]
   },
   "exports": {
-    "get": ["read", "write", "stat", "mount", "unmount"]
+    "get": ["mount", "unmount", "slots"]
   }
 }

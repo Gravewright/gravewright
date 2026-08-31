@@ -20,7 +20,7 @@ project
 ├── zero or more rooms       campaign/table experiences
 ├── zero or more rulesets    game mechanics
 ├── zero or more addons      optional extensions
-└── zero or more systems     backend services
+└── zero or more backends     backend services
 ```
 
 The kernel knows these five roles and their minimum contracts. It does not know

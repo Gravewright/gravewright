@@ -1,13 +1,11 @@
 import { access, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import semver from "semver";
 import { createActivationPlan, REQUIRED_KINDS, SINGLETON_KINDS } from "./graph/plan.js";
 import { disposeAll } from "./lifecycle.js";
 import { isObject, validateManifest } from "./manifest/validate.js";
 import type { ActivationPlan, ModuleDefinition, ModuleRecord } from "./types.js";
 import {
-  COMMON_MODULE_EXPORTS,
   type Context,
   type Dispose,
   type DiagnosticReporter,
@@ -28,12 +26,11 @@ export interface KernelOptions {
 export type { ActivationPlan } from "./types.js";
 
 const REQUIRED_EXPORTS: Partial<Record<ModuleKind, readonly string[]>> = {
-  server: [...COMMON_MODULE_EXPORTS, "start", "stop", "route", "middleware", "slot"],
-  room: [...COMMON_MODULE_EXPORTS, "mount", "unmount"],
-  ruleset: COMMON_MODULE_EXPORTS,
-  addon: COMMON_MODULE_EXPORTS,
-  system: COMMON_MODULE_EXPORTS,
+  server: ["start", "stop", "http", "route", "middleware"], room: ["mount", "unmount", "slots"],
+  chat: ["send", "erase"], "dice-engine": ["roll"], assets: ["store", "resolve", "mimeTypeAllowed", "remove"],
+  storage: ["create", "find", "where", "update", "delete"], ruleset: [], backend: [], addon: [],
 };
+const FUNCTION_EXPORTS = new Set(["start", "stop", "route", "middleware", "mount", "unmount", "slots", "send", "erase", "roll", "store", "resolve", "mimeTypeAllowed", "remove", "create", "find", "where", "update", "delete"]);
 
 export class Kernel {
   readonly #definitions = new Map<string, ModuleDefinition>();
@@ -41,6 +38,7 @@ export class Kernel {
   readonly #diagnostic: DiagnosticReporter;
   readonly #disposers = new Map<string, Dispose[]>();
   readonly #capabilityProviders = new Map<string, string>();
+  readonly #kindProviders = new Map<ModuleKind, readonly string[]>();
   #moduleOrder: string[] = [];
   #initialized = false;
   #initializing = false;
@@ -53,12 +51,19 @@ export class Kernel {
   #contextFor(manifest: ModuleManifest, resources: Dispose[]): Context {
     const dependencies = new Set(Object.keys(manifest.dependencies ?? {}));
     const capabilities = new Set(Object.keys(manifest.requires ?? {}));
+    const kinds = new Set(Object.keys(manifest.uses ?? {}) as ModuleKind[]);
     return Object.freeze({
       use: (name: string) => {
         if (!dependencies.has(name)) {
           throw new Error(`Module "${manifest.name}" cannot use undeclared dependency "${name}"`);
         }
         return this.use(name);
+      },
+      kind: (kind: ModuleKind) => {
+        if (!kinds.has(kind)) throw new Error(`Module "${manifest.name}" cannot use undeclared kind "${kind}"`);
+        const names = this.#kindProviders.get(kind) ?? [];
+        if (kind === "backend" || kind === "addon") return Object.freeze(names.map((name) => this.use(name)));
+        return names[0] ? this.use(names[0]) : undefined;
       },
       capability: (name: string) => {
         if (!capabilities.has(name)) throw new Error(`Module "${manifest.name}" cannot use undeclared capability "${name}"`);
@@ -147,6 +152,13 @@ export class Kernel {
     });
   }
 
+  async tooling(name: string, operation: "read" | "write" | "stat", ...args: unknown[]): Promise<unknown> {
+    const record = this.#modules.get(name);
+    if (!record) throw new Error(`Module "${name}" is not active`);
+    if (record.manifest.tooling?.[operation] !== true) throw new Error(`Tooling operation not declared: ${name}.${operation}`);
+    return (record.module[operation] as (...values: unknown[]) => unknown)(...args);
+  }
+
   async #instantiate(definition: ModuleDefinition): Promise<ModuleRecord> {
     const { manifest, entryPath } = definition;
     const entry: Record<string, unknown> = await import(pathToFileURL(entryPath).href);
@@ -174,9 +186,12 @@ export class Kernel {
       if (!readable.has(required)) {
         throw new Error(`Minimum contract not satisfied for ${manifest.kind}: '${required}' must be declared in exports.get`);
       }
-      if (typeof instance[required] !== "function") {
+      if (FUNCTION_EXPORTS.has(required) && typeof instance[required] !== "function") {
         throw new Error(`Minimum contract not satisfied for ${manifest.kind}: '${required}' must be a function`);
       }
+    }
+    for (const operation of Object.keys(manifest.tooling ?? {})) if (typeof instance[operation] !== "function") {
+      throw new Error(`Declared tooling operation does not exist: ${manifest.name}.${operation}`);
     }
     for (const exportName of Object.values(manifest.routes ?? {})) {
       if (!readable.has(exportName)) throw new Error(`Invalid route in ${manifest.name}: '${exportName}' must be declared in exports.get`);
@@ -216,6 +231,12 @@ export class Kernel {
     return this.use(server.manifest.name);
   }
 
+  #roomRef(): ModuleRef {
+    const room = [...this.#definitions.values()].find(({ manifest, state }) => manifest.kind === "room" && state === "active");
+    if (!room) throw new Error("Missing active module for required kind \"room\"");
+    return this.use(room.manifest.name);
+  }
+
   #composeMiddleware(record: ModuleRecord, server: ModuleRef, disposers: Dispose[]): void {
     const register = server.get("middleware") as (mount: string, handler: (...args: unknown[]) => unknown) => Dispose;
     const ref = this.use(record.manifest.name);
@@ -238,12 +259,12 @@ export class Kernel {
     }
   }
 
-  #composeSlots(record: ModuleRecord, server: ModuleRef, disposers: Dispose[]): void {
-    const register = server.get("slot") as (name: string, value: unknown) => Dispose;
+  #composeSlots(record: ModuleRecord, room: ModuleRef, disposers: Dispose[]): void {
+    const register = room.get("slots") as (name: string, module: string, value: unknown) => Dispose;
     const ref = this.use(record.manifest.name);
     for (const [slotName, exportNames] of Object.entries(record.manifest.slots ?? {})) {
       for (const exportName of exportNames) {
-        const dispose = register(slotName, ref.get(exportName));
+        const dispose = register(slotName, record.manifest.name, ref.get(exportName));
         if (typeof dispose !== "function") throw new Error(`Base slot registrar did not return a disposer for ${record.manifest.name}.${exportName}`);
         disposers.push(dispose);
       }
@@ -271,6 +292,8 @@ export class Kernel {
     for (const [capability, provider] of Object.entries(plan.capabilities)) {
       this.#capabilityProviders.set(capability, provider);
     }
+    this.#kindProviders.clear();
+    for (const [kind, providers] of Object.entries(plan.kinds)) this.#kindProviders.set(kind as ModuleKind, providers);
   }
 
   async initialize(): Promise<void> {
@@ -291,13 +314,14 @@ export class Kernel {
       }
       const serverName = servers[0]!.manifest.name;
       const server = this.use(serverName);
+      const room = this.#roomRef();
       for (const record of this.#modules.values()) {
         const disposers: Dispose[] = [];
         this.#composeMiddleware(record, server, disposers);
         this.#disposers.set(record.manifest.name, disposers);
       }
       for (const record of this.#modules.values()) this.#composeRoutes(record, server, this.#disposers.get(record.manifest.name)!);
-      for (const record of this.#modules.values()) this.#composeSlots(record, server, this.#disposers.get(record.manifest.name)!);
+      for (const record of this.#modules.values()) this.#composeSlots(record, room, this.#disposers.get(record.manifest.name)!);
       const start = server.get("start");
       await (start as () => void | Promise<void>)();
       this.#initialized = true;
@@ -347,17 +371,6 @@ export class Kernel {
       );
       if (active) throw new Error(`Cannot activate "${name}": singleton kind "${definition.manifest.kind}" is already implemented by "${active.manifest.name}"`);
     }
-    for (const [dependencyName, range] of Object.entries(definition.manifest.dependencies ?? {})) {
-      const dependency = this.#definitions.get(dependencyName);
-      if (!dependency) throw new Error(`Module "${name}" requires missing dependency "${dependencyName}"`);
-      if (dependency.state === "disabled") {
-        throw new Error(`Module "${name}" requires dependency "${dependencyName}", but "${dependencyName}" is disabled`);
-      }
-      if (!semver.satisfies(dependency.manifest.version, range)) {
-        throw new Error(`Module "${name}" requires "${dependencyName}" ${range}, but ${dependency.manifest.version} is loaded`);
-      }
-    }
-
     definition.state = "active";
     let plan: ActivationPlan;
     try { plan = this.plan(); } catch (error) { definition.state = "disabled"; throw error; }
@@ -368,9 +381,10 @@ export class Kernel {
       record = await this.#instantiate(definition);
       this.#modules.set(name, record);
       const server = this.#serverRef();
+      const room = this.#roomRef();
       this.#composeMiddleware(record, server, disposers);
       this.#composeRoutes(record, server, disposers);
-      this.#composeSlots(record, server, disposers);
+      this.#composeSlots(record, room, disposers);
       this.#disposers.set(name, disposers);
       this.#moduleOrder.push(name);
     } catch (error) {
@@ -446,6 +460,7 @@ export class Kernel {
       }
       this.#disposers.clear(); this.#modules.clear(); this.#moduleOrder = [];
       this.#capabilityProviders.clear(); this.#initialized = false;
+      this.#kindProviders.clear();
       if (errors.length === 1) throw errors[0];
       if (errors.length > 1) throw new AggregateError(errors, "Kernel shutdown completed with errors");
     });

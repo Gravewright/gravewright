@@ -19,7 +19,7 @@ const toolbarButton = {
 };
 ```
 
-The active server owns the slot registrar and decides how collected values are delivered to the host experience. The kernel only coordinates registration and disposal.
+The active room owns the slot registrar and decides how collected values are mounted in its visual regions. The kernel only coordinates registration and disposal. Routes remain owned by the server.
 
 A slot value must exist and be exported through `get`. Slot names are contracts: document their expected value shape and version them carefully.
 

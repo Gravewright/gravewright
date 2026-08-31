@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { Kernel as RuntimeKernel, type LoadOptions } from "@gravewright/kernel";
-import { COMMON_MODULE_EXPORTS, ROOM_PROTOCOL, ROOM_SLOT_NAMES, type ModuleKind } from "@gravewright/sdk";
+import { ROOM_PROTOCOL, ROOM_SLOT_NAMES, type ModuleKind } from "@gravewright/sdk";
 import { activateModule, disableModule } from "../src/module-admin.js";
 import type { ModuleStateStore } from "../src/module-state.js";
 
@@ -16,10 +16,8 @@ class Kernel extends RuntimeKernel {
 }
 
 const contracts: Partial<Record<ModuleKind, string[]>> = {
-  server: [...COMMON_MODULE_EXPORTS, "start", "stop", "route", "middleware", "slot"],
-  room: [...COMMON_MODULE_EXPORTS, "mount", "unmount"],
-  ruleset: [...COMMON_MODULE_EXPORTS],
-  system: [...COMMON_MODULE_EXPORTS],
+  server: ["start", "stop", "http", "route", "middleware"], room: ["mount", "unmount", "slots"], ruleset: [], backend: [],
+  chat: ["send", "erase"], "dice-engine": ["roll"], assets: ["store", "resolve", "mimeTypeAllowed", "remove"], storage: ["create", "find", "where", "update", "delete"], addon: [],
 };
 
 async function fixture(options: {
@@ -27,6 +25,7 @@ async function fixture(options: {
   kind?: ModuleKind;
   version?: string;
   dependencies?: Record<string, string>;
+  uses?: Partial<Record<ModuleKind, "required" | "optional">>;
   requires?: Record<string, string>;
   provides?: Record<string, string>;
   exposes?: { slots: Array<{ name: string; mounts: "one"; contributions: "one" | "many" }> };
@@ -35,14 +34,12 @@ async function fixture(options: {
   slots?: Record<string, string[]>;
   exports?: { get?: string[] };
   source?: string;
-  includeCommon?: boolean;
 } = {}): Promise<string> {
   const directory = await mkdtemp(path.join(tmpdir(), "vtt-module-"));
   const name = options.name ?? path.basename(directory);
   const kind = options.kind ?? "addon";
   const requested = options.exports ?? { get: ["answer"] };
-  const common = options.includeCommon === false ? [] : COMMON_MODULE_EXPORTS.filter((name) => !(requested.get ?? []).includes(name));
-  const declared = { ...requested, get: [...common, ...(requested.get ?? [])] };
+  const declared = { ...requested, get: [...(requested.get ?? [])] };
   const all = [...(declared.get ?? [])];
   const unsafeCharMap: Record<string, string> = {
     "<": "\\u003C",
@@ -68,13 +65,13 @@ async function fixture(options: {
     source = `${source.replace("export default function", "const __fixtureFactory = function")}
       export default function(ctx) {
         const value = __fixtureFactory(ctx);
-        if (value && typeof value === "object") return Object.assign(value, { read() {}, write() {}, stat() {} });
         return value;
       }`;
   }
   await writeFile(path.join(directory, "manifest.json"), JSON.stringify({
     name, kind, provider: "community", version: options.version ?? "1.0.0", entry: "./index.ts",
     ...(options.dependencies ? { dependencies: options.dependencies } : {}),
+    ...(options.uses ? { uses: options.uses } : {}),
     ...(options.requires ? { requires: options.requires } : {}),
     ...(options.provides ? { provides: options.provides } : {}),
     ...(options.routes ? { routes: options.routes } : {}),
@@ -87,7 +84,7 @@ async function fixture(options: {
   return directory;
 }
 
-async function validKind(kind: "server" | "room" | "ruleset" | "system", name = `${kind}-module`) {
+async function validKind(kind: "server" | "room" | "ruleset" | "backend", name = `${kind}-module`) {
   return fixture({ name, kind, exports: { get: contracts[kind] } });
 }
 
@@ -98,6 +95,8 @@ async function bootstrap(kernel: Kernel, includeBase = true): Promise<void> {
 
 async function loadRequiredKinds(kernel: Kernel, includeBase = true): Promise<void> {
   if (includeBase) await kernel.load(await validKind("server", `base-${crypto.randomUUID()}`));
+  await kernel.load(await validKind("room", `room-${crypto.randomUUID()}`));
+  await kernel.load(await validKind("ruleset", `ruleset-${crypto.randomUUID()}`));
 }
 
 test("loads a valid module and permits declared get", async () => {
@@ -135,7 +134,7 @@ test("functions are ordinary values obtained and called through get", async () =
 for (const kind of ["server"] as const) {
   test(`validates the minimum ${kind} contract`, async () => {
     const badKernel = new Kernel();
-    await badKernel.load(await fixture({ name: `bad-${kind}`, kind, exports: { get: contracts[kind]!.slice(1) }, includeCommon: false }));
+    await badKernel.load(await fixture({ name: `bad-${kind}`, kind, exports: { get: contracts[kind]!.slice(1) } }));
     await assert.rejects(
       bootstrap(badKernel, kind !== "server"),
       new RegExp(`Minimum contract not satisfied for ${kind}`),
@@ -155,10 +154,10 @@ test("allows multiple addons", async () => {
   assert.equal(kernel.use("addon-b").get("answer"), 42);
 });
 
-test("allows multiple systems, rooms and rulesets", async () => {
+test("allows multiple backend modules and rejects duplicate singleton kinds", async () => {
   const systems = new Kernel();
-  await systems.load(await fixture({ name: "system-a", kind: "system" }));
-  await systems.load(await fixture({ name: "system-b", kind: "system" }));
+  await systems.load(await fixture({ name: "backend-a", kind: "backend" }));
+  await systems.load(await fixture({ name: "backend-b", kind: "backend" }));
   await systems.load(await validKind("server"));
   await systems.load(await validKind("room"));
   await systems.load(await validKind("ruleset"));
@@ -168,7 +167,7 @@ test("allows multiple systems, rooms and rulesets", async () => {
     const kernel = new Kernel();
     await loadRequiredKinds(kernel);
     await kernel.load(await validKind(kind, `second-${kind}`));
-    await assert.doesNotReject(kernel.initialize());
+    await assert.rejects(kernel.initialize(), new RegExp(`Multiple active modules implement singleton kind "${kind}"`));
   }
 });
 
@@ -237,6 +236,95 @@ test("module context does not grant transitive dependency access", async () => {
   );
 });
 
+test("ctx.kind resolves every architectural role with singleton and plural cardinality", async () => {
+  const kernel = new Kernel();
+  await kernel.load(await validKind("server", "kind-server"));
+  await kernel.load(await validKind("room", "kind-room"));
+  await kernel.load(await validKind("ruleset", "kind-ruleset"));
+  for (const [kind, name] of [
+    ["chat", "kind-chat"], ["dice-engine", "kind-dice"], ["assets", "kind-assets"], ["storage", "kind-storage"],
+  ] as const) await kernel.load(await fixture({ name, kind, exports: { get: contracts[kind] } }));
+  await kernel.load(await fixture({ name: "kind-backend-a", kind: "backend" }));
+  await kernel.load(await fixture({ name: "kind-backend-b", kind: "backend" }));
+  await kernel.load(await fixture({ name: "kind-addon", kind: "addon" }));
+  await kernel.load(await fixture({
+    name: "kind-consumer",
+    uses: Object.fromEntries(["server", "room", "ruleset", "chat", "dice-engine", "assets", "storage", "backend"].map((kind) => [kind, "required"])) as Partial<Record<ModuleKind, "required">>,
+    exports: { get: ["resolved"] },
+    source: `export default function(ctx) { return { resolved: {
+      server: ctx.kind("server"), room: ctx.kind("room"), ruleset: ctx.kind("ruleset"),
+      chat: ctx.kind("chat"), dice: ctx.kind("dice-engine"), assets: ctx.kind("assets"), storage: ctx.kind("storage"),
+      backends: ctx.kind("backend")
+    } }; }`,
+  }));
+  await kernel.initialize();
+  const resolved = kernel.use("kind-consumer").get("resolved") as Record<string, unknown>;
+  assert.equal(Array.isArray(resolved.backends) && resolved.backends.length, 2);
+  for (const name of ["server", "room", "ruleset", "chat", "dice", "assets", "storage"]) assert.ok(resolved[name]);
+
+  const addonKernel = new Kernel();
+  await addonKernel.load(await validKind("server"));
+  await addonKernel.load(await validKind("room"));
+  await addonKernel.load(await fixture({
+    name: "addon-kind-consumer", kind: "ruleset", uses: { addon: "required" }, exports: { get: ["addons"] },
+    source: `export default function(ctx) { return { addons: ctx.kind("addon") }; }`,
+  }));
+  await addonKernel.load(await fixture({ name: "addon-provider-a", kind: "addon" }));
+  await addonKernel.load(await fixture({ name: "addon-provider-b", kind: "addon" }));
+  await addonKernel.initialize();
+  assert.equal((addonKernel.use("addon-kind-consumer").get("addons") as unknown[]).length, 2);
+});
+
+test("ctx.kind enforces uses and optional absence semantics", async () => {
+  const optional = new Kernel();
+  await optional.load(await fixture({
+    name: "optional-kinds", uses: { chat: "optional", backend: "optional" }, exports: { get: ["values"] },
+    source: `export default function(ctx) { return { values: [ctx.kind("chat"), ctx.kind("backend")] }; }`,
+  }));
+  await bootstrap(optional);
+  assert.deepEqual(optional.use("optional-kinds").get("values"), [undefined, []]);
+
+  const undeclared = new Kernel();
+  await undeclared.load(await fixture({ name: "undeclared-kind", source: `export default function(ctx) { ctx.kind("chat"); return { answer: 42 }; }` }));
+  await assert.rejects(bootstrap(undeclared), /cannot use undeclared kind "chat"/);
+
+  const required = new Kernel();
+  await required.load(await fixture({ name: "required-chat", uses: { chat: "required" } }));
+  await loadRequiredKinds(required);
+  await assert.rejects(required.initialize(), /requires missing kind "chat"/);
+});
+
+test("kind relations determine order, cycles, activation and disable safety", async () => {
+  const key = `__gravewright_kind_order_${crypto.randomUUID().replaceAll("-", "")}`;
+  (globalThis as Record<string, unknown>)[key] = [];
+  const kernel = new Kernel();
+  await kernel.load(await fixture({
+    name: "kind-order-consumer", uses: { chat: "required" },
+    source: `export default function(ctx) { globalThis.${key}.push("consumer"); ctx.kind("chat"); return { answer: 42 }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "kind-order-chat", kind: "chat", exports: { get: contracts.chat },
+    source: `export default function() { globalThis.${key}.push("chat"); return { send() { return "id"; }, erase() {} }; }`,
+  }));
+  await loadRequiredKinds(kernel);
+  await kernel.initialize();
+  assert.deepEqual((globalThis as Record<string, unknown>)[key], ["chat", "consumer"]);
+  await assert.rejects(kernel.disable("kind-order-chat"), /requires missing kind "chat"/);
+  delete (globalThis as Record<string, unknown>)[key];
+
+  const incremental = new Kernel();
+  await incremental.load(await fixture({ name: "optional-chat-consumer", uses: { chat: "optional" } }));
+  await incremental.load(await fixture({ name: "disabled-chat", kind: "chat", exports: { get: contracts.chat } }), { state: "disabled" });
+  await bootstrap(incremental);
+  await assert.doesNotReject(incremental.activate("disabled-chat"));
+
+  const cycle = new Kernel();
+  await cycle.load(await fixture({ name: "cycle-chat", kind: "chat", uses: { addon: "required" }, exports: { get: contracts.chat } }));
+  await cycle.load(await fixture({ name: "cycle-addon", kind: "addon", uses: { chat: "required" } }));
+  await loadRequiredKinds(cycle);
+  assert.throws(() => cycle.plan(), /Circular dependency detected/);
+});
+
 test("factory receives a Context facade without Kernel methods", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({
@@ -268,7 +356,7 @@ test("factory receives a Context facade without Kernel methods", async () => {
     hasUse: true,
     hasLoad: false,
     hasInitialize: false,
-      keys: ["use", "capability", "onDispose", "diagnostic"],
+      keys: ["use", "kind", "capability", "onDispose", "diagnostic"],
     frozen: true,
   });
 });
@@ -326,16 +414,7 @@ for (const [kind, invalidName, invalidValue] of [
   });
 }
 
-test("all non-server kinds implement the common POSIX-inspired contract", async () => {
-  const kernel = new Kernel();
-  for (const kind of ["room", "ruleset", "system"] as const) {
-    await kernel.load(await fixture({ name: `optional-${kind}`, kind, exports: { get: [...COMMON_MODULE_EXPORTS, ...(kind === "room" ? ["mount", "unmount"] : [])] } }));
-  }
-  await kernel.load(await validKind("server"));
-  await assert.doesNotReject(kernel.initialize());
-});
-
-for (const operation of ["start", "stop", "route", "middleware", "slot"] as const) {
+for (const operation of ["start", "stop", "route", "middleware"] as const) {
   test(`server contract rejects missing ${operation}`, async () => {
     const kernel = new Kernel();
     const remaining = contracts.server!.filter((name) => name !== operation);
@@ -356,6 +435,48 @@ for (const operation of ["start", "stop", "route", "middleware", "slot"] as cons
   });
 }
 
+test("server contract rejects a missing HTTP provider", async () => {
+  const kernel = new Kernel();
+  await kernel.load(await fixture({ name: "missing-http", kind: "server", exports: { get: contracts.server!.filter((name) => name !== "http") } }));
+  await assert.rejects(bootstrap(kernel, false), /'http' must be declared in exports.get/);
+});
+
+test("server accepts an opaque HTTP provider", async () => {
+  const kernel = new Kernel();
+  await kernel.load(await fixture({
+    name: "opaque-http", kind: "server", exports: { get: contracts.server },
+    source: "export default function() { return { start() {}, stop() {}, http: { adapter: 'test' }, route() {}, middleware() {} }; }",
+  }));
+  await loadRequiredKinds(kernel, false);
+  await assert.doesNotReject(kernel.initialize());
+});
+
+for (const kind of ["chat", "dice-engine", "assets", "storage"] as const) {
+  test(`${kind} enforces its complete minimum contract`, async () => {
+    const required = contracts[kind]!;
+    for (const missing of required) {
+      const kernel = new Kernel();
+      await kernel.load(await fixture({ name: `${kind}-without-${missing}`, kind, exports: { get: required.filter((name) => name !== missing) } }));
+      await loadRequiredKinds(kernel);
+      await assert.rejects(kernel.initialize(), new RegExp(`'${missing}' must be declared in exports.get`));
+    }
+    const valid = new Kernel();
+    await valid.load(await fixture({ name: `valid-${kind}`, kind, exports: { get: required } }));
+    await loadRequiredKinds(valid);
+    await assert.doesNotReject(valid.initialize());
+  });
+}
+
+test("ruleset, backend and addon require no universal domain exports", async () => {
+  const kernel = new Kernel();
+  await kernel.load(await validKind("server"));
+  await kernel.load(await validKind("room"));
+  await kernel.load(await fixture({ name: "empty-ruleset", kind: "ruleset", exports: { get: [] } }));
+  await kernel.load(await fixture({ name: "empty-backend", kind: "backend", exports: { get: [] } }));
+  await kernel.load(await fixture({ name: "empty-addon", kind: "addon", exports: { get: [] } }));
+  await assert.doesNotReject(kernel.initialize());
+});
+
      test("initialize starts the unique server exactly once and awaits it", async () => {
   const key = `__gravewright_start_${crypto.randomUUID().replaceAll("-", "")}`;
   (globalThis as Record<string, unknown>)[key] = { calls: 0, resolved: false };
@@ -364,7 +485,7 @@ for (const operation of ["start", "stop", "route", "middleware", "slot"] as cons
     name: "awaited-base", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
       start() { globalThis.${key}.calls += 1; return new Promise(resolve => setTimeout(() => { globalThis.${key}.resolved = true; resolve(); }, 10)); },
-      stop() {}, route() {}, middleware() {}, slot() {}
+      stop() {}, http: {}, route() {}, middleware() {}
     }; }`,
   }));
   await loadRequiredKinds(kernel, false);
@@ -377,7 +498,7 @@ test("initialize propagates a base start failure", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({
     name: "failing-base", kind: "server", exports: { get: contracts.server },
-    source: `export default function() { return { start() { throw new Error("base failed"); }, stop() {}, route() {}, middleware() {}, slot() {} }; }`,
+    source: `export default function() { return { start() { throw new Error("base failed"); }, stop() {}, http: {}, route() {}, middleware() {} }; }`,
   }));
   await loadRequiredKinds(kernel, false);
   await assert.rejects(kernel.initialize(), /base failed/);
@@ -390,7 +511,7 @@ test("initialize rejects multiple server implementations before starting either"
   for (const name of ["express-like-base", "fastify-like-base"]) {
     await kernel.load(await fixture({
       name, kind: "server", exports: { get: contracts.server },
-      source: `export default function() { return { start() { globalThis.${key} += 1; }, stop() {}, route() {}, middleware() {}, slot() {} }; }`,
+      source: `export default function() { return { start() { globalThis.${key} += 1; }, stop() {}, http: {}, route() {}, middleware() {} }; }`,
     }));
   }
   await loadRequiredKinds(kernel, false);
@@ -408,7 +529,7 @@ test("initialize is one-shot and does not start the server twice", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({
     name: "one-shot-base", kind: "server", exports: { get: contracts.server },
-    source: `export default function() { return { start() { globalThis.${key} += 1; }, stop() {}, route() {}, middleware() {}, slot() {} }; }`,
+    source: `export default function() { return { start() { globalThis.${key} += 1; }, stop() {}, http: {}, route() {}, middleware() {} }; }`,
   }));
   await loadRequiredKinds(kernel, false);
   await kernel.initialize();
@@ -440,18 +561,22 @@ test("composes middleware and slots before starting the base", async () => {
   await kernel.load(await fixture({
     name: "composition-base", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
-      route(name, handler) { globalThis.${key}.push(["route", name, typeof handler]); return () => {}; },
+      http: {}, route(name, handler) { globalThis.${key}.push(["route", name, typeof handler]); return () => {}; },
       middleware(name, handler) { globalThis.${key}.push(["middleware", name, typeof handler]); return () => {}; },
       slot(name, value) { globalThis.${key}.push(["slot", name, value]); return () => {}; },
       start() { globalThis.${key}.push(["start"]); }, stop() {}
     }; }`,
   }));
   await kernel.load(await fixture({
+    name: "composition-room", kind: "room", exports: { get: contracts.room },
+    source: `export default function() { return { mount() {}, unmount() {}, slots(name, module, value) { globalThis.${key}.push(["slot", name, value]); return () => {}; } }; }`,
+  }));
+  await kernel.load(await fixture({
     name: "composed-module", routes: { "/foo": "foo" }, middleware: { "/foo": ["before"] }, slots: { app: ["panel"] },
     exports: { get: ["foo", "before", "panel"] },
     source: `export default function() { return { foo() {}, before() {}, panel: "content" }; }`,
   }));
-  await loadRequiredKinds(kernel, false);
+  await kernel.load(await validKind("ruleset"));
   await kernel.initialize();
   assert.deepEqual((globalThis as Record<string, unknown>)[key], [
     ["middleware", "/foo", "function"], ["route", "/foo", "function"], ["slot", "app", "content"], ["start"],
@@ -466,8 +591,12 @@ test("registers multiple values in the same slot", async () => {
   await kernel.load(await fixture({
     name: "slot-base", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
-      route() { return () => {}; }, middleware() { return () => {}; }, slot(name, value) { globalThis.${key}.push([name, value]); return () => {}; }, start() {}, stop() {}
+      http: {}, route() { return () => {}; }, middleware() { return () => {}; }, start() {}, stop() {}
     }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "slot-room", kind: "room", exports: { get: contracts.room },
+    source: `export default function() { return { mount() {}, unmount() {}, slots(name, module, value) { globalThis.${key}.push([name, value]); return () => {}; } }; }`,
   }));
   for (const [name, exportName, value] of [["ui-a", "foo", "A"], ["ui-b", "bar", "B"]] as const) {
     await kernel.load(await fixture({
@@ -475,7 +604,7 @@ test("registers multiple values in the same slot", async () => {
       source: `export default function() { return { ${exportName}: "${value}" }; }`,
     }));
   }
-  await loadRequiredKinds(kernel, false);
+  await kernel.load(await validKind("ruleset"));
   await kernel.initialize();
   assert.deepEqual((globalThis as Record<string, unknown>)[key], [["app", "A"], ["app", "B"]]);
   delete (globalThis as Record<string, unknown>)[key];
@@ -565,7 +694,7 @@ test("allows middleware from different modules on the same mount in module order
   await kernel.load(await fixture({
     name: "shared-middleware-base", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
-      middleware(mount, handler) { globalThis.${key}.push(handler()); return () => {}; }, route() { return () => {}; }, slot() { return () => {}; }, start() {}, stop() {}
+      http: {}, middleware(mount, handler) { globalThis.${key}.push(handler()); return () => {}; }, route() { return () => {}; }, start() {}, stop() {}
     }; }`,
   }));
   for (const [name, exportName] of [["middleware-a", "first"], ["middleware-b", "second"]] as const) {
@@ -779,15 +908,18 @@ test("one active and one disabled server is valid", async () => {
   await kernel.load(await fixture({
     name: "dynamic-slot-base", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
-      start() {}, stop() {}, route() { return () => {}; }, middleware() { return () => {}; },
-      slot(name, value) { globalThis.${key}.push(value); return () => { const i = globalThis.${key}.indexOf(value); if (i >= 0) globalThis.${key}.splice(i, 1); }; }
+      start() {}, stop() {}, http: {}, route() { return () => {}; }, middleware() { return () => {}; }
     }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "dynamic-slot-room", kind: "room", exports: { get: contracts.room },
+    source: `export default function() { return { mount() {}, unmount() {}, slots(name, module, value) { globalThis.${key}.push(value); return () => { const i = globalThis.${key}.indexOf(value); if (i >= 0) globalThis.${key}.splice(i, 1); }; } }; }`,
   }));
   await kernel.load(await fixture({
     name: "dynamic-slot", slots: { app: ["content"] }, exports: { get: ["content"] },
     source: `export default function() { return { content: "panel" }; }`,
   }), { state: "disabled" });
-  await loadRequiredKinds(kernel, false);
+  await kernel.load(await validKind("ruleset"));
   await kernel.initialize();
   assert.deepEqual((globalThis as Record<string, unknown>)[key], []);
   await kernel.activate("dynamic-slot");
@@ -806,7 +938,7 @@ test("failed activation rolls back middleware, instance and partial composition"
   await kernel.load(await fixture({
     name: "atomic-base", kind: "server", exports: { get: contracts.server },
     source: `export default function() { const routes = new Set(["/conflict"]); return {
-      start() {}, stop() {},
+      start() {}, stop() {}, http: {},
       middleware(name, value) { globalThis.${key}.push("middleware"); return () => globalThis.${key}.splice(globalThis.${key}.indexOf("middleware"), 1); },
       route(name) { if (routes.has(name)) throw new Error("route conflict"); routes.add(name); return () => routes.delete(name); },
       slot(name, value) { globalThis.${key}.push("slot"); return () => globalThis.${key}.splice(globalThis.${key}.indexOf("slot"), 1); }
@@ -834,10 +966,10 @@ test("cannot disable an active dependency or the active server", async () => {
   await kernel.load(basePath);
   await kernel.load(roomPath);
   await kernel.load(await validKind("ruleset"));
-  await kernel.load(await validKind("system"));
+  await kernel.load(await validKind("backend"));
   await kernel.initialize();
   await assert.rejects(kernel.disable("library"), /active module "consumer" depends on it/);
-  await assert.doesNotReject(kernel.disable("protected-room"));
+  await assert.rejects(kernel.disable("protected-room"), /last active module for required kind "room"/);
   await assert.rejects(kernel.disable("protected-base"), /Cannot disable the active server while the kernel is running/);
 });
 
@@ -849,7 +981,7 @@ test("load defaults to disabled without importing or instantiating the module", 
     name: "default-disabled",
     source: `globalThis.${key} += 1; export default function() { globalThis.${key} += 1; return { answer: 42 }; }`,
   }));
-  for (const kind of ["server", "room", "ruleset", "system"] as const) {
+  for (const kind of ["server", "room", "ruleset", "backend"] as const) {
     await kernel.load(await validKind(kind, `default-${kind}`), { state: "active" });
   }
   await kernel.initialize();
@@ -964,18 +1096,21 @@ test("disable commits removal after teardown starts even when cleanup fails", as
   await kernel.load(await fixture({
     name: "cleanup-base", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
-      start() {}, stop() {},
+      start() {}, stop() {}, http: {},
       middleware() { return () => { globalThis.${key}.push("middleware"); }; },
-      route() { return () => { globalThis.${key}.push("route"); throw new Error("route cleanup failed"); }; },
-      slot() { return () => { globalThis.${key}.push("slot"); throw new Error("slot cleanup failed"); }; }
+      route() { return () => { globalThis.${key}.push("route"); throw new Error("route cleanup failed"); }; }
     }; }`,
+  }));
+  await kernel.load(await fixture({
+    name: "cleanup-room", kind: "room", exports: { get: contracts.room },
+    source: `export default function() { return { mount() {}, unmount() {}, slots() { return () => { globalThis.${key}.push("slot"); throw new Error("slot cleanup failed"); }; } }; }`,
   }));
   await kernel.load(await fixture({
     name: "cleanup-module", middleware: { "/": ["middleware"] }, routes: { "/cleanup": "route" },
     slots: { app: ["content"] }, exports: { get: ["middleware", "route", "content", "answer"] },
     source: "export default function() { return { middleware() {}, route() {}, content: 'panel', answer: 42 }; }",
   }));
-  await loadRequiredKinds(kernel, false);
+  await kernel.load(await validKind("ruleset"));
   await kernel.initialize();
   await assert.rejects(
     kernel.disable("cleanup-module"),
@@ -1001,6 +1136,7 @@ test("failed disable removes capability providers and disposes module resources 
       return { answer: 42 };
     }`,
   }));
+  await loadRequiredKinds(kernel, false);
   await kernel.initialize();
   await assert.rejects(kernel.disable("failing-provider"), /resource cleanup failed/);
   assert.throws(() => kernel.use("failing-provider"), /not active/);
@@ -1014,7 +1150,7 @@ test("composition fails when a server registrar does not provide its required di
   const kernel = new Kernel();
   await kernel.load(await fixture({
     name: "invalid-registrar-base", kind: "server", exports: { get: contracts.server },
-    source: "export default function() { return { start() {}, stop() {}, middleware() { return () => {}; }, route() {}, slot() { return () => {}; } }; }",
+    source: "export default function() { return { start() {}, stop() {}, http: {}, middleware() { return () => {}; }, route() {} }; }",
   }));
   await kernel.load(await fixture({
     name: "needs-disposer", routes: { "/invalid": "route" }, exports: { get: ["route"] },
@@ -1060,8 +1196,8 @@ test("module resources dispose in reverse order during shutdown after server sto
   await kernel.load(await fixture({
     name: "shutdown-server", kind: "server", exports: { get: contracts.server },
     source: `export default function(ctx) { ctx.onDispose(() => globalThis.${key}.push("server-resource")); return {
-      read() {}, write() {}, stat() {}, start() {}, stop() { globalThis.${key}.push("server-stop"); },
-      route() { return () => {}; }, middleware() { return () => {}; }, slot() { return () => {}; }
+      start() {}, stop() { globalThis.${key}.push("server-stop"); }, http: {},
+      route() { return () => {}; }, middleware() { return () => {}; }
     }; }`,
   }));
   await kernel.load(await fixture({ name: "resource-owner", source: `export default function(ctx) {
@@ -1069,6 +1205,7 @@ test("module resources dispose in reverse order during shutdown after server sto
     ctx.onDispose(() => globalThis.${key}.push("second"));
     return { answer: 42 };
   }` }));
+  await loadRequiredKinds(kernel, false);
   await kernel.initialize();
   await kernel.shutdown();
   assert.deepEqual((globalThis as Record<string, unknown>)[key], ["server-stop", "second", "first", "server-resource"]);
@@ -1088,6 +1225,7 @@ test("create failure rolls back registered resources", async () => {
     ctx.onDispose(() => globalThis.${key}.push("second"));
     throw new Error("create failed");
   }` }));
+  await loadRequiredKinds(kernel, false);
   await assert.rejects(kernel.initialize(), /create failed/);
   assert.deepEqual((globalThis as Record<string, unknown>)[key], ["second", "first", "previous"]);
   delete (globalThis as Record<string, unknown>)[key];
@@ -1125,6 +1263,7 @@ test("incremental activation rejects a duplicate capability provider without dis
     name: "provider-b", provides: { "gravewright.incremental": "1.1.0" }, exports: { get: ["identity"] },
     source: `export default function() { globalThis.${key} += 1; return { identity: "B" }; }`,
   }), { state: "disabled" });
+  await loadRequiredKinds(kernel, false);
   await kernel.initialize();
 
   const provider = kernel.use("capability-consumer").get("provider") as () => string;
@@ -1144,7 +1283,7 @@ test("incremental activation rejects a route conflict before registration", asyn
   await kernel.load(await fixture({
     name: "route-server", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
-      start() {}, stop() {}, middleware() { return () => {}; }, slot() { return () => {}; },
+      start() {}, stop() {}, http: {}, middleware() { return () => {}; },
       route(mount, handler) { globalThis.${key}.routes.set(mount, handler); return () => globalThis.${key}.routes.delete(mount); }
     }; }`,
   }));
@@ -1156,6 +1295,7 @@ test("incremental activation rejects a route conflict before registration", asyn
     name: "route-disabled", routes: { "/x": "handler" }, exports: { get: ["handler"] },
     source: `export default function() { globalThis.${key}.createdB += 1; return { handler: () => "B" }; }`,
   }), { state: "disabled" });
+  await loadRequiredKinds(kernel, false);
   await kernel.initialize();
   assert.equal(state.routes.get("/x")?.(), "A");
 
@@ -1175,8 +1315,7 @@ test("incremental activation rejects a single-contribution slot conflict before 
   await kernel.load(await fixture({
     name: "slot-server", kind: "server", exports: { get: contracts.server },
     source: `export default function() { return {
-      start() {}, stop() {}, route() { return () => {}; }, middleware() { return () => {}; },
-      slot(_name, value) { globalThis.${key}.slots.push(value); return () => { const index = globalThis.${key}.slots.indexOf(value); if (index >= 0) globalThis.${key}.slots.splice(index, 1); }; }
+      start() {}, stop() {}, http: {}, route() { return () => {}; }, middleware() { return () => {}; }
     }; }`,
   }));
   await kernel.load(await fixture({
@@ -1184,7 +1323,7 @@ test("incremental activation rejects a single-contribution slot conflict before 
     exposes: { slots: [
       ...ROOM_SLOT_NAMES.map((name) => ({ name, mounts: "one" as const, contributions: "many" as const })),
       { name: "gw-renderer", mounts: "one", contributions: "one" },
-    ] },
+    ] }, source: `export default function() { return { mount() {}, unmount() {}, slots(_name, _module, value) { globalThis.${key}.slots.push(value); return () => { const index = globalThis.${key}.slots.indexOf(value); if (index >= 0) globalThis.${key}.slots.splice(index, 1); }; } }; }`,
   }));
   await kernel.load(await fixture({
     name: "slot-active", slots: { "gw-renderer": ["contribution"] }, exports: { get: ["contribution"] },
@@ -1194,6 +1333,7 @@ test("incremental activation rejects a single-contribution slot conflict before 
     name: "slot-disabled", slots: { "gw-renderer": ["contribution"] }, exports: { get: ["contribution"] },
     source: `export default function() { globalThis.${key}.createdB += 1; return { contribution: { id: "B", mount() {} } }; }`,
   }), { state: "disabled" });
+  await kernel.load(await validKind("ruleset"));
   await kernel.initialize();
   assert.equal(state.slots.length, 1);
   assert.equal((state.slots[0] as { id: string }).id, "A");
@@ -1214,6 +1354,7 @@ test("capabilities resolve a compatible active provider", async () => {
     source: `export default function(ctx) { const storage = ctx.capability("gravewright.storage"); return { readValue: () => storage.get("value") }; }`,
   }));
   await kernel.load(await fixture({ name: "sqlite", provides: { "gravewright.storage": "1.2.0" }, exports: { get: ["value"] }, source: "export default function() { return { value: 42 }; }" }));
+  await loadRequiredKinds(kernel, false);
   await kernel.initialize();
   assert.equal((kernel.use("storage-consumer").get("readValue") as () => number)(), 42);
 });

@@ -32,8 +32,8 @@ contract.
 ## Important invariants
 
 - A running project has exactly one active `server`.
-- `room`, `ruleset`, `addon`, and `system` modules have cardinality `0..n`.
-- Every module exports at least the `read`, `write`, and `stat` commands.
+- `room`, `ruleset`, `addon`, and `backend` modules have cardinality `0..n`.
+- `read`, `write`, and `stat` are optional administrative tooling.
 - A module may use a concrete module only when it declares that dependency.
 - Static manifests are validated before module code is imported.
 - Installation never activates a module implicitly.

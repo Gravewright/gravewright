@@ -32,7 +32,7 @@ create(ctx) {
     async connect() {
       if (connected) return;
       connected = true;
-      ctx.diagnostic.record({ event: "storage.connected", actor: "System", action: "Connect storage", status: "success" });
+      ctx.diagnostic.record({ event: "storage.connected", actor: "Backend", action: "Connect storage", status: "success" });
     },
     pendingCount() { return pending.size; },
   };
