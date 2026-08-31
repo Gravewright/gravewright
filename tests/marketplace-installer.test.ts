@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { access, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -57,7 +57,10 @@ async function zipFixture(entries: readonly ZipEntry[]): Promise<{ zip: string; 
 test("URL policy accepts public addresses and rejects local, private and link-local ranges", async () => {
   const publicResolver = async () => [{ address: "93.184.216.34", family: 4 }];
   assert.equal((await _installerTest.safeUrl("https://example.test/module.json", publicResolver)).address, "93.184.216.34");
-  for (const address of ["127.0.0.1", "10.0.0.1", "169.254.1.1", "192.168.1.1", "::1", "fe80::1", "fc00::1", "::ffff:127.0.0.1"]) {
+  for (const address of [
+    "127.0.0.1", "10.0.0.1", "100.64.0.1", "169.254.1.1", "172.16.0.1", "192.168.1.1", "224.0.0.1",
+    "::1", "fe80::1", "fc00::1", "ff00::1", "::ffff:127.0.0.1", "::ffff:7f00:1", "::ffff:0a00:1",
+  ]) {
     await assert.rejects(_installerTest.safeUrl("https://example.test/module.json", async () => [{ address, family: address.includes(":") ? 6 : 4 }]), /privado ou reservado/);
   }
 });
@@ -131,4 +134,96 @@ test("marketplace dependency installation requires a package lock", async () => 
   const root = await mkdtemp(path.join(tmpdir(), "grave-unlocked-module-"));
   await writeFile(path.join(root, "package.json"), '{"dependencies":{"example":"1.0.0"}}');
   await assert.rejects(_installerTest.installNodeDependencies(root), /package-lock\.json.*reproduzível/);
+});
+
+async function dependencyPackage(specifier: string, field = "dependencies"): Promise<string> {
+  const root = await mkdtemp(path.join(tmpdir(), "grave-dependency-policy-"));
+  await writeFile(path.join(root, "package.json"), JSON.stringify({ name: "fixture", version: "1.0.0", [field]: { package: specifier } }));
+  await writeFile(path.join(root, "package-lock.json"), JSON.stringify({
+    name: "fixture", version: "1.0.0", lockfileVersion: 3, requires: true,
+    packages: {
+      "": { name: "fixture", version: "1.0.0", [field]: { package: specifier } },
+      "node_modules/package": {
+        version: "1.0.0",
+        resolved: "https://registry.npmjs.org/package/-/package-1.0.0.tgz",
+        integrity: "sha512-dGVzdA==",
+      },
+    },
+  }));
+  return root;
+}
+
+test("npm dependency policy permits registry ranges and rejects external specifiers", async () => {
+  await assert.doesNotReject(_installerTest.validateNodeDependencyPolicy(await dependencyPackage("^1.0.0")));
+  for (const specifier of [
+    "file:../secret", "link:../secret", "workspace:*", "https://example.test/package.tgz",
+    "npm:other-package@1.0.0",
+    "git+https://example.test/repository.git", "git+ssh://git@example.test/repository.git",
+    "github:user/repository", "user/repository", "../relative", "/absolute/package.tgz",
+  ]) {
+    await assert.rejects(_installerTest.validateNodeDependencyPolicy(await dependencyPackage(specifier)), /dependency specifier.*não permitido/);
+  }
+});
+
+test("npm dependency policy rejects module-local npm configuration", async () => {
+  const root = await dependencyPackage("^1.0.0");
+  await writeFile(path.join(root, ".npmrc"), "registry=https://packages.example.test/\n");
+  await assert.rejects(_installerTest.validateNodeDependencyPolicy(root), /não podem incluir \.npmrc/);
+});
+
+test("npm dependency policy validates optional and peer dependencies", async () => {
+  await assert.rejects(_installerTest.validateNodeDependencyPolicy(await dependencyPackage("file:../secret", "optionalDependencies")), /optionalDependencies/);
+  await assert.rejects(_installerTest.validateNodeDependencyPolicy(await dependencyPackage("git+https://example.test/repo", "peerDependencies")), /peerDependencies/);
+});
+
+test("npm dependency policy rejects malicious lock-only entries, foreign origins and missing integrity", async () => {
+  const lockOnly = await dependencyPackage("^1.0.0");
+  const lockPath = path.join(lockOnly, "package-lock.json");
+  const lock = JSON.parse(await readFile(lockPath, "utf8"));
+  lock.packages["node_modules/hidden"] = { version: "1.0.0", resolved: "file:../secret" };
+  await writeFile(lockPath, JSON.stringify(lock));
+  await assert.rejects(_installerTest.validateNodeDependencyPolicy(lockOnly), /resolved.*não permitido/);
+
+  const foreign = await dependencyPackage("^1.0.0");
+  const foreignPath = path.join(foreign, "package-lock.json");
+  const foreignLock = JSON.parse(await readFile(foreignPath, "utf8"));
+  foreignLock.packages["node_modules/package"].resolved = "https://packages.example.test/package.tgz";
+  await writeFile(foreignPath, JSON.stringify(foreignLock));
+  await assert.rejects(_installerTest.validateNodeDependencyPolicy(foreign), /registry não permitido/);
+
+  const missingIntegrity = await dependencyPackage("^1.0.0");
+  const missingPath = path.join(missingIntegrity, "package-lock.json");
+  const missingLock = JSON.parse(await readFile(missingPath, "utf8"));
+  delete missingLock.packages["node_modules/package"].integrity;
+  await writeFile(missingPath, JSON.stringify(missingLock));
+  await assert.rejects(_installerTest.validateNodeDependencyPolicy(missingIntegrity), /integrity ausente/);
+});
+
+test("npm subprocess receives only controlled configuration and no host credentials", async () => {
+  const root = await dependencyPackage("^1.0.0");
+  await mkdir(path.join(root, "nested"));
+  process.env.NODE_AUTH_TOKEN = "host-secret";
+  process.env.NPM_TOKEN = "host-secret";
+  process.env.npm_config_userconfig = "/private/.npmrc";
+  let captured: { args: readonly string[]; env: NodeJS.ProcessEnv } | undefined;
+  try {
+    await _installerTest.installNodeDependencies(root, async (_command, args, options) => {
+      captured = { args, env: options.env ?? {} };
+      return { stdout: "", stderr: "" };
+    });
+  } finally {
+    delete process.env.NODE_AUTH_TOKEN;
+    delete process.env.NPM_TOKEN;
+    delete process.env.npm_config_userconfig;
+  }
+  assert.ok(captured);
+  assert.equal(captured.env.NODE_AUTH_TOKEN, undefined);
+  assert.equal(captured.env.NPM_TOKEN, undefined);
+  assert.notEqual(captured.env.npm_config_userconfig, "/private/.npmrc");
+  assert.equal(captured.env.npm_config_registry, "https://registry.npmjs.org/");
+  assert.equal(captured.env.npm_config_strict_ssl, "true");
+  assert.ok(captured.args.includes("--registry=https://registry.npmjs.org/"));
+  assert.ok(captured.args.includes("--strict-ssl=true"));
+  assert.ok(captured.args.includes("--ignore-scripts"));
+  assert.ok(captured.args.includes("--workspaces=false"));
 });

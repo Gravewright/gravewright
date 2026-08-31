@@ -53,7 +53,10 @@ export default defineModule({
   create(_ctx) {
     const app = express();
     const websocketServer = new WebSocketServer({ noServer: true });
-    const mounts = new Set<string>();
+    const routes = new Map<string, RouteHandler>();
+    const routeBridges = new Set<string>();
+    const middleware = new Map<string, Map<symbol, MiddlewareHandler>>();
+    const middlewareBridges = new Set<string>();
     const slots = new Map<string, Set<unknown>>();
     let listener: Server | undefined;
     let port = configuredPort();
@@ -64,6 +67,34 @@ export default defineModule({
       next();
     });
     app.use(express.json({ limit: "64kb", strict: true }));
+
+    function ensureMiddlewareBridge(mount: string): void {
+      if (middlewareBridges.has(mount)) return;
+      middlewareBridges.add(mount);
+      app.use(mount, (request: Request, response: Response, next: NextFunction) => {
+        const handlers = [...(middleware.get(mount)?.values() ?? [])];
+        const dispatch = (index: number): void => {
+          const handler = handlers[index];
+          if (!handler) { next(); return; }
+          try {
+            void Promise.resolve(handler(requestOf(request), responseOf(response), () => dispatch(index + 1))).catch(next);
+          } catch (error) { next(error); }
+        };
+        dispatch(0);
+      });
+    }
+
+    function ensureRouteBridge(mount: string): void {
+      if (routeBridges.has(mount)) return;
+      ensureMiddlewareBridge(mount);
+      routeBridges.add(mount);
+      app.all(mount, async (request: Request, response: Response, next: NextFunction) => {
+        const handler = routes.get(mount);
+        if (!handler) { next(); return; }
+        try { await handler(requestOf(request), responseOf(response)); }
+        catch (error) { next(error); }
+      });
+    }
 
     return {
       read(resource: string) {
@@ -76,29 +107,45 @@ export default defineModule({
         if (!Number.isInteger(value) || (value as number) < 0 || (value as number) > 65535) throw new Error("Invalid server port");
         port = value as number;
       },
-      stat() { return { running: listener !== undefined, port }; },
+      stat() {
+        return {
+          running: listener !== undefined,
+          port,
+          registrations: {
+            routes: routes.size,
+            middleware: [...middleware.values()].reduce((total, handlers) => total + handlers.size, 0),
+            slots: [...slots.values()].reduce((total, values) => total + values.size, 0),
+          },
+          bridges: { routes: routeBridges.size, middleware: middlewareBridges.size },
+        };
+      },
       get port() { return port; },
       get http() { return app; },
       get ws() { return websocketServer; },
       route(mount: string, handler: RouteHandler) {
-        if (mounts.has(mount)) throw new Error(`Route mount ${JSON.stringify(mount)} is already registered`);
-        mounts.add(mount);
-        let active = true;
-        app.all(mount, async (request: Request, response: Response, next: NextFunction) => {
-          if (!active) return next();
-          try { await handler(requestOf(request), responseOf(response)); }
-          catch (error) { next(error); }
-        });
-        return () => { active = false; mounts.delete(mount); };
+        if (routes.has(mount)) throw new Error(`Route mount ${JSON.stringify(mount)} is already registered`);
+        ensureRouteBridge(mount);
+        routes.set(mount, handler);
+        let disposed = false;
+        return () => {
+          if (disposed) return;
+          disposed = true;
+          if (routes.get(mount) === handler) routes.delete(mount);
+        };
       },
       middleware(mount: string, handler: MiddlewareHandler) {
-        let active = true;
-        app.use(mount, async (request: Request, response: Response, next: NextFunction) => {
-          if (!active) return next();
-          try { await handler(requestOf(request), responseOf(response), next); }
-          catch (error) { next(error); }
-        });
-        return () => { active = false; };
+        ensureMiddlewareBridge(mount);
+        const token = Symbol(mount);
+        const handlers = middleware.get(mount) ?? new Map();
+        handlers.set(token, handler);
+        middleware.set(mount, handlers);
+        let disposed = false;
+        return () => {
+          if (disposed) return;
+          disposed = true;
+          handlers.delete(token);
+          if (!handlers.size) middleware.delete(mount);
+        };
       },
       slot(name: string, value: unknown) {
         const values = slots.get(name) ?? new Set();

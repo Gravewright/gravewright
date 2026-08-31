@@ -45,6 +45,14 @@ próprio módulo com `npm ci --omit=dev --ignore-scripts` e exigem um
 `package-lock.json` publicado. Pacotes sem lockfile são rejeitados para evitar
 que cada máquina resolva uma árvore diferente.
 
+Dependências Node seguem uma política exclusiva de registry. A validação do
+package e lockfile rejeita specs de filesystem, workspace, URL, Git, shorthand
+de repositório e tarballs arbitrários. Toda entrada externa do lock precisa vir
+do registry npm aprovado e possuir integrity. A instalação usa configuração e
+cache npm temporários, sem herdar tokens, configuração privada do usuário ou
+`.npmrc` do módulo. TLS continua obrigatório. `--ignore-scripts` reduz risco,
+mas não é sandbox.
+
 Esses controles reduzem riscos de transporte, SSRF e arquivos malformados. Eles
 não auditam o JavaScript do módulo nem o isolam do processo host.
 

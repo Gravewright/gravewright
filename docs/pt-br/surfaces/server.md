@@ -13,6 +13,13 @@ Exports obrigatórios:
 
 O kernel exige que todos estejam em `get` e sejam funções. Ele não exige Express nem conhece o transporte.
 
+`BaseRequest` e `BaseResponse` são uma surface neutra deliberadamente mínima
+para routes e middleware básicos e portáveis. Elas não tentam representar todo
+o HTTP. Um server concreto pode exportar APIs adicionais; um módulo que precise
+de streaming, headers especializados ou recursos do framework pode depender
+explicitamente da implementação, por exemplo
+`ctx.use("gravewright-server").get("http")`.
+
 `start()` é aguardado exatamente uma vez depois de middleware, routes e slots. O server ativo não pode ser desabilitado durante a execução do kernel.
 
 ## Comportamento mínimo de registrar

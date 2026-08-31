@@ -5,10 +5,12 @@ import { createWriteStream } from "node:fs";
 import { access, mkdir, mkdtemp, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { BlockList, isIP } from "node:net";
 import type { LookupFunction } from "node:net";
+import { tmpdir } from "node:os";
 import { request } from "node:https";
 import path from "node:path";
 import { Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
+import ipaddr from "ipaddr.js";
 import semver from "semver";
 import { promisify } from "node:util";
 import yauzl, { type Entry, type ZipFile } from "yauzl";
@@ -22,6 +24,7 @@ const MAX_ENTRY_BYTES = 50 * 1024 * 1024;
 const MAX_FILES = 2_000;
 const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const SHA256 = /^[a-f0-9]{64}$/i;
+const NPM_REGISTRY = "https://registry.npmjs.org/";
 
 const blockedAddresses = new BlockList();
 for (const [network, prefix] of [
@@ -29,10 +32,10 @@ for (const [network, prefix] of [
 ] as const) blockedAddresses.addSubnet(network, prefix, "ipv6");
 
 function privateAddress(address: string): boolean {
-  if (isIP(address) === 6 && blockedAddresses.check(address, "ipv6")) return true;
-  if (address.startsWith("::ffff:")) return privateAddress(address.slice(7));
-  if (isIP(address) !== 4) return false;
-  const [a = 0, b = 0, c = 0] = address.split(".").map(Number);
+  let parsed: ipaddr.IPv4 | ipaddr.IPv6;
+  try { parsed = ipaddr.process(address); } catch { return true; }
+  if (parsed instanceof ipaddr.IPv6) return blockedAddresses.check(parsed.toNormalizedString(), "ipv6");
+  const [a = 0, b = 0, c = 0] = parsed.octets;
   return a === 0 || a === 10 || a === 127 || a >= 224
     || (a === 100 && b >= 64 && b <= 127)
     || (a === 169 && b === 254)
@@ -288,21 +291,130 @@ async function packageRoot(unpacked: string): Promise<string> {
   throw new Error("ZIP deve conter manifest.json na raiz ou em um único diretório");
 }
 
-async function installNodeDependencies(root: string): Promise<void> {
+interface CommandOptions {
+  cwd: string;
+  timeout: number;
+  maxBuffer: number;
+  env: NodeJS.ProcessEnv;
+}
+
+type CommandRunner = (command: string, args: readonly string[], options: CommandOptions) => Promise<{ stdout: string | Buffer; stderr: string | Buffer }>;
+
+function dependencyObject(value: unknown, field: string): Record<string, string> {
+  if (value === undefined) return {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${field} deve ser um objeto`);
+  const result: Record<string, string> = {};
+  for (const [name, specifier] of Object.entries(value)) {
+    if (!name || typeof specifier !== "string") throw new Error(`${field}.${name} deve ser uma string`);
+    result[name] = specifier;
+  }
+  return result;
+}
+
+function registrySpecifier(specifier: string): boolean {
+  return semver.validRange(specifier) !== null || /^[a-z][a-z0-9._-]{0,63}$/i.test(specifier);
+}
+
+function validateDependencySpecifiers(document: Record<string, unknown>, source: string): void {
+  for (const field of ["dependencies", "optionalDependencies", "peerDependencies"] as const) {
+    for (const [name, specifier] of Object.entries(dependencyObject(document[field], `${source}.${field}`))) {
+      if (!registrySpecifier(specifier)) throw new Error(`${source}.${field}.${name}: dependency specifier não permitido: ${specifier}`);
+    }
+  }
+}
+
+function validateResolved(resolved: unknown, label: string): void {
+  if (typeof resolved !== "string") throw new Error(`${label}: resolved ausente`);
+  let url: URL;
+  try { url = new URL(resolved); } catch { throw new Error(`${label}: resolved não permitido: ${String(resolved)}`); }
+  if (url.origin !== new URL(NPM_REGISTRY).origin || url.username || url.password) {
+    throw new Error(`${label}: registry não permitido: ${resolved}`);
+  }
+}
+
+function validateLockDependencies(value: unknown, prefix: string): void {
+  if (value === undefined) return;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${prefix} inválido`);
+  for (const [name, raw] of Object.entries(value)) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error(`${prefix}.${name} inválido`);
+    const entry = raw as Record<string, unknown>;
+    if (entry.link === true) throw new Error(`${prefix}.${name}: links locais não são permitidos`);
+    validateResolved(entry.resolved, `${prefix}.${name}.resolved`);
+    if (typeof entry.integrity !== "string" || !/^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}(?:\s+sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2})*$/.test(entry.integrity)) {
+      throw new Error(`${prefix}.${name}: integrity ausente ou inválida`);
+    }
+    validateLockDependencies(entry.dependencies, `${prefix}.${name}.dependencies`);
+  }
+}
+
+async function validateNodeDependencyPolicy(root: string): Promise<void> {
+  const packageDocument = JSON.parse(await readFile(path.join(root, "package.json"), "utf8")) as unknown;
+  const lockDocument = JSON.parse(await readFile(path.join(root, "package-lock.json"), "utf8")) as unknown;
+  if (!packageDocument || typeof packageDocument !== "object" || Array.isArray(packageDocument)) throw new Error("package.json deve ser um objeto");
+  if (!lockDocument || typeof lockDocument !== "object" || Array.isArray(lockDocument)) throw new Error("package-lock.json deve ser um objeto");
+  validateDependencySpecifiers(packageDocument as Record<string, unknown>, "package.json");
+  const lock = lockDocument as Record<string, unknown>;
+  if (lock.lockfileVersion !== 2 && lock.lockfileVersion !== 3) throw new Error("package-lock.json deve usar lockfileVersion 2 ou 3");
+  if (!lock.packages || typeof lock.packages !== "object" || Array.isArray(lock.packages)) throw new Error("package-lock.json sem packages");
+  for (const [location, raw] of Object.entries(lock.packages)) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error(`package-lock.json packages.${location} inválido`);
+    const entry = raw as Record<string, unknown>;
+    validateDependencySpecifiers(entry, `package-lock.json packages.${location || "<root>"}`);
+    if (!location) continue;
+    if (entry.link === true) throw new Error(`package-lock.json packages.${location}: links locais não são permitidos`);
+    validateResolved(entry.resolved, `package-lock.json packages.${location}.resolved`);
+    if (typeof entry.integrity !== "string" || !/^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}(?:\s+sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2})*$/.test(entry.integrity)) {
+      throw new Error(`package-lock.json packages.${location}: integrity ausente ou inválida`);
+    }
+  }
+  validateLockDependencies(lock.dependencies, "package-lock.json dependencies");
+  if (await access(path.join(root, ".npmrc")).then(() => true, () => false)) throw new Error("módulos do marketplace não podem incluir .npmrc");
+}
+
+function sanitizedNpmEnvironment(config: string, cache: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = {
+    PATH: process.env.PATH,
+    npm_config_userconfig: config,
+    npm_config_globalconfig: config,
+    npm_config_cache: cache,
+    npm_config_registry: NPM_REGISTRY,
+    npm_config_strict_ssl: "true",
+    npm_config_ignore_scripts: "true",
+    npm_config_audit: "false",
+    npm_config_fund: "false",
+    npm_config_workspaces: "false",
+  };
+  for (const name of ["SystemRoot", "WINDIR", "TEMP", "TMP", "TMPDIR"] as const) if (process.env[name] !== undefined) env[name] = process.env[name];
+  return env;
+}
+
+async function installNodeDependencies(
+  root: string,
+  runner: CommandRunner = (command, args, options) => execute(command, [...args], options),
+): Promise<void> {
   const packageFile = path.join(root, "package.json");
   if (!await access(packageFile).then(() => true, () => false)) return;
   const locked = await access(path.join(root, "package-lock.json")).then(() => true, () => false);
   if (!locked) throw new Error("módulo com package.json precisa incluir package-lock.json para instalação reproduzível");
+  await validateNodeDependencyPolicy(root);
+  const npmHome = await mkdtemp(path.join(tmpdir(), "gravewright-npm-"));
   const command = process.platform === "win32" ? "npm.cmd" : "npm";
   const args = [
     "ci",
+    `--registry=${NPM_REGISTRY}`,
+    "--strict-ssl=true",
     "--omit=dev",
     "--ignore-scripts",
     "--no-audit",
     "--no-fund",
     "--workspaces=false",
   ];
-  await execute(command, args, { cwd: root, timeout: 120_000, maxBuffer: 4 * 1024 * 1024 });
+  const config = path.join(npmHome, "npmrc");
+  const cache = path.join(npmHome, "cache");
+  await writeFile(config, `registry=${NPM_REGISTRY}\nstrict-ssl=true\nignore-scripts=true\naudit=false\nfund=false\n`, { mode: 0o600 });
+  try {
+    await runner(command, args, { cwd: root, timeout: 120_000, maxBuffer: 4 * 1024 * 1024, env: sanitizedNpmEnvironment(config, cache) });
+  } finally { await rm(npmHome, { recursive: true, force: true }); }
 }
 
 export interface RevokedRelease { name: string; version?: string; download_sha256?: string; reason?: string; }
@@ -379,5 +491,6 @@ export const _installerTest = Object.freeze({
   safeFetchWithResolver,
   boundedBody,
   extractArchive,
+  validateNodeDependencyPolicy,
   installNodeDependencies,
 });

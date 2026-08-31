@@ -4,7 +4,7 @@
 
 Gravewright é uma plataforma open source para criar Virtual Tabletops com módulos independentes e substituíveis. Ela oferece um pequeno microkernel TypeScript e deixa cada distribuição decidir como sua mesa, regras, backend, extensões e transporte devem funcionar.
 
-[English](README.md) · [Documentação](docs/README.md) · [Criar um módulo](docs/pt-br/criando-um-modulo.md)
+[English](README.md) · [Documentação](docs/README.md) · [Criar um módulo](docs/pt-br/criando-um-modulo.md) · [Prontidão de release](docs/pt-br/reference/prontidao-de-release.md)
 
 ## Um kernel, muitos VTTs
 
@@ -43,13 +43,12 @@ addons e systems são livremente combináveis (`0..n`).
 npm install
 npm test
 npm run typecheck
-printf '{\n  "gravewright-server": "active",\n  "gravewright-marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 npm run grave -- run
 ```
 
-`gravewright.modules.json` é estado local de runtime; o repositório não impõe
-essa escolha de distribuição. A instalação nunca ativa código.
+O `gravewright.modules.json` versionado é a composição padrão deste repositório.
+A instalação pelo marketplace nunca altera o estado de ativação automaticamente.
 
 O marketplace padrão fica disponível em `http://127.0.0.1:3000/marketplace`.
 
@@ -94,3 +93,6 @@ gravewright/
 ## Licença
 
 `@gravewright/sdk` usa MIT. `@gravewright/kernel` usa Apache-2.0. Módulos de terceiros permanecem sujeitos às suas próprias licenças.
+
+Consulte [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar mudanças e
+[SECURITY.md](SECURITY.md) para relatar vulnerabilidades de forma privada.

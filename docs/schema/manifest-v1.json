@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gravewright.org/schema/manifest-v1.json",
+  "title": "Gravewright module manifest v1",
+  "type": "object",
+  "required": ["name", "kind", "provider", "version", "entry", "exports"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["server", "room", "ruleset", "addon", "system"] },
+    "provider": { "enum": ["core", "community", "official", "licensed", "partner"] },
+    "version": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$" },
+    "entry": { "type": "string", "minLength": 1 },
+    "types": { "type": "string", "minLength": 1 },
+    "dependencies": { "$ref": "#/$defs/versionMap" },
+    "requires": { "$ref": "#/$defs/versionMap" },
+    "provides": { "$ref": "#/$defs/versionMap" },
+    "room_protocol": { "const": "gravewright.room/v1" },
+    "exposes": {
+      "type": "object",
+      "required": ["slots"],
+      "properties": {
+        "slots": { "type": "array", "items": { "$ref": "#/$defs/slotExposure" } }
+      },
+      "additionalProperties": false
+    },
+    "routes": { "$ref": "#/$defs/stringMap" },
+    "middleware": { "$ref": "#/$defs/stringArrayMap" },
+    "slots": { "$ref": "#/$defs/stringArrayMap" },
+    "exports": {
+      "type": "object",
+      "properties": { "get": { "$ref": "#/$defs/nonEmptyStrings" } },
+      "additionalProperties": false
+    },
+    "manifest_url": { "type": "string" },
+    "download_url": { "type": "string" },
+    "download_sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "kind": { "const": "room" } }, "required": ["kind"] },
+      "then": { "required": ["room_protocol", "exposes"] }
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyStrings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "versionMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "stringMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "stringArrayMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/nonEmptyStrings" }
+    },
+    "slotExposure": {
+      "type": "object",
+      "required": ["name", "mounts", "contributions"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^gw-[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "mounts": { "const": "one" },
+        "contributions": { "enum": ["one", "many"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

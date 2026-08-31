@@ -1,4 +1,4 @@
-import type { Context, ModuleAPI } from "@gravewright/sdk";
+import type { Context, DynamicContext, ModuleAPI } from "@gravewright/sdk";
 
 interface CharacterAPI extends ModuleAPI {
   get: {
@@ -16,6 +16,16 @@ declare module "@gravewright/sdk" {
 }
 
 declare const ctx: Context;
+declare const dynamicContext: DynamicContext;
+
+const dynamicFromTypedContext: DynamicContext = ctx;
+dynamicContext.diagnostic.record({
+  event: "types.dynamic-context",
+  actor: "Test",
+  action: "Verify diagnostic parity",
+  status: "success",
+});
+void dynamicFromTypedContext;
 
 const character = ctx.use("character");
 const hp: number = character.get("hp")();

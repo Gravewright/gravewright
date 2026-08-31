@@ -1,1 +1,1 @@
-export { Kernel, type KernelOptions, type LoadOptions } from "./kernel.js";
+export { Kernel, type ActivationPlan, type KernelOptions, type LoadOptions } from "./kernel.js";

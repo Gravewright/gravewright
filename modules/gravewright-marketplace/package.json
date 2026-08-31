@@ -17,6 +17,7 @@
     }
   },
   "dependencies": {
+    "ipaddr.js": "^2.5.0",
     "semver": "^7.7.2",
     "yauzl": "^3.4.0"
   }

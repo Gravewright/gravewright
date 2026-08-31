@@ -2,6 +2,10 @@
 
 `manifest.json` é a fronteira estática de segurança e composição. O kernel o valida antes de importar o código.
 
+O schema legível por ferramentas está em
+[`docs/schema/manifest-v1.json`](../../schema/manifest-v1.json). A validação de
+runtime continua sendo a autoridade para regras semânticas, como faixas SemVer.
+
 ```json
 {
   "name": "dice-roller",

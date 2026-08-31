@@ -19,19 +19,21 @@
     "start": "tsx src/index.ts",
     "grave": "tsx src/cli/main.ts",
     "pretest": "npm run types:sync",
-    "test": "tsx --test tests/kernel.test.ts tests/kernel-properties.test.ts tests/tooling.test.ts tests/cli.test.ts tests/marketplace-installer.test.ts",
+    "test": "tsx --test tests/kernel.test.ts tests/kernel-properties.test.ts tests/kernel-state-machine.test.ts tests/manifest-schema.test.ts tests/tooling.test.ts tests/cli.test.ts tests/marketplace-installer.test.ts",
     "pretypecheck": "npm run types:sync",
     "typecheck": "tsc --noEmit",
     "build:sdk": "npm run build -w @gravewright/sdk",
     "build:kernel": "npm run build -w @gravewright/kernel",
     "build": "npm run build:sdk && npm run build:kernel",
-    "pack:dry": "npm pack --dry-run -w @gravewright/sdk && npm pack --dry-run -w @gravewright/kernel"
+    "pack:dry": "npm pack --dry-run -w @gravewright/sdk && npm pack --dry-run -w @gravewright/kernel",
+    "smoke:packages": "tsx scripts/smoke-packages.ts"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^24.13.3",
     "@types/semver": "^7.7.0",
     "@types/yauzl": "^2.10.3",
+    "ajv": "^8.20.0",
     "fast-check": "^4.9.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"

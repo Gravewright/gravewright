@@ -7,6 +7,7 @@ import { runtimeTypeSpecifier, syncModuleTypes } from "../scripts/sync-module-ty
 import { discoverModules } from "../src/discover-modules.js";
 import { createModuleStateStore } from "../src/module-state.js";
 import { _catalogTest } from "../modules/gravewright-marketplace/catalog.js";
+import { _installerTest } from "../modules/gravewright-marketplace/installer.js";
 import { _recipeTest } from "../modules/gravewright-marketplace/recipe.js";
 import { resolveDependencyPlanForRoots } from "../modules/gravewright-marketplace/dependency-install.js";
 import serverModule from "../modules/gravewright-server/index.js";
@@ -238,6 +239,36 @@ test("server exposes working HTTP and WebSocket providers through get", async ()
   }
 });
 
+test("server registrations stay bounded across repeated route and middleware cycles", async () => {
+  const server = await serverModule({} as never);
+  server.write("port", 0);
+  await server.start();
+  let middlewareCalls = 0;
+  try {
+    for (let cycle = 0; cycle < 100; cycle += 1) {
+      const disposeMiddleware = server.middleware("/cycle", (_request, _response, next) => {
+        middlewareCalls += 1;
+        next();
+      });
+      const disposeRoute = server.route("/cycle", (_request, response) => response.text(`cycle-${cycle}`));
+      const active = await fetch(`http://127.0.0.1:${server.stat().port}/cycle`);
+      assert.equal(active.status, 200);
+      assert.equal(await active.text(), `cycle-${cycle}`);
+      disposeRoute(); disposeMiddleware();
+      disposeRoute(); disposeMiddleware();
+      const disabled = await fetch(`http://127.0.0.1:${server.stat().port}/cycle`);
+      assert.equal(disabled.status, 404);
+      const status = server.stat() as {
+        registrations: { routes: number; middleware: number };
+        bridges: { routes: number; middleware: number };
+      };
+      assert.deepEqual(status.registrations, { routes: 0, middleware: 0, slots: 0 });
+      assert.deepEqual(status.bridges, { routes: 1, middleware: 1 });
+    }
+    assert.equal(middlewareCalls, 100);
+  } finally { await server.stop(); }
+});
+
 test("core modules ship reproducible dependency locks and use the host SDK peer", async () => {
   for (const directory of ["gravewright-server", "gravewright-marketplace"]) {
     const moduleRoot = path.resolve("modules", directory);
@@ -246,5 +277,6 @@ test("core modules ship reproducible dependency locks and use the host SDK peer"
     assert.equal(packageJson.peerDependenciesMeta?.["@gravewright/sdk"]?.optional, true);
     assert.equal(packageLock.lockfileVersion, 3);
     assert.equal(packageLock.packages[""]?.name, packageJson.name);
+    await assert.doesNotReject(_installerTest.validateNodeDependencyPolicy(moduleRoot));
   }
 });
