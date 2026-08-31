@@ -14,7 +14,6 @@ coverage/
 # Gravewright runtime data
 .gravewright/
 modules/.install-*/
-gravewright.modules.json
 
 # Environment and local configuration
 .env
