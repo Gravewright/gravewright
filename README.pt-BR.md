@@ -2,7 +2,7 @@
 
 **Construa um virtual tabletop a partir de módulos, não de premissas.**
 
-Gravewright é uma plataforma open source para criar Virtual Tabletops com módulos independentes e substituíveis. Ela oferece um pequeno microkernel TypeScript e deixa cada distribuição decidir como campanhas, salas, regras, renderização, assets, interface e descoberta devem funcionar.
+Gravewright é uma plataforma open source para criar Virtual Tabletops com módulos independentes e substituíveis. Ela oferece um pequeno microkernel TypeScript e deixa cada distribuição decidir como sua mesa, regras, backend, extensões e transporte devem funcionar.
 
 [English](README.md) · [Documentação](docs/README.md) · [Criar um módulo](docs/pt-br/criando-um-modulo.md)
 
@@ -17,13 +17,10 @@ Gravewright é uma plataforma open source para criar Virtual Tabletops com módu
                                     │
                             um server ativo
                                     │
-          ┌─────────────┬───────────┼───────────┬─────────────┐
-          │             │           │           │             │
-      Campaign         Room       Ruleset   Marketplace       UI
-                        │                       │
-                    Renderer                Módulos e
-                        │                    Recipes
-                      Assets
+                ┌───────────┬───────┴───────┬───────────┐
+                │           │               │           │
+              Room       Ruleset          Addon       System
+          campanha/mesa  regras         extensões     backend
 ```
 
 Use os módulos oficiais, substitua apenas uma parte da stack ou publique uma experiência completamente diferente. O kernel coordena o sistema sem controlar suas decisões de produto.
@@ -46,9 +43,13 @@ addons e systems são livremente combináveis (`0..n`).
 npm install
 npm test
 npm run typecheck
+printf '{\n  "server": "active",\n  "marketplace": "active"\n}\n' > gravewright.modules.json
 npm run grave -- doctor
 npm run grave -- run
 ```
+
+`gravewright.modules.json` é estado local de runtime; o repositório não impõe
+essa escolha de distribuição. A instalação nunca ativa código.
 
 O marketplace padrão fica disponível em `http://127.0.0.1:3000/marketplace`.
 
@@ -60,7 +61,7 @@ npm run grave -- module build modules/fog-of-war
 npm run grave -- doctor
 ```
 
-Comece pelo [guia de autoria](docs/pt-br/criando-um-modulo.md), copie um [template mínimo](docs/minimal-templates/) ou estude os [exemplos completos](docs/examples/).
+Comece pelos [primeiros passos para autores](docs/pt-br/getting-started/README.md), use o [guia completo](docs/pt-br/criando-um-modulo.md), copie um [template mínimo](docs/minimal-templates/) ou estude os [exemplos completos](docs/examples/).
 
 ## Princípios
 
