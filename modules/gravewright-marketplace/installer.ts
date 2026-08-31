@@ -94,6 +94,8 @@ function manifestOf(value: unknown, source: string): ModuleManifest & { download
   }
   if (!SHA256.test(manifest.download_sha256 as string)) throw new Error("download_sha256 deve ser SHA-256 hexadecimal");
   if (!manifest.exports || typeof manifest.exports !== "object" || Array.isArray(manifest.exports)) throw new Error("exports inválido no manifest remoto");
+  const exports = manifest.exports as Record<string, unknown>;
+  if (exports.set !== undefined || exports.prop !== undefined) throw new Error("somente exports.get é suportado");
   return { ...manifest, manifest_url: source } as ModuleManifest & { download_url: string; download_sha256: string };
 }
 

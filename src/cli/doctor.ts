@@ -38,7 +38,9 @@ export async function diagnose(root: string): Promise<Finding[]> {
       if (typeof value.version !== "string" || !semver.valid(value.version)) throw new Error("invalid SemVer version");
       if (typeof value.entry !== "string" || !await access(path.resolve(path.dirname(file), value.entry)).then(() => true, () => false)) throw new Error("entry file does not exist");
       {
-        const readable = (value.exports as { get?: unknown } | undefined)?.get;
+        const exports = value.exports as { get?: unknown; set?: unknown; prop?: unknown } | undefined;
+        if (exports?.set !== undefined || exports?.prop !== undefined) throw new Error("only exports.get is supported");
+        const readable = exports?.get;
         const required = [...COMMON_MODULE_EXPORTS, ...(value.kind === "server" ? ["start", "stop", "route", "middleware", "slot"] : value.kind === "room" ? ["mount", "unmount"] : [])];
         if (!Array.isArray(readable) || required.some((name) => !readable.includes(name))) {
           throw new Error(`${String(value.kind)} exports.get must include ${required.join(", ")}`);

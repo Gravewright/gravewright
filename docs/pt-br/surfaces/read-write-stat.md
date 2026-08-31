@@ -9,4 +9,4 @@ Todo módulo publica estes comandos inspirados em POSIX por `exports.get`.
 Os recursos e retornos pertencem à API documentada de cada módulo. Um storage pode
 oferecer `read("campaigns/42")`; um server pode retornar
 `{ running: true, port: 3000 }` em `stat()`. São comandos em `exports.get`, não
-atribuições diretas em `exports.set`.
+atribuições diretas entre módulos.

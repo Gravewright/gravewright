@@ -13,7 +13,7 @@ lookup, not sequential reading.
 ## Runtime surfaces
 
 - [Complete surface index](../surfaces/README.md)
-- [`use`](../surfaces/use.md), [`get`](../surfaces/get.md), [`set`](../surfaces/set.md), and [`prop`](../surfaces/prop.md)
+- [`use`](../surfaces/use.md) and [`get`](../surfaces/get.md)
 - [Routes](../surfaces/routes.md), [middleware](../surfaces/middleware.md), and [slots](../surfaces/slots.md)
 - [Server contract](../surfaces/server.md)
 - [Room slot ABI](../surfaces/room-slots.md)

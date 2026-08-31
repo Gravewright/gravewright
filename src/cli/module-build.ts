@@ -36,8 +36,6 @@ export async function buildModuleDefinition(directory: string, options: BuildMod
     ...(definition.slots ? { slots: Object.fromEntries(Object.entries(definition.slots).map(([key, names]) => [key, [...names]])) } : {}),
     exports: {
       get: [...(definition.exports.get ?? [])],
-      ...(definition.exports.set ? { set: [...definition.exports.set] } : {}),
-      ...(definition.exports.prop ? { prop: [...definition.exports.prop] } : {}),
     },
   };
   const interfaceName = pascal(definition.name);

@@ -13,7 +13,7 @@ não para leitura sequencial.
 ## Superfícies de runtime
 
 - [Índice completo](../surfaces/README.md)
-- [`use`](../surfaces/use.md), [`get`](../surfaces/get.md), [`set`](../surfaces/set.md) e [`prop`](../surfaces/prop.md)
+- [`use`](../surfaces/use.md) e [`get`](../surfaces/get.md)
 - [Routes](../surfaces/routes.md), [middleware](../surfaces/middleware.md) e [slots](../surfaces/slots.md)
 - [Contrato do server](../surfaces/server.md)
 - [ABI de slots da room](../surfaces/room-slots.md)

@@ -32,7 +32,7 @@ async function fixture(options: {
   routes?: Record<string, string>;
   middleware?: Record<string, string[]>;
   slots?: Record<string, string[]>;
-  exports?: { get?: string[]; set?: string[]; prop?: string[] };
+  exports?: { get?: string[] };
   source?: string;
   includeCommon?: boolean;
 } = {}): Promise<string> {
@@ -42,7 +42,7 @@ async function fixture(options: {
   const requested = options.exports ?? { get: ["answer"] };
   const common = options.includeCommon === false ? [] : COMMON_MODULE_EXPORTS.filter((name) => !(requested.get ?? []).includes(name));
   const declared = { ...requested, get: [...common, ...(requested.get ?? [])] };
-  const all = [...(declared.get ?? []), ...(declared.set ?? []), ...(declared.prop ?? [])];
+  const all = [...(declared.get ?? [])];
   const unsafeCharMap: Record<string, string> = {
     "<": "\\u003C",
     ">": "\\u003E",
@@ -122,25 +122,6 @@ test("enforces get permission and hides internal exports", async () => {
   assert.equal(kernel.use("visibility").get("visible"), 1);
   assert.throws(() => kernel.use("visibility").get("internal"), /Get not authorized/);
   assert.throws(() => kernel.use("visibility").get("unknown"), /Get not authorized/);
-});
-
-test("enforces set permission", async () => {
-  const kernel = new Kernel();
-  await kernel.load(await fixture({ name: "writes", exports: { get: ["readOnly"], set: ["writeOnly"] } }));
-  await bootstrap(kernel);
-  kernel.use("writes").set("writeOnly", "changed");
-  assert.throws(() => kernel.use("writes").get("writeOnly"), /Get not authorized/);
-  assert.throws(() => kernel.use("writes").set("readOnly", 2), /Set not authorized/);
-});
-
-test("prop permits both get and set", async () => {
-  const kernel = new Kernel();
-  await kernel.load(await fixture({ name: "properties", exports: { prop: ["hp"] }, source: "export default function createModule(ctx) { return { hp: 10 }; }" }));
-  await bootstrap(kernel);
-  const ref = kernel.use("properties");
-  assert.equal(ref.get("hp"), 10);
-  ref.set("hp", 20);
-  assert.equal(ref.get("hp"), 20);
 });
 
 test("functions are ordinary values obtained and called through get", async () => {
@@ -291,21 +272,21 @@ test("factory receives a Context facade without Kernel methods", async () => {
   });
 });
 
-test("get, set and module functions operate on the exact same instance", async () => {
+test("get commands operate on the exact same module instance", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({
     name: "character",
-    exports: { get: ["damage"], prop: ["hp"] },
+    exports: { get: ["damage", "hp"] },
     source: `export default function createModule(ctx) {
-      const api = { hp: 10, damage(amount) { api.hp -= amount; } };
+      let currentHp = 10;
+      const api = { hp: () => currentHp, damage(amount) { currentHp -= amount; } };
       return api;
     }`,
   }));
   await bootstrap(kernel);
   const character = kernel.use("character");
-  character.set("hp", 20);
   (character.get("damage") as (amount: number) => void)(5);
-  assert.equal(character.get("hp"), 15);
+  assert.equal((character.get("hp") as () => number)(), 5);
 });
 
 for (const [kind, invalidName, invalidValue] of [
@@ -340,15 +321,6 @@ for (const operation of ["start", "stop", "route", "middleware", "slot"] as cons
     const kernel = new Kernel();
     const remaining = contracts.server!.filter((name) => name !== operation);
     await kernel.load(await fixture({ name: `base-missing-${operation}`, kind: "server", exports: { get: remaining } }));
-    await assert.rejects(bootstrap(kernel, false), new RegExp(`'${operation}' must be declared in exports.get`));
-  });
-
-  test(`server contract rejects ${operation} declared as prop`, async () => {
-    const kernel = new Kernel();
-    const remaining = contracts.server!.filter((name) => name !== operation);
-    await kernel.load(await fixture({
-      name: `base-prop-${operation}`, kind: "server", exports: { get: remaining, prop: [operation] },
-    }));
     await assert.rejects(bootstrap(kernel, false), new RegExp(`'${operation}' must be declared in exports.get`));
   });
 
@@ -492,7 +464,7 @@ test("registers multiple values in the same slot", async () => {
 
 test("rejects middleware outside exports.get", async () => {
   const kernel = new Kernel();
-  await kernel.load(await fixture({ name: "bad-middleware-access", middleware: { "/foo": ["foo"] }, exports: { prop: ["foo"] } }));
+  await kernel.load(await fixture({ name: "bad-middleware-access", middleware: { "/foo": ["foo"] }, exports: { get: [] } }));
   await assert.rejects(bootstrap(kernel), /Invalid middleware.*'foo' must be declared in exports.get/);
 });
 
@@ -507,7 +479,7 @@ test("rejects middleware whose value is not a function", async () => {
 
 test("rejects routes outside exports.get", async () => {
   const kernel = new Kernel();
-  await kernel.load(await fixture({ name: "bad-route-access", routes: { "/foo": "foo" }, exports: { prop: ["foo"] } }));
+  await kernel.load(await fixture({ name: "bad-route-access", routes: { "/foo": "foo" }, exports: { get: [] } }));
   await assert.rejects(bootstrap(kernel), /Invalid route.*'foo' must be declared in exports.get/);
 });
 
@@ -531,7 +503,7 @@ test("rejects a slot export missing from the instance", async () => {
 
 test("rejects slot values outside exports.get", async () => {
   const kernel = new Kernel();
-  await kernel.load(await fixture({ name: "bad-slot-access", slots: { app: ["foo"] }, exports: { prop: ["foo"] } }));
+  await kernel.load(await fixture({ name: "bad-slot-access", slots: { app: ["foo"] }, exports: { get: [] } }));
   await assert.rejects(bootstrap(kernel), /Invalid slot 'app'.*'foo' must be declared in exports.get/);
 });
 
@@ -596,26 +568,15 @@ test("rejects duplicate exports within one slot", async () => {
   );
 });
 
-for (const [first, second] of [["get", "set"], ["get", "prop"], ["set", "prop"]] as const) {
-  test(`manifest rejects exports.${first} + exports.${second} overlap`, async () => {
-    await assert.rejects(
-      new Kernel().load(await fixture({ name: `overlap-${first}-${second}`, exports: { [first]: ["hp"], [second]: ["hp"] } })),
-      /export 'hp' overlaps/,
-    );
-  });
-}
-
-for (const category of ["get", "set", "prop"] as const) {
-  test(`manifest rejects duplicate names inside exports.${category}`, async () => {
-    await assert.rejects(
-      new Kernel().load(await fixture({
-        name: `duplicate-${category}`,
-        exports: { [category]: ["foo", "foo"] },
-      })),
-      new RegExp(`duplicate export 'foo' in exports.${category}`),
-    );
-  });
-}
+test("manifest rejects duplicate names inside exports.get", async () => {
+  await assert.rejects(
+    new Kernel().load(await fixture({
+      name: "duplicate-get",
+      exports: { get: ["foo", "foo"] },
+    })),
+    /duplicate export 'foo' in exports.get/,
+  );
+});
 
 test("module entry must default-export a factory", async () => {
   const kernel = new Kernel();
@@ -883,7 +844,7 @@ test("ModuleRef resolves the current instance and is unavailable only while disa
   (globalThis as Record<string, unknown>)[key] = 0;
   const kernel = new Kernel();
   await kernel.load(await fixture({
-    name: "logical-handle", exports: { get: ["instanceId"], prop: ["value"] },
+    name: "logical-handle", exports: { get: ["instanceId", "value"] },
     source: `export default function() { return { instanceId: ++globalThis.${key}, value: 10 }; }`,
   }));
   await bootstrap(kernel);
@@ -891,7 +852,6 @@ test("ModuleRef resolves the current instance and is unavailable only while disa
   assert.equal(ref.get("instanceId"), 1);
   await kernel.disable("logical-handle");
   assert.throws(() => ref.get("instanceId"), /Module "logical-handle" is not active/);
-  assert.throws(() => ref.set("value", 20), /Module "logical-handle" is not active/);
   await kernel.activate("logical-handle");
   assert.equal(ref.get("instanceId"), 2);
   assert.equal(ref.get("value"), 10);

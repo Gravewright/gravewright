@@ -105,16 +105,14 @@ export default defineModule({
 
 ```ts
 exports: {
-  get: ["read", "write", "stat", "roll", "reset"],
-  prop: ["status"],
+  get: ["read", "write", "stat", "roll", "reset", "status"],
 }
 ```
 
-- `get` expõe valores legíveis e comandos chamáveis.
-- `prop` expõe uma propriedade legível e gravável.
-- `set` existe por compatibilidade, mas está deprecated. Prefira comandos explícitos em `get`, como `configure()`.
+- `get` é a única superfície pública. Ela expõe valores legíveis e comandos chamáveis.
+- Mutações usam comandos explícitos como `configure()`, `setTheme()` ou `write()`.
 
-Todo export deve existir no retorno de `create()`. Um nome não pode ser duplicado nem aparecer em categorias diferentes.
+Todo export deve existir no retorno de `create()` e não pode ser duplicado.
 
 ## 5. Gere manifest e tipos
 

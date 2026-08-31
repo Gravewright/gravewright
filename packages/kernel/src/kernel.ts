@@ -131,6 +131,9 @@ function validateManifest(value: unknown): ModuleManifest {
     throw new Error(`Invalid provider: ${String(value.provider)}`);
   }
   if (!isObject(value.exports)) throw new Error("Invalid manifest: exports must be an object");
+  if (value.exports.set !== undefined || value.exports.prop !== undefined) {
+    throw new Error("Invalid manifest: only exports.get is supported");
+  }
   if (!semver.valid(value.version as string)) {
     throw new Error(`Invalid manifest: version '${String(value.version)}' is not valid SemVer`);
   }
@@ -214,8 +217,6 @@ function validateManifest(value: unknown): ModuleManifest {
     ...(slots === undefined ? {} : { slots }),
     exports: {
       get: stringArray(value.exports.get, "exports.get"),
-      set: stringArray(value.exports.set, "exports.set"),
-      prop: stringArray(value.exports.prop, "exports.prop"),
     },
     ...(value.manifest_url === undefined ? {} : { manifest_url: value.manifest_url }),
     ...(value.download_url === undefined ? {} : { download_url: value.download_url }),
@@ -235,19 +236,12 @@ function validateManifest(value: unknown): ModuleManifest {
     throw new Error("Invalid manifest: types must be a non-empty string");
   }
 
-  const categories = ["get", "set", "prop"] as const;
-  const categoryByName = new Map<string, string>();
-  for (const category of categories) {
-    for (const name of manifest.exports[category] ?? []) {
-      const previous = categoryByName.get(name);
-      if (previous) {
-        if (previous === category) {
-          throw new Error(`Invalid manifest: duplicate export '${name}' in exports.${category}`);
-        }
-        throw new Error(`Invalid manifest: export '${name}' overlaps exports.${previous} and exports.${category}`);
-      }
-      categoryByName.set(name, category);
+  const exported = new Set<string>();
+  for (const name of manifest.exports.get ?? []) {
+    if (exported.has(name)) {
+      throw new Error(`Invalid manifest: duplicate export '${name}' in exports.get`);
     }
+    exported.add(name);
   }
   return manifest;
 }
@@ -357,15 +351,9 @@ export class Kernel {
     return Object.freeze({
       get<T = unknown>(property: string): T {
         const record = resolve();
-        const readable = new Set([...(record.manifest.exports.get ?? []), ...(record.manifest.exports.prop ?? [])]);
+        const readable = new Set(record.manifest.exports.get ?? []);
         if (!readable.has(property)) throw new Error(`Get not authorized: ${name}.${property}`);
         return record.module[property] as T;
-      },
-      set<T = unknown>(property: string, value: T): void {
-        const record = resolve();
-        const writable = new Set([...(record.manifest.exports.set ?? []), ...(record.manifest.exports.prop ?? [])]);
-        if (!writable.has(property)) throw new Error(`Set not authorized: ${name}.${property}`);
-        record.module[property] = value;
       },
     });
   }
@@ -386,7 +374,7 @@ export class Kernel {
     try {
     if (!isObject(instance)) throw new Error(`Module factory must return an object: ${manifest.name}`);
 
-    const names = new Set([...(manifest.exports.get ?? []), ...(manifest.exports.set ?? []), ...(manifest.exports.prop ?? [])]);
+    const names = new Set(manifest.exports.get ?? []);
     for (const name of names) {
       if (!Object.prototype.hasOwnProperty.call(instance, name)) {
         throw new Error(`Declared export does not exist: ${manifest.name}.${name}`);
