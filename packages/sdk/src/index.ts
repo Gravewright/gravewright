@@ -126,8 +126,6 @@ export async function composeRoomSlots(
 
 export interface ModuleAPI {
   get: object;
-  set: object;
-  prop: object;
 }
 
 type ExportNames<T> = readonly (keyof T & string)[];
@@ -148,12 +146,7 @@ export interface ModuleDefinition<TInstance extends Record<string, unknown>> {
   routes?: Record<string, keyof TInstance & string>;
   middleware?: Record<string, readonly (keyof TInstance & string)[]>;
   slots?: Record<string, readonly (keyof TInstance & string)[]>;
-  exports: {
-    get?: ExportNames<TInstance>;
-    /** @deprecated Prefira comandos explícitos publicados em exports.get. */
-    set?: ExportNames<TInstance>;
-    prop?: ExportNames<TInstance>;
-  };
+  exports: { get?: ExportNames<TInstance> };
   create(context: Context): TInstance | Promise<TInstance>;
 }
 
@@ -173,13 +166,8 @@ export function defineModule<
 export type InferModuleAPI<T> = T extends DefinedModule<infer TDefinition>
   ? {
       get: Pick<Awaited<ReturnType<TDefinition["create"]>>, Extract<TDefinition["exports"]["get"] extends readonly (infer K)[] ? K : never, keyof Awaited<ReturnType<TDefinition["create"]>>>>;
-      set: Pick<Awaited<ReturnType<TDefinition["create"]>>, Extract<TDefinition["exports"]["set"] extends readonly (infer K)[] ? K : never, keyof Awaited<ReturnType<TDefinition["create"]>>>>;
-      prop: Pick<Awaited<ReturnType<TDefinition["create"]>>, Extract<TDefinition["exports"]["prop"] extends readonly (infer K)[] ? K : never, keyof Awaited<ReturnType<TDefinition["create"]>>>>;
     }
   : never;
-
-export type Readable<T extends ModuleAPI> = T["get"] & T["prop"];
-export type Writable<T extends ModuleAPI> = T["set"] & T["prop"];
 
 export interface ModuleRegistry {
 }
@@ -254,8 +242,6 @@ export interface ModuleManifest {
   slots?: Record<string, string[]>;
   exports: {
     get?: string[];
-    set?: string[];
-    prop?: string[];
   };
   manifest_url?: string;
   /** URL HTTPS estável que descreve sempre a release mais recente. */
@@ -264,14 +250,8 @@ export interface ModuleManifest {
   download_sha256?: string;
 }
 
-export interface ModuleRef<T extends ModuleAPI = {
-  get: Record<string, unknown>;
-  set: Record<string, unknown>;
-  prop: Record<string, unknown>;
-}> {
-  get<K extends keyof Readable<T> & string>(name: K): Readable<T>[K];
-  /** @deprecated Prefira comandos explícitos obtidos por get(). */
-  set<K extends keyof Writable<T> & string>(name: K, value: Writable<T>[K]): void;
+export interface ModuleRef<T extends ModuleAPI = { get: Record<string, unknown> }> {
+  get<K extends keyof T["get"] & string>(name: K): T["get"][K];
 }
 
 export interface Context<R extends ModuleRegistry = ModuleRegistry, C extends CapabilityRegistry = CapabilityRegistry> {

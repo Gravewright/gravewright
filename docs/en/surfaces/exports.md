@@ -4,16 +4,15 @@
 
 ```ts
 exports: {
-  get: ["roll", "configure"],
-  prop: ["status"],
+  get: ["roll", "configure", "status"],
 }
 ```
 
-- `get`: readable values and callable commands.
-- `prop`: readable/writable properties.
-- `set`: deprecated writable-only compatibility surface.
+`get` is the only public surface. It contains readable values and callable
+commands. State changes use commands owned by the module, such as
+`configure(options)`, instead of generic cross-module assignment.
 
-Every name must exist on the runtime instance. Names must be unique and cannot overlap categories. A value returned by `create()` but omitted here remains private.
+Every name must exist on the runtime instance and be unique. A value returned by `create()` but omitted here remains private.
 
 Prefer commands such as `configure(options)` over publishing mutable implementation state.
 

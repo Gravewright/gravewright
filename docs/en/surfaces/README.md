@@ -14,8 +14,6 @@ Each page documents one explicit boundary between a module, the SDK, and the ker
 
 - [`use`](use.md) — obtain a revocable reference to a declared dependency.
 - [`get`](get.md) — read a permitted value or command.
-- [`set`](set.md) — deprecated generic cross-module mutation.
-- [`prop`](prop.md) — explicitly shared readable/writable property.
 - [Dependencies](dependencies.md) — names, SemVer, ordering, and installation.
 - [Recipes](recipes.md) — reproducible compositions and capability-provider choices.
 

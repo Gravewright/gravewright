@@ -108,16 +108,14 @@ The returned object is the module instance. Only names declared under `exports` 
 
 ```ts
 exports: {
-  get: ["read", "write", "stat", "roll", "reset"],
-  prop: ["status"],
+  get: ["read", "write", "stat", "roll", "reset", "status"],
 }
 ```
 
-- `get` exposes readable values and callable commands.
-- `prop` exposes a readable and writable property.
-- `set` exists for compatibility but is deprecated. Prefer an explicit command in `get`, such as `configure()` or `setTheme()`.
+- `get` is the only public surface. It exposes readable values and callable commands.
+- Mutations are explicit commands such as `configure()`, `setTheme()`, or `write()`.
 
-An export must exist on the object returned by `create()`. Names cannot be duplicated or appear in more than one export category.
+An export must exist on the object returned by `create()` and cannot be duplicated.
 
 ## 5. Generate the manifest and types
 

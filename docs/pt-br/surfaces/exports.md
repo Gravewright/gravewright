@@ -4,16 +4,15 @@
 
 ```ts
 exports: {
-  get: ["roll", "configure"],
-  prop: ["status"],
+  get: ["roll", "configure", "status"],
 }
 ```
 
-- `get`: valores legíveis e comandos chamáveis.
-- `prop`: propriedades legíveis e graváveis.
-- `set`: superfície write-only legada e deprecated.
+`get` é a única superfície pública. Ela contém valores legíveis e comandos
+chamáveis. Mudanças de estado usam comandos do próprio módulo, como
+`configure(options)`, em vez de atribuição genérica entre módulos.
 
-Todo nome deve existir na instância, ser único e não aparecer em categorias diferentes. Um valor retornado por `create()` mas omitido aqui permanece privado.
+Todo nome deve existir na instância e ser único. Um valor retornado por `create()` mas omitido aqui permanece privado.
 
 Prefira comandos como `configure(options)` em vez de publicar estado mutável.
 

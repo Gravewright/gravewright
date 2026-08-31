@@ -1,6 +1,6 @@
 # `get`
 
-`ref.get(name)` lê um valor listado em `exports.get` ou `exports.prop`.
+`ref.get(name)` lê um valor listado em `exports.get`.
 
 ```ts
 const roll = ctx.use("dice-roller").get("roll");

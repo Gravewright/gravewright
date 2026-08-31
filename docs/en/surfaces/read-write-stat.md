@@ -9,4 +9,4 @@ Every module publishes these POSIX-inspired commands through `exports.get`.
 Resource names and return values belong to each module's documented API. A storage
 system might expose `read("campaigns/42")`; a server might return
 `{ running: true, port: 3000 }` from `stat()`. These are callable commands in
-`exports.get`, not direct assignments in `exports.set`.
+`exports.get`, not direct cross-module assignments.

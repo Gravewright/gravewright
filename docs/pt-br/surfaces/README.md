@@ -14,8 +14,6 @@ Cada página documenta uma fronteira explícita entre módulo, SDK e kernel.
 
 - [`use`](use.md) — referência revogável para uma dependência declarada.
 - [`get`](get.md) — leitura de valor ou comando permitido.
-- [`set`](set.md) — mutação cross-module genérica e deprecated.
-- [`prop`](prop.md) — propriedade compartilhada legível e gravável.
 - [Dependencies](dependencies.md) — nomes, SemVer, ordem e instalação.
 - [Recipes](recipes.md) — composições reproduzíveis e escolha de providers.
 

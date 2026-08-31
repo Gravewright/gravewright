@@ -4,9 +4,9 @@ interface CharacterAPI extends ModuleAPI {
   get: {
     /** Aplica dano ao personagem. @param amount Quantidade de dano. */
     damage: (amount: number) => void;
+    hp: () => number;
+    setFavoriteColor: (color: string) => void;
   };
-  set: { favoriteColor: string };
-  prop: { hp: number };
 }
 
 declare module "@gravewright/sdk" {
@@ -18,15 +18,13 @@ declare module "@gravewright/sdk" {
 declare const ctx: Context;
 
 const character = ctx.use("character");
-const hp: number = character.get("hp");
-character.set("hp", 10);
+const hp: number = character.get("hp")();
+character.get("setFavoriteColor")("purple");
 void hp;
-// @ts-expect-error hp is numeric
-character.set("hp", "wrong");
-// @ts-expect-error write-only values cannot be read
-character.get("favoriteColor");
-// @ts-expect-error read-only behavior cannot be overwritten
-character.set("damage", () => {});
+// @ts-expect-error hp does not accept arguments
+character.get("hp")(10);
+// @ts-expect-error color must be a string
+character.get("setFavoriteColor")(42);
 
 // @ts-expect-error unknown modules require the explicit DynamicContext fallback
 ctx.use("unknown-module");
@@ -35,8 +33,6 @@ const server = ctx.use("gravewright-server");
 const start: () => Promise<void> = server.get("start");
 const port: number = server.get("port");
 void [start, port, server.get("middleware"), server.get("route"), server.get("slot")];
-// @ts-expect-error port is read-only
-server.set("port", 4000);
 // @ts-expect-error unknown server export
 server.get("unknown");
 
