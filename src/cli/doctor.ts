@@ -97,12 +97,12 @@ export async function diagnose(root: string): Promise<Finding[]> {
     }
   }
   for (const name of Object.keys(states)) if (!manifests.has(name)) findings.push({ status: "warn", label: "Orphan state", detail: `${name} is not installed` });
-  for (const kind of ["server", "room", "ruleset"]) {
+  for (const kind of ["server"]) {
     const count = [...manifests.values()].filter((item) => item.active && item.kind === kind).length;
     if (count === 0) findings.push({ status: "fail", label: "Required kind", detail: `no active ${kind} module` });
     if (count > 1) findings.push({ status: "fail", label: "Required kind", detail: `multiple ${kind} modules are active` });
   }
-  for (const kind of ["chat", "dice-engine", "assets", "storage"]) if ([...manifests.values()].filter((item) => item.active && item.kind === kind).length > 1) findings.push({ status: "fail", label: "Kind", detail: `multiple ${kind} modules are active` });
+  for (const kind of ["room", "ruleset", "chat", "dice-engine", "assets", "storage"]) if ([...manifests.values()].filter((item) => item.active && item.kind === kind).length > 1) findings.push({ status: "fail", label: "Kind", detail: `multiple ${kind} modules are active` });
   findings.unshift({ status: manifests.size ? "pass" : "fail", label: "Modules", detail: `${manifests.size} manifest(s) found` });
   return findings;
 }

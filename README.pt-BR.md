@@ -34,9 +34,10 @@ Use os módulos oficiais, substitua apenas uma parte da stack ou publique uma ex
 - Scaffold, diagnóstico, verificação de ambiente e tooling pela CLI `grave`.
 - Marketplace baseado em releases verificadas e recipes reproduzíveis.
 
-Todo projeto em execução possui exatamente um `server`, uma `room` e um `ruleset`
-ativos. `chat`, `dice-engine`, `assets` e `storage` são singletons opcionais;
-`backend` e `addon` são plurais.
+Todo projeto em execução possui exatamente um `server` ativo. `room`, `ruleset`,
+`chat`, `dice-engine`, `assets` e `storage` são singletons opcionais; `backend` e
+`addon` são plurais. Recipes podem exigir room ou ruleset sem transformar essa
+política de produto em uma regra do kernel.
 
 ## Início rápido
 

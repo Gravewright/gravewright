@@ -14,9 +14,9 @@ These templates contain only the files required by the current Gravewright archi
 | `addon` | [`addon/`](addon/) | Optional extension |
 | `backend` | [`backend/`](backend/) | Backend service |
 
-`server`, `room`, and `ruleset` require exactly one active implementation.
-`chat`, `dice-engine`, `assets`, and `storage` accept at most one; `backend` and
-`addon` accept many. Administrative `read`, `write`, and `stat` hooks are optional.
+`server` requires exactly one active implementation. `room`, `ruleset`, `chat`,
+`dice-engine`, `assets`, and `storage` accept at most one; `backend` and `addon`
+accept many. Administrative `read`, `write`, and `stat` hooks are optional.
 
 Prefer generating a fresh template with the CLI because it follows the installed SDK version:
 

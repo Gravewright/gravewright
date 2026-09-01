@@ -34,9 +34,10 @@ Use the official modules, replace one part of the stack, or ship a completely di
 - Scaffolding, diagnostics, health checks, and manifest tooling through `grave`.
 - A release-based marketplace with verified archives and reproducible recipes.
 
-Every running project has exactly one active `server`, `room`, and `ruleset`.
-`chat`, `dice-engine`, `assets`, and `storage` are optional singletons; `backend`
-and `addon` are plural.
+Every running project has exactly one active `server`. `room`, `ruleset`, `chat`,
+`dice-engine`, `assets`, and `storage` are optional singletons; `backend` and
+`addon` are plural. Recipes may require a room or ruleset without turning that
+product policy into a kernel invariant.
 
 ## Quick start
 

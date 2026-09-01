@@ -5,8 +5,8 @@ Kinds define architectural roles and minimum contracts. Modules implement those 
 | Kind | Minimum contract | Active cardinality |
 | --- | --- | --- |
 | `server` | `start`, `stop`, `http`, `route`, `middleware`; optional `realtime` | exactly 1 |
-| `room` | `mount`, `unmount`, `slots` and the canonical room slots | exactly 1 |
-| `ruleset` | no universal game API | exactly 1 |
+| `room` | `mount`, `unmount`, `slots` and the canonical room slots | 0..1 |
+| `ruleset` | no universal game API | 0..1 |
 | `chat` | `send`, `erase` | 0..1 |
 | `dice-engine` | `roll` | 0..1 |
 | `assets` | `store`, `resolve`, `mimeTypeAllowed`, `remove` | 0..1 |
@@ -17,3 +17,7 @@ Kinds define architectural roles and minimum contracts. Modules implement those 
 Use `dependencies` with `ctx.use()` when implementation identity matters, `uses` with `ctx.kind()` for a replaceable architectural role, and `requires`/`provides` with `ctx.capability()` for an optional semantic protocol that does not justify a kind.
 
 `server` owns transport, routes and middleware. `room` owns the visual lifecycle and slots. `ruleset` deliberately has no universal character, combat, initiative or dice API.
+
+Only `server` is required by the kernel. A VTT recipe may require `room` and
+`ruleset`, while a server used only for administration or marketplace access can
+start without either.

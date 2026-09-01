@@ -108,11 +108,9 @@ test("doctor reports missing required active module kinds", async () => {
 test("doctor accepts one active server with optional modules", async () => {
   const root = await workspace();
   const result = await scaffoldModule({ root, kind: "server", name: "http-server" });
-  await scaffoldModule({ root, kind: "room", name: "campaign-room" });
-  await scaffoldModule({ root, kind: "ruleset", name: "game-rules" });
   await scaffoldModule({ root, kind: "storage", name: "storage" });
   await writeFile(path.join(root, "gravewright.modules.json"), JSON.stringify({
-    "http-server": "active", "campaign-room": "active", "game-rules": "active", storage: "active",
+    "http-server": "active", storage: "active",
   }));
   const findings = await diagnose(root);
   assert.equal(findings.filter((item) => item.status === "fail").length, 0);

@@ -32,7 +32,8 @@ contract.
 ## Important invariants
 
 - A running project has exactly one active `server`.
-- `room`, `ruleset`, `addon`, and `backend` modules have cardinality `0..n`.
+- `room` and `ruleset` are optional singletons (`0..1`); `addon` and `backend`
+  are plural (`0..n`).
 - `read`, `write`, and `stat` are optional administrative tooling.
 - A module may use a concrete module only when it declares that dependency.
 - Static manifests are validated before module code is imported.

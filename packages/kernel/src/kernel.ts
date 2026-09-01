@@ -231,10 +231,9 @@ export class Kernel {
     return this.use(server.manifest.name);
   }
 
-  #roomRef(): ModuleRef {
+  #roomRef(): ModuleRef | undefined {
     const room = [...this.#definitions.values()].find(({ manifest, state }) => manifest.kind === "room" && state === "active");
-    if (!room) throw new Error("Missing active module for required kind \"room\"");
-    return this.use(room.manifest.name);
+    return room ? this.use(room.manifest.name) : undefined;
   }
 
   #composeMiddleware(record: ModuleRecord, server: ModuleRef, disposers: Dispose[]): void {
@@ -321,7 +320,7 @@ export class Kernel {
         this.#disposers.set(record.manifest.name, disposers);
       }
       for (const record of this.#modules.values()) this.#composeRoutes(record, server, this.#disposers.get(record.manifest.name)!);
-      for (const record of this.#modules.values()) this.#composeSlots(record, room, this.#disposers.get(record.manifest.name)!);
+      if (room) for (const record of this.#modules.values()) this.#composeSlots(record, room, this.#disposers.get(record.manifest.name)!);
       const start = server.get("start");
       await (start as () => void | Promise<void>)();
       this.#initialized = true;
@@ -384,7 +383,7 @@ export class Kernel {
       const room = this.#roomRef();
       this.#composeMiddleware(record, server, disposers);
       this.#composeRoutes(record, server, disposers);
-      this.#composeSlots(record, room, disposers);
+      if (room) this.#composeSlots(record, room, disposers);
       this.#disposers.set(name, disposers);
       this.#moduleOrder.push(name);
     } catch (error) {

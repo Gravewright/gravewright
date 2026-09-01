@@ -278,7 +278,7 @@ export interface ModuleRef<T extends ModuleAPI = { get: Record<string, unknown> 
 
 export type KindResolution<K extends ModuleKind> = K extends PluralModuleKind
   ? readonly ModuleRef<KindRegistry[K]>[]
-  : K extends "server" | "room" | "ruleset"
+  : K extends "server"
     ? ModuleRef<KindRegistry[K]>
     : ModuleRef<KindRegistry[K]> | undefined;
 

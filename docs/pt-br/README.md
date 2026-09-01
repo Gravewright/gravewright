@@ -31,7 +31,8 @@ consultar um contrato exato.
 ## Invariantes importantes
 
 - Um projeto em execução possui exatamente um `server` ativo.
-- Módulos `room`, `ruleset`, `addon` e `backend` têm cardinalidade `0..n`.
+- `room` e `ruleset` são singletons opcionais (`0..1`); `addon` e `backend` são
+  plurais (`0..n`).
 - `read`, `write` e `stat` são tooling administrativo opcional.
 - Um módulo só pode usar outro módulo concreto se declarar a dependência.
 - Manifests estáticos são validados antes da importação do código.

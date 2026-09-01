@@ -2,7 +2,7 @@ import semver from "semver";
 import type { ModuleKind } from "@gravewright/sdk";
 import type { ActivationPlan, ModuleDefinition } from "../types.js";
 
-export const REQUIRED_KINDS: readonly ModuleKind[] = ["server", "room", "ruleset"];
+export const REQUIRED_KINDS: readonly ModuleKind[] = ["server"];
 export const SINGLETON_KINDS: readonly ModuleKind[] = ["server", "room", "ruleset", "chat", "dice-engine", "assets", "storage"];
 
 export function createActivationPlan(definitions: Iterable<ModuleDefinition>): ActivationPlan {

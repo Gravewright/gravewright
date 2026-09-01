@@ -175,7 +175,7 @@ test("initialization requires exactly one server kind", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({ name: "optional-addon" }));
   await assert.rejects(kernel.initialize(), /Missing active module for required kind "server"/);
-  await loadRequiredKinds(kernel);
+  await kernel.load(await validKind("server"));
   await assert.doesNotReject(kernel.initialize());
 });
 
@@ -957,7 +957,7 @@ test("failed activation rolls back middleware, instance and partial composition"
   delete (globalThis as Record<string, unknown>)[key];
 });
 
-test("cannot disable an active dependency or the active server", async () => {
+test("cannot disable an active dependency or the active server, but room is optional", async () => {
   const kernel = new Kernel();
   await kernel.load(await fixture({ name: "library" }));
   await kernel.load(await fixture({ name: "consumer", dependencies: { library: "^1.0.0" } }));
@@ -969,7 +969,7 @@ test("cannot disable an active dependency or the active server", async () => {
   await kernel.load(await validKind("backend"));
   await kernel.initialize();
   await assert.rejects(kernel.disable("library"), /active module "consumer" depends on it/);
-  await assert.rejects(kernel.disable("protected-room"), /last active module for required kind "room"/);
+  await assert.doesNotReject(kernel.disable("protected-room"));
   await assert.rejects(kernel.disable("protected-base"), /Cannot disable the active server while the kernel is running/);
 });
 

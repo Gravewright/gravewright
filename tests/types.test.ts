@@ -19,8 +19,10 @@ declare const ctx: Context;
 declare const dynamicContext: DynamicContext;
 
 const serverByKind: ServerKindAPI["get"]["http"] = ctx.kind("server").get("http");
-const roomByKind: RoomKindAPI["get"]["slots"] = ctx.kind("room").get("slots");
-const rulesetByKind: ModuleRef<RulesetKindAPI> = ctx.kind("ruleset");
+const optionalRoom = ctx.kind("room");
+let roomByKind: RoomKindAPI["get"]["slots"] | undefined;
+if (optionalRoom) roomByKind = optionalRoom.get("slots");
+const rulesetByKind: ModuleRef<RulesetKindAPI> | undefined = ctx.kind("ruleset");
 const optionalChat = ctx.kind("chat");
 if (optionalChat) {
   const send: ChatKindAPI["get"]["send"] = optionalChat.get("send");
