@@ -1,0 +1,21 @@
+{
+  "name": "@gravewright/kernel",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "LICENSE"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@gravewright/sdk": "0.1.0",
+    "semver": "^7.7.2"
+  }
+}

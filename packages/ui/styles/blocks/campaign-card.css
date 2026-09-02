@@ -1,0 +1,236 @@
+/* gw-campaign — a table on the shelf.
+ *
+ * There is no artwork in the data, so the card grows its own: a tinted field
+ * under an engraved hatch, fading into the card surface so the title can sit
+ * across the seam. A drawn seal marks the plate; "open" floats on it, in the
+ * same place on every card, instead of competing with the title baseline.
+ *
+ * Five tints cycle down the shelf so a wall of cards reads as distinct
+ * objects rather than repeated rows. */
+
+.gw-campaign {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: var(--fib-1) solid var(--hairline);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: var(--shadow-hairline);
+    transition:
+        transform var(--motion-base) var(--ease),
+        border-color var(--motion-base) var(--ease),
+        box-shadow var(--motion-base) var(--ease);
+}
+
+.gw-campaign:hover,
+.gw-campaign:focus-within {
+    transform: translateY(calc(var(--fib-3) * -1));
+    border-color: rgba(192, 154, 90, 0.5);
+    box-shadow: var(--shadow-lg);
+}
+
+/* The cover plate. */
+.gw-campaign::before {
+    content: "";
+    display: block;
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--size-100);
+    background:
+        linear-gradient(
+            180deg,
+            transparent 40%,
+            rgba(24, 29, 35, 0.82) 78%,
+            var(--surface) 100%
+        ),
+        repeating-linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.05) 0 1px,
+            transparent 1px 10px
+        ),
+        linear-gradient(140deg, var(--plate-a), var(--plate-b));
+    transition: filter var(--motion-base) var(--ease);
+}
+
+.gw-campaign:hover::before {
+    filter: brightness(1.12) saturate(1.15);
+}
+
+/* Counting cards only: modals and other siblings do not shift the cycle. */
+.gw-campaign:nth-of-type(5n + 2) {
+    --plate-a: #24313f;
+}
+
+.gw-campaign:nth-of-type(5n + 3) {
+    --plate-a: #223329;
+}
+
+.gw-campaign:nth-of-type(5n + 4) {
+    --plate-a: #33253a;
+}
+
+.gw-campaign:nth-of-type(5n + 5) {
+    --plate-a: #3a2724;
+}
+
+/* ---- Body -------------------------------------------------------------- */
+
+.gw-campaign__body {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    padding: calc(var(--fib-9) + var(--fib-5) + var(--fib-1)) var(--gap-section)
+        var(--gap-section); /* 55 + 8 + 1 = 64 top, clears the plate */
+}
+
+/* A seal on the cover, drawn rather than shipped: a rotated square with a
+ * gold hairline. Decorative only. */
+.gw-campaign__body::after {
+    content: "";
+    position: absolute;
+    top: var(--gap-section);
+    left: var(--gap-section);
+    width: var(--gap-block);
+    height: var(--gap-block);
+    border: var(--fib-1) solid rgba(192, 154, 90, 0.55);
+    background: rgba(192, 154, 90, 0.08);
+    transform: rotate(45deg);
+    pointer-events: none;
+}
+
+.gw-campaign__title {
+    margin: 0;
+    color: var(--text-bright);
+    font-family: var(--font-display);
+    font-size: var(--text-title-card);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-snug);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+}
+
+.gw-campaign__description {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    margin: var(--gap-base) 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+}
+
+/* "Open" floats on the cover: the card's one destination. */
+.gw-campaign__open {
+    position: absolute;
+    top: var(--step-18);
+    right: var(--gap-loose);
+    z-index: 2;
+    min-height: var(--size-30);
+    border-color: rgba(255, 255, 255, 0.16);
+    padding: 0 var(--gap-loose);
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: blur(var(--step-6));
+    color: var(--text-bright);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+.gw-campaign:hover .gw-campaign__open,
+.gw-campaign:focus-within .gw-campaign__open {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+    color: var(--text-on-accent);
+}
+
+/* Metadata pinned to the bottom, so titles and footers line up across a row
+ * whatever the description length. */
+.gw-campaign__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-base);
+    margin-top: auto;
+    padding-top: var(--gap-loose);
+}
+
+/* ---- Footer: a recessed strip flush with the card edges ---------------- */
+
+.gw-campaign__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--step-10);
+    margin: var(--gap-loose) calc(var(--gap-section) * -1) calc(var(--gap-section) * -1);
+    border-top: var(--fib-1) solid var(--hairline);
+    padding: 0 var(--gap-section);
+    background: var(--surface-sunken);
+}
+
+.gw-campaign__manage {
+    width: 100%;
+    min-width: 0;
+}
+
+.gw-campaign__manage-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-base);
+    border-radius: var(--radius-sm);
+    padding: var(--step-12) 0;
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    list-style: none;
+    cursor: pointer;
+    transition: color var(--motion-fast) var(--ease);
+}
+
+.gw-campaign__manage-summary::-webkit-details-marker {
+    display: none;
+}
+
+.gw-campaign__manage-summary::before {
+    content: "";
+    width: var(--size-6);
+    height: var(--size-6);
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform var(--motion-fast) var(--ease);
+}
+
+.gw-campaign__manage[open] > .gw-campaign__manage-summary::before {
+    transform: rotate(45deg);
+}
+
+.gw-campaign__manage-summary:hover,
+.gw-campaign__manage[open] > .gw-campaign__manage-summary {
+    color: var(--accent);
+}
+
+.gw-campaign__manage-summary:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: var(--fib-2);
+}
+
+.gw-campaign__manage-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-base);
+    margin-top: var(--gap-base);
+    border-top: var(--fib-1) solid var(--hairline);
+    padding: var(--gap-comfy) 0;
+}
+
+@media (max-width: 900px) {
+    .gw-campaign:hover {
+        transform: none;
+    }
+}

@@ -1,0 +1,46 @@
+{
+  "name": "gravewright",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "grave": "./bin/grave.js"
+  },
+  "workspaces": [
+    "packages/*",
+    "modules/*"
+  ],
+  "scripts": {
+    "types:sync": "tsx scripts/sync-module-types.ts",
+    "prestart": "npm run types:sync",
+    "start": "tsx src/index.ts",
+    "dev": "tsx scripts/dev.ts",
+    "grave": "tsx src/cli/main.ts",
+    "pretest": "npm run types:sync",
+    "test": "tsx --test tests/kernel.test.ts tests/kernel-properties.test.ts tests/manifest-schema.test.ts tests/cli.test.ts",
+    "pretypecheck": "npm run types:sync",
+    "typecheck": "tsc --noEmit",
+    "build:sdk": "npm run build -w @gravewright/sdk",
+    "build:kernel": "npm run build -w @gravewright/kernel",
+    "build": "npm run build:sdk && npm run build:kernel",
+    "pack:dry": "npm pack --dry-run -w @gravewright/sdk && npm pack --dry-run -w @gravewright/kernel",
+    "smoke:packages": "tsx scripts/smoke-packages.ts"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.13.3",
+    "@types/semver": "^7.7.0",
+    "@types/yauzl": "^2.10.3",
+    "ajv": "^8.20.0",
+    "fast-check": "^4.9.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "@gravewright/kernel": "0.1.0",
+    "@gravewright/sdk": "0.1.0"
+  }
+}

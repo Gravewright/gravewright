@@ -1,0 +1,39 @@
+/* gw-shell — the setup screen: a scrolling work area with a fixed nav on the
+ * right. The nav is on the right because the work is on the left and the eye
+ * returns to the content, not to the chrome. */
+
+.gw-shell {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--nav-width);
+    overflow: hidden;
+    background:
+        radial-gradient(
+            circle at 22% 18%,
+            rgba(192, 154, 90, 0.04),
+            transparent var(--fib-14)
+        ),
+        var(--bg);
+}
+
+.gw-shell__area {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Below the rail breakpoint the nav stops being a column and becomes a
+ * footer: the work keeps the top of the screen, where it belongs. */
+@media (max-width: 980px) {
+    .gw-shell {
+        height: auto;
+        min-height: 100vh;
+        grid-template-columns: minmax(0, 1fr);
+        overflow: visible;
+    }
+
+    .gw-shell__area {
+        min-height: var(--size-760);
+    }
+}

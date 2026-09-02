@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gravewright.dev/schema/manifest-v1.json",
+  "title": "Gravewright module manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "kind", "provider", "version", "entry", "exports"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "kind": { "enum": ["server", "frontend", "backend", "module"] },
+    "provider": { "enum": ["core", "community", "official", "licensed", "partner"] },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Semantic version; the runtime performs full SemVer validation."
+    },
+    "entry": { "type": "string", "minLength": 1 },
+    "types": { "type": "string", "minLength": 1 },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "tooling": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "read": { "const": true },
+        "write": { "const": true },
+        "stat": { "const": true }
+      }
+    },
+    "exports": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "get": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "manifest_url": { "type": "string" },
+    "download_url": { "type": "string" },
+    "download_sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" }
+  }
+}
+

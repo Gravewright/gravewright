@@ -1,0 +1,27 @@
+/* @gravewright/ui — the whole interface language, in load order.
+ *
+ * tokens → base → blocks. Nothing below tokens may declare a raw pixel
+ * dimension; every one resolves through the Fibonacci scale. */
+
+@import "./tokens.css";
+@import "./base.css";
+
+@import "./blocks/mark.css";
+@import "./blocks/button.css";
+@import "./blocks/field.css";
+@import "./blocks/form.css";
+@import "./blocks/notice.css";
+@import "./blocks/badge.css";
+@import "./blocks/empty.css";
+@import "./blocks/modal.css";
+@import "./blocks/shell.css";
+@import "./blocks/nav.css";
+@import "./blocks/panel.css";
+@import "./blocks/card.css";
+@import "./blocks/campaign-card.css";
+@import "./blocks/gate.css";
+@import "./blocks/stage.css";
+@import "./blocks/window.css";
+@import "./blocks/dock.css";
+@import "./blocks/layer-hud.css";
+@import "./blocks/tray.css";

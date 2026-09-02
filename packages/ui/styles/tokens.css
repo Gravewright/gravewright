@@ -1,0 +1,396 @@
+/* Gravewright design tokens — single source of truth for the whole interface.
+ *
+ * ---------------------------------------------------------------------------
+ * THE SCALE IS FIBONACCI
+ * ---------------------------------------------------------------------------
+ *
+ * Every dimensional value in this system — spacing, padding, margin, gap,
+ * sizes, radii, type — resolves to a step of the Fibonacci sequence in
+ * pixels, or to a sum of non-consecutive steps.
+ *
+ *   --fib-1 … --fib-15  →  1 2 3 5 8 13 21 34 55 89 144 233 377 610 987
+ *
+ * Zeckendorf's theorem says every positive integer is the sum of a unique set
+ * of non-consecutive Fibonacci numbers. So a value that does not land on a
+ * step is not an arbitrary literal: it is written as that sum, in `calc()`,
+ * behind a named token. `--step-16` is `13 + 3`, not `16px`. This keeps the
+ * scale honest while letting the interface hit the exact geometry it needs.
+ *
+ * Rules for new rules:
+ *   1. Reach for a bare `--fib-*` step first.
+ *   2. If the geometry needs an in-between value, reach for the named
+ *      `--step-*` / `--size-*` composite below.
+ *   3. Never write a raw px literal for a dimension. If a value is missing,
+ *      add it here as a Fibonacci sum.
+ *
+ * Colours, shadows and easing curves are not dimensions and stay literal.
+ *
+ * Two things cannot go through the scale and stay literal by necessity:
+ * media-query breakpoints (a `@media` condition cannot read a custom
+ * property), and the sub-pixel strokes inside drawn glyphs such as the
+ * disclosure chevron.
+ */
+
+:root {
+    /* ===== Fibonacci steps ================================================= */
+
+    --fib-1: 1px;
+    --fib-2: 2px;
+    --fib-3: 3px;
+    --fib-4: 5px;
+    --fib-5: 8px;
+    --fib-6: 13px;
+    --fib-7: 21px;
+    --fib-8: 34px;
+    --fib-9: 55px;
+    --fib-10: 89px;
+    --fib-11: 144px;
+    --fib-12: 233px;
+    --fib-13: 377px;
+    --fib-14: 610px;
+    --fib-15: 987px;
+
+    /* ===== Spacing ========================================================
+     * Bare steps first; composites (Zeckendorf sums) after, each annotated
+     * with the arithmetic so the value can be checked at a glance.
+     */
+
+    --step-0: 0;
+    --step-1: var(--fib-1);
+    --step-2: var(--fib-2);
+    --step-3: var(--fib-3);
+    --step-4: calc(var(--fib-3) + var(--fib-1)); /* 3 + 1 */
+    --step-5: var(--fib-4);
+    --step-6: calc(var(--fib-4) + var(--fib-1)); /* 5 + 1 */
+    --step-7: calc(var(--fib-4) + var(--fib-2)); /* 5 + 2 */
+    --step-8: var(--fib-5);
+    --step-9: calc(var(--fib-5) + var(--fib-1)); /* 8 + 1 */
+    --step-10: calc(var(--fib-5) + var(--fib-2)); /* 8 + 2 */
+    --step-11: calc(var(--fib-5) + var(--fib-3)); /* 8 + 3 */
+    --step-12: calc(var(--fib-5) + var(--fib-3) + var(--fib-1)); /* 8 + 3 + 1 */
+    --step-13: var(--fib-6);
+    --step-14: calc(var(--fib-6) + var(--fib-1)); /* 13 + 1 */
+    --step-16: calc(var(--fib-6) + var(--fib-3)); /* 13 + 3 */
+    --step-18: calc(var(--fib-6) + var(--fib-4)); /* 13 + 5 */
+    --step-20: calc(var(--fib-6) + var(--fib-4) + var(--fib-2)); /* 13 + 5 + 2 */
+    --step-21: var(--fib-7);
+    --step-24: calc(var(--fib-7) + var(--fib-3)); /* 21 + 3 */
+    --step-26: calc(var(--fib-7) + var(--fib-4)); /* 21 + 5 */
+    --step-28: calc(var(--fib-7) + var(--fib-4) + var(--fib-2)); /* 21 + 5 + 2 */
+    --step-32: calc(var(--fib-7) + var(--fib-5) + var(--fib-3)); /* 21 + 8 + 3 */
+    --step-34: var(--fib-8);
+    --step-40: calc(var(--fib-8) + var(--fib-4) + var(--fib-1)); /* 34 + 5 + 1 */
+    --step-48: calc(var(--fib-8) + var(--fib-6) + var(--fib-1)); /* 34 + 13 + 1 */
+    --step-55: var(--fib-9);
+
+
+    /* ---- The reference interface's step scale ---------------------------
+     * `--space-1 … --space-10` are the names the ported legacy stylesheets
+     * already use, and there they mean *steps of four*, not pixels: the
+     * journal workspace and the quest sheet are full of `var(--space-4)`
+     * meaning 16px. Those names keep that meaning here, so a port reads the
+     * way it was written. This system's own exact values are `--step-*`
+     * above; never mix the two in one rule.
+     */
+
+    --space-1: var(--step-4); /* 4 */
+    --space-2: var(--step-8); /* 8 */
+    --space-3: var(--step-12); /* 12 */
+    --space-4: var(--step-16); /* 16 */
+    --space-5: var(--step-20); /* 20 */
+    --space-6: var(--step-24); /* 24 */
+    --space-7: var(--step-28); /* 28 */
+    --space-8: var(--step-32); /* 32 */
+    --space-9: var(--step-34); /* 34 — the legacy scale skips 36 */
+    --space-10: var(--step-40); /* 40 */
+
+    /* Semantic aliases. Prefer these in component CSS: they say what the gap
+     * is for, and they are the ones that move if the density changes. */
+    --gap-snug: var(--step-6);
+    --gap-base: var(--step-8);
+    --gap-comfy: var(--step-12);
+    --gap-loose: var(--step-16);
+    --gap-section: var(--step-20);
+    --gap-block: var(--step-24);
+
+    /* The page gutter. Fluid between one small and one large step. */
+    --gutter: clamp(var(--step-20), 4vw, var(--step-48));
+
+    /* ===== Sizing =========================================================
+     * Control heights and the fixed chrome widths. Every one is a Fibonacci
+     * sum; the comment carries the arithmetic.
+     */
+
+    --size-2: var(--fib-2);
+    --size-3: var(--fib-3);
+    --size-6: calc(var(--fib-4) + var(--fib-1)); /* 6 */
+    --size-8: var(--fib-5);
+    --size-14: calc(var(--fib-6) + var(--fib-1)); /* 14 */
+    --size-18: calc(var(--fib-6) + var(--fib-4)); /* 18 */
+    --size-20: calc(var(--fib-6) + var(--fib-4) + var(--fib-2)); /* 20 */
+    --size-22: calc(var(--fib-7) + var(--fib-1)); /* 21 + 1 */
+    --size-24: calc(var(--fib-7) + var(--fib-3)); /* 21 + 3 */
+    --size-26: calc(var(--fib-7) + var(--fib-4)); /* 21 + 5 */
+    --size-28: calc(var(--fib-7) + var(--fib-4) + var(--fib-2)); /* 21 + 5 + 2 */
+    --size-30: calc(var(--fib-7) + var(--fib-5) + var(--fib-1)); /* 21 + 8 + 1 */
+    --size-32: calc(var(--fib-7) + var(--fib-5) + var(--fib-3)); /* 21 + 8 + 3 */
+    --size-34: var(--fib-8);
+    --size-36: calc(var(--fib-8) + var(--fib-2)); /* 34 + 2 */
+    --size-38: calc(var(--fib-8) + var(--fib-3) + var(--fib-1)); /* 34 + 3 + 1 */
+    --size-42: calc(var(--fib-8) + var(--fib-5)); /* 34 + 8 */
+    --size-44: calc(var(--fib-8) + var(--fib-5) + var(--fib-2)); /* 34 + 8 + 2 */
+    --size-47: calc(var(--fib-8) + var(--fib-6)); /* 34 + 13 */
+    --size-50: calc(var(--fib-8) + var(--fib-6) + var(--fib-3)); /* 34 + 13 + 3 */
+    --size-100: calc(var(--fib-10) + var(--fib-5) + var(--fib-3)); /* 89 + 8 + 3 */
+    --size-560: calc(
+        var(--fib-13) + var(--fib-11) + var(--fib-8) + var(--fib-4)
+    ); /* 377 + 144 + 34 + 5 = 560 */
+    --size-39: calc(var(--fib-8) + var(--fib-4)); /* 34 + 5 */
+    --size-86: calc(
+        var(--fib-9) + var(--fib-7) + var(--fib-5) + var(--fib-2)
+    ); /* 55 + 21 + 8 + 2 = 86 */
+    --size-300: calc(
+        var(--fib-12) + var(--fib-9) + var(--fib-5) + var(--fib-3) + var(--fib-1)
+    ); /* 233 + 55 + 8 + 3 + 1 = 300 */
+    --size-760: calc(
+        var(--fib-14) + var(--fib-11) + var(--fib-4) + var(--fib-1)
+    ); /* 610 + 144 + 5 + 1 = 760 */
+
+    /* Control heights, by role. */
+    --control-height-xs: var(--size-24);
+    --control-height-sm: var(--size-28);
+    --control-height-md: var(--size-32);
+    --control-height-lg: var(--size-38);
+    --control-height-xl: var(--size-42);
+
+    /* Fixed chrome geometry. */
+    --nav-width: calc(
+        var(--fib-12) + var(--fib-9) + var(--fib-5) + var(--fib-3) + var(--fib-1)
+    ); /* 233 + 55 + 8 + 3 + 1 = 300 */
+    --panel-width: calc(
+        var(--fib-12) + var(--fib-9) + var(--fib-7) + var(--fib-5) + var(--fib-3)
+    ); /* 233 + 55 + 21 + 8 + 3 = 320 */
+    --panel-min-width: calc(
+        var(--fib-12) + var(--fib-7) + var(--fib-4) + var(--fib-1)
+    ); /* 233 + 21 + 5 + 1 = 260 */
+    --panel-min-height: calc(
+        var(--fib-12) + var(--fib-4) + var(--fib-2)
+    ); /* 233 + 5 + 2 = 240 */
+    --content-max-width: calc(
+        var(--fib-15) + var(--fib-13) + var(--fib-9) + var(--fib-7)
+    ); /* 987 + 377 + 55 + 21 = 1440 */
+    /* The narrowest a card may be before the shelf drops a column. */
+    /* Below this the nav stops being a rail and becomes a footer. */
+    --breakpoint-rail: 980px;
+
+    --card-min-width: calc(
+        var(--fib-12) + var(--fib-9) + var(--fib-5) + var(--fib-3) + var(--fib-1)
+    ); /* 233 + 55 + 8 + 3 + 1 = 300 */
+
+    /* A settings form is read left to right; past this it becomes a banner. */
+    --form-max-width: calc(
+        var(--fib-15) + var(--fib-10) + var(--fib-8) + var(--fib-5) + var(--fib-2)
+    ); /* 987 + 89 + 34 + 8 + 2 = 1120 */
+
+    --tool-dock-width: var(--size-47);
+    --tool-dock-button: var(--size-36);
+    --dock-button: var(--size-38);
+
+    /* ===== Typography =====================================================
+     * The interface is set in Inter; the *name of a thing* is set in the
+     * display serif. Steps are Fibonacci sums, same rule as spacing.
+     */
+
+    --font:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    --font-display:
+        "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+        Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+
+    --text-3xs: calc(var(--fib-5) + var(--fib-1)); /* 9 */
+    --text-2xs: calc(var(--fib-5) + var(--fib-2)); /* 10 */
+    --text-xs: calc(var(--fib-5) + var(--fib-3)); /* 11 */
+    --text-sm: calc(var(--fib-5) + var(--fib-3) + var(--fib-1)); /* 12 */
+    --text-md: var(--fib-6); /* 13 */
+    --text-base: calc(var(--fib-6) + var(--fib-1)); /* 14 */
+    --text-lead: calc(var(--fib-6) + var(--fib-2)); /* 15 */
+    --text-lg: calc(var(--fib-6) + var(--fib-3)); /* 16 */
+    --text-xl: calc(var(--fib-6) + var(--fib-4)); /* 18 */
+    --text-2xl: calc(var(--fib-7) + var(--fib-1)); /* 22 */
+    --text-3xl: calc(var(--fib-7) + var(--fib-5) + var(--fib-1)); /* 30 */
+    --text-stage: calc(var(--fib-8) + var(--fib-4) + var(--fib-1)); /* 40 */
+    --text-4xl: calc(var(--fib-8) + var(--fib-5)); /* 42 */
+
+    /* One display size sits between steps because the card title has to clear
+     * two lines inside a fixed plate: 21 is the step, +0 needed. */
+    --text-title-card: var(--fib-7); /* 21 */
+
+    --weight-regular: 400;
+    --weight-medium: 600;
+    --weight-bold: 700;
+    --weight-heavy: 800;
+    --weight-black: 850;
+    /* The two display weights the reference interface uses. */
+    --weight-display: 760;
+
+    --leading-flat: 1;
+    /* A display title is set solid: its own size carries the rhythm. */
+    --leading-display: 1.1;
+    --leading-tight: 1.2;
+    --leading-snug: 1.25;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.7;
+
+    --tracking-tight: -0.02em;
+    --tracking-snug: -0.01em;
+    --tracking-none: 0;
+    --tracking-wide: 0.06em;
+    --tracking-wider: 0.08em;
+    --tracking-widest: 0.1em;
+    --tracking-caps: 0.12em;
+    --tracking-eyebrow: 0.14em;
+    --tracking-mega: 0.18em;
+
+    /* ===== Radius ========================================================= */
+
+    --radius-xs: var(--fib-3); /* 3 */
+    --radius-sm: calc(var(--fib-3) + var(--fib-1)); /* 4 */
+    --radius-md: calc(var(--fib-4) + var(--fib-1)); /* 6 */
+    --radius-lg: var(--fib-5); /* 8 */
+    --radius-xl: calc(var(--fib-5) + var(--fib-3) + var(--fib-1)); /* 12 */
+    --radius-2xl: calc(var(--fib-6) + var(--fib-3)); /* 16 */
+    --radius-pill: 999px;
+    --radius-circle: 50%;
+    --radius: var(--radius-sm);
+
+    /* ===== Palette ========================================================
+     * Carried over unchanged from the reference interface.
+     */
+
+    --bg: #11151a;
+    --surface: #181d23;
+    --surface-raised: #20262d;
+    --surface-raised-2: #252c34;
+    --surface-field: #151a20;
+    --surface-sunken: rgba(0, 0, 0, 0.3);
+    --surface-base: var(--surface);
+
+    --border: #303842;
+    --border-strong: #46505c;
+    --border-control: #637183;
+    --border-soft: var(--border);
+    --hairline: rgba(70, 80, 92, 0.5);
+
+    --layer-accent-rgb: 192, 154, 90;
+    --border-accent: rgba(var(--layer-accent-rgb), 0.36);
+    --border-accent-strong: rgba(var(--layer-accent-rgb), 0.6);
+
+    --text-bright: #f0ebdd;
+    --text: #d8d2c3;
+    --text-muted: #a9a193;
+    --text-faint: #7f8994;
+    --text-main: var(--text);
+    --text-on-accent: #1a1206;
+
+    --accent: #c09a5a;
+    --accent-hover: #d2ac6b;
+    --accent-bright: #e2bd7c;
+    --accent-dark: #8b6a3c;
+    --accent-glow: rgba(192, 154, 90, 0.1);
+
+    --danger: #d2796b;
+    --danger-hover: #e08b7e;
+    --danger-text: #f0b8ae;
+    --danger-soft: rgba(182, 97, 80, 0.1);
+    --danger-border: rgba(182, 97, 80, 0.42);
+
+    --success: #6db386;
+    --warning: #e0b36a;
+    --offline: #d06f6f;
+
+    --focus-ring: #d2ac6b;
+
+    /* The campaign cover plate. Overridden per card to cycle the shelf. */
+    --plate-a: #3b3122;
+    --plate-b: #191d23;
+
+    /* ===== Elevation ====================================================== */
+
+    --shadow-hairline: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 18px 42px rgba(0, 0, 0, 0.45);
+    --shadow-xl:
+        0 26px 70px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --shadow-dock: 0 0 0 1px rgba(192, 154, 90, 0.08), 0 18px 48px rgba(0, 0, 0, 0.58);
+    --shadow-window:
+        0 0 0 1px rgba(192, 154, 90, 0.08), 0 0 34px rgba(192, 154, 90, 0.08),
+        0 28px 90px rgba(0, 0, 0, 0.68);
+    --shadow-tool-dock:
+        0 0 0 1px rgba(255, 255, 255, 0.04), 0 8px 32px rgba(0, 0, 0, 0.55);
+
+    --ring-accent: 0 0 0 2px var(--accent-glow);
+    --ring-accent-hairline: inset 0 0 0 1px rgba(192, 154, 90, 0.22);
+    --ring-top-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --ring-inset-accent: inset 0 0 0 1px rgba(192, 154, 90, 0.22);
+    --ring-field: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+
+    /* ===== Motion ========================================================= */
+
+    --motion-fast: 120ms;
+    --motion-base: 160ms;
+    --motion-slow: 240ms;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ===== Layering ======================================================= */
+
+    --z-board-overlay: 100;
+    --z-chrome: 200;
+    --z-chrome-pop: 300;
+    --z-fog: 800;
+    --z-modal: 1000;
+    --z-modal-dock: 1100;
+    --z-editor-pop: 4000;
+    --z-popover: 10000;
+    --z-toast: 11000;
+}
+
+/* ===========================================================================
+   THE ACTIVE LAYER PAINTS THE TABLE'S DETAIL LINE
+
+   The dock, the panels and the windows say, through their border, which plane
+   the table is being edited on. Only the base colour changes: the thicknesses
+   and opacities stay as calibrated.
+   =========================================================================== */
+
+[data-table-layer] {
+    --border-accent: rgba(var(--layer-accent-rgb), 0.36);
+    --border-accent-strong: rgba(var(--layer-accent-rgb), 0.6);
+    --layer-accent: rgb(var(--layer-accent-rgb));
+}
+
+[data-table-layer="game"] { --layer-accent-rgb: 192, 154, 90; }
+[data-table-layer="gm"] { --layer-accent-rgb: 208, 111, 111; }
+[data-table-layer="composition"] { --layer-accent-rgb: 96, 165, 250; }
+[data-table-layer="effects"] { --layer-accent-rgb: 109, 179, 134; }
+[data-table-layer="walls"] { --layer-accent-rgb: 167, 139, 250; }
+[data-table-layer="lighting"] { --layer-accent-rgb: 250, 204, 21; }
+
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-fast: 0ms;
+        --motion-base: 0ms;
+        --motion-slow: 0ms;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

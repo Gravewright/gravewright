@@ -1,0 +1,119 @@
+/* gw-layer-hud — which plane of the table you are editing.
+ *
+ * It sits quiet at 78% opacity until the pointer arrives, because it is a
+ * statement of state, not a call to action. The active layer is the one gold
+ * chip in the bar. */
+
+.gw-layer-hud {
+    position: absolute;
+    top: var(--step-14);
+    left: var(--step-14);
+    z-index: calc(var(--z-board-overlay) + 1);
+    display: flex;
+    align-items: center;
+    gap: var(--gap-snug);
+    border: var(--fib-1) solid var(--border-accent);
+    border-radius: var(--radius-xl);
+    padding: var(--fib-4) var(--step-7);
+    background: rgba(9, 13, 16, 0.62);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(var(--step-7));
+    opacity: 0.78;
+    transition: opacity var(--motion-base) var(--ease);
+}
+
+.gw-layer-hud:hover,
+.gw-layer-hud:focus-within {
+    opacity: 1;
+}
+
+.gw-layer-hud__title {
+    display: flex;
+    align-items: center;
+    gap: var(--fib-4);
+    border: 0;
+    border-right: var(--fib-1) solid rgba(255, 255, 255, 0.1);
+    padding: var(--fib-1) var(--fib-4) var(--fib-1) var(--step-6);
+    background: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.gw-layer-hud__title:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* The chevron takes the colour of the layer you are standing on. */
+.gw-layer-hud__title svg {
+    color: rgb(var(--layer-accent-rgb));
+}
+
+/* Each layer owns a hue, and its button wears it before it is chosen, so the
+ * bar reads as six planes rather than six labels. */
+.gw-layer-hud__button[data-layer="game"] { --layer-button-rgb: 192, 154, 90; }
+.gw-layer-hud__button[data-layer="gm"] { --layer-button-rgb: 208, 111, 111; }
+.gw-layer-hud__button[data-layer="composition"] { --layer-button-rgb: 96, 165, 250; }
+.gw-layer-hud__button[data-layer="effects"] { --layer-button-rgb: 109, 179, 134; }
+.gw-layer-hud__button[data-layer="walls"] { --layer-button-rgb: 167, 139, 250; }
+.gw-layer-hud__button[data-layer="lighting"] { --layer-button-rgb: 250, 204, 21; }
+
+.gw-layer-hud__button svg {
+    color: rgba(var(--layer-button-rgb), 0.85);
+}
+
+.gw-layer-hud__button {
+    --layer-button-rgb: var(--layer-accent-rgb);
+    display: flex;
+    align-items: center;
+    gap: var(--fib-4);
+    border: var(--fib-1) solid transparent;
+    border-radius: var(--radius-md);
+    padding: var(--step-4) var(--step-9);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-flat);
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+.gw-layer-hud__button:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.gw-layer-hud__button[aria-pressed="true"] {
+    border-color: rgba(var(--layer-button-rgb), 0.95);
+    background: rgba(var(--layer-button-rgb), 0.95);
+    color: #0c100f;
+}
+
+.gw-layer-hud__button[aria-pressed="true"] svg {
+    color: inherit;
+}
+
+.gw-layer-hud__button:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: var(--fib-2);
+}
+
+.gw-layer-hud--collapsed {
+    gap: 0;
+}
+
+.gw-layer-hud--collapsed .gw-layer-hud__title {
+    border-right: 0;
+    padding-right: 0;
+}
+
+.gw-layer-hud--collapsed .gw-layer-hud__button {
+    display: none;
+}

@@ -1,0 +1,192 @@
+/* gw-dock — the row of panel toggles at the bottom of the table, and the
+ * column of tools at its left edge. Same button, two orientations.
+ *
+ * A dock button is an icon in a 38px (bottom) or 36px (side) square. Pressed
+ * means "this panel is open" and is drawn in gold, not merely highlighted. */
+
+.gw-dock {
+    position: fixed;
+    bottom: var(--step-14);
+    left: 50%;
+    z-index: var(--z-chrome);
+    display: flex;
+    align-items: center;
+    gap: var(--fib-2);
+    border: var(--fib-1) solid var(--border-accent-strong);
+    border-radius: var(--radius-lg);
+    padding: var(--fib-4);
+    background: #0b0e10;
+    box-shadow: var(--shadow-dock);
+    transform: translateX(-50%);
+}
+
+.gw-dock__button {
+    position: relative;
+    width: var(--dock-button);
+    height: var(--dock-button);
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--radius-lg);
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-xl);
+    line-height: 0;
+    cursor: pointer;
+    transition:
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease);
+}
+
+.gw-dock__button:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-bright);
+}
+
+.gw-dock__button[aria-pressed="true"],
+.gw-dock__button--active {
+    background: rgba(var(--layer-accent-rgb), 0.1);
+    box-shadow: inset 0 0 0 1px rgba(var(--layer-accent-rgb), 0.22);
+    color: rgb(var(--layer-accent-rgb));
+}
+
+.gw-dock__button:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: calc(var(--fib-2) * -1);
+}
+
+.gw-dock__button--exit:hover {
+    background: rgba(210, 121, 107, 0.12);
+    color: var(--danger-text);
+}
+
+.gw-dock__separator {
+    width: var(--fib-1);
+    height: var(--gap-block);
+    flex: 0 0 auto;
+    margin: 0 var(--fib-3);
+    background: var(--border);
+}
+
+/* ---- The tool rail on the left edge ------------------------------------ */
+
+.gw-tool-dock {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    z-index: var(--z-chrome);
+    width: var(--tool-dock-width);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--fib-2);
+    border: var(--fib-1) solid var(--border-accent-strong);
+    border-left: none;
+    border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+    padding: var(--fib-4);
+    background: rgba(14, 17, 19, 0.94);
+    box-shadow: var(--shadow-tool-dock);
+    backdrop-filter: blur(var(--step-16));
+    transform: translateY(-50%);
+}
+
+.gw-tool-dock__toggle {
+    width: var(--tool-dock-button);
+    height: var(--step-26);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--radius-md);
+    padding: var(--fib-1) var(--step-6);
+    background: transparent;
+    color: var(--text-faint);
+    font-size: var(--text-md);
+    line-height: 0;
+    cursor: pointer;
+    transition:
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+.gw-tool-dock__toggle:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+}
+
+/* The active layer's name, under the collapse control. */
+.gw-tool-dock__layer {
+    color: rgb(var(--layer-accent-rgb));
+    font-size: var(--text-3xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+}
+
+.gw-tool-dock__body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--fib-2);
+    max-height: var(--fib-15);
+    overflow: hidden;
+    transition:
+        max-height var(--motion-slow) var(--ease),
+        opacity var(--motion-base) var(--ease);
+}
+
+.gw-tool-dock--collapsed .gw-tool-dock__body {
+    max-height: 0;
+    opacity: 0;
+}
+
+.gw-tool-dock__button {
+    position: relative;
+    width: var(--tool-dock-button);
+    height: var(--tool-dock-button);
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--radius-lg);
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-xl);
+    line-height: 0;
+    cursor: pointer;
+    transition:
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease);
+}
+
+.gw-tool-dock__button:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-bright);
+}
+
+.gw-tool-dock__button[aria-pressed="true"],
+.gw-tool-dock__button--active {
+    background: rgba(var(--layer-accent-rgb), 0.1);
+    box-shadow: inset 0 0 0 1px rgba(var(--layer-accent-rgb), 0.22);
+    color: rgb(var(--layer-accent-rgb));
+}
+
+.gw-tool-dock__button:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: calc(var(--fib-2) * -1);
+}
+
+.gw-tool-dock__separator {
+    width: var(--step-26);
+    height: var(--fib-1);
+    margin: var(--fib-2) 0;
+    background: var(--border);
+}
+

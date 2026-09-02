@@ -1,0 +1,138 @@
+/* gw-nav — the setup screen's side rail: brand, sections, and who you are. */
+
+.gw-nav {
+    height: 100vh;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    border-left: var(--fib-1) solid var(--border);
+    background:
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.012),
+            transparent var(--fib-12)
+        ),
+        rgba(13, 16, 18, 0.98);
+}
+
+/* ---- Brand ------------------------------------------------------------- */
+
+.gw-nav__brand {
+    min-height: calc(var(--fib-9) + var(--fib-7) + var(--fib-2)); /* 55+21+2 = 78 */
+    display: flex;
+    align-items: center;
+    gap: var(--gap-comfy);
+    border-bottom: var(--fib-1) solid var(--border);
+    padding: var(--gap-section);
+}
+
+.gw-nav__brand-text {
+    min-width: 0;
+}
+
+.gw-nav__brand-name {
+    display: block;
+    color: var(--text);
+    font-size: var(--text-base);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+.gw-nav__brand-tagline {
+    display: block;
+    margin-top: var(--fib-3);
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+}
+
+/* ---- Sections ---------------------------------------------------------- */
+
+.gw-nav__list {
+    display: grid;
+    align-content: start;
+    gap: var(--gap-base);
+    overflow-y: auto;
+    padding: var(--step-14);
+}
+
+.gw-nav__item {
+    min-height: var(--control-height-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--step-11);
+    border: var(--fib-1) solid transparent;
+    border-radius: var(--radius-md);
+    padding: 0 var(--gap-comfy);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-wide);
+    text-align: left;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+.gw-nav__item:hover {
+    border-color: var(--border);
+    background: var(--surface-raised);
+    color: var(--text);
+}
+
+.gw-nav__item:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: calc(var(--fib-2) * -1);
+}
+
+.gw-nav__item--active,
+.gw-nav__item--active:hover {
+    border-color: rgba(192, 154, 90, 0.42);
+    background: rgba(192, 154, 90, 0.12);
+    color: var(--text);
+}
+
+/* ---- Footer ------------------------------------------------------------ */
+
+.gw-nav__footer {
+    display: grid;
+    gap: var(--gap-base);
+    border-top: var(--fib-1) solid var(--border);
+    padding: var(--step-14);
+}
+
+.gw-nav__card {
+    display: grid;
+    gap: var(--fib-3);
+    border: var(--fib-1) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--step-10);
+    background: rgba(255, 255, 255, 0.014);
+}
+
+.gw-nav__card-title {
+    color: var(--text);
+    font-size: var(--text-sm);
+    word-break: break-word;
+}
+
+.gw-nav__card-role {
+    color: var(--accent);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+@media (max-width: 980px) {
+    .gw-nav {
+        height: auto;
+        grid-template-rows: auto auto auto;
+        border-top: var(--fib-1) solid var(--border);
+        border-left: 0;
+    }
+}

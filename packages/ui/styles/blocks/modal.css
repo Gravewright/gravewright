@@ -1,0 +1,138 @@
+/* gw-modal — a dialog over a blurred board.
+ *
+ * The header carries a small caps eyebrow above a serif title, and a close
+ * control on the right. The footer row right-aligns its actions with the
+ * affirmative one last. */
+
+.gw-modal {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    display: grid;
+    place-items: center;
+    padding: var(--gap-block);
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(var(--fib-3));
+}
+
+.gw-modal__dialog {
+    width: min(var(--fib-14) - var(--fib-10), 100%); /* 610 - 89 = 521 */
+    max-height: calc(100vh - var(--step-48));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: var(--fib-1) solid var(--border-strong);
+    border-radius: var(--radius-md);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent var(--fib-12)),
+        var(--surface-raised);
+    box-shadow: var(--shadow-xl);
+}
+
+.gw-modal__dialog--narrow {
+    width: min(calc(var(--fib-13) + var(--fib-5)), 100%); /* 377 + 8 = 385 */
+}
+
+.gw-modal__dialog--wide {
+    width: min(calc(var(--fib-14) + var(--fib-11)), calc(100vw - var(--step-32))); /* 754 */
+}
+
+.gw-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--gap-loose);
+    border-bottom: var(--fib-1) solid var(--hairline);
+    padding: var(--gap-section);
+}
+
+.gw-modal__eyebrow {
+    margin: 0 0 var(--step-4);
+    color: var(--accent);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-mega);
+    text-transform: uppercase;
+}
+
+.gw-modal__title {
+    margin: 0;
+    color: var(--text-bright);
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-snug);
+    line-height: var(--leading-tight);
+}
+
+.gw-modal__close {
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    border: var(--fib-1) solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0;
+    background: rgba(22, 26, 29, 0.88);
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+.gw-modal__close:hover {
+    border-color: var(--border-accent-strong);
+    color: var(--accent-hover);
+}
+
+.gw-modal__body {
+    display: grid;
+    gap: var(--gap-loose);
+    overflow-y: auto;
+    padding: var(--gap-section);
+}
+
+.gw-modal__copy {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+}
+
+.gw-modal__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--gap-base);
+    border-top: var(--fib-1) solid var(--hairline);
+    padding: var(--gap-loose) var(--gap-section);
+    background: var(--surface-sunken);
+}
+
+.gw-modal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--gap-base);
+}
+
+.gw-modal__actions--split {
+    justify-content: space-between;
+}
+
+@media (max-width: 620px) {
+    .gw-modal {
+        padding: var(--gap-comfy);
+    }
+
+    .gw-modal__actions .gw-button,
+    .gw-modal__footer .gw-button {
+        flex: 1 1 auto;
+    }
+}

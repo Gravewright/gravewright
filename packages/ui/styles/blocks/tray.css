@@ -1,0 +1,140 @@
+/* gw-tray — the pill in the bottom-left corner: who is here, and how loud.
+ *
+ * Its popovers open upward, anchored to the pill, because there is nothing
+ * below them. */
+
+.gw-tray {
+    position: fixed;
+    bottom: var(--step-12);
+    left: var(--step-12);
+    z-index: var(--z-popover);
+}
+
+.gw-tray__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-snug);
+    border: var(--fib-1) solid rgba(108, 97, 76, 0.62);
+    border-radius: var(--radius-pill);
+    padding: var(--fib-4);
+    background: rgba(24, 29, 35, 0.94);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.73);
+}
+
+.gw-tray__toggle {
+    width: var(--size-36);
+    height: var(--size-36);
+    display: grid;
+    place-items: center;
+    border: var(--fib-1) solid transparent;
+    border-radius: var(--radius-circle);
+    padding: 0;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-xl);
+    line-height: 0;
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+.gw-tray__toggle:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-bright);
+}
+
+.gw-tray__toggle[aria-expanded="true"] {
+    border-color: var(--border-accent);
+    background: var(--accent-glow);
+    color: var(--accent);
+}
+
+.gw-tray__toggle--muted {
+    color: var(--offline);
+}
+
+.gw-tray__badge {
+    position: absolute;
+    top: calc(var(--fib-1) * -1);
+    right: calc(var(--fib-1) * -1);
+    min-width: var(--step-16);
+    border-radius: var(--radius-pill);
+    padding: 0 var(--fib-3);
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-size: var(--text-3xs);
+    font-weight: var(--weight-heavy);
+    line-height: var(--step-16);
+    text-align: center;
+}
+
+/* ---- Popovers ---------------------------------------------------------- */
+
+.gw-tray__popover {
+    position: absolute;
+    bottom: calc(100% + var(--gap-base));
+    left: 0;
+    width: max-content;
+    min-width: var(--fib-12);
+    max-width: calc(100vw - var(--gap-block));
+    display: grid;
+    gap: var(--gap-base);
+    border: var(--fib-1) solid var(--border-accent);
+    border-radius: var(--radius-lg);
+    padding: var(--gap-comfy);
+    background: rgba(11, 14, 16, 0.96);
+    box-shadow: var(--shadow-window);
+}
+
+.gw-tray__popover-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-comfy);
+    border-bottom: var(--fib-1) solid var(--hairline);
+    padding-bottom: var(--gap-base);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+}
+
+.gw-tray__people {
+    display: grid;
+    gap: var(--gap-snug);
+    max-height: var(--fib-12);
+    overflow-y: auto;
+}
+
+.gw-tray__person {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-base);
+    color: var(--text);
+    font-size: var(--text-md);
+}
+
+.gw-tray__status {
+    width: var(--size-8);
+    height: var(--size-8);
+    flex: 0 0 auto;
+    border-radius: var(--radius-circle);
+    background: var(--offline);
+}
+
+.gw-tray__status--online {
+    background: var(--success);
+    box-shadow: 0 0 var(--step-8) rgba(109, 179, 134, 0.55);
+}
+
+.gw-tray__role {
+    margin-left: auto;
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+}

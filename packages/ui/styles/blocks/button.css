@@ -1,0 +1,155 @@
+/* gw-button — every control that is pressed.
+ *
+ * Three voices, and only one of them is gold:
+ *   · `--primary`  the affirmative submit. One per view.
+ *   · (default)    quiet: a hairline box that warms to gold on hover.
+ *   · `--danger`   destructive.
+ *   · `--ghost`    no box at all: a caps label that behaves like a link.
+ *
+ * Sizes are `--sm` (24), default (32) and `--lg` (38). */
+
+.gw-button {
+    min-height: var(--control-height-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-base);
+    border: var(--fib-1) solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--step-16);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    font-weight: var(--weight-heavy);
+    line-height: var(--leading-flat);
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease),
+        transform var(--motion-fast) var(--ease);
+}
+
+.gw-button:hover:not(:disabled) {
+    border-color: var(--border-accent-strong);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+.gw-button:active:not(:disabled) {
+    transform: translateY(var(--fib-1));
+}
+
+.gw-button:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: var(--fib-2);
+}
+
+.gw-button:disabled,
+.gw-button[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+/* ---- Voices ------------------------------------------------------------ */
+
+.gw-button--primary {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+    color: var(--text-on-accent);
+    font-weight: var(--weight-heavy);
+}
+
+.gw-button--primary:hover:not(:disabled) {
+    border-color: var(--accent-hover);
+    background: linear-gradient(180deg, var(--accent-bright), var(--accent-hover));
+    box-shadow: 0 4px 16px rgba(192, 154, 90, 0.24);
+    color: var(--text-on-accent);
+}
+
+.gw-button--danger {
+    border-color: var(--danger-border);
+    background: var(--danger-soft);
+    color: #d58c7f;
+}
+
+.gw-button--danger:hover:not(:disabled) {
+    border-color: var(--danger-hover);
+    background: rgba(210, 121, 107, 0.16);
+    color: #f0a091;
+}
+
+.gw-button--ghost {
+    min-height: 0;
+    gap: var(--gap-base);
+    border: 0;
+    padding: var(--step-12) 0;
+    background: none;
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+}
+
+.gw-button--ghost:hover:not(:disabled) {
+    background: none;
+    color: var(--accent);
+}
+
+/* A quiet control that still reads as a chip inside a recessed strip. */
+.gw-button--tool {
+    min-height: var(--control-height-sm);
+    padding: 0 var(--step-12);
+    background: var(--surface-sunken);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+.gw-button--tool.gw-button--danger {
+    background: var(--danger-soft);
+}
+
+/* ---- Sizes ------------------------------------------------------------- */
+
+.gw-button--sm {
+    min-height: var(--control-height-xs);
+    padding: 0 var(--step-12);
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+.gw-button--lg {
+    min-height: var(--control-height-lg);
+    padding: 0 var(--step-20);
+}
+
+.gw-button--block {
+    width: 100%;
+}
+
+/* ---- Icon slot --------------------------------------------------------- */
+
+.gw-button__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: var(--text-lg);
+    line-height: 0;
+}
+
+.gw-button__count {
+    min-width: var(--size-20);
+    border-radius: var(--radius-pill);
+    padding: var(--fib-1) var(--step-6);
+    background: var(--surface-field);
+    color: var(--text-muted);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
+    text-align: center;
+}

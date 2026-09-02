@@ -1,0 +1,202 @@
+/* gw-field — a label, its control, and an optional line of help.
+ *
+ * The caps treatment goes on the label text, never on the <label> element: a
+ * label wraps its own control, and `text-transform`, `letter-spacing` and
+ * `font-weight` all inherit — put them on the label and the value the user
+ * types inherits them too. */
+
+.gw-field {
+    display: grid;
+    gap: var(--gap-snug);
+    min-width: 0;
+}
+
+.gw-field__label {
+    color: var(--text-faint);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+}
+
+.gw-field__control,
+.gw-field input,
+.gw-field select,
+.gw-field textarea {
+    width: 100%;
+    min-height: var(--control-height-lg);
+    border: var(--fib-1) solid #39434f;
+    border-radius: var(--radius-sm);
+    padding: 0 var(--step-10);
+    background: var(--surface-field);
+    box-shadow: var(--ring-field);
+    color: var(--text);
+    /* Explicit, so a control can never pick up the label's caps styling. */
+    font-size: var(--text-base);
+    font-weight: var(--weight-regular);
+    letter-spacing: var(--tracking-none);
+    text-transform: none;
+    outline: none;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        box-shadow var(--motion-fast) var(--ease);
+}
+
+.gw-field textarea {
+    min-height: var(--fib-10);
+    padding: var(--step-10);
+    line-height: var(--leading-normal);
+    resize: vertical;
+}
+
+.gw-field select {
+    appearance: none;
+    padding-right: var(--step-28);
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-faint) 50%),
+        linear-gradient(135deg, var(--text-faint) 50%, transparent 50%);
+    background-position:
+        right var(--step-14) center,
+        right var(--step-9) center;
+    background-size: var(--fib-4) var(--fib-4), var(--fib-4) var(--fib-4);
+    background-repeat: no-repeat;
+}
+
+.gw-field input:focus,
+.gw-field select:focus,
+.gw-field textarea:focus,
+.gw-field__control:focus {
+    border-color: var(--accent);
+    box-shadow: var(--ring-field), var(--ring-accent);
+}
+
+.gw-field input::placeholder,
+.gw-field textarea::placeholder {
+    color: var(--text-faint);
+}
+
+.gw-field__help,
+.gw-field small {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-regular);
+    letter-spacing: var(--tracking-none);
+    line-height: var(--leading-normal);
+    text-transform: none;
+}
+
+.gw-field--inline {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+}
+
+/* A file field renders the OS button unless it is told otherwise: a light
+ * grey bevel sitting on a dark dialog. */
+.gw-field input[type="file"] {
+    max-width: 100%;
+    padding: var(--step-8);
+    color: var(--text-muted);
+    font-size: var(--text-md);
+}
+
+.gw-field input[type="file"]::file-selector-button {
+    margin-right: var(--step-12);
+    border: var(--fib-1) solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: var(--step-7) var(--step-16);
+    background: var(--surface-raised);
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+.gw-field input[type="file"]::file-selector-button:hover {
+    border-color: var(--border-accent-strong);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+/* ---- gw-switch — the one toggle shape ---------------------------------- */
+
+.gw-switch {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: var(--gap-comfy);
+    border: var(--fib-1) solid var(--hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--step-12) var(--step-16);
+    background: rgba(0, 0, 0, 0.14);
+    cursor: pointer;
+}
+
+.gw-switch__input {
+    position: absolute;
+    width: var(--fib-1);
+    height: var(--fib-1);
+    opacity: 0;
+}
+
+.gw-switch__control {
+    position: relative;
+    width: var(--size-38);
+    height: var(--size-22);
+    border: var(--fib-1) solid var(--border-strong);
+    border-radius: var(--radius-pill);
+    background: var(--surface-field);
+    transition:
+        background var(--motion-fast) var(--ease),
+        border-color var(--motion-fast) var(--ease);
+}
+
+.gw-switch__control::after {
+    content: "";
+    position: absolute;
+    top: var(--fib-3);
+    left: var(--fib-3);
+    width: var(--size-14);
+    height: var(--size-14);
+    border-radius: var(--radius-circle);
+    background: var(--text-faint);
+    transition:
+        transform var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease);
+}
+
+.gw-switch__input:checked + .gw-switch__control {
+    border-color: var(--accent);
+    background: rgba(192, 154, 90, 0.22);
+}
+
+.gw-switch__input:checked + .gw-switch__control::after {
+    background: var(--accent-hover);
+    transform: translateX(var(--step-16));
+}
+
+.gw-switch__input:focus-visible + .gw-switch__control {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: var(--fib-3);
+}
+
+.gw-switch__text {
+    display: grid;
+    gap: var(--fib-2);
+}
+
+.gw-switch__title {
+    color: var(--text);
+    font-size: var(--text-base);
+}
+
+.gw-switch__help {
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+}

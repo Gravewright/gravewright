@@ -1,0 +1,32 @@
+/* gw-notice — an alert as a left rule, never a tinted box.
+ *
+ * Four tones. The rule carries the colour; the fill is a wash that runs out
+ * before the line does, so a long message does not become a slab. */
+
+.gw-notice {
+    border: 0;
+    border-left: var(--fib-2) solid var(--accent);
+    border-radius: 0;
+    margin: 0 0 var(--gap-comfy);
+    padding: var(--step-12) var(--step-16);
+    background: linear-gradient(90deg, var(--accent-glow), transparent 72%);
+    color: var(--text);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+}
+
+.gw-notice--danger {
+    border-left-color: var(--danger);
+    background: linear-gradient(90deg, rgba(210, 121, 107, 0.14), transparent 72%);
+    color: var(--danger-text);
+}
+
+.gw-notice--ok {
+    border-left-color: var(--success);
+    background: linear-gradient(90deg, rgba(109, 179, 134, 0.12), transparent 72%);
+}
+
+.gw-notice--warning {
+    border-left-color: var(--warning);
+    background: linear-gradient(90deg, rgba(224, 179, 106, 0.12), transparent 72%);
+}

@@ -1,0 +1,87 @@
+/* Base layer: the reset and the page ground. Nothing here is a component. */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+a[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+a {
+    color: inherit;
+}
+
+:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: var(--fib-2);
+}
+
+/* The screen-reader-only utility. Not a block: it has no visual form. */
+.sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: var(--fib-1);
+    height: var(--fib-1);
+    margin: calc(var(--fib-1) * -1);
+    border: 0;
+    padding: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Thin scrollbars everywhere: the chrome is dense and a 15px native bar eats
+ * a whole gutter out of a 320px panel. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: var(--fib-5);
+    height: var(--fib-5);
+}
+
+*::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-pill);
+    background: var(--border-strong);
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}

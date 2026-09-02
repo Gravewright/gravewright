@@ -1,0 +1,69 @@
+/* gw-badge — a fact about a thing, set in micro caps.
+ *
+ * Never a control: a badge is never pressed. Tones follow the notice palette
+ * so a green badge and a green banner mean the same thing. */
+
+.gw-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-snug);
+    width: max-content;
+    max-width: 100%;
+    border: var(--fib-1) solid var(--border);
+    border-radius: var(--radius-xs);
+    padding: var(--step-4) var(--step-10);
+    background: var(--surface-sunken);
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-wider);
+    line-height: var(--leading-snug);
+    text-transform: uppercase;
+}
+
+.gw-badge--accent {
+    border-color: var(--border-accent);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+.gw-badge--ok {
+    border-color: rgba(109, 179, 134, 0.42);
+    background: rgba(109, 179, 134, 0.1);
+    color: var(--success);
+}
+
+.gw-badge--warning {
+    border-color: rgba(224, 179, 106, 0.45);
+    background: rgba(224, 179, 106, 0.1);
+    color: var(--warning);
+}
+
+.gw-badge--danger {
+    border-color: rgba(210, 121, 107, 0.45);
+    background: rgba(210, 121, 107, 0.1);
+    color: var(--danger-text);
+}
+
+.gw-badge--pill {
+    border-radius: var(--radius-pill);
+    padding: var(--step-4) var(--step-11);
+}
+
+/* Sentence case on a raised surface: the form the table's own metadata takes,
+ * where a caps chip would compete with the title above it. */
+.gw-badge--plain {
+    border-color: var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--step-5) var(--step-8);
+    background: var(--surface);
+    color: var(--text-faint);
+    letter-spacing: var(--tracking-none);
+    text-transform: none;
+}
+
+.gw-badge--quiet {
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-muted);
+}
