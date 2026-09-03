@@ -23,7 +23,7 @@ function stringArray(value: unknown, field: string): string[] | undefined {
 /** Validates and normalizes an untrusted module manifest. */
 export function validateManifest(value: unknown): ModuleManifest {
   if (!isObject(value)) throw new Error("Invalid manifest: expected an object");
-  const allowedFields = new Set(["name", "kind", "provider", "version", "entry", "types", "dependencies", "tooling", "exports", "manifest_url", "download_url", "download_sha256"]);
+  const allowedFields = new Set(["name", "kind", "provider", "version", "tags", "entry", "types", "dependencies", "tooling", "exports", "manifest_url", "download_url", "download_sha256"]);
   const unknownField = Object.keys(value).find((field) => !allowedFields.has(field));
   if (unknownField) throw new Error(`Invalid manifest: unknown field '${unknownField}'`);
   for (const field of ["name", "version", "entry"] as const) {
@@ -43,6 +43,9 @@ export function validateManifest(value: unknown): ModuleManifest {
   }
   if (!semver.valid(value.version as string)) {
     throw new Error(`Invalid manifest: version '${String(value.version)}' is not valid SemVer`);
+  }
+  if (value.tags !== undefined && (typeof value.tags !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*(?:,[a-z0-9]+(?:-[a-z0-9]+)*)*$/.test(value.tags))) {
+    throw new Error("Invalid manifest: tags must be a comma-separated list of lowercase identifiers");
   }
 
   let dependencies: Record<string, string> | undefined;
@@ -64,6 +67,7 @@ export function validateManifest(value: unknown): ModuleManifest {
     kind: value.kind,
     provider: value.provider,
     version: value.version,
+    ...(value.tags === undefined ? {} : { tags: value.tags }),
     entry: value.entry,
     ...(value.types === undefined ? {} : { types: value.types }),
     ...(dependencies === undefined ? {} : { dependencies }),

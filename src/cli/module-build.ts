@@ -24,6 +24,7 @@ export async function buildModuleDefinition(directory: string, options: BuildMod
     kind: definition.kind,
     provider: definition.provider,
     version: definition.version,
+    ...(definition.tags ? { tags: definition.tags } : {}),
     entry: "./index.ts",
     types: "./types.ts",
     ...(definition.manifest_url ? { manifest_url: definition.manifest_url } : {}),

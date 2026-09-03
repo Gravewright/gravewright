@@ -41,6 +41,8 @@ export interface ModuleDefinition<TInstance extends Record<string, unknown>> {
   kind: ModuleKind;
   provider: ModuleProvider;
   version: string;
+  /** Comma-separated discovery tags using lowercase kebab-case identifiers. */
+  tags?: string;
   manifest_url?: string;
   download_url?: string;
   download_sha256?: string;
@@ -185,6 +187,8 @@ export interface ModuleManifest {
   kind: ModuleKind;
   provider: ModuleProvider;
   version: string;
+  /** Comma-separated discovery tags using lowercase kebab-case identifiers. */
+  tags?: string;
   entry: string;
   types?: string;
   dependencies?: Record<string, string>;

@@ -51,7 +51,8 @@ export async function diagnose(root: string): Promise<Finding[]> {
       }
       if (value.tooling !== undefined && (!value.tooling || typeof value.tooling !== "object" || Array.isArray(value.tooling)
         || Object.entries(value.tooling).some(([name, enabled]) => !["read", "write", "stat"].includes(name) || enabled !== true))) throw new Error("invalid tooling declaration");
-      const allowedFields = new Set(["name", "kind", "provider", "version", "entry", "types", "dependencies", "tooling", "exports", "manifest_url", "download_url", "download_sha256"]);
+      if (value.tags !== undefined && (typeof value.tags !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*(?:,[a-z0-9]+(?:-[a-z0-9]+)*)*$/.test(value.tags))) throw new Error("tags must be a comma-separated list of lowercase identifiers");
+      const allowedFields = new Set(["name", "kind", "provider", "version", "tags", "entry", "types", "dependencies", "tooling", "exports", "manifest_url", "download_url", "download_sha256"]);
       const unknownField = Object.keys(value).find((field) => !allowedFields.has(field));
       if (unknownField) throw new Error(`unknown manifest field ${unknownField}`);
       manifests.set(value.name, { kind: value.kind as ModuleKind, version: value.version, dependencies: (value.dependencies as Record<string, string>) ?? {}, active: states[value.name] === "active" });

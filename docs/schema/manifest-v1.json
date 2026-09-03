@@ -14,6 +14,11 @@
       "minLength": 1,
       "description": "Semantic version; the runtime performs full SemVer validation."
     },
+    "tags": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:,[a-z0-9]+(?:-[a-z0-9]+)*)*$",
+      "description": "Comma-separated discovery tags using lowercase identifiers."
+    },
     "entry": { "type": "string", "minLength": 1 },
     "types": { "type": "string", "minLength": 1 },
     "dependencies": {
@@ -45,4 +50,3 @@
     "download_sha256": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" }
   }
 }
-

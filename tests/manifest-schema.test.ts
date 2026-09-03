@@ -15,6 +15,12 @@ test("accepts the four module kinds", () => {
   }
 });
 
+test("accepts comma-separated discovery tags", () => {
+  const manifest = { ...base, tags: "ruleset,pdf" };
+  assert.equal(validate(manifest), true, JSON.stringify(validate.errors));
+  assert.equal(validateManifest(manifest).tags, "ruleset,pdf");
+});
+
 test("rejects unknown kinds and composition fields", () => {
   for (const manifest of [
     { ...base, kind: "unknown" },
@@ -22,6 +28,8 @@ test("rejects unknown kinds and composition fields", () => {
     { ...base, uses: ["storage"] },
     { ...base, provides: ["storage"] },
     { ...base, requires: ["storage"] },
+    { ...base, tags: ["ruleset", "pdf"] },
+    { ...base, tags: "Ruleset,PDF" },
   ]) {
     assert.equal(validate(manifest), false); assert.throws(() => validateManifest(manifest));
   }
