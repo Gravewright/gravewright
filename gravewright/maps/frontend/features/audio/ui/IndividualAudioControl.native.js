@@ -1,0 +1,14 @@
+import { text as gwText } from "../../../shared/config/i18n/text.js";
+import {widget} from "../../../native/widget.js";
+export default widget([{"tag":"div","attrs":{"class":"individual-audio","role":"group"},"bind":{"aria-label":"gwText(\"Audio on this device\")"},"events":[],"children":[{"tag":"button","attrs":{"class":"individual-audio__toggle","type":"button"},"bind":{"aria-label":"enabled ? gwText(\"Mute audio\") : gwText(\"Enable audio\")","title":"enabled ? gwText(\"Mute only on this device\") : gwText(\"Play audio on this device\")","aria-pressed":"enabled"},"events":[{"event":"click","code":"emit(\"toggle\");","mods":[]}],"children":[{"tag":"component","attrs":{"aria-hidden":"true"},"bind":{"is":"enabled && volume > 0 ? PhSpeakerHigh : PhSpeakerSlash"},"events":[],"children":[]}]},{"tag":"input","attrs":{"class":"individual-audio__volume","type":"range","min":"0","max":"100","step":"1"},"bind":{"value":"Math.round(volume * 100)","aria-label":"gwText(\"Individual volume\")","aria-valuetext":"`${Math.round(volume * 100)}% \\u2014 somente neste dispositivo`","title":"`Volume individual: ${Math.round(volume * 100)}%`"},"events":[{"event":"input","code":"changeVolume;","mods":[]}],"children":[]},{"tag":"button","attrs":{"class":"individual-audio__toggle"},"bind":{"aria-label":"gwText(\"Individual mixer\")","aria-expanded":"expanded"},"events":[{"event":"click","code":"expanded = !expanded;","mods":[]}],"children":[{"tag":"PhSlidersHorizontal","attrs":{},"bind":{},"events":[],"children":[]}]},{"tag":"div","attrs":{"class":"individual-audio__mixer"},"bind":{},"events":[{"event":"keydown","code":"expanded = false;","mods":["esc","stop"]}],"children":[{"tag":"strong","attrs":{},"bind":{},"events":[],"children":[{"value":"gwText(\"Audio on this device\")"}]},{"tag":"label","attrs":{},"bind":{"key":"key"},"events":[],"children":[{"value":"label"},{"tag":"input","attrs":{"type":"range","min":"0","max":"1","step":"0.01"},"bind":{"value":"channels[key] ?? 1","aria-label":"`Volume de ${label}`"},"events":[{"event":"input","code":"emit(\"channels\", { ...channels, [key]: Number($event.target.value) });","mods":[]}],"children":[]}],"each":{"names":["[key","label]"],"value":"[[\"music\", gwText(\"Music\")], [\"ambience\", gwText(\"Ambience\")], [\"sfx\", gwText(\"Effects\")], [\"cinematic\", gwText(\"Cinematic\")]]"}},{"tag":"small","attrs":{},"bind":{},"events":[],"children":[{"value":"gwText(\"Does not change other players' volume.\")"}]}],"when":"expanded"}]}],(options,{ref,computed,watch,onMounted,onBeforeUnmount,nextTick,defineExpose})=>{
+const PhSpeakerHigh="PhSpeakerHigh";
+const PhSpeakerSlash="PhSpeakerSlash";
+const PhSlidersHorizontal="PhSlidersHorizontal";
+options.props;
+const emit = options.emit;
+const expanded = ref(false);
+function changeVolume(event) {
+  emit("volume", Number(event.target.value) / 100);
+}
+return {gwText,PhSpeakerHigh,PhSpeakerSlash,PhSlidersHorizontal,emit,expanded,changeVolume};
+});

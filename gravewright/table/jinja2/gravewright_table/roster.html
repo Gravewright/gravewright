@@ -1,0 +1,1 @@
+{% if not members %}<span class="game-roster__empty">{{ game.nobodyOnline }}</span>{% endif %}{% for member in members %}<span class="game-roster__member" data-member-id="{{ member.id }}" data-member-role="{{ member.role }}"><i></i><strong>{{ member.name }}</strong><small>{{ 'Streamer' if member.role == 'streamer' else game.seats[member.role] }}</small></span>{% endfor %}

@@ -1,0 +1,58 @@
+/* gw-empty — the dashed field a view stands in before it has anything.
+ *
+ * It holds the space the content will occupy rather than collapsing, so the
+ * page does not jump when the first item arrives. */
+
+.gw-empty {
+    min-height: var(--size-300);
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    border: var(--fib-1) dashed var(--hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--step-40) var(--gap-block);
+    background:
+        radial-gradient(
+            60% 80% at 50% 0%,
+            rgba(192, 154, 90, 0.05),
+            transparent 70%
+        ),
+        rgba(0, 0, 0, 0.14);
+    text-align: center;
+}
+
+.gw-empty__marker {
+    margin-bottom: var(--gap-comfy);
+}
+
+.gw-empty__text {
+    max-width: 42ch;
+    margin: 0;
+    color: var(--text-faint);
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+}
+
+.gw-empty__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--gap-base);
+    margin-top: var(--gap-loose);
+}
+
+/* A loading state is an empty state that is still waiting: same field, with
+ * the marker breathing instead of sitting still. */
+.gw-empty--loading .gw-empty__marker {
+    animation: gw-empty-pulse 1.4s var(--ease) infinite;
+}
+
+@keyframes gw-empty-pulse {
+    0%,
+    100% {
+        opacity: 0.35;
+    }
+    50% {
+        opacity: 1;
+    }
+}

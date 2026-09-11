@@ -1,0 +1,31 @@
+/* The slots an interface opens, and nothing else.
+ *
+ * A slot is a place; a block is a thing. No block in this package claims any of these names, and
+ * nothing here says how a contribution looks — a slot carries only where its region sits, the same
+ * way a block carries only its own internal geometry.
+ *
+ * A module addresses a region by its class. The bare names below are the base primitives every
+ * interface inherits; a module that opens slots of its own namespaces them with its own name. */
+
+/* A region nobody contributed to occupies nothing: it never eats a click, and never opens a gap in
+ * the layout it sits in. */
+.gw-slot:empty { display: none; }
+/* The wrapper exists to be addressed and disposed, not to lay anything out. */
+.gw-slot__contribution { display: contents; }
+
+/* `gw-navigation`, `gw-menubar`, `gw-toolbar`, `gw-sidebar` and `gw-settings` are in flow and carry
+ * no geometry of their own: where they sit is their parent's business, as with any block. */
+
+/* Over the scene: what a module draws on the table, then the ephemeral layer above it. */
+.gw-board, .gw-hud { position: absolute; inset: 0; pointer-events: none; }
+.gw-board { z-index: 2; }
+.gw-hud { z-index: 3; }
+
+/* Over the page: independent windows, and the contextual actions raised over them. */
+.gw-overlay, .gw-context-menu { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+
+/* The region is transparent to the pointer; what a module actually drew in it is not. */
+.gw-board > .gw-slot__contribution,
+.gw-hud > .gw-slot__contribution,
+.gw-overlay > .gw-slot__contribution,
+.gw-context-menu > .gw-slot__contribution { pointer-events: auto; }

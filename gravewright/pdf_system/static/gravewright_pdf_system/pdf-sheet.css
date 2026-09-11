@@ -1,0 +1,184 @@
+/* Legacy sheet structure, Vue BEM selectors and compact Fibonacci spacing. */
+gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
+  /* Aliases onto the shared scale in @gravewright/ui. */
+  --p-radius-sm: var(--radius-sm, 3px);
+  --p-radius-md: var(--radius-md, 5px);
+  --p-radius-lg: var(--radius-lg, 8px);
+  display: block;
+  height: 100%;
+  min-height: 0;
+  color: var(--text, #d8d2c3);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.pdf-sheet { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.pdf-sheet__loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; padding: 21px; color: var(--text-faint, #7f8994); font-size: 13px; text-align: center;
+}
+
+.pdf-sheet__bar {
+  display: flex; align-items: center; gap: 13px;
+  padding: 5px 8px; border-bottom: 1px solid var(--border, #303842);
+}
+.pdf-sheet__bar-group { display: flex; align-items: center; gap: 3px; }
+.pdf-sheet__bar-group--end { margin-left: auto; }
+
+.pdf-sheet__btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0;
+  border: 1px solid var(--border, #303842); border-radius: var(--p-radius-md);
+  background: none; color: var(--text-muted, #a9a193); cursor: pointer;
+}
+.pdf-sheet__btn:hover { color: var(--text, #d8d2c3); }
+.pdf-sheet__btn--active { border-color: var(--accent, #c09a5a); }
+
+.pdf-sheet__page { min-width: 62px; text-align: center; font-variant-numeric: tabular-nums; font-size: 13px; }
+.pdf-sheet__status { color: var(--text-faint, #7f8994); font-size: 13px; }
+
+.pdf-sheet__stage { flex: 1; min-height: 0; overflow: auto; }
+
+/* The page and the fields layer share one coordinate system: the doc shrinks
+   to the page width and centers, so the fields layer (inset: 0) covers exactly
+   the canvas. */
+.pdf-sheet__doc { position: relative; width: max-content; margin: 0 auto; }
+.pdf-sheet__page-host { display: block; }
+.pdf-sheet__fields { position: absolute; inset: 0; pointer-events: none; }
+.pdf-sheet__fields > .pdf-sheet__field { pointer-events: auto; }
+
+/* Without a renderer the sheet doesn't become a blank screen: the fields stack
+   into a readable column and keep saving. */
+.pdf-sheet__stage[data-viewer-missing="true"] .pdf-sheet__fields {
+  position: static; display: grid; gap: 8px; padding: 13px;
+}
+.pdf-sheet__stage[data-viewer-missing="true"] .pdf-sheet__field { position: static; }
+
+.pdf-sheet__field {
+  position: absolute;
+  border: 1px solid transparent; border-radius: 3px;
+  background: color-mix(in srgb, var(--accent, #c09a5a) 12%, transparent);
+  /* The field sits over the PDF PAGE, which is light: inheriting the dark
+     modal theme left the text an almost illegible grey. The default is dark;
+     the sheet can change it through the variable. */
+  color: var(--pdf-field-text, #111111);
+  font: inherit; padding: 0 3px;
+}
+.pdf-sheet__field:focus { border-color: var(--accent, #c09a5a); outline: none; }
+.pdf-sheet__field[readonly] { background: none; }
+.pdf-sheet__field--checkbox { width: auto !important; }
+
+.pdf-sheet__empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  height: 100%; padding: 21px; color: var(--text-faint, #7f8994); text-align: center; font-size: 13px;
+}
+.pdf-sheet__empty p { margin: 0; max-width: 42ch; }
+.pdf-sheet__empty strong { color: var(--text-muted, #a9a193); }
+
+/* The doc is what centers; centering here too would shift the canvas inside
+   the fields' own frame of reference. */
+.pdf-sheet__canvas { display: block; }
+
+/* Template picker. Anchored to its button, over the stage: the list is short
+   and opening a modal to swap sheets would be disproportionate. */
+.pdf-sheet__picker-wrap { position: relative; display: inline-flex; }
+.pdf-sheet__picker {
+  position: absolute; top: calc(100% + 3px); right: 0; z-index: 5;
+  min-width: 180px; padding: 3px; display: flex; flex-direction: column; gap: 2px;
+  border: 1px solid var(--border, #303842); border-radius: var(--p-radius-lg);
+  background: var(--surface-raised, #20262d);
+  box-shadow: 0 8px 21px rgba(0, 0, 0, 0.35);
+}
+.pdf-sheet__picker-option {
+  padding: 5px 8px; text-align: left; font-size: 13px;
+  border: 1px solid transparent; border-radius: var(--p-radius-md);
+  background: none; color: var(--text-muted, #a9a193); cursor: pointer;
+}
+.pdf-sheet__picker-option:hover { color: var(--text, #d8d2c3); }
+.pdf-sheet__picker-option[aria-selected="true"] { border-color: var(--accent, #c09a5a); color: var(--text, #d8d2c3); }
+.pdf-sheet__picker-empty { margin: 0; padding: 8px; font-size: 13px; line-height: 1.4; color: var(--text-faint, #7f8994); }
+.pdf-sheet__picker-upload {
+  display: block; margin-top: 2px; padding: 5px 8px;
+  border-top: 1px solid var(--border, #303842);
+  color: var(--accent, #c09a5a); font-size: 13px; cursor: pointer;
+}
+
+/* --- tabs ---------------------------------------------------------------
+   The sheet panel must keep the full height, otherwise the PDF stage loses
+   the room it needs to scroll. */
+.pdf-sheet__tabs {
+  display: flex; gap: 2px; margin: 5px 8px; padding: 3px;
+  border: 1px solid var(--border, #303842); border-radius: var(--p-radius-lg);
+  background: rgba(0, 0, 0, .24);
+}
+.pdf-sheet__tab {
+  display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: 5px;
+  padding: 5px 13px; font-size: 13px;
+  border: 1px solid transparent;
+  border-radius: var(--p-radius-md);
+  background: none; color: var(--text-faint, #7f8994); cursor: pointer;
+}
+.pdf-sheet__tab:hover { color: var(--text, #d8d2c3); }
+.pdf-sheet__tab--active {
+  color: var(--accent-hover, #dfbc7b);
+  border-color: color-mix(in srgb, var(--accent, #c09a5a) 42%, var(--border, #303842));
+  background: color-mix(in srgb, var(--accent, #c09a5a) 14%, rgba(255, 255, 255, .04));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .35), inset 0 1px rgba(255, 255, 255, .05);
+}
+
+.pdf-sheet__panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.pdf-sheet__panel--form { gap: 13px; padding: 8px; overflow: auto; }
+
+.pdf-sheet__field-group { display: flex; flex-direction: column; gap: 5px; }
+.pdf-sheet__field-group h3 {
+  margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--text-muted, #a9a193);
+}
+.pdf-sheet__hint { margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-faint, #7f8994); }
+
+.pdf-sheet__bar-map { display: grid; gap: 8px; }
+.pdf-sheet__row {
+  display: grid; grid-template-columns: 144px minmax(0, 1fr);
+  align-items: center; gap: 8px; font-size: 13px;
+}
+.pdf-sheet__select {
+  padding: 5px 8px; font: inherit; font-size: 13px;
+  border: 1px solid var(--border, #303842); border-radius: var(--p-radius-md);
+  background: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
+}
+.pdf-sheet__text {
+  padding: 8px 8px; font: inherit; font-size: 13px; line-height: 1.55; resize: vertical;
+  border: 1px solid var(--border, #303842); border-radius: var(--p-radius-md);
+  background: color-mix(in srgb, var(--accent, #c09a5a) 6%, transparent);
+  color: inherit;
+}
+.pdf-sheet__text:focus, .pdf-sheet__select:focus { border-color: var(--accent, #c09a5a); outline: none; }
+
+.pdf-sheet__textarea {
+  min-height: 120px; width: 100%; padding: 8px 8px; resize: vertical;
+  border: 1px solid var(--border, #303842); border-radius: var(--p-radius-md);
+  background: color-mix(in srgb, var(--accent, #c09a5a) 6%, transparent);
+  color: inherit; font: inherit; font-size: 13px; line-height: 1.55;
+}
+.pdf-sheet__textarea:focus { border-color: var(--accent, #c09a5a); outline: none; }
+
+.pdf-sheet__color {
+  width: 100%; height: 34px; padding: 2px;
+  border: 1px solid var(--border, #303842); border-radius: var(--p-radius-md);
+  background: var(--surface-raised, #20262d); cursor: pointer;
+}
+
+.pdf-sheet__error { padding: 5px 8px; color: #ffaaaa; border-bottom: 1px solid var(--border, #303842); font-size: 13px; }
+.pdf-sheet__error button { margin-left: 8px; }
+.pdf-sheet__images { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }
+.pdf-sheet__image-picker { display: grid; gap: 5px; font-size: 13px; }
+.pdf-sheet__image-picker img { width: 89px; height: 89px; object-fit: contain; }
+.pdf-sheet__image-picker input { max-width: 100%; font-size: 13px; }
+.pdf-sheet__btn svg { width: 21px; height: 21px; }
+.pdf-sheet__field-group .journal-rich-text { min-height: 89px; }
+
+.pdf-sheet__btn:disabled { opacity: .4; cursor: default; }
+.pdf-sheet__tab svg { width: 21px; height: 21px; }
+
+.pdf-sheet__image-picker { border: 1px solid var(--border, #303842); padding: 8px; border-radius: 5px; align-content: start; }
+.pdf-sheet__image-action { display: flex; gap: 5px; align-items: center; color: var(--accent, #c09a5a); cursor: pointer; }
+.pdf-sheet__image-action svg { width: 21px; height: 21px; }

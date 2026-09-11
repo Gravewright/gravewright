@@ -1,0 +1,6 @@
+{% macro get_button(label, target, css='', glyph='', weight='regular') -%}
+<button class="{{ css }}" type="button" data-on:click="$_menu='';@get(window.gravewrightInside.location({{ target|tojson|forceescape }}, $_search, $_system), {retry:'never'})">{% if glyph %}{{ icon(glyph,weight) }} {% endif %}{{ label }}</button>
+{%- endmacro %}
+{% macro avatars(names, limit=4, titles=false) -%}
+<div>{% for name in names[:limit] %}<i{% if titles %} title="{{ name }}" aria-label="{{ name }}"{% endif %}>{{ name[:1]|upper }}</i>{% endfor %}{% if names|length>limit %}<strong>+{{ names|length-limit }}</strong>{% endif %}</div>
+{%- endmacro %}

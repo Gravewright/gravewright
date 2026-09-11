@@ -1,0 +1,126 @@
+/* gw-panel — one section of the setup screen.
+ *
+ * The language, in one place:
+ *   · a sticky head with a gold hairline across the top and a serif title in
+ *     near-white, the description demoted to a line beside it;
+ *   · one gutter, owned by the panel, that every block inherits — the head
+ *     escapes it with negative margins so it can span edge to edge;
+ *   · flat corners, hairline borders, `--surface` fills;
+ *   · serif for the name of a thing, micro caps for its metadata;
+ *   · one gold-filled control per view: the affirmative submit. */
+
+.gw-panel {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+}
+
+.gw-panel__inner {
+    display: flex;
+    flex-direction: column;
+    max-width: var(--content-max-width);
+    margin-inline: auto;
+    padding: 0 var(--gutter) var(--step-40);
+}
+
+/* ---- The head ---------------------------------------------------------- */
+
+.gw-panel__head {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--step-4) var(--gap-block);
+    border-bottom: var(--fib-1) solid var(--hairline);
+    margin: 0 calc(var(--gutter) * -1) var(--gap-block);
+    padding: var(--gap-section) var(--gutter) var(--gap-loose);
+    background: rgba(17, 21, 26, 0.92);
+    backdrop-filter: blur(var(--step-12));
+}
+
+/* The signature: the one piece of gold at the top of every panel. */
+.gw-panel__head::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: var(--fib-2);
+    background: linear-gradient(
+        90deg,
+        var(--accent),
+        rgba(192, 154, 90, 0.15) 34%,
+        transparent 62%
+    );
+}
+
+/* The title of a panel is set in the display serif, not as an 11px caps
+ * eyebrow: it *is* the title, so it carries the weight of one. */
+.gw-panel__title {
+    margin: 0;
+    color: var(--text-bright);
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-tight);
+    line-height: var(--leading-display);
+    text-transform: none;
+}
+
+.gw-panel__description {
+    flex: 0 1 46ch;
+    margin: 0;
+    color: var(--text-faint);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+}
+
+/* ---- The action row ---------------------------------------------------- */
+
+.gw-panel__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: var(--gap-base);
+    margin: 0 0 var(--gap-section);
+}
+
+/* ---- Content grids ----------------------------------------------------- */
+
+.gw-panel__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
+    gap: var(--gap-section);
+}
+
+@media (max-width: 900px) {
+    .gw-panel__head {
+        padding-top: var(--gap-loose);
+    }
+
+    .gw-panel__title {
+        font-size: var(--text-2xl);
+    }
+
+    .gw-panel__description {
+        flex: 1 1 100%;
+    }
+
+    /* One column: two cards at 300px each stop being cards and start being
+     * columns of text. */
+    .gw-panel__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .gw-panel__inner {
+        padding: 0 var(--gap-loose) var(--gap-block);
+    }
+
+    .gw-panel__head {
+        margin-inline: calc(var(--gap-loose) * -1);
+        padding-inline: var(--gap-loose);
+    }
+}

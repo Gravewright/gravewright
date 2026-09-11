@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import { hitToken, inMarquee, position, movementBlocked } from './token-interaction.js';
+const token = { id: 'a', mapId: 'scene', actorId: 'actor', name: 'Hero', version: 1, linkMode: 'linked', gridX: 0, gridY: 0, cells: 1, heightCells: 2, elevation: 0 };
+const wall = { id: 'w', kind: 'wall', x1: 100, y1: -100, x2: 100, y2: 500 };
+assert.equal(hitToken({ x: 30, y: 130 }, [token], 70)?.id, 'a');
+assert.equal(hitToken({ x: 80, y: 130 }, [token], 70), undefined);
+assert.equal(inMarquee(token, { x: 50, y: 100 }, { x: 0, y: 0 }, 70), true);
+assert.deepEqual(position(token, { x: 43, y: 28 }, 70, 350, 350, true), { gridX: 1, gridY: 0 });
+assert.deepEqual(position(token, { x: 35, y: 35 }, 70, 350, 350, false), { gridX: .5, gridY: .5 });
+assert.deepEqual(position(token, { x: 999, y: 999 }, 70, 350, 350, false), { gridX: 4, gridY: 3 });
+assert.equal(movementBlocked(token, { gridX: 2, gridY: 0 }, [wall], 70), true);
+assert.equal(movementBlocked(token, { gridX: 2, gridY: 0 }, [{ ...wall, movement_behavior: 'pass' }], 70), false);
+assert.equal(movementBlocked(token, { gridX: 2, gridY: 0 }, [{ ...wall, kind: 'door', door_state: 'open' }], 70), false);
+assert.equal(movementBlocked({ ...token, elevation: 4 }, { gridX: 2, gridY: 0 }, [{ ...wall, vertical_bottom: 0, vertical_top: 3 }], 70), false);
+assert.equal(movementBlocked(token, { gridX: 0, gridY: 1 }, [wall], 70), false);

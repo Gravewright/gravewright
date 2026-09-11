@@ -1,0 +1,72 @@
+/* gw-stage — the table itself: the board, and what stands on it when the
+ * board is empty. */
+
+.gw-stage {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(
+            circle at 50% 38%,
+            rgba(192, 154, 90, 0.05),
+            transparent var(--fib-14)
+        ),
+        var(--bg);
+}
+
+.gw-stage__board {
+    position: absolute;
+    inset: 0;
+}
+
+/* The table's own title card, shown until a scene is loaded. */
+.gw-stage__intro {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: var(--gap-block);
+    text-align: center;
+    pointer-events: none;
+}
+
+/* The marker stands one step above the eyebrow, not on it. */
+.gw-stage__marker {
+    margin-bottom: var(--step-18);
+}
+
+.gw-stage__eyebrow {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-lead);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-eyebrow);
+    line-height: var(--leading-normal);
+    text-transform: uppercase;
+}
+
+.gw-stage__title {
+    margin: 0 0 var(--step-10);
+    color: var(--text);
+    font-size: var(--text-stage);
+    font-weight: var(--weight-display);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+}
+
+.gw-stage__description {
+    max-width: 60ch;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-lead);
+    line-height: var(--leading-normal);
+}
+
+.gw-stage__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--gap-base);
+    margin-top: var(--step-18);
+}

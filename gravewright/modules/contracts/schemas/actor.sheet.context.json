@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "json": {
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "mountId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tableId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "moduleSetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actorId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "enum": [
+        "gm",
+        "player"
+      ]
+    }
+  },
+  "required": [
+    "mountId",
+    "tableId",
+    "moduleSetRevision",
+    "actorId"
+  ],
+  "additionalProperties": false
+}

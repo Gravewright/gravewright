@@ -1,0 +1,37 @@
+/* gw-shell — the library screen: a sticky rail beside a scrolling work area.
+ * The rail collapses to its icons, so the grid column is what animates. */
+
+.gw-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+    background: var(--bg);
+    color: var(--text-bright);
+    transition: grid-template-columns var(--transition-normal);
+}
+
+.gw-shell--compact {
+    grid-template-columns: var(--rail-compact) minmax(0, 1fr);
+}
+
+.gw-shell__topbar {
+    display: flex;
+    min-height: var(--topbar-height);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--step-21);
+    padding: 0 var(--step-34);
+    border-bottom: var(--border-hairline);
+    background: color-mix(in srgb, var(--bg) 94%, black);
+}
+
+.gw-shell__content {
+    width: min(100%, var(--content-width));
+    margin: 0 auto;
+    padding: var(--step-34);
+}
+
+.gw-shell__area {
+    position: relative;
+    min-width: 0;
+}

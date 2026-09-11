@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "const": {
+    "lifecycle": {
+      "start": "ModuleContext => void | Promise<void>",
+      "register": "RegistrationContext => void; synchronous; once per activation",
+      "stop": "ModuleContext => void | Promise<void>; once even after start fails"
+    },
+    "register": {
+      "defaultMode": "augment",
+      "duplicateDomain": "conflict",
+      "unknownDomain": "invalid_data",
+      "lateRegistration": "invalid_data",
+      "replace": "one candidate automatically; multiple candidates require a table preference before mounting"
+    },
+    "context": {
+      "invalidation": [
+        "surface detached",
+        "scene changed",
+        "table left",
+        "module set revision changed",
+        "replacement changed"
+      ],
+      "error": "stale_context",
+      "root": "owned HTMLElement; native content restored after failed replacement",
+      "scope": "one module, one table, one mounting UUID",
+      "cleanup": "AbortSignal first; cleanup in reverse order; every cleanup attempted; asynchronous cleanup deadline 5000 ms"
+    },
+    "assets": {
+      "paths": "relative to signed installed package; no traversal, URL or query",
+      "methods": [
+        "url",
+        "text",
+        "json",
+        "bytes"
+      ]
+    },
+    "styles": {
+      "method": "use(path) => dispose",
+      "isolation": "namespaced CSS by convention; no Shadow DOM; no sandbox"
+    },
+    "storage": {
+      "local": "browser/module namespace; JSON; 256 KiB per value",
+      "user": "module/table/authenticated user; persistent JSON CAS",
+      "table": "module/table; participant reads; GM writes; persistent JSON CAS",
+      "quotaBytes": 4194304,
+      "valueQuotaBytes": 262144,
+      "missing": "null",
+      "revision": "opaque string; expectedRevision null creates; matching revision updates or deletes"
+    },
+    "events": {
+      "delivery": "authorized table audience only; scene events filtered by mount scene",
+      "unsubscribe": "explicit or automatic on disposal"
+    },
+    "coordinates": {
+      "unit": "logical scene pixel",
+      "origin": "top left",
+      "tokenAnchor": "center",
+      "viewport": "scene.overlay only; CSS pixels, independent of device pixel ratio"
+    },
+    "versioning": {
+      "sdk": "independent SemVer",
+      "package": "immutable id/version/digest",
+      "activation": "per table exact versions + moduleSetRevision",
+      "rollback": "code version only; persisted data is never reverted"
+    },
+    "binary": {
+      "input": "Blob in JS; multipart metadata JSON + file part; server builds file metadata",
+      "output": "DownloadedFile in JS; authenticated attachment response",
+      "abort": "CallOptions.signal; before committed write cancellation prevents work; committed changes are not undone",
+      "progress": "optional callback; Fetch transport reports completion"
+    },
+    "errors": [
+      "not_found",
+      "permission_denied",
+      "invalid_data",
+      "conflict",
+      "unavailable",
+      "cancelled",
+      "stale_context"
+    ]
+  }
+}

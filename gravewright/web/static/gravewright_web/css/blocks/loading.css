@@ -1,0 +1,31 @@
+/* gw-loading — the whole-screen wait, before any chrome exists to put it in. */
+
+.gw-loading {
+    display: grid;
+    min-height: 100vh;
+    place-content: center;
+    justify-items: center;
+    gap: var(--step-13);
+    background: var(--bg);
+    color: var(--text-muted);
+}
+
+.gw-loading__spinner {
+    width: var(--size-21);
+    height: var(--size-21);
+    border: var(--hairline-width-strong) solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: var(--radius-circle);
+    animation: gw-loading-spin var(--motion-spin, 800ms) linear infinite;
+}
+
+.gw-loading p {
+    margin: 0;
+    font-size: var(--text-md);
+}
+
+@keyframes gw-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

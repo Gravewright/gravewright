@@ -1,0 +1,292 @@
+/* gw-campaign — a table on the shelf: its cover, its system, who sits at it.
+ *
+ * The same card serves the owner's library and a player's. The owner's carries
+ * a manage menu; a player's does not, and that is the only difference. */
+
+.gw-campaign-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(calc(var(--fib-12) + var(--fib-7) + var(--fib-4) + var(--fib-1)), 1fr)
+    );
+    gap: var(--step-21);
+}
+
+/* One per row, cover to the left: the shelf read as a list instead of a grid. */
+.gw-campaign-grid--list {
+    grid-template-columns: 1fr;
+}
+
+.gw-campaign-grid--list .gw-campaign:not(.gw-campaign--new) {
+    display: grid;
+    grid-template-columns: var(--fib-12) 1fr;
+}
+
+.gw-campaign-grid--list .gw-campaign__cover {
+    border-right: var(--border-hairline);
+    border-bottom: 0;
+}
+
+.gw-campaign-grid--list .gw-campaign--new {
+    min-height: var(--cover-height);
+}
+
+.gw-campaign {
+    --cover-height: var(--fib-11);
+    min-width: 0;
+    border: var(--border-hairline);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    transition:
+        border-color var(--transition-fast),
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+.gw-campaign:not(.gw-campaign--new):hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+    transform: translateY(calc(var(--fib-2) * -1));
+}
+
+/* ---- Cover ------------------------------------------------------------- */
+
+.gw-campaign__cover {
+    position: relative;
+    display: grid;
+    width: 100%;
+    min-height: var(--cover-height);
+    place-items: center;
+    overflow: hidden;
+    border: 0;
+    border-bottom: var(--border-hairline);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    padding: 0;
+    background: linear-gradient(135deg, var(--plate-a), var(--plate-b));
+    color: var(--text);
+}
+
+/* A faint diagonal weave, so a coverless table still reads as bound cloth. */
+.gw-campaign__cover::before {
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        135deg,
+        transparent 0 var(--step-12),
+        rgb(255 255 255 / 3%) var(--step-13) var(--step-14)
+    );
+    content: "";
+}
+
+.gw-campaign__cover img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.gw-campaign--umber { --plate-a: #3b3122; --plate-b: #171b20; }
+.gw-campaign--blue { --plate-a: #243747; --plate-b: #171d23; }
+.gw-campaign--green { --plate-a: #243528; --plate-b: #171d1a; }
+.gw-campaign--violet { --plate-a: #312b42; --plate-b: #191922; }
+
+.gw-campaign__open {
+    position: absolute;
+    z-index: 1;
+    right: var(--step-13);
+    bottom: var(--step-13);
+    color: var(--text);
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+/* ---- Body -------------------------------------------------------------- */
+
+.gw-campaign__body {
+    padding: var(--step-13);
+}
+
+.gw-campaign__title-row {
+    display: flex;
+    align-items: start;
+    gap: var(--step-13);
+}
+
+.gw-campaign__title-row h2 {
+    min-height: 2.4em;
+    margin: 0;
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: var(--text-heading);
+    line-height: var(--leading-tight);
+}
+
+.gw-campaign__title {
+    min-width: 0;
+    padding: 0;
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--text-bright);
+    text-align: left;
+}
+
+.gw-campaign__title h2 {
+    min-height: 0;
+}
+
+.gw-campaign__description {
+    min-height: 3em;
+    margin: var(--step-8) 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+}
+
+.gw-campaign__meta {
+    overflow: hidden;
+    margin: var(--step-13) 0;
+    color: var(--accent-hover);
+    font-size: var(--text-md);
+    font-weight: var(--weight-book);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Who sits at the table --------------------------------------------- */
+
+.gw-campaign__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--step-13);
+    border-top: var(--border-hairline);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+.gw-campaign__footer > div {
+    display: flex;
+}
+
+/* Overlapping initials, the way a table's seats overlap. */
+.gw-campaign__footer i,
+.gw-campaign__footer strong {
+    display: grid;
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    place-items: center;
+    margin-left: calc(var(--step-8) * -1);
+    border: var(--hairline-width) solid var(--border-strong);
+    border-radius: var(--radius-circle);
+    background: var(--surface-raised);
+    color: var(--text);
+    font-size: var(--text-2xs);
+    font-style: normal;
+    letter-spacing: var(--tracking-none);
+}
+
+/* ---- Manage menu ------------------------------------------------------- */
+
+.gw-campaign__manage {
+    position: relative;
+}
+
+.gw-campaign__manage > button {
+    display: grid;
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-faint);
+}
+
+.gw-campaign__manage > button:hover,
+.gw-campaign__manage > button[aria-expanded="true"] {
+    background: var(--surface-raised);
+    color: var(--text-bright);
+}
+
+.gw-campaign__manage > button svg {
+    width: var(--size-21);
+    height: var(--size-21);
+}
+
+.gw-campaign__manage-menu {
+    position: absolute;
+    z-index: var(--z-dropdown);
+    top: 100%;
+    right: 0;
+    display: grid;
+    min-width: var(--fib-11);
+    overflow: hidden;
+    border: var(--border-hairline);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-md);
+}
+
+.gw-campaign__manage-menu button {
+    padding: var(--step-8) var(--step-13);
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: var(--text-md);
+    text-align: left;
+}
+
+.gw-campaign__manage-menu button:hover {
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface-raised));
+    color: var(--text-bright);
+}
+
+.gw-campaign__manage-menu button + button {
+    border-top: var(--border-hairline);
+}
+
+.gw-campaign__manage-menu .gw-campaign__remove {
+    color: var(--danger-text);
+}
+
+/* ---- The empty slot ---------------------------------------------------- */
+
+.gw-campaign--new {
+    display: grid;
+    min-height: calc(var(--fib-12) + var(--fib-8) + var(--fib-5) + var(--fib-2));
+    place-content: center;
+    justify-items: center;
+    gap: var(--step-8);
+    border-style: dashed;
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.gw-campaign--new:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+}
+
+.gw-campaign--new span {
+    display: grid;
+    width: var(--step-55);
+    height: var(--step-55);
+    place-items: center;
+    border: var(--border-hairline);
+    border-radius: var(--radius-circle);
+    font-size: var(--text-heading);
+}
+
+.gw-campaign--new small {
+    color: var(--text-faint);
+}

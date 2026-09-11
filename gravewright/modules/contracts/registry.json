@@ -1,0 +1,718 @@
+{
+  "sdk": "1.0.0",
+  "operations": {
+    "actor.list": {
+      "input": "schemas/actor.list.input.json",
+      "output": "schemas/actor.list.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "read",
+      "scope": "table",
+      "description": ""
+    },
+    "actor.read": {
+      "input": "schemas/actor.read.input.json",
+      "output": "schemas/actor.read.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "read",
+      "scope": "table",
+      "description": ""
+    },
+    "actor.create": {
+      "input": "schemas/actor.create.input.json",
+      "output": "schemas/actor.create.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "table",
+      "description": ""
+    },
+    "actor.update": {
+      "input": "schemas/actor.update.input.json",
+      "output": "schemas/actor.update.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "table",
+      "description": "Only supplied fields change. Empty patch preserves the document."
+    },
+    "actor.data.read": {
+      "input": "schemas/actor.data.read.input.json",
+      "output": "schemas/actor.data.read.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "read",
+      "scope": "table",
+      "description": "",
+      "transport": "json"
+    },
+    "actor.data.update": {
+      "input": "schemas/actor.data.update.input.json",
+      "output": "schemas/actor.data.update.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "table",
+      "description": "Replaces the entire data object atomically. Arrays and nested objects are replaced; null is a value, not deletion. Native ownership and system schema validation always apply.",
+      "transport": "json"
+    },
+    "actor.delete": {
+      "input": "schemas/actor.delete.input.json",
+      "output": "schemas/actor.delete.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "table",
+      "description": "Version-checked logical deletion. File reclamation is separate from visibility.",
+      "transport": "json"
+    },
+    "token.read": {
+      "input": "schemas/token.read.input.json",
+      "output": "schemas/token.read.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "read",
+      "scope": "scene",
+      "description": "",
+      "transport": "json"
+    },
+    "token.move": {
+      "input": "schemas/token.move.input.json",
+      "output": "schemas/token.move.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "scene",
+      "description": "Center coordinates in logical scene pixels: origin top-left, x right, y down; independent of zoom and DPR. Native walls, locks and token ownership apply.",
+      "transport": "json"
+    },
+    "token.data.read": {
+      "input": "schemas/token.data.read.input.json",
+      "output": "schemas/token.data.read.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "read",
+      "scope": "scene",
+      "description": "",
+      "transport": "json"
+    },
+    "token.data.update": {
+      "input": "schemas/token.data.update.input.json",
+      "output": "schemas/token.data.update.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "scene",
+      "description": "Full replacement of snapshot data. Linked tokens write their actor data; revision identifies the linked or snapshot source.",
+      "transport": "json"
+    },
+    "asset.list": {
+      "input": "schemas/asset.list.input.json",
+      "output": "schemas/asset.list.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "read",
+      "scope": "table",
+      "description": "PDF templates belonging to this table and its current system.",
+      "transport": "json"
+    },
+    "asset.upload": {
+      "input": "schemas/asset.upload.input.json",
+      "output": "schemas/asset.upload.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "table",
+      "description": "Uploads a PDF template (max 10 MB), GM only. Binary argument is multipart, never base64 in module code.",
+      "transport": "multipart"
+    },
+    "asset.download": {
+      "input": "schemas/asset.download.input.json",
+      "output": "schemas/asset.download.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "read",
+      "scope": "table",
+      "description": "Authorized binary download of a table PDF template.",
+      "transport": "binary"
+    },
+    "actor.image.upload": {
+      "input": "schemas/actor.image.upload.input.json",
+      "output": "schemas/actor.image.upload.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "table",
+      "description": "Native actor image validation and ownership; multipart File/Blob.",
+      "transport": "multipart"
+    },
+    "locale.apply": {
+      "input": "schemas/locale.apply.input.json",
+      "output": "schemas/locale.apply.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "local",
+      "scope": "local",
+      "description": "Apply a client-only language catalog. Owned by the mounting block and reverted when it closes; keys never change server permissions or data.",
+      "transport": "json"
+    }
+  },
+  "events": {
+    "actor.created": {
+      "payload": "schemas/actor.created.json",
+      "scope": "table",
+      "delivery": "after commit, authorized recipients only; reconnect by list/read"
+    },
+    "actor.updated": {
+      "payload": "schemas/actor.updated.json",
+      "scope": "table",
+      "delivery": "after commit, authorized recipients only; reconnect by list/read"
+    },
+    "actor.deleted": {
+      "payload": "schemas/actor.deleted.json",
+      "scope": "table",
+      "delivery": "after commit, authorized recipients only; reconnect by list/read"
+    },
+    "scene.viewport.changed": {
+      "payload": "schemas/scene.viewport.changed.json",
+      "scope": "scene",
+      "delivery": "Local pan, zoom and resize notifications for the mounted scene."
+    }
+  },
+  "domains": {
+    "actor.directory": {
+      "context": "schemas/actor.directory.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "actor.sheet": {
+      "context": "schemas/actor.sheet.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "token.sheet": {
+      "context": "schemas/token.sheet.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "item.directory": {
+      "context": "schemas/item.directory.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "item.sheet": {
+      "context": "schemas/item.sheet.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "scene.directory": {
+      "context": "schemas/scene.directory.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "scene.controls": {
+      "context": "schemas/scene.controls.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "scene.overlay": {
+      "context": "schemas/scene.overlay.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "chat.log": {
+      "context": "schemas/chat.log.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "combat.tracker": {
+      "context": "schemas/combat.tracker.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "journal.sheet": {
+      "context": "schemas/journal.sheet.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "preferences": {
+      "context": "schemas/preferences.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    },
+    "table.interface": {
+      "context": "schemas/table.interface.context.json",
+      "modes": [
+        "augment",
+        "replace"
+      ],
+      "augment": "Dedicated root after native content; overlay roots are viewport-clipped and do not capture input until the module opts in.",
+      "lifetime": "Disposed before table, scene, document, replacement, or module-set revision changes.",
+      "operations": [
+        "actor.list",
+        "actor.read",
+        "actor.create",
+        "actor.update",
+        "actor.data.read",
+        "actor.data.update",
+        "actor.delete",
+        "token.read",
+        "token.move",
+        "token.data.read",
+        "token.data.update",
+        "asset.list",
+        "asset.upload",
+        "asset.download",
+        "actor.image.upload",
+        "locale.apply"
+      ],
+      "events": [
+        "actor.created",
+        "actor.updated",
+        "actor.deleted"
+      ]
+    }
+  },
+  "protocol": {
+    "schema": "schemas/protocol.json",
+    "api": "api.json",
+    "transport": "transport.md"
+  }
+}

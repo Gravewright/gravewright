@@ -1,0 +1,50 @@
+{% set submit = text.createOwner if setup else text.createParticipant if registration else text.signIn %}
+<form class="gw-gate__form" method="post" action="{{ url('accounts:' ~ mode) }}"
+      data-on:submit="$_networkError = false; @post('{{ url('accounts:' ~ mode) }}', {contentType: 'form', retry: 'never'})"
+      data-indicator:_pending
+      data-on:datastar-fetch="if (evt.detail.type === 'error') $_networkError = true">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+  <header class="gw-gate__intro">
+    <div class="gw-gate__brand">
+      <span class="gw-mark" aria-hidden="true"></span>
+      <div>
+        <p class="gw-gate__eyebrow">{{ text.productKind }}</p>
+        <h1 class="gw-gate__title">{{ text.productName }}</h1>
+      </div>
+    </div>
+    <p class="gw-gate__description">{{ text.setupDescription if setup else text.registerDescription if registration else text.loginDescription }}</p>
+  </header>
+  {% if setup or registration %}
+    <div class="gw-field">
+      <label class="gw-field__label" for="owner-name">{{ text.name }}</label>
+      <input id="owner-name" name="name" data-bind:_name data-preserve-attr="value" autocomplete="name" placeholder="{{ text.namePlaceholder }}"
+             minlength="2" maxlength="80" required value="{{ name }}" />
+    </div>
+  {% endif %}
+  <div class="gw-field">
+    <label class="gw-field__label" for="owner-email">{{ text.email }}</label>
+    <input id="owner-email" name="email" data-bind:_email data-preserve-attr="value" type="email" autocomplete="username"
+           placeholder="{{ text.emailPlaceholder }}" maxlength="254" required value="{{ email }}" />
+  </div>
+  <div class="gw-field">
+    <div class="gw-field__label-row">
+      <label class="gw-field__label" for="owner-password">{{ text.password }}</label>
+      {% if setup or registration %}<span class="gw-field__help">{{ text.passwordHint }}</span>{% endif %}
+    </div>
+    <input id="owner-password" name="password" type="password"
+           autocomplete="{{ 'new-password' if setup or registration else 'current-password' }}"
+           placeholder="{{ text.passwordPlaceholder }}" minlength="12" maxlength="256" required />
+  </div>
+  {% if error %}<p class="gw-notice gw-notice--danger gw-notice--boxed" role="alert" data-attr:hidden="$_pending">{{ error }}</p>{% endif %}
+  <p class="gw-notice gw-notice--danger gw-notice--boxed" role="alert" hidden
+     data-attr:hidden="!$_networkError">{{ text.errors.unreachable }}</p>
+  <button class="gw-button gw-button--caps gw-button--primary" type="submit"
+          data-attr:disabled="$_pending" data-text="$_pending ? '{{ text.waiting }}' : '{{ submit }}'">{{ submit }}</button>
+  {% if not setup %}
+    <div class="gw-gate__links">
+      <button type="button"
+              data-on:click="$_networkError = false; document.getElementById('owner-password').value = ''; @get('{{ url('accounts:login' if registration else 'accounts:register') }}', {retry: 'never'})">{{ text.returnToLogin if registration else text.createAccount }}</button>
+      {% if not registration %}<span>•</span><span>{{ text.forgotPassword }}</span>{% endif %}
+    </div>
+  {% endif %}
+</form>

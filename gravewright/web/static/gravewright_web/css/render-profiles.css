@@ -1,0 +1,28 @@
+/* Client-local rendering tiers. Modules receive the same tier through
+ * `globalThis.__gravewright.rendering`; these selectors govern core chrome only. */
+
+:root[data-render-profile="performance"] *,
+:root[data-render-profile="performance"] *::before,
+:root[data-render-profile="performance"] *::after {
+    animation-duration: var(--step-0) !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: var(--step-0) !important;
+}
+
+:root[data-render-profile="performance"] :is(.gw-window, .gw-table-modal, .gw-table-modal__panel, .gw-folder-editor, .house-menu-scrim, .house-menu, .game-panel, .game-dock) {
+    backdrop-filter: none;
+}
+
+:root[data-render-profile="balanced"] :is(.gw-window, .gw-table-modal__panel, .gw-folder-editor, .house-menu, .game-panel) {
+    backdrop-filter: blur(var(--fib-4)) saturate(110%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: var(--step-0) !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: var(--step-0) !important;
+    }
+}

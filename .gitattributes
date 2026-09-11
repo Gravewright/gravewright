@@ -1,0 +1,16 @@
+# Normalize source text while keeping the Windows entry point native to CMD.
+* text=auto
+*.bat text eol=crlf
+
+# Keep copied third-party notices byte-for-byte as supplied upstream.
+LICENSES/** -text
+
+# Even simple PDFs can look like text; never rewrite their byte offsets.
+*.pdf binary
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.woff binary
+*.woff2 binary

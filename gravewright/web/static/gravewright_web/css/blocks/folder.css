@@ -1,0 +1,50 @@
+.gw-folder { --folder-color: var(--accent); overflow: hidden; border: 1px solid var(--border); border-left-color: var(--folder-color); border-radius: 4px; background: color-mix(in srgb, var(--folder-color) 8%, rgb(14 17 19 / 72%)); color: var(--text); }
+.gw-folder--blue { --folder-color: #60a5fa; }
+.gw-folder--green { --folder-color: #6db386; }
+.gw-folder--violet { --folder-color: #a78bfa; }
+.gw-folder--neutral { --folder-color: var(--text-faint); }
+.gw-folder--selected { box-shadow: inset 0 0 0 1px rgb(255 255 255 / 5%); }
+.gw-folder__header { display: flex; min-height: 34px; align-items: center; }
+.gw-folder__toggle { display: flex; min-width: 0; min-height: 34px; padding: 0 8px; flex: 1; align-items: center; gap: 7px; border: 0; background: transparent; color: inherit; text-align: left; }
+.gw-folder__toggle:hover { background: rgb(255 255 255 / 3%); }
+.gw-folder__icon { width: 14px; height: 14px; flex: 0 0 14px; color: var(--folder-color); }
+.gw-folder__label { overflow: hidden; flex: 1; font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.gw-folder__count { color: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.gw-folder__caret { width: 12px; height: 12px; flex: 0 0 12px; color: var(--text-faint); transition: transform var(--transition-fast); }
+.gw-folder--open > .gw-folder__header .gw-folder__caret { transform: rotate(90deg); }
+.gw-folder__actions { display: flex; align-items: center; padding-right: 5px; }
+.gw-folder__actions button { display: grid; width: 28px; height: 28px; padding: 0; place-items: center; border: 0; border-radius: 4px; background: transparent; color: var(--text-muted); }
+.gw-folder__actions button:hover { background: var(--surface-raised); color: var(--text); }
+.gw-folder__content { display: grid; border-top: 1px solid var(--border); }
+.gw-folder__content > .gw-folder { width: calc(100% - 13px); margin-left: 13px; border-top: 0; border-right: 0; border-bottom: 0; border-radius: 0; }
+.gw-folder--movable > .gw-folder__header, .gw-folder--movable > .gw-folder__header .gw-folder__toggle { cursor: grab; }
+.gw-folder--dragged { opacity: .4; }
+.gw-folder--drop { border-color: var(--folder-color); background: color-mix(in srgb, var(--folder-color) 22%, rgb(14 17 19 / 72%)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--folder-color) 40%, transparent); }
+.gw-folder-item--active { border-color: color-mix(in srgb, var(--folder-color, var(--accent)) 38%, var(--border)); background: color-mix(in srgb, var(--folder-color, var(--accent)) 10%, rgb(14 17 19 / 72%)); }
+
+.gw-folder-menu { position: fixed; z-index: 1400; display: grid; width: 205px; margin: 0; padding: var(--step-8); border: 1px solid var(--border); border-radius: 4px; background: var(--surface); box-shadow: 0 13px 34px rgb(0 0 0 / 45%); list-style: none; }
+.gw-folder-menu button { display: flex; min-height: 34px; padding: 0 var(--step-8); align-items: center; gap: var(--step-8); border: 0; border-radius: 3px; background: transparent; color: var(--text); font: inherit; font-size: 13px; text-align: left; }
+.gw-folder-menu button:hover, .gw-folder-menu button:focus-visible { background: var(--surface-raised); outline: none; }
+.gw-folder-menu svg { width: 16px; height: 16px; color: var(--accent); }
+.gw-folder-menu .gw-folder-menu__danger { color: var(--danger-text); }
+.gw-folder-menu .gw-folder-menu__danger svg { color: currentcolor; }
+
+.gw-folder-editor { position: fixed; z-index: 1450; display: grid; width: 248px; gap: var(--step-13); padding: var(--step-13); border: var(--fib-1) solid var(--border-accent-strong); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--surface) 96%, transparent); box-shadow: var(--shadow-window), inset 0 var(--fib-1) rgb(255 255 255 / 5%); backdrop-filter: blur(var(--step-13)) saturate(120%); }
+.gw-folder-editor header { display: grid; min-height: 34px; margin: calc(var(--step-13) * -1) calc(var(--step-13) * -1) 0; padding: 0 var(--step-8); grid-template-columns: 39px 1fr 34px; align-items: center; border-bottom: 1px solid var(--border); }
+.gw-folder-editor header > span { width: 39px; height: 3px; background: color-mix(in srgb, var(--accent) 55%, transparent); }
+.gw-folder-editor header strong { color: var(--text); font-size: 13px; text-align: center; }
+.gw-folder-editor header button { display: grid; width: 29px; height: 29px; padding: 0; place-items: center; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); }
+.gw-folder-editor header button:hover { border-color: var(--border-accent); background: var(--accent-glow); color: var(--accent-hover); }
+.gw-folder-editor label { display: grid; gap: var(--step-8); color: var(--text-muted); font-size: 11px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.gw-folder-editor input, .gw-folder-editor select { width: 100%; min-height: 34px; padding: 0 var(--step-8); border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); font: inherit; text-transform: none; }
+.gw-folder-editor input:focus, .gw-folder-editor select:focus { border-color: var(--accent); outline: none; }
+.gw-folder-editor__color { display: grid; grid-template-columns: 1fr 39px; gap: 8px; }
+.gw-folder-editor__color input[type="color"] { width: 39px; min-height: 34px; padding: 3px; cursor: pointer; }
+.gw-folder-editor .gw-folder-editor__primary { min-height: 38px; border: 1px solid var(--border); border-radius: 4px; background: transparent; color: var(--text); font: inherit; font-weight: 650; }
+.gw-folder-editor .gw-folder-editor__primary:hover { border-color: var(--accent); }
+
+.gw-folder-delete-confirm { position: fixed; z-index: 1450; display: grid; width: 220px; gap: 5px; padding: 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-raised); box-shadow: 0 8px 21px rgb(0 0 0 / 45%); }
+.gw-folder-delete-confirm strong { padding: 5px; color: var(--text); font-size: 12px; }
+.gw-folder-delete-confirm button { min-height: 34px; padding: 0 8px; border: 0; border-radius: 3px; background: transparent; color: var(--text-muted); font: inherit; font-size: 12px; text-align: left; }
+.gw-folder-delete-confirm button:hover { background: rgb(255 255 255 / 5%); color: var(--text); }
+.gw-folder-delete-confirm .gw-folder-delete-confirm__recursive { color: var(--danger-text); }

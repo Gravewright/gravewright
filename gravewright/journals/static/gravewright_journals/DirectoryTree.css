@@ -1,0 +1,13 @@
+
+.directory-tree[data-v-gwtree] { min-width: 0; min-height: var(--fib-6);
+}
+.directory-tree[data-v-gwtree] .gw-folder__header { min-height: var(--fib-8); gap: var(--fib-4);
+}
+.directory-tree[data-v-gwtree] .gw-folder__content { padding-left: var(--fib-6);
+}
+.directory-tree[data-v-gwtree] .gw-folder__label { font-size: var(--fib-6);
+}
+.directory-tree[data-v-gwtree] .gw-folder__grip { width: var(--fib-6); color: var(--text-faint); flex-shrink: 0;
+}
+.directory-tree[data-v-gwtree] .gw-folder__actions button { display: inline-flex; padding: var(--fib-4); background: transparent; border: 0; color: var(--text-muted); cursor: pointer;
+}

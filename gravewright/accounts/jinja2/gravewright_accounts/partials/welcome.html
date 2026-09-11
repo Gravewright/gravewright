@@ -1,0 +1,13 @@
+{# Existing OwnerAuthForm.vue authenticated state; campaign hubs are a later migration. #}
+<div class="gw-gate__welcome">
+  <p class="gw-gate__eyebrow">{{ text.authenticated }}</p>
+  <h1 id="owner-access-title" class="gw-gate__title">{{ text.welcome.replace('{name}', account.name) }}</h1>
+  <p class="gw-gate__description">{{ text.ready }}</p>
+  <button class="gw-button gw-button--caps" type="submit" form="logout-form"
+          data-attr:disabled="$_pending">{{ text.signOut }}</button>
+</div>
+<form id="logout-form" method="post" action="{{ url('accounts:logout') }}"
+      data-on:submit="@post('{{ url('accounts:logout') }}', {contentType: 'form', retry: 'never'})"
+      data-indicator:_pending hidden>
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+</form>

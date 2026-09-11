@@ -1,0 +1,247 @@
+/* gw-nav — the library's side rail: brand, sections, and who you are. */
+
+.gw-nav {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    border-right: var(--border-hairline);
+    background: color-mix(in srgb, var(--bg) 90%, black);
+}
+
+/* ---- Brand ------------------------------------------------------------- */
+
+.gw-nav__brand {
+    min-height: var(--topbar-height);
+    display: flex;
+    align-items: center;
+    gap: var(--step-13);
+    border-bottom: var(--border-hairline);
+    padding: 0 var(--step-21);
+}
+
+.gw-nav__brand-text {
+    min-width: 0;
+}
+
+.gw-nav__brand-name {
+    display: block;
+    color: var(--text);
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+}
+
+.gw-nav__brand-tagline {
+    display: block;
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+}
+
+/* ---- Sections ---------------------------------------------------------- */
+
+.gw-nav__list {
+    display: grid;
+    align-content: start;
+    gap: var(--step-8);
+    overflow-y: auto;
+    padding: var(--step-21) var(--step-13);
+}
+
+/* The group that sinks to the bottom: settings, privacy, the quiet links. */
+.gw-nav__list--secondary {
+    margin-top: auto;
+    border-top: var(--border-hairline);
+}
+
+.gw-nav__icon {
+    width: var(--size-13);
+    height: var(--size-13);
+    flex: 0 0 var(--size-13);
+    color: var(--accent);
+}
+
+.gw-nav__item {
+    min-height: var(--control-height-md);
+    display: flex;
+    align-items: center;
+    gap: var(--step-13);
+    border: var(--hairline-width) solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 0 var(--step-13);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-wide);
+    text-align: left;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+        border-color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease),
+        color var(--motion-fast) var(--ease);
+}
+
+.gw-nav__item:hover {
+    background: var(--surface);
+    color: var(--text-bright);
+}
+
+.gw-nav__item:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: calc(var(--fib-2) * -1);
+}
+
+.gw-nav__item--active,
+.gw-nav__item--active:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    color: var(--accent-hover);
+}
+
+/* ---- Collapsed rail ----------------------------------------------------
+ *
+ * Collapsing hides the words, not the rail: icons keep their column and the
+ * chevron rides out onto the edge so it stays reachable. */
+
+.gw-nav__collapse {
+    display: grid;
+    margin-left: auto;
+    padding: var(--step-8);
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: var(--text-heading);
+}
+
+.gw-shell--compact .gw-nav__brand {
+    justify-content: center;
+    padding: 0;
+}
+
+.gw-shell--compact .gw-nav__brand-text,
+.gw-shell--compact .gw-nav__label {
+    display: none;
+}
+
+.gw-shell--compact .gw-nav__collapse {
+    position: absolute;
+    z-index: 1;
+    top: calc((var(--topbar-height) - var(--control-height-sm)) / 2);
+    right: calc(var(--control-height-sm) / -2);
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    margin: 0;
+    padding: 0;
+    border: var(--border-hairline);
+    border-radius: var(--radius-circle);
+    background: var(--bg);
+    transform: rotate(180deg);
+}
+
+.gw-shell--compact .gw-nav__list {
+    padding-inline: var(--step-8);
+}
+
+.gw-shell--compact .gw-nav__item {
+    justify-content: center;
+    padding: 0;
+}
+
+/* ---- Footer ------------------------------------------------------------ */
+
+.gw-nav__footer {
+    display: grid;
+    gap: var(--gap-base);
+    border-top: var(--fib-1) solid var(--border);
+    padding: var(--step-14);
+}
+
+.gw-nav__card {
+    display: grid;
+    gap: var(--fib-3);
+    border: var(--fib-1) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--step-10);
+    background: rgba(255, 255, 255, 0.014);
+}
+
+.gw-nav__card-title {
+    color: var(--text);
+    font-size: var(--text-sm);
+    word-break: break-word;
+}
+
+.gw-nav__card-role {
+    color: var(--accent);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-black);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+/* Narrow: the rail collapses to icons on its own, without the toggle. */
+@media (max-width: 900px) {
+    .gw-shell {
+        grid-template-columns: var(--rail-compact) minmax(0, 1fr);
+    }
+
+    .gw-nav__brand-text,
+    .gw-nav__label,
+    .gw-nav__collapse {
+        display: none;
+    }
+
+    .gw-nav__brand,
+    .gw-nav__item {
+        justify-content: center;
+        padding-inline: 0;
+    }
+}
+
+/* Phone: the rail leaves the side and becomes a bottom bar. */
+@media (max-width: 600px) {
+    .gw-shell {
+        display: block;
+    }
+
+    .gw-nav {
+        position: fixed;
+        z-index: var(--z-dropdown);
+        inset: auto 0 0;
+        height: var(--control-height-lg);
+        flex-direction: row;
+        border-top: var(--border-hairline);
+        border-right: 0;
+    }
+
+    .gw-nav__brand,
+    .gw-nav__list--secondary {
+        display: none;
+    }
+
+    .gw-nav__list {
+        display: flex;
+        width: 100%;
+        justify-content: space-around;
+        padding: var(--step-5);
+    }
+
+    .gw-nav__item {
+        width: var(--control-height-lg);
+        min-height: 0;
+    }
+
+    .gw-shell__content {
+        padding: var(--step-21) var(--step-13)
+            calc(var(--control-height-lg) + var(--step-21));
+    }
+}

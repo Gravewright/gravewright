@@ -1,0 +1,36 @@
+<div id="campaign-dialog" data-on:cover-ready="$_image=evt.detail.image;$_fileName=evt.detail.name;$_fileSize=evt.detail.size;$_imageError=evt.detail.error?{{ auth.errors.invalid_container_image|tojson|forceescape }}:''" class="gw-table-modal" role="presentation" data-on:click="if(evt.target===el) @get(window.gravewrightInside.location('/inside', $_search, $_system), {retry:'never'})" data-on:keydown__window="if(evt.key==='Escape') @get(window.gravewrightInside.location('/inside', $_search, $_system), {retry:'never'})" data-signals="{_image:{{ fields.image|tojson|forceescape }},_imageSource:'{{ 'url' if fields.image.startswith('http') else 'file' }}',_fileName:'',_fileSize:0,_dragging:false,_imageError:'',_copied:false,_removal:''}">
+<section class="gw-movable-resizable gw-move-handle gw-window--focused gw-table-modal__panel{{ ' gw-table-modal__panel--wide' if dialog!='preview' else '' }}{{ ' campaign-dialog--compact' if dialog in ['invite','remove'] else '' }}" data-movable data-preserve-attr="style" style="z-index:7" role="dialog" aria-modal="true" aria-labelledby="container-dialog-title">
+<button class="gw-table-modal__close" type="button" aria-label="{{ campaigns.close }}" data-on:click="@get(window.gravewrightInside.location('/inside', $_search, $_system), {retry:'never'})">{{ icon('X') }}</button>
+{% if dialog=='preview' %}
+<div class="gw-table-modal__hero">{% if selected.image %}<img src="{{ selected.image }}" alt="{{ selected.name }}" />{% endif %}</div>
+<div class="gw-table-modal__content"><p class="gw-table-modal__eyebrow">{{ containers.eyebrow }}</p><h2 id="container-dialog-title">{{ selected.name }}</h2><p class="gw-table-modal__description">{{ selected.description }}</p><div class="gw-table-modal__actions"><button class="gw-button gw-button--primary" type="button" data-on:click="window.location.assign('/game/{{ selected.id }}')">{{ containers.enter }}</button>{% if owner %}{{ get_button(containers.invitePlayers,'/inside/dialog/invite/'~selected.id,'gw-button','UsersThree') }}{% endif %}</div><div class="gw-table-modal__participants"><span>{{ campaigns.participants }}</span>{{ avatars(selected.participantNames,6,true) }}</div></div>
+{% else %}
+{% set target='/inside/campaigns/create' if dialog=='create' else '/inside/campaigns/'~selected.id~'/'~('removal-code' if dialog=='remove' and not temporary_code else dialog) %}
+
+<input form="campaign-form" type="hidden" name="_insideSearch" data-bind:_search /><input form="campaign-form" type="hidden" name="_insideSystem" data-bind:_system /><input form="campaign-form" type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+<p class="gw-table-modal__eyebrow">{{ containers.eyebrow }}</p><h2 id="container-dialog-title">{{ containers[dialog].title }}</h2><p>{{ containers[dialog].description }}</p>
+{% if dialog in ['create','edit'] %}
+<div class="campaign-dialog__form-grid">
+<div class="campaign-dialog__column">
+<label><span>{{ campaigns.name }}</span><input form="campaign-form" name="name" value="{{ fields.name }}" maxlength="80" placeholder="{{ campaigns.namePlaceholder }}" /></label>
+<label class="campaign-dialog__description"><span>{{ containers.description }}</span><textarea form="campaign-form" name="description" maxlength="500">{{ fields.description }}</textarea></label>
+</div>
+<div class="campaign-dialog__column"><label><span>{{ containers.system }}</span><select form="campaign-form" name="system">{% for system in rulesets %}<option value="{{ system.systemId }}" {{ 'selected' if fields.system==system.systemId else '' }}>{{ system.title }}</option>{% endfor %}</select></label>
+<fieldset class="campaign-dialog__image"><legend>{{ containers.image }}</legend>
+<input form="campaign-form" type="hidden" name="image" data-bind:_image />
+<div class="campaign-dialog__source">{% for mode,label in [('file',containers.fromComputer),('url',containers.fromUrl)] %}<button type="button" data-class="{'campaign-dialog__source--active':$_imageSource==='{{ mode }}'}" data-on:click="$_imageSource='{{ mode }}';$_image='';$_fileName='';$_fileSize=0;$_imageError=''">{{ label }}</button>{% endfor %}</div>
+<label class="campaign-dialog__dropzone" data-show="$_imageSource==='file'" data-class="{'campaign-dialog__dropzone--dragging':$_dragging}" data-on:dragenter__prevent="$_dragging=true" data-on:dragover__prevent="$_dragging=true" data-on:dragleave__prevent="$_dragging=false" data-on:drop__prevent="$_dragging=false;window.gravewrightInside.cover(evt.dataTransfer.files[0],el)">
+<span class="campaign-dialog__upload-icon" aria-hidden="true">{{ icon('UploadSimple') }}</span><strong>{{ containers.dropFile }}</strong><small>{{ containers.fileHint }}</small><input form="campaign-form" type="file" accept="image/png,image/jpeg,image/webp" data-on:change="window.gravewrightInside.cover(el.files[0],el);el.value=''" />
+</label>
+<label data-show="$_imageSource==='url'" style="display:none"><span>URL</span><input form="campaign-form" data-bind:_image type="url" placeholder="https://" data-attr:disabled="$_imageSource!=='url'" /></label>
+<div class="campaign-dialog__preview-wrap" data-show="!!$_image" style="display:none"><img class="campaign-dialog__preview" data-attr:src="$_image||null" alt="{{ containers.preview }}" /><div data-show="!!$_fileName" style="display:none"><span><strong data-text="$_fileName"></strong><small data-text="($_fileSize/1000000).toFixed(2)+' MB'"></small></span><button type="button" aria-label="{{ containers.removeImage }}" data-on:click="$_image='';$_fileName='';$_fileSize=0;$_imageError=''">{{ icon('X') }}</button></div></div>
+</fieldset></div></div>
+{% endif %}
+{% if temporary_code %}<div class="campaign-dialog__code"><strong>{{ temporary_code }}</strong><span>{{ containers.expires }}</span>{% if dialog=='invite' %}<button class="gw-button campaign-dialog__copy" type="button" data-on:click="navigator.clipboard.writeText({{ temporary_code|tojson|forceescape }}).then(()=&gt;{$_copied=true}).catch(()=&gt;{$_copied=false})">{{ icon('Copy') }} <span data-text="$_copied?{{ containers.copied|tojson|forceescape }}:{{ containers.copyCode|tojson|forceescape }}">{{ containers.copyCode }}</span></button>{% endif %}</div>{% endif %}
+{% if dialog=='remove' and temporary_code %}<input form="campaign-form" type="hidden" name="display_code" value="{{ temporary_code }}" /><label class="campaign-dialog__confirmation"><span>{{ containers.removalCode }}</span><input form="campaign-form" name="code" data-bind:_removal maxlength="{{ temporary_code|length }}" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" /></label>{% endif %}
+{% if error %}<p class="campaign-dialog__error">{{ error }}</p>{% endif %}
+<p class="campaign-dialog__error" data-show="!!$_imageError" data-text="$_imageError" style="display:none"></p>
+<button class="gw-button gw-button--primary" type="submit" form="campaign-form" data-attr:disabled="$_pending{{ '||!$_removal.trim()' if dialog=='remove' and temporary_code else '' }}">{{ containers[dialog].action }}</button>
+<form id="campaign-form" method="post" action="{{ target }}" hidden style="display:none" data-on:submit="@post({{ target|tojson|forceescape }}, {contentType:'form',retry:'never'})" data-indicator:_pending></form>
+{% endif %}
+</section></div>

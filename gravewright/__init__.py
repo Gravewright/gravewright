@@ -1,0 +1,1 @@
+"""Gravewright application domain."""

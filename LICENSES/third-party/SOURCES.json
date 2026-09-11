@@ -1,0 +1,506 @@
+[
+  {
+    "file": "LICENSES/third-party/python/asgiref/LICENSE",
+    "package": "asgiref",
+    "version": "3.12.1",
+    "source": "Installed asgiref==3.12.1: asgiref-3.12.1.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669"
+  },
+  {
+    "file": "LICENSES/third-party/python/attrs/LICENSE",
+    "package": "attrs",
+    "version": "26.1.0",
+    "source": "Installed attrs==26.1.0: attrs-26.1.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "882115c95dfc2af1eeb6714f8ec6d5cbcabf667caff8729f42420da63f714e9f"
+  },
+  {
+    "file": "LICENSES/third-party/python/autobahn/LICENSE",
+    "package": "autobahn",
+    "version": "26.7.1",
+    "source": "Installed autobahn==26.7.1: autobahn-26.7.1.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "ff61657bfe1984c96d932fc0423268097b4b588bc57d47c26e8d680250d6c76d"
+  },
+  {
+    "file": "LICENSES/third-party/python/automat/LICENSE",
+    "package": "automat",
+    "version": "25.4.16",
+    "source": "Installed automat==25.4.16: automat-25.4.16.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "b2201301678d0a937d938543827ca1360712eb34e23de8ee3f3bfffbd4c0e376"
+  },
+  {
+    "file": "LICENSES/third-party/python/cbor2/LICENSE.txt",
+    "package": "cbor2",
+    "version": "5.9.0",
+    "source": "Installed cbor2==5.9.0: cbor2-5.9.0.dist-info/licenses/LICENSE.txt; artifacts pinned in uv.lock",
+    "sha256": "a6afd126d8f545a15166a22f25fadff4b9fb4978bbdd17e97d97d950b66d2fef"
+  },
+  {
+    "file": "LICENSES/third-party/python/cffi/LICENSE",
+    "package": "cffi",
+    "version": "2.1.1",
+    "source": "Installed cffi==2.1.1: cffi-2.1.1.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "5ba24ddc57067f9249add644c3afc41a5d6dc37e23433ef759d95df370b0af63"
+  },
+  {
+    "file": "LICENSES/third-party/python/channels/LICENSE",
+    "package": "channels",
+    "version": "4.3.2",
+    "source": "Installed channels==4.3.2: channels-4.3.2.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669"
+  },
+  {
+    "file": "LICENSES/third-party/python/channels-redis/LICENSE",
+    "package": "channels-redis",
+    "version": "4.3.0",
+    "source": "Installed channels-redis==4.3.0: channels_redis-4.3.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669"
+  },
+  {
+    "file": "LICENSES/third-party/python/constantly/LICENSE",
+    "package": "constantly",
+    "version": "23.10.4",
+    "source": "Installed constantly==23.10.4: constantly-23.10.4.dist-info/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "020870fcaf4bf9c50b233e331817094fe109b91c0880570fd476f527cfbfc085"
+  },
+  {
+    "file": "LICENSES/third-party/python/cryptography/LICENSE",
+    "package": "cryptography",
+    "version": "50.0.1",
+    "source": "Installed cryptography==50.0.1: cryptography-50.0.1.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "3e0c7c091a948b82533ba98fd7cbb40432d6f1a9acbf85f5922d2f99a93ae6bb"
+  },
+  {
+    "file": "LICENSES/third-party/python/cryptography/LICENSE.APACHE",
+    "package": "cryptography",
+    "version": "50.0.1",
+    "source": "Installed cryptography==50.0.1: cryptography-50.0.1.dist-info/licenses/LICENSE.APACHE; artifacts pinned in uv.lock",
+    "sha256": "aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe"
+  },
+  {
+    "file": "LICENSES/third-party/python/cryptography/LICENSE.BSD",
+    "package": "cryptography",
+    "version": "50.0.1",
+    "source": "Installed cryptography==50.0.1: cryptography-50.0.1.dist-info/licenses/LICENSE.BSD; artifacts pinned in uv.lock",
+    "sha256": "602c4c7482de6479dd2e9793cda275e5e63d773dacd1eca689232ab7008fb4fb"
+  },
+  {
+    "file": "LICENSES/third-party/python/daphne/LICENSE",
+    "package": "daphne",
+    "version": "4.2.3",
+    "source": "Installed daphne==4.2.3: daphne-4.2.3.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669"
+  },
+  {
+    "file": "LICENSES/third-party/python/datastar-py/LICENSE.md",
+    "package": "datastar-py",
+    "version": "1.0.2",
+    "source": "Installed datastar-py==1.0.2: datastar_py-1.0.2.dist-info/licenses/LICENSE.md; artifacts pinned in uv.lock",
+    "sha256": "17da0e216d3c6a819526f5b72a6a44d84d34bcd9beb4191ac6af89c1508ef08f"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/AUTHORS",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django-6.1.1.dist-info/licenses/AUTHORS; artifacts pinned in uv.lock",
+    "sha256": "a564771f483ddae26be57ad4ba21a32783ef8b9c8b15171f87b3539bb8caef21"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/LICENSE",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django-6.1.1.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "b846415d1b514e9c1dff14a22deb906d794bc546ca6129f950a18cd091e2a669"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/LICENSE.python",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django-6.1.1.dist-info/licenses/LICENSE.python; artifacts pinned in uv.lock",
+    "sha256": "765e2b1e339fef8d3e9f12892e7e072a8be309996a0be43ffc5796398ec4e7d4"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/django/contrib/admin/static/admin/css/vendor/select2/LICENSE-SELECT2.md",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django/contrib/admin/static/admin/css/vendor/select2/LICENSE-SELECT2.md; artifacts pinned in uv.lock",
+    "sha256": "4ee0cbc51370afde358652a0f977972053729ed578b6a42f5e2a037d114f0b39"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/django/contrib/admin/static/admin/js/vendor/jquery/LICENSE.txt",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django/contrib/admin/static/admin/js/vendor/jquery/LICENSE.txt; artifacts pinned in uv.lock",
+    "sha256": "d4db9ebe6f29f5168eac45ad713f055623ac5d0dcd5ba92da23d650ae012020d"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/django/contrib/admin/static/admin/js/vendor/select2/LICENSE.md",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django/contrib/admin/static/admin/js/vendor/select2/LICENSE.md; artifacts pinned in uv.lock",
+    "sha256": "4ee0cbc51370afde358652a0f977972053729ed578b6a42f5e2a037d114f0b39"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/django/contrib/admin/static/admin/js/vendor/xregexp/LICENSE.txt",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django/contrib/admin/static/admin/js/vendor/xregexp/LICENSE.txt; artifacts pinned in uv.lock",
+    "sha256": "73af2949bff9296cb0f816c3be19a4da4e95adc94c1f924796e8bad3f03f2f29"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/django/contrib/gis/gdal/LICENSE",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django/contrib/gis/gdal/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "570a045a8372b6cd6a00e30ebafe8e3e8dfc0a7fe3d4ef2cc5f16d419eb63aeb"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/django/contrib/gis/geos/LICENSE",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django/contrib/gis/geos/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "08bf24b7551238ae325295245425b1caeb9ad0f42f9e2d303c7b353502632045"
+  },
+  {
+    "file": "LICENSES/third-party/python/django/django/dispatch/license.txt",
+    "package": "django",
+    "version": "6.1.1",
+    "source": "Installed django==6.1.1: django/dispatch/license.txt; artifacts pinned in uv.lock",
+    "sha256": "54004c4b606964ebc163af16d04607c16e428f8a78a026fecb53f70c09f4a94f"
+  },
+  {
+    "file": "LICENSES/third-party/python/greenlet/LICENSE",
+    "package": "greenlet",
+    "version": "3.5.5",
+    "source": "Installed greenlet==3.5.5: greenlet-3.5.5.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "769831d6e5dfaf2c20802faccff1fafb4c2025dd8f6253dfa47fcad59d4d0979"
+  },
+  {
+    "file": "LICENSES/third-party/python/greenlet/LICENSE.PSF",
+    "package": "greenlet",
+    "version": "3.5.5",
+    "source": "Installed greenlet==3.5.5: greenlet-3.5.5.dist-info/licenses/LICENSE.PSF; artifacts pinned in uv.lock",
+    "sha256": "e5ff3c23c110e494cd7d736c10fd96d462457bafeca310840db6527298c7d46b"
+  },
+  {
+    "file": "LICENSES/third-party/python/hyperlink/LICENSE",
+    "package": "hyperlink",
+    "version": "21.0.0",
+    "source": "Installed hyperlink==21.0.0: hyperlink-21.0.0.dist-info/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "7468ded55310f64fbf085b8e892df81d1bcc49263bf535d3c2c58b014cfae214"
+  },
+  {
+    "file": "LICENSES/third-party/python/idna/LICENSE.md",
+    "package": "idna",
+    "version": "3.19",
+    "source": "Installed idna==3.19: idna-3.19.dist-info/licenses/LICENSE.md; artifacts pinned in uv.lock",
+    "sha256": "1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04"
+  },
+  {
+    "file": "LICENSES/third-party/python/incremental/LICENSE",
+    "package": "incremental",
+    "version": "24.11.0",
+    "source": "Installed incremental==24.11.0: incremental-24.11.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "d043bc8899b4695de1f4511d8f507b927e11723b981ce600fa3ef7b73954afa5"
+  },
+  {
+    "file": "LICENSES/third-party/python/jinja2/LICENSE.txt",
+    "package": "jinja2",
+    "version": "3.1.6",
+    "source": "Installed jinja2==3.1.6: jinja2-3.1.6.dist-info/licenses/LICENSE.txt; artifacts pinned in uv.lock",
+    "sha256": "3b49dcee4105eb37bac10faf1be260408fe85d252b8e9df2e0979fc1e094437b"
+  },
+  {
+    "file": "LICENSES/third-party/python/jsonschema/COPYING",
+    "package": "jsonschema",
+    "version": "4.26.0",
+    "source": "Installed jsonschema==4.26.0: jsonschema-4.26.0.dist-info/licenses/COPYING; artifacts pinned in uv.lock",
+    "sha256": "4f92a015a13c4d1a040bef018aa13430b4f1bc73b41b16bb846c346766de7439"
+  },
+  {
+    "file": "LICENSES/third-party/python/jsonschema-specifications/COPYING",
+    "package": "jsonschema-specifications",
+    "version": "2025.9.1",
+    "source": "Installed jsonschema-specifications==2025.9.1: jsonschema_specifications-2025.9.1.dist-info/licenses/COPYING; artifacts pinned in uv.lock",
+    "sha256": "42dcd63495f87b4eb7c7757afa379bb55a53f94afd7a5f657d9adf57236e515c"
+  },
+  {
+    "file": "LICENSES/third-party/python/markupsafe/LICENSE.txt",
+    "package": "markupsafe",
+    "version": "3.0.3",
+    "source": "Installed markupsafe==3.0.3: markupsafe-3.0.3.dist-info/licenses/LICENSE.txt; artifacts pinned in uv.lock",
+    "sha256": "489a8e1108509ed98a37bb983e11e0f7e1d31f0bd8f99a79c8448e7ff37d07ea"
+  },
+  {
+    "file": "LICENSES/third-party/python/msgpack/COPYING",
+    "package": "msgpack",
+    "version": "1.2.2",
+    "source": "Installed msgpack==1.2.2: msgpack-1.2.2.dist-info/licenses/COPYING; artifacts pinned in uv.lock",
+    "sha256": "492dedba85da5872f78e6091bcd1fea474d660d35acb4dee964b8aab3f007427"
+  },
+  {
+    "file": "LICENSES/third-party/python/mutagen/COPYING",
+    "package": "mutagen",
+    "version": "1.48.1",
+    "source": "Installed mutagen==1.48.1: mutagen-1.48.1.dist-info/licenses/COPYING; artifacts pinned in uv.lock",
+    "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+  },
+  {
+    "file": "LICENSES/third-party/python/mutagen/SOURCE-NOTICE.txt",
+    "package": "mutagen",
+    "version": "1.48.1",
+    "source": "Installed mutagen==1.48.1: initial notice in mutagen/__init__.py",
+    "sha256": "0809096e6d7e04245dce474da7fa5cab4e3ebb2075ffa15b78d7c75fb8fd213e"
+  },
+  {
+    "file": "LICENSES/third-party/python/packaging/LICENSE",
+    "package": "packaging",
+    "version": "26.3",
+    "source": "Installed packaging==26.3: packaging-26.3.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "cad1ef5bd340d73e074ba614d26f7deaca5c7940c3d8c34852e65c4909686c48"
+  },
+  {
+    "file": "LICENSES/third-party/python/packaging/LICENSE.APACHE",
+    "package": "packaging",
+    "version": "26.3",
+    "source": "Installed packaging==26.3: packaging-26.3.dist-info/licenses/LICENSE.APACHE; artifacts pinned in uv.lock",
+    "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+  },
+  {
+    "file": "LICENSES/third-party/python/packaging/LICENSE.BSD",
+    "package": "packaging",
+    "version": "26.3",
+    "source": "Installed packaging==26.3: packaging-26.3.dist-info/licenses/LICENSE.BSD; artifacts pinned in uv.lock",
+    "sha256": "b70e7e9b742f1cc6f948b34c16aa39ffece94196364bc88ff0d2180f0028fac5"
+  },
+  {
+    "file": "LICENSES/third-party/python/pillow/LICENSE",
+    "package": "pillow",
+    "version": "12.3.0",
+    "source": "Installed pillow==12.3.0: pillow-12.3.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "dda12a98c1979cf3d94df1cff45d27a4cb3f04a60c76f76902ac54cac03ec0ce"
+  },
+  {
+    "file": "LICENSES/third-party/python/playwright/LICENSE",
+    "package": "playwright",
+    "version": "1.62.0",
+    "source": "Installed playwright==1.62.0: playwright-1.62.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "7fab1461b41970ff376f1c9303a637076bfaaeb71cd12dd3a1c44aaf59a1a2b9"
+  },
+  {
+    "file": "LICENSES/third-party/python/playwright/playwright/driver/LICENSE",
+    "package": "playwright",
+    "version": "1.62.0",
+    "source": "Installed playwright==1.62.0: playwright/driver/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "148eacf7863ef4329224a29398623077200a27194aa075569faf4a0a85566ca5"
+  },
+  {
+    "file": "LICENSES/third-party/python/playwright/playwright/driver/package/LICENSE",
+    "package": "playwright",
+    "version": "1.62.0",
+    "source": "Installed playwright==1.62.0: playwright/driver/package/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "45873d00a0dd243596deb4aa23b2493b3d1f0671921bf2538ea431d7380220eb"
+  },
+  {
+    "file": "LICENSES/third-party/python/playwright/playwright/driver/package/NOTICE",
+    "package": "playwright",
+    "version": "1.62.0",
+    "source": "Installed playwright==1.62.0: playwright/driver/package/NOTICE; artifacts pinned in uv.lock",
+    "sha256": "6d602191187b35b9b01d2cffa01c8469c2c8d9de8a96f1bf868e0f264f51c81d"
+  },
+  {
+    "file": "LICENSES/third-party/python/playwright/playwright/driver/package/ThirdPartyNotices.txt",
+    "package": "playwright",
+    "version": "1.62.0",
+    "source": "Installed playwright==1.62.0: playwright/driver/package/ThirdPartyNotices.txt; artifacts pinned in uv.lock",
+    "sha256": "a549d329bad8806fe279f0ecae0fc0270dec7e7c2dc8ec10f90e394f7c32b144"
+  },
+  {
+    "file": "LICENSES/third-party/python/pycparser/LICENSE",
+    "package": "pycparser",
+    "version": "3.0",
+    "source": "Installed pycparser==3.0: pycparser-3.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "0c846399369ea76ddd7b5c44fe6d16497415fcf015f5cbb508c24bf98b81c5b1"
+  },
+  {
+    "file": "LICENSES/third-party/python/pyee/LICENSE",
+    "package": "pyee",
+    "version": "13.0.1",
+    "source": "Installed pyee==13.0.1: pyee-13.0.1.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "1ff556ca206b107f10e1c562ae454d3292e0296c3510eb90eb7f114caee32a66"
+  },
+  {
+    "file": "LICENSES/third-party/python/pyopenssl/LICENSE",
+    "package": "pyopenssl",
+    "version": "26.4.0",
+    "source": "Installed pyopenssl==26.4.0: pyopenssl-26.4.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "file": "LICENSES/third-party/python/python-dotenv/LICENSE",
+    "package": "python-dotenv",
+    "version": "1.2.3",
+    "source": "Installed python-dotenv==1.2.3: python_dotenv-1.2.3.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "80619b7049f08c81683ad0e01f08f257a840652dd71ee83146d36658c7d2c2b9"
+  },
+  {
+    "file": "LICENSES/third-party/python/redis/LICENSE",
+    "package": "redis",
+    "version": "8.1.0",
+    "source": "Installed redis==8.1.0: redis-8.1.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "a57b250a5bf03d7afe55b74063313f2adb7b00d546c0ab149a89398333fe3cc8"
+  },
+  {
+    "file": "LICENSES/third-party/python/referencing/COPYING",
+    "package": "referencing",
+    "version": "0.37.0",
+    "source": "Installed referencing==0.37.0: referencing-0.37.0.dist-info/licenses/COPYING; artifacts pinned in uv.lock",
+    "sha256": "42dcd63495f87b4eb7c7757afa379bb55a53f94afd7a5f657d9adf57236e515c"
+  },
+  {
+    "file": "LICENSES/third-party/python/rpds-py/LICENSE",
+    "package": "rpds-py",
+    "version": "2026.6.3",
+    "source": "Installed rpds-py==2026.6.3: rpds_py-2026.6.3.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "314e4e91be3baa93c0fb4bccc9e4e97cd643eb839b065af921782c2175fe9909"
+  },
+  {
+    "file": "LICENSES/third-party/python/service-identity/LICENSE",
+    "package": "service-identity",
+    "version": "26.1.0",
+    "source": "Installed service-identity==26.1.0: service_identity-26.1.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "24bd0a9ba7d0eae08a3a6e32a1b09f8e6871fa0325520a2fcb00e1539eaa602a"
+  },
+  {
+    "file": "LICENSES/third-party/python/sqlparse/AUTHORS",
+    "package": "sqlparse",
+    "version": "0.6.0",
+    "source": "Installed sqlparse==0.6.0: sqlparse-0.6.0.dist-info/licenses/AUTHORS; artifacts pinned in uv.lock",
+    "sha256": "fee330a5b516ad49a8453b0ea6813c89cb8ec4e0f34007946f6efabd0271e399"
+  },
+  {
+    "file": "LICENSES/third-party/python/sqlparse/LICENSE",
+    "package": "sqlparse",
+    "version": "0.6.0",
+    "source": "Installed sqlparse==0.6.0: sqlparse-0.6.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "c1938235b80d39e93138eae89edc3af67e18ecbc40d266529fa57b2dce426310"
+  },
+  {
+    "file": "LICENSES/third-party/python/twisted/LICENSE",
+    "package": "twisted",
+    "version": "26.4.0",
+    "source": "Installed twisted==26.4.0: twisted-26.4.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "d7a2f74fe5c2b3f610052b75b5a131728c49823b28088893dacacf8d58849a4d"
+  },
+  {
+    "file": "LICENSES/third-party/python/txaio/LICENSE",
+    "package": "txaio",
+    "version": "26.6.1",
+    "source": "Installed txaio==26.6.1: txaio-26.6.1.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "e7b0171093d8d2cec2db922db6d7634b5ddbb0338de111b38857d3160a7ea770"
+  },
+  {
+    "file": "LICENSES/third-party/python/typing-extensions/LICENSE",
+    "package": "typing-extensions",
+    "version": "4.16.0",
+    "source": "Installed typing-extensions==4.16.0: typing_extensions-4.16.0.dist-info/licenses/LICENSE; artifacts pinned in uv.lock",
+    "sha256": "3b2f81fe21d181c499c59a256c8e1968455d6689d269aa85373bfb6af41da3bf"
+  },
+  {
+    "file": "LICENSES/third-party/python/ujson/LICENSE.txt",
+    "package": "ujson",
+    "version": "6.0.0",
+    "source": "Installed ujson==6.0.0: ujson-6.0.0.dist-info/licenses/LICENSE.txt; artifacts pinned in uv.lock",
+    "sha256": "36866344f0a486541bd9800f1a407a056c0c214a82c658f059694daf3dc394d2"
+  },
+  {
+    "file": "LICENSES/third-party/python/zope-interface/LICENSE.txt",
+    "package": "zope-interface",
+    "version": "8.6",
+    "source": "Installed zope-interface==8.6: zope_interface-8.6.dist-info/licenses/LICENSE.txt; artifacts pinned in uv.lock",
+    "sha256": "3e671db11df687516cc1db5b3d65e4aa383eaca3c20cea3faf53a0f7335d0a3c"
+  },
+  {
+    "file": "LICENSES/third-party/python/zope-interface/SOURCE-NOTICE.txt",
+    "package": "zope-interface",
+    "version": "8.6",
+    "source": "Installed zope-interface==8.6: initial notice in zope/interface/__init__.py",
+    "sha256": "3fcced1157c1798f85a41725b5dcb013dd56d1f2844e5c7ce2520fafcf3278ab"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/tiptap/LICENSE.md",
+    "package": "tiptap",
+    "version": "2.11.5",
+    "source": "https://raw.githubusercontent.com/ueberdosis/tiptap/v2.11.5/LICENSE.md",
+    "sha256": "c96e5ecb55ac593157ad1d21d1f44a611187f494a0f04c235a1ae692c88d6ba9"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/@pixi_colord/LICENSE.md",
+    "package": "@pixi/colord",
+    "version": "2.9.6",
+    "source": "https://raw.githubusercontent.com/PixiJS/colord/v2.9.6/LICENSE.md",
+    "sha256": "7613d4594ee8b6163926af3435dae61c9e3d5a27cd137bd76a543ba40002d8fc"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/core-js/LICENSE",
+    "package": "core-js",
+    "version": "3.49.0",
+    "source": "https://raw.githubusercontent.com/zloirock/core-js/v3.49.0/LICENSE",
+    "sha256": "b87653fff2d44426ab5cd4723cee3b1364dc8d35a0acdf098c54689543123bf8"
+  },
+  {
+    "file": "LICENSES/third-party/python/tzdata/LICENSE",
+    "package": "tzdata",
+    "version": "2026.3",
+    "source": "https://files.pythonhosted.org/packages/e5/6d/b53b99a9f2766d095985947a5782f1702cabb129a34f7a802d7197af832f/tzdata-2026.3-py2.py3-none-any.whl!/tzdata-2026.3.dist-info/licenses/LICENSE",
+    "sha256": "df58f69ea88683035d720b5375bcef0cf5aeaa98a1d098d572e0992c378deb46"
+  },
+  {
+    "file": "LICENSES/third-party/python/tzdata/licenses/LICENSE_APACHE",
+    "package": "tzdata",
+    "version": "2026.3",
+    "source": "https://files.pythonhosted.org/packages/e5/6d/b53b99a9f2766d095985947a5782f1702cabb129a34f7a802d7197af832f/tzdata-2026.3-py2.py3-none-any.whl!/tzdata-2026.3.dist-info/licenses/licenses/LICENSE_APACHE",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  {
+    "file": "LICENSES/third-party/python/u-msgpack-python/LICENSE",
+    "package": "u-msgpack-python",
+    "version": "2.8.0",
+    "source": "https://files.pythonhosted.org/packages/b1/5e/512aeb40fd819f4660d00f96f5c7371ee36fc8c6b605128c5ee59e0b28c6/u_msgpack_python-2.8.0-py2.py3-none-any.whl!/u_msgpack_python-2.8.0.dist-info/LICENSE",
+    "sha256": "2466f2b37a97e92bfe1ab9910c9e112e7b0dfd5d261f39cadb92629db503d13c"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/@types_earcut/LICENSE",
+    "package": "@types/earcut",
+    "version": "3.0.0",
+    "source": "Installed npm @types/earcut@3.0.0: LICENSE; artifact pinned in gravewright/maps/frontend/package-lock.json",
+    "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/@webgpu_types/LICENSE",
+    "package": "@webgpu/types",
+    "version": "0.1.72",
+    "source": "Installed npm @webgpu/types@0.1.72: LICENSE; artifact pinned in gravewright/maps/frontend/package-lock.json",
+    "sha256": "ad88400fc55c2871ba2ed33930dc13001ef01907c2ddcbfa3caa8656e9142f05"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/esbuild/LICENSE.md",
+    "package": "esbuild",
+    "version": "0.28.2",
+    "source": "Installed npm esbuild@0.28.2: LICENSE.md; artifact pinned in gravewright/maps/frontend/package-lock.json",
+    "sha256": "b40ec5baec7bb34fa5b1c09521fa3cd52d5fad7adafed74932a2010d3612a681"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/gifuct-js/LICENSE",
+    "package": "gifuct-js",
+    "version": "2.1.2",
+    "source": "Installed npm gifuct-js@2.1.2: LICENSE; artifact pinned in gravewright/maps/frontend/package-lock.json",
+    "sha256": "8633cda68d7b47e98e3e563a2833e63792edeecdb24cab02bfb15f25c1b37072"
+  },
+  {
+    "file": "LICENSES/third-party/javascript/js-binary-schema-parser/LICENSE",
+    "package": "js-binary-schema-parser",
+    "version": "2.0.3",
+    "source": "Installed npm js-binary-schema-parser@2.0.3: LICENSE; artifact pinned in gravewright/maps/frontend/package-lock.json",
+    "sha256": "8633cda68d7b47e98e3e563a2833e63792edeecdb24cab02bfb15f25c1b37072"
+  }
+]

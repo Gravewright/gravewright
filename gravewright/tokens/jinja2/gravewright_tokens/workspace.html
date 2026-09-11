@@ -1,0 +1,92 @@
+<template id="token-editor"
+  ><section class="token-editor" role="dialog">
+    <header class="token-editor__header">
+      <strong></strong
+      ><button type="button" aria-label="Close editor">{{ icon('X') }}</button>
+    </header>
+    <form>
+      <fieldset>
+        <small data-token-name></small>
+        <div data-mode="vision" style="display: contents">
+          <p class="token-editor__notice">
+            Enable dynamic lighting in the scene to use token vision.
+          </p>
+          <label class="token-editor__check"
+            ><input name="enabled" type="checkbox" />Vision enabled</label
+          ><label
+            ><span data-range-label>Range (units)</span
+            ><span class="token-editor__range"
+              ><input
+                name="range"
+                type="range"
+                min="0" /><output></output></span></label
+          ><label class="token-editor__check"
+            ><input name="unlimited" type="checkbox" />Unlimited</label
+          >
+        </div>
+        <div data-mode="configure" style="display: contents">
+          <label
+            >Disposition<select name="disposition">
+              {% for value,label in
+              [('friendly','Friendly'),('neutral','Neutral'),('hostile','Hostile'),('unknown','Unknown')]
+              %}
+              <option value="{{ value }}">{{ label }}</option>
+              {% endfor %}
+            </select></label
+          >
+          <div class="token-editor__pair">
+            <label
+              >Rotation<input
+                name="rotation"
+                type="number"
+                min="0"
+                max="359" /></label
+            ><label
+              >Elevation<input name="elevation" type="number" step="any"
+            /></label>
+          </div>
+          <label class="token-editor__check"
+            ><input name="locked" type="checkbox" />Lock movement</label
+          ><small data-token-size></small>
+        </div>
+        <div data-mode="conditions" style="display: contents">
+          <ul class="token-editor__conditions"></ul>
+          <label
+            >Condition<input
+              name="label"
+              maxlength="120"
+              placeholder="Condition name"
+          /></label>
+          <div class="token-editor__pair">
+            <label
+              >Type<select name="kind">
+                <option value="neutral">Neutral</option>
+                <option value="positive">Positive</option>
+                <option value="negative">Negative</option>
+              </select></label
+            ><label
+              >Visibility<select name="visibility">
+                <option value="everyone">All</option>
+                <option value="gm">GM only</option>
+              </select></label
+            >
+          </div>
+        </div>
+        <p role="alert" hidden></p>
+        <footer><button type="submit">Save</button></footer>
+      </fieldset>
+    </form>
+  </section></template
+>
+<template id="token-confirm"
+  ><section
+    class="token-workspace__confirm"
+    role="dialog"
+    aria-label="Remove tokens"
+  >
+    <strong></strong>
+    <p>The actors' original character sheets will be preserved.</p>
+    <button type="button" data-cancel>Cancel</button
+    ><button type="button" data-remove>Remove</button>
+  </section></template
+>

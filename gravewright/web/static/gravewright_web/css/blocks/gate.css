@@ -1,0 +1,296 @@
+/* gw-gate — the standalone screens: joining a table, unlocking setup.
+ *
+ * The ground is the one image the product is actually about: a battle map. A
+ * square grid at the scale a VTT rules one, a heavier line every fifth cell,
+ * a lamp hung over the table and darkness at the edges. All static, all CSS:
+ * no canvas and no renderer on a gate screen. */
+
+.gw-gate {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+    overflow: hidden;
+    padding: var(--step-34) var(--step-21);
+    background: var(--bg);
+}
+
+.gw-gate::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(192, 154, 90, 0.075) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(192, 154, 90, 0.075) 1px, transparent 1px),
+        linear-gradient(rgba(192, 154, 90, 0.032) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(192, 154, 90, 0.032) 1px, transparent 1px);
+    background-size:
+        var(--grid-major) var(--grid-major), var(--grid-major) var(--grid-major),
+        var(--grid-minor) var(--grid-minor), var(--grid-minor) var(--grid-minor);
+}
+
+/* Lamp above, dark at the corners: the map is lit where the form sits. */
+.gw-gate::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(
+            90% 60% at 50% -10%,
+            rgba(192, 154, 90, 0.11),
+            transparent 68%
+        ),
+        radial-gradient(
+            120% 110% at 50% 45%,
+            transparent 32%,
+            rgba(0, 0, 0, 0.78) 100%
+        );
+}
+
+/* ---- The shell --------------------------------------------------------- */
+
+.gw-gate__shell {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    width: min(100%, var(--gate-width));
+    min-height: var(--gate-min-height);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    border: var(--fib-1) solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: rgba(24, 29, 35, 0.92);
+    box-shadow: var(--shadow-gate);
+    backdrop-filter: blur(var(--step-13));
+}
+
+/* Corner brackets, drawn from the palette. */
+.gw-gate__shell::after {
+    content: "";
+    position: absolute;
+    inset: var(--step-8);
+    z-index: 3;
+    opacity: 0.55;
+    pointer-events: none;
+    background-image:
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent)),
+        linear-gradient(var(--accent), var(--accent));
+    background-repeat: no-repeat;
+    background-size:
+        var(--corner-size) var(--fib-1), var(--fib-1) var(--corner-size),
+        var(--corner-size) var(--fib-1), var(--fib-1) var(--corner-size),
+        var(--corner-size) var(--fib-1), var(--fib-1) var(--corner-size),
+        var(--corner-size) var(--fib-1), var(--fib-1) var(--corner-size);
+    background-position:
+        left top, left top,
+        right top, right top,
+        left bottom, left bottom,
+        right bottom, right bottom;
+}
+
+/* ---- Header ------------------------------------------------------------ */
+
+.gw-gate__header {
+    display: flex;
+    min-height: var(--gate-tab-height);
+    gap: var(--fib-2);
+    min-height: auto;
+    margin: var(--step-8);
+    padding: var(--fib-3);
+    border: var(--fib-1) solid var(--border);
+    border-radius: var(--radius-lg);
+    background: rgb(0 0 0 / 24%);
+}
+
+.gw-gate__tab {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    min-height: var(--control-height-sm);
+    border-right: 0;
+    border-radius: var(--radius-md);
+    padding: 0 var(--step-21);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    user-select: none;
+    transition:
+        color var(--motion-fast) var(--ease),
+        background var(--motion-fast) var(--ease);
+}
+
+.gw-gate__tab:last-child {
+    border-right: 0;
+}
+
+.gw-gate__tab:hover {
+    background: var(--surface-raised);
+    color: var(--text-bright);
+}
+
+/* One tab is a label, not a choice: it loses the underline and the centring. */
+.gw-gate__tab--single {
+    flex: 1;
+    justify-content: flex-start;
+    color: var(--text);
+    cursor: default;
+}
+
+.gw-gate__tab--single:hover {
+    background: transparent;
+    color: var(--text);
+}
+
+.gw-gate__tab--active {
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
+    box-shadow: 0 var(--fib-1) var(--fib-3) rgb(0 0 0 / 35%), inset 0 0 0 var(--fib-1) var(--border-accent);
+    color: var(--accent-hover);
+}
+
+.gw-gate__intro {
+    display: grid;
+    gap: var(--step-21);
+    margin-bottom: var(--step-13);
+}
+
+.gw-gate__wait {
+    display: flex;
+    min-height: var(--gate-content-min-height);
+    align-items: center;
+    justify-content: center;
+    gap: var(--step-13);
+    color: var(--text-muted);
+}
+
+.gw-gate__welcome {
+    display: grid;
+    min-height: var(--gate-content-min-height);
+    align-content: center;
+    justify-items: center;
+    gap: var(--step-13);
+    text-align: center;
+}
+
+/* ---- Panel ------------------------------------------------------------- */
+
+.gw-gate__panel {
+    position: relative;
+    z-index: 2;
+    padding: var(--gate-padding-block) var(--gate-padding-inline);
+}
+
+/* A panel of prose rather than a form: the privacy notice, the terms. */
+.gw-gate__panel--prose {
+    display: grid;
+    gap: var(--step-13);
+}
+
+.gw-gate__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--step-13);
+    margin-bottom: 0;
+}
+
+.gw-gate__brand .gw-mark {
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 0 18px rgba(192, 154, 90, 0.18);
+}
+
+.gw-gate__eyebrow {
+    margin: 0 0 var(--step-5);
+    color: var(--accent);
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-eyebrow);
+    line-height: var(--leading-tight);
+    text-transform: uppercase;
+}
+
+.gw-gate__title {
+    margin: 0;
+    color: var(--text-bright);
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-snug);
+    line-height: var(--leading-tight);
+}
+
+.gw-gate__description {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+}
+
+.gw-gate__form {
+    display: grid;
+    gap: var(--step-13);
+}
+
+.gw-gate__submit {
+    min-height: calc(var(--fib-8) + var(--fib-6) - var(--fib-1)); /* 46 */
+    margin-top: var(--gap-base);
+}
+
+.gw-gate__links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--step-8);
+    margin-top: var(--step-13);
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    font-weight: var(--weight-book);
+}
+
+.gw-gate__links a,
+.gw-gate__links button {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.gw-gate__links a:hover,
+.gw-gate__links button:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+    text-underline-offset: var(--step-5);
+}
+
+@media (max-width: 600px) {
+    .gw-gate {
+        padding: var(--step-21) var(--step-13);
+    }
+
+    .gw-gate__shell {
+        min-height: 0;
+    }
+
+    .gw-gate__panel {
+        padding: var(--step-34) var(--step-21);
+    }
+}

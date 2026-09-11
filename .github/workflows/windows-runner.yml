@@ -1,0 +1,33 @@
+name: Windows Runner
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-runner:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+      - name: Check the native batch launcher
+        run: python tests\windows\runner.py --source-check
+      - name: Exercise installation, offline reuse and the local server
+        run: python tests\windows\runner.py
+      - name: Retain Windows Runner diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: windows-runner-diagnostics
+          path: test-results/windows-runner/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,1010 @@
+
+
+.game-modal-window[data-auto-sizing="true"]> :not(.game-modal-titlebar),
+.game-modal-window[data-auto-sizing="true"] .game-modal-body,
+.game-modal-window[data-auto-sizing="true"] .game-panel-body,
+.game-modal-window[data-auto-sizing="true"] .actor-sheet-body,
+.game-modal-window[data-auto-sizing="true"] .journal-modal-body {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+
+.game-modal-titlebar {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid rgba(192, 154, 90, 0.18);
+    padding: 6px 8px 6px 12px;
+    background:
+        linear-gradient(180deg, rgba(192, 154, 90, 0.05), rgba(192, 154, 90, 0)),
+        rgba(16, 19, 21, 0.78);
+    cursor: grab;
+}
+
+
+.game-modal-window[data-dragging="true"] .game-modal-titlebar {
+    cursor: grabbing;
+}
+
+
+.game-modal-controls {
+    display: inline-flex;
+    gap: 6px;
+}
+
+
+.game-modal-control {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(22, 26, 29, 0.88);
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+
+.game-modal-control:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    box-shadow: 0 0 0 1px rgba(192, 154, 90, 0.1);
+}
+
+
+.library-actions button,
+.gm-actions button,
+.combat-actions button,
+.inside-action,
+.invite-submit,
+.permission-save,
+.settings-open-modal,
+.settings-exit {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--surface-raised);
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+
+.library-actions button i,
+.gm-actions button i,
+.combat-actions button i,
+.inside-action i,
+.invite-submit i,
+.permission-save i,
+.settings-open-modal i,
+.settings-exit i {
+    font-size: 16px;
+}
+
+
+.library-actions button:hover,
+.gm-actions button:hover,
+.combat-actions button:hover,
+.inside-action:hover,
+.invite-submit:hover,
+.permission-save:hover,
+.settings-open-modal:hover,
+.settings-exit:hover {
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    box-shadow: 0 0 0 1px rgba(192, 154, 90, 0.1);
+}
+
+
+.settings-card .player-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+
+.settings-card .player-card {
+    background: rgba(7, 9, 10, 0.34);
+}
+
+
+    .settings-card .player-list,
+    .settings-management .settings-room-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+
+.settings-category-content .player-list,
+.settings-category-content .settings-room-list {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+
+body[data-game-layout="classic"] .settings-category-content .player-card {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+
+.administration-settings-detail > .game-modal-body,
+.administration-settings-detail > .game-panel-body {
+    height: auto;
+    padding: 0;
+    overflow: visible;
+    background: transparent;
+}
+
+
+.settings-panel-body .settings-inline-section .player-list {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+
+.settings-panel-body .settings-inline-section .player-card {
+    padding: 8px;
+}
+
+
+.settings-panel-body .settings-inline-section .player-list {
+    gap: 4px;
+}
+
+
+.settings-panel-body .settings-inline-section .player-card,
+body[data-game-layout="classic"] .settings-panel-body .settings-inline-section .player-card {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 5px 7px;
+}
+
+
+.settings-panel-body .settings-inline-section .player-card strong {
+    overflow: hidden;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.settings-panel-body .settings-inline-section .player-status-text,
+.settings-panel-body .settings-inline-section .player-card em {
+    font-size: 8px;
+    letter-spacing: 0.035em;
+    white-space: nowrap;
+}
+
+    .settings-config-modal .settings-room-list,
+    .settings-config-modal .player-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+
+.player-list {
+    display: grid;
+    gap: 6px;
+}
+
+
+.player-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.12);
+}
+
+
+.player-card strong {
+    display: block;
+    min-width: 0;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+.player-card em {
+    color: var(--accent);
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+
+.game-field {
+    display: grid;
+    gap: 5px;
+}
+
+
+.game-field span {
+    color: var(--text-faint);
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+
+.game-field input,
+.game-field select {
+    min-height: 38px;
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0 10px;
+    background: var(--surface-field);
+    color: var(--text);
+    outline: none;
+}
+
+
+.game-field input:focus,
+.game-field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(192, 154, 90, 0.16);
+}
+
+
+/* Range, cor e checkbox nao sao caixas de texto: a moldura de 38px do .game-field
+   deixa cada um deles desproporcional. */
+.game-field input[type="range"] {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+
+.game-field input[type="color"] {
+    min-height: 32px;
+    width: 100%;
+    padding: 2px;
+    cursor: pointer;
+}
+
+
+.game-field input[type="checkbox"] {
+    min-height: 0;
+    width: auto;
+    justify-self: start;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+
+.game-notice {
+    border: 1px solid rgba(192, 154, 90, 0.38);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    background: rgba(192, 154, 90, 0.1);
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+
+.game-notice.is-dismissing {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity var(--motion-base), transform var(--motion-base);
+}
+
+
+.game-notice--danger {
+    border-color: rgba(182, 97, 80, 0.46);
+    background: rgba(182, 97, 80, 0.1);
+    color: #f0b7ad;
+}
+
+
+
+
+.game-panel-body--chat {
+    padding: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+}
+
+
+    .player-card {
+        grid-template-columns: 1fr;
+    }
+
+
+.game-panel-title {
+    flex: 1;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+
+.game-panel-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+
+body[data-game-layout="classic"] .game-panel .game-modal-titlebar {
+    display: none;
+}
+
+
+body[data-game-layout="classic"] .game-panel .game-modal-controls {
+    display: none;
+}
+
+
+body[data-detached-modal] .game-modal-window .game-modal-titlebar {
+    cursor: default;
+}
+
+
+body[data-game-layout="classic"] .game-panel-title {
+    color: var(--accent);
+}
+
+
+body[data-game-layout="classic"] .game-panel-body {
+    padding: 8px;
+}
+
+
+.cards-table-modal .game-modal-titlebar {
+    background:
+        linear-gradient(180deg, rgba(111, 221, 180, 0.12), rgba(255, 255, 255, 0.025)),
+        rgba(9, 14, 17, 0.96);
+}
+
+
+.library-images-modal .game-modal-titlebar {
+    background:
+        linear-gradient(180deg, rgba(111, 221, 180, 0.12), rgba(255, 255, 255, 0.025)),
+        rgba(9, 14, 17, 0.96);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.command-palette-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: grid;
+    place-items: start center;
+    padding: min(14vh, 120px) 16px 16px;
+    background: rgba(5, 7, 9, 0.72);
+    backdrop-filter: blur(3px);
+}
+
+
+.command-palette-backdrop[hidden] {
+    display: none;
+}
+
+
+.command-palette {
+    width: min(680px, 100%);
+    max-height: min(70vh, 620px);
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-xl);
+    background: var(--surface-raised);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+
+.command-palette-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+}
+
+
+.command-palette-input-wrap input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 17px;
+    outline: none;
+}
+
+
+.command-palette-input-wrap kbd,
+.command-palette-footer {
+    color: var(--text-faint);
+    font-size: 11px;
+}
+
+
+.command-palette-status {
+    margin: 0;
+    padding: 10px 14px;
+    color: var(--text-faint);
+    font-size: 12px;
+}
+
+
+.command-palette-results {
+    overflow: auto;
+    padding: 0 8px 8px;
+}
+
+
+.command-palette-result {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 10px;
+    background: transparent;
+    color: var(--text);
+    text-align: left;
+}
+
+
+.command-palette-result.is-selected,
+.command-palette-result:hover {
+    border-color: var(--accent);
+    background: rgba(192, 154, 90, 0.12);
+}
+
+
+.command-palette-result-copy {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+}
+
+
+.command-palette-result-copy strong,
+.command-palette-result-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.command-palette-result-copy small {
+    color: var(--text-faint);
+}
+
+
+.command-palette-footer {
+    display: flex;
+    gap: 16px;
+    padding: 9px 14px;
+    border-top: 1px solid var(--border);
+}
+
+
+body.command-palette-open {
+    overflow: hidden;
+}
+
+
+/* Regua e cor em duas colunas: rotulo a esquerda, controle a direita. Empilhados,
+   sao seis campos ocupando o dobro da altura para dizer o mesmo. */
+.shader-editor-modal .game-field:has(.slider-row),
+.shader-editor-modal .game-field:has(input[type="color"]) {
+    grid-template-columns: 78px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+}
+
+
+.shader-editor-modal .game-field:has(.slider-row) > span,
+.shader-editor-modal .game-field:has(input[type="color"]) > span {
+    font-size: 10px;
+}
+
+
+/* ---------------------------------------------------------------------------
+   Gravewright mode: keyboard parity and labelling.
+
+   The mode's own chrome (bottom dock, left tool rail, window controls, the
+   minimised-window tray, the layer switch) carried 155 `:hover` rules and not a
+   single `:focus` rule between them. Reaching any of it by keyboard gave no
+   indication of where you were.
+
+   The tool rail was worse: its buttons carry `data-tooltip`, but no rule ever
+   rendered it, so the attribute was dead and the buttons were icon-only with no
+   name at all. The label is now announced (aria-label, in the template) and
+   drawn: on focus as well as hover, so it is not mouse-only either.
+   --------------------------------------------------------------------------- */
+
+.game-dock-btn:focus-visible,
+.tool-dock-btn:focus-visible,
+.game-modal-control:focus-visible,
+.game-dock-item:focus-visible,
+.layer-hud__btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: -2px;
+    color: var(--text);
+}
+
+
+body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .settings-tab-titlebar .game-modal-drag-grip,
+body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .settings-tab-titlebar .game-modal-controls {
+    display: none;
+}
+
+
+.journal-modal > .game-modal-titlebar {
+    min-height: 48px;
+    padding-inline: 14px 10px;
+    background: color-mix(in srgb, var(--surface-raised) 94%, black);
+}
+
+
+.journal-modal > .game-modal-titlebar .sheet-modal-name {
+    font-size: 14px;
+    font-weight: 750;
+}
+
+
+.journal-modal > .game-modal-titlebar .sheet-modal-owner {
+    color: var(--accent);
+}
+.spatial-sound-inspector .permission-toggle{display:flex;align-items:center;justify-content:space-between}
+
+.spatial-sound-inspector .permission-toggle>span{display:grid;gap:3px;padding-right:16px}
+.spatial-sound-inspector .permission-toggle small{color:var(--text-muted);font-size:11px;font-weight:400;line-height:1.35}
+.spatial-sound-inspector .permission-toggle input[type=checkbox]{position:relative;flex:0 0 auto;appearance:none;width:38px;height:20px;margin:0;border:1px solid var(--border-soft);border-radius:999px;background:var(--surface-base);cursor:pointer;transition:.15s ease}
+.spatial-sound-inspector .permission-toggle input[type=checkbox]::before{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:var(--text-muted);transition:.15s ease}
+.spatial-sound-inspector .permission-toggle input[type=checkbox]:checked{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 35%,var(--surface-base))}
+.spatial-sound-inspector .permission-toggle input[type=checkbox]:checked::before{left:20px;background:var(--accent)}
+.spatial-sound-inspector>.game-modal-titlebar{padding-inline:16px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 8%,var(--surface)),var(--surface))}
+.spatial-sound-inspector .permission-toggle{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;min-height:44px;padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--border) 65%,transparent)}
+.spatial-sound-inspector .permission-toggle:last-child{border-bottom:0}
+.spatial-sound-inspector .permission-toggle>span{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:0}
+.spatial-sound-inspector .permission-toggle strong{display:block;line-height:1.25}
+.spatial-sound-inspector .permission-toggle small{display:block;max-width:430px;line-height:1.4}
+.spatial-sound-inspector .permission-toggle input[type=checkbox]{appearance:none!important;-webkit-appearance:none!important;width:42px!important;height:22px!important;padding:0!important;border-radius:999px!important;align-self:center}
+.spatial-sound-inspector .permission-toggle input[type=checkbox]::before{width:16px;height:16px}
+.spatial-sound-inspector .permission-toggle input[type=checkbox]:checked::before{left:22px}
+
+.system-tray-users-panel .player-list { display: grid; grid-template-columns: minmax(0,1fr); gap: 4px; }
+
+.system-tray-users-panel .player-card { min-height: 36px; gap: 7px; padding: 5px 7px; border-radius: var(--radius-sm); }
+
+.system-tray-users-panel .player-card strong { font-size: 11px; }
+
+.system-tray-users-panel .player-status-text,.system-tray-users-panel .player-card em { font-size: 8px; line-height: 1; }
+[data-lobby-panel-window]{position:fixed;left:50%;top:15%;transform:translateX(-50%);width:420px;max-width:95vw;max-height:75vh;overflow:auto;z-index:1200;background:var(--surface,#171d23);border:1px solid var(--border);border-radius:12px;color:var(--text);}
+[hidden]{display:none!important}
+
+
+.gw-combat-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+
+.gw-combat-panel__state {
+    /* The accent is the only thing a system can repaint here. */
+    --gw-combat-accent: var(--accent);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    flex: 1;
+}
+
+
+.gw-combat-header {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+
+.gw-combat-header__title {
+    font-size: 1rem;
+    color: var(--text);
+}
+
+
+.gw-combat-header__current {
+    color: var(--gw-combat-accent);
+    font-size: 0.9rem;
+}
+
+
+.gw-combat-header__next {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+
+.gw-combat-toolbar,
+.gw-combat-rollbar {
+    display: flex;
+    gap: 6px;
+}
+
+
+.gw-combat-rollbar {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+
+.gw-combat-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(9, 13, 16, 0.72);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 15px;
+}
+
+
+.gw-combat-icon:not(:disabled):hover {
+    border-color: var(--gw-combat-accent);
+    color: var(--text);
+}
+
+
+.gw-combat-icon--primary {
+    border-color: var(--gw-combat-accent);
+    color: var(--gw-combat-accent);
+}
+
+
+.gw-combat-icon--danger:not(:disabled):hover {
+    border-color: var(--combat-next);
+    color: var(--combat-next);
+}
+
+
+.gw-combat-icon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+
+.gw-combat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    min-height: 0;
+    flex: 1;
+}
+
+
+.gw-combat-combatant {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 8px;
+    border: 1px solid var(--border);
+    border-left-width: 3px;
+    border-radius: var(--radius-md);
+    background: rgba(9, 13, 16, 0.6);
+}
+
+
+.gw-combat-combatant.is-current {
+    border-left-color: var(--combat-current);
+    background: color-mix(in srgb, var(--combat-current) 10%, rgba(9, 13, 16, 0.6));
+}
+
+
+.gw-combat-combatant.is-next {
+    border-left-color: var(--combat-next);
+}
+
+
+.gw-combat-combatant.has-acted:not(.is-current) {
+    opacity: 0.62;
+}
+
+
+.gw-combat-combatant.is-defeated .gw-combat-combatant__name {
+    text-decoration: line-through;
+    color: var(--text-faint);
+}
+
+
+.gw-combat-combatant.is-hidden-combatant {
+    border-style: dashed;
+}
+
+
+.gw-combat-combatant__position {
+    width: 1.4em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.75rem;
+    color: var(--text-faint);
+}
+
+
+.gw-combat-combatant__portrait {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+
+.gw-combat-combatant__portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+.gw-combat-combatant__portrait .gw-combat-combatant__defeated-icon {
+    position: absolute;
+    inset: 14%;
+    z-index: 1;
+    width: 72%;
+    height: 72%;
+    object-fit: contain;
+    opacity: 0.94;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.9));
+    pointer-events: none;
+}
+
+
+.gw-combat-combatant__initial {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+
+.gw-combat-combatant__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+
+.gw-combat-combatant__name {
+    font-size: 0.9rem;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.gw-combat-combatant__meta {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+}
+
+
+.gw-combat-combatant__score {
+    width: 3.2em;
+    padding: 3px 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+
+.gw-combat-combatant__score--editable:focus {
+    border-color: var(--gw-combat-accent);
+    outline: none;
+}
+
+
+/* The spinner steals width the number needs. */
+.gw-combat-combatant__score--editable::-webkit-outer-spin-button,
+.gw-combat-combatant__score--editable::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+.gw-combat-combatant__score--editable {
+    -moz-appearance: textfield;
+}
+
+
+/* Systems whose initiative is a word or a card need room for it. */
+.gw-combat-combatant__score--text {
+    width: 5.5em;
+    text-align: left;
+}
+
+
+.gw-combat-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+.gw-combat-bar__track {
+    position: relative;
+    height: 4px;
+    flex: 1;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+}
+
+
+.gw-combat-bar__fill {
+    display: block;
+    height: 100%;
+    background: var(--combat-current);
+}
+
+
+.gw-combat-bar.is-wounded .gw-combat-bar__fill {
+    background: #e0a33c;
+}
+
+
+.gw-combat-bar.is-critical .gw-combat-bar__fill {
+    background: var(--combat-next);
+}
+
+
+.gw-combat-bar__value {
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-faint);
+}
+
+
+.gw-combat-combatant__actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+.gw-combat-menu {
+    position: relative;
+}
+
+
+.gw-combat-menu__trigger {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    color: var(--text-faint);
+    cursor: pointer;
+    list-style: none;
+}
+
+
+.gw-combat-menu__trigger::-webkit-details-marker {
+    display: none;
+}
+
+
+.gw-combat-menu__trigger:hover {
+    color: var(--text);
+}
+
+
+.gw-combat-menu__list {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(9, 13, 16, 0.98);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+
+
+.gw-combat-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.82rem;
+    text-align: left;
+}
+
+
+.gw-combat-menu-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text);
+}
+
+
+.gw-combat-menu-item--danger:hover {
+    color: var(--combat-next);
+}
+
+
+.gw-combat-empty {
+    margin: auto;
+    text-align: center;
+    color: var(--text-faint);
+}
+[data-native-directory]{z-index:1100;right:16px;top:70px;max-height:80vh;overflow:auto;}

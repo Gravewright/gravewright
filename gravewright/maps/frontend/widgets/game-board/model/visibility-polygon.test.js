@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import { visibilityPolygon } from "./visibility-polygon.js";
+const wall = { id: "wall", x1: 10, x2: 10, y1: -100, y2: 100, kind: "wall" };
+const polygon = visibilityPolygon({ x: 0, y: 0 }, 50, [wall]);
+assert.ok(polygon.every(p => p.x <= 10.0001));
+const open = visibilityPolygon({ x: 0, y: 0 }, 50, [{ ...wall, kind: "door", door_state: "open" }]);
+assert.ok(open.some(p => p.x > 40));
+assert.ok(open.every(p => Math.hypot(p.x, p.y) <= 50.0001));
+const angles = polygon.map(p => (Math.atan2(p.y, p.x) + Math.PI * 2) % (Math.PI * 2));
+assert.ok(angles.every((a, i) => i === 0 || a >= angles[i - 1] - 1e-10));
+const cone = visibilityPolygon({ x: 0, y: 0, angle: 90, rotation: 0 }, 50, [wall]);
+assert.ok(cone.every(p => p.x >= -1e-8 && p.x <= 10.0001 && Math.abs(p.y) <= p.x + 1e-8));
+const rotated = visibilityPolygon({ x: 0, y: 0, angle: 60, rotation: 180 }, 50, []);
+assert.ok(rotated.slice(1, -1).every(p => p.x < 0 && Math.abs(p.y) <= 25.0001));
+// Elevation intervals are inclusive and do not change unbounded legacy walls.
+const low = { ...wall, vertical_bottom: 0, vertical_top: 3 };
+assert.ok(visibilityPolygon({ x: 0, y: 0, elevation: 3 }, 50, [low]).every(p => p.x <= 10.0001));
+assert.ok(visibilityPolygon({ x: 0, y: 0, elevation: 4 }, 50, [low]).some(p => p.x > 40));
+assert.ok(visibilityPolygon({ x: 0, y: 0, elevation: -1 }, 50, [low]).some(p => p.x > 40));
+assert.ok(visibilityPolygon({ x: 0, y: 0, elevation: 400 }, 50, [wall]).every(p => p.x <= 10.0001));
+assert.ok(visibilityPolygon({ x: 0, y: 0 }, 50, [{ ...wall, vision_behavior: 'pass' }]).some(p => p.x > 40));

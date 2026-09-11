@@ -1,0 +1,63 @@
+Gravewright Independent Module Permission, version 1.0
+Additional permission under GNU GPL version 3, section 7
+
+1. Scope
+
+This permission applies to the copyrightable material in Gravewright whose
+copyright holders license that material under GNU GPL version 3 only and grant
+this permission (the "Covered Core"). It does not grant rights in material
+whose copyright holders have not authorized this permission.
+
+An "Independent Module" is a separately identifiable extension, plugin, game
+system, integration, application or other module written independently of the
+Covered Core. It must not incorporate or adapt copyrightable implementation
+code from the Covered Core, apart from interface declarations strictly needed
+for interoperability and material separately licensed to permit that use.
+Communicating or linking with the Covered Core, using its data structures or
+subclassing its interfaces does not, by itself, disqualify a module from this
+permission. Merely repackaging or relabeling Covered Core code as a module does
+not make that code an Independent Module.
+
+2. Permission
+
+The copyright holders of the Covered Core grant you additional permission to
+link, combine, load, execute, communicate with and convey the Covered Core
+together with Independent Modules, regardless of the license of those modules.
+An Independent Module may be licensed under any terms, including proprietary
+or commercial terms, and need not be licensed under the GNU GPL or have its
+source disclosed solely because it is combined with the Covered Core.
+
+This permission applies whether or not a module uses Gravewright's published
+APIs or SDK. It covers public or internal interfaces, direct linking, dynamic
+loading, imports, callbacks, shared data structures, HTTP, WebSockets and other
+forms of integration. It does not promise technical compatibility or support
+for any particular integration method.
+
+3. Continuing obligations
+
+You must comply with GNU GPL version 3 for the Covered Core and modifications
+to it, including the applicable Corresponding Source and Installation
+Information requirements when conveying it. You must also comply with each
+Independent Module's own license. The terms imposed on a module must not
+restrict recipients' GPL rights in the Covered Core. Source disclosure
+obligations for the Covered Core remain in force; under this permission they
+do not require disclosure of an Independent Module's source solely because
+the module is combined with the Covered Core.
+
+This permission does not relicense third-party dependencies, assets or other
+material. It does not remove obligations imposed by their copyright holders.
+
+4. Modified versions
+
+When modifying the Covered Core, you may extend this permission to your own
+modifications, but are not required to do so. As provided by GPLv3 section 7,
+you may remove this additional permission from a copy or part of a copy you
+convey. State clearly where you have removed it or where it does not apply.
+
+The underlying license is GNU GPL version 3 ONLY; this permission does not
+authorize use of a later GPL version. Except as expressly permitted above,
+all terms of GNU GPL version 3 remain applicable. Its warranty disclaimer and
+limitation of liability are unchanged.
+
+The English text of this permission is authoritative. Translations are
+provided for convenience.

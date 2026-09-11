@@ -1,0 +1,199 @@
+/* gw-table-modal — a table presented before you sit at it.
+ *
+ * One panel serves the owner's library and a player's; the only difference is
+ * which actions the viewer is allowed. Given room it reads as a poster: the
+ * cover across the top, the pitch beneath. Squeezed, it turns on its side and
+ * puts the cover beside the text so the fold still shows both. */
+
+.gw-table-modal {
+    position: fixed;
+    z-index: var(--z-modal);
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: var(--step-21);
+    background: rgb(5 7 9 / 62%);
+    backdrop-filter: blur(var(--step-13)) saturate(115%);
+}
+
+.gw-table-modal__panel {
+    position: relative;
+    display: grid;
+    width: min(100%, calc(var(--fib-13) + var(--fib-11)));
+    max-height: calc(100vh - var(--step-34));
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+    border: var(--border-hairline);
+    border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+    border-radius: var(--radius-2xl);
+    background: color-mix(in srgb, var(--surface) 95%, transparent);
+    box-shadow: var(--shadow-window), inset 0 var(--fib-1) rgb(255 255 255 / 5%);
+    backdrop-filter: blur(var(--step-13)) saturate(125%);
+    animation: gw-table-modal-enter var(--motion-base) var(--ease);
+}
+
+@keyframes gw-table-modal-enter {
+    from { opacity: 0; transform: translateY(var(--step-8)) scale(.985); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .gw-table-modal__panel { animation: none; }
+}
+
+/* The create and edit forms: one column, room for fields. */
+.gw-table-modal__panel--wide {
+    width: min(100%, calc(var(--fib-13) + var(--fib-11) + var(--fib-8)));
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--step-34);
+    gap: var(--step-21);
+    align-content: start;
+    overflow-y: auto;
+}
+
+.gw-table-modal__close {
+    position: absolute;
+    z-index: 2;
+    top: var(--step-13);
+    right: var(--step-13);
+    display: grid;
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    padding: 0;
+    place-items: center;
+    border: var(--fib-1) solid transparent;
+    border-radius: var(--radius-circle);
+    background: transparent;
+    color: var(--text-faint);
+}
+
+.gw-table-modal__close:hover {
+    border-color: var(--border-accent);
+    background: var(--accent-glow);
+    color: var(--accent-hover);
+}
+
+.gw-table-modal__hero {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, var(--plate-a), var(--plate-b));
+    box-shadow: inset 0 calc(var(--fib-1) * -1) var(--hairline);
+}
+
+.gw-table-modal__hero img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.gw-table-modal__content {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    gap: var(--step-13);
+    overflow-y: auto;
+    padding: var(--step-21) var(--step-34) var(--step-34);
+}
+
+.gw-table-modal__eyebrow {
+    margin: 0;
+    color: var(--accent);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+}
+
+.gw-table-modal__content h2 {
+    margin: 0;
+    color: var(--text-bright);
+    font-family: var(--font-display);
+    font-size: var(--text-display);
+    line-height: var(--leading-tight);
+}
+
+.gw-table-modal__description {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-relaxed);
+}
+
+.gw-table-modal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--step-8);
+}
+
+.gw-table-modal__actions .gw-button {
+    flex: 1;
+}
+
+.gw-table-modal__participants {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--step-13);
+    border-top: var(--border-hairline);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+}
+
+.gw-table-modal__participants > div {
+    display: flex;
+}
+
+.gw-table-modal__participants i,
+.gw-table-modal__participants strong {
+    display: grid;
+    width: var(--control-height-sm);
+    height: var(--control-height-sm);
+    place-items: center;
+    margin-left: calc(var(--step-8) * -1);
+    border: var(--hairline-width) solid var(--border-strong);
+    border-radius: var(--radius-circle);
+    background: var(--surface-raised);
+    color: var(--text);
+    font-size: var(--text-2xs);
+    font-style: normal;
+    letter-spacing: var(--tracking-none);
+}
+
+/* Squeezed: the poster turns on its side. The cover keeps a column so the art
+ * is still legible, and the pitch takes the other. */
+@media (max-width: 800px) {
+    .gw-table-modal {
+        padding: var(--step-13);
+    }
+
+    .gw-table-modal__panel,
+    .gw-table-modal__panel--wide {
+        width: 100%;
+        max-height: calc(100vh - var(--step-26));
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-rows: minmax(0, 1fr);
+    }
+
+    .gw-table-modal__hero {
+        height: 100%;
+        aspect-ratio: auto;
+    }
+
+    .gw-table-modal__content {
+        padding: var(--step-34) var(--step-21) var(--step-21);
+    }
+
+    .gw-table-modal__description {
+        max-height: none;
+    }
+
+    /* The form panel has no cover to pair with, so it keeps its single column. */
+    .gw-table-modal__panel--wide {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto;
+    }
+}

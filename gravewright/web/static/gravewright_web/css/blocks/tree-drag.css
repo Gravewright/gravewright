@@ -1,0 +1,4 @@
+.gw-tree-preview { position: fixed; z-index: 1500; top: 0; left: 0; display: flex; max-width: 250px; padding: 6px 10px; align-items: center; gap: 8px; border: 1px solid var(--accent); border-radius: 4px; background: rgb(24 29 35 / 96%); box-shadow: 0 8px 21px rgb(0 0 0 / 45%); color: var(--text); pointer-events: none; }
+.gw-tree-preview svg { width: 14px; height: 14px; flex: 0 0 14px; color: var(--accent); }
+.gw-tree-preview strong { overflow: hidden; font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.gw-tree-dragging, .gw-tree-dragging * { cursor: grabbing !important; user-select: none !important; }

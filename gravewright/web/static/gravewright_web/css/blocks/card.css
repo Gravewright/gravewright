@@ -1,0 +1,242 @@
+/* gw-card — every other box on every other tab: same corner, same fill, same
+ * hairline. Rulesets, add-ons, marketplace entries, settings sections and
+ * admin rows are all this block. */
+
+.gw-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: var(--fib-1) solid var(--hairline);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    box-shadow: var(--shadow-hairline);
+    transition:
+        border-color var(--motion-base) var(--ease),
+        box-shadow var(--motion-base) var(--ease);
+}
+
+.gw-card:hover,
+.gw-card:focus-within {
+    border-color: rgba(192, 154, 90, 0.5);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+}
+
+.gw-card--flat:hover,
+.gw-card--flat:focus-within {
+    border-color: var(--hairline);
+    box-shadow: var(--shadow-hairline);
+}
+
+.gw-card--raised {
+    background: var(--surface-raised);
+}
+
+/* ---- Head -------------------------------------------------------------- */
+
+.gw-card__head {
+    display: flex;
+    align-items: center;
+    gap: var(--step-14);
+    min-height: calc(var(--fib-9) + var(--fib-3)); /* 55 + 3 = 58 */
+    border-bottom: var(--fib-1) solid var(--hairline);
+    padding: var(--step-10) var(--gap-loose);
+}
+
+.gw-card__head-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.gw-card__title {
+    margin: 0 0 var(--fib-2);
+    color: var(--text-bright);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-medium);
+    letter-spacing: -0.005em;
+    text-transform: none;
+}
+
+.gw-card__subtitle {
+    overflow: hidden;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ---- Body -------------------------------------------------------------- */
+
+.gw-card__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--gap-base);
+    padding: var(--gap-loose);
+    text-align: left;
+}
+
+.gw-card__description {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+}
+
+.gw-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-base);
+    color: var(--text-faint);
+    font-size: var(--text-xs);
+}
+
+.gw-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-snug);
+}
+
+/* A card whose whole body is the affordance that opens its detail. */
+.gw-card__trigger {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--gap-base);
+    border: 0;
+    border-radius: 0;
+    padding: var(--gap-loose);
+    background: transparent;
+    box-shadow: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.gw-card__trigger:focus-visible {
+    outline: var(--fib-2) solid var(--focus-ring);
+    outline-offset: calc(var(--fib-2) * -1);
+}
+
+/* ---- Footer ------------------------------------------------------------ */
+
+.gw-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-base);
+    margin-top: auto;
+    border-top: var(--fib-1) solid var(--hairline);
+    padding: var(--gap-comfy) var(--gap-loose);
+    background: var(--surface-sunken);
+}
+
+.gw-card__actions--spread {
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ---- Definition rows --------------------------------------------------- */
+
+.gw-facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--fib-11), 1fr));
+    margin: 0;
+    padding: var(--gap-comfy) var(--gap-loose);
+}
+
+.gw-facts__item {
+    min-width: 0;
+    border-right: var(--fib-1) solid var(--hairline);
+    padding: 0 var(--step-14);
+}
+
+.gw-facts__item:first-child {
+    padding-left: 0;
+}
+
+.gw-facts__item:last-child {
+    border-right: 0;
+    padding-right: 0;
+}
+
+.gw-facts__term {
+    margin-bottom: var(--fib-3);
+    color: var(--text-faint);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+}
+
+.gw-facts__value {
+    overflow: hidden;
+    margin: 0;
+    color: var(--text-bright);
+    font-size: var(--text-md);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 820px) {
+    .gw-facts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--gap-loose) 0;
+    }
+
+    .gw-facts__item {
+        border-right: 0;
+        padding: 0;
+    }
+}
+
+/* ---- A row in a list (participants, users, snapshots) ------------------ */
+
+.gw-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-comfy);
+    border: var(--fib-1) solid var(--hairline);
+    border-radius: var(--radius-sm);
+    padding: var(--gap-comfy) var(--step-14);
+    background: var(--surface);
+    transition: border-color var(--motion-fast) var(--ease);
+}
+
+.gw-row:hover {
+    border-color: rgba(192, 154, 90, 0.5);
+}
+
+.gw-row__main {
+    display: grid;
+    gap: var(--fib-3);
+    min-width: 0;
+}
+
+.gw-row__title {
+    color: var(--text-bright);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-medium);
+}
+
+.gw-row__meta {
+    color: var(--text-muted);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+}
+
+.gw-row__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-base);
+}
+
+.gw-list {
+    display: grid;
+    gap: var(--step-10);
+}

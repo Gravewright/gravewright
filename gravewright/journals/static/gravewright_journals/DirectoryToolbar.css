@@ -1,0 +1,15 @@
+
+.directory-toolbar[data-v-gwtoolbar] { display: grid; gap: var(--fib-5); margin-bottom: var(--fib-5);
+}
+.directory-toolbar__actions[data-v-gwtoolbar] { display: flex; flex-wrap: wrap; gap: var(--fib-4);
+}
+.directory-toolbar__actions[data-v-gwtoolbar] button { display: inline-flex; align-items: center; justify-content: center; gap: var(--fib-4); flex: 1; min-height: var(--fib-8); padding: var(--fib-4) var(--fib-5); border: var(--fib-1) solid var(--border); border-radius: var(--fib-4); background: var(--surface); color: var(--text); font: inherit; font-size: var(--fib-6); cursor: pointer;
+}
+.directory-toolbar__actions[data-v-gwtoolbar] svg, .directory-toolbar__search > svg[data-v-gwtoolbar] { width: var(--fib-7); height: var(--fib-7); flex-shrink: 0;
+}
+.directory-toolbar__search[data-v-gwtoolbar] { display: flex; align-items: center; gap: var(--fib-5); min-height: var(--fib-8); padding: 0 var(--fib-5); border: var(--fib-1) solid var(--border); border-radius: var(--fib-4); background: var(--surface-field); color: var(--text-faint);
+}
+.directory-toolbar__search input[data-v-gwtoolbar] { min-width: 0; flex: 1; border: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--fib-6);
+}
+.directory-toolbar__actions[data-v-gwtoolbar] button:hover { color: var(--accent); border-color: var(--accent);
+}

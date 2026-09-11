@@ -1,0 +1,15 @@
+<div class="house-menu-scrim" data-show="$_house" style="display:none" data-on:pointerdown="if(evt.target===el)$_house=false">
+<div class="house-menu" role="dialog" aria-label="{{ house.title }}"><nav class="house-menu__rail" aria-label="{{ house.title }}"><p class="house-menu__brand"><span class="gw-mark" aria-hidden="true"></span><strong>Gravewright</strong></p>{% for key,glyph in [('table','Table'),('extensions','Cube'),('preferences','Gear')] %}<button class="house-menu__section" data-class="{'house-menu__section--on':$_houseSection==='{{ key }}'}" type="button" data-on:click="$_houseSection='{{ key }}'">{{ icon(glyph) }}<span>{{ house.sections[key] }}</span></button>{% endfor %}</nav><section class="house-menu__pane"><header class="house-menu__head"><strong data-text="({{ house.sections|tojson|forceescape }})[$_houseSection]">{{ house.sections.table }}</strong></header><div class="house-menu__facts" data-show="$_houseSection==='table'"><p><span>Table</span><strong>{{ campaign.name }}</strong></p><p><span>System</span><strong>{{ campaign.system }}</strong></p><p><span>{{ house.yourRole }}</span><strong>{{ 'Streamer' if member_role == 'streamer' else house.roles.owner if owner else house.roles.participant }}</strong></p>{% if campaign.description %}<p><span>Description</span><strong>{{ campaign.description }}</strong></p>{% endif %}{% if member_role == 'player' %}<p><button type="button" data-campaign-help>Getting started</button></p>{% endif %}{% if owner %}<p><button type="button" data-streamer-link>Create streamer link</button><button type="button" data-streamer-revoke>Revoke streamer link</button></p>{% endif %}</div><section data-table-modules data-manage="{{ 'true' if owner else 'false' }}" data-show="$_houseSection==='extensions'" style="display:none"></section><div class="house-menu__preferences" data-show="$_houseSection==='preferences'" style="display:none">
+<header><strong>{{ house.rendering.title }}</strong><p>{{ house.rendering.description }}</p></header>
+<div class="house-menu__profiles" role="radiogroup" aria-label="{{ house.rendering.title }}">
+{% for profile in ['performance','balanced','quality'] %}
+<button type="button" role="radio" aria-checked="{{ 'true' if profile=='performance' else 'false' }}" class="house-menu__profile" data-render-choice="{{ profile }}">
+<span class="house-menu__profile-preview" data-profile="{{ profile }}"><i></i><i></i><i></i></span>
+<strong>{{ house.rendering.profiles[profile].name }}</strong>
+<small>{{ house.rendering.profiles[profile].description }}</small>
+<em>{{ house.rendering.profiles[profile].detail }}</em>
+</button>
+{% endfor %}
+</div>
+<p class="house-menu__preference-note">{{ house.rendering.localHint }}</p>
+</div></section></div></div>

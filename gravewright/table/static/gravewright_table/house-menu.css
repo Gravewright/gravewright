@@ -1,0 +1,209 @@
+/* The house menu takes the screen the way Launchpad does: the table stays visible but pushed far
+   out of focus behind a blurred scrim, and the sheet sits centred on top of it. Finder's rail on
+   the left, the store's cards on the right. */
+.house-menu-scrim {
+    position: fixed;
+    z-index: 12;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background: rgb(6 8 10 / 58%);
+    backdrop-filter: blur(var(--step-34)) saturate(120%);
+    animation: house-menu-scrim var(--motion-base) var(--ease);
+}
+
+.house-menu {
+    display: grid;
+    width: 88vw;
+    height: 88vh;
+    grid-template-columns: var(--fib-12) minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent);
+    border-radius: var(--radius-2xl);
+    background: color-mix(in srgb, #14181d 96%, transparent);
+    box-shadow: var(--shadow-window);
+    animation: house-menu-rise var(--motion-slow) var(--ease);
+}
+
+@keyframes house-menu-scrim { from { opacity: 0; } }
+/* It grows into place rather than appearing, which is the gesture that reads as Launchpad. */
+@keyframes house-menu-rise { from { opacity: 0; transform: scale(.96); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .house-menu-scrim, .house-menu { animation: none; }
+}
+
+/* Finder's sidebar: quieter ground than the pane, so the eye starts on the right. */
+.house-menu__rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--fib-2);
+    padding: var(--step-13) var(--step-8);
+    border-right: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+    background: rgb(0 0 0 / 26%);
+}
+
+.house-menu__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--step-8);
+    margin: 0 0 var(--step-13);
+    padding: 0 var(--step-5);
+    color: var(--text-bright);
+}
+
+.house-menu__brand .gw-mark { width: var(--fib-7); height: var(--fib-7); }
+.house-menu__brand strong { font-size: var(--text-md); font-weight: var(--weight-bold); letter-spacing: .04em; }
+
+.house-menu__section {
+    display: flex;
+    align-items: center;
+    gap: var(--step-8);
+    min-height: var(--size-34);
+    padding: 0 var(--step-8);
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-align: left;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.house-menu__section svg { width: var(--fib-6); height: var(--fib-6); }
+.house-menu__section:hover { background: rgb(255 255 255 / 7%); color: var(--text-bright); }
+.house-menu__section--on { background: rgba(var(--layer-accent-rgb), .9); color: #0c100f; }
+
+.house-menu__pane { display: flex; min-width: 0; flex-direction: column; overflow: hidden; }
+
+.house-menu__head {
+    display: flex;
+    min-height: var(--control-height-lg);
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--step-13);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--text-bright);
+    font-size: var(--text-md);
+}
+
+.house-menu__refresh {
+    display: grid;
+    width: var(--size-21);
+    height: var(--size-21);
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+}
+
+.house-menu__refresh svg { width: var(--fib-6); height: var(--fib-6); }
+.house-menu__refresh:hover { color: var(--text-bright); }
+.house-menu__refresh:disabled { opacity: .4; }
+
+.house-menu__facts { display: grid; align-content: start; gap: var(--step-21); padding: var(--step-21); }
+.house-menu__facts p { display: grid; gap: var(--fib-3); margin: 0; }
+.house-menu__facts span { color: var(--text-faint); font-size: var(--text-2xs); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+.house-menu__facts strong { color: var(--text); font-size: var(--text-md); font-weight: var(--weight-bold); }
+
+.house-menu__store { display: grid; align-content: start; gap: var(--step-8); padding: var(--step-21); overflow-y: auto; }
+.house-menu__note { margin: 0; padding: var(--step-13); color: var(--text-muted); font-size: var(--text-md); }
+.house-menu__error { display: flex; align-items: center; gap: var(--step-8); margin: 0; padding: var(--step-8) var(--step-13); border: 1px solid var(--danger); border-radius: var(--radius-md); color: var(--danger-text); font-size: var(--text-sm); }
+.house-menu__error svg { width: var(--fib-6); height: var(--fib-6); flex: 0 0 auto; }
+.house-menu__group { margin: var(--step-13) 0 0; color: var(--text-faint); font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+
+/* One store card: glyph, identity, and the single action that applies to it. */
+.house-menu__card {
+    display: flex;
+    align-items: center;
+    gap: var(--step-13);
+    padding: var(--step-8) var(--step-13);
+    border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+    border-radius: var(--radius-xl);
+    background: rgb(255 255 255 / 3%);
+}
+
+.house-menu__card--locked { opacity: .72; }
+.house-menu__glyph { display: grid; width: var(--size-34); height: var(--size-34); flex: 0 0 auto; place-items: center; border-radius: var(--radius-md); background: rgba(var(--layer-accent-rgb), .14); color: var(--layer-accent); }
+.house-menu__glyph svg { width: var(--fib-7); height: var(--fib-7); }
+.house-menu__meta { display: grid; min-width: 0; gap: var(--fib-1); }
+.house-menu__meta strong { overflow: hidden; color: var(--text-bright); font-size: var(--text-md); text-overflow: ellipsis; white-space: nowrap; }
+.house-menu__meta small { color: var(--text-faint); font-size: var(--text-2xs); }
+
+/* As ações do módulo andam juntas no fim da linha, em vez de cada uma ser empurrada para longe
+   pelo espaçamento do cartão. */
+.house-menu__actions { display: flex; align-items: center; gap: var(--fib-5, 5px); margin-left: auto; }
+
+.house-menu__action {
+    min-height: var(--control-height-sm);
+    margin-left: auto;
+    padding: 0 var(--step-13);
+    border: 1px solid var(--layer-accent);
+    border-radius: var(--radius-pill);
+    background: rgba(var(--layer-accent-rgb), .16);
+    color: var(--layer-accent);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-heavy);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.house-menu__action:hover { background: rgb(var(--layer-accent-rgb)); color: #0c100f; }
+.house-menu__action:disabled { cursor: progress; opacity: .55; }
+/* Installed reads as the quiet state; the loud button is the one that changes something. */
+.house-menu__action--on { border-color: var(--border); background: transparent; color: var(--text-muted); }
+.house-menu__action--on:hover { border-color: var(--danger); background: transparent; color: var(--danger-text); }
+.house-menu__badge { margin-left: auto; color: var(--text-faint); font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+
+.house-menu__preferences { display: grid; align-content: start; gap: var(--step-21); padding: var(--step-21); overflow-y: auto; }
+.house-menu__preferences > header { display: grid; gap: var(--step-5); }
+.house-menu__preferences > header strong { color: var(--text-bright); font-family: var(--font-display); font-size: var(--text-lg); }
+.house-menu__preferences > header p, .house-menu__preference-note { margin: 0; color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
+.house-menu__profiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--step-13); }
+.house-menu__profile { display: grid; min-width: 0; align-content: start; gap: var(--step-8); padding: var(--step-13); border: var(--fib-1) solid var(--border); border-radius: var(--radius-xl); background: rgb(255 255 255 / 2%); color: var(--text); text-align: left; transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
+.house-menu__profile:hover { border-color: var(--border-accent); background: var(--accent-glow); transform: translateY(calc(var(--fib-2) * -1)); }
+.house-menu__profile--on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, transparent); box-shadow: inset 0 0 0 var(--fib-1) var(--border-accent); }
+.house-menu__profile strong { color: var(--text-bright); font-size: var(--text-md); }
+.house-menu__profile small { min-height: var(--size-34); color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-normal); }
+.house-menu__profile em { color: var(--text-faint); font-size: var(--text-2xs); font-style: normal; line-height: var(--leading-normal); }
+.house-menu__profile-preview { display: flex; height: var(--fib-10); align-items: flex-end; justify-content: center; gap: var(--step-5); overflow: hidden; border: var(--fib-1) solid var(--border); border-radius: var(--radius-lg); background: linear-gradient(145deg, var(--plate-a), var(--plate-b)); }
+.house-menu__profile-preview i { width: var(--step-13); border-radius: var(--radius-pill) var(--radius-pill) 0 0; background: color-mix(in srgb, var(--accent) 70%, var(--surface-raised)); }
+.house-menu__profile-preview i:nth-child(1) { height: var(--fib-7); opacity: .5; }
+.house-menu__profile-preview i:nth-child(2) { height: var(--fib-8); opacity: .75; }
+.house-menu__profile-preview i:nth-child(3) { height: var(--fib-9); }
+.house-menu__profile-preview[data-profile="performance"] i:nth-child(n+2) { opacity: .18; }
+.house-menu__profile-preview[data-profile="balanced"] { box-shadow: inset 0 0 var(--step-13) rgb(192 154 90 / 8%); }
+.house-menu__profile-preview[data-profile="quality"] { box-shadow: inset 0 0 var(--step-21) rgb(192 154 90 / 18%); }
+.house-menu__preference-note { padding-top: var(--step-13); border-top: var(--fib-1) solid var(--border); }
+
+@media (max-width: 700px) {
+    .house-menu { width: calc(100vw - var(--step-13)); height: calc(100vh - var(--step-34)); grid-template-columns: 1fr; }
+    .house-menu__rail { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 16%, transparent); }
+    .house-menu__brand { display: none; }
+    .house-menu__profiles { grid-template-columns: 1fr; }
+}
+
+/* Ações em lote e diagnóstico da composição. */
+.house-menu__bulk {
+  display: flex; align-items: center; gap: var(--fib-6, 8px);
+  padding: var(--fib-5, 5px) var(--fib-6, 8px);
+  border-bottom: 1px solid var(--border);
+}
+.house-menu__select-all { display: flex; align-items: center; gap: var(--fib-5, 5px); font-size: var(--text-sm, 12px); color: var(--text-muted); cursor: pointer; }
+.house-menu__pick { margin-right: var(--fib-5, 5px); cursor: pointer; }
+
+.house-menu__findings { display: flex; flex-direction: column; gap: var(--fib-3, 3px); margin: var(--fib-6, 8px) 0; padding: 0; list-style: none; }
+.house-menu__findings li {
+  display: flex; gap: var(--fib-6, 8px); align-items: baseline;
+  padding: var(--fib-5, 5px) var(--fib-6, 8px);
+  border-left: 2px solid var(--border);
+  font-size: var(--text-sm, 12px);
+}
+.house-menu__findings li strong { min-width: var(--fib-12, 144px); color: var(--text-muted); font-weight: 600; }
+.house-menu__findings li span { color: var(--text); }
+/* A cor diz o que ler primeiro; o texto continua dizendo tudo sem ela. */
+.house-menu__findings li[data-status="warn"] { border-left-color: var(--accent, #c09a5a); }
+.house-menu__findings li[data-status="fail"] { border-left-color: #b4453c; }

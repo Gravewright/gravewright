@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "json": {
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "mountId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tableId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "moduleSetRevision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tokenId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actorId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sceneId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "width": {
+      "type": "number"
+    },
+    "height": {
+      "type": "number"
+    },
+    "grid": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "number"
+        },
+        "distance": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "offsetX": {
+          "type": "number"
+        },
+        "offsetY": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "size",
+        "distance",
+        "unit",
+        "offsetX",
+        "offsetY"
+      ],
+      "additionalProperties": false
+    },
+    "role": {
+      "enum": [
+        "gm",
+        "player"
+      ]
+    }
+  },
+  "required": [
+    "mountId",
+    "tableId",
+    "moduleSetRevision",
+    "tokenId",
+    "actorId",
+    "sceneId",
+    "width",
+    "height",
+    "grid"
+  ],
+  "additionalProperties": false
+}

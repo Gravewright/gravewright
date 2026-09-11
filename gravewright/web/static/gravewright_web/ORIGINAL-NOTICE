@@ -1,0 +1,5 @@
+Gravewright Vue frontend and UI components
+Copyright 2026 Gravewright contributors
+
+Derived from /mnt/dados/gravewright-vtt/modules/gravewright-frontend and packages/ui.
+Adapted for the Python kernel and SDK composition.

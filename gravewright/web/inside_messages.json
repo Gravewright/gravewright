@@ -1,0 +1,102 @@
+{
+  "campaigns": {
+    "navigation": "Main navigation",
+    "preferences": "Preferences",
+    "toggleNavigation": "Collapse or expand navigation",
+    "globalSearch": "Search Gravewright",
+    "workspace": "Your library",
+    "title": "Tables",
+    "description": "Continue your campaigns or prepare a new adventure.",
+    "join": "Join a table",
+    "create": "Create table",
+    "search": "Search tables",
+    "allSystems": "All systems",
+    "view": "View mode",
+    "grid": "Grid view",
+    "list": "List view",
+    "continue": "Continue",
+    "options": "Table options",
+    "participants": "Participants",
+    "edit": "Edit",
+    "invite": "Invite",
+    "backup": "Backup",
+    "remove": "Remove",
+    "close": "Close",
+    "newCampaign": "New campaign",
+    "joinCampaign": "Join campaign",
+    "joinHint": "Use the code sent by the table administrator",
+    "createDescription": "Name the new campaign. The remaining details can be configured next.",
+    "codeDescription": "Enter the code shared by the table administrator to join the campaign.",
+    "name": "Name",
+    "code": "Campaign code",
+    "namePlaceholder": "Campaign name",
+    "codePlaceholder": "XXXX-XXXX",
+    "emptyEyebrow": "The first chapter",
+    "emptyTitle": "Every universe begins in the void.",
+    "emptyDescription": "Yours still holds maps to draw, heroes to gather, and stories to live.",
+    "emptyAction": "Begin my first journey",
+    "participantEmptyEyebrow": "Awaiting the call",
+    "participantEmptyTitle": "Your next journey has not arrived yet.",
+    "participantEmptyDescription": "Take a seat at the table and await the first contract.",
+    "newTable": "New table",
+    "newTableHint": "Start a campaign",
+    "nav": {
+      "campaigns": "Tables",
+      "systems": "Systems",
+      "addons": "Add-ons",
+      "marketplace": "Marketplace",
+      "settings": "Settings",
+      "playerSettings": "Player settings",
+      "privacy": "Privacy"
+    }
+  },
+  "containers": {
+    "eyebrow": "Table",
+    "enter": "Enter table",
+    "open": "Open {name}",
+    "invitePlayers": "Invite",
+    "copyCode": "Copy code",
+    "copied": "Code copied",
+    "description": "Description",
+    "system": "System",
+    "image": "Cover image",
+    "fromComputer": "From computer",
+    "fromUrl": "By URL",
+    "chooseFile": "Select image",
+    "dropFile": "Drag an image here or click to select",
+    "fileHint": "PNG, JPEG, or WebP · up to 5 MB",
+    "removeImage": "Remove image",
+    "preview": "Cover image preview",
+    "expires": "This code expires in 10 minutes.",
+    "removalCode": "Removal code",
+    "create": {
+      "title": "Create table",
+      "description": "Prepare a new table with everything your journey will need.",
+      "action": "Create table"
+    },
+    "edit": {
+      "title": "Edit table",
+      "description": "Update this table's presentation details.",
+      "action": "Save changes"
+    },
+    "invite": {
+      "title": "Invite participants",
+      "description": "Generate a temporary code to share with your players.",
+      "action": "Generate new code"
+    },
+    "remove": {
+      "title": "Remove table",
+      "description": "Generate the confirmation code and enter it below. Removal cannot be undone.",
+      "action": "Confirm removal"
+    }
+  },
+  "playerHome": {
+    "joinAnotherEyebrow": "Another adventure",
+    "joinAnotherTitle": "There is always another story to tell.",
+    "joinAnotherDescription": "Your campaigns are waiting in your library. Use an invitation code to join another table.",
+    "backToTables": "Back to my tables",
+    "invitationEyebrow": "Table invitation",
+    "invitationTitle": "Did you receive a code?",
+    "invitationDescription": "Enter the code shared by the table administrator to add the campaign to your library."
+  }
+}

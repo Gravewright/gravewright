@@ -1,0 +1,21 @@
+
+.directory-entry[data-v-gwentry] { display: flex; align-items: center; gap: var(--fib-5); width: 100%; min-height: var(--fib-8); padding: var(--fib-5); border: 0; border-bottom: var(--fib-1) solid var(--border); background: transparent; color: var(--text); text-align: left; cursor: pointer;
+}
+.directory-entry[data-v-gwentry] svg, .directory-entry__image[data-v-gwentry] { width: var(--fib-7); height: var(--fib-7); flex-shrink: 0; object-fit: cover; color: var(--text-muted);
+}
+.directory-entry__info[data-v-gwentry] { flex: 1; min-width: 0; display: grid; gap: var(--fib-3);
+}
+.directory-entry__info strong[data-v-gwentry] { font-size: var(--fib-6); overflow-wrap: anywhere;
+}
+.directory-entry__info small[data-v-gwentry], .directory-entry[data-v-gwentry] .directory-entry__grip { color: var(--text-faint);
+}
+.directory-entry[data-v-gwentry]:hover { background: var(--surface-raised);
+}
+.directory-entry[data-v-gwentry]:focus-visible { outline: var(--fib-2) solid var(--accent); outline-offset: calc(-1 * var(--fib-2));
+}
+.directory-entry--compact[data-v-gwentry] { height: var(--fib-8); min-height: var(--fib-8); padding: var(--fib-4) var(--fib-5);
+}
+.directory-entry--compact .directory-entry__info[data-v-gwentry] { display: block;
+}
+.directory-entry--compact .directory-entry__info strong[data-v-gwentry] { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}

@@ -1,0 +1,9 @@
+<article id="campaign-{{ row.id }}" class="gw-campaign{{ ' gw-campaign--blue' if owner else '' }}">
+<button class="gw-campaign__cover" type="button" aria-label="{{ containers.open.replace('{name}',row.name) }}" data-on:click="@get(window.gravewrightInside.location('/inside/dialog/preview/{{ row.id }}', $_search, $_system), {retry:'never'})">{% if row.image %}<img src="{{ row.image }}" alt="{{ row.name }}" />{% endif %}</button>
+<div class="gw-campaign__body">
+{% if owner %}<div class="gw-campaign__title-row">{% endif %}
+<button class="gw-campaign__title" type="button" data-on:click="@get(window.gravewrightInside.location('/inside/dialog/preview/{{ row.id }}', $_search, $_system), {retry:'never'})"><h2>{{ row.name }}</h2></button>
+{% if owner %}<div class="gw-campaign__manage"><button type="button" aria-label="{{ campaigns.options }}" data-attr:aria-expanded="String($_menu==='{{ row.id }}')" data-on:click="$_menu=$_menu==='{{ row.id }}'?'':'{{ row.id }}'">{{ icon('DotsThree','bold') }}</button><div class="gw-campaign__manage-menu" data-show="$_menu==='{{ row.id }}'" style="display:none">{% for key in ['edit','invite','backup','remove'] %}{% if key=='backup' %}<button type="button" data-backup="{{ row.id }}" data-backup-name="{{ row.name }}">{{ campaigns.backup }}</button>{% else %}{{ get_button(campaigns[key],'/inside/dialog/'~key~'/'~row.id,'gw-campaign__remove' if key=='remove' else '') }}{% endif %}{% endfor %}</div></div></div>{% endif %}
+<p{% if owner %} class="gw-campaign__meta"{% endif %}>{{ system_titles.get(row.system,row.system) }}</p>
+<div class="gw-campaign__footer"><span>{{ campaigns.participants }}</span>{{ avatars(row.participantNames,titles=not owner) }}</div>
+</div></article>

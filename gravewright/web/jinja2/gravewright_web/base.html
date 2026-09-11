@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="{{ default_locale }}" {% block html_attributes %}{% endblock %}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#11151a" />
+    <title>{{ app_name }} VTT · {{ release_label }}</title>
+    {% block styles %}<link rel="stylesheet" href="{{ static('gravewright_web/css/index.css') }}" />{% endblock %}
+    <script type="module" src="{{ static('gravewright_web/vendor/datastar-1.0.3.js') }}"></script>
+    <script type="module" src="{{ static('gravewright_modules/frontend-api.js') }}"></script>
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body>
+    <div id="app">{% block content %}{% endblock %}</div>
+  </body>
+</html>

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "json": {
+      "anyOf": [
+        {
+          "type": [
+            "null",
+            "boolean",
+            "number",
+            "string"
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/json"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/json"
+          }
+        }
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tableId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "systemId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canEdit": {
+      "type": "boolean"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/json"
+      }
+    },
+    "portraitUrl": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "tokenUrl": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "tableId",
+    "name",
+    "type",
+    "systemId",
+    "revision",
+    "canEdit",
+    "data",
+    "portraitUrl",
+    "tokenUrl"
+  ],
+  "additionalProperties": false
+}

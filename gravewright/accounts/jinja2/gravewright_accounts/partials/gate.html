@@ -1,0 +1,33 @@
+{% set setup = mode == 'setup' %}
+{% set registration = mode == 'register' %}
+<main id="auth-gate" class="gw-gate" data-signals="{_panel: 'access', _pending: false, _networkError: false}">
+  <section class="gw-gate__shell">
+    <header class="gw-gate__header" role="tablist" aria-label="{{ text.application }}">
+      <button class="gw-gate__tab gw-gate__tab--active" type="button" role="tab"
+              aria-selected="true" aria-controls="owner-access-panel"
+              data-class="{'gw-gate__tab--active': $_panel === 'access'}"
+              data-attr:aria-selected="$_panel === 'access'"
+              data-on:click="$_panel = 'access'">{{ text.setupTab if setup else text.registerTab if registration else text.loginTab }}</button>
+      <button class="gw-gate__tab" type="button" role="tab"
+              aria-selected="false" aria-controls="owner-privacy-panel"
+              data-class="{'gw-gate__tab--active': $_panel === 'privacy'}"
+              data-attr:aria-selected="$_panel === 'privacy'"
+              data-on:click="$_panel = 'privacy'">{{ text.privacyTab }}</button>
+    </header>
+    <div id="owner-access-panel" class="gw-gate__panel" role="tabpanel"
+         data-attr:hidden="$_panel !== 'access'">
+      <section aria-label="{{ text.application }}">
+        {% if mode == 'authenticated' %}
+          {% include 'gravewright_accounts/partials/welcome.html' %}
+        {% else %}
+          {% include 'gravewright_accounts/partials/form.html' %}
+        {% endif %}
+      </section>
+    </div>
+    <div id="owner-privacy-panel" class="gw-gate__panel gw-gate__panel--prose" role="tabpanel"
+         hidden data-attr:hidden="$_panel !== 'privacy'">
+      <h1 class="gw-gate__title">{{ text.privacyTitle }}</h1>
+      <p class="gw-gate__description">{{ text.privacyDescription }}</p>
+    </div>
+  </section>
+</main>

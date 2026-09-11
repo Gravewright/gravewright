@@ -1,0 +1,132 @@
+/* Base layer: the reset and the page ground. Nothing here is a component. */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+    min-height: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text-bright);
+    font-family: var(--font);
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+/* A native select paints an opaque light ground of its own, and Chrome's
+ * autofill repaints a filled input yellow-white. Both must be told otherwise
+ * or they punch a hole in a dark surface. */
+select {
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentcolor 50%),
+        linear-gradient(135deg, currentcolor 50%, transparent 50%);
+    background-repeat: no-repeat;
+    background-position:
+        right var(--step-14) center,
+        right var(--step-9) center;
+    background-size: var(--fib-4) var(--fib-4), var(--fib-4) var(--fib-4);
+    padding-right: var(--step-28);
+}
+
+select option {
+    background: var(--surface);
+    color: var(--text);
+}
+
+input:autofill,
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-text-fill-color: var(--text-bright);
+    caret-color: var(--text-bright);
+    box-shadow: inset 0 0 0 100vmax var(--surface-field);
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+a[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+a {
+    color: inherit;
+}
+
+:focus-visible {
+    outline: var(--hairline-width-strong) solid var(--focus-ring);
+    outline-offset: var(--fib-4);
+}
+
+/* The screen-reader-only utility. Not a block: it has no visual form. */
+.sr-only {
+    position: absolute;
+    overflow: hidden;
+    width: var(--fib-1);
+    height: var(--fib-1);
+    margin: calc(var(--fib-1) * -1);
+    border: 0;
+    padding: 0;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Thin scrollbars everywhere: the chrome is dense and a 15px native bar eats
+ * a whole gutter out of a 320px panel. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent) var(--surface-field);
+}
+
+*::-webkit-scrollbar {
+    width: var(--fib-5);
+    height: var(--fib-5);
+}
+
+*::-webkit-scrollbar-thumb {
+    border: var(--fib-2) solid var(--surface-field);
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-hover);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--surface-field);
+}
+
+/* O atributo `hidden` precisa vencer o `display` de um bloco.
+ *
+ * A regra do agente de usuário é `[hidden] { display: none }`, e qualquer classe que declare o
+ * próprio `display` — `gw-modal` é `grid` — passa por cima dela. Sem isto, esconder um diálogo pelo
+ * atributo o deixa invisível e ainda ocupando a tela inteira, engolindo todo clique. */
+[hidden] { display: none !important; }

@@ -1,0 +1,27 @@
+<section data-v-gwdice id="dice-tray" class="dice-tray" data-movable role="dialog" aria-label="Dice tray" data-show="$_diceOpen" style="display:none" data-on:keydown__stop="if(evt.key==='Escape')window.gravewrightDice.close()">
+<header data-v-gwdice class="dice-tray__header" data-move-handle>{{ icon('DiceFive',scope='data-v-gwdice') }}<strong data-v-gwdice>Dice tray</strong><button data-v-gwdice type="button" aria-label="Detach window" data-dice-action="detach">{{ icon('ArrowsOutSimple',scope='data-v-gwdice') }}</button><button data-v-gwdice type="button" aria-label="Minimize" data-dice-action="minimize">{{ icon('Minus',scope='data-v-gwdice') }}</button><button data-v-gwdice type="button" aria-label="Close" data-dice-action="close">{{ icon('X',scope='data-v-gwdice') }}</button></header>
+<form data-v-gwdice class="dice-tray__body" novalidate><fieldset data-v-gwdice>
+<div data-v-gwdice class="dice-tray__layout"><div data-v-gwdice class="dice-tray__preset-column">
+<nav data-v-gwdice class="dice-tray__tabs" aria-label="Tray mode"><button data-v-gwdice type="button" aria-pressed="true" data-dice-tab="manual">Dice</button><button data-v-gwdice type="button" aria-pressed="false" data-dice-tab="presets">RPG presets</button></nav>
+{% include 'gravewright_dice/presets.html' %}
+<div data-v-gwdice data-dice-manual style="display:contents">
+<div data-v-gwdice class="dice-tray__palette">{% for faces in ['2','3','4','5','6','7','8','10','12','14','16','20','24','30','50','60','100','F'] %}<button data-v-gwdice type="button" title="{{ 'Fudge: −1, 0, +1' if faces=='F' else 'Add d'+faces }}" data-dice-faces="{{ faces }}">{{ icon('DiceFive',scope='data-v-gwdice') }}<span data-v-gwdice>d{{ faces }}</span></button>{% endfor %}</div>
+<div data-v-gwdice class="dice-tray__custom"><label data-v-gwdice for="dice-faces">Other faces</label><input data-v-gwdice id="dice-faces" type="number" min="1" max="1000" value="24"><button data-v-gwdice type="button" data-dice-action="custom">Add</button></div>
+<div data-v-gwdice class="dice-tray__pool" hidden></div>
+<div data-v-gwdice class="dice-tray__options" hidden><label data-v-gwdice>Quantity<input data-v-gwdice name="count" type="number" min="1" max="99" required></label><label data-v-gwdice>Selection<select data-v-gwdice name="selection"><option data-v-gwdice value="">All</option><option data-v-gwdice value="kh">Keep highest</option><option data-v-gwdice value="kl">Keep lowest</option><option data-v-gwdice value="dh">Drop highest</option><option data-v-gwdice value="dl">Drop lowest</option></select></label><label data-v-gwdice data-selected-count>Dice<input data-v-gwdice name="selectedCount" type="number" min="0" required></label><label data-v-gwdice class="dice-tray__check"><input data-v-gwdice name="explode" type="checkbox">Explode on maximum</label></div>
+<div data-v-gwdice class="dice-tray__custom"><label data-v-gwdice for="dice-modifier">Modifier</label><input data-v-gwdice id="dice-modifier" type="number" value="0"><button data-v-gwdice type="button" data-dice-action="clear">{{ icon('Trash',scope='data-v-gwdice') }}Clear</button></div>
+</div>
+</div><div data-v-gwdice class="dice-tray__roll-column">
+<label data-v-gwdice>Expression<input data-v-gwdice name="expression" class="dice-tray__expression" placeholder="4d6dl1 + 2 or 4dF" maxlength="512" required spellcheck="false"></label>
+<details data-v-gwdice class="dice-tray__help"><summary data-v-gwdice>Grammar and examples</summary><p data-v-gwdice>2d20kh1 · 4d6dl1 · 1d6! · 1d6!o · 1d6r=1 · 1d6rr=1 · 8d10 &gt;= 8 · max(1d6, 1d8)</p><p data-v-gwdice>dF: −1, 0 or +1. Use the formula for rerolls, functions, and comparisons.</p></details>
+<label data-v-gwdice>Independent rolls<input data-v-gwdice name="repeat" type="number" min="1" max="12" value="1" required><small data-v-gwdice data-dice-repeat-hint hidden></small></label>
+<label data-v-gwdice>Roll name <small data-v-gwdice>(optional)</small><input data-v-gwdice name="label" maxlength="48" placeholder="Attack, damage, check…"></label>
+<p data-v-gwdice class="dice-tray__error" role="alert" hidden></p>
+<footer data-v-gwdice class="dice-tray__actions"><button data-v-gwdice type="submit" disabled>{{ icon('DiceFive',scope='data-v-gwdice') }}<span data-v-gwdice data-roll-label>Roll</span></button><button data-v-gwdice type="button" data-dice-action="gm" disabled>{{ icon('ShieldCheck',scope='data-v-gwdice') }}To GM</button></footer>
+</div></div>
+</fieldset>
+<button data-v-gwdice class="dice-tray__history-toggle" type="button" aria-expanded="false" data-dice-action="history">{{ icon('ClockCounterClockwise',scope='data-v-gwdice') }}Recent <span data-v-gwdice data-history-count>0</span></button>
+<ul data-v-gwdice class="dice-tray__history" hidden></ul>
+</form></section>
+<template data-v-gwdice id="dice-term"><span data-v-gwdice class="dice-tray__term"><button data-v-gwdice type="button" data-term-select></button><button data-v-gwdice type="button" aria-label="Remove term" data-term-remove>{{ icon('X',scope='data-v-gwdice') }}</button></span></template>
+<template data-v-gwdice id="dice-history-entry"><li data-v-gwdice><button data-v-gwdice type="button" data-history-use><strong data-v-gwdice></strong><small data-v-gwdice></small></button><button data-v-gwdice type="button" aria-label="Remove from history" data-history-remove>{{ icon('X',scope='data-v-gwdice') }}</button></li></template>

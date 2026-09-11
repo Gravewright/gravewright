@@ -1,0 +1,50 @@
+{% extends 'gravewright_web/base.html' %}
+{% block html_attributes %}data-render-profile="performance"{% endblock %}
+{% block styles %}<link rel="stylesheet" href="{{ static('gravewright_maps/workspace.css') }}"><link rel="stylesheet" href="/static/gravewright_maps/tools.css">
+<link rel="stylesheet" href="{{ static('gravewright_journals/journal.css') }}">
+{% for name in ['DirectoryToolbar','DirectoryEntry','DirectoryDialog','DirectoryTree','DirectoryFolderFields'] %}<link rel="stylesheet" href="{{ static('gravewright_journals/'+name+'.css') }}">{% endfor %}
+<link rel="stylesheet" href="{{ static('gravewright_table/audio.css') }}" />
+{{ super() }}
+{% for name in ['DiceTray','DicePresets','DiceResult'] %}<link rel="stylesheet" href="{{ static('gravewright_dice/'+name+'.css') }}">{% endfor %}
+<link rel="stylesheet" href="{{ static('gravewright_table/game-page.css') }}" />
+<link rel="stylesheet" href="{{ static('gravewright_table/window-polish.css') }}" />
+<link rel="stylesheet" href="{{ static('gravewright_table/house-menu.css') }}" />
+<link rel="stylesheet" href="{{ static('gravewright_maps/lighting.css') }}">
+<link rel="stylesheet" href="{{ static('gravewright_maps/walls.css') }}">
+<link rel="stylesheet" href="{{ static('gravewright_maps/calibration.css') }}">
+<link rel="stylesheet" href="{{ static('gravewright_maps/game-board.css') }}">
+<link rel="stylesheet" href="{{ static('gravewright_tokens/tokens.css') }}"><link rel="stylesheet" href="{{ static('gravewright_actors/actors.css') }}"><link rel="stylesheet" href="{{ static('gravewright_pdf_system/pdf-sheet.css') }}">
+{% endblock %}
+{% block extra_head %}
+<script src="{{ static('gravewright_table/combat-panel.js') }}" defer></script>
+<script type="module" src="{{ static('gravewright_table/directories.js') }}"></script>
+<link rel="stylesheet" href="{{ static('gravewright_table/modules-original.css') }}">
+<script type="module" src="{{ static('gravewright_table/media-workspace.js') }}"></script>
+<link rel="stylesheet" href="{{ static('gravewright_table/table-tools.css') }}">
+<script type="module" src="{{ static('gravewright_table/table-tools.js') }}"></script>
+<script type="module" src="{{ static('gravewright_table/preferences.js') }}"></script>
+<script type="module" src="{{ static('gravewright_table/campaign-controls.js') }}"></script>
+<script type="module" src="{{ static('gravewright_modules/workspace.js') }}"></script>
+<link rel="stylesheet" href="{{ static('gravewright_modules/modules.css') }}" />
+<script type="module" src="{{ static('gravewright_actors/workspace.js') }}"></script>
+<script type="module" src="{{ static('gravewright_maps/workspace.js') }}"></script>
+<script type="module" src="{{ static('gravewright_journals/workspace.js') }}"></script>
+<script src="{{ static('gravewright_web/windows.js') }}" defer></script>
+<script type="module" src="{{ static('gravewright_table/realtime.js') }}"></script>
+<script type="module" src="{{ static('gravewright_dice/tray.js') }}"></script>
+{% endblock %}
+{% block content %}
+<main id="table-workspace" data-renderer-debug="{{ 'true' if renderer_debug else 'false' }}" data-role="{{ member_role }}" data-profile-id="{{ request.user.pk }}" data-table-id="{{ campaign.pk }}" data-detached-chat="{{ 'true' if detached_chat else 'false' }}" class="game-table" data-signals="{_houseSection:'table',_actorsOpen:false,_hasMap:false,_mapsOpen:false,_journalsOpen:false,_diceOpen:false,_layer:'game',_tool:'select',_house:false,_roster:false,_chatOpen:{{ 'true' if detached_chat else 'false' }},_chatMinimized:false,_chatDetached:false,_presence:'connecting',_onlineCount:0,_hasChat:false,_chatDraft:'',_chatPending:false,_chatError:''}" data-attr:data-table-layer="$_layer" data-on:keydown__window="if(evt.key==='Escape'){$_house=false;$_roster=false}else if(!evt.ctrlKey &amp;&amp; !evt.metaKey &amp;&amp; !evt.altKey &amp;&amp; !evt.target.closest('input,textarea,select,[contenteditable]')){const button=[...el.querySelectorAll('button[aria-keyshortcuts]')].find(b=&gt;b.offsetParent!==null &amp;&amp; b.getAttribute('aria-disabled')!=='true' &amp;&amp; b.getAttribute('aria-keyshortcuts')===evt.key.toUpperCase());if(button){evt.preventDefault();button.click()}}" >
+{% if not detached_chat %}<section class="game-table__stage"><div class="game-table__scene-frame" data-drag-drop="board"><div class="game-table__empty-scene"><span class="gw-mark gw-mark--xl" aria-hidden="true"></span><strong class="game-table__wordmark">{{ campaign.name }}</strong><h2 class="game-table__empty-title">{{ game.emptyWorldTitle }}</h2><p class="game-table__empty-hint">{{ game.emptyWorldHint }}</p></div></div></section>
+{% include 'gravewright_table/menubar.html' %}
+{% include 'gravewright_table/dock.html' %}
+{% include 'gravewright_table/house.html' %}{% include 'gravewright_table/directories.html' %}
+{% if command_palette_enabled %}{% include 'gravewright_table/command_palette.html' %}{% endif %}
+{% if lobby_enabled %}{% include 'gravewright_table/lobby.html' %}{% endif %}{% endif %}
+{% include 'gravewright_chat/panel.html' %}
+{% include 'gravewright_dice/tray.html' %}
+{% include 'gravewright_journals/workspace.html' %}
+{% if not detached_chat %}{% include 'gravewright_maps/workspace.html' %}{% include 'gravewright_actors/workspace.html' %}
+{% include 'gravewright_maps/native.html' %}{% endif %}
+</main>
+{% endblock %}

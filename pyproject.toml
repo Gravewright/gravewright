@@ -1,0 +1,39 @@
+[project]
+name = "gravewright-vtt"
+# Public release: Alpha 0.1.0 (release tag: v0.1.0-alpha.0).
+version = "0.1.0a0"
+classifiers = ["Development Status :: 3 - Alpha"]
+requires-python = ">=3.14"
+readme = "README.md"
+description = "Gravewright VTT with Django, Jinja2 and Datastar"
+# GPL version 3 only plus the section 7 permission in LICENSE-EXCEPTION.
+license = "LicenseRef-Gravewright-GPL-3.0-only-with-module-permission"
+license-files = [
+    "LICENSE", "LICENSE-EXCEPTION", "LICENSE-EXCEPTION.pt-BR.md",
+    "LICENSING*.md", "THIRD_PARTY_NOTICES*.md", "LICENSES/**/*",
+    "scripts/windows/ICON-NOTICE.md",
+    "gravewright/web/icons/LICENSE",
+    "gravewright/web/static/gravewright_web/ORIGINAL-*",
+    "gravewright/web/static/gravewright_web/vendor/*LICENSE*",
+    "gravewright/maps/static/gravewright_maps/vendor/licenses/*",
+    "gravewright/journals/static/gravewright_journals/vendor/*LICENSE*",
+    "gravewright/journals/static/gravewright_journals/vendor/licenses/*",
+]
+dependencies = [
+    "channels>=4.3,<5",
+    "channels-redis>=4.3,<5",
+    "cryptography>=50.0.1",
+    "daphne>=4.2,<5",
+    "datastar-py>=1.0.2,<2",
+    "django>=6.1.1,<6.2",
+    "jinja2>=3.1.6,<4",
+    "jsonschema>=4.26.0",
+    "mutagen>=1.47,<2",
+    "pillow>=12.3.0",
+    "python-dotenv>=1.1,<2",
+]
+
+[dependency-groups]
+dev = [
+    "playwright>=1.62.0",
+]

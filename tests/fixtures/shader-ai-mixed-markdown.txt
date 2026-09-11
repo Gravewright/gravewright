@@ -1,0 +1,114 @@
+float hash21(vec2 p) {\
+p = fract(p \* vec2(123.34, 456.21));\
+p += dot(p, p + 45.32);\
+return fract(p.x \* p.y);\
+}
+
+float noise2(vec2 p) {\
+vec2 i = floor(p);\
+vec2 f = fract(p);\
+vec2 u = f \* f \* (3.0 - 2.0 \* f);
+```arduino
+float a = hash21(i);
+float b = hash21(i + vec2(1.0, 0.0));
+float c = hash21(i + vec2(0.0, 1.0));
+float d = hash21(i + vec2(1.0, 1.0));
+
+return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+```
+
+}
+
+float fbm(vec2 p) {\
+float v = 0.0;\
+float amp = 0.5;\
+mat2 m = mat2(0.80, 0.60, -0.60, 0.80);
+```cpp
+for (int i = 0; i < 5; ++i) {
+    v += amp * noise2(p);
+    p = m * p * 2.03 + vec2(17.1, 9.2);
+    amp *= 0.5;
+}
+
+return v;
+```
+
+}
+
+float ridgeNoise(vec2 p) {\
+float n = fbm(p);\
+return 1.0 - abs(n \* 2.0 - 1.0);\
+}
+
+void main() {\
+vec2 p = gwPattern(vTextureCoord);\
+float t = uTime \* uSpeed;
+```java
+float dist = length(p);
+float angle = atan(p.y, p.x);
+
+vec2 windDir = normalize(vec2(1.0, 0.28));
+vec2 crossDir = vec2(-windDir.y, windDir.x);
+
+float gustWarp = fbm(p * 0.20 + vec2(t * 0.11, -t * 0.035));
+float curlWarp = fbm(p * 0.37 - vec2(t * 0.075, t * 0.045));
+vec2 warped = p;
+warped += crossDir * (gustWarp - 0.5) * 3.6;
+warped += windDir * (curlWarp - 0.5) * 1.8;
+
+vec2 advected = warped - windDir * t * 3.2;
+
+float broadDust = fbm(advected * 0.23);
+float turbulentDust = fbm(advected * 0.61 + vec2(0.0, broadDust * 2.5));
+float fineDust = fbm(advected * 1.55 + vec2(t * 0.14, -t * 0.08));
+
+float gustBands = sin(dot(advected, crossDir) * 2.6 + broadDust * 7.0);
+gustBands = 0.5 + 0.5 * gustBands;
+gustBands *= gustBands;
+
+float streakCoord = dot(advected, crossDir);
+float streakTravel = dot(advected, windDir);
+float streakNoise = noise2(vec2(streakCoord * 5.8, streakTravel * 0.20 - t * 5.5));
+float streaks = smoothstep(0.58, 0.92, streakNoise);
+streaks *= 0.45 + 0.55 * smoothstep(0.35, 0.82, fineDust);
+
+float spiral = sin(angle * 5.0 - dist * 1.45 + t * 2.2 + broadDust * 5.5);
+spiral = 0.5 + 0.5 * spiral;
+float rotatingWall = smoothstep(0.42, 0.92, spiral) * ridgeNoise(p * 0.36 + t * 0.05);
+
+float pulse = 0.72 + 0.28 * sin(t * 1.7 + broadDust * 6.2831853);
+float density = broadDust * 0.48 + turbulentDust * 0.34 + fineDust * 0.18;
+density += gustBands * 0.30;
+density += streaks * 0.42;
+density += rotatingWall * 0.24;
+density *= pulse;
+
+float granular = hash21(gwWorld(vTextureCoord) * 0.065 + floor(t * 18.0));
+float grain = smoothstep(0.78, 0.98, granular);
+density += grain * (0.13 + 0.17 * fineDust);
+
+float coreLift = 1.0 - smoothstep(0.0, 4.5, dist);
+density += coreLift * (0.08 + 0.15 * turbulentDust);
+
+density = smoothstep(0.25, 1.18, density);
+
+vec4 sceneLight = gwLight(vTextureCoord);
+float illumination = clamp(sceneLight.a, 0.0, 1.0);
+
+vec3 sandBase = uColor;
+vec3 warmHighlight = mix(uColor, vec3(1.0, 0.78, 0.46), 0.32);
+vec3 darkDust = uColor * 0.42;
+
+float depthVariation = clamp(broadDust * 0.65 + turbulentDust * 0.35, 0.0, 1.0);
+vec3 color = mix(darkDust, sandBase, depthVariation);
+color = mix(color, warmHighlight, streaks * 0.38 + grain * 0.20);
+color *= 0.82 + illumination * 0.25;
+
+float a = density * (0.50 + 0.50 * uIntensity);
+a += streaks * 0.10 * uIntensity;
+a = clamp(a * uIntensity, 0.0, 0.94);
+
+finalColor = vec4(color * a, a);
+```
+
+}

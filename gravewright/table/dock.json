@@ -1,0 +1,284 @@
+{
+  "layers": [
+    {
+      "id": "game",
+      "label": "Game",
+      "icon": "DiceFive"
+    },
+    {
+      "id": "gm",
+      "label": "GM",
+      "icon": "MaskHappy"
+    },
+    {
+      "id": "composition",
+      "label": "Images",
+      "icon": "Images"
+    },
+    {
+      "id": "audio",
+      "label": "Sound",
+      "icon": "Waveform"
+    },
+    {
+      "id": "effects",
+      "label": "Effects",
+      "icon": "Sparkle"
+    },
+    {
+      "id": "walls",
+      "label": "Walls",
+      "icon": "Wall"
+    },
+    {
+      "id": "lighting",
+      "label": "Lighting",
+      "icon": "SunHorizon"
+    }
+  ],
+  "tools": {
+    "game": [
+      {
+        "id": "select",
+        "label": "Select",
+        "icon": "Cursor",
+        "key": "V"
+      },
+      {
+        "id": "measure",
+        "label": "Measure",
+        "icon": "Ruler",
+        "key": "R"
+      },
+      {
+        "id": "draw",
+        "label": "Draw",
+        "icon": "PencilSimple",
+        "key": "B"
+      },
+      {
+        "id": "templates",
+        "label": "Shapes",
+        "icon": "Shapes",
+        "key": "T"
+      },
+      {
+        "id": "cards",
+        "label": "Your hand",
+        "icon": "CardsThree",
+        "key": "H",
+        "panel": "cards"
+      },
+      {
+        "id": "visibility",
+        "label": "Visibility",
+        "icon": "Eye",
+        "key": "E",
+        "panel": "lighting"
+      }
+    ],
+    "gm": [
+      {
+        "id": "select",
+        "label": "Select",
+        "icon": "Cursor",
+        "key": "V"
+      },
+      {
+        "id": "measure",
+        "label": "Measure",
+        "icon": "Ruler",
+        "key": "R"
+      },
+      {
+        "id": "draw",
+        "label": "Draw",
+        "icon": "PencilSimple",
+        "key": "B"
+      },
+      {
+        "id": "templates",
+        "label": "Shapes",
+        "icon": "Shapes",
+        "key": "T"
+      }
+    ],
+    "audio": [
+      {
+        "id": "select",
+        "label": "Select",
+        "icon": "Cursor",
+        "key": "V"
+      },
+      {
+        "id": "measure",
+        "label": "Measure",
+        "icon": "Ruler",
+        "key": "R"
+      },
+      {
+        "id": "sound",
+        "label": "Audio sources",
+        "icon": "Waveform",
+        "key": "A"
+      },
+      {
+        "id": "sounds",
+        "label": "Scene mixer",
+        "icon": "Waveform",
+        "key": "S",
+        "panel": "sounds"
+      }
+    ],
+    "composition": [
+      {
+        "id": "select",
+        "label": "Select",
+        "icon": "Cursor",
+        "key": "V"
+      },
+      {
+        "id": "measure",
+        "label": "Measure",
+        "icon": "Ruler",
+        "key": "R"
+      },
+      {
+        "id": "images",
+        "label": "Images",
+        "icon": "Images",
+        "key": "I",
+        "panel": "images"
+      }
+    ],
+    "effects": [
+      {
+        "id": "select",
+        "label": "Select",
+        "icon": "Cursor",
+        "key": "V"
+      },
+      {
+        "id": "particle",
+        "label": "Particles",
+        "icon": "Atom",
+        "key": "P"
+      },
+      {
+        "id": "shader",
+        "label": "Shaders",
+        "icon": "MagicWand",
+        "key": "G"
+      },
+      {
+        "id": "clear-effects",
+        "label": "Clear all scene effects",
+        "icon": "Trash",
+        "key": ""
+      }
+    ],
+    "walls": [
+      {
+        "id": "select",
+        "label": "Select",
+        "icon": "Cursor",
+        "key": "V"
+      },
+      {
+        "id": "measure",
+        "label": "Measure",
+        "icon": "Ruler",
+        "key": "R"
+      },
+      {
+        "id": "wall",
+        "label": "Wall",
+        "icon": "Wall",
+        "key": "W"
+      },
+      {
+        "id": "door",
+        "label": "Door",
+        "icon": "Door",
+        "key": "D"
+      },
+      {
+        "id": "clear-walls",
+        "label": "Clear all scene walls",
+        "icon": "Trash",
+        "key": ""
+      }
+    ],
+    "lighting": [
+      {
+        "id": "select",
+        "label": "Select",
+        "icon": "Cursor",
+        "key": "V"
+      },
+      {
+        "id": "light",
+        "label": "Light",
+        "icon": "Lightbulb",
+        "key": "L"
+      },
+      {
+        "id": "lighting",
+        "label": "Scene visibility",
+        "icon": "CircleHalf",
+        "key": "E",
+        "panel": "lighting"
+      },
+      {
+        "id": "clear-lights",
+        "label": "Clear all scene lights",
+        "icon": "Trash",
+        "key": ""
+      }
+    ]
+  },
+  "directories": [
+    {
+      "id": "chat",
+      "label": "Chat",
+      "icon": "ChatCircleText",
+      "key": "C"
+    },
+    {
+      "id": "scenes",
+      "label": "Scenes",
+      "icon": "MapTrifold",
+      "key": "M"
+    },
+    {
+      "id": "actors",
+      "label": "Actors",
+      "icon": "UsersThree",
+      "key": "P"
+    },
+    {
+      "id": "journals",
+      "label": "Journals",
+      "icon": "Scroll",
+      "key": "J"
+    },
+    {
+      "id": "combat",
+      "label": "Combat",
+      "icon": "Sword",
+      "key": "O"
+    },
+    {
+      "id": "items",
+      "label": "Items",
+      "icon": "Backpack",
+      "key": "U"
+    },
+    {
+      "id": "content",
+      "label": "Compendiums",
+      "icon": "Books",
+      "key": "K"
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+<aside
+  id="actors-panel"
+  class="game-panel"
+  data-movable
+  data-show="$_actorsOpen"
+  style="display: none"
+  data-style="{'--panel-index':($_chatOpen?1:0)+($_journalsOpen?1:0)+($_mapsOpen?1:0)}"
+>
+  <header data-move-handle>
+    <strong class="game-panel__title"
+      >{{ icon('UsersThree','duotone') }}{{ game.panels.actors }}</strong
+    >
+    <div>
+      {% for action,label,glyph in
+      [('detach','Detach','ArrowsOutSimple'),('minimize','Minimize','Minus'),('close','Close','X')]
+      %}<button
+        type="button"
+        data-actor-panel="{{ action }}"
+        aria-label="{{ label }}"
+        title="{{ label }}"
+      >
+        {{ icon(glyph) }}</button
+      >{% endfor %}
+    </div>
+  </header>
+  <div class="game-directory">
+    <div class="actor-directory">
+      <div class="directory-toolbar" data-v-gwtoolbar>
+        {% if owner %}
+        <div class="directory-toolbar__actions" data-v-gwtoolbar>
+          <button data-v-gwtoolbar type="button" data-actor-panel="create">
+            {{ icon('Plus') }}{{ game.newActor }}</button
+          ><button data-v-gwtoolbar type="button" data-actor-panel="folder">
+            {{ icon('FolderPlus') }}{{ game.createActorFolder }}</button
+          ><button data-v-gwtoolbar type="button" data-actor-panel="upload">
+            {{ icon('UploadSimple') }}{{ game.uploadTemplate }}</button
+          ><input
+            type="file"
+            accept="application/pdf"
+            hidden
+            data-template-upload
+          />
+        </div>
+        {% endif %}<label class="directory-toolbar__search" data-v-gwtoolbar
+          >{{ icon('MagnifyingGlass',scope='data-v-gwtoolbar') }}<input
+            data-v-gwtoolbar
+            type="search"
+            placeholder="{{ game.searchActors }}"
+            aria-label="{{ game.searchActors }}"
+        /></label>
+      </div>
+      <p role="alert" hidden></p>
+      <div data-templates></div>
+      <div class="directory-tree" data-v-gwtree data-actor-tree></div>
+      <p class="actor-directory__empty">{{ game.noActors }}</p>
+    </div>
+  </div>
+</aside>
+<template id="actor-entry"
+  ><button
+    class="directory-entry actor-directory__actor"
+    data-v-gwentry
+    type="button"
+  >
+    {{ icon('User',scope='data-v-gwentry') }}<span
+      class="directory-entry__info"
+      data-v-gwentry
+      ><strong data-v-gwentry></strong
+      ><small data-v-gwentry>character</small></span
+    >{% if owner %}{{
+    icon("DotsSixVertical",css="directory-entry__grip",scope="data-v-gwentry")
+    }}{% endif %}
+  </button></template
+>
+<template id="actor-form"
+  ><form class="directory-dialog" data-v-gwdialog role="dialog">
+    <header class="directory-dialog__header" data-v-gwdialog>
+      <strong data-v-gwdialog>{{ game.newActor }}</strong
+      ><button
+        class="directory-dialog__close"
+        data-v-gwdialog
+        type="button"
+        aria-label="Close"
+      >
+        {{ icon('X') }}
+      </button>
+    </header>
+    <fieldset class="directory-dialog__fields" data-v-gwdialog>
+      <label data-v-gwdialog
+        ><span>{{ game.actorName }}</span
+        ><input
+          name="name"
+          maxlength="120"
+          placeholder="{{ game.actorNamePlaceholder }}"
+          required
+          autofocus /></label
+      ><label data-actor-type
+        ><span>{{ game.actorType }}</span
+        ><select name="actorType">
+          <option value="character">Character</option>
+        </select></label
+      ><label data-actor-template
+        ><span>{{ game.templates }}</span
+        ><select name="template"></select
+      ></label>
+      <p class="actor-directory__no-system" data-no-templates>
+        {{ game.noTemplates }}
+      </p>
+      <button
+        class="gw-folder-editor__primary actor-directory__submit"
+        type="submit"
+      >
+        {{ icon('Check') }}<span>{{ game.createActor }}</span>
+      </button>
+      <p role="alert" hidden></p>
+    </fieldset></form
+></template>
+<template id="actor-permissions"
+  ><form class="directory-dialog" data-v-gwdialog role="dialog">
+    <header class="directory-dialog__header" data-v-gwdialog>
+      <strong></strong
+      ><button class="directory-dialog__close" type="button" aria-label="Close">
+        {{ icon('X') }}
+      </button>
+    </header>
+    <div class="directory-dialog__fields" data-v-gwdialog>
+      <div class="resource-permissions">
+        <p>Choose access for each player.</p>
+        <div data-permission-rows style="display: contents"></div>
+        <button type="submit">Save permissions</button>
+        <p role="alert" hidden></p>
+      </div>
+    </div></form
+></template>
+<template id="actor-permission-row"
+  ><fieldset class="resource-permissions__row">
+    <legend></legend>
+    {% for value,label,glyph in [('none','None','Prohibit'),('read','Read
+    access','Eye'),('owner','Owner','PencilSimple')] %}<label
+      class="resource-permissions__choice"
+      ><input type="radio" value="{{ value }}" />{{ icon(glyph) }}{{ label
+      }}</label
+    >{% endfor %}
+  </fieldset></template
+>
+<template id="actor-icons"
+  >{% for name in
+  ['User','FilePdf','Trash','NotePencil','PencilSimple','UsersThree','Plus','FolderPlus','Eye','EyeSlash','BookOpenText','Gear','Heart','Copy','Clipboard','ArrowCounterClockwise','ArrowClockwise','X']
+  %}<span data-icon="{{ name }}">{{ icon(name) }}</span>{% endfor %}</template
+>
+{% include 'gravewright_pdf_system/sheet.html' %} {% include
+'gravewright_tokens/workspace.html' %}

@@ -1,0 +1,5 @@
+
+.directory-folder-fields__color[data-v-gwfolderfields] { display: grid; grid-template-columns: minmax(0,1fr) var(--fib-8); gap: var(--fib-5); align-items: center;
+}
+.directory-folder-fields__color input[type="color"][data-v-gwfolderfields] { width: var(--fib-8); height: var(--fib-8); padding: var(--fib-3); border: var(--fib-1) solid var(--border); background: var(--surface-field); cursor: pointer;
+}

@@ -1,0 +1,261 @@
+.game-table { --game-dock-height: calc(var(--size-44) + var(--fib-4) * 2); --game-panel-width: 377px; position: relative; min-height: 100vh; overflow: hidden; background: #11151a; color: #d8d2c3; }
+.game-table button { color: inherit; }
+.game-table__stage { position: absolute; inset: 0; }
+.game-table__scene-frame { width: 100%; height: 100%; overflow: hidden; background: transparent; }
+.game-table__scene { display: block; width: 100%; max-height: calc(100vh - 174px); height: auto; object-fit: contain; }
+/* The opening state of a table: the house mark, the name under it, and the invitation. It uses the
+   shared `gw-mark--xl`, which the design system defines for exactly this spot. */
+/* It fills the frame rather than sizing itself, so the block lands on the viewport centre — the
+   same axis the dock is pinned to. Only the paragraph is width-capped, for line length. */
+.game-table__empty-scene { display: grid; width: 100%; height: 100%; place-content: center; justify-items: center; gap: var(--step-8); padding: var(--step-21); color: var(--text-muted); text-align: center; }
+.game-table__wordmark { margin-top: var(--step-5); color: var(--text); font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-bold); letter-spacing: .18em; text-transform: uppercase; }
+.game-table__empty-title { margin: var(--step-13) 0 0; color: var(--accent); font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-bold); }
+.game-table__empty-hint { max-width: 46ch; margin: 0; font-size: var(--text-md); line-height: var(--leading-relaxed); }
+.game-table__scene-notice { margin: var(--step-13) 0 0; font-size: var(--text-md); }
+/* The menu bar: one thin strip the scene runs under, holding what identifies the table and what
+   leaves it. Glass rather than a slab, so the board stays visible through it. */
+.game-menubar { position: fixed; z-index: 9; top: 0; right: 0; left: 0; display: flex; height: var(--size-34); align-items: center; gap: var(--step-21); padding: 0 var(--step-13); border-bottom: 1px solid color-mix(in srgb, var(--accent) 26%, transparent); background: color-mix(in srgb, #0a0d10 92%, transparent); color: var(--text); backdrop-filter: blur(var(--step-21)) saturate(140%); }
+/* The house menu, where a Mac keeps the apple: the mark itself is the button that opens settings. */
+.game-menubar__logo { display: grid; width: var(--size-34); height: var(--size-34); place-items: center; margin-left: calc(var(--step-5) * -1); padding: 0; border: 0; border-radius: var(--radius-md); background: transparent; transition: background var(--transition-fast); }
+.game-menubar__logo .gw-mark { width: var(--fib-7); height: var(--fib-7); }
+.game-menubar__logo:hover { background: rgb(255 255 255 / 10%); }
+.game-menubar__logo--on { background: rgba(var(--layer-accent-rgb), .18); }
+.game-menubar__brand { display: flex; align-items: center; gap: var(--step-8); color: var(--text); }
+.game-menubar__brand strong { overflow: hidden; max-width: 34ch; color: var(--text-bright); font-size: var(--text-lg); font-weight: var(--weight-bold); letter-spacing: .01em; text-overflow: ellipsis; white-space: nowrap; }
+/* Presence is a state, not an alert: a small dot that only earns attention when it stops being green. */
+.game-menubar__presence { width: var(--fib-4); height: var(--fib-4); flex: 0 0 auto; border-radius: var(--radius-circle); background: var(--text-faint); transition: background var(--transition-normal); }
+.game-menubar__presence[data-presence="seated"] { background: var(--success); box-shadow: 0 0 var(--fib-5) color-mix(in srgb, var(--success) 70%, transparent); }
+.game-menubar__presence[data-presence="connecting"] { background: var(--accent); animation: game-presence 1.2s var(--ease) infinite; }
+.game-menubar__presence[data-presence="offline"] { background: var(--danger); }
+@keyframes game-presence { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .game-menubar__presence { animation: none; } }
+
+.game-menubar__layers { display: flex; align-items: center; gap: var(--fib-2); padding: var(--fib-2); border-radius: var(--radius-pill); background: rgb(0 0 0 / 28%); }
+/* The mode is a critical state, so the chosen side is filled, not merely tinted: the GM must never
+   have to look twice to know which one is live. */
+.game-menubar__layer { display: flex; height: var(--size-21); align-items: center; gap: var(--fib-4); padding: 0 var(--step-13); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text-muted); font-size: var(--text-xs); font-weight: var(--weight-heavy); letter-spacing: var(--tracking-wide); text-transform: uppercase; transition: background var(--transition-fast), color var(--transition-fast); }
+.game-menubar__layer svg { width: var(--fib-6); height: var(--fib-6); }
+.game-menubar__layer:hover { background: rgb(255 255 255 / 8%); color: var(--text); }
+.game-menubar__layer--on, .game-menubar__layer--on:hover { background: rgb(var(--layer-accent-rgb)); color: #0c100f; box-shadow: 0 0 0 1px rgba(var(--layer-accent-rgb), .5), 0 0 var(--fib-6) rgba(var(--layer-accent-rgb), .45); }
+.game-menubar__actions { display: flex; margin-left: auto; align-items: center; gap: var(--fib-2); }
+/* Small glyph, generous hitbox: the target is the full bar height even though the icon is not. */
+.game-menubar__actions button { display: grid; width: var(--size-34); height: var(--size-34); place-items: center; padding: 0; border: 0; border-radius: var(--radius-md); background: transparent; color: var(--text); transition: background var(--transition-fast), color var(--transition-fast); }
+.game-menubar__actions button svg { width: var(--fib-6); height: var(--fib-6); }
+.game-menubar__actions button:hover { background: rgb(255 255 255 / 8%); color: var(--text-bright); }
+.game-menubar__actions button:active { background: rgb(255 255 255 / 12%); }
+
+/* Attendance, one click away: a count on the glyph, and the names only when asked for. */
+.game-menubar__roster { position: relative; display: flex; }
+.game-menubar__roster > button { position: relative; }
+.game-menubar__roster > button b { position: absolute; right: var(--fib-2); bottom: var(--fib-2); min-width: var(--fib-6); padding: 0 var(--fib-2); border-radius: var(--radius-pill); background: var(--success); color: #0c100f; font-size: var(--text-3xs); font-weight: var(--weight-heavy); line-height: var(--fib-6); }
+.game-menubar__roster .game-menubar__roster-open { background: rgb(255 255 255 / 12%); color: var(--text-bright); }
+.game-roster { position: absolute; top: calc(100% + var(--fib-4)); right: 0; z-index: 11; display: grid; width: var(--fib-12); gap: var(--fib-2); padding: var(--step-8); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); border-radius: var(--radius-xl); background: color-mix(in srgb, #14181d 97%, transparent); box-shadow: var(--shadow-lg); }
+.game-roster p { margin: 0 0 var(--fib-2); padding: 0 var(--step-5); color: var(--text-faint); font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+.game-roster__empty { padding: var(--step-5); color: var(--text-muted); font-size: var(--text-sm); }
+.game-roster__member { display: flex; align-items: center; gap: var(--step-8); min-height: var(--size-21); padding: 0 var(--step-5); }
+.game-roster__member i { width: var(--fib-4); height: var(--fib-4); flex: 0 0 auto; border-radius: var(--radius-circle); background: var(--success); }
+.game-roster__member strong { overflow: hidden; color: var(--text); font-size: var(--text-sm); font-weight: var(--weight-bold); text-overflow: ellipsis; white-space: nowrap; }
+.game-roster__member small { margin-left: auto; color: var(--text-faint); font-size: var(--text-2xs); }
+
+/* GM mode marks the chrome itself, not just the switch: the bar and the dock take the mode's hue. */
+[data-table-layer="gm"] .game-menubar { border-bottom-color: rgba(var(--layer-accent-rgb), .42); box-shadow: 0 var(--fib-6) var(--size-34) calc(var(--size-34) * -1) rgba(var(--layer-accent-rgb), .55); }
+[data-table-layer="gm"] .game-dock { border-color: rgba(var(--layer-accent-rgb), .38); }
+
+/* The dock: tools of the active layer, then the panels. Icons lift on hover from their base edge,
+   and a running dot marks what is open — the two gestures that read as a dock rather than a bar. */
+.game-dock { position: fixed; z-index: 8; bottom: var(--step-13); left: 50%; display: flex; align-items: flex-end; gap: var(--fib-3); padding: var(--fib-4); border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); border-radius: var(--radius-2xl); background: color-mix(in srgb, #0a0d10 86%, transparent); box-shadow: var(--shadow-dock); backdrop-filter: blur(var(--step-21)) saturate(160%); transform: translateX(-50%); }
+.game-dock__split { width: 1px; height: var(--size-34); margin: 0 var(--step-13) var(--fib-4); background: linear-gradient(transparent, color-mix(in srgb, var(--accent) 55%, transparent) 20%, color-mix(in srgb, var(--accent) 55%, transparent) 80%, transparent); }
+/* A 44px target under a 21px glyph: the icon stays small, the thing you aim at does not. */
+.game-dock__item { position: relative; display: grid; width: var(--size-44); height: var(--size-44); place-items: center; padding: 0; border: 0; border-radius: var(--radius-xl); background: transparent; color: var(--text); transform-origin: bottom center; transition: transform var(--transition-normal), background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast); }
+.game-dock__item svg { width: var(--fib-7); height: var(--fib-7); }
+.game-dock__item:hover { transform: translateY(calc(var(--fib-5) * -1)) scale(1.14); background: rgb(255 255 255 / 12%); color: var(--text-bright); box-shadow: 0 var(--fib-5) var(--fib-7) calc(var(--fib-4) * -1) rgb(0 0 0 / 55%); }
+.game-dock__item:active { transform: translateY(0) scale(.96); background: rgb(255 255 255 / 16%); transition-duration: var(--motion-fast); }
+.game-dock__item:focus-visible { outline: var(--fib-2) solid var(--focus-ring); outline-offset: var(--fib-2); }
+.game-dock__item:disabled { cursor: not-allowed; opacity: .35; }
+.game-dock__item:disabled:hover { transform: none; background: transparent; box-shadow: none; }
+/* The selected tool is filled and ringed, not tinted — at a glance it must be unmistakable. */
+.game-dock__item--on, .game-dock__item--on:hover { background: rgba(var(--layer-accent-rgb), .95); color: #0c100f; box-shadow: 0 0 0 1px rgba(var(--layer-accent-rgb), .55), 0 var(--fib-5) var(--fib-7) calc(var(--fib-4) * -1) rgba(var(--layer-accent-rgb), .5); }
+/* The running dot sits in the dock's own padding, below the tile, the way a dock marks a live app. */
+.game-dock__item--on::after { content: ""; position: absolute; bottom: calc(var(--fib-3) * -1); width: var(--fib-3); height: var(--fib-3); border-radius: var(--radius-circle); background: rgb(var(--layer-accent-rgb)); }
+.game-dock__tip { position: absolute; bottom: calc(100% + var(--step-8)); left: 50%; display: none; align-items: center; gap: var(--step-8); width: max-content; padding: var(--fib-3) var(--step-8); border: var(--border-hairline); border-radius: var(--radius-md); background: var(--surface-raised); box-shadow: var(--shadow-lg); color: var(--text); font-size: var(--text-2xs); transform: translateX(-50%); }
+.game-dock__tip kbd { padding: 0 var(--fib-3); border: 1px solid var(--border); border-radius: var(--radius-xs); background: var(--surface-field); color: var(--text-muted); font-family: inherit; font-size: var(--text-3xs); }
+.game-dock__item:hover > .game-dock__tip, .game-dock__item:focus-visible > .game-dock__tip { display: flex; }
+/* While the table has no scene, the two directories that start one breathe so the first click is
+   obvious. It stops on its own once a scene exists, and never competes with the active panel. */
+@keyframes game-dock-guide {
+  0%, 100% { background: color-mix(in srgb, var(--success) 7%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 30%, transparent); color: var(--success); }
+  50% { background: color-mix(in srgb, var(--success) 24%, transparent); box-shadow: inset 0 0 0 1px var(--success); color: var(--success-text); }
+}
+.game-dock .game-dock__guide { animation: game-dock-guide .9s var(--ease, ease-in-out) infinite; }
+/* The two run in antiphase, so one is always lit while the other rests. The delay is negative to
+   start the second already half a cycle in, rather than holding it dark until the offset elapses. */
+.game-dock .game-dock__guide[data-panel="actors"] { animation-delay: -.45s; }
+
+:root[data-render-profile="performance"] .game-dock__item:hover { transform: none; box-shadow: none; }
+:root[data-render-profile="balanced"] .game-dock__item:hover { transform: translateY(calc(var(--fib-3) * -1)) scale(1.04); }
+:root[data-render-profile="performance"] .game-dock { background: #0a0d10; box-shadow: 0 var(--fib-4) var(--fib-6) rgb(0 0 0 / 38%); }
+:root[data-render-profile="balanced"] .game-dock { backdrop-filter: blur(var(--fib-4)) saturate(115%); }
+:root[data-render-profile="quality"] .game-panel--minimized { animation: game-panel-minimize var(--motion-base) var(--ease); transform-origin: bottom right; }
+@keyframes game-panel-minimize { from { opacity: .55; transform: translateY(var(--step-13)) scale(.96); } }
+@media (prefers-reduced-motion: reduce) {
+  .game-dock .game-dock__guide { animation: none; background: color-mix(in srgb, var(--success) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 60%, transparent); color: var(--success); }
+}
+/* Soft radius and a light rim so it reads as a sheet over the board, but the fill stays nearly
+   opaque: this panel carries text over a busy map, and legibility outranks the glass effect. */
+/* Tabs open at the full height the chrome leaves them — from under the bar to just above the dock —
+   and each new one lands to the left of the last. Dragging one writes inline styles that win. */
+.game-panel { position: fixed; z-index: 7; top: calc(var(--size-34) + var(--step-13)); right: calc(var(--step-13) + var(--panel-index, 0) * (var(--game-panel-width) + var(--step-13))); bottom: calc(var(--step-13) + var(--game-dock-height) + var(--step-13)); display: flex; width: min(var(--game-panel-width), calc(100vw - var(--step-34))); min-width: var(--fib-12); flex-direction: column; overflow: hidden; border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: var(--radius-2xl); background: color-mix(in srgb, #14181d 94%, transparent); box-shadow: var(--shadow-window), inset 0 var(--fib-1) rgb(255 255 255 / 5%); backdrop-filter: blur(var(--step-13)) saturate(120%); }
+/* Minimised: the tab keeps its slot in the column but shows only its title bar, and the dock item
+   stays lit so one click brings it back. */
+.game-panel--minimized { top: auto; bottom: calc(var(--step-13) + var(--game-dock-height) + var(--step-13)); height: auto; min-height: 0; }
+.game-panel--minimized > :not(header) { display: none; }
+/* Detached into its own browser window: the chrome that placed it here no longer applies. */
+.game-panel--detached { position: static; width: 100%; height: 100%; min-width: 0; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none; background: var(--surface); }
+.game-panel--detached > header [data-move-handle], .game-panel--detached > header button:first-child { display: none; }
+.game-detached { margin: 0; height: 100vh; overflow: hidden; background: var(--surface); }
+.game-detached__host { height: 100%; }
+.game-panel.gw-movable-resizable { overflow: hidden; }
+.game-panel > header { display: flex; min-height: var(--fib-8); align-items: center; justify-content: space-between; padding: 0 var(--step-8) 0 var(--step-13); border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent); background: linear-gradient(180deg, rgb(255 255 255 / 4%), transparent); color: var(--text-bright); }
+.game-panel > header strong { font-size: 13px; font-weight: 650; }
+.game-panel > header > div { display: flex; gap: 5px; } .game-panel > header button { display: grid; width: 29px; height: 29px; padding: 0; place-items: center; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); } .game-panel > header button:hover { border-color: var(--border-accent); background: var(--accent-glow); color: var(--accent-hover); }
+.game-panel__chat { display: flex; min-height: 0; flex: 1; flex-direction: column; } .game-panel__placeholder { display: grid; flex: 1; place-content: center; justify-items: center; gap: var(--step-8); padding: var(--step-21); color: var(--text-muted); text-align: center; } .game-panel__placeholder > svg { width: var(--size-34); height: var(--size-34); color: var(--layer-accent); } .game-panel__placeholder p { max-width: 27ch; margin: 0; font-size: var(--text-md); line-height: var(--leading-relaxed); }
+.game-panel__log { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: var(--step-5); padding: var(--step-13); overflow-y: auto; }
+.game-panel__log article b { display: block; color: var(--layer-accent); font-size: var(--text-2xs); font-weight: var(--weight-bold); }
+.game-panel__log article { margin: 0; padding: var(--step-5) var(--step-8); border-radius: var(--radius-md); background: rgb(255 255 255 / 4%); color: var(--text); font-size: var(--text-sm); line-height: var(--leading-relaxed); overflow-wrap: anywhere; }
+.game-panel__chat form { display: grid; gap: var(--step-8); padding: var(--step-13); border-top: var(--border-hairline); } .game-panel__chat textarea { min-height: var(--control-height-lg); padding: var(--step-8); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text); resize: none; } .game-panel__chat form button { justify-self: end; min-height: var(--control-height-sm); padding: 0 var(--step-13); border: 1px solid var(--layer-accent); border-radius: var(--radius-sm); background: transparent; color: var(--layer-accent); }
+.game-dice-tray { display: grid; gap: 5px; padding: 8px; border-top: 1px solid var(--border-accent); background: #0b0e10; }
+.game-dice-tray > button { display: flex; min-height: 32px; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--border-accent-strong); border-radius: 6px; background: rgba(var(--layer-accent-rgb), .1); color: var(--layer-accent); font-size: 12px; font-weight: 700; }
+.game-dice-tray > button svg { width: 16px; height: 16px; }
+.game-dice-tray > div { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.game-dice-tray > div button { min-height: 30px; border: 1px solid var(--border-accent); border-radius: 4px; background: #181d23; color: #d8d2c3; font-size: 11px; font-weight: 700; }
+.game-dice-tray > div button:hover { border-color: var(--border-accent-strong); background: rgba(var(--layer-accent-rgb), .1); color: var(--layer-accent); }
+.game-directory { display: grid; flex: 1; align-content: start; gap: 6px; padding: 8px; overflow-y: auto; overscroll-behavior: contain; transition: background var(--transition-fast); }
+.game-directory--drop { background: rgb(201 164 76 / 5%); outline: 1px dashed var(--accent); outline-offset: -1px; }
+.game-directory--scenes { grid-template-rows: auto minmax(0, 1fr); align-content: stretch; }
+.game-scene-list { display: grid; gap: 3px; padding: 3px; }
+.game-scene-list:empty { padding: 0; }
+.game-scene-list--root { min-height: 55px; flex: 1; align-content: start; }
+/* The drop surfaces stay geometrically still during a drag; only their outline reacts, so nothing
+   reflows under the pointer and the target the user is aiming at cannot move away from them. */
+.game-scene-lists { display: flex; min-height: 0; flex-direction: column; gap: 6px; }
+.game-directory__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.game-directory__actions button { display: flex; min-height: 34px; align-items: center; justify-content: center; gap: 8px; border: 1px solid #303842; border-radius: 5px; background: #151a20; color: #d8d2c3; font-size: 12px; font-weight: 650; }
+.game-directory__actions button:hover { border-color: var(--border-accent-strong); background: rgba(var(--layer-accent-rgb), .06); }
+.game-directory__actions svg { width: 15px; height: 15px; color: var(--layer-accent); }
+.game-directory > label { display: flex; min-height: 34px; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid #303842; border-radius: 4px; background: #151a20; color: #7f8994; }
+.game-directory > label svg { width: 14px; height: 14px; flex: 0 0 14px; }
+.game-directory > label input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #d8d2c3; font-size: 12px; }
+.game-directory__item { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 5px 10px; border: 0; border-bottom: 1px solid rgb(48 56 66 / 55%); background: transparent; color: #d8d2c3; text-align: left; }
+.game-directory__item:last-child { border-bottom: 0; }
+.game-directory__item:hover { background: rgb(255 255 255 / 3%); }
+.game-directory__item > svg { width: 16px; height: 16px; flex: 0 0 16px; color: #a9a193; }
+.game-directory__item > span { display: grid; min-width: 0; }
+.game-directory__item strong { overflow: hidden; font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.game-directory__item small { overflow: hidden; color: #7f8994; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.game-directory__scene { width: 100%; cursor: grab; min-height: 36px; margin: 0; box-sizing: border-box; border: 1px solid var(--border); border-radius: 4px; background: rgb(14 17 19 / 72%); }
+.game-directory__scene--dragged { opacity: .4; }
+.game-directory__scene > span { flex: 1; }
+.game-directory__scene > small { padding: 2px 6px; border: 1px solid #3e806c; border-radius: 12px; color: #8ee3c3; font-size: 8px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
+
+.game-scene-editor { position: fixed; z-index: 8; top: calc(var(--size-34) + var(--step-8)); left: max(21px, calc(50vw - 252px)); display: grid; width: 504px; gap: 13px; padding: 13px; border: 1px solid var(--border-accent-strong); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--surface) 95%, transparent); box-shadow: var(--shadow-window), inset 0 var(--fib-1) rgb(255 255 255 / 5%); backdrop-filter: blur(var(--step-13)) saturate(120%); }
+.game-scene-editor > header { display: flex; min-height: 38px; margin: -13px -13px 0; padding: 0 8px 0 13px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.game-scene-editor > header strong { font-size: 13px; font-weight: 650; }
+.game-scene-editor > header button { display: grid; width: 29px; height: 29px; padding: 0; place-items: center; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); } .game-scene-editor > header button:hover { border-color: var(--border-accent); background: var(--accent-glow); color: var(--accent-hover); }
+.game-scene-editor > p { margin: 0; color: var(--text-muted); font-size: 11px; }
+.game-scene-editor label { display: grid; min-width: 0; gap: 5px; color: #89929e; font-size: 9px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+.game-scene-editor input:not([type="checkbox"]):not([type="range"]):not([type="color"]), .game-scene-editor select { width: 100%; min-height: 34px; padding: 0 10px; border: 1px solid #303842; border-radius: 5px; background: #151a20; color: #d8d2c3; font: inherit; font-size: 13px; text-transform: none; }
+.game-scene-editor input:focus, .game-scene-editor select:focus { border-color: var(--layer-accent); outline: none; }
+.game-scene-editor__columns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.game-scene-editor__file { display: flex; min-height: 40px; padding: 5px; align-items: center; gap: 13px; overflow: hidden; border: 1px solid #303842; border-radius: 5px; background: #151a20; text-align: left; }
+.game-scene-editor__file b { flex: 0 0 auto; padding: 7px 10px; border: 1px solid var(--border-accent-strong); border-radius: 4px; background: rgba(var(--layer-accent-rgb), .14); font-size: 10px; }
+.game-scene-editor__file em { overflow: hidden; color: var(--text-muted); font-size: 12px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.game-scene-editor__grid { display: grid; min-height: 47px; padding: 8px 12px; grid-template-columns: auto 108px 1fr; align-items: center; gap: 13px; border: 1px solid #2a302e; border-radius: 7px; background: rgb(255 255 255 / 2%); }
+.game-scene-editor .game-scene-editor__check { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 10px; letter-spacing: 0; text-transform: none; }
+.game-scene-editor__check input { width: 13px; height: 13px; accent-color: var(--layer-accent); }
+.game-scene-editor input[type="color"] { width: 39px; height: 32px; padding: 3px; border: 1px solid #303842; border-radius: 4px; background: #151a20; }
+.game-scene-editor__range { display: grid !important; grid-template-columns: 1fr 28px; }
+.game-scene-editor__range span { grid-column: 1 / -1; }
+.game-scene-editor__range input { width: 100%; accent-color: var(--layer-accent); }
+.game-scene-editor__range output { color: var(--text-muted); font-size: 10px; }
+.game-scene-editor__submit { display: flex; min-height: 38px; padding: 0 16px; align-items: center; justify-content: center; gap: 8px; justify-self: end; border: 1px solid #d7ae60; border-radius: 5px; background: linear-gradient(#c9a45f, #a7803f); color: #17130c !important; font-size: 12px; font-weight: 750; }
+.game-scene-editor__submit:disabled { cursor: not-allowed; opacity: .45; }
+.game-scene-editor__submit svg { width: 14px; height: 14px; }
+.game-scene-settings { position: fixed; z-index: 9; top: calc(var(--size-34) + var(--step-8)); left: max(21px, calc(50vw - 360px)); display: grid; width: min(720px, calc(100vw - 42px)); min-width: 520px; min-height: 330px; gap: 8px; padding: 8px; border: 1px solid var(--border-accent-strong); border-radius: var(--radius-xl); background: color-mix(in srgb, var(--surface) 95%, transparent); box-shadow: var(--shadow-window), inset 0 var(--fib-1) rgb(255 255 255 / 5%); backdrop-filter: blur(var(--step-13)) saturate(120%); }
+.game-scene-settings > header { display: flex; min-height: 38px; margin: -8px -8px 0; padding: 0 8px 0 13px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.game-scene-settings > header strong { overflow: hidden; font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.game-scene-settings > header button { display: grid; width: 29px; height: 29px; padding: 0; place-items: center; border: 1px solid transparent; border-radius: var(--radius-md); background: transparent; color: var(--text-muted); } .game-scene-settings > header button:hover { border-color: var(--border-accent); background: var(--accent-glow); color: var(--accent-hover); }
+.game-scene-settings label { display: grid; min-width: 0; gap: 5px; color: #89929e; font-size: 9px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
+.game-scene-settings input:not([type="checkbox"]):not([type="range"]):not([type="color"]), .game-scene-settings select { width: 100%; min-height: 34px; padding: 0 10px; border: 1px solid #303842; border-radius: 4px; background: #151a20; color: #d8d2c3; font-size: 13px; }
+.game-scene-settings input:focus, .game-scene-settings select:focus { border-color: var(--border-accent-strong); outline: 0; }
+.game-scene-settings__wide { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.game-scene-settings__triple { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+.game-scene-settings__calibration { display: flex; min-height: 60px; padding: 8px 13px; align-items: center; justify-content: space-between; gap: 13px; border: 1px solid #353b38; border-radius: 5px; background: rgb(201 164 76 / 6%); }
+.game-scene-settings__calibration div { display: grid; gap: 4px; }
+.game-scene-settings__calibration strong { font-family: var(--font-display); font-size: 16px; }
+.game-scene-settings__calibration small { color: var(--text-muted); font-size: 11px; }
+.game-scene-settings__calibration button, .game-scene-settings__actions button { display: flex; min-height: 38px; padding: 0 16px; align-items: center; justify-content: center; gap: 8px; border: 1px solid #303842; border-radius: 4px; background: #151a20; color: #d8d2c3; font-size: 11px; font-weight: 650; }
+.game-scene-settings__grid { display: grid; min-height: 48px; padding: 8px 13px; grid-template-columns: 1fr 110px 190px; align-items: center; gap: 13px; border: 1px solid #2a302e; border-radius: 5px; background: rgb(255 255 255 / 2%); }
+.game-scene-settings input[type="color"] { width: 39px; height: 32px; padding: 3px; border: 1px solid #303842; border-radius: 4px; background: #151a20; }
+.game-scene-settings__actions { display: flex; padding-top: 8px; flex-direction: row-reverse; justify-content: space-between; border-top: 1px solid rgb(48 56 66 / 45%); }
+.game-scene-settings__actions .game-scene-settings__save { border-color: #d7ae60; background: linear-gradient(#c9a45f, #a7803f); color: #17130c; }
+.game-folder-create { top: calc(var(--size-34) + var(--size-34)); right: calc(var(--game-panel-width) + var(--step-34)); left: auto; }
+/* This header has no drag-handle span, so it must beat the shared `39px 1fr 34px` grid whatever
+   order the stylesheets land in; matching both classes raises it above the block's own rule. */
+.gw-folder-editor.game-folder-create > header { display: flex; grid-template-columns: none; align-items: center; justify-content: space-between; gap: var(--step-8); padding-left: 13px; }
+.gw-folder-editor.game-folder-create > header strong { flex: 1; text-align: left; }
+@media (max-width: 960px) { .game-scene-editor, .game-scene-settings { left: 13px; width: calc(100vw - 26px); min-width: 0; } .game-panel:has(+ .game-scene-editor), .game-scene-editor + .game-panel { visibility: hidden; } }
+@media (max-width: 700px) { .game-table__scene { max-height: calc(100vh - 89px); } .game-panel { top: var(--step-8); right: var(--step-8); bottom: 60px; width: calc(100vw - var(--step-13)); } .game-dock { bottom: var(--step-8); max-width: calc(100vw - var(--step-13)); } .game-scene-editor__grid { grid-template-columns: 1fr 1fr; } .game-scene-editor__range { grid-column: 1 / -1; } }
+.game-directory__file { display: none; }
+
+/* Layers stay in the upper menubar; tools and directories occupy the lower dock. */
+.game-table { --game-dock-height: calc(var(--fib-8) + var(--fib-5) * 3 + var(--fib-2)); --game-panel-width: var(--fib-13); }
+.game-dock { flex-direction: column; align-items: center; gap: var(--fib-4); max-width: calc(100vw - var(--fib-7)); padding: var(--fib-5); }
+.game-dock__row, .game-dock__group { display: flex; align-items: center; justify-content: center; gap: var(--fib-3); }
+.game-dock__item { width: calc(var(--fib-8) + var(--fib-5)); height: calc(var(--fib-8) + var(--fib-5)); flex: 0 0 auto; }
+.game-dock__split { margin: 0 var(--fib-5); height: var(--fib-8); }
+.game-dock__inspector { position: absolute; left: 0; bottom: calc(100% + var(--fib-5)); width: min(var(--fib-13), calc(100vw - var(--fib-7))); max-height: calc(100dvh - var(--fib-12)); overflow: auto; border: var(--fib-1) solid var(--border); border-radius: var(--fib-6); background: var(--surface, #14181d); box-shadow: var(--shadow-window); }
+.game-dock__inspector-heading { display: flex; justify-content: space-between; align-items: center; gap: var(--fib-5); padding: var(--fib-5) var(--fib-6); border-bottom: var(--fib-1) solid var(--border); }
+.game-dock__inspector-heading button { display: grid; place-items: center; width: var(--fib-8); height: var(--fib-8); border: 0; background: transparent; color: inherit; cursor: pointer; }
+.game-panel__notice { padding: var(--fib-6); color: var(--text-muted); }
+@media (max-width: 987px) {
+  .game-dock__item { width: var(--fib-8); height: var(--fib-8); }
+  .game-panel { right: var(--fib-6); }
+}
+@media (max-width: 610px) {
+  .game-dock { width: calc(100vw - var(--fib-7)); }
+  .game-dock__row { flex-wrap: wrap; }
+  .game-dock__split { display: none; }
+  .game-table { --game-dock-height: calc(var(--fib-10) + var(--fib-5)); }
+}
+
+.game-menubar__actions .game-menubar__library { display: flex; width: auto; gap: var(--fib-4); padding-inline: var(--fib-5); white-space: nowrap; }
+.game-menubar__layers { min-width: 0; overflow-x: auto; flex-shrink: 1; }
+.game-menubar__layer { flex-shrink: 0; }
+
+.game-panel--visibility:not(.game-panel--minimized):not(.game-panel--detached) {bottom:auto;height:auto;width:min(420px,calc(100vw - 26px));max-height:calc(100vh - 144px);}
+
+.game-panel--hand:not(.game-panel--detached){width:min(610px,calc(100vw - 26px));height:auto;bottom:auto;max-height:calc(100dvh - 144px)}
+.game-panel--hand.game-panel--minimized{top:auto;bottom:89px}
+.game-chat-cards{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}.game-chat-cards img{width:89px;height:125px;object-fit:contain;border:1px solid var(--border);border-radius:5px}
+
+.chat-message--whisper {
+    background: rgba(120, 144, 196, 0.1);
+    border-left: 2px solid #7890c4;
+}
+
+.chat-whisper-target {
+    color: #9db0e0;
+    font-size: 11px;
+    margin-right: 6px;
+}
+
+#chat-form { position:relative; }
+.chat-command-menu { position:absolute; bottom:100%; left:8px; right:8px; z-index:3; padding:5px; border:1px solid var(--border-accent-strong); border-radius:8px; background:#171d23; box-shadow:0 8px 24px #0006; }
+.chat-command-menu[hidden] { display:none; }
+#chat-form .chat-command-menu button { display:flex; width:100%; min-height:36px; align-items:center; gap:13px; padding:8px; border:0; border-radius:4px; text-align:left; background:transparent; color:var(--text); }
+#chat-form .chat-command-menu button[aria-selected="true"] { background:var(--accent-glow); }
+.chat-command-menu strong { min-width:65px; color:var(--accent); }
+.chat-command-menu span { font-size:11px; color:var(--text-muted); }
+#chat-log article { position:relative; padding-right:32px; }
+.chat-message-delete { position:absolute; top:3px; right:3px; width:26px; height:26px; border:1px solid transparent; border-radius:4px; background:transparent; color:var(--text-muted); font-size:20px; cursor:pointer; }
+.chat-message-delete:hover,.chat-message-delete:focus-visible { color:#ef9696; border-color:#ef969666; background:#ef969611; }

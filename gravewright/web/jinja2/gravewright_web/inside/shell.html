@@ -1,0 +1,53 @@
+{% from 'gravewright_web/inside/macros.html' import get_button, avatars with context %}
+<main id="inside-shell" class="{{ 'gw-shell' if owner else 'player-home' }}" data-signals__ifmissing="{_compact:false,_view:'grid',_menu:'',_pending:false,_search:{{ search|tojson|forceescape }},_system:{{ system_filter|tojson|forceescape }}}" {% if owner %}data-class="{'gw-shell--compact':$_compact}"{% endif %}>
+{% if owner %}
+<aside class="gw-nav">
+  <div class="gw-nav__brand"><span class="gw-mark" aria-hidden="true"></span><div class="gw-nav__brand-text"><strong>Gravewright</strong><span>Virtual Tabletop</span></div><button class="gw-nav__collapse" type="button" aria-label="{{ campaigns.toggleNavigation }}" data-on:click="$_compact=!$_compact">{{ icon('CaretLeft','bold') }}</button></div>
+  <nav class="gw-nav__list" aria-label="{{ campaigns.navigation }}">
+  {% for key, glyph in [('campaigns','Stack'),('systems','GridFour'),('addons','PuzzlePiece'),('marketplace','Storefront')] %}
+    <button class="gw-nav__item{{ ' gw-nav__item--active' if section==key else '' }}" type="button" {% if key in ['campaigns','systems','addons','marketplace'] %}data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})"{% else %}aria-disabled="true"{% endif %}>{{ icon(glyph,css='gw-nav__icon') }}<span class="gw-nav__label">{{ campaigns.nav[key] }}</span></button>
+  {% endfor %}
+    <button class="gw-nav__item{{ ' gw-nav__item--active' if section=='administration' else '' }}" type="button" data-on:click="@get('/inside?section=administration', {retry:'never'})">{{ icon('Gear',css='gw-nav__icon') }}<span class="gw-nav__label">Administration</span></button>
+  </nav>
+  <nav class="gw-nav__list gw-nav__list--secondary" aria-label="{{ campaigns.preferences }}">
+  {% for key, glyph in [('settings','Gear'),('privacy','ShieldCheck')] %}<button class="gw-nav__item{{ ' gw-nav__item--active' if section==key else '' }}" type="button" data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})">{{ icon(glyph,css='gw-nav__icon') }}<span class="gw-nav__label">{{ campaigns.nav[key] }}</span></button>{% endfor %}
+  </nav>
+</aside>
+<section class="gw-shell__area">
+  <header class="gw-shell__topbar">
+    <label class="campaign-hub__global-search">{{ icon('MagnifyingGlass') }}<span class="sr-only">{{ campaigns.globalSearch }}</span><input data-bind:_search data-on:input__debounce.200ms="@get(window.gravewrightInside.location('/inside?search='+encodeURIComponent($_search)+'&amp;system='+encodeURIComponent($_system), $_search, $_system), {retry:'never'})" type="search" placeholder="{{ campaigns.globalSearch }}" /></label>
+    <div class="campaign-hub__owner"><span class="gw-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span><span class="campaign-hub__owner-copy"><strong>{{ user.name }}</strong><small>{{ user.email }}</small></span><button class="campaign-hub__logout" type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
+  </header>
+  <div class="gw-shell__content{{ ' player-settings' if section=='settings' else '' }}">
+  {% if section=='campaigns' %}{% include 'gravewright_web/inside/library.html' %}
+  {% elif section in ['addons','marketplace'] %}{% include 'gravewright_web/inside/modules.html' %}
+  {% elif section=='administration' %}{% include 'gravewright_web/inside/administration.html' %}
+  {% elif section=='settings' %}{% include 'gravewright_accounts/settings/account.html' %}
+  {% elif section=='systems' %}<header class="campaign-hub__heading"><h1>Systems</h1><p>Native game systems available when creating a table. Sheet modules are installed through Marketplace.</p></header>{% for system in rulesets %}<article class="gw-campaign"><div class="gw-campaign__body"><h2>{{ system.title }}</h2><p>{{ system.systemId }}</p></div></article>{% endfor %}
+  {% elif section=='privacy' %}<h1>Privacy</h1><p>Accounts, campaign documents and uploaded assets are stored by the host of this installation.</p><h2>Access to your table</h2><p>Table membership and document permissions determine player access. Use each document's permissions before sharing it.</p><h2>Extensions</h2><p>Modules run JavaScript in the browser. Install only versions reviewed by your configured marketplace. Deactivation stops the module, but cannot recall data already shared or downloaded.</p><h2>Sessions</h2><p>Sign out to end this browser session. Changing your password in Settings ends your other sessions.</p>{% endif %}
+  </div>
+</section>
+{% else %}
+<header class="player-home__header">
+  <div class="player-home__brand"><span class="gw-mark" aria-hidden="true"></span><div><strong>Gravewright</strong><small>Virtual Tabletop</small></div></div>
+  <nav aria-label="{{ campaigns.navigation }}">{% for key,label in [('campaigns',campaigns.nav.campaigns),('settings',campaigns.nav.playerSettings)] %}<button type="button" class="{{ 'player-home__nav-active' if section==key else '' }}" data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})">{{ label }}</button>{% endfor %}</nav>
+  <div class="player-home__account"><span class="gw-avatar">{{ user.name[:1]|upper }}</span><span><strong>{{ user.name }}</strong><small>{{ user.email }}</small></span><button type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
+</header>
+{% if section=='settings' %}<section class="player-home__profile">{% include 'gravewright_accounts/settings/account.html' %}</section>
+{% elif not rows or joining %}
+<section class="player-home__content">
+  <div class="player-home__intro"><p>{{ playerHome.joinAnotherEyebrow if rows else campaigns.participantEmptyEyebrow }}</p><h1>{{ playerHome.joinAnotherTitle if rows else campaigns.participantEmptyTitle }}</h1><span>{{ playerHome.joinAnotherDescription if rows else campaigns.participantEmptyDescription }}</span></div>
+  <form class="player-home__invitation" method="post" action="/inside/campaigns/join" data-on:submit="@post('/inside/campaigns/join', {contentType:'form',retry:'never'})" data-indicator:_pending>
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" />
+    <span class="gw-mark gw-mark--lg" aria-hidden="true"></span><div><p>{{ playerHome.invitationEyebrow }}</p><h2>{{ playerHome.invitationTitle }}</h2><span>{{ playerHome.invitationDescription }}</span></div>
+    <label><span>{{ campaigns.code }}</span><input name="code" autocomplete="off" placeholder="{{ campaigns.codePlaceholder }}" /></label>
+    {% if error %}<p class="player-home__error">{{ error }}</p>{% endif %}
+    <button class="gw-button gw-button--primary" type="submit" data-attr:disabled="$_pending">{{ campaigns.join }}</button>
+    {% if rows %}{{ get_button(playerHome.backToTables,'/inside','gw-button') }}{% endif %}
+  </form>
+</section>
+{% else %}<section class="player-home__library"><header><p>{{ campaigns.workspace }}</p><h1>{{ campaigns.title }}</h1>{{ get_button(campaigns.joinCampaign,'/inside?join=1','gw-button gw-button--primary') }}</header><div class="gw-campaign-grid">{% for row in rows %}{% include 'gravewright_web/inside/card.html' %}{% endfor %}</div></section>{% endif %}
+{% endif %}
+<form id="logout-form" method="post" action="/logout" hidden style="display:none" data-on:submit="@post('/logout', {contentType:'form',retry:'never'})" data-indicator:_pending><input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}" /></form>
+{% if dialog %}{% include 'gravewright_web/inside/dialog.html' %}{% endif %}
+</main>

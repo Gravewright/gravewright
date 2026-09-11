@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { snap, hitWall, enclosed, wallPayload } from './walls.js';
+const w = { id: 'a', kind: 'wall', x1: 19, y1: 21, x2: 83, y2: 91, presentation: 'secret', movement_behavior: 'pass', vertical_bottom: 0, vertical_top: 3 };
+assert.deepEqual(snap({ x: 20, y: 20 }, [w], 5, 70, true), { x: 19, y: 21 }, 'endpoint precedes grid');
+assert.deepEqual(snap({ x: 150, y: 145 }, [w], 5, 70, true), { x: 140, y: 140 });
+assert.deepEqual(snap({ x: 150, y: 145 }, [w], 5, 70, false), { x: 150, y: 145 });
+assert.equal(hitWall({ x: 51, y: 56 }, [w], 1)?.id, 'a');
+assert.equal(hitWall({ x: 1, y: 1 }, [w], 1), undefined);
+assert.equal(enclosed(w, { x: 100, y: 100 }, { x: 10, y: 10 }), true);
+assert.equal(enclosed(w, { x: 10, y: 10 }, { x: 30, y: 30 }), false, 'both endpoints must be enclosed');
+assert.equal(wallPayload(w).behavior.movement, 'pass');
+assert.deepEqual(wallPayload(w).vertical, { bottom: 0, top: 3 });

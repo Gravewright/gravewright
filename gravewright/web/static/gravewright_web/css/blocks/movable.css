@@ -1,0 +1,3 @@
+.gw-movable-resizable { overflow: auto; resize: both; }
+.gw-move-handle { cursor: grab; touch-action: none; user-select: none; }
+.gw-move-handle--active { cursor: grabbing; }

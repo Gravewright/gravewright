@@ -1,0 +1,50 @@
+/* gw-mark — the house glyph.
+ *
+ * A square with a gold hairline and one diagonal stroke. It is the brand at
+ * 32px, the nav bullet at 8px (rotated to a lozenge), and the marker an empty
+ * state stands under at 34px. One block, three sizes, so the three never
+ * drift apart. */
+
+.gw-mark {
+    display: block;
+    flex: 0 0 auto;
+    width: var(--size-34);
+    height: var(--size-34);
+    border: var(--fib-1) solid var(--accent);
+    background:
+        linear-gradient(
+            135deg,
+            transparent 47%,
+            var(--accent) 48%,
+            var(--accent) 52%,
+            transparent 53%
+        ),
+        var(--surface-raised);
+}
+
+.gw-mark--lg {
+    width: var(--size-34);
+    height: var(--size-34);
+}
+
+/* The table's own marker, which stands alone over an empty board. */
+.gw-mark--xl {
+    width: var(--size-44);
+    height: var(--size-44);
+}
+
+/* The nav bullet: no fill, no diagonal, rotated 45deg into a lozenge, and it
+ * takes the colour of the item it sits in so it follows hover and active. */
+.gw-mark--bullet {
+    width: var(--size-8);
+    height: var(--size-8);
+    border-color: currentColor;
+    background: none;
+    transform: rotate(45deg);
+}
+
+/* The invitation's seal, at the size a card gives it. */
+.gw-mark--lg {
+    width: var(--control-height-lg);
+    height: var(--control-height-lg);
+}

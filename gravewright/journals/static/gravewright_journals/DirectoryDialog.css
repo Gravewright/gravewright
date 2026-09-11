@@ -1,0 +1,17 @@
+
+.directory-dialog[data-v-gwdialog] { position: fixed; z-index: 120; top: var(--fib-10); left: max(var(--fib-6), calc(50vw - var(--fib-12))); width: min(var(--fib-13), calc(100vw - var(--fib-8))); max-height: calc(100dvh - var(--fib-11)); overflow: auto; padding: 0; border: var(--fib-1) solid var(--border); border-radius: var(--fib-5); background: var(--surface, #15191e); color: var(--text); box-shadow: 0 var(--fib-5) var(--fib-8) #0008;
+}
+.directory-dialog__header[data-v-gwdialog] { display: flex; align-items: center; justify-content: space-between; min-height: var(--fib-8); gap: var(--fib-5); padding: var(--fib-4) var(--fib-5); border-bottom: var(--fib-1) solid var(--border); cursor: move;
+}
+.directory-dialog__close[data-v-gwdialog] { display: inline-flex; background: transparent; border: 0; color: var(--text); cursor: pointer;
+}
+.directory-dialog__fields[data-v-gwdialog] { display: grid; gap: var(--fib-5); border: 0; margin: 0; padding: var(--fib-5); min-width: 0;
+}
+.directory-dialog__fields[data-v-gwdialog] label { display: grid; gap: var(--fib-4); min-width: 0; font-size: var(--fib-6);
+}
+.directory-dialog__fields[data-v-gwdialog] input:not([type=checkbox]):not([type=color]), .directory-dialog__fields[data-v-gwdialog] select { box-sizing: border-box; width: 100%; min-height: var(--fib-8); min-width: 0; padding: var(--fib-4) var(--fib-5); border: var(--fib-1) solid var(--border); border-radius: var(--fib-4); background: var(--surface-field, #101419); color: var(--text); font: inherit;
+}
+.directory-dialog__fields[data-v-gwdialog] button[type=submit] { display: flex; align-items: center; justify-content: center; gap: var(--fib-5); min-height: var(--fib-8); padding: var(--fib-5); background: var(--accent); color: var(--on-accent, #17130e); border: 0; border-radius: var(--fib-4); cursor: pointer;
+}
+.directory-dialog__error[data-v-gwdialog] { padding: 0 var(--fib-6) var(--fib-6); color: var(--danger, #ef9999);
+}

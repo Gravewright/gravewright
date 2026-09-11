@@ -1,0 +1,21 @@
+/* Shared finishing layer: Fibonacci spacing, semantic focus and compact controls. */
+.game-panel.game-panel,.journal-window.journal-window,.upload-library.upload-library,.directory-dialog.directory-dialog{border-color:color-mix(in srgb,var(--accent) 23%,var(--border));box-shadow:0 13px 34px #0006,inset 0 1px #ffffff06;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--accent) 45%,transparent) transparent}
+.gw-movable-resizable.gw-window--focused{border-color:color-mix(in srgb,var(--accent) 65%,var(--border));box-shadow:0 13px 34px #0009,inset 0 1px #ffffff0a}
+.game-panel>header,.journal-window>header,.upload-library>header,.directory-dialog>header{min-height:34px;box-sizing:border-box;flex-shrink:0;background:linear-gradient(180deg,#ffffff06,transparent);gap:8px}
+.game-panel__title{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.game-panel__title>svg{width:18px;height:18px;flex-shrink:0;color:var(--accent)}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label]{min-width:29px;min-height:29px;border-radius:5px}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label]:hover{background:#ffffff0a}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label*="Fechar"]:hover{background:#dc68681a;color:#ef9999}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog,.card-hand__veil,.token-editor,.light-editor,.wall-editor) :is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--focus-ring,var(--accent));outline-offset:2px}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog) :is(input,select,textarea){accent-color:var(--accent)}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog) :is(button,summary){-webkit-tap-highlight-color:transparent}
+.game-dock .game-dock__item svg{width:21px;height:21px}.game-dock .game-dock__item:hover{transform:translateY(-3px);box-shadow:0 5px 13px #0005}.game-dock .game-dock__tip{padding:5px 8px;font-size:11px;line-height:1.4;pointer-events:none;z-index:4;border:1px solid var(--border);background:#171d23fa;border-radius:5px}.game-dock .game-dock__item--on::after{content:"";position:absolute;bottom:3px;width:13px;height:2px;border-radius:3px;background:currentColor;opacity:.65}
+.game-menubar .game-menubar__layer svg{width:15px;height:15px}.game-menubar .game-menubar__layer{gap:5px}
+.table-library.table-library--embedded{padding:8px}.table-library .table-library__entry{padding:8px 0}.table-library .table-library__field{gap:5px;margin:8px 0}.table-library .table-library__input{padding:5px 8px}.scene-controls.scene-controls{padding:8px;font-size:13px}.scene-controls .scene-controls__button{padding:5px 8px}.scene-controls .scene-controls__combatant{padding:5px 0}.scene-controls .scene-controls__order{padding-left:21px}
+.game-measurement{position:absolute;bottom:89px;left:13px;z-index:5;display:flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:8px;padding:8px 13px;background:#171d23ed;color:var(--accent);font-size:13px;pointer-events:none;font-variant-numeric:tabular-nums}.game-measurement svg{width:18px;height:18px}
+@media(prefers-reduced-motion:reduce){.game-dock .game-dock__item,.game-dock .game-dock__guide{transition:none;animation:none}.game-dock .game-dock__item:hover{transform:none}}
+:root[data-render-profile="performance"] .game-dock .game-dock__item:hover{transform:none;box-shadow:none}
+
+/* Keep panel focus ordering below the dock and scene dialogs. */
+.game-panel-stack{position:fixed;inset:0;z-index:7;pointer-events:none}
+.game-panel-stack .game-panel{pointer-events:auto}

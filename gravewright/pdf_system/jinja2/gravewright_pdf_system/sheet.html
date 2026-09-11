@@ -1,0 +1,211 @@
+<template id="pdf-sheet-window"
+  ><section data-movable class="gw-window actor-directory__sheet" role="dialog">
+    <header class="gw-window__titlebar" data-move-handle>
+      <span class="gw-window__grip" aria-hidden="true"></span
+      ><span class="actor-directory__sheet-heading"
+        ><strong></strong><small>character</small></span
+      >
+      <div class="gw-window__controls">
+        {% for action,label,glyph in
+        [('maximize','Maximize','ArrowsOutSimple'),('minimize','Minimize','Minus'),('close','Close
+        character sheet','X')] %}<button
+          class="gw-window__control"
+          type="button"
+          data-window="{{ action }}"
+          aria-label="{{ label }}"
+        >
+          {{ icon(glyph) }}</button
+        >{% endfor %}
+      </div>
+    </header>
+    <div class="gw-window__body gw-window__body--flush">
+      <gravewright-pdf-system-sheet
+        ><div class="pdf-sheet">
+          <div class="pdf-sheet__loading">Opening character sheet…</div>
+          <div class="pdf-sheet__error" role="alert" hidden>
+            <span></span>
+            <button type="button" data-pdf="save">Try saving</button>
+          </div>
+          <nav class="pdf-sheet__tabs" role="tablist">
+            {% for id,label,glyph in [('ficha','Character
+            sheet','FilePdf'),('token','Token','UserFocus'),('notas','Notes','Notebook')]
+            %}<button
+              type="button"
+              class="pdf-sheet__tab"
+              role="tab"
+              data-tab="{{ id }}"
+            >
+              {{ icon(glyph) }}<span>{{ label }}</span></button
+            >{% endfor %}
+          </nav>
+          <section class="pdf-sheet__panel" data-panel="ficha">
+            <header class="pdf-sheet__bar">
+              <div class="pdf-sheet__bar-group">
+                <button
+                  class="pdf-sheet__btn"
+                  type="button"
+                  title="Previous page"
+                  data-pdf="prevPage"
+                >
+                  {{ icon('ArrowLeft') }}</button
+                ><span class="pdf-sheet__page">-</span
+                ><button
+                  class="pdf-sheet__btn"
+                  type="button"
+                  title="Next page"
+                  data-pdf="nextPage"
+                >
+                  {{ icon('ArrowRight') }}
+                </button>
+              </div>
+              <div class="pdf-sheet__bar-group">
+                {% for action,label,glyph in [('out','Zoom
+                out','MagnifyingGlassMinus'),('in','Zoom
+                in','MagnifyingGlassPlus'),('fitPage','Fit','CornersIn'),('toggleSpread','Two-page
+                view','BookOpen')] %}<button
+                  class="pdf-sheet__btn"
+                  type="button"
+                  title="{{ label }}"
+                  data-pdf="{{ action }}"
+                >
+                  {{ icon(glyph) }}</button
+                >{% endfor %}
+              </div>
+              <div class="pdf-sheet__bar-group pdf-sheet__bar-group--end">
+                <span class="pdf-sheet__status"></span>
+                <div class="pdf-sheet__picker-wrap">
+                  <button
+                    class="pdf-sheet__btn"
+                    type="button"
+                    title="Choose PDF"
+                    data-pdf="togglePicker"
+                  >
+                    {{ icon('FilePdf') }}
+                  </button>
+                  <div class="pdf-sheet__picker" role="listbox" hidden>
+                    <div data-pdf-sources></div>
+                    {% if owner %}<label class="pdf-sheet__picker-upload"
+                      ><input
+                        type="file"
+                        accept="application/pdf"
+                        hidden
+                        data-upload="pdf"
+                      /><span>Upload PDF…</span></label
+                    >{% endif %}
+                  </div>
+                </div>
+                <button
+                  class="pdf-sheet__btn"
+                  type="button"
+                  title="Download original PDF"
+                  data-pdf="download"
+                >
+                  {{ icon('DownloadSimple') }}
+                </button>
+              </div>
+            </header>
+            <section class="pdf-sheet__stage">
+              <div class="pdf-sheet__empty" hidden>
+                <p>No PDF selected yet.</p>
+                <p class="pdf-sheet__hint">
+                  Upload your PDF sheet through the Actors tab (<strong
+                    >Upload template</strong
+                  >) and select it using the PDF button above.
+                </p>
+              </div>
+              <div class="pdf-sheet__doc">
+                <div class="pdf-sheet__page-host"></div>
+                <div class="pdf-sheet__fields"></div>
+              </div>
+            </section>
+          </section>
+          <section
+            class="pdf-sheet__panel pdf-sheet__panel--form"
+            data-panel="token"
+            hidden
+          >
+            <div class="pdf-sheet__images">
+              {% for kind,label in [('portrait','Portrait'),('token','Token
+              image')] %}<label class="pdf-sheet__image-picker"
+                ><span>{{ label }}</span
+                ><img alt="" data-image="{{ kind }}" hidden /><span
+                  class="pdf-sheet__image-action"
+                  data-image-action="{{ kind }}"
+                  >{{ icon('UploadSimple') }} Choose image</span
+                ><input
+                  type="file"
+                  hidden
+                  accept="image/png,image/jpeg,image/webp"
+                  data-upload="{{ kind }}" /></label
+              >{% endfor %}
+            </div>
+            <div class="pdf-sheet__field-group">
+              <h3>Token name</h3>
+              <label class="pdf-sheet__row"
+                ><span>Name</span
+                ><input class="pdf-sheet__text" type="text" data-field="name"
+              /></label>
+            </div>
+            {% if owner %}
+            <div class="pdf-sheet__field-group">
+              <h3>Token size</h3>
+              <label class="pdf-sheet__row"
+                ><span>Grid cells</span
+                ><input
+                  type="number"
+                  class="pdf-sheet__text"
+                  data-field="size"
+                  min="1"
+                  step="1"
+              /></label>
+            </div>
+            {% endif %}
+            <div class="pdf-sheet__field-group">
+              <h3>Text color</h3>
+              <label class="pdf-sheet__row"
+                ><span>Color over the page</span
+                ><input
+                  class="pdf-sheet__color"
+                  type="color"
+                  data-field="textColor"
+                  value="#111111"
+              /></label>
+            </div>
+            <div class="pdf-sheet__field-group">
+              <h3>Token bars</h3>
+              <p class="pdf-sheet__hint" data-no-fields>
+                Open a PDF with fields first.
+              </p>
+              <div class="pdf-sheet__bar-map" data-bar-choices>
+                {% for key,label in [('bar1Value','Bar 1 ·
+                Current'),('bar1Max','Bar 1 · Maximum'),('bar2Value','Bar 2 ·
+                Current'),('bar2Max','Bar 2 ·
+                Maximum'),('initiative','Initiative'),('defense','Defense')]
+                %}<label class="pdf-sheet__row"
+                  ><span>{{ label }}</span
+                  ><select
+                    class="pdf-sheet__select"
+                    data-bar="{{ key }}"
+                  ></select></label
+                >{% endfor %}
+              </div>
+            </div>
+          </section>
+          <section
+            class="pdf-sheet__panel pdf-sheet__panel--form"
+            data-panel="notas"
+            hidden
+          >
+            {% for key,label in
+            [('bio','Biography'),('history','History'),('notes','Notes')] %}
+            <div class="pdf-sheet__field-group">
+              <h3>{{ label }}</h3>
+              <div data-note="{{ key }}" aria-label="{{ label }}"></div>
+            </div>
+            {% endfor %}
+          </section>
+        </div></gravewright-pdf-system-sheet
+      >
+    </div>
+  </section></template
+>
