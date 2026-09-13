@@ -189,6 +189,17 @@ class UpdateTests(TestCase):
         self.assertEqual(result['status'], 'available')
         self.assertEqual(result['availableVersion'], '0.1.0')
 
+    def test_preview_channel_offers_newer_stable_release(self):
+        import json
+        from .updates import CoreUpdateService
+        releases = [self.release('0.1.0-alpha.0'), self.release('0.1.1')]
+        service = CoreUpdateService(fetcher=lambda *_: json.dumps(releases).encode(),
+                                    current_version='0.1.0-alpha.0', channel='dev')
+        result = service.check()
+        self.assertEqual(result['status'], 'available')
+        self.assertEqual(result['availableVersion'], '0.1.1')
+        self.assertEqual(result['resolvedChannel'], 'stable')
+
     @override_settings(GRAVEWRIGHT_RELEASES_REPOSITORY="")
     def test_unconfigured_source_never_fetches_legacy_releases(self):
         from unittest.mock import Mock

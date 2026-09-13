@@ -142,13 +142,11 @@ class CoreUpdateService:
                     candidates_by_channel[release_channel].append(
                         (version_key(version), release, asset, version)
                     )
-            resolved_channel = next(
-                (name for name in channel_order if candidates_by_channel[name]), None
-            )
-            if resolved_channel is None:
+            candidates = [candidate for group in candidates_by_channel.values() for candidate in group]
+            if not candidates:
                 raise ValueError("CORE_RELEASE_CHANNEL_UNAVAILABLE")
-            candidates = candidates_by_channel[resolved_channel]
             _, release, asset, available = max(candidates, key=lambda item: item[0])
+            resolved_channel = _channel(available)
             comparison = (version_key(available) > version_key(current)) - (
                 version_key(available) < version_key(current)
             )
