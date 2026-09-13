@@ -274,3 +274,13 @@ New signed catalog records should include `"type": "system"` or `"type": "module
 Catalog records may also declare `tags`: up to 24 unique, trimmed, nonempty Unicode strings of at most 64 characters. They participate in the canonical signature and form creator-defined categories in the installation modal. Categories are scoped to the selected package type. Missing tags remain valid and packages still appear under All packages.
 
 The installation modal receives NDJSON progress from `POST /api/marketplace/install` when `Accept: application/x-ndjson` is sent. Events have `stage` values `catalog`, `download` (actual `received` bytes and nullable `total`), `verify`, `complete` (manifest), or `error` (code). Completion is emitted only after archive verification, extraction and database installation. Without a known Content-Length, download progress is indeterminate with a byte count. The ordinary JSON endpoint remains compatible. Disconnecting a browser does not roll back an installation already running; refresh the installed library to check its result.
+
+### Optional per-user customization
+
+An active browser module may export `customize(context)` alongside its required
+lifecycle methods. The table extension list displays **Customize** immediately
+before Deactivate (or on its own for players). The callback receives the same
+module-scoped assets, storage and lifetime as `start`; no new permissions are
+granted. Use `storage.user` for personal choices, and close dialogs and dispose
+resources on `onDispose`. The host only supplies the button; the module owns its
+UI, assets and validation. Modules without this optional callback are unchanged.

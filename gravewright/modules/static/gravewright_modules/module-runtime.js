@@ -26,6 +26,14 @@ class ModuleRuntime {
   queue = Promise.resolve();
   closed = false;
   generation = 0;
+  canCustomize(id) {
+    return this.active.some(module => module.descriptor.id === id && !module.life.signal.aborted && typeof module.api.customize === "function");
+  }
+  async customize(id) {
+    const module = this.active.find(module => module.descriptor.id === id);
+    if (!module || !this.canCustomize(id)) throw new ModuleError("stale_context");
+    return module.life.wait(() => module.api.customize(module.context));
+  }
   serial(job) {
     const next = this.queue.then(job);
     this.queue = next.catch(this.report);

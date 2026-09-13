@@ -232,3 +232,17 @@ test("scene transforms and nested context are immutable and revoked with the sur
   assert.throws(() => saved.viewport.sceneToViewport({ x: 0, y: 0 }), { code: "stale_context" });
   await f.runtime.close();
 });
+
+test("optional customization uses the active module lifetime and stops after deactivation", async () => {
+  let context;
+  const f = fixture({ configurable: { start(){}, register(){}, stop(){}, customize(ctx){ context=ctx; } }, plain: {start(){},register(){},stop(){}} });
+  await f.runtime.reconcile(f.state(['configurable','plain']));
+  assert.equal(f.runtime.canCustomize('configurable'),true);
+  assert.equal(f.runtime.canCustomize('plain'),false);
+  await f.runtime.customize('configurable');
+  assert.equal(context.signal.aborted,false);
+  await f.runtime.reconcile(f.state([], '2'));
+  assert.equal(context.signal.aborted,true);
+  assert.equal(f.runtime.canCustomize('configurable'),false);
+  await assert.rejects(f.runtime.customize('configurable'),{code:'stale_context'});
+});

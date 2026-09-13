@@ -274,3 +274,13 @@ Novos registros assinados devem incluir `"type": "system"` ou `"type": "module"`
 Registros do catálogo aceitam `tags`: até 24 textos Unicode únicos, sem espaços nas extremidades, não vazios e com até 64 caracteres. As tags integram a assinatura e geram categorias na modal de instalação, separadas pelo tipo de pacote. Pacotes sem tags continuam aparecendo em Todos os pacotes.
 
 A modal recebe progresso real via NDJSON de `POST /api/marketplace/install`, solicitando `Accept: application/x-ndjson`. As etapas são `catalog`, `download` (bytes recebidos e total quando conhecido), `verify`, `complete` e `error`. A conclusão só é enviada após verificar e instalar o arquivo. Downloads sem tamanho informado exibem progresso indeterminado e contagem de bytes. O retorno JSON tradicional permanece disponível. Desconectar o navegador não desfaz uma instalação em andamento; atualize a biblioteca para conferir o resultado.
+
+### Personalização opcional por usuário
+
+Um módulo ativo pode exportar `customize(context)` junto aos métodos obrigatórios
+do ciclo de vida. A lista de extensões mostra **Personalizar** imediatamente antes
+de Desativar (ou sozinho para jogadores). O callback recebe os mesmos assets,
+armazenamento e ciclo de vida de `start`; não ganha novas permissões. Use
+`storage.user` para preferências pessoais e feche as modais e libere os recursos
+em `onDispose`. O host fornece apenas o botão; o módulo mantém sua interface,
+assets e validação. Módulos sem esse callback continuam funcionando normalmente.

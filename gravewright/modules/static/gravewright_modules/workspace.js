@@ -48,6 +48,20 @@ if (table) {
       small.textContent = `${pkg.version} \xB7 ${pkg.description}`;
       div.append(strong, small);
       row.append(div);
+      const active = state?.modules.some((m) => m.id === pkg.id && m.version === pkg.version);
+      if (!pkg.revoked && active && runtime.canCustomize(pkg.id)) {
+        const customize = document.createElement("button");
+        customize.type = "button";
+        customize.dataset.moduleCustomize = pkg.id;
+        const language = document.documentElement.lang;
+        customize.textContent = language.startsWith("pt") || language.startsWith("es") ? "Personalizar" : "Customize";
+        customize.onclick = async () => {
+          customize.disabled = true;
+          try { await runtime.customize(pkg.id); } catch (error) { report(error); }
+          finally { customize.disabled = false; }
+        };
+        row.append(customize);
+      }
       if (pkg.revoked) {
         const span = document.createElement("span");
         span.textContent = "Revoked";
@@ -55,7 +69,6 @@ if (table) {
       } else if (manage) {
         const b = document.createElement("button");
         b.type = "button";
-        const active = state?.modules.some((m) => m.id === pkg.id && m.version === pkg.version);
         b.textContent = active ? "Deactivate" : "Activate";
         b.onclick = async () => {
           b.disabled = true;
