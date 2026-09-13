@@ -174,6 +174,30 @@ if (table) {
   let state, packages = [], timer, fetching = false, again = false;
   const report = (error) => {
     if (error?.code === "stale_context" || scope.signal.aborted) return;
+    if (error?.status === 401 || error?.code === "authentication_required") {
+      scope.abort();
+      clearTimeout(timer);
+      void runtime.close();
+      const language = document.documentElement.lang;
+      const label = (en, pt, es) => language.startsWith("pt") ? pt : language.startsWith("es") ? es : en;
+      if (pane) {
+        const message = pane.querySelector('[role="alert"]') ?? document.createElement("p");
+        message.role = "alert";
+        message.className = "module-marketplace__error";
+        message.hidden = false;
+        const login = document.createElement("a");
+        login.href = "/login";
+        login.textContent = label("Sign in again", "Entrar novamente", "Iniciar sesión de nuevo");
+        message.replaceChildren(document.createTextNode(label(
+          "Your session is no longer valid. Sign in again to load table modules. ",
+          "Sua sessão não é mais válida. Entre novamente para carregar os módulos da mesa. ",
+          "Tu sesión ya no es válida. Inicia sesión de nuevo para cargar los módulos de la mesa. "
+        )), login);
+        if (!message.isConnected) pane.append(message);
+        for (const button of pane.querySelectorAll("button")) button.disabled = true;
+      }
+      return;
+    }
     const p = pane?.querySelector("[role=alert]");
     if (p) {
       p.textContent = "A module could not load correctly. Refresh to retry.";
@@ -183,6 +207,7 @@ if (table) {
   };
   const runtime = new ModuleRuntime(bridge, report);
   async function refresh(force = false) {
+    if (scope.signal.aborted) return;
     if (fetching) {
       again = true;
       return;
