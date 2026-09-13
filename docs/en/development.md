@@ -51,19 +51,19 @@ The existing dice grammar documents are maintained next to their implementation.
 
 ## Release identifiers
 
-The current release is **Alpha 0.1.0**. Its equivalent identifiers follow the formats required by each tool:
+The current release is **0.1.1**. Its equivalent identifiers follow the formats required by each tool:
 
 | Location | Identifier |
 | --- | --- |
-| Public release name, application and Runner | `Alpha 0.1.0` |
-| Python project and `uv.lock` | `0.1.0a0` |
-| Frontend package, package lock and update API | `0.1.0-alpha.0` |
-| Release tag | `v0.1.0-alpha.0` |
-| Source release artifact | `Gravewright-0.1.0-alpha.0-django.zip` |
+| Public release name, application and Runner | `0.1.1` |
+| Python project and `uv.lock` | `0.1.1` |
+| Frontend package, package lock and update API | `0.1.1` |
+| Release tag | `v0.1.1` |
+| Source release artifact | `Gravewright-0.1.1-django.zip` |
 
-[`pyproject.toml`](../../pyproject.toml) is the source of the installed version. [`gravewright/version.py`](../../gravewright/version.py) derives its public identifier and label; keep the frontend package metadata aligned when changing it. Python's [prerelease format](https://packaging.python.org/en/latest/specifications/version-specifiers/#pre-releases) and [Semantic Versioning](https://semver.org/) both distinguish this alpha from the later stable `0.1.0` release. API/SDK contract versions and third-party module versions have independent lifecycles.
+[`pyproject.toml`](../../pyproject.toml) is the source of the installed version. [`gravewright/version.py`](../../gravewright/version.py) derives its public identifier and label; keep the frontend package metadata aligned when changing it. API/SDK contract versions and third-party module versions have independent lifecycles.
 
-The updater classifies alpha releases in the `dev` channel. The selected update channel remains a host preference; naming this release alpha does not change an existing preference or opt users into preview updates.
+Release `0.1.1` uses the `stable` update channel. This channel describes the version identifier; the project remains an early development preview. The selected channel remains a host preference.
 
 ## Before submitting
 

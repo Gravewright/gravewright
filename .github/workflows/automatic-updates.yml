@@ -2,7 +2,7 @@ name: Automatic updates
 on:
   workflow_dispatch:
   push:
-    branches: ['validate/automatic-updates-*']
+    branches: ['main']
   pull_request:
     paths:
       - 'scripts/**'

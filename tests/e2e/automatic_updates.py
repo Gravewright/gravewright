@@ -13,6 +13,7 @@ import sys
 import tempfile
 import threading
 import time
+import tomllib
 import zipfile
 from unittest.mock import patch
 
@@ -45,6 +46,7 @@ def main():
     connections.close_all()
     supervisor=Supervisor(ROOT,work/'state',settings.DATABASES['default']['NAME'],media,'127.0.0.1',port)
     files=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=ROOT).decode().split('\0')
+    installed_version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
     def archive(sequence, failure=None):
         target=work/f'alpha{sequence}.zip'
         with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as z:
@@ -53,7 +55,7 @@ def main():
                 if not name or not file.is_file():continue
                 data=file.read_bytes()
                 if name in ('pyproject.toml','uv.lock'):
-                    data=data.replace(b'0.1.0a0',f'0.1.0a{sequence}'.encode())
+                    data=data.replace(f'version = "{installed_version}"'.encode(), f'version = "0.1.0a{sequence}"'.encode())
                 if name=='config/managed_asgi.py' and failure=='startup':
                     data=b"raise RuntimeError('Intentional startup failure')\n"+data
                 z.writestr('release/'+name,data)

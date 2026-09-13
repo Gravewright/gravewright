@@ -175,7 +175,7 @@ class UpdateTests(TestCase):
         from .updates import CoreUpdateService
         from .models import HostSettings
         alpha = self.release('0.1.0-alpha.0')
-        service = CoreUpdateService(fetcher=lambda *_: json.dumps([alpha]).encode(), channel='dev')
+        service = CoreUpdateService(fetcher=lambda *_: json.dumps([alpha]).encode(), channel='dev', current_version='0.1.0-alpha.0')
         self.assertEqual(service.current_version, '0.1.0-alpha.0')
         result = service.check()
         self.assertEqual(result['status'], 'current')
@@ -185,7 +185,7 @@ class UpdateTests(TestCase):
         row = HostSettings.objects.get(pk=1)
         self.assertEqual(row.channel, 'stable')
         stable = self.release('0.1.0')
-        result = CoreUpdateService(fetcher=lambda *_: json.dumps([stable]).encode()).check()
+        result = CoreUpdateService(fetcher=lambda *_: json.dumps([stable]).encode(), current_version='0.1.0-alpha.0').check()
         self.assertEqual(result['status'], 'available')
         self.assertEqual(result['availableVersion'], '0.1.0')
 

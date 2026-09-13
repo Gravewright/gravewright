@@ -51,19 +51,19 @@ Os documentos da gramática de dados são mantidos junto à implementação. Os 
 
 ## Identificadores da versão
 
-A versão atual é **Alpha 0.1.0**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
+A versão atual é **0.1.1**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
 
 | Local | Identificador |
 | --- | --- |
-| Nome público, aplicação e Runner | `Alpha 0.1.0` |
-| Projeto Python e `uv.lock` | `0.1.0a0` |
-| Pacote frontend, package lock e API de atualização | `0.1.0-alpha.0` |
-| Tag do release | `v0.1.0-alpha.0` |
-| Artefato do código-fonte | `Gravewright-0.1.0-alpha.0-django.zip` |
+| Nome público, aplicação e Runner | `0.1.1` |
+| Projeto Python e `uv.lock` | `0.1.1` |
+| Pacote frontend, package lock e API de atualização | `0.1.1` |
+| Tag do release | `v0.1.1` |
+| Artefato do código-fonte | `Gravewright-0.1.1-django.zip` |
 
-[`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. O [formato de prévias do Python](https://packaging.python.org/en/latest/specifications/version-specifiers/#pre-releases) e o [versionamento semântico](https://semver.org/) distinguem esta alpha da futura versão estável `0.1.0`. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
+[`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
 
-O atualizador classifica releases alpha no canal `dev`. O canal escolhido continua sendo uma preferência do host; nomear esta versão como alpha não altera uma preferência existente nem habilita atualizações de prévias automaticamente.
+A release `0.1.1` usa o canal de atualização `stable`. Esse canal descreve o identificador da versão; o projeto continua em desenvolvimento inicial. O canal selecionado continua sendo uma preferência do host.
 
 ## Antes de enviar
 

@@ -4,7 +4,7 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **Alpha 0.1.0**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, atores com fichas PDF, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de frontend instaláveis. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **0.1.1**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, atores com fichas PDF, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de frontend instaláveis. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
 ## Executar no Windows
 
