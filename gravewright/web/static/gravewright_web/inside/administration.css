@@ -32,3 +32,10 @@
 @media(max-width:700px){.diagnostics__metrics{gap:8px}.diagnostics__metric{padding:14px;flex-direction:column;align-items:flex-start;gap:8px}.diagnostics__metric strong{font-size:26px}.diagnostics__filters{grid-template-columns:1fr}.diagnostics__event summary{flex-wrap:wrap;gap:8px}.diagnostics__event summary>div{flex-basis:75%}.diagnostics__event time{font-size:11px}.diagnostics__event summary::after{margin-left:auto}.diagnostics__activity{padding:14px}}
 .administration__automatic{display:grid;gap:var(--step-13);padding-block:var(--step-13);border-block:var(--border-hairline)}
 .administration__automatic button{justify-self:start}
+
+.administration__releases{margin-block:var(--step-21)}
+.administration__releases details{border-top:1px solid var(--border)}
+.administration__releases summary{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--step-8);padding-block:var(--step-13);cursor:pointer}
+.administration__releases summary span{font-size:13px;color:var(--text-muted)}
+.administration__releases pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
+.administration__releases a{display:inline-block;margin:0 var(--step-13) var(--step-13) 0}

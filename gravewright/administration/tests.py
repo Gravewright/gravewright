@@ -219,6 +219,21 @@ class UpdateTests(TestCase):
         with self.settings(GRAVEWRIGHT_RELEASES_REPOSITORY='another/project'):
             self.assertEqual(CoreUpdateService(current_version='0.1.0').status()['status'], 'unchecked')
 
+    def test_history_includes_old_releases_other_channels_and_all_pages(self):
+        import json
+        from .updates import CoreUpdateService
+        urls = []
+        first = [self.release(f'0.0.{i}') for i in range(100)]
+        old = self.release('0.1.0-alpha.0')
+        def fetch(url, limit):
+            urls.append(url)
+            return json.dumps(first if url.endswith('&page=1') else [old, self.release('9.0.0', draft=True)]).encode()
+        result = CoreUpdateService(fetcher=fetch, current_version='0.1.1', channel='stable').check()
+        self.assertEqual(len(urls), 2)
+        self.assertEqual(len(result['releases']), 101)
+        self.assertEqual(result['releases'][-1]['version'], '0.1.0-alpha.0')
+        self.assertEqual(result['availableVersion'], '0.0.99')
+
     def release(self, version, *, digest=True, draft=False):
         return {
             "tag_name": "v" + version,

@@ -346,6 +346,34 @@ function administration(root) {
     show(root, "[data-source-update]", false);
     show(root, "[data-container-update]", value.installFormat === "container");
     text(root, "[data-release-notes]", value.releaseNotes);
+    const history = root.querySelector('[data-release-history]');
+    history.replaceChildren();
+    for (const item of value.releases ?? []) {
+      const row = document.createElement('details');
+      const heading = document.createElement('summary');
+      const title = document.createElement('strong');
+      title.textContent = item.name;
+      const meta = document.createElement('span');
+      const date = item.publishedAt ? new Date(item.publishedAt) : null;
+      meta.textContent = [item.version, item.channel, date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(language) : '', item.installed ? ui('Installed','Instalada','Instalada') : ''].filter(Boolean).join(' · ');
+      heading.append(title, meta);
+      const body = document.createElement('div');
+      const notes = document.createElement('pre');
+      notes.textContent = item.notes || ui('No release notes.','Sem notas da versão.','Sin notas de versión.');
+      body.append(notes);
+      for (const [url, caption] of [[item.url, ui('Open release','Abrir release','Abrir versión')], [item.artifact?.url, ui('Download','Baixar','Descargar')]]) {
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol !== 'https:' || parsed.hostname !== 'github.com' || parsed.username || parsed.password) continue;
+          const anchor = document.createElement('a');
+          anchor.href = parsed.href; anchor.target = '_blank'; anchor.rel = 'noopener noreferrer'; anchor.textContent = caption;
+          body.append(anchor);
+        } catch {}
+      }
+      row.append(heading, body); history.append(row);
+    }
+    if (!history.childElementCount) history.textContent = ui('Check for updates to load published releases.','Verifique as atualizações para carregar as releases publicadas.','Busca actualizaciones para cargar las versiones publicadas.');
+
     const link = root.querySelector("[data-release]");
     let valid = false;
     try {

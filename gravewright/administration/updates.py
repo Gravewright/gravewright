@@ -111,6 +111,7 @@ class CoreUpdateService:
     def check(self) -> dict:
         current = _clean_version(self.current_version)
         channel = self.channel
+        history = []
         try:
             if not self.repository:
                 raise ValueError("CORE_RELEASE_SOURCE_NOT_CONFIGURED")
@@ -118,12 +119,36 @@ class CoreUpdateService:
                 raise ValueError("CORE_RELEASE_SOURCE_INVALID")
             if _install_format() != "source":
                 raise ValueError("CORE_INSTALL_FORMAT_UNSUPPORTED")
-            release_url = f"https://api.github.com/repos/{self.repository}/releases?per_page=30"
             channel_order = _channel_order(channel)
             published_channels = list(channel_order)
-            releases = json.loads(self.fetcher(release_url, MAX_RELEASE_METADATA_BYTES))
-            if not isinstance(releases, list):
-                raise ValueError("CORE_RELEASE_METADATA_INVALID")
+            releases = []
+            page = 1
+            seen = set()
+            while True:
+                release_url = f"https://api.github.com/repos/{self.repository}/releases?per_page=100&page={page}"
+                batch = json.loads(self.fetcher(release_url, MAX_RELEASE_METADATA_BYTES))
+                if not isinstance(batch, list):
+                    raise ValueError("CORE_RELEASE_METADATA_INVALID")
+                fresh = [r for r in batch if isinstance(r, dict) and str(r.get('tag_name')) not in seen]
+                releases.extend(fresh)
+                seen.update(str(r.get('tag_name')) for r in fresh)
+                if len(batch) < 100 or not fresh:
+                    break
+                page += 1
+            for entry in releases:
+                if entry.get('draft'):
+                    continue
+                version = _clean_version(str(entry.get('tag_name') or ''))
+                history.append({
+                    'version': version,
+                    'name': str(entry.get('name') or entry.get('tag_name') or version),
+                    'publishedAt': entry.get('published_at'),
+                    'url': str(entry.get('html_url') or ''),
+                    'notes': str(entry.get('body') or '')[:4000],
+                    'channel': _channel(version),
+                    'installed': version == current,
+                    'artifact': self._asset(entry, version),
+                })
             candidates_by_channel: dict[str, list] = {
                 name: [] for name in channel_order
             }
@@ -191,6 +216,7 @@ class CoreUpdateService:
                 "installFormat": _install_format(),
                 "errorKey": str(exc),
             }
+        result['releases'] = history
         self._write(result)
         return result
 
