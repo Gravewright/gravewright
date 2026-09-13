@@ -14,5 +14,6 @@ urlpatterns = [
     path('inside/campaigns/<uuid:campaign_id>/remove', inside.remove, name='remove'),
     path('inside/campaigns/join', inside.join, name='join'),
     path('inside/account', inside.save_account, name='account'),
+    path('inside/language', inside.language, name='language'),
     path('api/player-preferences', inside.preferences, name='preferences'),
 ]

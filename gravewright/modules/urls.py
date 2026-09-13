@@ -9,6 +9,7 @@ urlpatterns = [
     path("api/marketplace", views.marketplace),
     path("api/marketplace/install", views.install),
     path("api/module-packages", views.installed),
+    path("api/module-packages/activation", views.global_activation),
     path(
         "api/module-packages/<str:module_id>/<str:version>/<str:digest>/<path:asset>",
         views.asset,

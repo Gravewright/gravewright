@@ -135,3 +135,40 @@ Core update discovery is opt-in through `GRAVEWRIGHT_RELEASES_REPOSITORY=owner/r
 Marketplace configuration uses an HTTPS catalog and a local file of trusted Ed25519 public keys. An empty URL leaves online discovery unconfigured. Review module authors and code before installation because modules execute on the application's origin. See [modules](modules.md).
 
 Mail currently uses Django's console backend. Privacy text and publication settings are operator-managed content; enabling a flag does not supply a completed privacy policy or an operational email service. Dependency, Redis-server, browser and container-image licenses must also be considered for the actual distributed deployment; see [third-party notices](../../THIRD_PARTY_NOTICES.md).
+
+### In-app updates on Windows, Linux and macOS
+
+Normal `main.py` and Gravewright Runner launches now enable the supervisor by
+default. Windows users keep starting `Gravewright Runner.bat`; Linux/macOS
+source installations use `uv run --locked python main.py`. Only developers
+need `--dev` for autoreload. No special update mode is required.
+
+Use Administration → Updates → **Back up and install update** on all three
+platforms. The interface controls download, SHA-256 validation, isolated
+locked dependencies, backup, migrations, restart and failure recovery. Alpha
+releases use Development. Active table connections briefly disconnect during
+the swap; the administration page polls for the restarted server.
+
+Releases require a higher version, the supervisor files, and a
+`Gravewright-VERSION-django.zip` asset with a GitHub SHA-256 digest. The default
+repository is `Gravewright/gravewright`; an explicitly empty value disables
+discovery. The legacy initial `0.1.0-alpha.0` release predates the supervisor;
+that old installation must first receive the updated launcher to support
+in-app installation.
+
+New code lives separately from the original checkout. SQLite, media,
+compendiums and the Runner's shared static files are backed up and restored
+on migration/startup failure. Interrupted transactions recover at next launch.
+Dirty Git checkouts are protected. Never run another server against the same
+database during a swap.
+
+Runner updates live under its user-data `updates` directory. `main.py` uses
+`%LOCALAPPDATA%/Gravewright/updates` on Windows,
+`~/Library/Application Support/Gravewright/updates` on macOS, or
+`$XDG_STATE_HOME/gravewright/updates` (default `~/.local/state/gravewright/updates`)
+on Linux. Preserve these directories and reserve disk space: backups are not
+automatically removed.
+
+The `Automatic updates` workflow runs native Windows/Linux/macOS tests. Run
+`uv run python tests/e2e/automatic_updates.py` and the same command with
+`--runner` for isolated HTTPS upgrades and deliberate migration/startup failures.

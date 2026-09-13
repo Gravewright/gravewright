@@ -19,7 +19,7 @@ from gravewright.accounts.forms import AccountUpdateForm
 from gravewright.accounts.models import UserPreference
 from gravewright.accounts.views import MESSAGES as AUTH_TEXT, api_error, is_datastar, read_json
 from gravewright.campaigns import services as campaigns
-from gravewright.campaigns.catalog import RULESETS
+from gravewright.campaigns.catalog import list_rulesets
 from gravewright.campaigns.models import Campaign
 from gravewright.campaigns.forms import CampaignForm
 from gravewright.campaigns.views import authenticated, validate_campaign_form
@@ -33,6 +33,8 @@ def inside_response(request, *, section='campaigns', dialog='', campaign=None, f
                     error='', notice='', temporary_code='', joining=False):
     if not request.user.is_authenticated:
         return navigate(request, '/login')
+    if section == 'marketplace':
+        section = 'addons'
     if section not in SECTIONS or (request.user.role != 'owner' and section in ('privacy', 'systems', 'addons', 'marketplace', 'administration')):
         section = 'campaigns'
     rows = [campaigns.public_campaign(c) for c in Campaign.objects.visible_to(request.user).with_members()]
@@ -41,21 +43,30 @@ def inside_response(request, *, section='campaigns', dialog='', campaign=None, f
     visible = [row for row in rows if (not system or row['system'] == system) and
                query.strip().lower() in f"{row['name']} {row['description']}".lower()]
     selected = campaigns.public_campaign(campaign) if campaign else None
+    rulesets = list_rulesets()
+    dialog_rulesets = list(rulesets)
+    if campaign and campaign.system and campaign.system not in {row['systemId'] for row in rulesets}:
+        dialog_rulesets.append({'systemId': campaign.system, 'title': f'{campaign.system} (unavailable)'})
     if form:
         fields = {k: form.data.get(k, '') for k in ['name', 'description', 'system', 'image', 'code']}
     else:
         fields = {k: (selected or {}).get(k, '') or '' for k in ['name', 'description', 'system', 'image', 'code']}
         if not campaign:
-            fields['system'] = RULESETS[0]['systemId']
+            fields['system'] = rulesets[0]['systemId']
+    from gravewright.administration.preferences import read as host_preferences
     context = {
+        'privacy_policy': host_preferences()['privacy'] if section == 'privacy' else {},
         **TEXT, 'auth': AUTH_TEXT, 'user': request.user, 'owner': request.user.role == 'owner',
-        'section': section, 'rows': rows, 'visible_rows': visible, 'rulesets': RULESETS,
-        'system_titles': {r['systemId']: r['title'] for r in RULESETS},
+        'section': section, 'rows': rows, 'visible_rows': visible, 'rulesets': rulesets,
+        'dialog_rulesets': dialog_rulesets,
+        'system_titles': {r['systemId']: r['title'] for r in rulesets},
         'search': query, 'system_filter': system,
         'dialog': dialog, 'selected': selected, 'fields': fields,
         'error': error, 'notice': notice, 'temporary_code': temporary_code,
         'joining': joining, 'ping_color': UserPreference.objects.filter(user=request.user).values_list('ping_color', flat=True).first() or '#f2c679',
     }
+    from .localization import template_context
+    context.update(template_context(request))
     if is_datastar(request):
         html = render_to_string('gravewright_web/inside/shell.html', context, request=request, using='jinja2')
         events = [SSE.patch_elements(html)]
@@ -106,7 +117,7 @@ def save_campaign(request, campaign_id=None):
             return api_error(error)
         # A minimal bound form retains the submitted public fields, never secrets.
         return inside_response(request, dialog='edit' if existing else 'create', campaign=existing,
-                               form=CampaignForm(data), error=AUTH_TEXT['errors'].get(error.code, AUTH_TEXT['errors']['request_failed']))
+                               form=CampaignForm(data, instance=existing), error=AUTH_TEXT['errors'].get(error.code, AUTH_TEXT['errors']['request_failed']))
     return inside_response(request)
 
 
@@ -162,12 +173,15 @@ def save_account(request):
         return inside_response(request, section='settings', error='The new passwords do not match.')
     try:
         accounts.reserve_attempt(request)
+        if 'email' in data and not data['email'].strip():
+            raise accounts.AuthError('invalid_email')
         form = AccountUpdateForm(data)
         if not form.is_valid():
-            raise accounts.AuthError('invalid_input')
+            raise accounts.AuthError('invalid_email' if 'email' in form.errors else 'invalid_input')
         accounts.update_account(request, form.cleaned_data, change_password=bool(new_password))
     except accounts.AuthError as error:
-        message = 'The current password is incorrect.' if error.code == 'invalid_credentials' else 'Could not save the account. Check your entries and try again.'
+        message = ('The current password is incorrect.' if error.code == 'invalid_credentials'
+                   else AUTH_TEXT['errors'].get(error.code, 'Could not save the account. Check your entries and try again.'))
         return inside_response(request, section='settings', error=message)
     message = 'Account saved. Other sessions have been signed out.' if new_password else 'Profile saved.'
     return inside_response(request, section='settings', notice=message)
@@ -186,3 +200,19 @@ def preferences(request):
             return DatastarResponse(SSE.patch_signals({'_pingNotice': 'Color saved for your account.'}))
     color = UserPreference.objects.filter(user=request.user).values_list('ping_color', flat=True).first() or '#f2c679'
     return JsonResponse({'pingColor': color})
+
+
+@require_POST
+@authenticated
+def language(request):
+    from django.conf import settings
+    from gravewright.modules.localization import catalogs
+    locale = request.POST.get('locale', '')
+    available = catalogs()
+    if len(available) < 2 or locale not in available:
+        return api_error(accounts.AuthError('invalid_locale'))
+    UserPreference.objects.update_or_create(user=request.user, defaults={'locale': locale})
+    response = navigate(request, '/inside?section=settings')
+    response.set_signed_cookie('gravewright-language', locale, max_age=365 * 24 * 3600,
+                               secure=settings.SESSION_COOKIE_SECURE, httponly=True, samesite='Strict')
+    return response

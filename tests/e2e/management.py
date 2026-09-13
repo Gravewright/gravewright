@@ -48,7 +48,7 @@ def check(gm, player, data, output):
     player.goto(base + "/inside")
     gm.goto(base + "/inside?section=addons")
     expect(
-        gm.get_by_role("heading", name="Installed modules", exact=True)
+        gm.get_by_role("heading", name="Modules", exact=True)
     ).to_be_visible()
     expect(gm.get_by_text("Runtime probe", exact=True)).to_be_visible()
     gm.goto(base + "/inside?section=administration")

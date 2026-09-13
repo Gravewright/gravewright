@@ -85,7 +85,7 @@ No Linux, o Playwright pode precisar de bibliotecas do sistema; `uv run --locked
 | Tabuleiro, tokens e fichas PDF | `maps.py`, `tokens_pdf.py`, `token_routes.py`, `mixed_selection.py` |
 | Efeitos e renderização | `effects.py`, `effect_editor.py`, `effect_pixels.py`, `light_rendering.py` |
 | Diários e dados | `journals.py`, `journal_types.py`, `dice.py`, `dice_validation.py` |
-| SDK e módulos de mesa | `frontend_api.py`, `table_modules.py`, `management.py` |
+| SDK e módulos de mesa | `frontend_api.py`, `table_modules.py`, `management.py`, `marketplace.py` |
 | Áudio e chat | `audio_lifecycle.py`, `chat_controls.py` |
 
 Alguns cenários aceitam `--original /caminho/da/referencia` para comparação opcional de pixels com `dist/frontend` de outro checkout. Esse checkout não é necessário para testes comuns. `reference_tokens.cjs` é uma ferramenta auxiliar de comparação, não parte do comando de testes unitários Node.

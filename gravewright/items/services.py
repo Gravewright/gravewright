@@ -4,13 +4,14 @@ The native PDF system currently supplies no item types. Extension-facing callers
 must use public_state/public_command, which recheck membership and record retries."""
 
 from copy import deepcopy
+from gravewright.campaigns.catalog import get_ruleset
 from gravewright.table.domain import title, color, manage, identifier, version, document, permissions, MapError
 from .models import Item, Folder
 
 
-def types(system_id):
-    # The original native PDF system declares no item document types.
-    return []
+def types(system_id, *, campaign_id=None):
+    ruleset = get_ruleset(system_id, campaign_id=campaign_id)
+    return deepcopy(ruleset.get('itemTypes', [])) if ruleset else []
 
 
 def access(row, who, edit=False):
@@ -39,7 +40,7 @@ def state(who, scene_id=None):
     for _ in folders:
         for f in folders:
             if str(f.pk) in used and f.parent_id:used.add(str(f.parent_id))
-    return dict(types=types(who.campaign.system),items=rows,folders=[dict(id=str(f.pk),name=f.name,parentId=str(f.parent_id) if f.parent_id else None,color=f.color) for f in folders if who.role=='gm' or str(f.pk) in used],isGM=who.role=='gm')
+    return dict(types=types(who.campaign.system,campaign_id=who.campaign_id),items=rows,folders=[dict(id=str(f.pk),name=f.name,parentId=str(f.parent_id) if f.parent_id else None,color=f.color) for f in folders if who.role=='gm' or str(f.pk) in used],isGM=who.role=='gm')
 
 
 def folder(value,who):
@@ -67,7 +68,7 @@ def command(who,action,p):
         return {'id':str(row.pk)}
     if action=='create':
         manage(who)
-        if p.get('type') not in {t['id'] for t in types(who.campaign.system)}:
+        if p.get('type') not in {t['id'] for t in types(who.campaign.system,campaign_id=who.campaign_id)}:
             raise MapError('Enable a system that provides item types to create items.')
         row=Item.objects.create(campaign_id=who.campaign_id,name=title(p.get('name')),type=title(p.get('type','item'),80),system_id=who.campaign.system,
             data=document(p.get('data',{})),permissions=permissions(p.get('permissions',{}),who),folder=folder(p.get('folderId'),who))

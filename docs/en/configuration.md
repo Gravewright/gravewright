@@ -28,7 +28,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `GRAVEWRIGHT_REDIS_URL` | empty | Channels Redis URL; standard server settings allow empty/in-memory delivery only in debug |
 | `APP_NAME` | `Gravewright` | Fallback product name; persisted host preferences can override |
 | `DEFAULT_LOCALE` | `en` | Fallback locale; current supported host locale is en |
-| `PRIVACY_ENABLED` | `false` | Force privacy publication on; persisted privacy.enabled can also enable it |
+| `PRIVACY_ENABLED` | `false` | Initial privacy publication setting; the saved Privacy checkbox takes precedence |
 | `CAMPAIGN_JOIN_CODE_ENABLED` | `true` | Enable campaign join-code workflow |
 | `CAMPAIGN_CLONE_ENABLED` | `true` | Enable campaign cloning |
 | `CAMPAIGN_SNAPSHOTS_ENABLED` | `true` | Enable campaign snapshots |
@@ -72,7 +72,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `MAP_MAX_TILE_COUNT` | `4096` | Maximum generated map tiles |
 | `GRAVEWRIGHT_MARKETPLACE_URL` | empty | HTTPS URL of the module catalog JSON |
 | `GRAVEWRIGHT_MARKETPLACE_KEYS_FILE` | empty | Local Ed25519 trust-key JSON path; relative to source root |
-| `GRAVEWRIGHT_RELEASES_REPOSITORY` | empty | owner/repo used for compatible Django release discovery; empty leaves it unconfigured |
+| `GRAVEWRIGHT_RELEASES_REPOSITORY` | `Gravewright/gravewright` | owner/repo used for compatible Django release discovery; empty leaves it unconfigured |
 
 Two optional commented settings are also recognized:
 

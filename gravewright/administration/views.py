@@ -15,7 +15,7 @@ from gravewright.accounts.views import read_json
 from gravewright.campaigns.services import get_campaign
 from gravewright.campaigns.views import authenticated
 
-from . import archives
+from . import archives, automatic_updates
 from .models import AuditEvent, HostSettings, Snapshot
 from .updates import CoreUpdateService
 
@@ -43,7 +43,7 @@ def audit(request, action, **detail):
 def status(request):
     return JsonResponse(
         {
-            "updates": CoreUpdateService().status(),
+            "updates": {**CoreUpdateService().status(), "automatic": automatic_updates.status()},
             "features": {"clone": settings.CAMPAIGN_CLONE_ENABLED, "import": True},
         }
     )
@@ -76,6 +76,13 @@ def diagnostics(request):
 @require_POST
 @owner
 def updates(request, action):
+    if action == "apply":
+        data = read_json(request)
+        if set(data) != {"version"} or not isinstance(data["version"], str):
+            raise AuthError("invalid_input")
+        result = automatic_updates.request_update(data["version"])
+        audit(request, "updates.apply", version=data["version"])
+        return JsonResponse(result, status=202)
     if action == "channel":
         data = read_json(request)
         if set(data) != {"channel"} or data["channel"] not in (

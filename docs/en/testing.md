@@ -85,7 +85,7 @@ On Linux, Playwright may need system browser libraries; `uv run --locked playwri
 | Board, tokens and PDF sheets | `maps.py`, `tokens_pdf.py`, `token_routes.py`, `mixed_selection.py` |
 | Effects and rendering | `effects.py`, `effect_editor.py`, `effect_pixels.py`, `light_rendering.py` |
 | Journals and dice | `journals.py`, `journal_types.py`, `dice.py`, `dice_validation.py` |
-| SDK and table modules | `frontend_api.py`, `table_modules.py`, `management.py` |
+| SDK and table modules | `frontend_api.py`, `table_modules.py`, `management.py`, `marketplace.py` |
 | Audio and chat | `audio_lifecycle.py`, `chat_controls.py` |
 
 Some scenarios accept `--original /path/to/reference` for optional pixel comparisons against another checkout's `dist/frontend`. That checkout is not needed for ordinary smoke tests. `reference_tokens.cjs` is an auxiliary comparison tool, not part of the root Node unit command.

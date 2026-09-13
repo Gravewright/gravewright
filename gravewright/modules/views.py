@@ -1,6 +1,7 @@
 """Django transport for the original signed browser-module contract."""
 
 import json
+import asyncio
 import mimetypes
 from datetime import timedelta
 from urllib.parse import urlsplit
@@ -8,7 +9,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from django.conf import settings
 from django.db import transaction
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse, JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
@@ -19,7 +20,15 @@ from gravewright.campaigns.services import get_campaign
 from gravewright.campaigns.views import authenticated
 
 from .models import ContextLease, Package
-from .packages import MAX_ARCHIVE, ModuleFailure, compatible, host, safe_path
+from .packages import (
+    MAX_ARCHIVE,
+    MarketplaceConfigurationError,
+    ModuleFailure,
+    compatible,
+    host,
+    safe_path,
+    trusted_keys,
+)
 
 
 class HTTPSRedirects(HTTPRedirectHandler):
@@ -29,22 +38,37 @@ class HTTPSRedirects(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def download(url, limit):
+def download(url, limit, progress=None):
     """Fetch a bounded catalog/archive while keeping redirects on HTTPS."""
-    parsed = urlsplit(url)
-    if (
-        parsed.scheme != "https"
-        or not parsed.hostname
-        or parsed.username
-        or parsed.password
-    ):
-        raise ModuleFailure("invalid_data")
+    try:
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.fragment
+        ):
+            raise ValueError()
+        parsed.port  # Validate an explicitly configured port before opening a socket.
+    except ValueError:
+        raise ModuleFailure("invalid_data") from None
     try:
         with build_opener(HTTPSRedirects()).open(
             Request(url, headers={"User-Agent": "Gravewright-Marketplace/1"}),
             timeout=30,
         ) as response:
-            raw = response.read(limit + 1)
+            length = response.headers.get('Content-Length', '')
+            total = int(length) if length.isdecimal() and int(length) <= limit else None
+            chunks, received = [], 0
+            while chunk := response.read(min(64 * 1024, limit + 1 - received)):
+                chunks.append(chunk)
+                received += len(chunk)
+                if progress:
+                    progress(received, total)
+                if received > limit:
+                    break
+            raw = b''.join(chunks)
         if len(raw) > limit:
             raise ModuleFailure("invalid_data")
         return raw
@@ -54,15 +78,43 @@ def download(url, limit):
         raise ModuleFailure("unavailable") from None
 
 
+def catalog_url():
+    """Validate local configuration without contacting the publisher."""
+    url = settings.GRAVEWRIGHT_MARKETPLACE_URL
+    if not url:
+        raise MarketplaceConfigurationError("marketplace_catalog_missing")
+    try:
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.fragment
+        ):
+            raise ValueError()
+        parsed.port
+    except ValueError:
+        raise MarketplaceConfigurationError("marketplace_catalog_invalid") from None
+    return url
+
+
+def missing_keys_code():
+    return (
+        "marketplace_keys_empty"
+        if settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE
+        else "marketplace_keys_missing"
+    )
+
+
 def catalog(engine):
     """Validate the configured publisher catalog and apply its signed revocations."""
-    if not settings.GRAVEWRIGHT_MARKETPLACE_URL:
-        raise ModuleFailure("unavailable")
+    url = catalog_url()
+    if not engine.keys:
+        raise MarketplaceConfigurationError(missing_keys_code())
     try:
-        rows = json.loads(
-            download(settings.GRAVEWRIGHT_MARKETPLACE_URL, 2 * 1024 * 1024)
-        )
-    except ValueError:
+        rows = json.loads(download(url, 2 * 1024 * 1024))
+    except (ValueError, RecursionError):
         raise ModuleFailure("invalid_data") from None
     if not isinstance(rows, list) or len(rows) > 5000:
         raise ModuleFailure("invalid_data")
@@ -82,10 +134,22 @@ def catalog(engine):
 @require_GET
 @owner
 def marketplace_status(request):
+    errors = []
+    try:
+        catalog_url()
+    except MarketplaceConfigurationError as error:
+        errors.append({"field": "catalog", "code": error.code})
+    try:
+        if not trusted_keys():
+            raise MarketplaceConfigurationError(missing_keys_code())
+    except MarketplaceConfigurationError as error:
+        errors.append({"field": "keys", "code": error.code})
     return JsonResponse(
         {
-            "catalogConfigured": bool(settings.GRAVEWRIGHT_MARKETPLACE_URL),
-            "trustedKeysConfigured": bool(host().keys),
+            "catalogConfigured": not any(e["field"] == "catalog" for e in errors),
+            "trustedKeysConfigured": not any(e["field"] == "keys" for e in errors),
+            "ready": not errors,
+            "errors": errors,
             "sdk": "1.0.0",
         }
     )
@@ -104,6 +168,49 @@ def marketplace(request):
     )
 
 
+def installation_stream(request, data):
+    async def events():
+        loop = asyncio.get_running_loop()
+        queue = asyncio.Queue()
+        def emit(stage, **values):
+            loop.call_soon_threadsafe(queue.put_nowait, {"stage": stage, **values})
+        def work():
+            from django.db import close_old_connections
+            close_old_connections()
+            try:
+                emit('catalog')
+                engine = host()
+                record = next((r for r in catalog(engine) if r['id'] == data['id'] and r['version'] == data['version']), None)
+                if record is None:
+                    raise ModuleFailure('not_found')
+                emit('download', received=0, total=None)
+                raw = download(record['download'], MAX_ARCHIVE,
+                               progress=lambda received, total: emit('download', received=received, total=total))
+                emit('verify')
+                manifest = engine.install(record, raw)
+                audit(request, 'module.install', module=manifest['id'], version=manifest['version'])
+                emit('complete', manifest=manifest)
+            except ModuleFailure as error:
+                emit('error', error=error.code)
+            except Exception:
+                emit('error', error='unavailable')
+            finally:
+                close_old_connections()
+        task = asyncio.create_task(asyncio.to_thread(work))
+        # Retain the task until its worker finishes even if the browser disconnects.
+        task.add_done_callback(lambda done: done.exception() if not done.cancelled() else None)
+        while True:
+            event = await queue.get()
+            yield (json.dumps(event) + '\n').encode()
+            if event['stage'] in {'complete', 'error'}:
+                await task
+                break
+    response = StreamingHttpResponse(events(), content_type='application/x-ndjson')
+    response['Cache-Control'] = 'no-store'
+    response['X-Accel-Buffering'] = 'no'
+    return response
+
+
 @require_POST
 @owner
 def install(request):
@@ -112,6 +219,8 @@ def install(request):
         not isinstance(v, str) for v in data.values()
     ):
         raise ModuleFailure("invalid_data")
+    if request.headers.get('Accept') == 'application/x-ndjson':
+        return installation_stream(request, data)
     engine = host()
     record = next(
         (
@@ -133,11 +242,37 @@ def install(request):
 def installed(request):
     return JsonResponse(
         [
-            {**row.manifest, "revoked": row.revoked}
+            {**row.manifest, "revoked": row.revoked,
+             **({"tags": row.record["tags"]} if "tags" in row.record else {}),
+             **({"globalEnabled": row.global_enabled} if row.locale_catalogs else {})}
             for row in Package.objects.order_by("module_id", "version")
         ],
         safe=False,
     )
+
+
+@require_POST
+@owner
+@transaction.atomic
+def global_activation(request):
+    data = read_json(request)
+    if (set(data) != {'id', 'version', 'enabled'} or type(data['enabled']) is not bool
+            or not isinstance(data['id'], str) or not isinstance(data['version'], str)):
+        raise ModuleFailure('invalid_data')
+    row = Package.objects.select_for_update().filter(module_id=data['id'], version=data['version']).first()
+    if row is None:
+        raise ModuleFailure('not_found')
+    if not row.locale_catalogs:
+        raise ModuleFailure('invalid_data')
+    if data['enabled']:
+        if row.revoked:
+            raise ModuleFailure('permission_denied')
+        host().verify_installed(row)
+        Package.objects.filter(global_enabled=True).update(global_enabled=False)
+    row.global_enabled = data['enabled']
+    row.save(update_fields=['global_enabled'])
+    audit(request, 'module.global_activation', module=row.module_id, version=row.version, enabled=row.global_enabled)
+    return JsonResponse({'enabled': row.global_enabled})
 
 
 @require_http_methods(["GET", "POST"])

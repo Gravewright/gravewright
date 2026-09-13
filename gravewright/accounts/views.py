@@ -30,7 +30,9 @@ def gate_response(request, *, mode=None, form=None, error=None):
     if mode is None:
         mode = ('authenticated' if request.user.is_authenticated else
                 'login' if services.configured() else 'setup')
+    from gravewright.administration.preferences import public_privacy
     context = {
+        'privacy_policy': public_privacy(),
         'mode': mode,
         'text': MESSAGES,
         'account': request.user if request.user.is_authenticated else None,
@@ -38,6 +40,9 @@ def gate_response(request, *, mode=None, form=None, error=None):
         'email': form.data.get('email', '') if form else '',
         'error': MESSAGES['errors'].get(error.code, MESSAGES['errors']['request_failed']) if error else '',
     }
+    from gravewright.web.localization import template_context
+    context.update(template_context(request))
+    context["error"] = context.get("language", {}).get("messages", {}).get(context["error"], context["error"])
     if is_datastar(request):
         html = render_to_string('gravewright_accounts/partials/gate.html', context,
                                 request=request, using='jinja2')
@@ -187,17 +192,19 @@ def account(request):
     try:
         services.reserve_attempt(request)
         data = read_json(request)
-        if set(data) - {'name', 'currentPassword', 'newPassword'}:
+        if set(data) - {'name', 'email', 'currentPassword', 'newPassword'}:
             raise services.AuthError('invalid_input')
         data.setdefault('name', request.user.name)
         if any(not isinstance(value, str) for value in data.values()):
             raise services.AuthError('invalid_input')
+        if 'email' in data and not data['email'].strip():
+            raise services.AuthError('invalid_email')
         change_password = 'newPassword' in data
         if change_password and not data['newPassword']:
             raise services.AuthError('invalid_password')
         form = AccountUpdateForm(data)
         if not form.is_valid():
-            raise services.AuthError('invalid_name' if 'name' in form.errors else 'invalid_password')
+            raise services.AuthError('invalid_name' if 'name' in form.errors else 'invalid_email' if 'email' in form.errors else 'invalid_password')
         user = services.update_account(request, form.cleaned_data, change_password=change_password)
     except services.AuthError as error:
         return api_error(error)

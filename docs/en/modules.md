@@ -100,7 +100,42 @@ python -m zipfile -c ../actor-counter-1.0.0.zip manifest.json main.js styles.css
 
 This produces a package ready for signing. There is no unsigned package upload endpoint or file-watching module development server in this repository. The [module tests](../../gravewright/modules/tests.py) and [browser integration fixture](../../tests/e2e/frontend_api.py) show isolated signing/install fixtures for development.
 
+## Declaring an installed system
+
+A package can also provide a campaign system by adding `system` to its manifest:
+
+```json
+"system": {
+  "actorTypes": [
+    { "id": "character", "label": "Character" },
+    { "id": "npc", "label": "Non-player character" }
+  ],
+  "itemTypes": [{ "id": "gear", "label": "Gear" }]
+}
+```
+
+The system ID and title come from the package's `id` and `name`. Each package declares one system; it cannot replace `gravewright-pdf-system`. Declare at least one actor type; item types are optional. Type IDs must be unique within each list, start with a lowercase letter, and contain only lowercase letters, digits, underscores or hyphens (80 characters maximum). Each list supports up to 64 entries with labels of 1–120 characters.
+
+After a signed installation, the system appears in Systems, `/api/rulesets`, and the campaign form. The catalog uses the newest compatible, non-revoked installed version per package, ordered by numeric version. Ordinary modules without `system` remain available under Installed modules. Existing campaigns can retain an unavailable system when editing their details, but it cannot be selected for a new campaign.
+
+Selecting a system supplies document types; the GM still activates its JavaScript and sheet replacements under Settings → Extensions. Tables use the document types of that exact activated release, or the latest installed version if none is activated. Actor data keeps the existing native document structure; module-specific data uses the supported module storage and document APIs. Installing a new version does not automatically change a table's activated release.
+
 ## Signed catalog and activation
+
+The marketplace uses the publisher catalog configured by the host owner; there is no built-in public feed. Installed modules load from `/api/module-packages` independently of the remote catalog and its configuration. Refreshing the marketplace discards previous remote results before loading the current catalog, and re-reads installed packages after signed revocations or installation.
+
+The owner-only `GET /api/marketplace/status` checks local configuration without contacting the publisher or writing package files. It returns HTTP 200 with `catalogConfigured`, `trustedKeysConfigured`, `ready`, `sdk`, and `errors` (an array of `{field, code}`, where `field` is `catalog` or `keys`). The booleans indicate valid local configuration, not publisher availability. `ready` is true only when the HTTPS URL is valid and the trust store contains at least one valid key. Configuration failures return HTTP 503 from catalog and installation requests with `{ "error": "<code>" }`:
+
+| Code | Owner action |
+| --- | --- |
+| `marketplace_catalog_missing` | Set the publisher's HTTPS JSON catalog URL. |
+| `marketplace_catalog_invalid` | Correct the URL; credentials, invalid ports and fragments are rejected. |
+| `marketplace_keys_missing` | Set the trusted public keys file path. |
+| `marketplace_keys_unreadable` | Check that the file exists and the server can read it. |
+| `marketplace_keys_invalid` | Correct its JSON object, key IDs or base64 Ed25519 public keys. |
+| `marketplace_keys_empty` | Add at least one trusted publisher key. |
+
+Restart the host after changing environment settings; edits to the configured keys file are read on the next request. Publisher/network failure remains `unavailable` (503), invalid catalog/package data is `invalid_data` (400), and untrusted or invalid signatures remain `permission_denied` (403). Failed trust configuration never disables signature verification.
 
 Set `GRAVEWRIGHT_MARKETPLACE_URL` to an HTTPS JSON catalog, and `GRAVEWRIGHT_MARKETPLACE_KEYS_FILE` to a JSON file containing `{ "key-id": "base64-encoded-32-byte-Ed25519-public-key" }`. Keep private signing keys outside distributed packages and public catalogs. The catalog is an array of records:
 
@@ -217,3 +252,25 @@ uv run --locked python tests/e2e/table_modules.py
 ```
 
 Browser tests require the development dependencies and installed Playwright browser; see [testing](testing.md). Exercise activation/deactivation, a failed mount, scene changes, membership loss, reconnect, stale storage revisions, and the GM/player views of any new operation. Existing schema files and tests are concrete contract references; this checkout does not include a TypeScript SDK package or an automated major-version compatibility release checker.
+
+### Installation-wide language packages
+
+A manifest may declare `locales`, mapping locale IDs to `{ "name": "Português (Brasil)", "path": "locales/pt-BR.json" }`. Catalog files are nonempty JSON objects mapping original UI strings to translations, preserving `{name}`-style placeholders. English is built into the host and cannot be overridden; a package cannot combine `system` and `locales`. Python is not loaded from marketplace packages.
+
+Language packages appear in Installed modules. An owner uses `POST /api/module-packages/activation` with `{ "id": "gravewright.translator", "version": "0.1.0", "enabled": true }` to activate one installation-wide language package. Activation verifies the installed signed archive. Campaign module configuration rejects language packages and the table extension list omits them.
+
+After activation, each authenticated user can choose a language in internal account Settings. The choice is stored in `UserPreference.locale`; a signed cookie supports the anonymous login screen. A different signed-in account does not inherit the previous account's cookie preference. Disabling/revoking the package restores English on the next page load and removes the selector. Reload existing pages after changing global activation.
+
+The host translates application dictionaries and literal template text. Reactive template labels are translated before Datastar processes them to avoid conflicting DOM observers. Browser-created controls use the static catalog; user-authored names, chat and editable content are excluded. This does not translate PDFs, rule content or arbitrary third-party interfaces.
+
+The Translator Django app is maintained at <https://github.com/Gravewright/translator>. Its build command creates the portable signed release input; the Django authoring app is not needed after marketplace installation. See its `VALIDATION.md` for offline/online browser coverage. The host changes in this development checkout are required by the Translator v0.1.0 preview.
+
+### Package library and installation browser
+
+Inside now has separate **Systems** and **Modules** libraries, with a tile/list view preference, search and pagination. **Install system** or **Install module** opens the configured catalog in a dialog filtered to that category. The native PDF system remains visible without remote configuration. Installed libraries never require a catalog fetch; catalog diagnostics appear when opening the installation browser. The old `section=marketplace` link resolves to Modules for compatibility.
+
+New signed catalog records should include `"type": "system"` or `"type": "module"`. This field participates in the signature and must match the ZIP manifest (`system` means the manifest declares `system`). Invalid values and mismatches are rejected. Legacy records without a type remain valid and default to modules when not yet installed; installed manifests determine their actual category. Publishers of system packages must include the signed type for correct discovery before installation.
+
+Catalog records may also declare `tags`: up to 24 unique, trimmed, nonempty Unicode strings of at most 64 characters. They participate in the canonical signature and form creator-defined categories in the installation modal. Categories are scoped to the selected package type. Missing tags remain valid and packages still appear under All packages.
+
+The installation modal receives NDJSON progress from `POST /api/marketplace/install` when `Accept: application/x-ndjson` is sent. Events have `stage` values `catalog`, `download` (actual `received` bytes and nullable `total`), `verify`, `complete` (manifest), or `error` (code). Completion is emitted only after archive verification, extraction and database installation. Without a known Content-Length, download progress is indeterminate with a byte count. The ordinary JSON endpoint remains compatible. Disconnecting a browser does not roll back an installation already running; refresh the installed library to check its result.

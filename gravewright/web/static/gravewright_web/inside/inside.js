@@ -65,6 +65,20 @@ syncWindows();
 
 })();
 // Browser-only helpers; Django and Datastar own the page and form workflows.
+// Format before Datastar reads the input so its signal and the submitted value agree.
+document.addEventListener('input', event => {
+  const input = event.target;
+  if (!input.matches('input[data-code-mask]') || event.isComposing) return;
+  const start = input.selectionStart ?? input.value.length;
+  const before = input.value.slice(0, start).replace(/[^a-z0-9]/gi, '').length;
+  const code = input.value.replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 8);
+  const formatted = code.length > 4 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;
+  if (input.value === formatted) return;
+  input.value = formatted;
+  const caret = Math.min(formatted.length, before + (before > 4 ? 1 : 0));
+  input.setSelectionRange(caret, caret);
+}, true);
+
 window.gravewrightInside = {
   location(target, search, system) {
     const url = new URL(target, window.location.origin);

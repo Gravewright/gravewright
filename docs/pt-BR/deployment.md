@@ -135,3 +135,45 @@ A descoberta de versões do núcleo é opcional por `GRAVEWRIGHT_RELEASES_REPOSI
 O marketplace usa catálogo HTTPS e arquivo local de chaves públicas Ed25519 confiáveis. URL vazia deixa a descoberta online sem configuração. Revise autores e código antes de instalar módulos, pois executam na origem da aplicação. Veja [módulos](modules.md).
 
 O e-mail usa o backend de console do Django. Texto e publicação da política de privacidade são administrados pelo operador; ativar uma opção não fornece política preenchida nem serviço de e-mail. Considere também licenças das dependências, servidor Redis, navegador e imagem de contêiner efetivamente distribuídos; consulte [avisos de terceiros](../../THIRD_PARTY_NOTICES.pt-BR.md).
+
+### Atualizações pela interface: Windows, Linux e macOS
+
+O início normal por `main.py` e pelo Gravewright Runner ativa o supervisor
+por padrão. No Windows, o `Gravewright Runner.bat` mantém seu funcionamento
+habitual. No Linux e macOS, `uv run --locked python main.py` também inicia o
+fluxo de atualização; `--dev` é reservado ao desenvolvimento com autoreload.
+Não é necessário iniciar um modo especial para usar o botão de atualização.
+
+Em Administração → Atualizações, escolha o canal, verifique a versão e clique
+em **Fazer backup e instalar atualização**. O download, validação SHA-256,
+preparação de dependências, backup, migrações, reinício e recuperação são
+controlados por essa tela nos três sistemas operacionais. Alpha usa o canal
+Desenvolvimento. Acesso e conexões de mesa são interrompidos durante a troca;
+a tela acompanha o retorno do servidor.
+
+O pacote `Gravewright-VERSAO-django.zip` deve ter digest SHA-256 publicado no
+GitHub, versão superior e os arquivos do supervisor. O repositório padrão é
+`Gravewright/gravewright`; uma configuração explicitamente vazia desabilita a
+consulta. A release inicial `0.1.0-alpha.0`, anterior ao supervisor, não pode
+aplicar atualizações: é necessário distribuir este inicializador atualizado
+para habilitar o fluxo da interface nessa instalação antiga.
+
+A versão nova fica em um diretório separado. Banco, mídia, compêndios e os
+arquivos estáticos compartilhados do Runner são preservados. Falhas de
+migração ou inicialização restauram a versão anterior e seus dados. Uma
+transação interrompida é recuperada ao iniciar novamente. Checkouts Git com
+alterações locais são protegidos contra substituição. Não execute outro
+servidor contra o mesmo banco durante a atualização.
+
+O Runner guarda versões, backups e `update.log` na pasta `updates` dentro de
+seu diretório de dados. O inicializador por `main.py` usa o diretório de estado
+do usuário: `%LOCALAPPDATA%/Gravewright/updates` no Windows,
+`~/Library/Application Support/Gravewright/updates` no macOS e
+`$XDG_STATE_HOME/gravewright/updates` (ou `~/.local/state/gravewright/updates`)
+no Linux. Preserve esses diretórios e reserve espaço para backups, que não são
+apagados automaticamente.
+
+O workflow `Automatic updates` testa Windows, Linux e macOS nativamente.
+Para reproduzir, execute `uv run python tests/e2e/automatic_updates.py` e
+`uv run python tests/e2e/automatic_updates.py --runner`; ambos usam dados
+temporários, HTTPS local e falhas deliberadas de migração e inicialização.

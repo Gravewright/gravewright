@@ -1,0 +1,16 @@
+{% macro label(en, pt, es) %}{{ pt if language.id=='pt-BR' else es if language.id=='es' else en }}{% endmacro %}
+{% set fields = [
+('data_controller','Data controller','Responsável pelo tratamento','Responsable del tratamiento'),
+('contact_email','Privacy contact email','E-mail de contato para privacidade','Correo de contacto de privacidad'),
+('dpo_contact','Data protection officer / privacy contact','Encarregado / contato de privacidade','Delegado / contacto de privacidad'),
+('applicable_laws','Applicable laws and regions','Leis e regiões aplicáveis','Leyes y regiones aplicables'),
+('data_categories','Personal data collected','Dados pessoais coletados','Datos personales recopilados'),
+('purposes','Purposes of processing','Finalidades do tratamento','Finalidades del tratamiento'),
+('legal_basis','Legal bases for each purpose','Bases legais para cada finalidade','Bases jurídicas para cada finalidad'),
+('recipients','Sharing, providers and sale of data','Compartilhamento, fornecedores e venda de dados','Destinatarios, proveedores y venta de datos'),
+('international_transfers','International transfers','Transferências internacionais','Transferencias internacionales'),
+('retention_policy','Retention and deletion','Retenção e exclusão','Conservación y eliminación'),
+('cookies','Cookies and browser storage','Cookies e armazenamento no navegador','Cookies y almacenamiento del navegador'),
+('data_subject_rights','Rights and how to submit requests','Direitos e como apresentar solicitações','Derechos y cómo presentar solicitudes'),
+('content','Additional policy information','Informações adicionais da política','Información adicional de la política')
+] %}

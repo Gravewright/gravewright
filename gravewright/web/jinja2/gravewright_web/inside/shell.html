@@ -4,8 +4,8 @@
 <aside class="gw-nav">
   <div class="gw-nav__brand"><span class="gw-mark" aria-hidden="true"></span><div class="gw-nav__brand-text"><strong>Gravewright</strong><span>Virtual Tabletop</span></div><button class="gw-nav__collapse" type="button" aria-label="{{ campaigns.toggleNavigation }}" data-on:click="$_compact=!$_compact">{{ icon('CaretLeft','bold') }}</button></div>
   <nav class="gw-nav__list" aria-label="{{ campaigns.navigation }}">
-  {% for key, glyph in [('campaigns','Stack'),('systems','GridFour'),('addons','PuzzlePiece'),('marketplace','Storefront')] %}
-    <button class="gw-nav__item{{ ' gw-nav__item--active' if section==key else '' }}" type="button" {% if key in ['campaigns','systems','addons','marketplace'] %}data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})"{% else %}aria-disabled="true"{% endif %}>{{ icon(glyph,css='gw-nav__icon') }}<span class="gw-nav__label">{{ campaigns.nav[key] }}</span></button>
+  {% for key, glyph in [('campaigns','Stack'),('systems','GridFour'),('addons','PuzzlePiece')] %}
+    <button class="gw-nav__item{{ ' gw-nav__item--active' if section==key else '' }}" type="button" {% if key in ['campaigns','systems','addons','marketplace'] %}data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})"{% else %}aria-disabled="true"{% endif %}>{{ icon(glyph,css='gw-nav__icon') }}<span class="gw-nav__label">{{ tr('Modules') if key=='addons' else campaigns.nav[key] }}</span></button>
   {% endfor %}
     <button class="gw-nav__item{{ ' gw-nav__item--active' if section=='administration' else '' }}" type="button" data-on:click="@get('/inside?section=administration', {retry:'never'})">{{ icon('Gear',css='gw-nav__icon') }}<span class="gw-nav__label">Administration</span></button>
   </nav>
@@ -16,22 +16,21 @@
 <section class="gw-shell__area">
   <header class="gw-shell__topbar">
     <label class="campaign-hub__global-search">{{ icon('MagnifyingGlass') }}<span class="sr-only">{{ campaigns.globalSearch }}</span><input data-bind:_search data-on:input__debounce.200ms="@get(window.gravewrightInside.location('/inside?search='+encodeURIComponent($_search)+'&amp;system='+encodeURIComponent($_system), $_search, $_system), {retry:'never'})" type="search" placeholder="{{ campaigns.globalSearch }}" /></label>
-    <div class="campaign-hub__owner"><span class="gw-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span><span class="campaign-hub__owner-copy"><strong>{{ user.name }}</strong><small>{{ user.email }}</small></span><button class="campaign-hub__logout" type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
+    <div class="campaign-hub__owner"><span class="gw-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span><span class="campaign-hub__owner-copy"><strong>{{ user.name }}</strong></span><button class="campaign-hub__logout" type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
   </header>
-  <div class="gw-shell__content{{ ' player-settings' if section=='settings' else '' }}">
+  <div class="gw-shell__content{{ ' gw-shell__content--packages' if section in ['addons','marketplace','systems','administration'] else '' }}{{ ' player-settings gw-shell__content--settings' if section=='settings' else '' }}">
   {% if section=='campaigns' %}{% include 'gravewright_web/inside/library.html' %}
-  {% elif section in ['addons','marketplace'] %}{% include 'gravewright_web/inside/modules.html' %}
+  {% elif section in ['addons','marketplace','systems'] %}{% include 'gravewright_web/inside/modules.html' %}
   {% elif section=='administration' %}{% include 'gravewright_web/inside/administration.html' %}
   {% elif section=='settings' %}{% include 'gravewright_accounts/settings/account.html' %}
-  {% elif section=='systems' %}<header class="campaign-hub__heading"><h1>Systems</h1><p>Native game systems available when creating a table. Sheet modules are installed through Marketplace.</p></header>{% for system in rulesets %}<article class="gw-campaign"><div class="gw-campaign__body"><h2>{{ system.title }}</h2><p>{{ system.systemId }}</p></div></article>{% endfor %}
-  {% elif section=='privacy' %}<h1>Privacy</h1><p>Accounts, campaign documents and uploaded assets are stored by the host of this installation.</p><h2>Access to your table</h2><p>Table membership and document permissions determine player access. Use each document's permissions before sharing it.</p><h2>Extensions</h2><p>Modules run JavaScript in the browser. Install only versions reviewed by your configured marketplace. Deactivation stops the module, but cannot recall data already shared or downloaded.</p><h2>Sessions</h2><p>Sign out to end this browser session. Changing your password in Settings ends your other sessions.</p>{% endif %}
+  {% elif section=='privacy' %}{% include 'gravewright_web/inside/privacy.html' %}{% endif %}
   </div>
 </section>
 {% else %}
 <header class="player-home__header">
   <div class="player-home__brand"><span class="gw-mark" aria-hidden="true"></span><div><strong>Gravewright</strong><small>Virtual Tabletop</small></div></div>
   <nav aria-label="{{ campaigns.navigation }}">{% for key,label in [('campaigns',campaigns.nav.campaigns),('settings',campaigns.nav.playerSettings)] %}<button type="button" class="{{ 'player-home__nav-active' if section==key else '' }}" data-on:click="@get(window.gravewrightInside.location('/inside?section={{ key }}', $_search, $_system), {retry:'never'})">{{ label }}</button>{% endfor %}</nav>
-  <div class="player-home__account"><span class="gw-avatar">{{ user.name[:1]|upper }}</span><span><strong>{{ user.name }}</strong><small>{{ user.email }}</small></span><button type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
+  <div class="player-home__account"><span class="gw-avatar">{{ user.name[:1]|upper }}</span><span><strong>{{ user.name }}</strong></span><button type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
 </header>
 {% if section=='settings' %}<section class="player-home__profile">{% include 'gravewright_accounts/settings/account.html' %}</section>
 {% elif not rows or joining %}

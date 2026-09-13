@@ -1,6 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$defs": {
+    "documentType": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_-]*$",
+          "maxLength": 80
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      },
+      "required": ["id", "label"],
+      "additionalProperties": false
+    },
     "json": {
       "anyOf": [
         {
@@ -73,6 +90,44 @@
     "license": {
       "type": "string",
       "minLength": 1
+    },
+    "locales": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 8,
+      "patternProperties": {
+        "^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$": {
+          "type": "object",
+          "properties": {
+            "name": {"type": "string", "minLength": 1, "maxLength": 80},
+            "path": {"type": "string", "minLength": 1}
+          },
+          "required": ["name", "path"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "system": {
+      "type": "object",
+      "description": "Registers this package ID and name as an installed campaign system.",
+      "properties": {
+        "actorTypes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/documentType"}
+        },
+        "itemTypes": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/documentType"}
+        }
+      },
+      "required": ["actorTypes"],
+      "additionalProperties": false
     }
   },
   "required": [

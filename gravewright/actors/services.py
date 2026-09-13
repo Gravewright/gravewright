@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from django.db import transaction
 
+from gravewright.campaigns.catalog import get_ruleset
 from gravewright.campaigns.models import Campaign, Membership
 from gravewright.journals.services import identifier, member
 from gravewright.maps.models import Receipt
@@ -11,6 +12,20 @@ from gravewright.maps.services import MapError, color, manage, title
 from gravewright.pdf_system.schema import normalize
 
 from .models import Actor, Asset, Folder
+
+
+def types(system_id, *, campaign_id=None):
+    ruleset = get_ruleset(system_id, campaign_id=campaign_id)
+    return deepcopy(ruleset.get("actorTypes", [])) if ruleset else []
+
+
+def actor_type(system_id, value=None, *, campaign_id=None):
+    available = types(system_id, campaign_id=campaign_id)
+    if value is None and available:
+        value = available[0]["id"]
+    if not isinstance(value, str) or value not in {t["id"] for t in available}:
+        raise MapError("Choose an actor type provided by this campaign's system.")
+    return value
 
 
 def access(actor, who, edit=False):
@@ -47,8 +62,8 @@ def project(row, who):
         id=str(row.pk),
         containerId=str(row.campaign_id),
         name=row.name,
-        actorType="character",
-        systemId="pdf",
+        actorType=row.type,
+        systemId=who.campaign.system or "gravewright-pdf-system",
         folderId=str(row.folder_id) if row.folder_id else None,
         canEdit=access(row, who, True),
         version=row.version,
@@ -76,6 +91,7 @@ def state(campaign, user):
             allowed.add(cursor)
             cursor = all_folders[cursor].parent_id
     return {
+        "actorTypes": types(who.campaign.system, campaign_id=who.campaign_id),
         "actors": [project(a, who) for a in visible],
         "folders": [
             dict(
@@ -222,6 +238,11 @@ def command(campaign, user, action, data, request_id):
             row = Actor.objects.create(
                 campaign_id=campaign,
                 name=title(data.get("name")),
+                type=actor_type(
+                    who.campaign.system,
+                    data.get("type", data.get("actorType")),
+                    campaign_id=who.campaign_id,
+                ),
                 folder=folder(data.get("folderId"), who),
                 data=clean,
             )

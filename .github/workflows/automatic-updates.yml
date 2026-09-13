@@ -1,0 +1,40 @@
+name: Automatic updates
+on:
+  workflow_dispatch:
+  push:
+    branches: ['validate/automatic-updates-*']
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'config/**'
+      - 'gravewright/administration/**'
+      - 'tests/e2e/automatic_updates.py'
+      - '.github/workflows/automatic-updates.yml'
+env:
+  PYTHONUTF8: '1'
+permissions:
+  contents: read
+jobs:
+  upgrade:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: '0.12.13'
+          python-version: '3.14'
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Validate permissions, maintenance gate and recovery
+        run: uv run python manage.py test gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions --noinput
+      - name: Exercise HTTPS upgrade and recovery on this operating system
+        run: uv run python tests/e2e/automatic_updates.py
+      - name: Exercise the desktop Runner profile on this operating system
+        run: uv run python tests/e2e/automatic_updates.py --runner

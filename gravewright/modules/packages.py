@@ -54,6 +54,47 @@ class ModuleFailure(AuthError):
         )
 
 
+class MarketplaceConfigurationError(ModuleFailure):
+    """A host configuration problem that the owner can diagnose and repair."""
+
+    def __init__(self, code):
+        super().__init__(code)
+        self.status = 503
+
+
+def validate_keys(keys):
+    """Reject malformed trust stores instead of silently skipping publisher keys."""
+    if not isinstance(keys, dict):
+        raise MarketplaceConfigurationError("marketplace_keys_invalid")
+    for key_id, value in keys.items():
+        if not isinstance(key_id, str) or not key_id or not isinstance(value, str):
+            raise MarketplaceConfigurationError("marketplace_keys_invalid")
+        try:
+            Ed25519PublicKey.from_public_bytes(base64.b64decode(value, validate=True))
+        except ValueError:
+            raise MarketplaceConfigurationError("marketplace_keys_invalid") from None
+    return keys
+
+
+def trusted_keys():
+    """Read the current trust store without constructing a package host."""
+    from django.conf import settings
+
+    if not settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE:
+        return {}
+    try:
+        raw = Path(settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE).read_text(encoding="utf-8")
+    except OSError:
+        raise MarketplaceConfigurationError("marketplace_keys_unreadable") from None
+    except (UnicodeError, ValueError):
+        raise MarketplaceConfigurationError("marketplace_keys_invalid") from None
+    try:
+        keys = json.loads(raw)
+    except (ValueError, RecursionError):
+        raise MarketplaceConfigurationError("marketplace_keys_invalid") from None
+    return validate_keys(keys)
+
+
 def canonical(record: dict) -> bytes:
     """Return the exact ASCII JSON bytes covered by the publisher's signature."""
     # Catalog fields are ASCII strings; no floating point/cross-language number ambiguity.
@@ -129,21 +170,9 @@ class ModulePackages:
     have established that authority and enforce package and concurrency invariants.
     """
     def __init__(self, directory: Path, keys: dict[str, str] | None = None):
-        if keys is not None:
-            if not isinstance(keys, dict):
-                raise ValueError("Marketplace keys must be a keyId-to-base64 object")
-            for key_id, value in keys.items():
-                if not isinstance(key_id, str) or not isinstance(value, str):
-                    raise ValueError("Invalid marketplace key")
-                try:
-                    Ed25519PublicKey.from_public_bytes(
-                        base64.b64decode(value, validate=True)
-                    )
-                except ValueError:
-                    raise ValueError("Invalid marketplace public key") from None
+        self.keys = validate_keys(keys if keys is not None else {})
         self.directory = directory
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.keys = keys or {}
         self.contracts = Contracts()
 
     def verify(self, record: dict, *, require_compatible=True):
@@ -153,21 +182,33 @@ class ModulePackages:
             raise ModuleFailure("invalid_data")
         if (
             not fields <= set(record)
-            or set(record) - fields - {"status"}
-            or any(not isinstance(v, str) or not v.isascii() for v in record.values())
+            or set(record) - fields - {"status", "name", "description", "type", "tags"}
+            or any(not isinstance(v, str) or not v.isascii() for k, v in record.items() if k != "tags")
         ):
             raise ModuleFailure("invalid_data", "Invalid signed record")
+        tags = record.get("tags", [])
+        if (not isinstance(tags, list) or len(tags) > 24
+                or any(not isinstance(tag, str) or not tag.strip() or tag != tag.strip()
+                       or len(tag) > 64 or any(ord(c) < 32 for c in tag) for tag in tags)
+                or len({tag.casefold() for tag in tags}) != len(tags)):
+            raise ModuleFailure("invalid_data", "Invalid package tags")
+        if record.get("type", "module") not in {"module", "system"}:
+            raise ModuleFailure("invalid_data", "Invalid package type")
         if not re.fullmatch("[a-f0-9]{64}", record["sha256"]):
             raise ModuleFailure("invalid_data")
-        url = urlsplit(record["download"])
-        if (
-            url.scheme != "https"
-            or not url.hostname
-            or url.username
-            or url.password
-            or url.fragment
-        ):
-            raise ModuleFailure("invalid_data")
+        try:
+            url = urlsplit(record["download"])
+            if (
+                url.scheme != "https"
+                or not url.hostname
+                or url.username
+                or url.password
+                or url.fragment
+            ):
+                raise ValueError()
+            url.port
+        except ValueError:
+            raise ModuleFailure("invalid_data") from None
         key = self.keys.get(record["keyId"])
         if not key:
             raise ModuleFailure("permission_denied", "Unknown marketplace signing key")
@@ -194,7 +235,7 @@ class ModulePackages:
         with transaction.atomic():
             Package.objects.filter(
                 module_id=record["id"], version=record["version"]
-            ).update(revoked=True)
+            ).update(revoked=True, global_enabled=False)
             for row in ModuleSet.objects.select_for_update():
                 if row.modules.get(record["id"]) == record["version"]:
                     del row.modules[record["id"]]
@@ -265,6 +306,27 @@ class ModulePackages:
                     raise ModuleFailure("invalid_data", "File type not allowed")
             manifest = json.loads(package.read("manifest.json"))
             self.contracts.validate("schemas/manifest.json", manifest)
+            locale_catalogs = {}
+            if "locales" in manifest:
+                from .localization import validate_catalog
+                if "system" in manifest or "en" in manifest["locales"]:
+                    raise ModuleFailure("invalid_data")
+                for locale_id, info in manifest["locales"].items():
+                    path = str(safe_path(info["path"]))
+                    if not path.endswith('.json') or package.getinfo(path).file_size > 2 * 1024 * 1024:
+                        raise ModuleFailure("invalid_data")
+                    messages = json.loads(package.read(path))
+                    validate_catalog(messages)
+                    locale_catalogs[locale_id] = {"name": info["name"], "messages": messages}
+            if "system" in manifest:
+                # A package owns its own ruleset identity; it cannot replace the
+                # built-in system or declare ambiguous document type IDs.
+                if manifest["id"] == "gravewright-pdf-system":
+                    raise ModuleFailure("invalid_data")
+                for field in ("actorTypes", "itemTypes"):
+                    types = manifest["system"].get(field, [])
+                    if len({row["id"] for row in types}) != len(types):
+                        raise ModuleFailure("invalid_data")
             if (
                 manifest["id"] != record["id"]
                 or manifest["version"] != record["version"]
@@ -274,6 +336,8 @@ class ModulePackages:
                 raise ModuleFailure(
                     "invalid_data", "Manifest does not match signed record"
                 )
+            if "type" in record and record["type"] != ("system" if "system" in manifest else "module"):
+                raise ModuleFailure("invalid_data", "Package type does not match signed record")
             entry = str(safe_path(manifest["entry"]))
             if (
                 Path(entry).suffix not in (".js", ".mjs")
@@ -339,6 +403,7 @@ class ModulePackages:
                         digest=record["sha256"],
                         manifest=manifest,
                         record=record,
+                        locale_catalogs=locale_catalogs,
                     )
                 finally:
                     if temporary.exists():
@@ -441,6 +506,8 @@ class ModulePackages:
             ).first()
             if not installed:
                 raise ModuleFailure("not_found")
+            if installed.locale_catalogs:
+                raise ModuleFailure("invalid_data", "Language modules are activated for the installation.")
             self.verify_installed(installed)
         row.modules, row.replacements, row.revision = (
             modules,
@@ -530,9 +597,4 @@ def host():
     """Build the package host from current settings and configured publisher keys."""
     from django.conf import settings
 
-    keys = (
-        json.loads(Path(settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE).read_text())
-        if settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE
-        else {}
-    )
-    return ModulePackages(Path(settings.MEDIA_ROOT) / "modules", keys)
+    return ModulePackages(Path(settings.MEDIA_ROOT) / "modules", trusted_keys())

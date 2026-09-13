@@ -66,7 +66,7 @@
       class="directory-entry__info"
       data-v-gwentry
       ><strong data-v-gwentry></strong
-      ><small data-v-gwentry>character</small></span
+      ><small data-v-gwentry></small></span
     >{% if owner %}{{
     icon("DotsSixVertical",css="directory-entry__grip",scope="data-v-gwentry")
     }}{% endif %}
@@ -96,9 +96,7 @@
           autofocus /></label
       ><label data-actor-type
         ><span>{{ game.actorType }}</span
-        ><select name="actorType">
-          <option value="character">Character</option>
-        </select></label
+        ><select name="actorType" required></select></label
       ><label data-actor-template
         ><span>{{ game.templates }}</span
         ><select name="template"></select

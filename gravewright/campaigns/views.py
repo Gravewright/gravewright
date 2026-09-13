@@ -7,7 +7,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 from gravewright.accounts.services import AuthError
 from gravewright.accounts.views import api_error, read_json
 from . import services
-from .catalog import RULESETS
+from .catalog import list_rulesets
 from .forms import CampaignForm
 from .models import Campaign
 
@@ -94,7 +94,7 @@ def cover(request, campaign_id):
 @require_GET
 @authenticated
 def rulesets(request):
-    return JsonResponse({'rulesets': RULESETS})
+    return JsonResponse({'rulesets': list_rulesets()})
 
 
 @require_GET

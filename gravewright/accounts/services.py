@@ -112,13 +112,24 @@ def sign_in(request, data):
 def update_account(request, data, *, change_password=False):
     with transaction.atomic():
         user = User.objects.select_for_update().get(pk=request.user.pk)
-        if change_password:
+        email = data.get('email') or user.email
+        change_email = email != user.email
+        if change_password or change_email:
             with password_capacity():
                 if not user.check_password(data["currentPassword"]):
                     raise AuthError("invalid_credentials", 401)
+        if change_password:
+            with password_capacity():
                 user.set_password(data["newPassword"])
+        if change_email and User.objects.filter(email__iexact=email).exclude(pk=user.pk).exists():
+            raise AuthError('email_already_registered', 409)
         user.name = data["name"]
-        user.save(update_fields=["name", "password"] if change_password else ["name"])
+        user.email = email
+        try:
+            with transaction.atomic():
+                user.save(update_fields=['name', 'email', *(['password'] if change_password else [])])
+        except IntegrityError as error:
+            raise AuthError('email_already_registered', 409) from error
         if change_password:
             # Other sessions fail Django's session-auth-hash check on next use.
             update_session_auth_hash(request, user)

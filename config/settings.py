@@ -100,7 +100,8 @@ TEMPLATES = [
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {'environment': 'config.jinja2.environment',
-                    'context_processors':['gravewright.administration.preferences.template_context']},
+                    'context_processors':['gravewright.administration.preferences.template_context',
+                                          'gravewright.web.localization.template_context']},
     },
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -193,6 +194,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Assets and installed module packages are private and served by guarded views.
 # Never expose this directory as an unauthenticated /media/ static location.
 MEDIA_ROOT = env_path('GRAVEWRIGHT_MEDIA_ROOT', 'data/media')
+GRAVEWRIGHT_CONTENT_ROOT = env_path('GRAVEWRIGHT_CONTENT_ROOT', 'data/vtt/compendiums')
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 GRAVEWRIGHT_MAP_MAX_PIXELS = int(os.environ.get('GRAVEWRIGHT_MAP_MAX_PIXELS', '64000000'))
 
@@ -236,4 +238,4 @@ if DATABASE_ECHO:
     }
 
 # Django source releases; empty until this distribution publishes compatible artifacts.
-GRAVEWRIGHT_RELEASES_REPOSITORY = os.environ.get("GRAVEWRIGHT_RELEASES_REPOSITORY", "")
+GRAVEWRIGHT_RELEASES_REPOSITORY = os.environ.get("GRAVEWRIGHT_RELEASES_REPOSITORY", "Gravewright/gravewright")

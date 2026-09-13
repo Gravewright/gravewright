@@ -43,7 +43,7 @@ def command(who,action,p):
         kind=p.get('kind')
         if kind=='actor':
             from gravewright.actors.services import get
-            resource=get(p.get('resourceId'),who);data={'name':resource.name,'data':deepcopy(resource.data)}
+            resource=get(p.get('resourceId'),who);data={'name':resource.name,'type':resource.type,'data':deepcopy(resource.data)}
         elif kind=='item':
             from gravewright.items.services import get
             resource=get(p.get('resourceId'),who);data={'name':resource.name,'type':resource.type,'data':deepcopy(resource.data)}
@@ -85,7 +85,7 @@ def command(who,action,p):
         data=deepcopy(entry.data)
         if entry.kind=='actor':
             from gravewright.actors.models import Actor
-            created=Actor.objects.create(campaign_id=who.campaign_id,name=title(data['name']),data=data['data'])
+            created=Actor.objects.create(campaign_id=who.campaign_id,name=title(data['name']),type=title(data.get('type','character'),80),data=data['data'])
         elif entry.kind=='item':
             from gravewright.items.models import Item
             created=Item.objects.create(campaign_id=who.campaign_id,name=title(data['name']),type=data['type'],system_id=who.campaign.system,data=data['data'])

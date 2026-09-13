@@ -182,7 +182,7 @@ if (table) {
         await runtime.reconcile(next);
         state = next;
       }
-      packages = await http.get("/api/module-packages");
+      packages = (await http.get("/api/module-packages")).filter((row) => !row.locales);
       render();
     } catch (error) {
       report(error);

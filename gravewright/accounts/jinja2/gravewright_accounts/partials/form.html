@@ -24,6 +24,7 @@
   <div class="gw-field">
     <label class="gw-field__label" for="owner-email">{{ text.email }}</label>
     <input id="owner-email" name="email" data-bind:_email data-preserve-attr="value" type="email" autocomplete="username"
+           spellcheck="false" autocapitalize="none" autocorrect="off"
            placeholder="{{ text.emailPlaceholder }}" maxlength="254" required value="{{ email }}" />
   </div>
   <div class="gw-field">

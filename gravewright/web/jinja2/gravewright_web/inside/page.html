@@ -1,13 +1,13 @@
 {% extends 'gravewright_web/base.html' %}
 {% block styles %}
-{% for sheet in ['ping-preferences', 'condition-preferences', 'account-settings', 'campaigns-page', 'campaigns-scoped', 'player-home-page', 'modules', 'administration', 'backups'] %}
+{% for sheet in ['ping-preferences', 'condition-preferences', 'account-settings', 'campaigns-page', 'campaigns-scoped', 'player-home-page', 'modules', 'administration', 'backups', 'privacy'] %}
 <link rel="stylesheet" href="{{ static('gravewright_web/inside/' ~ sheet ~ '.css') }}" />
 {% endfor %}
 {{ super() }}
 <style>.gw-button[data-deferred]{opacity:1}</style>
 {% endblock %}
+{% block before_scripts %}<script src="{{ static('gravewright_web/inside/inside.js') }}"></script>{% endblock %}
 {% block extra_head %}
 <script type="module" src="{{ static('gravewright_web/inside/management.js') }}"></script>
-<script src="{{ static('gravewright_web/inside/inside.js') }}" defer></script>
 {% endblock %}
 {% block content %}{% include 'gravewright_web/inside/shell.html' %}{% endblock %}

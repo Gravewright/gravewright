@@ -65,3 +65,4 @@ class UserPreference(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True,
                                 related_name='preferences')
     ping_color = models.CharField(max_length=7, default='#f2c679')
+    locale = models.CharField(max_length=16, blank=True)

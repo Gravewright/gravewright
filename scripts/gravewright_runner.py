@@ -1,4 +1,4 @@
-"""Prepare private user data and run the local Gravewright server in one process.
+"""Prepare private user data and supervise the local Gravewright server and updates.
 
 Windows users enter through Gravewright Runner.bat, which installs the locked
 dependencies. This helper is also portable for automated checks with --data-dir.
@@ -35,8 +35,10 @@ def data_directory(value=None):
         directory = Path(value).expanduser().resolve()
     elif os.environ.get('LOCALAPPDATA'):
         directory = (Path(os.environ['LOCALAPPDATA']) / 'Gravewright' / 'data').resolve()
+    elif sys.platform == 'darwin':
+        directory = Path.home() / 'Library/Application Support/Gravewright/data'
     else:
-        raise RunnerError('Use --data-dir PATH when testing outside Windows.')
+        directory = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'Gravewright/data'
     if directory == ROOT:
         raise RunnerError('The data directory must be separate from the project root.')
     return directory
@@ -276,11 +278,30 @@ def main(argv=None):
             from gravewright.version import release_label
             LOGGER.info('Starting Gravewright Runner - %s', release_label())
             print(f'Gravewright Runner - {release_label()}\nData: {directory}\nLog: {log_path}', flush=True)
-            prepare_application(directory)
+            from scripts.update_supervisor import Supervisor
+            state = directory / 'updates'
+            if not (state / 'active.json').exists() and not (state / 'transaction.json').exists():
+                prepare_application(directory)
+            def ready():
+                url = f'http://127.0.0.1:{port}'
+                print(f'Gravewright is ready: {url}', flush=True)
+                print('Keep this window open. Press Ctrl+C to stop the Runner.', flush=True)
+                if not args.no_browser:
+                    webbrowser.open(url)
+            supervisor = Supervisor(ROOT, state, directory / 'gravewright.sqlite3', directory / 'media',
+                                    '127.0.0.1', port, on_ready=ready)
             if args.check:
+                supervisor.recover()
+                supervisor.command(supervisor.active, supervisor.python(supervisor.active), 'manage.py', 'check')
                 print('Gravewright Runner checks passed.', flush=True)
             else:
-                serve(port, open_browser=not args.no_browser)
+                import signal
+                def stop_runner(*_):
+                    raise KeyboardInterrupt
+                signal.signal(signal.SIGTERM, stop_runner)
+                if hasattr(signal, 'SIGBREAK'):
+                    signal.signal(signal.SIGBREAK, stop_runner)
+                supervisor.run()
                 print('Gravewright Runner stopped.', flush=True)
         return 0
     except KeyboardInterrupt:

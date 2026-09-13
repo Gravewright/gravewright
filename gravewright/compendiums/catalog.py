@@ -68,8 +68,7 @@ def command(who, action, payload):
     if kind=='actor':
         from gravewright.actors.models import Actor
         from gravewright.actors.services import command as actor_command
-        if entry.get('type','character')!='character':raise MapError('Unknown actor type.')
-        created=actor_command(who.campaign_id,who.user_id,'actor.create',{'name':name,'data':data},uuid.uuid4())
+        created=actor_command(who.campaign_id,who.user_id,'actor.create',{'name':name,'type':entry.get('type','character'),'data':data},uuid.uuid4())
         result=Actor.objects.get(pk=created['id'])
     elif kind=='item':
         from gravewright.items.services import command as create_item

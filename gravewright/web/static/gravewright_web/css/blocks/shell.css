@@ -31,6 +31,10 @@
     padding: var(--step-34);
 }
 
+.gw-shell__content--packages {
+    width: 100%;
+}
+
 .gw-shell__area {
     position: relative;
     min-width: 0;

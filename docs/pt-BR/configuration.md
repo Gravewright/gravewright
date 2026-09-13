@@ -28,7 +28,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `GRAVEWRIGHT_REDIS_URL` | vazio | URL Redis do Channels; as configurações padrão do servidor permitem vazio/memória somente em debug |
 | `APP_NAME` | `Gravewright` | Nome padrão do produto; preferências persistidas podem substituir |
 | `DEFAULT_LOCALE` | `en` | Idioma padrão; o idioma da instância atualmente suportado é en |
-| `PRIVACY_ENABLED` | `false` | Força publicação da privacidade; privacy.enabled persistido também pode ativar |
+| `PRIVACY_ENABLED` | `false` | Valor inicial de publicação da privacidade; o checkbox salvo em Privacidade prevalece |
 | `CAMPAIGN_JOIN_CODE_ENABLED` | `true` | Ativa fluxo de códigos de entrada |
 | `CAMPAIGN_CLONE_ENABLED` | `true` | Ativa clonagem de campanhas |
 | `CAMPAIGN_SNAPSHOTS_ENABLED` | `true` | Ativa snapshots de campanhas |
@@ -72,7 +72,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `MAP_MAX_TILE_COUNT` | `4096` | Máximo de tiles gerados de mapa |
 | `GRAVEWRIGHT_MARKETPLACE_URL` | vazio | URL HTTPS do JSON do catálogo de módulos |
 | `GRAVEWRIGHT_MARKETPLACE_KEYS_FILE` | vazio | Caminho local do JSON de chaves Ed25519 confiáveis, relativo à raiz |
-| `GRAVEWRIGHT_RELEASES_REPOSITORY` | vazio | owner/repo para descobrir releases Django compatíveis; vazio deixa sem configuração |
+| `GRAVEWRIGHT_RELEASES_REPOSITORY` | `Gravewright/gravewright` | owner/repo para descobrir releases Django compatíveis; vazio deixa sem configuração |
 
 Duas opções comentadas também são reconhecidas:
 

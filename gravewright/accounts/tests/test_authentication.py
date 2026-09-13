@@ -143,6 +143,47 @@ class AuthenticationTests(AuthClientMixin, TestCase):
         self.assertEqual(self.post('/api/auth/account', {'role': 'owner'}).status_code, 400)
         self.assertEqual(self.post('/api/auth/account', {'newPassword': ''}).status_code, 400)
 
+    def test_email_change_requires_password_and_changes_login(self):
+        self.setup_owner()
+        for password in ['', 'wrong']:
+            response = self.post('/api/auth/account', {'email': 'new@example.test', 'currentPassword': password})
+            self.assertEqual(response.status_code, 401)
+        response = self.post('/api/auth/account', {'email': ' NEW@EXAMPLE.TEST ', 'currentPassword': PASSWORD})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['account']['email'], 'new@example.test')
+        self.assertTrue(self.client.get('/api/auth/session').json()['authenticated'])
+        self.post('/api/auth/logout')
+        self.assertEqual(self.post('/api/auth/login', OWNER).status_code, 401)
+        self.assertEqual(self.post('/api/auth/login', {**OWNER, 'email': 'new@example.test'}).status_code, 200)
+
+    def test_email_change_rejects_invalid_and_duplicate_addresses_atomically(self):
+        self.setup_owner()
+        User.objects.create_user(**PLAYER)
+        for email, status in [('invalid', 400), ('', 400), ('PLAYER@EXAMPLE.TEST', 409)]:
+            response = self.post('/api/auth/account', {'name': 'Changed name', 'email': email,
+                                                      'currentPassword': PASSWORD})
+            self.assertEqual(response.status_code, status)
+            owner = User.objects.get(role='owner')
+            self.assertEqual(owner.email, OWNER['email'])
+            self.assertEqual(owner.name, OWNER['name'])
+        self.assertEqual(self.post('/api/auth/account', {'email': OWNER['email'].upper()}).status_code, 200)
+
+    def test_settings_can_change_email_and_headers_do_not_display_it(self):
+        self.setup_owner()
+        self.assertNotContains(self.client.get('/inside?section=addons'), OWNER['email'])
+        settings_page = self.client.get('/inside?section=settings')
+        self.assertContains(settings_page, 'name="email" type="email"')
+        response = self.client.post('/inside/account', {
+            'csrfmiddlewaretoken': self.client.cookies[settings.CSRF_COOKIE_NAME].value,
+            'name': OWNER['name'], 'email': 'updated@example.test', 'currentPassword': PASSWORD,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(User.objects.get(role='owner').email, 'updated@example.test')
+        self.assertNotContains(self.client.get('/inside?section=addons'), 'updated@example.test')
+        self.post('/api/auth/logout')
+        self.post('/api/auth/register', PLAYER)
+        self.assertNotContains(self.client.get('/inside'), PLAYER['email'])
+
     def test_database_constraints_and_django_admin(self):
         self.setup_owner()
         for kwargs in [dict(email='second@example.test', role='owner'),

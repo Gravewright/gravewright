@@ -36,7 +36,7 @@ def invoke(request, table_id, scene_id, name, payload, upload=None):
             "id": str(row.pk),
             "tableId": str(table_id),
             "name": row.name,
-            "type": "character",
+            "type": row.type,
             "systemId": who.campaign.system or "gravewright-pdf-system",
             "revision": revision("actor", row.pk, row.version),
             "canEdit": actors.access(row, who, True),
@@ -66,8 +66,6 @@ def invoke(request, table_id, scene_id, name, payload, upload=None):
                 "nextCursor": str(rows[limit - 1].pk) if len(rows) > limit else None,
             }
         if name == "actor.create":
-            if payload.get("type", "character") != "character":
-                raise ModuleFailure("invalid_data")
             result = actors.command(
                 table_id, request.user.pk, name, payload, uuid.uuid4()
             )

@@ -15,7 +15,7 @@
 <label><span>{{ campaigns.name }}</span><input form="campaign-form" name="name" value="{{ fields.name }}" maxlength="80" placeholder="{{ campaigns.namePlaceholder }}" /></label>
 <label class="campaign-dialog__description"><span>{{ containers.description }}</span><textarea form="campaign-form" name="description" maxlength="500">{{ fields.description }}</textarea></label>
 </div>
-<div class="campaign-dialog__column"><label><span>{{ containers.system }}</span><select form="campaign-form" name="system">{% for system in rulesets %}<option value="{{ system.systemId }}" {{ 'selected' if fields.system==system.systemId else '' }}>{{ system.title }}</option>{% endfor %}</select></label>
+<div class="campaign-dialog__column"><label><span>{{ containers.system }}</span><select form="campaign-form" name="system">{% for system in dialog_rulesets %}<option value="{{ system.systemId }}" {{ 'selected' if fields.system==system.systemId else '' }}>{{ system.title }}</option>{% endfor %}</select></label>
 <fieldset class="campaign-dialog__image"><legend>{{ containers.image }}</legend>
 <input form="campaign-form" type="hidden" name="image" data-bind:_image />
 <div class="campaign-dialog__source">{% for mode,label in [('file',containers.fromComputer),('url',containers.fromUrl)] %}<button type="button" data-class="{'campaign-dialog__source--active':$_imageSource==='{{ mode }}'}" data-on:click="$_imageSource='{{ mode }}';$_image='';$_fileName='';$_fileSize=0;$_imageError=''">{{ label }}</button>{% endfor %}</div>
@@ -27,7 +27,7 @@
 </fieldset></div></div>
 {% endif %}
 {% if temporary_code %}<div class="campaign-dialog__code"><strong>{{ temporary_code }}</strong><span>{{ containers.expires }}</span>{% if dialog=='invite' %}<button class="gw-button campaign-dialog__copy" type="button" data-on:click="navigator.clipboard.writeText({{ temporary_code|tojson|forceescape }}).then(()=&gt;{$_copied=true}).catch(()=&gt;{$_copied=false})">{{ icon('Copy') }} <span data-text="$_copied?{{ containers.copied|tojson|forceescape }}:{{ containers.copyCode|tojson|forceescape }}">{{ containers.copyCode }}</span></button>{% endif %}</div>{% endif %}
-{% if dialog=='remove' and temporary_code %}<input form="campaign-form" type="hidden" name="display_code" value="{{ temporary_code }}" /><label class="campaign-dialog__confirmation"><span>{{ containers.removalCode }}</span><input form="campaign-form" name="code" data-bind:_removal maxlength="{{ temporary_code|length }}" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" /></label>{% endif %}
+{% if dialog=='remove' and temporary_code %}<input form="campaign-form" type="hidden" name="display_code" value="{{ temporary_code }}" /><label class="campaign-dialog__confirmation"><span>{{ containers.removalCode }}</span><input form="campaign-form" name="code" data-bind:_removal data-code-mask pattern="[A-Z0-9]{4}-[A-Z0-9]{4}" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false" /></label>{% endif %}
 {% if error %}<p class="campaign-dialog__error">{{ error }}</p>{% endif %}
 <p class="campaign-dialog__error" data-show="!!$_imageError" data-text="$_imageError" style="display:none"></p>
 <button class="gw-button gw-button--primary" type="submit" form="campaign-form" data-attr:disabled="$_pending{{ '||!$_removal.trim()' if dialog=='remove' and temporary_code else '' }}">{{ containers[dialog].action }}</button>

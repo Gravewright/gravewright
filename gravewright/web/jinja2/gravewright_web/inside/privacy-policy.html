@@ -1,0 +1,6 @@
+{% from 'gravewright_web/inside/privacy-fields.html' import fields, label with context %}
+<article class="privacy-policy" translate="no">
+<h1 class="gw-gate__title">{{ privacy_policy.title }}</h1>
+{% if privacy_policy.updated_at %}<p>{{ label('Updated on','Atualizada em','Actualizada el') }} {{ privacy_policy.updated_at }}</p>{% endif %}
+{% for key,en,pt,es in fields %}{% if privacy_policy[key] %}<section><h2>{{ label(en,pt,es) }}</h2><p>{{ privacy_policy[key] }}</p></section>{% endif %}{% endfor %}
+</article>

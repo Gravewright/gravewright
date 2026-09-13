@@ -16,6 +16,8 @@ class Package(models.Model):
     manifest = models.JSONField()
     record = models.JSONField()
     revoked = models.BooleanField(default=False)
+    global_enabled = models.BooleanField(default=False)
+    locale_catalogs = models.JSONField(default=dict)
 
     class Meta:
         constraints = [

@@ -1,1 +1,35 @@
-.account-settings[data-v-gwaccount]{display:grid;gap:21px;max-width:720px}.account-settings header p[data-v-gwaccount]{color:var(--text-muted)}.account-settings__form[data-v-gwaccount],.account-settings fieldset[data-v-gwaccount]{display:grid;gap:13px}.account-settings label[data-v-gwaccount]{display:grid;gap:5px;font-size:13px}.account-settings input[data-v-gwaccount]{padding:8px 13px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);font:inherit}.account-settings fieldset[data-v-gwaccount]{border:1px solid var(--border);padding:13px;border-radius:8px}.account-settings button[data-v-gwaccount]{justify-self:start}.account-settings [role=alert][data-v-gwaccount]{color:var(--danger-text)}
+.gw-shell__content.gw-shell__content--settings{width:100%;max-width:none}
+.account-settings[data-v-gwaccount]{display:grid;gap:var(--step-21);min-width:0;width:100%;color:var(--text)}
+.account-settings h1,.account-settings h2,.account-settings h3,.account-settings p{margin:0}
+.account-settings>header{display:grid;gap:var(--step-8)}
+.account-settings h1{font-size:var(--text-hero)}
+.account-settings h2,.account-settings h3,.account-settings .condition-preferences header strong[data-v-gwcondition]{font-family:inherit;font-size:var(--text-lg);font-weight:var(--weight-medium)}
+.account-settings p,.account-settings small{color:var(--text-muted);font-size:var(--text-md);line-height:var(--leading-normal)}
+.account-settings__columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--step-34);align-items:start}
+.account-settings__preferences{display:grid;gap:var(--step-21);min-width:0}
+.account-settings .account-settings__card{display:grid;gap:var(--step-13);min-width:0;padding:0 0 var(--step-21);border:0;border-bottom:var(--border-hairline);border-radius:0;background:none}
+.account-settings__card>header{display:grid;gap:var(--step-5)}
+.account-settings__form{display:grid;gap:var(--step-13)}
+.account-settings label{display:grid;gap:var(--step-5);min-width:0;font-size:var(--text-md)}
+.account-settings input:not([type=hidden]):not([type=color]),.account-settings select{box-sizing:border-box;width:100%;min-width:0;min-height:var(--control-height-sm);padding:var(--step-5) var(--step-8);background:var(--bg);border:var(--border-hairline);border-radius:var(--radius-xs);color:var(--text);font:inherit}
+.account-settings select option{background:var(--surface);color:var(--text)}
+.account-settings input:focus-visible,.account-settings select:focus-visible{outline:var(--step-2) solid var(--accent);outline-offset:var(--step-2)}
+.account-settings fieldset[data-v-gwaccount]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--step-13);min-width:0;margin:0;padding:var(--step-13) 0 0;border:0;border-top:var(--border-hairline);border-radius:0}
+.account-settings legend{font-size:var(--text-md);padding:0 var(--step-8) 0 0}
+.account-settings .gw-button{justify-self:start}
+.account-settings [role=alert]{color:var(--danger-text)}
+.account-settings [role=status]{color:var(--accent)}
+.account-settings__card>header.account-settings__language-heading{display:flex;align-items:center;justify-content:space-between;gap:var(--step-13)}
+.account-settings__badge{font-size:var(--text-xs);color:var(--accent);padding:var(--step-3) var(--step-8);border:var(--border-hairline);border-radius:var(--radius-xs)}
+.account-settings .ping-preferences label[data-v-gwping]{display:flex;justify-content:space-between}
+.account-settings input[type=color]{padding:var(--step-3);cursor:pointer}
+.account-settings .condition-preferences__option[data-v-gwcondition]{min-width:0;align-content:start}
+@media(max-width:1050px){.account-settings__columns{grid-template-columns:1fr}.account-settings__preferences{grid-template-columns:repeat(2,minmax(0,1fr))}.account-settings .condition-preferences{grid-column:1/-1}}
+@media(max-width:650px){.account-settings__preferences{grid-template-columns:1fr}.account-settings .account-settings__card{padding:0 0 var(--step-13)}.account-settings fieldset[data-v-gwaccount]{grid-template-columns:1fr}.account-settings h1{font-size:var(--text-display)}}
+
+.account-settings__preferences{padding-left:var(--step-21);border-left:var(--border-hairline)}
+.account-settings .account-settings__card:last-child{border-bottom:0}
+.account-settings .condition-preferences__option[data-v-gwcondition]{padding:var(--step-8);gap:var(--step-8);border-radius:var(--radius-xs)}
+.account-settings .condition-preferences__preview[data-v-gwcondition]{padding:var(--step-5);height:var(--step-34);border-radius:var(--radius-xs)}
+.account-settings .gw-button{min-height:var(--control-height-sm);padding:var(--step-5) var(--step-13);border-radius:var(--radius-xs);font-size:var(--text-md)}
+@media(max-width:1050px){.account-settings__preferences{padding-left:0;border-left:0;border-top:var(--border-hairline);padding-top:var(--step-21)}}

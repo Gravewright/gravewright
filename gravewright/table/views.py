@@ -59,6 +59,8 @@ def table(request, campaign_id, detached_chat=False):
             if owner or p["id"] not in {"scenes"}
         ],
     }
+    from gravewright.web.localization import template_context
+    context.update(template_context(request))
     return render(request, "gravewright_table/page.html", context, using="jinja2")
 
 

@@ -6,8 +6,11 @@
     <meta name="theme-color" content="#11151a" />
     <title>{{ app_name }} VTT · {{ release_label }}</title>
     {% block styles %}<link rel="stylesheet" href="{{ static('gravewright_web/css/index.css') }}" />{% endblock %}
+    {% block before_scripts %}{% endblock %}
     <script type="module" src="{{ static('gravewright_web/vendor/datastar-1.0.3.js') }}"></script>
     <script type="module" src="{{ static('gravewright_modules/frontend-api.js') }}"></script>
+    {% if language_enabled %}<script id="gravewright-language" type="application/json">{{ language|tojson }}</script>
+    <script type="module" src="{{ static('gravewright_web/localization.js') }}"></script>{% endif %}
     {% block extra_head %}{% endblock %}
   </head>
   <body>

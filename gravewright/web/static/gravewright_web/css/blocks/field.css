@@ -68,6 +68,18 @@
     box-shadow: var(--ring-field), var(--ring-accent);
 }
 
+/* Keep the autofill surface when the focus ring replaces the base shadow. */
+.gw-field input:is(:autofill, :-webkit-autofill) {
+    -webkit-text-fill-color: var(--text-bright);
+    caret-color: var(--text-bright);
+    box-shadow: inset 0 0 0 var(--fib-15) var(--surface-field);
+}
+
+.gw-field input:is(:autofill, :-webkit-autofill):focus {
+    box-shadow: inset 0 0 0 var(--fib-15) var(--surface-field),
+        var(--ring-field), var(--ring-accent);
+}
+
 .gw-field input::placeholder,
 .gw-field textarea::placeholder {
     color: var(--text-faint);

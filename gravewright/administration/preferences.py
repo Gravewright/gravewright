@@ -18,6 +18,12 @@ DEFAULT_PRIVACY = {
     "legal_basis": "Consentimento, execução de contrato e legítimo interesse, conforme aplicável.",
     "retention_policy": "Os dados são mantidos pelo tempo necessário para operar o serviço e cumprir obrigações legais.",
     "data_subject_rights": "O titular pode solicitar acesso, correção, portabilidade, revogação de consentimento e exclusão de dados.",
+    "applicable_laws": "",
+    "data_categories": "",
+    "purposes": "",
+    "recipients": "",
+    "international_transfers": "",
+    "cookies": "",
     "updated_at": None,
 }
 
@@ -27,14 +33,16 @@ SUPPORTED_LOCALES = ('en',)
 
 
 def read():
+    from gravewright.modules.localization import catalogs
+    supported_locales = tuple(catalogs())
     row=HostSettings.objects.filter(pk=1).first() or HostSettings()
     locale=row.default_locale or settings.DEFAULT_LOCALE
-    if locale not in SUPPORTED_LOCALES:locale=SUPPORTED_LOCALES[0]
+    if locale not in supported_locales:locale='en'
     privacy={**deepcopy(DEFAULT_PRIVACY),**row.privacy}
-    privacy['enabled']=bool(settings.PRIVACY_ENABLED or privacy['enabled'])
+    privacy['enabled']=bool(row.privacy.get('enabled', settings.PRIVACY_ENABLED))
     return {'app':{'app_name':row.app_name or settings.APP_NAME,
                    'default_locale':locale,
-                   'supported_locales':list(SUPPORTED_LOCALES)},
+                   'supported_locales':list(supported_locales)},
             'updates':{'core_channel':row.channel,'packages_channel':row.channel if row.channels_linked else row.packages_channel,'channels_linked':row.channels_linked},
             'privacy':privacy}
 
@@ -50,7 +58,9 @@ def update(user, section, data):
             if field in data:
                 value=data[field]
                 if not isinstance(value,str) or len(value.strip())>limit:raise AuthError('invalid_input')
-                if field=='default_locale' and value not in SUPPORTED_LOCALES:raise AuthError('invalid_locale')
+                if field=='default_locale':
+                    from gravewright.modules.localization import catalogs
+                    if value not in catalogs():raise AuthError('invalid_locale')
                 setattr(row,field,value.strip())
         for field,target in [('core_channel','channel'),('packages_channel','packages_channel')]:
             if field in data:

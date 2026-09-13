@@ -43,3 +43,30 @@ class HostPreferenceTests(TestCase):
         self.assertEqual(self.client.get('/api/admin/settings').status_code,403)
         self.client.logout()
         self.assertEqual(self.client.get('/api/privacy').json(),{'enabled':False})
+
+    @override_settings(PRIVACY_ENABLED=False)
+    def test_login_policy_follows_toggle_and_escapes_operator_text(self):
+        self.assertNotContains(self.client.get('/login'), 'owner-privacy-panel')
+        update(self.owner, 'privacy', {'enabled': True, 'title': 'Host policy',
+                                      'content': '<script>alert(1)</script>',
+                                      'data_categories': 'Account and table records'})
+        response = self.client.get('/login')
+        self.assertContains(response, 'owner-privacy-panel')
+        self.assertContains(response, 'Host policy')
+        self.assertContains(response, 'Account and table records')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+        self.assertContains(response, '&lt;script&gt;')
+        update(self.owner, 'privacy', {'enabled': False})
+        with override_settings(PRIVACY_ENABLED=True):
+            self.assertNotContains(self.client.get('/login'), 'owner-privacy-panel')
+            self.assertEqual(public_privacy(), {'enabled': False})
+        self.assertEqual(read()['privacy']['content'], '<script>alert(1)</script>')
+
+    def test_owner_has_privacy_editor(self):
+        self.client.force_login(self.owner)
+        response = self.client.get('/inside?section=privacy')
+        self.assertContains(response, 'data-privacy-form')
+        self.assertContains(response, 'name="enabled"')
+        self.assertContains(response, 'name="data_subject_rights"')
+        self.client.force_login(self.player)
+        self.assertNotContains(self.client.get('/inside?section=privacy'), 'data-privacy-form')

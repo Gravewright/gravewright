@@ -92,6 +92,7 @@ const labels = JSON.parse(
 );
 let state = {
     actors: [],
+    actorTypes: [],
     folders: [],
     templates: [],
     players: [],
@@ -138,6 +139,14 @@ function form(id, title, save) {
   el.querySelector("input")?.focus();
   return el;
 }
+function syncActorTypes() {
+  const select = dialog?.querySelector('[name=actorType]');
+  if (!select || select.disabled) return;
+  const selected = select.value;
+  select.replaceChildren(...state.actorTypes.map((type) => new Option(type.label, type.id)));
+  if (state.actorTypes.some((type) => type.id === selected)) select.value = selected;
+  dialog.querySelector('[type=submit]').disabled = !state.actorTypes.length;
+}
 function edit(actor, folderId) {
   const el = form(
     "actor-form",
@@ -147,11 +156,14 @@ function edit(actor, folderId) {
         id: actor?.id,
         version: actor?.version,
         name: el.elements.name.value,
+        actorType: actor?.actorType || el.elements.actorType.value,
         folderId: folderId ?? actor?.folderId,
         data: { pdf: { asset: el.elements.template.value } },
       }),
   );
   el.elements.name.value = actor?.name || "";
+  el.elements.actorType.disabled = !!actor;
+  syncActorTypes();
   show(el.querySelector("[data-actor-type]"), !actor);
   show(
     el.querySelector("[data-actor-template]"),
@@ -328,6 +340,8 @@ function paint() {
     )) {
       const el = clone("actor-entry");
       el.querySelector("strong").textContent = a.name;
+      el.querySelector("small").textContent =
+        state.actorTypes.find((type) => type.id === a.actorType)?.label || a.actorType;
       if (a.portraitUrl) {
         const image = document.createElement("img");
         image.src = a.portraitUrl;
@@ -552,6 +566,7 @@ if (panel) {
   };
   window.addEventListener("gravewright:actors.state", (e) => {
     state = e.detail;
+    syncActorTypes();
     paint();
     if (sheet && sheet.element.dataset.actorId) {
       const a = state.actors.find(
@@ -563,6 +578,9 @@ if (panel) {
   });
   window.addEventListener("gravewright:actor-error", (e) => error(e.detail));
   window.addEventListener("gravewright:connected", () =>
+    window.gravewrightRealtime.actorsSubscribe(),
+  );
+  window.addEventListener("gravewright:modules.updated", () =>
     window.gravewrightRealtime.actorsSubscribe(),
   );
   window.gravewrightRealtime?.actorsSubscribe();

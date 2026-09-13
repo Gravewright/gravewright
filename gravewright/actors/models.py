@@ -23,6 +23,7 @@ class Actor(models.Model):
     )
     folder = models.ForeignKey(Folder, null=True, on_delete=models.SET_NULL)
     name = models.CharField(max_length=120)
+    type = models.CharField(max_length=80, default="character")
     data = models.JSONField(default=dict)
     permissions = models.JSONField(default=dict)
     version = models.PositiveIntegerField(default=1)

@@ -100,7 +100,42 @@ python -m zipfile -c ../actor-counter-1.0.0.zip manifest.json main.js styles.css
 
 O pacote está pronto para assinatura. Este repositório não possui endpoint para envio de pacotes sem assinatura nem servidor de desenvolvimento de módulos com recarga automática. Os [testes de módulos](../../gravewright/modules/tests.py) e a [fixture de integração no navegador](../../tests/e2e/frontend_api.py) mostram assinatura/instalação em ambientes isolados.
 
+## Declarar um sistema instalado
+
+Um pacote também pode fornecer um sistema de campanha adicionando `system` ao manifesto:
+
+```json
+"system": {
+  "actorTypes": [
+    { "id": "character", "label": "Personagem" },
+    { "id": "npc", "label": "Personagem do mestre" }
+  ],
+  "itemTypes": [{ "id": "gear", "label": "Equipamento" }]
+}
+```
+
+O ID e o título do sistema vêm de `id` e `name` do pacote. Cada pacote declara um sistema e não pode substituir `gravewright-pdf-system`. Declare pelo menos um tipo de ator; tipos de itens são opcionais. Os IDs dos tipos devem ser únicos em cada lista, começar com letra minúscula e conter apenas letras minúsculas, dígitos, sublinhados ou hífens (máximo de 80 caracteres). Cada lista aceita até 64 entradas, com rótulos de 1–120 caracteres.
+
+Após a instalação assinada, o sistema aparece em Systems, `/api/rulesets` e no formulário de campanha. O catálogo usa a versão instalada compatível e não revogada mais recente de cada pacote, comparando os números da versão. Módulos comuns sem `system` continuam disponíveis em Installed modules. Campanhas existentes podem manter um sistema indisponível ao editar seus detalhes, mas ele não pode ser escolhido para uma nova campanha.
+
+Selecionar um sistema fornece os tipos de documentos; o mestre ainda ativa seu JavaScript e as substituições de fichas em Settings → Extensions. A mesa usa os tipos da versão exata ativada, ou da versão instalada mais recente quando nenhuma está ativada. Os dados dos atores mantêm a estrutura nativa existente; dados específicos do módulo usam as APIs de documentos e armazenamento de módulos. Instalar outra versão não muda automaticamente a versão ativada na mesa.
+
 ## Catálogo assinado e ativação
+
+O marketplace usa o catálogo do publicador configurado pelo proprietário do host; não há feed público embutido. Módulos instalados são carregados de `/api/module-packages` independentemente do catálogo remoto e de sua configuração. Atualizar o marketplace descarta os resultados remotos anteriores antes de carregar o catálogo atual e consulta novamente os pacotes instalados após revogações assinadas ou instalação.
+
+`GET /api/marketplace/status`, exclusivo do proprietário, verifica a configuração local sem contatar o publicador nem gravar arquivos de pacotes. Retorna HTTP 200 com `catalogConfigured`, `trustedKeysConfigured`, `ready`, `sdk` e `errors` (lista de `{field, code}`, com `field` igual a `catalog` ou `keys`). Os booleanos indicam configuração local válida, não disponibilidade do publicador. `ready` só é verdadeiro quando a URL HTTPS é válida e o arquivo de confiança contém ao menos uma chave válida. Falhas de configuração retornam HTTP 503 nas consultas ao catálogo e nas instalações, com `{ "error": "<code>" }`:
+
+| Código | Ação do proprietário |
+| --- | --- |
+| `marketplace_catalog_missing` | Configure a URL HTTPS do catálogo JSON do publicador. |
+| `marketplace_catalog_invalid` | Corrija a URL; credenciais, portas inválidas e fragmentos são rejeitados. |
+| `marketplace_keys_missing` | Configure o caminho do arquivo de chaves públicas confiáveis. |
+| `marketplace_keys_unreadable` | Verifique se o arquivo existe e se o servidor pode lê-lo. |
+| `marketplace_keys_invalid` | Corrija o objeto JSON, os IDs ou as chaves públicas Ed25519 em base64. |
+| `marketplace_keys_empty` | Adicione ao menos uma chave de publicador confiável. |
+
+Reinicie o host após alterar variáveis de ambiente; edições no arquivo de chaves configurado são lidas na próxima requisição. Falha de rede/publicador continua como `unavailable` (503), dados inválidos de catálogo/pacote como `invalid_data` (400), e assinaturas inválidas ou não confiáveis como `permission_denied` (403). Falhas na configuração de confiança nunca desabilitam a verificação de assinaturas.
 
 Configure `GRAVEWRIGHT_MARKETPLACE_URL` com a URL HTTPS de um catálogo JSON e `GRAVEWRIGHT_MARKETPLACE_KEYS_FILE` com um arquivo JSON no formato `{ "id-da-chave": "chave-publica-Ed25519-de-32-bytes-em-base64" }`. Mantenha chaves privadas fora dos pacotes distribuídos e catálogos públicos. O catálogo é uma lista de registros:
 
@@ -217,3 +252,25 @@ uv run --locked python tests/e2e/table_modules.py
 ```
 
 Os testes de navegador precisam das dependências de desenvolvimento e do navegador Playwright instalado; veja [testes](testing.md). Exercite ativação/desativação, falha de montagem, troca de cena, perda de participação, reconexão, revisões antigas de armazenamento e visões de mestre/jogador. Schemas e testes existentes são referências concretas; este checkout não inclui pacote SDK TypeScript nem verificador automático de compatibilidade entre versões principais.
+
+### Pacotes de idioma para a instalação
+
+O manifesto pode declarar `locales`, associando cada idioma a `{ "name": "Português (Brasil)", "path": "locales/pt-BR.json" }`. Cada catálogo é um objeto JSON de textos originais e traduções, preservando marcadores como `{name}`. O inglês pertence ao host e não pode ser sobrescrito. Um pacote não pode combinar `system` e `locales`, nem executar Python baixado pelo marketplace.
+
+O proprietário ativa os idiomas em Módulos instalados. A rota `POST /api/module-packages/activation` recebe `{ "id": "gravewright.translator", "version": "0.1.0", "enabled": true }` e verifica o arquivo assinado. Somente um pacote de idiomas fica ativo por instalação. A configuração de módulos por campanha rejeita esses pacotes e a lista de extensões da mesa os omite.
+
+Com o pacote ativo, cada usuário escolhe seu idioma nas configurações internas da conta, armazenado em `UserPreference.locale`. Um cookie assinado permite manter o idioma na tela de entrada; outra conta autenticada não herda a preferência desse cookie. Desativar ou revogar o pacote remove o seletor e restaura o inglês no próximo carregamento. Páginas já abertas precisam ser recarregadas.
+
+A tradução abrange dicionários da aplicação, textos literais dos templates e controles criados no navegador. Rótulos reativos são traduzidos antes do processamento pelo Datastar para evitar disputa entre observadores. Nomes, mensagens, conteúdo editável, PDFs e interfaces arbitrárias de terceiros não são traduzidos.
+
+O app Django do [Translator](https://github.com/Gravewright/translator) extrai e mantém os catálogos e gera o ZIP portátil. Ele não precisa estar instalado no Django após a instalação pelo marketplace. O relatório `VALIDATION.md` registra os testes offline e online. A pré-release v0.1.0 exige as alterações do host presentes neste checkout de desenvolvimento.
+
+### Biblioteca de pacotes e instalação
+
+A área interna possui bibliotecas separadas de **Sistemas** e **Módulos**, com visualização em grade/lista, busca e paginação. **Instalar sistema** ou **Instalar módulo** abre o catálogo configurado em uma janela filtrada por categoria. O sistema PDF integrado continua visível sem configuração remota. A biblioteca instalada não consulta o catálogo; os diagnósticos aparecem ao abrir a janela de instalação. Links antigos com `section=marketplace` levam à biblioteca de módulos.
+
+Novos registros assinados devem incluir `"type": "system"` ou `"type": "module"`. O campo participa da assinatura e deve corresponder ao manifesto do ZIP: sistemas declaram `system`. Valores inválidos e divergências são rejeitados. Registros antigos sem tipo continuam válidos e são tratados como módulos antes da instalação; depois, o manifesto instalado determina a categoria. Publicadores de sistemas devem incluir o tipo assinado para que o pacote apareça corretamente antes de ser instalado.
+
+Registros do catálogo aceitam `tags`: até 24 textos Unicode únicos, sem espaços nas extremidades, não vazios e com até 64 caracteres. As tags integram a assinatura e geram categorias na modal de instalação, separadas pelo tipo de pacote. Pacotes sem tags continuam aparecendo em Todos os pacotes.
+
+A modal recebe progresso real via NDJSON de `POST /api/marketplace/install`, solicitando `Accept: application/x-ndjson`. As etapas são `catalog`, `download` (bytes recebidos e total quando conhecido), `verify`, `complete` e `error`. A conclusão só é enviada após verificar e instalar o arquivo. Downloads sem tamanho informado exibem progresso indeterminado e contagem de bytes. O retorno JSON tradicional permanece disponível. Desconectar o navegador não desfaz uma instalação em andamento; atualize a biblioteca para conferir o resultado.
