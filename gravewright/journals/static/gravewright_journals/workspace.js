@@ -367,7 +367,7 @@ class JournalWindow {
     renderIndex() {
         const nav = this.$('.diary-workspace__index');
         nav.replaceChildren();
-        const search = this.$('[aria-label="Search pages"]').value.toLowerCase();
+        const search = this.$('[data-journal-search]').value.toLowerCase();
         const groups = [...new Set(this.pages.map(p => p.category))];
         let count = 0;
         for (const category of groups) {
@@ -583,7 +583,7 @@ class JournalWindow {
     }
     bind() {
         this.$('.journal-window__title').addEventListener('input', e => { this.draft.title = e.target.value; this.touch(); });
-        this.$('[aria-label="Search pages"]').addEventListener('input', () => this.renderIndex());
+        this.$('[data-journal-search]').addEventListener('input', () => this.renderIndex());
         this.$('[name=visibility]').addEventListener('change', e => { this.editing = true; this.draft.visibility = e.target.value; this.touch(); this.render(); });
         this.$('.diary-workspace__composer').addEventListener('submit', e => { e.preventDefault(); const input = e.target.querySelector('input'); this.add('text', input.value.trim()); input.value = ''; show(e.target, false); });
         this.$('.diary-workspace__index').addEventListener('dragover', e => {

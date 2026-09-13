@@ -167,11 +167,11 @@ function edit(actor, folderId) {
   show(el.querySelector("[data-actor-type]"), !actor);
   show(
     el.querySelector("[data-actor-template]"),
-    !actor && !!state.templates.length,
+    !actor && state.systemId === 'gravewright-pdf-system' && !!state.templates.length,
   );
   show(
     el.querySelector("[data-no-templates]"),
-    !actor && !state.templates.length,
+    !actor && state.systemId === 'gravewright-pdf-system' && !state.templates.length,
   );
   el.querySelector("[type=submit] span").textContent = actor
     ? "Save"

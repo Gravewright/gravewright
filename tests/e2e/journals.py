@@ -206,6 +206,8 @@ def main():
 
                 def seated(target):
                     expect(target.locator('.game-menubar__presence')).to_have_attribute('data-presence','seated',timeout=15000)
+                    target.keyboard.press('Escape')
+                    expect(target.locator('.house-menu-scrim')).to_be_hidden()
 
                 def echo(text,name,identifier):
                     if reference:
@@ -228,6 +230,8 @@ def main():
                 both('Journals')
                 expect(page.locator('#journals-panel')).to_be_visible()
                 capture('directory')
+                # Translation can change accessibility labels before cloning the window.
+                page.evaluate("document.querySelector('#journal-window').content.querySelector('[data-journal-search]').setAttribute('aria-label', 'Buscar páginas')")
                 both('Create journal')
                 expect(page.get_by_role('dialog',name='Create journal',exact=True)).to_be_visible()
                 capture('create')
@@ -245,6 +249,14 @@ def main():
                     if reference:reference.locator('.journal-window').get_by_role('button',name=name,exact=True).click()
                 action('New text page')
                 expect(notebook.get_by_role('textbox',name='Page content')).to_be_visible()
+                # Both binding and filtering must survive translated accessibility labels.
+                search = notebook.locator('[data-journal-search]')
+                for label in ('Buscar páginas', 'Buscar páginas del diario', 'Search pages'):
+                    search.evaluate('(input, label) => input.setAttribute(\"aria-label\", label)', label)
+                    search.fill('no-matching-page-123')
+                    expect(notebook.locator('.diary-workspace__page-link')).to_have_count(0)
+                    search.fill('')
+                    expect(notebook.locator('.diary-workspace__page-link')).to_have_count(1)
                 capture('text-page')
                 notebook.get_by_role('textbox',name='Page content').fill('A meeting at the old inn.')
                 if reference:reference.get_by_role('textbox',name='Page content').fill('A meeting at the old inn.')

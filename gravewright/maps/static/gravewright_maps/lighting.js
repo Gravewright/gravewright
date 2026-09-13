@@ -99,12 +99,12 @@ export function lightingWorkspace(surface, board, map, gm, api) {
       return;
     }
     panel = clone("visibility");
-    panel.querySelector("[aria-label=Close]").onclick = () => {
+    panel.querySelector("[data-visibility-action=close]").onclick = () => {
       popup?.close();
       panel.remove();
       panel = undefined;
     };
-    panel.querySelector("[aria-label=Detach]").onclick = () => {
+    panel.querySelector("[data-visibility-action=detach]").onclick = () => {
       if (popup && !popup.closed) {
         popup.focus();
         return;
@@ -122,7 +122,7 @@ export function lightingWorkspace(surface, board, map, gm, api) {
         }
       };
     };
-    panel.querySelector("[aria-label=Minimize]").onclick = () =>
+    panel.querySelector("[data-visibility-action=minimize]").onclick = () =>
       panel.classList.toggle("game-panel--minimized");
     panel.onclick = (e) => {
       const b = e.target.closest("button");

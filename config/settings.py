@@ -7,6 +7,7 @@ See docs/en/configuration.md and docs/en/deployment.md for server configuration.
 """
 
 import os
+import sys
 from pathlib import Path
 
 from config.environment import env_bool, env_path, load_environment, public_origin
@@ -78,6 +79,25 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+# Trusted Python extensions are explicitly installed by the host operator.
+# Browser marketplace archives never populate this setting or import Python.
+GRAVEWRIGHT_SERVER_APP_PATHS = tuple(dict.fromkeys(
+    value.strip() for value in os.environ.get('GRAVEWRIGHT_SERVER_APP_PATHS', '').split(os.pathsep)
+    if value.strip()
+))
+for value in GRAVEWRIGHT_SERVER_APP_PATHS:
+    app_path = Path(value).expanduser()
+    app_path = (app_path if app_path.is_absolute() else BASE_DIR / app_path).resolve()
+    if not app_path.is_dir():
+        raise ValueError(f'GRAVEWRIGHT_SERVER_APP_PATHS directory does not exist: {app_path}')
+    if str(app_path) not in sys.path:
+        sys.path.append(str(app_path))
+GRAVEWRIGHT_SERVER_APPS = tuple(dict.fromkeys(
+    name.strip() for name in os.environ.get('GRAVEWRIGHT_SERVER_APPS', '').split(',')
+    if name.strip()
+))
+INSTALLED_APPS += [name for name in GRAVEWRIGHT_SERVER_APPS if name not in INSTALLED_APPS]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -66,17 +66,21 @@ def save_campaign(user, form, *, existing=None):
         campaign.image_url = image
     try:
         with transaction.atomic():
+            previous_system = None
             if existing is not None:
                 # A stale form must never recreate a concurrently removed campaign.
                 current = Campaign.objects.select_for_update().filter(pk=existing.pk).first()
                 if current is None:
                     raise AuthError('container_not_found', 404)
                 old_cover = current.cover.name
+                previous_system = current.system
                 if retaining and not upload:
                     campaign.cover = current.cover
             campaign.save(force_update=existing is not None)
             if existing is None:
                 Membership.objects.create(campaign=campaign, user=user, role=Membership.Role.GM)
+            from .catalog import activate_selected_system
+            activate_selected_system(campaign, previous_system)
             if old_cover and old_cover != campaign.cover.name:
                 transaction.on_commit(lambda: campaign.cover.storage.delete(old_cover))
     except Exception:

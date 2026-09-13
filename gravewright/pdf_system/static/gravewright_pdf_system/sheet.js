@@ -121,17 +121,27 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
         sheetVersion: value.sheetVersion,
       }),
   });
-  function close() {
+  async function extensionLifecycle(name) {
+    const tasks = [];
+    el.dispatchEvent(new CustomEvent(name, { detail: { waitUntil: task => tasks.push(task) } }));
+    await Promise.all(tasks);
+  }
+  async function close(force = false) {
+    if (!force) {
+      try { await extensionLifecycle('gravewright:sheet-flush'); await controller.call('flush'); }
+      catch (error) { const alert=el.querySelector('.pdf-sheet__error');show(alert,true);alert.querySelector('span').textContent=error.message;return; }
+    }
     if (closed) return;
     closed = true;
     controller.destroy();
     notes.forEach((e) => e.destroy());
     el.remove();
-    window.removeEventListener("gravewright:access-revoked", close);
+    window.removeEventListener("gravewright:access-revoked", revoke);
     onClose();
   }
-  window.addEventListener("gravewright:access-revoked", close);
-  el.onclick = (e) => {
+  const revoke = () => close(true);
+  window.addEventListener("gravewright:access-revoked", revoke);
+  el.onclick = async (e) => {
     const w = e.target.closest("[data-window]")?.dataset.window;
     if (w === "close") return close();
     if (w === "maximize")
@@ -145,8 +155,14 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
         !el.classList.contains("gw-window--minimized"),
       );
     }
-    const t = e.target.closest("[data-tab]")?.dataset.tab;
+    const t = e.target.closest(".pdf-sheet__tabs > [data-tab]")?.dataset.tab;
     if (t) {
+      try {
+        await extensionLifecycle('gravewright:sheet-flush');
+        await controller.call('flush');
+        await controller.call('refreshActor');
+        if(t === 'ficha') await extensionLifecycle('gravewright:sheet-refresh');
+      } catch(error) { const alert=el.querySelector('.pdf-sheet__error');show(alert,true);alert.querySelector('span').textContent=error.message;return; }
       tab = t;
       paint();
     }
@@ -183,7 +199,7 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
       ? "Opening character sheet…"
       : v.error || "Character sheet unavailable.";
     show(el.querySelector(".pdf-sheet__tabs"), !!a);
-    for (const p of el.querySelectorAll("[data-panel]"))
+    for (const p of el.querySelectorAll(".pdf-sheet > [data-panel]"))
       show(p, !!a && p.dataset.panel === tab);
     if (!a) return;
     el.dataset.actorId = actorId;
@@ -199,7 +215,7 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
     const alert = el.querySelector(".pdf-sheet__error");
     show(alert, !!v.saveError);
     alert.querySelector("span").textContent = v.saveError;
-    for (const b of el.querySelectorAll("[data-tab]")) {
+    for (const b of el.querySelectorAll(".pdf-sheet__tabs > [data-tab]")) {
       b.classList.toggle("pdf-sheet__tab--active", b.dataset.tab === tab);
       b.setAttribute("aria-selected", String(b.dataset.tab === tab));
     }

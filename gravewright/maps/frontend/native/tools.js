@@ -105,7 +105,7 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
         const template = document.querySelector('#map-image-library');
         libraryHost = template.content.firstElementChild.cloneNode(true);
         document.body.append(libraryHost);
-        libraryHost.querySelector('[aria-label="Close library"]').onclick = openLibrary;
+        libraryHost.querySelector('[data-library-close]').onclick = openLibrary;
         library = Library(libraryHost.querySelector('[data-library-body]'), { ...common, props: { containerId: map.containerId, gm, revision: 0 }, emit() { } });
         library.update({ revision: 1 });
         const tabs=libraryHost.querySelectorAll('.upload-library__tabs button');

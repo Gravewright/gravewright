@@ -8,6 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_GET
 from django.utils import timezone
+from django.utils.deprecation import MiddlewareMixin
 from django.utils.crypto import salted_hmac
 from gravewright.accounts.models import User
 from .models import Campaign, Membership, StreamerLink
@@ -57,18 +58,17 @@ def consume(request,token):
     return redirect(f'/game/{row.campaign_id}')
 
 
-class StreamerMiddleware:
+class StreamerMiddleware(MiddlewareMixin):
     """Guest credentials cannot write through any HTTP app, including future routes."""
-    def __init__(self,get_response):self.get_response=get_response
-    def __call__(self,request):
+    def process_request(self,request):
         if request.path=='/logout' or request.path.startswith('/stream/') and request.method=='GET':
-            return self.get_response(request)
+            return None
         if request.user.is_authenticated and StreamerLink.objects.filter(guest_id=request.user.pk).exists():
             if not active(request.user.pk):
                 if request.path=='/login':
                     logout(request)
-                    return self.get_response(request)
+                    return None
                 return JsonResponse({'error':'stream_expired'},status=403)
             if request.method not in ('GET','HEAD','OPTIONS') and request.path!='/logout':
                 return JsonResponse({'error':'stream_read_only'},status=403)
-        return self.get_response(request)
+        return None

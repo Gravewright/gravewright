@@ -1,13 +1,11 @@
 from django.http import JsonResponse, HttpResponse
+from django.utils.deprecation import MiddlewareMixin
 
 
-class AuthSecurityMiddleware:
+class AuthSecurityMiddleware(MiddlewareMixin):
     """Bound authentication bodies before CSRF middleware parses form data."""
 
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
+    def process_request(self, request):
         is_api = request.path.startswith('/api/auth/')
         is_auth = is_api or request.path in {'/setup', '/register', '/login', '/logout', '/inside/account'}
         content_length = request.META.get('CONTENT_LENGTH', '')
@@ -20,8 +18,10 @@ class AuthSecurityMiddleware:
                 response = JsonResponse({'error': 'request_too_large'}, status=413)
             else:
                 response = HttpResponse(status=413)
-        else:
-            response = self.get_response(request)
+            return response
+        return None
+
+    def process_response(self, request, response):
         if not request.path.startswith(('/static/', '/admin/')):
             response['Cache-Control'] = 'no-store'
             # Datastar compiles trusted expressions in data-* attributes.

@@ -514,6 +514,19 @@ export function pdfController(host, options) {
         value: fieldValue,
         call(name, ...args) {
             const methods = {
+        async flush() {
+          clearTimeout(saveTimer);
+          while (saving || saveQueued) {
+            clearTimeout(saveTimer);
+            if (saving) await new Promise(resolve => setTimeout(resolve, 20));
+            else await save();
+          }
+          if (saveError.value) throw new Error(saveError.value);
+        },
+        async refreshActor() {
+          const value = await options.read();
+          if (!disposed) actor.value = { ...value, data: normalizePdfCharacterData(value.data) };
+        },
                 save,
                 prevPage,
                 nextPage,
@@ -533,7 +546,7 @@ export function pdfController(host, options) {
             const result = methods[name](...args);
             options.repaint();
             if (result?.finally)
-                result.finally(options.repaint);
+                result.then(options.repaint, options.repaint);
             return result;
         },
         destroy() {

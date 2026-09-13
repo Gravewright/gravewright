@@ -5,7 +5,7 @@
 .game-panel__title{display:flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.game-panel__title>svg{width:18px;height:18px;flex-shrink:0;color:var(--accent)}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label]{min-width:29px;min-height:29px;border-radius:5px}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label]:hover{background:#ffffff0a}
-:is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label*="Fechar"]:hover{background:#dc68681a;color:#ef9999}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button:is([data-action="close"],[data-close],[data-visibility-action="close"],[data-library-close],.directory-dialog__close):hover{background:#dc68681a;color:#ef9999}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog,.card-hand__veil,.token-editor,.light-editor,.wall-editor) :is(button,input,select,textarea,summary):focus-visible{outline:2px solid var(--focus-ring,var(--accent));outline-offset:2px}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) :is(input,select,textarea){accent-color:var(--accent)}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) :is(button,summary){-webkit-tap-highlight-color:transparent}

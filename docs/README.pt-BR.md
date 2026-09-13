@@ -14,6 +14,7 @@ Inglês é o idioma principal da documentação. Cada guia tem uma versão corre
 | [Desenvolvimento](pt-BR/development.md) | Fluxo de contribuição, convenções e contratos |
 | [API](pt-BR/api.md) | Fachada Python, API do navegador e transportes |
 | [Módulos](pt-BR/modules.md) | Manifestos, confiança, ciclo de vida e exemplos |
+| [Porte ético de módulos](pt-BR/ethical-module-porting.md) | Licenças, direitos sobre conteúdo e mapeamento para os domínios nativos |
 | [Frontend](pt-BR/frontend.md) | Jinja2, Datastar, JavaScript, renderização e dependências |
 | [Configuração](pt-BR/configuration.md) | Variáveis de ambiente, padrões e preferências persistidas |
 | [Testes](pt-BR/testing.md) | Verificações Django, Node.js e regressões no navegador |

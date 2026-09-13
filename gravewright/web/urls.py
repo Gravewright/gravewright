@@ -1,8 +1,10 @@
 from django.urls import path
+from django.views.generic import RedirectView
 from . import inside
 
 app_name = 'web'
 urlpatterns = [
+    path("favicon.ico", RedirectView.as_view(url="/static/gravewright_web/favicon.svg")),
     path('inside', inside.inside, name='inside'),
     path('inside/', inside.inside),
     path('inside/dialog/<str:mode>', inside.dialog, name='dialog'),

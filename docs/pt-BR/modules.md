@@ -118,7 +118,7 @@ O ID e o título do sistema vêm de `id` e `name` do pacote. Cada pacote declara
 
 Após a instalação assinada, o sistema aparece em Systems, `/api/rulesets` e no formulário de campanha. O catálogo usa a versão instalada compatível e não revogada mais recente de cada pacote, comparando os números da versão. Módulos comuns sem `system` continuam disponíveis em Installed modules. Campanhas existentes podem manter um sistema indisponível ao editar seus detalhes, mas ele não pode ser escolhido para uma nova campanha.
 
-Selecionar um sistema fornece os tipos de documentos; o mestre ainda ativa seu JavaScript e as substituições de fichas em Settings → Extensions. A mesa usa os tipos da versão exata ativada, ou da versão instalada mais recente quando nenhuma está ativada. Os dados dos atores mantêm a estrutura nativa existente; dados específicos do módulo usam as APIs de documentos e armazenamento de módulos. Instalar outra versão não muda automaticamente a versão ativada na mesa.
+Salvar uma mesa com um sistema instalado seleciona seus tipos e ativa seu pacote de interface. A versão exata já ativa é preservada; trocar o sistema remove o pacote anterior e mantém os demais módulos e preferências de interface. A mesa usa os tipos da versão exata ativada, ou da versão instalada mais recente quando nenhuma está ativada. Os dados dos atores mantêm a estrutura nativa existente; dados específicos do módulo usam as APIs de documentos e armazenamento de módulos. Instalar outra versão não muda automaticamente a versão ativada na mesa.
 
 ## Catálogo assinado e ativação
 
@@ -284,3 +284,26 @@ armazenamento e ciclo de vida de `start`; não ganha novas permissões. Use
 `storage.user` para preferências pessoais e feche as modais e libere os recursos
 em `onDispose`. O host fornece apenas o botão; o módulo mantém sua interface,
 assets e validação. Módulos sem esse callback continuam funcionando normalmente.
+
+### Apps Django instalados explicitamente
+
+O operador pode instalar um app Python confiável no ambiente do servidor e definir
+`GRAVEWRIGHT_SERVER_APPS` com seu caminho de importação (separado por vírgulas para
+vários apps). O AppConfig pode declarar `gravewright_urlconf` para registrar suas
+rotas. Cada app deve verificar autenticação, CSRF e permissões nativas. O marketplace
+de JavaScript não instala nem ativa código Python por esse mecanismo. Ao recriar o
+ambiente Python, reinstale essas dependências gerenciadas separadamente.
+
+As linhas de itens nativas fornecem o formato de arraste
+`application/x-gravewright-item`, com `{id, tableId}`. Resolva o identificador pela
+API autenticada antes de copiar o item para uma ficha; o conteúdo do arraste não
+concede acesso ao documento.
+
+Para apps mantidos em repositórios separados, configure
+`GRAVEWRIGHT_SERVER_APP_PATHS` com as pastas raiz dos pacotes (`:` no Linux/macOS,
+`;` no Windows). Caminhos relativos partem da raiz do VTT. Esses caminhos
+explicitamente confiáveis continuam disponíveis após sincronizar o ambiente;
+as dependências dos apps ainda precisam ser instaladas. Os pacotes permanecem
+fora do repositório do VTT.
+
+[Porte ético de módulos](ethical-module-porting.md)

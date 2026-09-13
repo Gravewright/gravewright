@@ -109,6 +109,7 @@ def state(campaign, user):
             for a in Asset.objects.filter(campaign_id=campaign, kind="pdf")
         ],
         "is_gm": who.role == "gm",
+        "systemId": who.campaign.system or "gravewright-pdf-system",
         "players": [
             {"id": str(m.user_id), "name": m.user.name}
             for m in Membership.objects.select_related("user").filter(

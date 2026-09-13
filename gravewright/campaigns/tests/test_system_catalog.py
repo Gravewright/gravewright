@@ -26,6 +26,9 @@ class SystemCatalogTests(TestCase):
         self.key = Ed25519PrivateKey.generate()
         keys = {'test': base64.b64encode(self.key.public_key().public_bytes_raw()).decode()}
         self.host = ModulePackages(Path(directory.name) / 'modules', keys)
+        host_patch = patch('gravewright.modules.packages.host', return_value=self.host)
+        host_patch.start()
+        self.addCleanup(host_patch.stop)
         self.owner = User.objects.create_user(
             'systems@example.test', 'owner-password-123', name='Owner', role='owner')
         self.client.force_login(self.owner)
@@ -83,7 +86,7 @@ class SystemCatalogTests(TestCase):
         self.assertEqual(created.status_code, 201, created.content)
         self.assertEqual(created.json()['system'], 'example.system')
         self.assertEqual(Campaign.objects.get().system, 'example.system')
-        self.assertFalse(ModuleSet.objects.exists(), 'Selecting a system must not activate its module')
+        self.assertEqual(ModuleSet.objects.get().modules, {'example.system': '1.0.0'})
         self.assertEqual(get_ruleset('example.system'), row)
 
     def test_filters_releases_and_uses_numeric_semver_for_each_system(self):
@@ -135,7 +138,7 @@ class SystemCatalogTests(TestCase):
         created = self.create_campaign()
         self.assertEqual(created.status_code, 201, created.content)
         campaign_id = created.json()['id']
-        selected = self.host.configure(campaign_id, {'example.system': '1.0.0'}, {}, '0')
+        selected = self.host.configure(campaign_id, {'example.system': '1.0.0'}, {}, self.host.state(campaign_id)['moduleSetRevision'])
         self.install(version='2.0.0', system={
             'actorTypes': [{'id': 'npc', 'label': 'NPC'}],
             'itemTypes': [{'id': 'treasure', 'label': 'Treasure'}],
@@ -157,7 +160,7 @@ class SystemCatalogTests(TestCase):
         created = self.create_campaign()
         self.assertEqual(created.status_code, 201, created.content)
         campaign_id = created.json()['id']
-        self.host.configure(campaign_id, {'example.system': '1.0.0'}, {}, '0')
+        self.host.configure(campaign_id, {'example.system': '1.0.0'}, {}, self.host.state(campaign_id)['moduleSetRevision'])
         with patch('gravewright.modules.packages.SDK_VERSION', (2, 0, 0)):
             self.assertIsNone(get_ruleset('example.system', campaign_id=campaign_id))
             self.assertEqual(get_ruleset('example.system')['version'], '2.0.0')
@@ -190,3 +193,52 @@ class SystemCatalogTests(TestCase):
             self.install('gravewright-pdf-system')
         self.assertEqual(error.exception.code, 'invalid_data')
         self.assertFalse(Package.objects.exists())
+
+    def test_switching_systems_preserves_addons_and_their_replacements(self):
+        self.install('future.first')
+        self.install('future.second', system={
+            'actorTypes': [{'id': 'pilot', 'label': 'Pilot'}],
+            'itemTypes': [{'id': 'ship', 'label': 'Ship'}],
+        })
+        self.install('future.addon', system=False)
+        created = self.create_campaign('future.first')
+        self.assertEqual(created.status_code, 201, created.content)
+        campaign_id = created.json()['id']
+        current = self.host.state(campaign_id)
+        self.host.configure(campaign_id,
+            {'future.first': '1.0.0', 'future.addon': '1.0.0'},
+            {'actor.sheet': 'future.first', 'chat.log': 'future.addon'},
+            current['moduleSetRevision'])
+        response = self.client.post('/api/containers/' + campaign_id, {
+            'name': 'Changed system', 'description': '', 'system': 'future.second',
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 200, response.content)
+        selected = ModuleSet.objects.get(campaign_id=campaign_id)
+        self.assertEqual(selected.modules, {'future.second': '1.0.0', 'future.addon': '1.0.0'})
+        self.assertEqual(selected.replacements, {'chat.log': 'future.addon'})
+        directory = self.client.get('/api/containers/' + campaign_id + '/actors')
+        self.assertEqual(directory.status_code, 200, directory.content)
+        self.assertEqual(directory.json()['systemId'], 'future.second')
+        self.assertEqual(directory.json()['actorTypes'], [{'id': 'pilot', 'label': 'Pilot'}])
+        response = self.client.post('/api/containers/' + campaign_id, {
+            'name': 'Native again', 'description': '', 'system': 'gravewright-pdf-system',
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 200, response.content)
+        selected.refresh_from_db()
+        self.assertEqual(selected.modules, {'future.addon': '1.0.0'})
+        self.assertEqual(selected.replacements, {'chat.log': 'future.addon'})
+
+    def test_saving_system_does_not_silently_upgrade_the_active_release(self):
+        self.install('future.pinned', version='1.0.0')
+        created = self.create_campaign('future.pinned')
+        self.assertEqual(created.status_code, 201, created.content)
+        campaign_id = created.json()['id']
+        revision = self.host.state(campaign_id)['moduleSetRevision']
+        self.install('future.pinned', version='2.0.0')
+        response = self.client.post('/api/containers/' + campaign_id, {
+            'name': 'Renamed', 'description': '', 'system': 'future.pinned',
+        }, content_type='application/json')
+        self.assertEqual(response.status_code, 200, response.content)
+        selected = ModuleSet.objects.get(campaign_id=campaign_id)
+        self.assertEqual(selected.modules, {'future.pinned': '1.0.0'})
+        self.assertEqual(selected.revision, revision)

@@ -1678,11 +1678,11 @@ window.addEventListener("gravewright:cards-drop", ({ detail }) => {
 document.addEventListener("click", (e) => {
   const button = e.target.closest("button");
   if (!button) return;
-  if (button.getAttribute("aria-label") === "Your hand") {
+  if (button.dataset.dockTool === "cards") {
     e.stopImmediatePropagation();
     showHand();
   }
-  if (["Audio sources", "Scene mixer"].includes(button.getAttribute("aria-label"))) {
+  if (["sound", "sounds"].includes(button.dataset.dockTool)) {
     e.stopImmediatePropagation();
     showAudio();
   }
@@ -1718,9 +1718,9 @@ window.addEventListener("pagehide", () => {
   }
   for (const name of Object.keys(widgets)) close(name);
 });
-var muteButton = document.querySelector('[aria-label="Enable audio"]');
-var volume = document.querySelector('[aria-label="Individual volume"]');
-var mixer = document.querySelector('[aria-label="Individual mixer"]');
+var muteButton = document.querySelector('[data-audio-control="mute"]');
+var volume = document.querySelector('[data-audio-control="volume"]');
+var mixer = document.querySelector('[data-audio-control="mixer"]');
 try {
   master = Number(localStorage.getItem("gravewright.audio.volume") || 1);
   muted = localStorage.getItem("gravewright.audio.muted") === "true";

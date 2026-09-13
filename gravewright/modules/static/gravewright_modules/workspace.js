@@ -141,7 +141,7 @@ if (table) {
     }
     document.querySelectorAll(".actor-directory__sheet[data-actor-id],.token-sheet[data-actor-id]").forEach((el) => {
       if (el.dataset.sceneId && el.dataset.sceneId !== window.gravewrightMaps?.current?.id) return;
-      attach(el, el.classList.contains("token-sheet") ? "token.sheet" : "actor.sheet", { actorId: el.dataset.actorId, ...el.dataset.tokenId ? { tokenId: el.dataset.tokenId } : {}, ...el.dataset.sceneId ? sceneContext() : {} });
+      attach(el.querySelector('[data-panel="ficha"]') ?? el, el.classList.contains("token-sheet") ? "token.sheet" : "actor.sheet", { actorId: el.dataset.actorId, ...el.dataset.tokenId ? { tokenId: el.dataset.tokenId } : {}, ...el.dataset.sceneId ? sceneContext() : {} });
     });
   }, sceneContext = function() {
     const map = window.gravewrightMaps?.current;

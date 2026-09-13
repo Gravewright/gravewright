@@ -114,14 +114,14 @@ window.addEventListener('gravewright:selection-edit',({detail:{object}})=>{if(ob
 window.addEventListener('gravewright:map-viewport',refresh);
 window.addEventListener('gravewright:selection-preview',({detail})=>{widgets.audio?.update({selectionPreview:detail});});
 window.addEventListener('gravewright:cards-drop',({detail})=>{void cardCommand('play',{card_id:detail.cardId,...detail}).catch(console.error);});
-document.addEventListener('click',e=>{const button=e.target.closest('button');if(!button)return;if(button.getAttribute('aria-label')==='Your hand'){e.stopImmediatePropagation();showHand();}if(['Audio sources','Scene mixer'].includes(button.getAttribute('aria-label'))){e.stopImmediatePropagation();showAudio();}},true);
+document.addEventListener('click',e=>{const button=e.target.closest('button');if(!button)return;if(button.dataset.dockTool==='cards'){e.stopImmediatePropagation();showHand();}if(['sound','sounds'].includes(button.dataset.dockTool)){e.stopImmediatePropagation();showAudio();}},true);
 window.gravewrightTableMedia={areaCommand,showHand,showAudio,mountCompendiums:mount=>ContentDirectory(mount,options(base(),()=>{})),mountDecks:mount=>DeckUpload(mount,options(base(),()=>{void fresh('cards').then(refresh);})),upload:async(file)=>{const body=new FormData();body.append('file',file);body.append('name',file.name);await new Client().upload('/audio',body);await fresh('audio');refresh();},setMuted(value){muted=value;syncAudio();},setVolume(value){master=value;syncAudio();},unlock(){unlocked=true;syncAudio();}};
 setInterval(()=>{if(scene&&unlocked)void fresh('audio').then(syncAudio).catch(()=>{});},2000);
 window.addEventListener('pagehide',()=>{for(const row of media.values()){row.audio.pause();row.audio.removeAttribute('src');}for(const name of Object.keys(widgets))close(name);});
 
-const muteButton=document.querySelector('[aria-label="Enable audio"]');
-const volume=document.querySelector('[aria-label="Individual volume"]');
-const mixer=document.querySelector('[aria-label="Individual mixer"]');
+const muteButton=document.querySelector('[data-audio-control="mute"]');
+const volume=document.querySelector('[data-audio-control="volume"]');
+const mixer=document.querySelector('[data-audio-control="mixer"]');
 try {master=Number(localStorage.getItem('gravewright.audio.volume')||1);muted=localStorage.getItem('gravewright.audio.muted')==='true';channels={...channels,...JSON.parse(localStorage.getItem('gravewright.audio.channels')||'{}')};}catch{}
 if(volume){volume.value=String(master*100);volume.oninput=()=>{master=Number(volume.value)/100;volume.setAttribute('aria-valuetext',Math.round(master*100)+'%');try{localStorage.setItem('gravewright.audio.volume',String(master));}catch{}syncAudio();};}
 if(muteButton)muteButton.onclick=()=>{if(!unlocked){unlocked=true;muted=false;}else muted=!muted;muteButton.setAttribute('aria-pressed',String(!muted));muteButton.setAttribute('aria-label',muted?'Enable audio':'Mute audio');try{localStorage.setItem('gravewright.audio.muted',String(muted));}catch{}syncAudio();};

@@ -5,6 +5,8 @@ Django URL configuration. Browser JSON and file routes remain in app URL modules
 WebSocket routing is configured separately by config.asgi.
 """
 from django.contrib import admin
+from django.apps import apps
+from django.conf import settings
 from django.urls import include, path
 
 urlpatterns = [
@@ -20,3 +22,11 @@ urlpatterns = [
     path('', include('gravewright.campaigns.urls')),
     path('', include('gravewright.accounts.urls')),
 ]
+
+# A trusted installed app may opt into HTTP routes without editing host URLs.
+for app in apps.get_app_configs():
+    if (app.name in settings.GRAVEWRIGHT_SERVER_APPS or
+            f'{type(app).__module__}.{type(app).__name__}' in settings.GRAVEWRIGHT_SERVER_APPS):
+        urlconf = getattr(app, 'gravewright_urlconf', None)
+        if urlconf:
+            urlpatterns += [path('', include(urlconf))]

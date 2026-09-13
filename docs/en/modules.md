@@ -118,7 +118,7 @@ The system ID and title come from the package's `id` and `name`. Each package de
 
 After a signed installation, the system appears in Systems, `/api/rulesets`, and the campaign form. The catalog uses the newest compatible, non-revoked installed version per package, ordered by numeric version. Ordinary modules without `system` remain available under Installed modules. Existing campaigns can retain an unavailable system when editing their details, but it cannot be selected for a new campaign.
 
-Selecting a system supplies document types; the GM still activates its JavaScript and sheet replacements under Settings → Extensions. Tables use the document types of that exact activated release, or the latest installed version if none is activated. Actor data keeps the existing native document structure; module-specific data uses the supported module storage and document APIs. Installing a new version does not automatically change a table's activated release.
+Saving a campaign with an installed system selects its document types and activates its browser package. The existing exact release is retained when already active; switching systems removes the previous system package while preserving unrelated modules and replacement preferences. Tables use the document types of that exact activated release, or the latest installed version if none is activated. Actor data keeps the existing native document structure; module-specific data uses the supported module storage and document APIs. Installing a new version does not automatically change a table's activated release.
 
 ## Signed catalog and activation
 
@@ -284,3 +284,35 @@ module-scoped assets, storage and lifetime as `start`; no new permissions are
 granted. Use `storage.user` for personal choices, and close dialogs and dispose
 resources on `onDispose`. The host only supplies the button; the module owns its
 UI, assets and validation. Modules without this optional callback are unchanged.
+
+### Explicitly installed Django apps
+
+A host operator may install a trusted Python app in the server's environment and
+set `GRAVEWRIGHT_SERVER_APPS` to its import path (comma-separated for multiple
+apps). An AppConfig may expose `gravewright_urlconf` to append its URL patterns.
+These apps run as trusted server code and must enforce authentication, CSRF and
+native domain permissions. This setting is never populated from browser package
+manifests. Environment rebuilds require reinstalling these separately managed
+Python dependencies. An invalid app import prevents startup rather than silently
+disabling its server functionality.
+
+Native item rows expose `application/x-gravewright-item` drag data containing
+`{id, tableId}`. Resolve the ID through the authenticated item API before copying
+it into a sheet; do not treat data supplied by a drag payload as authoritative.
+
+Actor and token sheet replacements mount inside the native character-sheet tab.
+They retain the movable window, title bar, Token and Notes tabs. Before switching
+tabs or closing, the window emits `gravewright:sheet-flush`; a mounted extension
+can call `event.detail.waitUntil(promise)` synchronously to await pending writes.
+A rejection keeps the window open and displays the error. Returning to the sheet
+emits `gravewright:sheet-refresh` with the same wait contract, after native token
+or notes writes finish. Bind listeners on `root.closest('.gw-window')` using the
+mount abort signal. Keep internal tab attributes namespaced to the extension.
+
+For separately maintained source checkouts, set `GRAVEWRIGHT_SERVER_APP_PATHS`
+to their package root directories (`:` separated on Linux/macOS, `;` on Windows).
+Relative paths resolve against the VTT checkout. These explicitly trusted paths
+survive virtual-environment synchronization; app dependencies still require
+installation. The Python packages remain outside the VTT repository.
+
+[Ethical module porting](ethical-module-porting.md)

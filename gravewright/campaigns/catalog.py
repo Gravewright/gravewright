@@ -1,7 +1,7 @@
 """Available campaign systems from the host and installed module manifests.
 
-Choosing a system identifies its documents. Its browser module must still be
-activated explicitly for each table through the module configuration.
+Choosing a system identifies its documents and activates its installed browser
+package when the campaign form is saved.
 """
 from copy import deepcopy
 import re
@@ -16,6 +16,24 @@ NATIVE_RULESET = {
     'title': 'Gravewright PDF System',
     'actorTypes': [{'id': 'character', 'label': 'Character'}],
 }
+
+
+def activate_selected_system(campaign, previous_system=None):
+    """Select system code alongside document types, retaining unrelated modules."""
+    from gravewright.modules.packages import host
+    current = ModuleSet.objects.filter(campaign=campaign).first()
+    modules = dict(current.modules) if current else {}
+    replacements = dict(current.replacements) if current else {}
+    if previous_system and previous_system != campaign.system:
+        modules.pop(previous_system, None)
+        replacements = {key: value for key, value in replacements.items() if value != previous_system}
+    if campaign.system and campaign.system != NATIVE_SYSTEM_ID and campaign.system not in modules:
+        descriptor = get_ruleset(campaign.system)
+        if descriptor is None:
+            return
+        modules[campaign.system] = descriptor['version']
+    if modules != (current.modules if current else {}) or replacements != (current.replacements if current else {}):
+        host().configure(campaign.pk, modules, replacements, current.revision if current else '0')
 
 
 def _descriptor(package):

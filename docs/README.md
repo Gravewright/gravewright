@@ -14,6 +14,7 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | [Development](en/development.md) | Contributor workflow, source conventions and contracts |
 | [API](en/api.md) | Python facade, browser API and transport boundaries |
 | [Modules](en/modules.md) | Package manifests, trust, lifecycle and extension examples |
+| [Ethical module porting](en/ethical-module-porting.md) | Licenses, content rights and mapping features to native domains |
 | [Frontend](en/frontend.md) | Jinja2, Datastar, JavaScript, rendering and vendor assets |
 | [Configuration](en/configuration.md) | Environment variables, defaults and persisted preferences |
 | [Testing](en/testing.md) | Django, Node.js and browser regression checks |
