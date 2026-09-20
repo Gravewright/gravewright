@@ -93,6 +93,19 @@ for value in GRAVEWRIGHT_SERVER_APP_PATHS:
         raise ValueError(f'GRAVEWRIGHT_SERVER_APP_PATHS directory does not exist: {app_path}')
     if str(app_path) not in sys.path:
         sys.path.append(str(app_path))
+# Default in-checkout extension folders. The API folder keeps browser module
+# sources; the Django folder is importable, so a trusted app dropped there only
+# needs its package name in GRAVEWRIGHT_SERVER_APPS. Explicitly configured
+# GRAVEWRIGHT_SERVER_APP_PATHS entries keep precedence over this default folder.
+GRAVEWRIGHT_API_MODULES_ROOT = env_path('GRAVEWRIGHT_API_MODULES_ROOT', 'extensions/api').resolve()
+GRAVEWRIGHT_DJANGO_MODULES_ROOT = env_path('GRAVEWRIGHT_DJANGO_MODULES_ROOT', 'extensions/django').resolve()
+for _name, _root in (('GRAVEWRIGHT_API_MODULES_ROOT', GRAVEWRIGHT_API_MODULES_ROOT),
+                     ('GRAVEWRIGHT_DJANGO_MODULES_ROOT', GRAVEWRIGHT_DJANGO_MODULES_ROOT)):
+    # A deployment may delete the shipped folders; a configured one must exist.
+    if not _root.is_dir() and os.environ.get(_name, '').strip():
+        raise ValueError(f'{_name} directory does not exist: {_root}')
+if GRAVEWRIGHT_DJANGO_MODULES_ROOT.is_dir() and str(GRAVEWRIGHT_DJANGO_MODULES_ROOT) not in sys.path:
+    sys.path.append(str(GRAVEWRIGHT_DJANGO_MODULES_ROOT))
 GRAVEWRIGHT_SERVER_APPS = tuple(dict.fromkeys(
     name.strip() for name in os.environ.get('GRAVEWRIGHT_SERVER_APPS', '').split(',')
     if name.strip()
@@ -214,6 +227,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # Assets and installed module packages are private and served by guarded views.
 # Never expose this directory as an unauthenticated /media/ static location.
 MEDIA_ROOT = env_path('GRAVEWRIGHT_MEDIA_ROOT', 'data/media')
+GRAVEWRIGHT_MODULES_ROOT = (
+    env_path('GRAVEWRIGHT_MODULES_ROOT', '').resolve()
+    if os.environ.get('GRAVEWRIGHT_MODULES_ROOT', '').strip() else None
+)
 GRAVEWRIGHT_CONTENT_ROOT = env_path('GRAVEWRIGHT_CONTENT_ROOT', 'data/vtt/compendiums')
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 GRAVEWRIGHT_MAP_MAX_PIXELS = int(os.environ.get('GRAVEWRIGHT_MAP_MAX_PIXELS', '64000000'))

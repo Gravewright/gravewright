@@ -54,6 +54,7 @@ function modules(root) {
   const kind = root.dataset.packageKind;
   const manager = root.closest('[data-package-manager]');
   const browser = manager.querySelector('[data-package-browser]');
+  const localDialog = manager.querySelector('[data-local-install]');
   const detail = root.querySelector('[data-package-detail]');
   const native = root.querySelector('[data-native-system]');
   const language = document.documentElement.lang;
@@ -275,8 +276,53 @@ function modules(root) {
       root.querySelector('[data-action=browse]').focus();
     };
     manager.querySelector('[data-action=close-browser]').onclick = closeBrowser;
+    const closeLocal = () => {
+      localDialog.close();
+    };
+    localDialog.addEventListener('close', () => {
+      localDialog.querySelector('[data-local-form]').reset();
+      show(localDialog, '[role=alert]', false);
+      manager.querySelector('[data-action=install-local]').focus();
+    });
+    localDialog.querySelectorAll('[data-action=close-local]').forEach(button => button.onclick = closeLocal);
+    manager.querySelector('[data-action=install-local]').onclick = async () => {
+      show(localDialog, '[role=alert]', false);
+      try {
+        const configuration = await http.get('/api/module-packages/install-local');
+        text(localDialog, '[data-local-directory]', configuration.directory);
+        localDialog.dataset.maxBytes = configuration.maxBytes;
+        localDialog.showModal();
+        localDialog.querySelector('input[type=file]').focus();
+      } catch (error) {
+        text(browser, '[role=alert]', error.message || ui('Could not read the local installation configuration.', 'Não foi possível ler a configuração da instalação local.', 'No se pudo leer la configuración de instalación local.'));
+        show(browser, '[role=alert]', true);
+      }
+    };
+    localDialog.querySelector('[data-local-form]').onsubmit = event => {
+      event.preventDefault();
+      void run(localDialog, async () => {
+        const form = new FormData(event.target), file = form.get('file');
+        if (!(file instanceof File) || !file.size) throw new Error(ui('Select a ZIP file.', 'Selecione um arquivo ZIP.', 'Selecciona un archivo ZIP.'));
+        if (file.size > Number(localDialog.dataset.maxBytes)) throw new Error(ui('The ZIP exceeds the 64 MiB package limit.', 'O ZIP ultrapassa o limite de 64 MiB por pacote.', 'El ZIP supera el límite de 64 MiB por paquete.'));
+        try {
+          await http.upload('/api/module-packages/install-local', form);
+        } catch (error) {
+          const message = error.code === 'conflict'
+            ? ui('This ID and version are already installed with different contents.', 'Este ID e versão já estão instalados com conteúdo diferente.', 'Este ID y versión ya están instalados con contenido diferente.')
+            : error.code === 'unavailable'
+              ? ui('This package is not compatible with the current SDK.', 'Este pacote não é compatível com o SDK atual.', 'Este paquete no es compatible con el SDK actual.')
+              : ui('The ZIP is not a valid package for this library.', 'O ZIP não é um pacote válido para esta biblioteca.', 'El ZIP no es un paquete válido para esta biblioteca.');
+          throw new Error(message);
+        }
+        closeLocal();
+        closeBrowser();
+        await refresh();
+        text(root, '[role=status]', ui('Local package installed from ZIP.', 'Pacote local instalado do ZIP.', 'Paquete local instalado desde ZIP.'));
+        show(root, '[role=status]', true);
+      });
+    };
     document.addEventListener('keydown', event => {
-      if (browser.hidden || browser.querySelector('dialog[open]')) return;
+      if (browser.hidden || manager.querySelector('dialog[open]')) return;
       if (event.key === 'Escape') { event.preventDefault(); closeBrowser(); }
       if (event.key === 'Tab') {
         const focusable = [...browser.querySelectorAll('button,input,select,a[href],[tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length);
@@ -512,8 +558,36 @@ function administration(root) {
   };
   void run(root, refresh);
 }
+function defaultMarketplace(root) {
+  const language = document.documentElement.lang;
+  const ui = (en, pt, es) => language === 'pt-BR' ? pt : language === 'es' ? es : en;
+  const button = root.querySelector('[data-action=install-default-marketplace]');
+  function render(state) {
+    text(root, '[data-marketplace-state]', state.default
+      ? ui('The default marketplace is installed and ready.', 'O marketplace padrão está instalado e pronto.', 'El marketplace predeterminado está instalado y listo.')
+      : state.configured
+        ? ui('A custom marketplace is already configured.', 'Um marketplace personalizado já está configurado.', 'Ya hay un marketplace personalizado configurado.')
+        : ui('No marketplace is configured for this installation.', 'Nenhum marketplace está configurado nesta instalação.', 'No hay ningún marketplace configurado en esta instalación.'));
+    button.hidden = !!state.configured;
+  }
+  async function refresh() {
+    render(await http.get('/api/marketplace/default'));
+  }
+  button.onclick = () => void run(root, async () => {
+    try {
+      render(await http.post('/api/marketplace/default'));
+    } catch {
+      throw new Error(ui(
+        'Could not install the default marketplace. Check the server connection and try again.',
+        'Não foi possível instalar o marketplace padrão. Verifique a conexão do servidor e tente novamente.',
+        'No se pudo instalar el marketplace predeterminado. Comprueba la conexión del servidor e inténtalo de nuevo.'
+      ));
+    }
+  });
+  void run(root, refresh);
+}
 function initialize() {
-  for (const [selector, start] of [["[data-module-catalog]", modules], ["[data-administration]", administration], ["[data-privacy-settings]", privacySettings]]) document.querySelectorAll(selector).forEach((root) => {
+  for (const [selector, start] of [["[data-module-catalog]", modules], ["[data-administration]", administration], ["[data-privacy-settings]", privacySettings], ["[data-default-marketplace]", defaultMarketplace]]) document.querySelectorAll(selector).forEach((root) => {
     if (root.dataset.initialized) return;
     root.dataset.initialized = "true";
     start(root);

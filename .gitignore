@@ -36,6 +36,12 @@ __pycache__/
 /backups/
 /tmp/
 
+# Operator-installed extensions; keep the folders and their documentation.
+/extensions/api/*
+/extensions/django/*
+!/extensions/api/README*.md
+!/extensions/django/README*.md
+
 # Test diagnostics, coverage reports and runtime logs.
 /test-results/
 /playwright-report/

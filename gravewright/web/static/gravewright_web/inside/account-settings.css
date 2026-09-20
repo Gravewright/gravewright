@@ -24,6 +24,8 @@
 .account-settings .ping-preferences label[data-v-gwping]{display:flex;justify-content:space-between}
 .account-settings input[type=color]{padding:var(--step-3);cursor:pointer}
 .account-settings .condition-preferences__option[data-v-gwcondition]{min-width:0;align-content:start}
+.account-settings__marketplace h3{display:flex;align-items:center;gap:var(--step-8)}
+.account-settings__marketplace h3 svg{color:var(--accent)}
 @media(max-width:1050px){.account-settings__columns{grid-template-columns:1fr}.account-settings__preferences{grid-template-columns:repeat(2,minmax(0,1fr))}.account-settings .condition-preferences{grid-column:1/-1}}
 @media(max-width:650px){.account-settings__preferences{grid-template-columns:1fr}.account-settings .account-settings__card{padding:0 0 var(--step-13)}.account-settings fieldset[data-v-gwaccount]{grid-template-columns:1fr}.account-settings h1{font-size:var(--text-display)}}
 

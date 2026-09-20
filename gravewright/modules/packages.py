@@ -250,6 +250,52 @@ class ModulePackages:
         self.verify(record)
         if record.get("status") == "revoked":
             raise ModuleFailure("permission_denied", "Revoked module version")
+        return self._install(record, archive)
+
+    def install_local(self, archive: bytes, expected_type=None):
+        """Install an owner-supplied ZIP without consulting a remote catalog."""
+        if expected_type not in {None, "module", "system"}:
+            raise ModuleFailure("invalid_data")
+        if len(archive) > MAX_ARCHIVE:
+            raise ModuleFailure("invalid_data", "Archive exceeds the package limit")
+        try:
+            with zipfile.ZipFile(io.BytesIO(archive)) as package:
+                info = package.getinfo("manifest.json")
+                if info.file_size > 1024 * 1024:
+                    raise ModuleFailure("invalid_data", "Manifest exceeds the package limit")
+                manifest = json.loads(package.read(info))
+        except (zipfile.BadZipFile, KeyError, ValueError, OSError):
+            raise ModuleFailure("invalid_data", "Invalid module archive") from None
+        self.contracts.validate("schemas/manifest.json", manifest)
+        record = {
+            "source": "local",
+            "id": manifest["id"],
+            "version": manifest["version"],
+            "sdk": manifest["sdk"]["requires"],
+            "sha256": hashlib.sha256(archive).hexdigest(),
+            "type": "system" if "system" in manifest else "module",
+        }
+        if expected_type is not None and record["type"] != expected_type:
+            raise ModuleFailure("invalid_data", "Package type does not match this library")
+        if not compatible(record["sdk"]):
+            raise ModuleFailure("unavailable", "Incompatible SDK")
+        return self._install(record, archive)
+
+    def _verify_stored_record(self, record):
+        if not isinstance(record, dict):
+            raise ModuleFailure("invalid_data", "Invalid package record")
+        if record.get("source") != "local":
+            self.verify(record)
+            return
+        if (set(record) != {"source", "id", "version", "sdk", "sha256", "type"}
+                or record["type"] not in {"module", "system"}
+                or any(not isinstance(record.get(field), str)
+                       for field in ("id", "version", "sdk", "sha256"))
+                or not re.fullmatch("[a-f0-9]{64}", record["sha256"])
+                or not compatible(record["sdk"])):
+            raise ModuleFailure("invalid_data", "Invalid local package record")
+
+    def _install(self, record: dict, archive: bytes):
         if (
             len(archive) > MAX_ARCHIVE
             or hashlib.sha256(archive).hexdigest() != record["sha256"]
@@ -415,9 +461,9 @@ class ModulePackages:
             raise ModuleFailure("invalid_data", "Invalid module archive") from None
 
     def verify_installed(self, row, asset=None):
-        """Recheck the signed archive and extracted bytes, including on activation."""
+        """Recheck the trusted archive and extracted bytes, including on activation."""
         record = row.record
-        self.verify(record)
+        self._verify_stored_record(record)
         archive = self.directory / "archives" / (row.digest + ".zip")
         try:
             raw = archive.read_bytes()
@@ -593,8 +639,15 @@ class ModulePackages:
         return {"value": value, "revision": revision}
 
 
-def host():
+def host(*, require_trust=False):
     """Build the package host from current settings and configured publisher keys."""
     from django.conf import settings
 
-    return ModulePackages(Path(settings.MEDIA_ROOT) / "modules", trusted_keys())
+    directory = settings.GRAVEWRIGHT_MODULES_ROOT or Path(settings.MEDIA_ROOT) / "modules"
+    try:
+        keys = trusted_keys()
+    except MarketplaceConfigurationError:
+        if require_trust:
+            raise
+        keys = {}
+    return ModulePackages(Path(directory), keys)

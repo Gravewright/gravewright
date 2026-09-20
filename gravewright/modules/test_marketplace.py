@@ -2,12 +2,14 @@ import base64
 import hashlib
 import io
 import json
+import os
 import tempfile
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
 from gravewright.accounts.models import User
@@ -238,6 +240,72 @@ class MarketplaceTests(TestCase):
         ]:
             self.assertEqual(response.status_code, 403)
         self.assertEqual(self.client.get("/api/module-packages").status_code, 200)
+
+    def test_owner_installs_local_zip_into_configured_folder_without_marketplace(self):
+        _, raw = self.release()
+        destination = self.directory / "operator-modules"
+        self.keyfile.write_text("broken")
+        with override_settings(
+            GRAVEWRIGHT_MODULES_ROOT=destination,
+            GRAVEWRIGHT_MARKETPLACE_URL="",
+        ), patch("gravewright.modules.views.download") as download:
+            configuration = self.client.get("/api/module-packages/install-local")
+            response = self.client.post("/api/module-packages/install-local", {
+                "kind": "module",
+                "file": SimpleUploadedFile("package.zip", raw, content_type="application/zip"),
+            })
+            installed = self.client.get("/api/module-packages").json()
+            host().verify_installed(Package.objects.get())
+        self.assertEqual(configuration.json()["directory"], str(destination))
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()["manifest"]["id"], "publisher.test")
+        self.assertNotIn("record", installed[0])
+        self.assertEqual(Package.objects.get().record["source"], "local")
+        self.assertTrue((destination / "archives" / (Package.objects.get().digest + ".zip")).is_file())
+        download.assert_not_called()
+
+    def test_local_zip_must_match_library_and_remains_owner_only(self):
+        _, raw = self.release()
+        response = self.client.post("/api/module-packages/install-local", {
+            "kind": "system",
+            "file": SimpleUploadedFile("package.zip", raw, content_type="application/zip"),
+        })
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertFalse(Package.objects.exists())
+        player = User.objects.create_user(email="local-player@example.test", name="Player")
+        self.client.force_login(player)
+        self.assertEqual(self.client.get("/api/module-packages/install-local").status_code, 403)
+
+    def test_owner_installs_default_marketplace_from_settings_screen(self):
+        raw = b'{\n  "gravewright-2026": "PXbpURq9J1jLkPnnwBVN/5B+zrb0p5MaWQAe/ltJ8LY="\n}\n'
+        data = self.directory / "runner-data"
+        data.mkdir()
+        (data / ".env").write_text("DJANGO_SECRET_KEY=" + "x" * 64 + "\n")
+        with override_settings(
+            RUNNER_DATA=data,
+            GRAVEWRIGHT_MARKETPLACE_URL="",
+            GRAVEWRIGHT_MARKETPLACE_KEYS_FILE="",
+        ), patch.dict(os.environ, {
+            "GRAVEWRIGHT_MARKETPLACE_URL": "",
+            "GRAVEWRIGHT_MARKETPLACE_KEYS_FILE": "",
+        }), patch(
+            "scripts.gravewright_runner._download_default_keys", return_value=raw,
+        ):
+            self.assertFalse(self.client.get("/api/marketplace/default").json()["configured"])
+            response = self.client.post("/api/marketplace/default")
+            self.assertEqual(response.status_code, 200, response.content)
+            self.assertTrue(response.json()["configured"])
+            self.assertTrue(response.json()["default"])
+            self.assertContains(self.client.get("/inside?section=settings"), "data-default-marketplace")
+            self.assertTrue((data / "marketplace/trusted-keys.json").is_file())
+            configured = (data / ".env").read_text()
+            self.assertIn("GRAVEWRIGHT_MARKETPLACE_URL", configured)
+            self.assertIn("GRAVEWRIGHT_MARKETPLACE_KEYS_FILE", configured)
+
+        player = User.objects.create_user(email="settings-player@example.test", name="Player")
+        self.client.force_login(player)
+        self.assertEqual(self.client.get("/api/marketplace/default").status_code, 403)
+        self.assertNotContains(self.client.get("/inside?section=settings"), "data-default-marketplace")
 
     def test_signed_package_type_must_be_supported_and_match_manifest(self):
         record, raw = self.release(type='module')

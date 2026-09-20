@@ -23,6 +23,11 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `GRAVEWRIGHT_PUBLIC_ORIGIN` | empty | Public HTTP(S) origin; pins the WebSocket origin/Host including port, adds host and CSRF trusted origin, enables Secure cookies for HTTPS |
 | `GRAVEWRIGHT_DATABASE` | `data/gravewright.sqlite3` | SQLite filename; relative to source root; :memory: is supported |
 | `GRAVEWRIGHT_MEDIA_ROOT` | `data/media` | Private upload/module storage, relative to source root |
+| `GRAVEWRIGHT_MODULES_ROOT` | `GRAVEWRIGHT_MEDIA_ROOT/modules` | Private folder where module ZIP archives and extracted packages are installed; may be absolute or source-root-relative |
+| `GRAVEWRIGHT_API_MODULES_ROOT` | `extensions/api` | Default folder for browser module sources, relative to source root; installed signed packages still live under the media root |
+| `GRAVEWRIGHT_DJANGO_MODULES_ROOT` | `extensions/django` | Default folder for trusted Django apps, relative to source root; appended to `sys.path` when it exists |
+| `GRAVEWRIGHT_SERVER_APPS` | empty | Comma-separated import paths of trusted Django apps added to `INSTALLED_APPS` |
+| `GRAVEWRIGHT_SERVER_APP_PATHS` | empty | Extra package roots for those apps (`:` on Linux/macOS, `;` on Windows); they precede the default Django folder |
 | `GRAVEWRIGHT_AUTH_MAX_ATTEMPTS` | `30` | Authentication attempts per client-IP window |
 | `GRAVEWRIGHT_AUTH_WINDOW_SECONDS` | `300` | Authentication window in seconds |
 | `GRAVEWRIGHT_REDIS_URL` | empty | Channels Redis URL; standard server settings allow empty/in-memory delivery only in debug |

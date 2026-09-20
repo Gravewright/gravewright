@@ -29,6 +29,10 @@ if not RUNNER_TOKEN:
 DATABASES['default']['NAME'] = RUNNER_DATA / 'gravewright.sqlite3'
 DATABASES['default']['TEST']['NAME'] = RUNNER_DATA / 'test-gravewright.sqlite3'
 MEDIA_ROOT = RUNNER_DATA / 'media'
+# An explicit module folder remains an operator choice; otherwise the Runner
+# keeps modules in its isolated user-data directory with the other media.
+if GRAVEWRIGHT_MODULES_ROOT is None:
+    GRAVEWRIGHT_MODULES_ROOT = MEDIA_ROOT / 'modules'
 STATIC_ROOT = RUNNER_DATA / 'staticfiles'
 GRAVEWRIGHT_CONTENT_ROOT = RUNNER_DATA / 'compendiums'
 ROOT_URLCONF = 'config.runner_urls'

@@ -23,6 +23,11 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `GRAVEWRIGHT_PUBLIC_ORIGIN` | vazio | Origem pública HTTP(S); fixa origem/Host WebSocket incluindo porta, adiciona host e origem CSRF, ativa cookies Secure em HTTPS |
 | `GRAVEWRIGHT_DATABASE` | `data/gravewright.sqlite3` | Arquivo SQLite relativo à raiz; :memory: é aceito |
 | `GRAVEWRIGHT_MEDIA_ROOT` | `data/media` | Armazenamento privado de uploads/módulos relativo à raiz |
+| `GRAVEWRIGHT_MODULES_ROOT` | `GRAVEWRIGHT_MEDIA_ROOT/modules` | Pasta privada onde arquivos ZIP de módulos e pacotes extraídos são instalados; pode ser absoluta ou relativa à raiz |
+| `GRAVEWRIGHT_API_MODULES_ROOT` | `extensions/api` | Pasta padrão dos fontes de módulos de navegador, relativa à raiz; pacotes assinados instalados continuam sob a raiz de mídia |
+| `GRAVEWRIGHT_DJANGO_MODULES_ROOT` | `extensions/django` | Pasta padrão dos apps Django confiáveis, relativa à raiz; acrescentada ao `sys.path` quando existe |
+| `GRAVEWRIGHT_SERVER_APPS` | vazio | Caminhos de importação (separados por vírgula) dos apps Django confiáveis adicionados a `INSTALLED_APPS` |
+| `GRAVEWRIGHT_SERVER_APP_PATHS` | vazio | Raízes adicionais de pacotes desses apps (`:` no Linux/macOS, `;` no Windows); têm precedência sobre a pasta padrão Django |
 | `GRAVEWRIGHT_AUTH_MAX_ATTEMPTS` | `30` | Tentativas de autenticação por janela de IP do cliente |
 | `GRAVEWRIGHT_AUTH_WINDOW_SECONDS` | `300` | Janela de autenticação em segundos |
 | `GRAVEWRIGHT_REDIS_URL` | vazio | URL Redis do Channels; as configurações padrão do servidor permitem vazio/memória somente em debug |

@@ -1,5 +1,6 @@
 import importlib
 import os
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -64,6 +65,28 @@ class EnvironmentTests(unittest.TestCase):
                     self.assertTrue(settings.CSRF_COOKIE_SECURE)
                     self.assertEqual(settings.SECURE_HSTS_SECONDS, 31536000)
         finally:
+            importlib.reload(settings)
+
+    def test_default_extension_folders(self):
+        """The shipped Django folder is importable; a configured folder must exist."""
+        import config.settings as settings
+        original = list(sys.path)
+        try:
+            importlib.reload(settings)
+            self.assertEqual(settings.GRAVEWRIGHT_API_MODULES_ROOT, BASE_DIR / 'extensions/api')
+            self.assertEqual(settings.GRAVEWRIGHT_DJANGO_MODULES_ROOT, BASE_DIR / 'extensions/django')
+            self.assertIn(str(BASE_DIR / 'extensions/django'), sys.path)
+            with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {
+                'GRAVEWRIGHT_DJANGO_MODULES_ROOT': directory,
+            }):
+                importlib.reload(settings)
+                self.assertEqual(settings.GRAVEWRIGHT_DJANGO_MODULES_ROOT, Path(directory).resolve())
+                self.assertIn(str(Path(directory).resolve()), sys.path)
+            with patch.dict(os.environ, {'GRAVEWRIGHT_API_MODULES_ROOT': 'extensions/absent'}):
+                with self.assertRaises(ValueError):
+                    importlib.reload(settings)
+        finally:
+            sys.path[:] = original
             importlib.reload(settings)
 
     def test_launcher_uses_configured_address(self):

@@ -168,9 +168,11 @@ record["signature"] = base64.b64encode(private_key.sign(canonical(record))).deco
 
 Publish the archive and catalog over HTTPS, configure the public key, then use the owner's Marketplace screen to install the release. A GM activates it under the table's Settings → Extensions. The HTTP installation route takes only `id` and `version`, looks up the configured catalog, and verifies the selected archive. It does not accept an arbitrary archive URL from the request.
 
+As a fully local alternative, the owner can use **Install from ZIP** in the same modal. This flow does not contact the marketplace or require a catalog or publisher keys: the local upload is the owner's explicit trust decision. The ZIP still undergoes the same manifest, compatibility, path, file-type, quota, and executable-content validation. In Systems it must declare `system`; in Modules it must not. Because module JavaScript runs on the application origin, install only trusted files.
+
 Installation checks the archive digest, manifest identity and SDK range, entry-file presence, filenames, entry types, and extracted bytes. Limits are 64 MiB compressed, 256 MiB expanded, 4,096 entries, and 64 active modules per table. Paths cannot traverse directories or contain backslashes, percent escapes, URL punctuation, or NUL. Symlinks, encrypted entries, case-insensitive duplicate paths, disallowed extensions, and recognized native executable headers are rejected. Supported file extensions are listed in `ModulePackages.install`; license texts should use `.txt` or `.md` because extensionless files are not accepted.
 
-Installed archives live under `MEDIA_ROOT/modules/archives/`; extracted packages live under `MEDIA_ROOT/modules/packages/<id>/<version>/<digest>/`. The database stores manifests and signed records. A release ID/version cannot be replaced with different bytes. Activation and authenticated asset access recheck stored content; do not edit extracted files to develop an update. Publish a new version instead.
+By default, installed archives live under `MEDIA_ROOT/modules/archives/`; extracted packages live under `MEDIA_ROOT/modules/packages/<id>/<version>/<digest>/`. Set, for example, `GRAVEWRIGHT_MODULES_ROOT=/srv/gravewright/modules` in `.env` to choose another folder; relative paths start at the source root and changing it requires a host restart. The database stores manifests and the trusted origin of each installation. A release ID/version cannot be replaced with different bytes. Activation and authenticated asset access recheck stored content; do not edit extracted files to develop an update. Publish a new version instead.
 
 Activation uses `{modules, replacements, expectedRevision}`. `modules` maps IDs to exact versions, `replacements` maps surface names to module IDs, and `expectedRevision` must equal the last read `moduleSetRevision` (`"0"` initially). A stale revision produces `conflict`. Successful changes issue a fresh revision and notify table clients. Clients also poll and reconcile on reconnect, so activation does not depend solely on socket delivery.
 
@@ -314,5 +316,16 @@ to their package root directories (`:` separated on Linux/macOS, `;` on Windows)
 Relative paths resolve against the VTT checkout. These explicitly trusted paths
 survive virtual-environment synchronization; app dependencies still require
 installation. The Python packages remain outside the VTT repository.
+
+The checkout ships a default folder for these apps: `extensions/django`, set by
+`GRAVEWRIGHT_DJANGO_MODULES_ROOT`. It is appended to `sys.path` when it exists,
+so a package placed directly in it only needs its import path in
+`GRAVEWRIGHT_SERVER_APPS`; explicit `GRAVEWRIGHT_SERVER_APP_PATHS` entries
+precede it. Browser module sources have a matching default folder,
+`extensions/api` (`GRAVEWRIGHT_API_MODULES_ROOT`), which is documentation and
+authoring space only — installed signed packages still live under
+`MEDIA_ROOT/modules`. A configured folder that does not exist prevents startup;
+deleting the shipped defaults without configuring them is supported. Git ignores
+the contents of both folders, so extensions stay out of this repository.
 
 [Ethical module porting](ethical-module-porting.md)

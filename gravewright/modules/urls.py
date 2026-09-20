@@ -6,8 +6,10 @@ urlpatterns = [
     path("api/tables/<uuid:table_id>/api", frontend.call),
     path("api/tables/<uuid:table_id>/modules/<str:module_id>/api", frontend.call),
     path("api/marketplace/status", views.marketplace_status),
+    path("api/marketplace/default", views.default_marketplace),
     path("api/marketplace", views.marketplace),
     path("api/marketplace/install", views.install),
+    path("api/module-packages/install-local", views.local_install),
     path("api/module-packages", views.installed),
     path("api/module-packages/activation", views.global_activation),
     path(

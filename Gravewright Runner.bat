@@ -6,6 +6,7 @@ rem CALL uses fixed labels only. Never pass paths through CALL's second parse.
 rem Delayed expansion stays disabled to preserve exclamation marks in paths.
 set "GW_EXIT=1"
 set "GW_CHECK="
+set "GW_MARKETPLACE=1"
 set "GW_NO_BROWSER="
 set "GW_NO_PAUSE="
 set "GW_DATA="
@@ -28,6 +29,7 @@ set "GW_ERROR=Unknown argument. Run Gravewright Runner.bat --help for usage."
 goto failed
 :argument_check
 set "GW_CHECK=--check"
+set "GW_MARKETPLACE="
 shift /1
 goto arguments
 :argument_browser
@@ -103,7 +105,7 @@ if not defined GW_PREPARED goto failed
 goto start_application
 
 :prepare_application
-echo [1/6] Checking uv...
+echo [1/7] Checking uv...
 set "GW_ERROR=Could not prepare uv. Check the download or version error above."
 call :resolve_uv
 if errorlevel 1 exit /b 1
@@ -111,7 +113,7 @@ echo Using uv: "%GW_UV%"
 "%GW_UV%" --version
 
 echo.
-echo [2/6] Checking Python 3.14 x64...
+echo [2/7] Checking Python 3.14 x64...
 set "GW_ERROR=Could not prepare Python 3.14. Check your connection and the error above."
 call :resolve_python
 if errorlevel 1 exit /b 1
@@ -127,7 +129,7 @@ set "UV_PROJECT_ENVIRONMENT=%GW_RUNTIME%\environments\%GW_CHECKOUT%"
 set "GW_FRONTEND_STATE=%GW_RUNTIME%\frontend\%GW_CHECKOUT%"
 
 echo.
-echo [3/6] Checking Node.js and npm...
+echo [3/7] Checking Node.js and npm...
 set "GW_ERROR=Could not prepare Node.js and npm. Check the download or version error above."
 call :resolve_node
 if errorlevel 1 exit /b 1
@@ -138,7 +140,7 @@ echo Using npm: "%GW_NPM%"
 for %%D in ("%GW_NODE%") do set "PATH=%%~dpD;%PATH%"
 
 echo.
-echo [4/6] Installing/checking locked Python dependencies...
+echo [4/7] Installing/checking locked Python dependencies...
 set "GW_ERROR=Python dependency installation failed. Check the error above and your connection."
 "%GW_UV%" --no-config sync --project "%GRAVEWRIGHT_ROOT%" --locked --no-dev --no-python-downloads --python "%GW_BASE_PYTHON%"
 if errorlevel 1 exit /b 1
@@ -146,7 +148,7 @@ set "GW_PYTHON=%UV_PROJECT_ENVIRONMENT%\Scripts\python.exe"
 if not exist "%GW_PYTHON%" exit /b 1
 
 echo.
-echo [5/6] Checking npm dependencies and frontend assets...
+echo [5/7] Checking npm dependencies and frontend assets...
 set "GW_ERROR=Frontend preparation failed. Check the npm/build error and folder permissions."
 rem The helper only checks packages/hashes or records a completed build here.
 rem The actual npm installation and build commands are executed by this BAT.
@@ -178,11 +180,18 @@ set "GW_PREPARED=1"
 exit /b 0
 
 :start_application
+if not defined GW_DATA set "GW_DATA=%LOCALAPPDATA%\Gravewright\data"
 echo.
-echo [6/6] Preparing the database and starting Gravewright...
+echo [6/7] Checking the optional default marketplace...
+if not defined GW_MARKETPLACE goto marketplace_ready
+set "GW_ERROR=Could not configure the default marketplace. Check the error above and your connection."
+"%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" --configure-default-marketplace
+if errorlevel 1 goto failed
+:marketplace_ready
+echo.
+echo [7/7] Preparing the database and starting Gravewright...
 echo Keep this window open. Press Ctrl+C here to stop the server.
 set "GW_ERROR=Gravewright could not start. See the application error above."
-if not defined GW_DATA set "GW_DATA=%LOCALAPPDATA%\Gravewright\data"
 if defined GW_PORT goto start_with_port
 "%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" %GW_CHECK% %GW_NO_BROWSER%
 set "GW_EXIT=%errorlevel%"

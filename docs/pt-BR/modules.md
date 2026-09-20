@@ -168,9 +168,11 @@ record["signature"] = base64.b64encode(private_key.sign(canonical(record))).deco
 
 Publique o arquivo e o catálogo por HTTPS, configure a chave pública e instale a versão na tela Marketplace do proprietário. Um mestre ativa o módulo em Settings → Extensions da mesa. A rota HTTP de instalação recebe somente `id` e `version`, consulta o catálogo configurado e verifica o ZIP selecionado. Ela não aceita uma URL arbitrária de arquivo enviada na requisição.
 
+Como alternativa inteiramente local, o proprietário pode usar **Instalar de ZIP** na mesma modal. Esse fluxo não consulta o marketplace nem exige catálogo ou chaves de publicador: o envio local é a decisão explícita de confiança do proprietário. O ZIP ainda passa pelas mesmas validações de manifesto, compatibilidade, caminhos, tipos de arquivo, cotas e conteúdo executável. Na seção Sistemas ele deve declarar `system`; na seção Módulos ele não pode declará-lo. Como JavaScript de módulos roda na origem da aplicação, instale somente arquivos confiáveis.
+
 A instalação verifica digest, identidade e intervalo SDK do manifesto, arquivo de entrada, nomes, tipos de entrada e bytes extraídos. Os limites são 64 MiB compactados, 256 MiB expandidos, 4.096 entradas e 64 módulos ativos por mesa. Caminhos não podem atravessar diretórios nem conter barras invertidas, escapes percentuais, pontuação de URL ou NUL. Links simbólicos, entradas criptografadas, nomes duplicados sem distinção de maiúsculas, extensões não permitidas e cabeçalhos reconhecidos de executáveis nativos são rejeitados. As extensões permitidas estão em `ModulePackages.install`; textos de licença precisam de `.txt` ou `.md`, pois arquivos sem extensão são rejeitados.
 
-Os arquivos ZIP ficam em `MEDIA_ROOT/modules/archives/`; os pacotes extraídos, em `MEDIA_ROOT/modules/packages/<id>/<version>/<digest>/`. O banco guarda manifestos e registros assinados. Não é possível substituir uma versão com outros bytes. Ativação e acesso autenticado a arquivos verificam novamente o conteúdo; publique uma nova versão em vez de editar arquivos extraídos.
+Por padrão, os arquivos ZIP ficam em `MEDIA_ROOT/modules/archives/` e os pacotes extraídos em `MEDIA_ROOT/modules/packages/<id>/<version>/<digest>/`. Defina, por exemplo, `GRAVEWRIGHT_MODULES_ROOT=/srv/gravewright/modulos` no `.env` para apontar outra pasta; caminhos relativos partem da raiz do projeto e a mudança exige reiniciar o host. O banco guarda manifestos e a origem confiada de cada instalação. Não é possível substituir uma versão com outros bytes. Ativação e acesso autenticado a arquivos verificam novamente o conteúdo; publique uma nova versão em vez de editar arquivos extraídos.
 
 A ativação recebe `{modules, replacements, expectedRevision}`. `modules` relaciona IDs a versões exatas, `replacements` relaciona superfícies a IDs, e `expectedRevision` deve corresponder ao último `moduleSetRevision` lido (`"0"` inicialmente). Uma revisão antiga resulta em `conflict`. Alterações geram nova revisão e notificam a mesa. Clientes também consultam periodicamente e reconciliam ao reconectar.
 
@@ -305,5 +307,17 @@ Para apps mantidos em repositórios separados, configure
 explicitamente confiáveis continuam disponíveis após sincronizar o ambiente;
 as dependências dos apps ainda precisam ser instaladas. Os pacotes permanecem
 fora do repositório do VTT.
+
+O checkout já traz uma pasta padrão para esses apps: `extensions/django`,
+definida por `GRAVEWRIGHT_DJANGO_MODULES_ROOT`. Ela é acrescentada ao `sys.path`
+quando existe, de modo que um pacote colocado diretamente nela só precisa do seu
+caminho de importação em `GRAVEWRIGHT_SERVER_APPS`; entradas explícitas de
+`GRAVEWRIGHT_SERVER_APP_PATHS` têm precedência sobre ela. Os fontes de módulos de
+navegador têm a pasta padrão correspondente `extensions/api`
+(`GRAVEWRIGHT_API_MODULES_ROOT`), que serve apenas para autoria e documentação —
+os pacotes assinados instalados continuam em `MEDIA_ROOT/modules`. Uma pasta
+configurada que não existe impede a inicialização; apagar as pastas padrão sem
+configurá-las é suportado. O git ignora o conteúdo das duas pastas, para que as
+extensões fiquem fora deste repositório.
 
 [Porte ético de módulos](ethical-module-porting.md)

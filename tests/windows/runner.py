@@ -270,7 +270,7 @@ def exercise(work, output, *, skip_browser):
         locked = run_batch(project, arguments, cwd=work, env=env, log=output / "preparation-lock.log",
                            label="Rejecting a concurrent preparation before installing or migrating...",
                            expected=1, timeout=30)
-    if "[1/6] Checking uv" in locked:
+    if "[1/7] Checking uv" in locked:
         raise AssertionError("The competing launcher entered preparation while its lock was held.")
     if (data / "gravewright.sqlite3").stat().st_mtime_ns != database_time:
         raise AssertionError("The competing launcher changed the database while preparation was locked.")

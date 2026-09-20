@@ -4,6 +4,7 @@ import json
 import asyncio
 import mimetypes
 from datetime import timedelta
+from pathlib import Path
 from urllib.parse import urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
@@ -29,6 +30,15 @@ from .packages import (
     safe_path,
     trusted_keys,
 )
+from scripts.gravewright_runner import (
+    DEFAULT_MARKETPLACE_URL,
+    RunnerError,
+    install_default_marketplace,
+)
+
+
+def module_directory():
+    return str(host().directory)
 
 
 class HTTPSRedirects(HTTPRedirectHandler):
@@ -155,13 +165,41 @@ def marketplace_status(request):
     )
 
 
+def default_marketplace_state():
+    try:
+        keys_ready = bool(trusted_keys())
+    except MarketplaceConfigurationError:
+        keys_ready = False
+    url = settings.GRAVEWRIGHT_MARKETPLACE_URL
+    return {
+        "configured": bool(url and keys_ready),
+        "default": url == DEFAULT_MARKETPLACE_URL and keys_ready,
+        "catalogUrl": url,
+    }
+
+
+@require_http_methods(["GET", "POST"])
+@owner
+def default_marketplace(request):
+    if request.method == "POST":
+        directory = Path(getattr(settings, "RUNNER_DATA", settings.BASE_DIR))
+        try:
+            result = install_default_marketplace(directory)
+        except RunnerError:
+            raise ModuleFailure("unavailable") from None
+        settings.GRAVEWRIGHT_MARKETPLACE_URL = result["GRAVEWRIGHT_MARKETPLACE_URL"]
+        settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE = result["GRAVEWRIGHT_MARKETPLACE_KEYS_FILE"]
+        audit(request, "marketplace.default_install")
+    return JsonResponse(default_marketplace_state(), headers={"Cache-Control": "no-store"})
+
+
 @require_GET
 @owner
 def marketplace(request):
     return JsonResponse(
         [
             r
-            for r in catalog(host())
+            for r in catalog(host(require_trust=True))
             if compatible(r["sdk"]) and r.get("status") != "revoked"
         ],
         safe=False,
@@ -179,7 +217,7 @@ def installation_stream(request, data):
             close_old_connections()
             try:
                 emit('catalog')
-                engine = host()
+                engine = host(require_trust=True)
                 record = next((r for r in catalog(engine) if r['id'] == data['id'] and r['version'] == data['version']), None)
                 if record is None:
                     raise ModuleFailure('not_found')
@@ -221,7 +259,7 @@ def install(request):
         raise ModuleFailure("invalid_data")
     if request.headers.get('Accept') == 'application/x-ndjson':
         return installation_stream(request, data)
-    engine = host()
+    engine = host(require_trust=True)
     record = next(
         (
             r
@@ -235,6 +273,24 @@ def install(request):
     manifest = engine.install(record, download(record["download"], MAX_ARCHIVE))
     audit(request, "module.install", module=manifest["id"], version=manifest["version"])
     return JsonResponse(manifest)
+
+
+@require_http_methods(["GET", "POST"])
+@owner
+def local_install(request):
+    if request.method == "GET":
+        return JsonResponse({"directory": module_directory(), "maxBytes": MAX_ARCHIVE})
+    upload = request.FILES.get("file")
+    kind = request.POST.get("kind")
+    if (upload is None or set(request.FILES) != {"file"} or set(request.POST) != {"kind"}
+            or kind not in {"module", "system"} or upload.size > MAX_ARCHIVE):
+        raise ModuleFailure("invalid_data")
+    raw = upload.read(MAX_ARCHIVE + 1)
+    if len(raw) > MAX_ARCHIVE:
+        raise ModuleFailure("invalid_data")
+    manifest = host().install_local(raw, expected_type=kind)
+    audit(request, "module.install", module=manifest["id"], version=manifest["version"], source="local")
+    return JsonResponse({"manifest": manifest, "directory": module_directory()})
 
 
 @require_GET
