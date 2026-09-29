@@ -143,7 +143,7 @@ default. Windows users keep starting `Gravewright Runner.bat`; Linux/macOS
 source installations use `uv run --locked python main.py`. Only developers
 need `--dev` for autoreload. No special update mode is required.
 
-Use Administration → Updates → **Back up and install update** on all three
+Use Administration → Updates → **Install update** on all three
 platforms. The interface controls download, SHA-256 validation, isolated
 locked dependencies, backup, migrations, restart and failure recovery. Alpha
 releases use Development. Active table connections briefly disconnect during
@@ -156,18 +156,23 @@ discovery. The legacy initial `0.1.0-alpha.0` release predates the supervisor;
 that old installation must first receive the updated launcher to support
 in-app installation.
 
-New code lives separately from the original checkout. SQLite, media,
-compendiums and the Runner's shared static files are backed up and restored
-on migration/startup failure. Interrupted transactions recover at next launch.
-Dirty Git checkouts are protected. Never run another server against the same
-database during a swap.
+Updates replace application files in the original project folder, including the installer, scripts and assets, remove obsolete code, and regenerate the Windows runner. Local `.env`, Python environments, caches and persistent data/extension directories are preserved. New dependencies are prepared in isolation before the replacement.
+
+**Keep a .old copy for rollback** is checked by default. After success, a sibling folder such as `Gravewright-0.1.1.old` holds the previous code and matching data snapshots under `.gravewright-rollback`. If it already exists, a unique identifier is added to the new backup name. Unchecking removes the temporary recovery copy after success. Temporary recovery is always retained during installation: migration, file replacement or startup failures restore code, launchers and data. Interrupted transactions recover at next launch.
+
+To restore a retained copy, stop the runner and use the installation's Python (shown in the generated BAT):
+
+```bat
+"PATH_TO_PYTHON\python.exe" -X utf8 scripts\rollback_update.py "E:\Gravewright-0.1.1.old"
+```
+
+Restoration also returns the database and media to the backup's point in time, discarding later changes. Keep updater state and environments together with the `.old` copy: it references the previous Python. Dirty Git checkouts remain protected. Never run another server against the same database during an update or restoration.
 
 Runner updates live under its user-data `updates` directory. `main.py` uses
 `%LOCALAPPDATA%/Gravewright/updates` on Windows,
 `~/Library/Application Support/Gravewright/updates` on macOS, or
 `$XDG_STATE_HOME/gravewright/updates` (default `~/.local/state/gravewright/updates`)
-on Linux. Preserve these directories and reserve disk space: backups are not
-automatically removed.
+on Linux. Preserve these directories and reserve disk space for environments and retained backups.
 
 The `Automatic updates` workflow runs native Windows/Linux/macOS tests. Run
 `uv run python tests/e2e/automatic_updates.py` and the same command with

@@ -1,7 +1,7 @@
 """Prepare private user data and supervise the local Gravewright server and updates.
 
-Windows users enter through Gravewright Runner.bat, which installs the locked
-dependencies. This helper is also portable for automated checks with --data-dir.
+Windows installation uses Install Windows.bat; the generated Gravewright Runner.bat
+only starts the prepared app. This helper is also portable for checks with --data-dir.
 It never loads or edits the source checkout's .env or development database.
 """
 
@@ -98,17 +98,83 @@ def _update_dotenv(path, values):
     output = []
     for line in original.splitlines():
         name = line.split('=', 1)[0].strip() if '=' in line and not line.lstrip().startswith('#') else ''
-        if name in remaining:
-            output.append(f'{name}={json.dumps(remaining.pop(name), ensure_ascii=False)}')
+        if name.startswith('export '):
+            name = name[7:].strip()
+        if name in values:
+            if name in remaining:
+                output.append(f'{name}={json.dumps(remaining.pop(name), ensure_ascii=False)}')
         else:
             output.append(line)
     if remaining:
         if output and output[-1]:
             output.append('')
-        output.append('# Official Gravewright Marketplace installed by Gravewright Runner.')
+        output.append('# Settings saved by Gravewright Runner.')
         output.extend(f'{name}={json.dumps(value, ensure_ascii=False)}'
                       for name, value in remaining.items())
     _write_private(path, ('\n'.join(output) + '\n').encode('utf-8'))
+
+
+def configure_environment(directory, *, prompt=input):
+    """Ask on every launch, collecting answers before updating user settings."""
+    from dotenv import dotenv_values
+
+    user = dotenv_values(directory / '.env', interpolate=False)
+    values = {**dotenv_values(ROOT / '.env.example', interpolate=False), **user}
+    fields = (
+        ('APP_NAME', 'Nome da mesa / Table name', 'text'),
+        ('DEFAULT_LOCALE', 'Idioma / Language (en, pt-BR)', 'locale'),
+        ('GRAVEWRIGHT_PORT', 'Porta local / Local port (1-65535)', 'port'),
+        ('GRAVEWRIGHT_MODULES_ROOT', 'Pasta de modulos / Modules folder', 'text'),
+        ('CAMPAIGN_JOIN_CODE_ENABLED', 'Codigos de convite / Join codes', 'bool'),
+        ('CAMPAIGN_SNAPSHOTS_ENABLED', 'Snapshots de campanhas / Campaign snapshots', 'bool'),
+        ('CAMPAIGN_EXPORT_ENABLED', 'Exportar campanhas / Campaign export', 'bool'),
+    )
+    print(f'Configurar / Configure: {directory / ".env"}\n'
+          'Enter = manter / keep current value. Ctrl+C = cancelar / cancel.', flush=True)
+    answers = {}
+    try:
+        for key, label, kind in fields:
+            current = values.get(key) or ''
+            if key == 'GRAVEWRIGHT_MODULES_ROOT' and not user.get(key):
+                current = 'media/modules'
+            hint = ' (s/n, y/n)' if kind == 'bool' else ''
+            while True:
+                value = prompt(f'{label}{hint} [{current}]: ').strip() or current
+                if any(ord(char) < 32 for char in value):
+                    print('Valor invalido / Invalid value.', flush=True)
+                    continue
+                if kind == 'port':
+                    try:
+                        number = int(value)
+                    except ValueError:
+                        number = 0
+                    if not 1 <= number <= 65535:
+                        print('Use 1-65535.', flush=True)
+                        continue
+                    value = str(number)
+                elif kind == 'locale':
+                    value = {'en': 'en', 'pt-br': 'pt-BR'}.get(value.casefold())
+                    if value is None:
+                        print('Use en / pt-BR.', flush=True)
+                        continue
+                elif kind == 'bool':
+                    value = {'s': 'true', 'sim': 'true', 'y': 'true', 'yes': 'true',
+                             'true': 'true', '1': 'true', 'n': 'false', 'nao': 'false',
+                             'não': 'false', 'no': 'false', 'false': 'false', '0': 'false'}.get(value.casefold())
+                    if value is None:
+                        print('Use s/n (y/n).', flush=True)
+                        continue
+                elif not value:
+                    print('Informe um valor / Enter a value.', flush=True)
+                    continue
+                answers[key] = value
+                break
+    except (EOFError, KeyboardInterrupt):
+        raise RunnerError('Configuration cancelled; answers were not saved. '
+                          'Run interactively to configure, or use --check for unattended checks.') from None
+    _update_dotenv(directory / '.env', answers)
+    print('Configuracao salva / Configuration saved.', flush=True)
+    return True
 
 
 def install_default_marketplace(directory, download=None):
@@ -388,20 +454,23 @@ def serve(port, open_browser=True):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Gravewright Runner: install data and run locally.')
+    parser = argparse.ArgumentParser(description='Gravewright Runner: install data and run locally.',
+                                     allow_abbrev=False)
     parser.add_argument('--data-dir', help='Override the persistent user-data directory.')
     parser.add_argument('--port', type=int, help='Use this port for this run without editing configuration.')
     parser.add_argument('--no-browser', action='store_true', help='Print the address without opening a browser.')
     parser.add_argument('--check', action='store_true', help='Prepare and check the installation, then exit.')
     parser.add_argument('--configure-default-marketplace', action='store_true',
-                        help='Offer the official marketplace, save the choice, then exit.')
+                        help='Ask personal settings and offer the official marketplace, then exit.')
     args = parser.parse_args(argv)
     log_path = None
     try:
         directory = data_directory(args.data_dir)
         with instance_lock(directory):
             port = prepare_environment(directory, args.port)
-            if args.configure_default_marketplace:
+            if not args.check and args.configure_default_marketplace:
+                configure_environment(directory)
+                port = prepare_environment(directory, args.port)
                 offer_default_marketplace(directory)
                 return 0
             if not args.check:

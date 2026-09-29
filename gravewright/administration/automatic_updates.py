@@ -17,7 +17,7 @@ def status():
     return {**progress, 'supported': True, 'busy': (Path(state) / 'job.lock').exists()}
 
 
-def request_update(version):
+def request_update(version, keep_old=True):
     from scripts.update_supervisor import write
     state = os.environ.get('GRAVEWRIGHT_MANAGED_STATE')
     if not state:
@@ -37,7 +37,7 @@ def request_update(version):
         if result['status'] != 'available' or result['availableVersion'] != version:
             raise AuthError('release_changed', 409)
         write(folder / 'progress.json', {'stage': 'queued', 'version': version})
-        write(folder / 'job.json', {'version': version, 'artifact': result['artifact']})
+        write(folder / 'job.json', {'version': version, 'artifact': result['artifact'], 'keep_old': keep_old})
     except BaseException:
         shutil.rmtree(folder / 'job.lock')
         raise

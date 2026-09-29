@@ -1,7 +1,7 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
-title Gravewright Runner - Alpha 0.1.0
-rem Native CMD launcher: tool discovery, downloads, installation and startup.
+title Gravewright Windows Installer
+rem Native CMD installer: tools, dependencies, settings and runner generation.
 rem CALL uses fixed labels only. Never pass paths through CALL's second parse.
 rem Delayed expansion stays disabled to preserve exclamation marks in paths.
 set "GW_EXIT=1"
@@ -25,7 +25,7 @@ if /i "%~1"=="--no-browser" goto argument_browser
 if /i "%~1"=="--no-pause" goto argument_pause
 if /i "%~1"=="--data-dir" goto argument_data
 if /i "%~1"=="--port" goto argument_port
-set "GW_ERROR=Unknown argument. Run Gravewright Runner.bat --help for usage."
+set "GW_ERROR=Unknown argument. Run Install Windows.bat --help for usage."
 goto failed
 :argument_check
 set "GW_CHECK=--check"
@@ -53,11 +53,11 @@ shift /1
 shift /1
 goto arguments
 :missing_argument
-set "GW_ERROR=The option needs a value. Run Gravewright Runner.bat --help for usage."
+set "GW_ERROR=The option needs a value. Run Install Windows.bat --help for usage."
 goto failed
 
 :start
-echo Gravewright Runner - Alpha 0.1.0
+echo Gravewright Windows Installer
 echo.
 set "GW_ARCH=%PROCESSOR_ARCHITECTURE%"
 if defined PROCESSOR_ARCHITEW6432 set "GW_ARCH=%PROCESSOR_ARCHITEW6432%"
@@ -77,7 +77,7 @@ if errorlevel 1 goto failed
 set "GW_PUSHED=1"
 set "GRAVEWRIGHT_ROOT=%CD%"
 set "GW_ERROR=The project is incomplete. Extract the entire ZIP before starting."
-for %%F in (pyproject.toml uv.lock scripts\gravewright_runner.py scripts\prepare_frontend.py gravewright\maps\frontend\package.json gravewright\maps\frontend\package-lock.json gravewright\maps\scripts\build.cjs) do if not exist "%%F" goto failed
+for %%F in (pyproject.toml uv.lock scripts\gravewright_runner.py scripts\windows\create_runner.py scripts\windows\runner.bat scripts\windows\launch_runner.py scripts\prepare_frontend.py gravewright\maps\frontend\package.json gravewright\maps\frontend\package-lock.json gravewright\maps\scripts\build.cjs) do if not exist "%%F" goto failed
 set "GW_RUNTIME=%LOCALAPPDATA%\Gravewright\runner"
 set "GW_ERROR=Cannot create the Runner working directory under LOCALAPPDATA."
 if not exist "%GW_RUNTIME%" mkdir "%GW_RUNTIME%"
@@ -171,10 +171,6 @@ if errorlevel 1 exit /b 1
 "%GW_PYTHON%" -X utf8 scripts\prepare_frontend.py --record --node "%GW_NODE%" --npm-cli "%GW_NPM%" --state-dir "%GW_FRONTEND_STATE%"
 if errorlevel 1 exit /b 1
 :frontend_ready
-if not exist scripts\windows\create_shortcut.py goto preparation_done
-"%GW_PYTHON%" -X utf8 scripts\windows\create_shortcut.py --project-root "%GRAVEWRIGHT_ROOT%"
-if errorlevel 1 echo The icon shortcut could not be created. The BAT still works.
-
 :preparation_done
 set "GW_PREPARED=1"
 exit /b 0
@@ -182,25 +178,31 @@ exit /b 0
 :start_application
 if not defined GW_DATA set "GW_DATA=%LOCALAPPDATA%\Gravewright\data"
 echo.
-echo [6/7] Checking the optional default marketplace...
+echo [6/7] Configuring the personal .env and optional marketplace...
 if not defined GW_MARKETPLACE goto marketplace_ready
-set "GW_ERROR=Could not configure the default marketplace. Check the error above and your connection."
+set "GW_ERROR=Could not configure the personal .env or marketplace. Check the error above."
 "%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" --configure-default-marketplace
 if errorlevel 1 goto failed
 :marketplace_ready
 echo.
-echo [7/7] Preparing the database and starting Gravewright...
-echo Keep this window open. Press Ctrl+C here to stop the server.
+echo [7/7] Preparing the database and generating Gravewright Runner.bat...
 set "GW_ERROR=Gravewright could not start. See the application error above."
 if defined GW_PORT goto start_with_port
-"%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" %GW_CHECK% %GW_NO_BROWSER%
+"%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" --check
 set "GW_EXIT=%errorlevel%"
 goto application_finished
 :start_with_port
-"%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" --port "%GW_PORT%" %GW_CHECK% %GW_NO_BROWSER%
+"%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" --port "%GW_PORT%" --check
 set "GW_EXIT=%errorlevel%"
 :application_finished
 if not "%GW_EXIT%"=="0" goto failed
+set "GW_ERROR=Could not generate Gravewright Runner.bat. Check the project folder permissions."
+"%GW_PYTHON%" -X utf8 scripts\windows\create_runner.py --data-dir "%GW_DATA%"
+if errorlevel 1 goto failed
+"%GW_PYTHON%" -X utf8 scripts\windows\create_shortcut.py --project-root "%GRAVEWRIGHT_ROOT%"
+if errorlevel 1 echo The icon shortcut could not be created. The BAT still works.
+echo Installation complete. Open Gravewright Runner.bat to start.
+if not defined GW_NO_PAUSE pause
 goto finish
 
 :resolve_uv
@@ -284,16 +286,20 @@ set "UV_PYTHON_PREFERENCE=only-managed"
 call :find_python
 if defined GW_BASE_PYTHON exit /b 0
 echo Python 3.14 was not found. Installing a private copy...
-"%GW_UV%" --no-config python install cpython-3.14+gil-windows-x86_64-none
+rem Download keys use the standard build without a +gil suffix.
+"%GW_UV%" --no-config python install cpython-3.14-windows-x86_64-none
 if errorlevel 1 exit /b 1
 call :find_python
 if not defined GW_BASE_PYTHON exit /b 1
 exit /b 0
 :find_python
-"%GW_UV%" --no-config python find --system --no-project --no-python-downloads cpython-3.14+gil-windows-x86_64-none >"%GW_WORK%\python.txt" 2>nul
+"%GW_UV%" --no-config python find --system --no-project --no-python-downloads cpython-3.14-windows-x86_64-none >"%GW_WORK%\python.txt" 2>nul
 if errorlevel 1 exit /b 1
 set /p "GW_BASE_PYTHON=" <"%GW_WORK%\python.txt"
-if exist "%GW_BASE_PYTHON%" exit /b 0
+if not exist "%GW_BASE_PYTHON%" goto invalid_python
+"%GW_BASE_PYTHON%" -I -c "import platform,struct,sys,sysconfig; sys.exit(not (sys.implementation.name == 'cpython' and sys.version_info[:2] == (3,14) and sys.version_info.releaselevel == 'final' and sys.platform == 'win32' and struct.calcsize('P') == 8 and platform.machine().upper() in ('AMD64','X86_64') and not sysconfig.get_config_var('Py_GIL_DISABLED')))"
+if not errorlevel 1 exit /b 0
+:invalid_python
 set "GW_BASE_PYTHON="
 exit /b 1
 
@@ -397,14 +403,14 @@ if /i "%GW_HASH%"=="%GW_EXPECTED%" exit /b 0
 exit /b 1
 
 :help
-echo Gravewright Runner - Alpha 0.1.0
-echo Usage: "Gravewright Runner.bat" [--check] [--no-browser] [--data-dir PATH] [--port NUMBER] [--no-pause]
+echo Gravewright Windows Installer
+echo Usage: "Install Windows.bat" [--check] [--no-browser] [--data-dir PATH] [--port NUMBER] [--no-pause]
 echo.
 echo --check prepares tools, dependencies, frontend and database, then exits.
-echo --no-browser starts the server without opening a browser.
+echo --no-browser is accepted for compatibility; installation never starts the server.
 echo --data-dir selects a separate folder for configuration and campaigns.
-echo --port overrides the saved port for this run.
-echo --no-pause exits immediately on error, for terminals and automation.
+echo --port overrides the port during the installation check only.
+echo --no-pause exits without waiting for a key, for terminals and automation.
 set "GW_EXIT=0"
 goto finish
 :failed

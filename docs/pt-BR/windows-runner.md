@@ -1,111 +1,71 @@
-# Gravewright Runner para Windows
+# Instalação Windows e Gravewright Runner
 
 [Documentação](../README.pt-BR.md) · [English](../en/windows-runner.md)
 
-O **Gravewright Runner** detecta ferramentas instaladas, prepara a aplicação e inicia o Gravewright no seu próprio computador Windows. Campanhas e configurações ficam fora da pasta do código, para que substituir os arquivos da aplicação não remova seus dados pessoais.
+## Instalar, configurar e executar
 
-## Iniciar com dois cliques
+1. Extraia o ZIP completo para uma pasta local gravável. Use Windows 10 versão 1803 ou posterior, ou Windows 11, em x64/AMD64, com `curl.exe`, `tar.exe`, `certutil.exe` e navegador com WebGL. Este instalador não suporta ARM nem Windows de 32 bits.
+2. Abra **`Install Windows.bat`**. Ele detecta ferramentas compatíveis, baixa as ausentes, instala dependências fixadas e compila o frontend quando necessário. Downloads ausentes exigem internet.
+3. Responda às perguntas. Enter mantém o valor exibido; Ctrl+C cancela sem salvar as respostas. O instalador prepara o banco e gera **`Gravewright Runner.bat`** na mesma pasta, além de um atalho opcional com ícone.
+4. Abra **`Gravewright Runner.bat`** ou seu atalho para iniciar a aplicação. Ele usa o Python preparado e as configurações salvas, sem baixar ferramentas, instalar dependências, compilar o frontend ou fazer perguntas. O endereço padrão é **http://127.0.0.1:3000**.
+5. Crie a primeira conta proprietária no navegador. Mantenha o console aberto; pressione **Ctrl+C** para encerrar. Fechar o navegador não para o servidor.
 
-1. Use **Windows 10 versão 1803 ou superior, ou Windows 11, em x64/AMD64**, com as ferramentas nativas `curl.exe`, `tar.exe` e `certutil.exe` e navegador moderno com WebGL. Este launcher não oferece suporte a Windows de 32 bits nem Windows em ARM.
-2. Extraia o **ZIP completo do projeto** para uma pasta local em que você possa gravar. Não execute dentro do ZIP nem copie apenas o `.bat`.
-3. Dê dois cliques em **`Gravewright Runner.bat`**. Ele verifica uv, Python e Node.js/npm instalados e mostra os caminhos e versões escolhidos. Internet é necessária para baixar ferramentas ou dependências ausentes.
-4. Aguarde o executor instalar dependências, compilar o frontend quando necessário, preparar o banco e abrir o navegador. O endereço padrão é **http://127.0.0.1:3000**.
-5. Crie a primeira conta de proprietário na tela de configuração. Nas próximas execuções, entre com a mesma conta. Veja o [guia de uso](user-guide.md) para campanhas e a mesa.
+O instalador termina sem iniciar o servidor. Abra-o novamente para mudar configurações, reparar dependências ausentes ou preparar uma nova versão do projeto. Ferramentas compatíveis e assets inalterados são reaproveitados. O runner é gerado para esta instalação Windows; não o distribua para outro computador. Após mover ou substituir o projeto, execute o instalador na nova pasta para regenerar runner e atalho.
 
-Ferramentas compatíveis já instaladas são reaproveitadas. Somente ferramentas ausentes ou incompatíveis exigem uma instalação local separada para seu usuário Windows; o executor não atualiza nem substitui suas ferramentas existentes, não exige administrador nem altera permanentemente o `PATH`. As dependências Python da aplicação ficam no ambiente isolado do executor. Docker e servidor Redis não são necessários.
+## Ferramentas e preparação
 
-O `.bat` executa diretamente no CMD do Windows e cuida da detecção de ferramentas, downloads, instalação de dependências, comandos de build npm e inicialização da aplicação. Usa os utilitários nativos do Windows para download, arquivos compactados e hashes e depois invoca os executáveis Python e Node selecionados.
-
-Mantenha a janela do console aberta enquanto usar o Gravewright. **Pressione Ctrl+C nessa janela para encerrar o servidor.** Fechar o navegador não o encerra. Aguarde a saída do executor antes de substituir arquivos da aplicação ou fazer backup. Se a inicialização falhar, o `.bat` mantém a mensagem de erro visível.
-
-## Detecção de ferramentas e preparação do frontend
-
-| Ferramenta | Instalação existente compatível | Se nenhuma estiver disponível |
+| Ferramenta | Instalação compatível | Alternativa privada |
 | --- | --- | --- |
-| uv | Versão **0.12.0 ou superior** disponível para o launcher | Baixa a versão fixada **0.12.13** e verifica sua integridade |
-| Python | **CPython 3.14**, Windows x64, build padrão com GIL; descoberto pelo uv, incluindo interpretadores instalados/do sistema e gerenciados compartilhados | Baixa um Python 3.14 gerenciado e privado |
-| Node.js e npm | **Node.js 22 ou 24 LTS** estável, x64, com **npm 10 ou superior** funcionando | Baixa o pacote Windows verificado do **Node.js 24.19.0** com npm |
+| uv | Versão 0.12.0 ou posterior | uv 0.12.13 com integridade verificada |
+| Python | CPython 3.14, Windows x64, GIL padrão | `cpython-3.14-windows-x86_64-none`, validado após a descoberta |
+| Node.js/npm | Node.js 22 ou 24 LTS estável x64, npm 10 ou posterior | Node.js 24.19.0 verificado, com npm |
 
-O console informa qual instalação foi reaproveitada ou baixada. O Python é usado por meio de um ambiente de dependências isolado, mesmo quando o interpretador base vem de uma instalação existente. Mantenha as ferramentas reaproveitadas instaladas enquanto usar esse ambiente do executor.
+Não exige administrador, mudanças permanentes no PATH, Docker ou servidor Redis. Mantenha instaladas as ferramentas reaproveitadas. Dependências Python usam ambiente isolado e `uv sync --locked --no-dev`. O frontend usa `npm ci --include=dev --include=optional` quando necessário e depois `npm run build`; hashes permitem reaproveitar assets inalterados. A instalação atualiza assets gerados e o `node_modules` ignorado na pasta do código.
 
-O executor verifica e sincroniza dependências Python de execução com `uv sync --locked --no-dev`. No npm, pode reaproveitar uma instalação de dependências quando as versões dos pacotes obrigatórios correspondem ao lock e uma verificação real do esbuild passa. Caso contrário, ou quando as entradas registradas das dependências mudam, executa `npm ci --include=dev --include=optional`, incluindo esbuild. Depois executa `npm run build` quando a preparação é necessária. Isso usa o projeto npm versionado em `gravewright/maps/frontend` e recompila os recursos gerados usados pela aplicação.
+## Configuração e dados pessoais
 
-O frontend é compilado na primeira preparação e quando suas entradas mudam. As próximas execuções conferem os hashes registrados das entradas e saídas e pulam um build válido e inalterado; saídas geradas ausentes ou modificadas provocam uma nova compilação. A pasta do código precisa ser gravável porque a preparação atualiza recursos estáticos gerados. Veja [frontend](frontend.md) para o mapeamento entre código e saída. Esse processo não baixa novas versões do código Gravewright nem executa a suíte de testes de navegador.
+O instalador pergunta nome da mesa, idioma (`en` ou `pt-BR`), porta local, pasta de módulos, códigos de convite, snapshots e exportação de campanhas. Salva as respostas juntas e preserva a chave secreta e outras configurações. Nas próximas instalações, as respostas salvas aparecem como padrão. Caminhos relativos de módulos partem da pasta de dados pessoal.
 
-## Ícone e atalho do projeto
+Ele também oferece o Marketplace padrão do Gravewright uma vez. Aceitar baixa as chaves oficiais, confere o SHA-256 e salva as configurações do catálogo. Recusar registra a escolha; o proprietário ainda pode instalar em Configurações → Marketplace. Apagar `data/.default-marketplace-choice` permite que o instalador ofereça novamente.
 
-O launcher tenta criar **`Gravewright Runner.lnk`** ao lado do `.bat`, com a marca do Gravewright como ícone. Dê dois cliques em qualquer um para iniciar. O `.bat` usa o ícone de arquivo em lote do Windows; o atalho gerado recebe o ícone do projeto. Nenhum atalho é adicionado automaticamente à área de trabalho.
+Os arquivos pessoais ficam, por padrão, em **`%LOCALAPPDATA%\Gravewright`**:
 
-A [nota sobre a origem do ícone](../../scripts/windows/ICON-NOTICE.md) registra a conversão dos estilos existentes da aplicação e a licença preservada da interface original.
-
-Se a pasta do código não permitir criar o atalho, a inicialização continua e informa a falha. Mova o projeto extraído para uma pasta gravável e execute o `.bat` novamente para criar o atalho. Depois de mover o projeto, use o `.bat` no novo local para atualizar o destino do atalho.
-
-## Onde seus arquivos ficam
-
-Cole **`%LOCALAPPDATA%\Gravewright`** na barra de endereços do Explorador de Arquivos. O executor usa estes caminhos para sua conta Windows:
-
-| Caminho dentro dessa pasta | Finalidade |
+| Caminho | Finalidade |
 | --- | --- |
-| `data\.env` | Chave persistente, porta e configuração opcional de recursos |
-| `data\gravewright.sqlite3` | Contas, campanhas e estado da aplicação |
-| `data\media\` | Uploads privados e módulos instalados |
-| `data\compendiums\` | Conteúdo local de compêndios |
-| `data\staticfiles\` | Recursos públicos gerados; reconstruídos pelo executor |
-| `data\logs\runner.log` | Diagnóstico de execução e inicialização, com rotação |
-| `data\runner.lock` | Bloqueio que impede dois executores de usar os mesmos dados |
-| `runner\` | Ferramentas baixadas apenas quando necessário, caches de pacotes e ambientes Python isolados por localização do código |
-| `runner\prepare.lock` | Trava de arquivo do Windows que impede preparações simultâneas de ferramentas/dependências; liberada automaticamente ao terminar |
-| `runner\frontend\<hash-local-do-código>\state.json` | Estado da preparação do frontend usado para verificar versões das ferramentas, entradas e saídas geradas |
+| `data/.env` | Chave privada e configurações |
+| `data/gravewright.sqlite3` | Contas e campanhas |
+| `data/media/`, `data/compendiums/` | Arquivos privados e conteúdo local |
+| `data/staticfiles/` | Assets públicos coletados |
+| `data/logs/runner.log` | Diagnósticos de inicialização e execução |
+| `data/runner.lock` | Impede uso simultâneo dos mesmos dados |
+| `runner/` | Ferramentas, caches e ambientes por pasta do código |
+| `runner/prepare.lock` | Impede preparação simultânea de dependências |
+| `runner/frontend/<hash-da-pasta>/state.json` | Estado da preparação do frontend |
 
-O `.env`, `.venv` e `data/` do código-fonte são separados e permanecem intactos nesse fluxo. A preparação do frontend atualiza os recursos estáticos gerados do projeto e o diretório ignorado de dependências npm `gravewright/maps/frontend/node_modules`. Campanhas existentes criadas com `main.py` não aparecem automaticamente no banco separado do executor. Use exportação/importação de campanhas quando adequado, ou migre deliberadamente o banco completo e a mídia correspondente com ambos os servidores parados e backups preservados.
-
-Todas as cópias do launcher usadas pela mesma conta Windows compartilham a pasta pessoal padrão. Elas não representam instalações independentes das suas campanhas. O executor verifica o bloqueio dos dados e a porta escolhida antes de preparar o banco; não encerra outro programa para liberar a porta.
-
-## Configuração e backups
-
-Pare o executor antes de editar **`data\.env`**. Para mudar a porta padrão, altere a entrada `GRAVEWRIGHT_PORT=3000`, por exemplo para `GRAVEWRIGHT_PORT=3001`, e inicie novamente. O endereço no navegador acompanha a porta. Mantenha a `DJANGO_SECRET_KEY` gerada privada e preserve-a entre execuções e restaurações.
-
-Na primeira inicialização normal sem marketplace configurado, o `.bat` pergunta se deseja instalar o **Marketplace padrão do Gravewright**. Ao aceitar com `S`/`Y`, o executor baixa o arquivo oficial de chaves públicas, confere seu SHA-256, grava-o em `data\marketplace\trusted-keys.json` e adiciona ao `.env` pessoal a URL do catálogo e o caminho das chaves. O proprietário também pode fazer a mesma instalação em **Configurações → Marketplace**. Ao recusar no `.bat`, a decisão fica registrada em `data\.default-marketplace-choice` e a pergunta não reaparece; o botão da interface continua disponível. Para fazer a pergunta reaparecer, pare o executor, apague esse arquivo e execute o `.bat`. O modo `--check` nunca faz perguntas nem altera essa escolha.
-
-O executor carrega os padrões do `.env.example` fornecido e depois o seu `.env` pessoal. Opções de recursos descritas no [guia de configuração](configuration.md) podem ser adicionadas ali. O perfil local impõe endereço de escuta, caminhos de armazenamento, debug, cookies, host/origem, proxy e Channels; alterar variáveis de implantação não transforma o executor em um servidor de rede. O `.env` do código-fonte não é carregado.
-
-Para fazer backup, pare o Gravewright e copie **a pasta `data` inteira** para um local seguro. Preserve juntos a chave, o banco e os arquivos privados. Antes de instalar uma versão mais nova do projeto, guarde um backup correspondente à versão anterior do código: a inicialização aplica migrações, que podem tornar uma versão antiga incompatível com o banco atualizado.
-
-As atualizações são manuais: pare o executor, faça backup dos dados, extraia o novo código completo e execute seu `.bat`. A nova inicialização verifica as ferramentas disponíveis, sincroniza as dependências com os locks Python/npm daquela versão, prepara o frontend e aplica migrações. Ela não baixa automaticamente novas versões do código do Gravewright. Remover a pasta do código ou a pasta descartável de ferramentas `runner` não desinstala suas campanhas; remover a pasta `data` apaga seus dados.
+O `.env`, `.venv` e banco de desenvolvimento do código-fonte são separados. Os padrões vêm de `.env.example` e depois do `.env` pessoal; os limites locais de rede, segurança e armazenamento são impostos pelo runner. A chave é gerada automaticamente. Pare o servidor antes de reconfigurar ou copiar toda a pasta pessoal `data` para backup. Preserve chave, banco e mídia juntos. Faça backup antes de instalar uma nova versão: migrações podem impedir o uso de versões anteriores.
 
 ## Limite da execução local
 
-O executor serve **HTTP somente em `127.0.0.1`**, com um processo Daphne e Channels em memória. O debug Django permanece desativado. As verificações de origem, host, sessão, CSRF e permissões da campanha continuam ativas, e uploads privados passam pelas rotas protegidas da aplicação. Apenas os recursos públicos coletados são servidos diretamente.
+O runner serve HTTP apenas em `127.0.0.1`, com um processo servidor e Channels em memória. Debug Django permanece desligado; verificações de origem, host, sessão, CSRF e permissões continuam ativas. Uploads privados usam rotas protegidas. Para rede local ou internet, siga [implantação](deployment.md) com o perfil ASGI padrão. Não exponha o runner local por túnel ou proxy reverso público.
 
-Esse perfil é para o computador que executa o launcher. Para jogadores em outro computador, serviço na rede local, HTTPS ou instância exposta à internet, siga [implantação](deployment.md) e configure separadamente a aplicação ASGI padrão, Redis e armazenamento. Não exponha o executor por um túnel ou proxy reverso público.
+## Diagnóstico e validação
 
-## Problemas comuns
-
-| Sintoma | O que verificar |
-| --- | --- |
-| Arquivos do projeto ausentes | Extraia o ZIP completo; mantenha juntos o `.bat`, `scripts`, `config`, pastas da aplicação e lockfile |
-| Download ou instalação de dependência falhou | Leia o erro no console do executor; confirme acesso aos releases GitHub, nodejs.org e às URLs de pacotes Python/npm usadas pelos locks, depois execute novamente |
-| Falha na verificação de integridade de ferramenta | Não ignore a verificação; tente novamente com uma cópia nova do projeto e investigue o download ou arquivo em cache indicado |
-| Falha na preparação do frontend | Leia o erro npm/build no console do executor e confirme que a pasta do projeto extraído é gravável |
-| Falta um utilitário Windows de download/arquivo/hash | Use uma instalação Windows compatível com `curl.exe`, `tar.exe` e `certutil.exe` disponíveis; confira o nome da ferramenta ausente informado pelo executor |
-| Outra instância está executando | Use a janela existente ou encerre aquela instância com Ctrl+C antes de tentar novamente |
-| Porta ocupada | Pare seu outro servidor local ou altere `GRAVEWRIGHT_PORT` no `.env` pessoal |
-| O navegador não abriu | Abra o endereço exato mostrado pelo executor quando ele indicar que está pronto |
-| Campanhas antigas não aparecem | Confira se foram criadas no banco do código-fonte ou em outra conta Windows |
-| A aplicação falha ao iniciar | Consulte `data\logs\runner.log`; remova segredos, dados de contas e caminhos privados antes de compartilhar diagnósticos |
-
-## Implementação e validação
-
-[`Gravewright Runner.bat`](../../Gravewright%20Runner.bat) detecta instalações compatíveis, baixa ferramentas ausentes com `curl.exe`, extrai arquivos com `tar.exe` e verifica hashes com `certutil.exe`. Os comandos `uv sync`, `npm ci` e `npm run build` são implementados no arquivo em lote. [`scripts/prepare_frontend.py`](../../scripts/prepare_frontend.py) fornece operações `--plan` e `--record` para conferir dependências, impressões dos arquivos e saídas geradas; o arquivo em lote fornece os caminhos das ferramentas escolhidas e o diretório de estado por código. O [helper de atalho](../../scripts/windows/create_shortcut.py) usa a biblioteca padrão do Python e COM do Windows para criar o `.lnk`. Veja [avisos de terceiros](../../THIRD_PARTY_NOTICES.pt-BR.md) para o escopo das licenças das ferramentas reaproveitadas e baixadas.
-
-[`scripts/gravewright_runner.py`](../../scripts/gravewright_runner.py) cuida da configuração, bloqueio dos dados, migrações, coleta de estáticos, verificação de prontidão, abertura do navegador e ciclo de vida do servidor. Aceita `--data-dir PATH`, `--port NUMBER`, `--no-browser` e `--check` para execuções controladas de desenvolvimento com ambiente já preparado. `--port` substitui a porta daquela execução sem editar a configuração salva; `--check` prepara e verifica a instalação, incluindo migrações e coleta de estáticos, e sai sem servir requisições. Não é uma verificação somente de leitura.
-
-O `.bat` aceita as mesmas opções `--data-dir`, `--port`, `--no-browser` e `--check` quando também são necessárias detecção de ferramentas, instalação de dependências e preparação do frontend. Dê dois cliques para iniciar normalmente ou passe argumentos no CMD do Windows. Por exemplo, na raiz do código, prepare um diretório isolado de diagnóstico sem iniciar o servidor:
+Para instalar com os padrões, sem perguntas nem inicialização do servidor:
 
 ```bat
-"Gravewright Runner.bat" --check --data-dir "%TEMP%\Gravewright Runner Check"
+"Install Windows.bat" --check --no-pause --data-dir "%TEMP%\Gravewright Install Check"
 ```
 
-A pasta de dados do exemplo fica separada das campanhas normais e pode ser removida após a verificação. `--check` ainda prepara dependências e recursos gerados do frontend, além do banco; não é um comando somente de leitura. Adicione `--no-pause` em CI ou scripts para que falhas retornem um código de saída em vez de esperar uma tecla. Diagnósticos de download/instalação/build aparecem no console; o arquivo em lote não cria uma transcrição automaticamente. Diagnósticos da aplicação são gravados em `data\logs\runner.log`.
+Isso instala dependências, prepara assets/banco e gera um runner apontando para a pasta escolhida. Não é somente leitura. Uma instalação normal posterior faz as perguntas. `--data-dir` escolhe a pasta persistida; `--port` altera apenas a verificação da instalação, não a porta salva.
 
-As configurações e entradas ASGI específicas são [`config/runner.py`](../../config/runner.py), [`config/runner_asgi.py`](../../config/runner_asgi.py) e [`config/runner_urls.py`](../../config/runner_urls.py). As entradas padrão do servidor mantêm a exigência de Redis com debug desativado. Siga [testes](testing.md) para validar antes de distribuir uma versão Windows, incluindo uma execução real no Windows; testes em outro sistema não verificam o shell, os atalhos nem o comportamento do console Windows.
+O runner gerado aceita `--no-browser`, `--no-pause`, `--data-dir`, `--port` e `--check`. O `--check` do runner verifica aplicação/banco sem instalar ferramentas nem preparar frontend; pode aplicar migrações e coletar assets. `--port` vale apenas naquela execução. Para alterar valores salvos, abra o instalador.
+
+Em falhas de download, confira o console e acesso ao GitHub, nodejs.org e fontes de pacotes. Não ignore erros de integridade. Se um launcher antigo informar `No download found` para `cpython-3.14+gil-windows-x86_64-none`, use o projeto atualizado completo. Se faltarem arquivos ou o Python preparado, execute o instalador novamente. Se a porta estiver ocupada, pare o outro servidor ou altere a porta salva. Para falhas da aplicação, consulte `data/logs/runner.log` e remova informações privadas antes de compartilhar.
+
+O instalador prepara ferramentas e dependências. [create_runner.py](../../scripts/windows/create_runner.py) gera o BAT de execução pelo [modelo](../../scripts/windows/runner.bat); [create_shortcut.py](../../scripts/windows/create_shortcut.py) cria o atalho opcional. [gravewright_runner.py](../../scripts/gravewright_runner.py) gerencia configurações pessoais, bloqueios e ciclo do servidor. Veja [testes](testing.md): o cenário nativo Windows cobre instalação, reconfiguração, download privado do Python, reaproveitamento offline e runner gerado. A validação de navegador é separada quando se usa `--skip-browser`.
+
+## Atualização e rollback
+
+A atualização substitui os arquivos na própria pasta do projeto, incluindo o instalador, e regenera o runner com o novo ambiente Python. Em Administração → Atualizações, **Manter cópia .old para rollback** controla se o código anterior e o snapshot correspondente dos dados serão preservados após o sucesso. A recuperação temporária durante a instalação é sempre mantida. Veja [implantação](deployment.md) para restaurar uma cópia.
+
+O runner usa uma cópia imutável do inicializador em `data/.runner-launchers` durante a execução, permitindo substituir o `.bat` do projeto com segurança enquanto a atualização acontece. Preserve essa pasta junto dos dados e backups.

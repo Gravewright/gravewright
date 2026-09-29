@@ -14,7 +14,7 @@ schema history; they are not the place to document or change current service log
 | [`manage.py`](../../manage.py) | Django management entry point. |
 | [`main.py`](../../main.py) | Starts the ASGI development server using the configured host and port. |
 | [`scripts/gravewright_runner.py`](../../scripts/gravewright_runner.py) | Prepares the personal configuration/database/assets and runs the local Daphne server for Gravewright Runner. |
-| [`Gravewright Runner.bat`](../../Gravewright%20Runner.bat) | Windows CMD launcher: detects/reuses uv, Python and Node/npm, installs missing tools, runs locked dependency/build commands and starts the application. |
+| [`Install Windows.bat`](../../Install%20Windows.bat) | Windows installer: prepares tools, dependencies, frontend and configuration, then generates `Gravewright Runner.bat` for startup only. |
 | [`scripts/prepare_frontend.py`](../../scripts/prepare_frontend.py) | Plans frontend preparation from dependency/source/output fingerprints and records verified build outputs for the batch launcher. |
 | [`scripts/windows/create_shortcut.py`](../../scripts/windows/create_shortcut.py) | Creates the Windows icon shortcut through standard-library ctypes and Windows COM. |
 | [`config/runner.py`](../../config/runner.py), [`config/runner_asgi.py`](../../config/runner_asgi.py), [`config/runner_urls.py`](../../config/runner_urls.py) | Dedicated local execution profile, collected static assets and runner routes; see the [Windows guide](windows-runner.md). |

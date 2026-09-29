@@ -8,7 +8,7 @@ A versão atual do projeto é **0.1.1**, uma prévia em estágio alpha. O códig
 
 ## Executar no Windows
 
-Extraia o projeto completo e dê dois cliques em **`Gravewright Runner.bat`**. Ele detecta **uv, Python e Node.js/npm** compatíveis já instalados, instala as ferramentas ausentes quando necessário, prepara as dependências Python e npm fixadas, compila o frontend e abre a aplicação no navegador. As próximas execuções reaproveitam as ferramentas e o build do frontend quando nada mudou. Mantenha a janela do executor aberta enquanto usar o Gravewright; pressione **Ctrl+C** para encerrar.
+Extraia o projeto completo e dê dois cliques em **`Install Windows.bat`**. Ele instala ferramentas ausentes, prepara dependências e frontend, faz as perguntas de configuração e gera **`Gravewright Runner.bat`**. Abra o runner gerado para iniciar a aplicação sem instalações ou perguntas. Execute o instalador novamente para mudar configurações ou preparar uma versão atualizada do projeto. Mantenha a janela do executor aberta enquanto usar o Gravewright; pressione **Ctrl+C** para encerrar.
 
 O executor funciona diretamente no **CMD do Windows**. Use Windows 10 versão 1803 ou superior, ou Windows 11, em x64; `curl.exe`, `tar.exe` e `certutil.exe` nativos cuidam dos downloads, extração e verificação de integridade.
 

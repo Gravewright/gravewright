@@ -78,10 +78,11 @@ def diagnostics(request):
 def updates(request, action):
     if action == "apply":
         data = read_json(request)
-        if set(data) != {"version"} or not isinstance(data["version"], str):
+        if (set(data) - {"version", "keep_old"} or not isinstance(data.get("version"), str)
+                or not isinstance(data.get("keep_old", True), bool)):
             raise AuthError("invalid_input")
-        result = automatic_updates.request_update(data["version"])
-        audit(request, "updates.apply", version=data["version"])
+        result = automatic_updates.request_update(data["version"], keep_old=data.get("keep_old", True))
+        audit(request, "updates.apply", version=data["version"], keep_old=data.get("keep_old", True))
         return JsonResponse(result, status=202)
     if action == "channel":
         data = read_json(request)

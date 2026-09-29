@@ -12,6 +12,7 @@ from config.runner_asgi import LocalOnlyMiddleware
 from scripts.gravewright_runner import (
     DEFAULT_MARKETPLACE_URL,
     RunnerError,
+    configure_environment,
     data_directory,
     offer_default_marketplace,
     prepare_environment,
@@ -19,6 +20,60 @@ from scripts.gravewright_runner import (
 
 
 class RunnerEnvironmentTests(SimpleTestCase):
+    def test_configuration_questions_validate_and_preserve_secret_and_custom_values(self):
+        from dotenv import dotenv_values
+
+        with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            directory = Path(temp)
+            prepare_environment(directory)
+            config = directory / '.env'
+            with config.open('a', encoding='utf-8') as stream:
+                stream.write('# Keep this comment\nCUSTOM_OPTION=literal\n')
+            secret = os.environ['DJANGO_SECRET_KEY']
+            answers = iter(['Mesa "São Paulo" ${literal}', 'invalid', 'pt-br', '0', '65536',
+                            'abc', '3001', 'C:\\My modules', 'maybe', 's', 'n', 'yes'])
+            self.assertTrue(configure_environment(directory, prompt=lambda _: next(answers)))
+            values = dotenv_values(config, interpolate=False)
+            self.assertEqual(values['APP_NAME'], 'Mesa "São Paulo" ${literal}')
+            self.assertEqual(values['DEFAULT_LOCALE'], 'pt-BR')
+            self.assertEqual(values['GRAVEWRIGHT_PORT'], '3001')
+            self.assertEqual(values['GRAVEWRIGHT_MODULES_ROOT'], 'C:\\My modules')
+            self.assertEqual(values['CAMPAIGN_JOIN_CODE_ENABLED'], 'true')
+            self.assertEqual(values['CAMPAIGN_SNAPSHOTS_ENABLED'], 'false')
+            self.assertEqual(values['CAMPAIGN_EXPORT_ENABLED'], 'true')
+            self.assertEqual(values['DJANGO_SECRET_KEY'], secret)
+            self.assertEqual(values['CUSTOM_OPTION'], 'literal')
+            self.assertIn('# Keep this comment', config.read_text(encoding='utf-8'))
+            with patch('builtins.input', return_value='') as prompt:
+                self.assertTrue(configure_environment(directory, prompt=prompt))
+                self.assertEqual(prompt.call_count, 7)
+            self.assertEqual(dotenv_values(config, interpolate=False), values)
+
+    def test_cancelled_configuration_can_be_retried_without_partial_answers(self):
+        with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            directory = Path(temp)
+            prepare_environment(directory)
+            original = (directory / '.env').read_bytes()
+            for interrupt in (EOFError, KeyboardInterrupt):
+                with patch('builtins.input', side_effect=['Unsaved name', interrupt]) as prompt:
+                    with self.assertRaises(RunnerError):
+                        configure_environment(directory, prompt=prompt)
+                self.assertEqual((directory / '.env').read_bytes(), original)
+            configure_environment(directory, prompt=lambda _: '')
+            self.assertEqual(prepare_environment(directory), 3000)
+            self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(directory / 'media/modules'))
+
+    def test_configuration_replaces_export_and_duplicate_assignments(self):
+        from dotenv import dotenv_values
+        from scripts.gravewright_runner import _update_dotenv
+
+        with tempfile.TemporaryDirectory() as temp:
+            config = Path(temp) / '.env'
+            config.write_text('export APP_NAME=Old\nAPP_NAME=Duplicate\n', encoding='utf-8')
+            _update_dotenv(config, {'APP_NAME': 'New'})
+            self.assertEqual(dotenv_values(config)['APP_NAME'], 'New')
+            self.assertEqual(config.read_text(encoding='utf-8').count('APP_NAME='), 1)
+
     def test_first_run_creates_secret_and_restart_preserves_configuration(self):
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             directory = Path(temp)

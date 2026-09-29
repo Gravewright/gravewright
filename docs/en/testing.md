@@ -116,7 +116,7 @@ The scenario creates a temporary checkout with spaces, punctuation and Unicode i
 
 The same scenario runs the frontend preparation unit tests and the real Python server scenario in Chromium. `--skip-browser` omits installation of the browser-test dependencies and the browser scenario while keeping the batch checks. Diagnostics are saved under `test-results/windows-runner/`. The temporary source, environment and campaign data are cleaned up when the scenario finishes.
 
-Use `"Gravewright Runner.bat" --check --no-pause --data-dir "<temporary-data-directory>"` for a manual batch preparation check that exits without serving requests. This still installs missing dependencies, builds assets when needed and applies migrations. Workflow presence does not mean its jobs have already passed for a release; `--source-check` alone does not validate native batch execution.
+Use `"Install Windows.bat" --check --no-pause --data-dir "<temporary-data-directory>"` for a manual batch preparation check that exits without serving requests. This still installs missing dependencies, builds assets when needed and applies migrations. Workflow presence does not mean its jobs have already passed for a release; `--source-check` alone does not validate native batch execution.
 
 Before publishing a Windows build, run that workflow and check a normal double-click launch, automatic browser opening, Ctrl+C and closing the console on a Windows computer. The [runner guide](windows-runner.md) describes diagnostic mode with an isolated data directory. Tests run on Linux or another operating system verify the Python runtime there, not native Windows CMD or shortcut behavior.
 

@@ -15,7 +15,7 @@ alterar a lógica atual dos serviços.
 | [`manage.py`](../../manage.py) | Entrada dos comandos de administração Django. |
 | [`main.py`](../../main.py) | Inicia o servidor ASGI de desenvolvimento com host e porta configurados. |
 | [`scripts/gravewright_runner.py`](../../scripts/gravewright_runner.py) | Prepara configuração pessoal, banco e recursos e executa o servidor Daphne local do Gravewright Runner. |
-| [`Gravewright Runner.bat`](../../Gravewright%20Runner.bat) | Launcher CMD Windows: detecta/reaproveita uv, Python e Node/npm, instala ferramentas ausentes, executa comandos fixados de dependências/build e inicia a aplicação. |
+| [`Install Windows.bat`](../../Install%20Windows.bat) | Instalador Windows: prepara ferramentas, dependências, frontend e configuração, depois gera `Gravewright Runner.bat` apenas para iniciar a aplicação. |
 | [`scripts/prepare_frontend.py`](../../scripts/prepare_frontend.py) | Planeja a preparação do frontend por impressões das dependências, fontes e saídas e registra os resultados verificados do build para o launcher em lote. |
 | [`scripts/windows/create_shortcut.py`](../../scripts/windows/create_shortcut.py) | Cria o atalho com ícone por ctypes da biblioteca padrão e COM do Windows. |
 | [`config/runner.py`](../../config/runner.py), [`config/runner_asgi.py`](../../config/runner_asgi.py), [`config/runner_urls.py`](../../config/runner_urls.py) | Perfil dedicado à execução local, recursos estáticos coletados e rotas do executor; veja o [guia Windows](windows-runner.md). |

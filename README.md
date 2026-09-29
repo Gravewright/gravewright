@@ -8,7 +8,7 @@ The current project version is **0.1.1**, an alpha preview. The source includes 
 
 ## Run on Windows
 
-Extract the complete project and double-click **`Gravewright Runner.bat`**. It detects compatible **uv, Python and Node.js/npm** already installed, installs missing tools when needed, prepares the locked Python and npm dependencies, builds the frontend and opens the application in your browser. Later launches reuse the tools and unchanged frontend build. Keep the runner window open while using Gravewright; press **Ctrl+C** to stop it.
+Extract the complete project and double-click **`Install Windows.bat`**. It installs missing tools, prepares dependencies and the frontend, asks for your settings, and generates **`Gravewright Runner.bat`**. Open the generated runner to start the application without installation or configuration questions. Run the installer again to change settings or prepare an updated project. Keep the runner window open while using Gravewright; press **Ctrl+C** to stop it.
 
 The runner executes directly in **Windows CMD**. Use Windows 10 version 1803 or newer, or Windows 11, on x64; built-in `curl.exe`, `tar.exe` and `certutil.exe` handle downloads, extraction and integrity checks.
 

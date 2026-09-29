@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import socket
 import ssl
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,7 +23,13 @@ sys.path.insert(0, str(ROOT))
 
 
 def main():
+    global ROOT
+    source_root = ROOT
     work = Path(tempfile.mkdtemp(prefix='gravewright-auto-update-'))
+    ROOT = work / 'application'
+    shutil.copytree(source_root, ROOT, ignore=shutil.ignore_patterns(
+        '.git', '.venv', 'node_modules', '__pycache__', '.env', 'data', 'media', 'staticfiles', 'test-results'))
+    sys.path.insert(0, str(ROOT))
     print('Isolated workspace:', work, flush=True)
     with socket.socket() as sock:
         sock.bind(('127.0.0.1',0)); port=sock.getsockname()[1]
@@ -32,6 +39,9 @@ def main():
         from scripts.gravewright_runner import prepare_environment
         directory = work / 'user-data'; directory.mkdir()
         prepare_environment(directory, port)
+        from scripts.windows.create_runner import create_runner
+        create_runner(ROOT, sys.executable, directory, shutil.which('uv'))
+        original_runner = (ROOT / 'Gravewright Runner.bat').read_bytes()
     import django
     django.setup()
     from django.core.management import call_command
@@ -45,20 +55,25 @@ def main():
     content=Path(settings.GRAVEWRIGHT_CONTENT_ROOT);content.mkdir();(content/'fixture').write_bytes(b'preserved')
     connections.close_all()
     supervisor=Supervisor(ROOT,work/'state',settings.DATABASES['default']['NAME'],media,'127.0.0.1',port)
-    files=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=ROOT).decode().split('\0')
+    files=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=source_root).decode().split('\0')
     installed_version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
+    (ROOT / 'obsolete-release-file.txt').write_text('remove on upgrade', encoding='utf-8')
+    (ROOT / '.env').write_text('# local configuration must survive\n', encoding='utf-8')
     def archive(sequence, failure=None):
         target=work/f'alpha{sequence}.zip'
         with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED) as z:
             for name in files:
-                file=ROOT/name
+                file=source_root/name
                 if not name or not file.is_file():continue
                 data=file.read_bytes()
                 if name in ('pyproject.toml','uv.lock'):
                     data=data.replace(f'version = "{installed_version}"'.encode(), f'version = "0.1.0a{sequence}"'.encode())
                 if name=='config/managed_asgi.py' and failure=='startup':
                     data=b"raise RuntimeError('Intentional startup failure')\n"+data
+                if name in ('Install Windows.bat', 'scripts/windows/runner.bat'):
+                    data += f'\nrem release test {sequence}\n'.encode()
                 z.writestr('release/'+name,data)
+            z.writestr('release/new-release-file.txt', str(sequence))
             if failure=='migration':
                 z.writestr('release/gravewright/accounts/migrations/0004_update_failure.py',"from django.db import migrations\ndef fail(apps,schema_editor):\n apps.get_model('gravewright_accounts','User').objects.update(name='Should roll back')\n raise RuntimeError('Intentional migration failure')\nclass Migration(migrations.Migration):\n dependencies=[('gravewright_accounts','0003_userpreference_locale')]\n operations=[migrations.RunPython(fail)]\n")
         return target
@@ -104,15 +119,45 @@ def main():
             supervisor.apply(job(first,1))
             assert read(supervisor.state/'progress.json')['stage']=='complete', (supervisor.state/'update.log').read_text()[-4000:]
             preserved();active=supervisor.active
-            print('PASS: HTTPS download, isolated dependencies, backup, migrations, new server and persistent active release.',flush=True)
+            assert active == ROOT
+            assert (ROOT / 'new-release-file.txt').read_text() == '1'
+            assert not (ROOT / 'obsolete-release-file.txt').exists()
+            assert 'release test 1' in (ROOT / 'Install Windows.bat').read_text()
+            assert (ROOT / '.env').read_text() == '# local configuration must survive\n'
+            old = ROOT.with_name(ROOT.name + '.old')
+            assert (old / 'obsolete-release-file.txt').is_file()
+            assert (old / '.gravewright-rollback/database.sqlite3').is_file()
+            if '--runner' in sys.argv:
+                assert any('release test 1' in p.read_text() for p in (directory / '.runner-launchers').glob('*.bat'))
+                assert supervisor.python(ROOT) in (ROOT / 'Gravewright Runner.bat').read_text()
+            print('PASS: in-place replacement, new/removed files, updated BATs, preserved .env and retained .old.',flush=True)
             for failure in ['migration','startup']:
                 target=archive(2,failure)
                 supervisor.apply(job(target,2))
                 assert read(supervisor.state/'progress.json')['stage']=='rolled_back', (supervisor.state/'update.log').read_text()[-4000:]
                 assert supervisor.active==active
+                assert (ROOT / 'new-release-file.txt').read_text() == '1'
+                assert 'release test 1' in (ROOT / 'Install Windows.bat').read_text()
                 preserved()
                 assert not (supervisor.state/'maintenance').exists()
                 print('PASS:',failure,'failure restores previous server, database and files.',flush=True)
+            third = job(archive(3), 3)
+            third['keep_old'] = False
+            supervisor.apply(third)
+            assert read(supervisor.state/'progress.json')['stage'] == 'complete'
+            assert read(supervisor.state/'progress.json')['backup'] is None
+            assert list(ROOT.parent.glob('*.old')) == [old]
+            assert (ROOT / 'new-release-file.txt').read_text() == '3'
+            preserved()
+            supervisor.stop()
+            from scripts.rollback_update import rollback
+            rollback(old)
+            assert not (ROOT / 'new-release-file.txt').exists()
+            assert (ROOT / 'obsolete-release-file.txt').is_file()
+            if '--runner' in sys.argv:
+                assert (ROOT / 'Gravewright Runner.bat').read_bytes() == original_runner
+            preserved()
+            print('PASS: optional .old retention and explicit rollback of code and data.', flush=True)
     finally:
         supervisor.stop();server.shutdown()
     print('All managed upgrade acceptance checks passed. No real installation data changed.',flush=True)

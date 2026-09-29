@@ -21,11 +21,12 @@ from pathlib import Path
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 
 
 ROOT = Path(__file__).resolve().parents[2]
-LAUNCHER = "Gravewright Runner.bat"
+LAUNCHER = "Install Windows.bat"
 PROFILE_NAME = "Private profile ç"
 
 
@@ -67,16 +68,17 @@ def registry_paths():
     return values
 
 
-def run_command(command, *, cwd, env, log, label, timeout=600, expected=0, executable=None):
+def run_command(command, *, cwd, env, log, label, timeout=600, expected=0, executable=None, input_text=None):
     print(label, flush=True)
     process = subprocess.Popen(
         command, executable=executable, cwd=cwd, env=env,
-        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        stdin=subprocess.PIPE if input_text is not None else subprocess.DEVNULL,
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         text=True, encoding="utf-8", errors="replace",
         creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
     )
     try:
-        output, _ = process.communicate(timeout=timeout)
+        output, _ = process.communicate(input=input_text, timeout=timeout)
     except (subprocess.TimeoutExpired, KeyboardInterrupt):
         # Only this test's process tree is terminated; uv/node may own children.
         subprocess.run(
@@ -93,7 +95,8 @@ def run_command(command, *, cwd, env, log, label, timeout=600, expected=0, execu
     return output
 
 
-def run_batch(project, arguments, *, env, log, label, cwd, expected=0, timeout=600):
+def run_batch(project, arguments, *, env, log, label, cwd, expected=0, timeout=600,
+              launcher=LAUNCHER, input_text=None):
     """Call CMD directly and keep paths containing %, ! and & as data.
 
     CMD expands these test variables once. Substituted percent signs are not
@@ -102,7 +105,7 @@ def run_batch(project, arguments, *, env, log, label, cwd, expected=0, timeout=6
     """
     child = dict(env)
     parts = []
-    for index, value in enumerate((str(project / LAUNCHER), *arguments)):
+    for index, value in enumerate((str(project / launcher), *arguments)):
         if any(character in str(value) for character in '\r\n"'):
             raise ValueError("Test batch arguments may not contain quotes or newlines.")
         name = f"GRAVEWRIGHT_TEST_ARGUMENT_{index}"
@@ -111,7 +114,7 @@ def run_batch(project, arguments, *, env, log, label, cwd, expected=0, timeout=6
     comspec = str(Path(env["SYSTEMROOT"]) / "System32/cmd.exe")
     command = f'"{comspec}" /d /s /v:off /c "' + " ".join(parts) + '"'
     return run_command(command, executable=comspec, cwd=cwd, env=child,
-                       log=log, label=label, expected=expected, timeout=timeout)
+                       log=log, label=label, expected=expected, timeout=timeout, input_text=input_text)
 
 
 def single_match(directory, pattern):
@@ -119,6 +122,55 @@ def single_match(directory, pattern):
     if len(matches) != 1:
         raise AssertionError(f"Expected one {pattern} under {directory}; found {len(matches)}")
     return matches[0]
+
+
+def check_running_bat_replacement(work, output):
+    project = work / 'Running BAT & 100% !'
+    (project / 'scripts/windows').mkdir(parents=True)
+    shutil.copy2(ROOT / 'scripts/windows/runner.bat', project / 'scripts/windows/runner.bat')
+    shutil.copy2(ROOT / 'scripts/windows/launch_runner.py', project / 'scripts/windows/launch_runner.py')
+    spec = importlib.util.spec_from_file_location('runner_generator', ROOT / 'scripts/windows/create_runner.py')
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+    for code in (0, 1):
+        (project / 'scripts/gravewright_runner.py').write_text(
+            'from pathlib import Path\n'
+            'Path("new.bat").write_text("@echo off\\necho REPLACEMENT_EXECUTED\\nexit /b 99\\n")\n'
+            'Path("new.bat").replace("Gravewright Runner.bat")\n'
+            f'raise SystemExit({code})\n', encoding='utf-8')
+        generator.create_runner(project, sys.executable, project / 'data')
+        result = run_batch(project, ['--no-pause'], launcher='Gravewright Runner.bat',
+                           cwd=work, env=os.environ, log=output / f'bat-swap-{code}.log', expected=code,
+                           label=f'Replacing the running project BAT and preserving exit status {code}...')
+        if 'REPLACEMENT_EXECUTED' in result:
+            raise AssertionError('CMD resumed the replacement BAT instead of finishing its private copy.')
+
+
+def check_private_python(work, uv, output):
+    """Exercise the real BAT subroutines without a shared/registered Python."""
+    source = (ROOT / LAUNCHER).read_text(encoding='utf-8')
+    block = source[source.index('\n:resolve_python\n'):source.index('\n:resolve_node\n')]
+    directory = work / 'Python download probe'
+    directory.mkdir()
+    script = directory / 'probe.bat'
+    script.write_text('@echo off\nsetlocal DisableDelayedExpansion\n'
+                      'call :resolve_python\nexit /b %errorlevel%\n' + block, encoding='utf-8')
+    env = dict(os.environ, GW_RUNTIME=str(directory), GW_WORK=str(directory), GW_UV=str(uv),
+               UV_PYTHON_INSTALL_DIR=str(directory / 'empty-discovery'), UV_PYTHON_NO_REGISTRY='1',
+               UV_PYTHON_INSTALL_REGISTRY='0', UV_PYTHON_INSTALL_BIN='0', GW_PYTHON_PROBE=str(script))
+    env.pop('UV_OFFLINE', None)
+    env['PATH'] = str(Path(env['SYSTEMROOT']) / 'System32')
+    comspec = str(Path(env['SYSTEMROOT']) / 'System32/cmd.exe')
+    command = f'"{comspec}" /d /s /v:off /c ""%GW_PYTHON_PROBE%""'
+    first = run_command(command, executable=comspec, cwd=work, env=env,
+                        log=output / 'private-python.log', label='Downloading private Python with the real BAT resolver...')
+    if 'Installing a private copy' not in first or not list((directory / 'python').glob('*/python.exe')):
+        raise AssertionError('The resolver did not download and validate a private Python.')
+    env['UV_OFFLINE'] = '1'
+    repeated = run_command(command, executable=comspec, cwd=work, env=env,
+                           log=output / 'private-python-repeat.log', label='Reusing private Python offline...')
+    if 'Installing a private copy' in repeated:
+        raise AssertionError('The resolver tried to reinstall its private Python.')
 
 
 @contextmanager
@@ -172,7 +224,7 @@ def check_shortcut(project, output):
             link, buffer, len(buffer)), "Read working directory")
         report["working_directory"] = buffer.value
 
-    expected = {"target": project / LAUNCHER,
+    expected = {"target": project / 'Gravewright Runner.bat',
                 "icon": project / "scripts/windows/gravewright.ico",
                 "working_directory": project}
     report["expected"] = {name: str(path) for name, path in expected.items()}
@@ -226,6 +278,7 @@ def diagnose_failure(work, output):
 
 
 def exercise(work, output, *, skip_browser):
+    check_running_bat_replacement(work, output)
     project = work / "Gravewright & (test) ! 100% ç"
     data = work / "Campaign data & ã"
     profile = work / PROFILE_NAME
@@ -254,6 +307,7 @@ def exercise(work, output, *, skip_browser):
               label="Running the real BAT with uv and Node/npm absent from PATH...")
     runtime = profile / "Gravewright/runner"
     uv = single_match(runtime / "uv", "*/uv.exe")
+    check_private_python(work, uv, output)
     node = single_match(runtime / "node", "*/node.exe")
     python = single_match(runtime / "environments", "*/Scripts/python.exe")
     check_shortcut(project, output)
@@ -294,7 +348,34 @@ def exercise(work, output, *, skip_browser):
     if registry_paths() != persisted_paths or os.environ.get("PATH", "") != process_path:
         raise AssertionError("The BAT changed the user, machine or parent process PATH.")
 
-    run_batch(project, ["--port", "70000", "--no-pause"], cwd=work, env=env,
+    wizard_data = work / 'Wizard data'
+    wizard_arguments = ['--data-dir', str(wizard_data), '--no-pause']
+    run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure.log',
+                label='Saving interactive configuration with the installed Python...',
+                input_text='Mesa São Paulo\npt-BR\n3001\n\ns\nn\ns\nn\n')
+    configuration = (wizard_data / '.env').read_text(encoding='utf-8')
+    for expected in ('APP_NAME="Mesa São Paulo"', 'DEFAULT_LOCALE="pt-BR"',
+                     'GRAVEWRIGHT_PORT="3001"', 'CAMPAIGN_SNAPSHOTS_ENABLED="false"'):
+        if expected not in configuration:
+            raise AssertionError(f'The configuration wizard did not save {expected}.')
+    repeated_questions = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure-repeat.log',
+                                    label='Asking again and keeping saved settings with Enter...', input_text='\n' * 7)
+    if 'Table name [Mesa São Paulo]' not in repeated_questions:
+        raise AssertionError('The repeated launch did not ask with the saved default.')
+    if (wizard_data / '.env').read_text(encoding='utf-8') != configuration:
+        raise AssertionError('Repeated configuration changed the personal .env.')
+
+    started = run_batch(project, ['--check', '--no-pause'], launcher='Gravewright Runner.bat',
+                        cwd=work, env=env, log=output / 'generated-runner.log',
+                        label='Running the generated launcher offline without configuration or tool preparation...')
+    if 'Gravewright Runner checks passed.' not in started or any(
+        text in started for text in ('[1/7]', 'Table name', 'npm ci', 'Configuration saved.')
+    ):
+        raise AssertionError('The generated runner must only execute the prepared application.')
+    if str(wizard_data) not in started:
+        raise AssertionError('The generated runner lost the configured data directory.')
+
+    run_batch(project, ["--port", "70000", "--no-pause"], launcher='Gravewright Runner.bat', cwd=work, env=env,
               log=output / "invalid-port.log", label="Rejecting an invalid port without pausing...", expected=1)
     run_command([str(python), "-X", "utf8", "-m", "unittest", "config.test_frontend_preparation"],
                 cwd=project, env=env, log=output / "frontend-tests.log",
