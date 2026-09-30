@@ -232,6 +232,48 @@ def check_large_library(page, base):
     page.unroute_all(behavior='wait')
 
 
+def check_local_install(page, base):
+    for kind, section in [('module', 'addons'), ('system', 'systems')]:
+        manifest = {
+            'id': f'example.local-{kind}', 'name': f'Local {kind}', 'version': '1.0.0',
+            'description': 'Local ZIP browser regression', 'author': 'Test', 'license': 'MIT',
+            'sdk': {'requires': '>=1.0.0 <2.0.0', 'tested': '1.0.0'}, 'entry': 'main.js',
+        }
+        if kind == 'system':
+            manifest['system'] = {
+                'actorTypes': [{'id': 'character', 'label': 'Character'}],
+                'itemTypes': [{'id': 'gear', 'label': 'Gear'}],
+            }
+        archive = BytesIO()
+        with zipfile.ZipFile(archive, 'w') as zipped:
+            zipped.writestr('manifest.json', json.dumps(manifest))
+            zipped.writestr('main.js', 'export default {start(){},register(){},stop(){}};')
+        page.goto(base + '/inside?section=' + section)
+        page.locator('[data-action=browse]').click()
+        page.locator('[data-action=install-local]').click()
+        dialog = page.locator('[data-local-install]')
+        expect(dialog).to_be_visible()
+        picker = dialog.locator('input[type=file]')
+        submit = dialog.locator('button[type=submit]')
+        picker.set_input_files({'name': 'empty.zip', 'mimeType': 'application/zip', 'buffer': b''})
+        submit.click()
+        expect(dialog.locator('[role=alert]')).to_have_text('Select a ZIP file.')
+        expect(picker).to_be_enabled()
+        picker.set_input_files({'name': kind + '.zip', 'mimeType': 'application/zip', 'buffer': archive.getvalue()})
+        limit = dialog.get_attribute('data-max-bytes')
+        dialog.evaluate('(el) => el.dataset.maxBytes = "1"')
+        submit.click()
+        expect(dialog.locator('[role=alert]')).to_have_text('The ZIP exceeds the 64 MiB package limit.')
+        expect(picker).to_be_enabled()
+        dialog.evaluate('(el, limit) => el.dataset.maxBytes = limit', limit)
+        with page.expect_response(lambda response: response.url.endswith('/api/module-packages/install-local') and response.request.method == 'POST') as uploaded:
+            submit.click()
+        assert uploaded.value.ok, uploaded.value.text()
+        expect(dialog).not_to_be_visible()
+        expect(page.locator('[data-module-catalog=installed] .module-catalog__card h3').filter(has_text=manifest['name'])).to_be_visible()
+    print('Local ZIP: module and system uploads, validation and library refresh passed.')
+
+
 def main():
     with tempfile.TemporaryDirectory(prefix='grave-marketplace-') as temp:
         directory = Path(temp)
@@ -244,6 +286,7 @@ def main():
                 'DJANGO_ALLOWED_HOSTS': '127.0.0.1,localhost,testserver',
                 'GRAVEWRIGHT_DATABASE': str(directory / 'db.sqlite3'),
                 'GRAVEWRIGHT_MEDIA_ROOT': str(directory / 'media'),
+                'GRAVEWRIGHT_MODULES_ROOT': str(directory / 'modules'),
                 'GRAVEWRIGHT_PUBLIC_ORIGIN': '', 'DJANGO_SECURE_COOKIES': 'false',
                 'GRAVEWRIGHT_REDIS_URL': '', 'TRUSTED_PROXIES': '', 'GRAVEWRIGHT_RELEASES_REPOSITORY': '',
                 'GRAVEWRIGHT_MARKETPLACE_URL': catalog_base + '/catalog.json',
@@ -274,6 +317,7 @@ def main():
                         page.on('pageerror', lambda error: errors.append(str(error)))
                         check(page, base, keys_file, keys, feed)
                         check_large_library(page, base)
+                        check_local_install(page, base)
                         assert not errors, errors
                         browser.close()
                     print('Marketplace: HTTPS signed installation, system selection, campaign and NPC creation, invalid keys, stale catalog cleanup, 70-package library and typed installation dialogs passed.')

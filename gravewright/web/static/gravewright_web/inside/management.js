@@ -328,8 +328,10 @@ function modules(root) {
     };
     localDialog.querySelector('[data-local-form]').onsubmit = event => {
       event.preventDefault();
+      // FormData omits disabled inputs, so capture before run() disables them.
+      const form = new FormData(event.currentTarget);
       void run(localDialog, async () => {
-        const form = new FormData(event.target), file = form.get('file');
+        const file = form.get('file');
         if (!(file instanceof File) || !file.size) throw new Error(ui('Select a ZIP file.', 'Selecione um arquivo ZIP.', 'Selecciona un archivo ZIP.'));
         if (file.size > Number(localDialog.dataset.maxBytes)) throw new Error(ui('The ZIP exceeds the 64 MiB package limit.', 'O ZIP ultrapassa o limite de 64 MiB por pacote.', 'El ZIP supera el límite de 64 MiB por paquete.'));
         try {

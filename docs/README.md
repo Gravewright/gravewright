@@ -24,4 +24,4 @@ Project policies: [contributing](../CONTRIBUTING.md), [security](../SECURITY.md)
 
 For the dice implementation, see the existing [grammar architecture](../gravewright/dice/grammar/ARCHITECTURE.md) and [notation reference](../gravewright/dice/grammar/notation/GRAMMAR.md). Machine-readable module contracts live in [contracts/](../gravewright/modules/contracts/); the [transport note](../gravewright/modules/contracts/transport.md) accompanies them.
 
-Current release: [Gravewright 0.1.2 release notes](releases/0.1.2.md).
+Current release: [Gravewright 0.1.3 release notes](releases/0.1.3.md).
