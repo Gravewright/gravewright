@@ -22,6 +22,8 @@ schema history; they are not the place to document or change current service log
 | [`config/environment.py`](../../config/environment.py) | Environment loading and parsing of booleans, paths and the public origin. |
 | [`config/engine.py`](../../config/engine.py) | Feature flags and validated engine limits. |
 | [`config/settings.py`](../../config/settings.py) | Installed apps, SQLite, sessions, templates, media and Channels configuration. |
+| [`config/marketplace_apps.py`](../../config/marketplace_apps.py), [`gravewright/modules/server_apps.py`](../../gravewright/modules/server_apps.py) | Verified Django package selection, startup imports and owner-authorized activation jobs. |
+| [`scripts/update_supervisor.py`](../../scripts/update_supervisor.py) | Core updates and Django app activation, isolated environments, backups, migrations, restart and rollback. |
 | [`config/asgi.py`](../../config/asgi.py), [`config/wsgi.py`](../../config/wsgi.py) | Server entry points; ASGI includes the tabletop WebSocket transport. |
 | [`config/proxy.py`](../../config/proxy.py) | Restores HTTP/WebSocket schemes from one valid forwarded-proto header sent by a trusted socket peer. |
 | [`config/urls.py`](../../config/urls.py) | Aggregates app HTTP routes. |

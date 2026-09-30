@@ -1,8 +1,9 @@
-"""Install signed browser packages and persist their table-scoped configuration.
+"""Install browser and trusted Django packages with immutable release identities.
 
-The host validates archive bytes but never imports package Python or executes
-package binaries. JavaScript later runs in the user's main browser page, without
-a sandbox; signing keys therefore identify trusted publishers, not permissions.
+Django packages are activated separately by the server supervisor.
+Browser packages cannot contain Python or native binaries. JavaScript later
+runs in the user's main browser page, without a sandbox; signing keys therefore
+identify trusted publishers, not permissions.
 See ``docs/en/modules.md`` (``docs/pt-BR/modules.md`` in Portuguese).
 """
 
@@ -40,6 +41,12 @@ from gravewright.accounts.services import AuthError
 from .models import ModuleSet, ModuleValue, Package
 
 
+def package_type(manifest):
+    if 'django' in manifest:
+        return 'django'
+    return 'system' if 'system' in manifest else 'module'
+
+
 class ModuleFailure(AuthError):
     def __init__(self, code, message=None):
         super().__init__(
@@ -48,6 +55,8 @@ class ModuleFailure(AuthError):
                 "permission_denied": 403,
                 "not_found": 404,
                 "conflict": 409,
+                "managed_start_required": 409,
+                "update_in_progress": 409,
                 "stale_context": 409,
                 "unavailable": 503,
             }.get(code, 400),
@@ -192,7 +201,7 @@ class ModulePackages:
                        or len(tag) > 64 or any(ord(c) < 32 for c in tag) for tag in tags)
                 or len({tag.casefold() for tag in tags}) != len(tags)):
             raise ModuleFailure("invalid_data", "Invalid package tags")
-        if record.get("type", "module") not in {"module", "system"}:
+        if record.get("type", "module") not in {"module", "system", "django"}:
             raise ModuleFailure("invalid_data", "Invalid package type")
         if not re.fullmatch("[a-f0-9]{64}", record["sha256"]):
             raise ModuleFailure("invalid_data")
@@ -254,7 +263,7 @@ class ModulePackages:
 
     def install_local(self, archive: bytes, expected_type=None):
         """Install an owner-supplied ZIP without consulting a remote catalog."""
-        if expected_type not in {None, "module", "system"}:
+        if expected_type not in {None, "module", "system", "django"}:
             raise ModuleFailure("invalid_data")
         if len(archive) > MAX_ARCHIVE:
             raise ModuleFailure("invalid_data", "Archive exceeds the package limit")
@@ -273,9 +282,10 @@ class ModulePackages:
             "version": manifest["version"],
             "sdk": manifest["sdk"]["requires"],
             "sha256": hashlib.sha256(archive).hexdigest(),
-            "type": "system" if "system" in manifest else "module",
+            "type": package_type(manifest),
         }
-        if expected_type is not None and record["type"] != expected_type:
+        if (expected_type is not None and record["type"] != expected_type
+                and not (expected_type == "module" and record["type"] == "django")):
             raise ModuleFailure("invalid_data", "Package type does not match this library")
         if not compatible(record["sdk"]):
             raise ModuleFailure("unavailable", "Incompatible SDK")
@@ -288,7 +298,7 @@ class ModulePackages:
             self.verify(record)
             return
         if (set(record) != {"source", "id", "version", "sdk", "sha256", "type"}
-                or record["type"] not in {"module", "system"}
+                or record["type"] not in {"module", "system", "django"}
                 or any(not isinstance(record.get(field), str)
                        for field in ("id", "version", "sdk", "sha256"))
                 or not re.fullmatch("[a-f0-9]{64}", record["sha256"])
@@ -323,7 +333,8 @@ class ModulePackages:
                 if name.casefold() in names:
                     raise ModuleFailure("invalid_data", "Duplicate package path")
                 names.add(name.casefold())
-                if not entry.is_dir() and Path(name).suffix.lower() not in {
+                python_source = record.get("type") == "django" and Path(name).suffix == ".py"
+                if not entry.is_dir() and not python_source and Path(name).suffix.lower() not in {
                     ".js",
                     ".mjs",
                     ".css",
@@ -382,14 +393,18 @@ class ModulePackages:
                 raise ModuleFailure(
                     "invalid_data", "Manifest does not match signed record"
                 )
-            if "type" in record and record["type"] != ("system" if "system" in manifest else "module"):
+            if "type" in record and record["type"] != package_type(manifest):
                 raise ModuleFailure("invalid_data", "Package type does not match signed record")
-            entry = str(safe_path(manifest["entry"]))
-            if (
-                Path(entry).suffix not in (".js", ".mjs")
-                or entry not in package.namelist()
-            ):
-                raise ModuleFailure("invalid_data", "Missing JavaScript entry")
+            if "django" in manifest:
+                if record.get("type") != "django":
+                    raise ModuleFailure("invalid_data", "Django packages require an explicit signed type")
+                for app in manifest["django"]["apps"]:
+                    if app.split(".")[0] + "/__init__.py" not in package.namelist():
+                        raise ModuleFailure("invalid_data", "Missing Django app package")
+            else:
+                entry = str(safe_path(manifest["entry"]))
+                if Path(entry).suffix not in (".js", ".mjs") or entry not in package.namelist():
+                    raise ModuleFailure("invalid_data", "Missing JavaScript entry")
             archives = self.directory / "archives"
             archives.mkdir(exist_ok=True)
             archived = archives / (record["sha256"] + ".zip")
@@ -481,7 +496,7 @@ class ModulePackages:
                 if (
                     asset is None
                     and {
-                        str(p.relative_to(root)) for p in root.rglob("*") if p.is_file()
+                        p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()
                     }
                     != names
                 ):
@@ -508,7 +523,7 @@ class ModulePackages:
             installed = Package.objects.filter(
                 module_id=module_id, version=version, revoked=False
             ).first()
-            if installed:
+            if installed and "django" not in installed.manifest:
                 descriptors.append(
                     {
                         "id": module_id,
@@ -552,8 +567,8 @@ class ModulePackages:
             ).first()
             if not installed:
                 raise ModuleFailure("not_found")
-            if installed.locale_catalogs:
-                raise ModuleFailure("invalid_data", "Language modules are activated for the installation.")
+            if installed.locale_catalogs or "django" in installed.manifest:
+                raise ModuleFailure("invalid_data", "Language and Django modules are activated for the installation.")
             self.verify_installed(installed)
         row.modules, row.replacements, row.revision = (
             modules,

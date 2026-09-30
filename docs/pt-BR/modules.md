@@ -2,7 +2,7 @@
 
 [Índice da documentação](../README.pt-BR.md) · [English](../en/modules.md) · [Referência da API](api.md)
 
-O Gravewright instala pacotes ZIP assinados com JavaScript para o navegador, arquivos auxiliares e um manifesto JSON. O proprietário do servidor instala versões; o mestre da campanha escolhe versões exatas e substituições da interface para uma mesa. A instalação não importa Python do pacote nem inicia seus executáveis.
+O Gravewright instala pacotes ZIP assinados com JavaScript para o navegador ou apps Django confiáveis, arquivos auxiliares e um manifesto JSON. O proprietário instala versões; o mestre escolhe módulos de navegador e substituições da interface para uma mesa. Apps Django são ativados separadamente para o servidor inteiro.
 
 A licença de módulos de terceiros está descrita na [política de licenciamento](../../LICENSING.pt-BR.md). O manifesto registra a licença escolhida pelo autor; a instalação não a altera.
 
@@ -257,7 +257,7 @@ Os testes de navegador precisam das dependências de desenvolvimento e do navega
 
 ### Pacotes de idioma para a instalação
 
-O manifesto pode declarar `locales`, associando cada idioma a `{ "name": "Português (Brasil)", "path": "locales/pt-BR.json" }`. Cada catálogo é um objeto JSON de textos originais e traduções, preservando marcadores como `{name}`. O inglês pertence ao host e não pode ser sobrescrito. Um pacote não pode combinar `system` e `locales`, nem executar Python baixado pelo marketplace.
+O manifesto pode declarar `locales`, associando cada idioma a `{ "name": "Português (Brasil)", "path": "locales/pt-BR.json" }`. Cada catálogo é um objeto JSON de textos originais e traduções, preservando marcadores como `{name}`. O inglês pertence ao host e não pode ser sobrescrito. Um pacote não pode combinar `system` e `locales`. Pacotes de idiomas não podem conter Python.
 
 O proprietário ativa os idiomas em Módulos instalados. A rota `POST /api/module-packages/activation` recebe `{ "id": "gravewright.translator", "version": "0.1.0", "enabled": true }` e verifica o arquivo assinado. Somente um pacote de idiomas fica ativo por instalação. A configuração de módulos por campanha rejeita esses pacotes e a lista de extensões da mesa os omite.
 
@@ -288,6 +288,42 @@ em `onDispose`. O host fornece apenas o botão; o módulo mantém sua interface,
 assets e validação. Módulos sem esse callback continuam funcionando normalmente.
 
 ### Apps Django instalados explicitamente
+
+O marketplace também aceita registros assinados com `"type": "django"`. Eles
+aparecem em **Módulos**, identificados como **Django · Server**. Também é possível
+usar **Instalar de ZIP**. A instalação valida e extrai o pacote; o botão de
+ativação executa o código confiável e reinicia o servidor. Esse fluxo exige o
+Runner ou `main.py`, além do `uv`, sem editar o `.env` manualmente.
+
+Mantenha os campos habituais de identidade, SDK, descrição, autor e licença,
+omita `entry`, `system` e `locales`, e acrescente:
+
+```json
+"django": {
+  "apps": ["my_extension.apps.MyExtensionConfig"],
+  "requirements": ["some-library==1.2.3"]
+}
+```
+
+O ZIP deve conter `my_extension/__init__.py`, fontes Python, migrações, templates
+e arquivos estáticos. `requirements` é opcional e aceita apenas `nome==versão`,
+sem URLs, caminhos locais, extras ou opções do instalador. As dependências vêm
+do índice Python configurado e não podem substituir versões fixadas pelo core.
+Use nomes de importação e labels Django exclusivos. Um AppConfig pode declarar
+`gravewright_urlconf`; o app deve verificar autenticação, CSRF e permissões.
+
+A ativação prepara outro ambiente Python, valida o Django, salva banco e arquivos,
+aplica migrações, coleta arquivos estáticos e reinicia. Em caso de falha, restaura
+o ambiente, a seleção de módulos e os dados anteriores. Uma única operação de
+servidor pode executar por vez. A seleção fica em
+`MEDIA_ROOT/modules/server-apps.json` (ou na pasta de módulos configurada),
+continua após atualizações do core e tem suas dependências reinstaladas nelas.
+Desativar reinicia sem carregar o app; não desfaz migrações nem apaga seus dados.
+Versões revogadas não podem ser ativadas; apps já em execução devem ser
+desativados pelo proprietário. Fontes Python não são servidos pela rota de
+arquivos de navegador nem oferecidos como módulos por mesa.
+
+A configuração abaixo continua disponível para fontes gerenciados pelo operador:
 
 O operador pode instalar um app Python confiável no ambiente do servidor e definir
 `GRAVEWRIGHT_SERVER_APPS` com seu caminho de importação (separado por vírgulas para

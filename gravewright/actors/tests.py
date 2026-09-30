@@ -135,7 +135,10 @@ class ActorTests(TransactionTestCase):
         )
         Broadcast.objects.create(campaign=self.campaign, scene=scene)
         token = Token.objects.create(scene=scene, actor=self.actor)
-        self.assertEqual(self.client.get(image_url).status_code, 200)
+        image_response = self.client.get(image_url)
+        self.addCleanup(image_response.close)
+        self.assertEqual(image_response.status_code, 200)
+        image_response.close()
         token.hidden = True
         token.save()
         self.assertEqual(self.client.get(image_url).status_code, 404)

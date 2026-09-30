@@ -220,7 +220,7 @@ if (table) {
         await runtime.reconcile(next);
         state = next;
       }
-      packages = (await http.get("/api/module-packages")).filter((row) => !row.locales);
+      packages = (await http.get("/api/module-packages")).filter((row) => !row.locales && !row.django);
       render();
     } catch (error) {
       report(error);

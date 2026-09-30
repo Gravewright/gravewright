@@ -13,6 +13,14 @@ LOCAL_DIRECTORIES = {
 NESTED_CACHES = {'.git', '.venv', 'venv', 'node_modules', '__pycache__', '.pytest_cache', '.ruff_cache', '.mypy_cache'}
 
 
+def storage_path(path):
+    """Allow deeply nested module archives in Windows data backups."""
+    value = str(Path(path).resolve())
+    if os.name == 'nt' and not value.startswith('\\\\?\\'):
+        return '\\\\?\\UNC\\' + value[2:] if value.startswith('\\\\') else '\\\\?\\' + value
+    return value
+
+
 def source_files(root, protected=()):
     root = Path(root).resolve()
     protected = tuple(Path(path).resolve() for path in protected)
@@ -91,4 +99,4 @@ def remove_work_tree(path, parent):
     if path == parent or not path.is_relative_to(parent):
         raise ValueError('Refusing to remove a directory outside updater storage')
     if path.exists():
-        shutil.rmtree(path)
+        shutil.rmtree(storage_path(path))

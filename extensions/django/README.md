@@ -26,4 +26,6 @@ invalid app import prevents startup instead of silently disabling the app.
 Folder contents are ignored by git, so third-party apps stay outside this
 repository's history.
 
-See `docs/en/modules.md` ("Explicitly installed Django apps").
+Marketplace Django ZIPs can instead be installed and activated in the Modules
+library. They are stored in the configured modules directory, not this folder.
+See `docs/en/modules.md` ("Explicitly installed Django apps") for their manifest.

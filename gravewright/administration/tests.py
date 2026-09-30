@@ -79,7 +79,8 @@ class ArchiveTests(TestCase):
         self.assertNotEqual(scene.block_id, self.scene.block_id)
         self.assertEqual(token.actor.campaign, restored)
         self.assertEqual(scene.environment.lighting, {"mode": "manual"})
-        self.assertEqual(Tile.objects.get(scene=scene).file.read(), b"image")
+        with Tile.objects.get(scene=scene).file.open('rb') as stream:
+            self.assertEqual(stream.read(), b"image")
         self.assertEqual(Broadcast.objects.get(campaign=restored).scene, scene)
         asset = Asset.objects.get(campaign=restored)
         self.assertIn(

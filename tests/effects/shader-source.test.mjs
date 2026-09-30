@@ -16,7 +16,7 @@ test('escaped fences and invisible formatting from copied responses are removed'
 });
 
 test('user response: all code survives interspersed arduino/cpp/java fences and Markdown escapes', () => {
-    const raw = readFileSync(new URL('../fixtures/shader-ai-mixed-markdown.txt', import.meta.url), 'utf8');
+    const raw = readFileSync(new URL('../fixtures/shader-ai-mixed-markdown.txt', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
     const expected = raw.replace(/^```(?:arduino|cpp|java)?\n/gm, '').replaceAll('\\*', '*').replace(/\\\n/g, '\n').trim();
     assert.equal(shaderSource(raw), expected);
     assert.equal(shaderSource(expected), expected);

@@ -23,6 +23,8 @@ alterar a lógica atual dos serviços.
 | [`config/environment.py`](../../config/environment.py) | Carrega o ambiente e interpreta booleanos, caminhos e origem pública. |
 | [`config/engine.py`](../../config/engine.py) | Recursos habilitados e limites validados do motor. |
 | [`config/settings.py`](../../config/settings.py) | Apps, SQLite, sessões, templates, mídia e configuração de Channels. |
+| [`config/marketplace_apps.py`](../../config/marketplace_apps.py), [`gravewright/modules/server_apps.py`](../../gravewright/modules/server_apps.py) | Seleção verificada de apps Django, importação na inicialização e ativação autorizada pelo proprietário. |
+| [`scripts/update_supervisor.py`](../../scripts/update_supervisor.py) | Atualização do core e ativação Django, ambientes isolados, backup, migrações, reinício e rollback. |
 | [`config/asgi.py`](../../config/asgi.py), [`config/wsgi.py`](../../config/wsgi.py) | Entradas do servidor; ASGI inclui WebSocket da mesa. |
 | [`config/proxy.py`](../../config/proxy.py) | Restaura esquemas HTTP/WebSocket a partir de um único cabeçalho forwarded-proto válido enviado por um par conectado confiável. |
 | [`config/urls.py`](../../config/urls.py) | Reúne rotas HTTP dos apps. |

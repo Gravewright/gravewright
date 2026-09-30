@@ -6,6 +6,8 @@ const text = (root, selector, value) => {
 };
 const show = (root, selector, visible) => root.querySelector(selector)?.toggleAttribute("hidden", !visible);
 const marketplaceErrors = {
+  managed_start_required: "Start Gravewright with the 0.1.2 or newer Runner or main.py to activate Django apps. When upgrading from 0.1.1, replace the old launcher using the new release ZIP and installer.",
+  update_in_progress: "Another server operation is running. Wait for it to finish before activating Django apps.",
   marketplace_catalog_missing: "Set GRAVEWRIGHT_MARKETPLACE_URL to the publisher's HTTPS JSON catalog, then restart the host.",
   marketplace_catalog_invalid: "GRAVEWRIGHT_MARKETPLACE_URL must be a valid HTTPS catalog URL without credentials or a fragment. Correct it and restart the host.",
   marketplace_keys_missing: "Set GRAVEWRIGHT_MARKETPLACE_KEYS_FILE to the publisher's trusted public keys file, then restart the host.",
@@ -60,7 +62,7 @@ function modules(root) {
   const language = document.documentElement.lang;
   const ui = (en, pt, es) => language === 'pt-BR' ? pt : language === 'es' ? es : en;
   const nativeRow = native ? (() => { const r = JSON.parse(native.textContent); return {id:r.systemId, name:r.title, version:'', builtin:true, system:{}, description:ui('Built into Gravewright. Available when creating a table.', 'Integrado ao Gravewright. Disponível ao criar uma mesa.', 'Integrado en Gravewright. Disponible al crear una mesa.')}; })() : null;
-  const packageType = r => r.system ? 'system' : r.type ?? 'module';
+  const packageType = r => r.system || r.type === 'system' ? 'system' : 'module';
   function view(mode) {
     root.dataset.view = !installedOnly || mode === 'list' ? 'list' : 'tiles';
     root.querySelectorAll('[data-view-mode]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.viewMode === root.dataset.view)));
@@ -169,6 +171,11 @@ function modules(root) {
       text(card, "h3", local?.name ?? row.name ?? row.id);
       text(card, '[data-card-description]', row.description ?? local?.description ?? '');
       const tags = card.querySelector('[data-tags]');
+      if (tags && (local?.django || row.type === 'django')) {
+        const badge = document.createElement('span');
+        badge.textContent = 'Django · Server';
+        tags.append(badge);
+      }
       if (tags) for (const tag of row.tags ?? local?.tags ?? []) { const badge = document.createElement('span'); badge.textContent = tag; tags.append(badge); }
       text(card, "[data-version]", row.builtin ? "PDF" : `v${row.version}`);
       const status = row.builtin ? ui('Built-in', 'Integrado', 'Integrado') : local?.revoked ? ui('Revoked', 'Revogado', 'Revocado') : local?.globalEnabled ? ui('Active', 'Ativo', 'Activo') : local ? ui('Installed', 'Instalado', 'Instalado') : ui('Available', 'Disponível', 'Disponible');
@@ -196,16 +203,37 @@ function modules(root) {
         text(root, '[role=status]', ui('Package installed. It is now in your library.', 'Pacote instalado. Ele já está na sua biblioteca.', 'Paquete instalado. Ya está en tu biblioteca.'));
         show(root, "[role=status]", true);
       });
-      if (installedOnly && local?.locales && !local.revoked) {
+      if (installedOnly && (local?.locales || local?.django) && (!local.revoked || local.globalEnabled)) {
         const button = document.createElement('button');
         button.type = 'button';
         button.dataset.action = 'global-activation';
         button.textContent = '⏻';
         button.title = local.globalEnabled ? ui('Deactivate languages', 'Desativar idiomas', 'Desactivar idiomas') : ui('Activate languages', 'Ativar idiomas', 'Activar idiomas');
         button.setAttribute('aria-label', button.title);
+        if (local.django) {
+          button.title = local.globalEnabled ? 'Deactivate Django app and restart server' : 'Activate trusted Django server code and restart server';
+          button.setAttribute('aria-label', button.title);
+        }
         button.setAttribute('aria-pressed', String(!!local.globalEnabled));
         button.onclick = () => run(root, async () => {
           await http.post('/api/module-packages/activation', {id: row.id, version: row.version, enabled: !local.globalEnabled});
+          if (local.django) {
+            show(root, '[role=status]', true);
+            text(root, '[role=status]', 'Preparing Django apps. The server will restart automatically.');
+            const deadline = Date.now() + 15 * 60 * 1000;
+            let complete = false;
+            while (Date.now() < deadline) {
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              let progress;
+              try { progress = (await http.get('/api/admin/status')).updates.automatic; }
+              catch { continue; }
+              if (progress.busy) continue;
+              if (progress.stage !== 'complete') throw Error('Django activation failed. Previous configuration preserved; check the host update log.');
+              complete = true;
+              break;
+            }
+            if (!complete) throw Error('The server is still unavailable. Check the host update log before retrying.');
+          }
           location.reload();
         });
         card.querySelector(".module-catalog__actions").append(button);

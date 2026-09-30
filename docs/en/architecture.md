@@ -246,7 +246,10 @@ reviewing the archive selection, dependency graph and import rules, not only the
 model definition.
 
 `administration/updates.py` discovers configured source release metadata and caches
-status. It does not replace the running installation. Host preferences and audit
+status. `administration/automatic_updates.py` hands owner-requested updates to
+`scripts/update_supervisor.py`, which replaces project files and manages backup,
+migration, restart and recovery. The same supervisor activates marketplace Django
+apps in isolated Python environments. Host preferences and audit
 records are separate models; feature toggles come from configuration. See
 [Deployment](deployment.md) and [Development](development.md) before extending
 these workflows.

@@ -13,6 +13,35 @@ from scripts.project_files import source_files, copy_files, replace_files
 
 
 class ArchiveTests(SimpleTestCase):
+    def test_relative_module_storage_stays_at_original_location_during_updates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for configured in ('data/media/modules', ''):
+                with patch.dict(os.environ, {'GRAVEWRIGHT_MODULES_ROOT': configured}):
+                    supervisor = Supervisor(root / 'app', root / 'state', root / 'db.sqlite3', root / 'media', '127.0.0.1', 3000)
+                expected = root / 'app/data/media/modules' if configured else root / 'media/modules'
+                self.assertEqual(supervisor.environment(root / 'candidate')['GRAVEWRIGHT_MODULES_ROOT'], str(expected.resolve()))
+
+    def test_django_crash_restores_registry_and_previous_interpreter(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database = root / 'database.sqlite3'
+            with closing(sqlite3.connect(database)) as connection, connection:
+                connection.execute('create table fixture(value text)')
+            with patch.dict(os.environ, {'GRAVEWRIGHT_MODULES_ROOT': str(root / 'media/modules')}):
+                supervisor = Supervisor(root / 'app', root / 'state', database, root / 'media', '127.0.0.1', 3000)
+            registry = supervisor.modules / 'server-apps.json'
+            write(registry, {'original': {}})
+            supervisor.backup(supervisor.state / 'backups/test')
+            write(registry, {'broken': {}})
+            write(supervisor.state / 'transaction.json', {'previous': str(supervisor.origin),
+                  'previous_python': 'original-python', 'backup': 'test', 'restore': True})
+            supervisor.runtime_python = 'broken-python'
+            supervisor.recover()
+            self.assertEqual(read(registry), {'original': {}})
+            self.assertEqual(supervisor.runtime_python, 'original-python')
+            self.assertEqual(read(supervisor.state / 'active.json')['python'], 'original-python')
+
     def test_staged_runner_uses_final_project_even_before_the_swap_completes(self):
         import shutil
         import sys

@@ -16,7 +16,7 @@ import uuid
 from urllib.request import Request, urlopen, build_opener, ProxyHandler
 import zipfile
 from scripts.process_control import environment_python, instance_lock, spawn, stop
-from scripts.project_files import source_files, copy_files, replace_files, remove_work_tree
+from scripts.project_files import source_files, copy_files, replace_files, remove_work_tree, storage_path
 
 
 def write(path, data):
@@ -100,8 +100,9 @@ class Supervisor:
         self.extra_paths = {} if content.resolve().is_relative_to(self.media) else {'compendiums': content.resolve()}
         if runner_data:
             self.extra_paths['staticfiles'] = Path(runner_data).resolve() / 'staticfiles'
-        modules = Path(os.environ.get('GRAVEWRIGHT_MODULES_ROOT', self.media / 'modules'))
+        modules = Path(os.environ.get('GRAVEWRIGHT_MODULES_ROOT') or self.media / 'modules')
         modules = (modules if modules.is_absolute() else self.origin / modules).resolve()
+        self.modules = modules
         if not modules.is_relative_to(self.media):
             self.extra_paths['modules'] = modules
         for path in [self.media, *self.extra_paths.values()]:
@@ -113,8 +114,10 @@ class Supervisor:
         self.profile = os.environ.get('DJANGO_SETTINGS_MODULE', 'config.settings')
         self.token = uuid.uuid4().hex
         self.env = {**os.environ, 'PYTHONUTF8': '1', 'GRAVEWRIGHT_MANAGED_STATE': str(self.state),
+                    'GRAVEWRIGHT_MANAGED_PROTOCOL': '2',
                     'GRAVEWRIGHT_MANAGED_TOKEN': self.token,
                     'GRAVEWRIGHT_DATABASE': str(self.database), 'GRAVEWRIGHT_MEDIA_ROOT': str(self.media),
+                    'GRAVEWRIGHT_MODULES_ROOT': str(self.modules),
                     'GRAVEWRIGHT_HOST': host, 'GRAVEWRIGHT_PORT': str(port),
                     'GRAVEWRIGHT_CONTENT_ROOT': str(content.resolve())}
         self.active = self.resolve_active(read(self.state / 'active.json', {'path': str(self.origin)})['path'])
@@ -147,9 +150,9 @@ class Supervisor:
         return {**self.env, 'PYTHONPATH': str(project), 'DJANGO_SETTINGS_MODULE': self.profile,
                 'UV_PROJECT_ENVIRONMENT': str(project / '.venv')}
 
-    def command(self, project, *args, timeout=600):
+    def command(self, project, *args, timeout=600, environment=None):
         with open(self.state / 'update.log', 'ab') as log:
-            process = spawn(args, cwd=project, env=self.environment(project), stdout=log, stderr=log)
+            process = spawn(args, cwd=project, env={**self.environment(project), **(environment or {})}, stdout=log, stderr=log)
             try:
                 code = process.wait(timeout=timeout)
                 if code:
@@ -189,12 +192,12 @@ class Supervisor:
         with closing(sqlite3.connect(self.database)) as source, closing(sqlite3.connect(folder / 'database.sqlite3')) as target:
             source.backup(target)
         if self.media.exists():
-            shutil.copytree(self.media, folder / 'media')
+            shutil.copytree(storage_path(self.media), storage_path(folder / 'media'))
         extras = {}
         for name, path in self.extra_paths.items():
             extras[name] = path.exists()
             if path.exists():
-                shutil.copytree(path, folder / name)
+                shutil.copytree(storage_path(path), storage_path(folder / name))
         write(folder / 'complete.json', {'media_existed': self.media.exists(), 'extras': extras})
 
     def restore(self, folder):
@@ -205,15 +208,15 @@ class Supervisor:
             Path(str(self.database) + suffix).unlink(missing_ok=True)
         shutil.copy2(folder / 'database.sqlite3', self.database)
         if self.media.exists():
-            shutil.rmtree(self.media)
+            shutil.rmtree(storage_path(self.media))
         if complete['media_existed']:
-            shutil.copytree(folder / 'media', self.media)
+            shutil.copytree(storage_path(folder / 'media'), storage_path(self.media))
         for name, existed in complete.get('extras', {}).items():
             path = self.extra_paths[name]
             if path.exists():
-                shutil.rmtree(path)
+                shutil.rmtree(storage_path(path))
             if existed:
-                shutil.copytree(folder / name, path)
+                shutil.copytree(storage_path(folder / name), storage_path(path))
 
     def recover(self):
         journal = read(self.state / 'transaction.json')
@@ -225,6 +228,8 @@ class Supervisor:
                 self.restore(folder)
             if journal.get('project_files') is not None:
                 replace_files(folder / 'project', self.origin, journal['project_files'], journal['incoming_files'])
+                self.runtime_python = journal['previous_python']
+            elif journal.get('previous_python'):
                 self.runtime_python = journal['previous_python']
             if journal.get('old_copy'):
                 old = Path(journal['old_copy']).resolve()
@@ -238,6 +243,8 @@ class Supervisor:
             self.notify('rolled_back')
 
     def apply(self, job):
+        if job.get('kind') == 'django':
+            return self.apply_django(job)
         previous = self.active
         previous_python = self.python(previous)
         ident = uuid.uuid4().hex
@@ -276,6 +283,7 @@ class Supervisor:
                 raise RuntimeError('uv is required')
             self.env['GW_UV'] = uv
             self.command(candidate, uv, 'sync', '--locked', '--no-dev', '--project', str(candidate), '--python', previous_python)
+            self.install_django_dependencies(candidate, self.python(candidate), read(self.modules / 'server-apps.json', {}), uv)
             if self.profile == 'config.runner':
                 self.command(candidate, self.python(candidate), 'scripts/windows/create_runner.py',
                              '--data-dir', self.env['GRAVEWRIGHT_RUNNER_DATA'], '--runtime-project', str(self.origin))
@@ -309,7 +317,7 @@ class Supervisor:
                 journal['old_copy'] = str(old_copy)
                 write(self.state / 'transaction.json', journal)
                 copy_files(backup / 'project', old_copy, existing)
-                shutil.copytree(backup, old_copy / '.gravewright-rollback',
+                shutil.copytree(storage_path(backup), storage_path(old_copy / '.gravewright-rollback'),
                                 ignore=shutil.ignore_patterns('project'))
                 write(old_copy / '.gravewright-rollback' / 'installation.json', {
                     'origin': str(self.origin), 'state': str(self.state), 'database': str(self.database),
@@ -342,6 +350,80 @@ class Supervisor:
                 log.write(f'Update failed: {type(error).__name__}: {error}\n')
         finally:
             # Keep maintenance if recovery itself failed; the journal is retried at next start.
+            if not (self.state / 'transaction.json').exists():
+                (self.state / 'maintenance').unlink(missing_ok=True)
+                (self.state / 'job.json').unlink(missing_ok=True)
+                shutil.rmtree(self.state / 'job.lock', ignore_errors=True)
+
+    def install_django_dependencies(self, project, python, registry, uv):
+        requirements = sorted({value for row in registry.values() for value in row['django'].get('requirements', [])})
+        if not requirements:
+            return
+        constraints = self.state / 'django-core-constraints.txt'
+        self.command(project, uv, 'export', '--locked', '--no-dev', '--no-hashes', '--no-emit-project',
+                     '--format', 'requirements.txt', '--output-file', str(constraints))
+        self.command(project, uv, 'pip', 'install', '--python', python, '--constraint', str(constraints), *requirements)
+
+    def apply_django(self, job):
+        """Prepare a new interpreter and restart atomically with data rollback."""
+        previous, previous_python = self.active, self.runtime_python
+        ident = uuid.uuid4().hex
+        staging = self.state / 'releases' / ident
+        staging.mkdir(parents=True)
+        plan = staging / 'server-apps.json'
+        backup = self.state / 'backups' / ident
+        journal_started = False
+        try:
+            self.notify('verify', kind='django')
+            self.command(previous, previous_python, 'manage.py', 'prepare_django_packages',
+                         job['id'], job['version'], str(job['enabled']).lower(), str(plan))
+            registry = read(plan)
+            uv = self.env.get('GW_UV') or shutil.which('uv')
+            if not uv:
+                raise RuntimeError('uv is required to activate Django packages')
+            self.notify('dependencies', kind='django')
+            self.command(previous, uv, 'sync', '--locked', '--no-dev', '--project', str(previous), '--python', previous_python,
+                         environment={'UV_PROJECT_ENVIRONMENT': str(staging / '.venv')})
+            python = str(environment_python(staging))
+            self.install_django_dependencies(previous, python, registry, uv)
+            proposed = {'GRAVEWRIGHT_DJANGO_REGISTRY': str(plan)}
+            self.command(previous, python, 'manage.py', 'check', environment=proposed)
+            (self.state / 'maintenance').touch()
+            self.stop()
+            self.notify('backup', kind='django')
+            self.backup(backup)
+            write(self.state / 'transaction.json', {'previous': str(previous), 'previous_python': previous_python,
+                                                   'backup': ident, 'restore': True})
+            journal_started = True
+            self.notify('migrate', kind='django')
+            self.command(previous, python, 'manage.py', 'migrate', '--noinput', environment=proposed)
+            self.command(previous, python, 'manage.py', 'collectstatic', '--noinput', environment=proposed)
+            write(self.modules / 'server-apps.json', registry)
+            self.runtime_python = python
+            self.notify('restart', kind='django')
+            self.start(previous)
+            self.ready()
+            write(self.state / 'active.json', {'path': str(previous), 'python': python})
+            (self.state / 'job.json').unlink(missing_ok=True)
+            (self.state / 'transaction.json').unlink()
+            journal_started = False
+            self.notify('complete', kind='django')
+            try:
+                remove_work_tree(backup, self.state / 'backups')
+            except OSError:
+                pass
+        except Exception as error:
+            if (self.state / 'maintenance').exists():
+                self.stop()
+                if journal_started:
+                    self.recover()
+                self.runtime_python = previous_python
+                self.start(previous)
+                self.ready()
+            self.notify('rolled_back' if journal_started else 'failed', kind='django', error=type(error).__name__)
+            with open(self.state / 'update.log', 'a', encoding='utf-8') as log:
+                log.write(f'Django activation failed: {type(error).__name__}: {error}\n')
+        finally:
             if not (self.state / 'transaction.json').exists():
                 (self.state / 'maintenance').unlink(missing_ok=True)
                 (self.state / 'job.json').unlink(missing_ok=True)

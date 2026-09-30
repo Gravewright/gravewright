@@ -40,6 +40,16 @@ uv run --locked python manage.py test gravewright.table.tests.test_frontend_api 
 uv run --locked python manage.py test gravewright.dice --noinput
 ```
 
+As verificações de release para apps Django e atualizações gerenciadas incluem:
+
+```bash
+uv run --locked python tests/e2e/django_marketplace.py
+uv run --locked python tests/e2e/automatic_updates.py --runner
+```
+
+Esses cenários usam dados isolados e verificam dependências, rotas Django,
+recuperação de falhas de migração, preservação nas atualizações e rollback `.old`.
+
 ## JavaScript
 
 Use Node.js atual com módulos ES nativos e `node:test`; estes comandos foram verificados com Node 24. Não é necessário instalar pacotes na raiz para esses testes.

@@ -8,7 +8,9 @@ on:
       - 'scripts/**'
       - 'config/**'
       - 'gravewright/administration/**'
+      - 'gravewright/modules/**'
       - 'tests/e2e/automatic_updates.py'
+      - 'tests/e2e/django_marketplace.py'
       - '.github/workflows/automatic-updates.yml'
 env:
   PYTHONUTF8: '1'
@@ -33,7 +35,9 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       - name: Validate permissions, maintenance gate and recovery
-        run: uv run python manage.py test gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions --noinput
+        run: uv run python manage.py test gravewright.modules gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions --noinput
+      - name: Exercise Django package activation and migration recovery
+        run: uv run python tests/e2e/django_marketplace.py
       - name: Exercise HTTPS upgrade and recovery on this operating system
         run: uv run python tests/e2e/automatic_updates.py
       - name: Exercise the desktop Runner profile on this operating system

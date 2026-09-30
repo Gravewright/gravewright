@@ -115,33 +115,33 @@ def _update_dotenv(path, values):
 
 
 def configure_environment(directory, *, prompt=input):
-    """Ask on every launch, collecting answers before updating user settings."""
+    """Collect installer answers before updating the personal environment file."""
     from dotenv import dotenv_values
 
     user = dotenv_values(directory / '.env', interpolate=False)
     values = {**dotenv_values(ROOT / '.env.example', interpolate=False), **user}
     fields = (
-        ('APP_NAME', 'Nome da mesa / Table name', 'text'),
-        ('DEFAULT_LOCALE', 'Idioma / Language (en, pt-BR)', 'locale'),
-        ('GRAVEWRIGHT_PORT', 'Porta local / Local port (1-65535)', 'port'),
-        ('GRAVEWRIGHT_MODULES_ROOT', 'Pasta de modulos / Modules folder', 'text'),
-        ('CAMPAIGN_JOIN_CODE_ENABLED', 'Codigos de convite / Join codes', 'bool'),
-        ('CAMPAIGN_SNAPSHOTS_ENABLED', 'Snapshots de campanhas / Campaign snapshots', 'bool'),
-        ('CAMPAIGN_EXPORT_ENABLED', 'Exportar campanhas / Campaign export', 'bool'),
+        ('APP_NAME', 'Table name', 'text'),
+        ('DEFAULT_LOCALE', 'Language (en, pt-BR)', 'locale'),
+        ('GRAVEWRIGHT_PORT', 'Local port (1-65535)', 'port'),
+        ('GRAVEWRIGHT_MODULES_ROOT', 'Modules folder', 'text'),
+        ('CAMPAIGN_JOIN_CODE_ENABLED', 'Join codes', 'bool'),
+        ('CAMPAIGN_SNAPSHOTS_ENABLED', 'Campaign snapshots', 'bool'),
+        ('CAMPAIGN_EXPORT_ENABLED', 'Campaign export', 'bool'),
     )
-    print(f'Configurar / Configure: {directory / ".env"}\n'
-          'Enter = manter / keep current value. Ctrl+C = cancelar / cancel.', flush=True)
+    print(f'Configure: {directory / ".env"}\n'
+          'Enter = keep current value. Ctrl+C = cancel.', flush=True)
     answers = {}
     try:
         for key, label, kind in fields:
             current = values.get(key) or ''
             if key == 'GRAVEWRIGHT_MODULES_ROOT' and not user.get(key):
                 current = 'media/modules'
-            hint = ' (s/n, y/n)' if kind == 'bool' else ''
+            hint = ' (y/n)' if kind == 'bool' else ''
             while True:
                 value = prompt(f'{label}{hint} [{current}]: ').strip() or current
                 if any(ord(char) < 32 for char in value):
-                    print('Valor invalido / Invalid value.', flush=True)
+                    print('Invalid value.', flush=True)
                     continue
                 if kind == 'port':
                     try:
@@ -162,10 +162,10 @@ def configure_environment(directory, *, prompt=input):
                              'true': 'true', '1': 'true', 'n': 'false', 'nao': 'false',
                              'não': 'false', 'no': 'false', 'false': 'false', '0': 'false'}.get(value.casefold())
                     if value is None:
-                        print('Use s/n (y/n).', flush=True)
+                        print('Use y/n.', flush=True)
                         continue
                 elif not value:
-                    print('Informe um valor / Enter a value.', flush=True)
+                    print('Enter a value.', flush=True)
                     continue
                 answers[key] = value
                 break
@@ -173,7 +173,7 @@ def configure_environment(directory, *, prompt=input):
         raise RunnerError('Configuration cancelled; answers were not saved. '
                           'Run interactively to configure, or use --check for unattended checks.') from None
     _update_dotenv(directory / '.env', answers)
-    print('Configuracao salva / Configuration saved.', flush=True)
+    print('Configuration saved.', flush=True)
     return True
 
 
@@ -202,7 +202,7 @@ def offer_default_marketplace(directory, prompt=input, download=None):
     try:
         answer = prompt(
             'Install the default Gravewright Marketplace? '
-            '(Instalar o Marketplace padrão?) [y/N]: '
+            '[y/N]: '
         ).strip().casefold()
     except (EOFError, KeyboardInterrupt):
         print('', flush=True)

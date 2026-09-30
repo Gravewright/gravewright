@@ -40,6 +40,16 @@ uv run --locked python manage.py test gravewright.table.tests.test_frontend_api 
 uv run --locked python manage.py test gravewright.dice --noinput
 ```
 
+Release checks for marketplace Django apps and managed updates also include:
+
+```bash
+uv run --locked python tests/e2e/django_marketplace.py
+uv run --locked python tests/e2e/automatic_updates.py --runner
+```
+
+These use isolated data and exercise dependency preparation, Django routes,
+migration failure recovery, preservation across core upgrades and `.old` rollback.
+
 ## JavaScript
 
 Use a current Node.js release with native ES modules and `node:test`; these commands were checked with Node 24. No root package installation is needed for these tests.

@@ -81,7 +81,7 @@ INSTALLED_APPS = [
 ]
 
 # Trusted Python extensions are explicitly installed by the host operator.
-# Browser marketplace archives never populate this setting or import Python.
+# Marketplace Django apps are added below from the supervisor's registry.
 GRAVEWRIGHT_SERVER_APP_PATHS = tuple(dict.fromkeys(
     value.strip() for value in os.environ.get('GRAVEWRIGHT_SERVER_APP_PATHS', '').split(os.pathsep)
     if value.strip()
@@ -231,6 +231,14 @@ GRAVEWRIGHT_MODULES_ROOT = (
     env_path('GRAVEWRIGHT_MODULES_ROOT', '').resolve()
     if os.environ.get('GRAVEWRIGHT_MODULES_ROOT', '').strip() else None
 )
+
+from config.marketplace_apps import load_apps as _load_marketplace_apps
+_marketplace_directory = GRAVEWRIGHT_MODULES_ROOT or (
+    Path(os.environ['GRAVEWRIGHT_RUNNER_DATA']) / 'media' / 'modules'
+    if _LOCAL_RUNNER else Path(MEDIA_ROOT) / 'modules'
+)
+GRAVEWRIGHT_SERVER_APPS += tuple(_load_marketplace_apps(_marketplace_directory))
+INSTALLED_APPS += [name for name in GRAVEWRIGHT_SERVER_APPS if name not in INSTALLED_APPS]
 GRAVEWRIGHT_CONTENT_ROOT = env_path('GRAVEWRIGHT_CONTENT_ROOT', 'data/vtt/compendiums')
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 GRAVEWRIGHT_MAP_MAX_PIXELS = int(os.environ.get('GRAVEWRIGHT_MAP_MAX_PIXELS', '64000000'))

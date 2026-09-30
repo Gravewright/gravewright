@@ -46,6 +46,6 @@ Maps, music, PDFs and other uploads retain their own licenses and ownership. The
 - The application locale preference currently supports `en`; Portuguese project documentation is available, but a Portuguese UI is not implemented by these documentation changes.
 - The native PDF ruleset does not provide item types; the generic item backend should not be read as a complete native item editor/catalog.
 - The provided extension loader runs JavaScript in the main page. Install code you trust; signatures do not provide isolation.
-- Online marketplace and core release discovery require operator configuration. Core update discovery does not install an update automatically.
+- Online marketplace discovery requires a catalog and trusted publisher keys. Managed hosts install core updates from Administration after the owner requests them. Django packages in Modules activate for the entire server and restart it automatically; browser modules remain table-specific.
 
 For development or integrations, continue with the [API](api.md) and [module](modules.md) guides.

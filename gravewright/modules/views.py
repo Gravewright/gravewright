@@ -1,4 +1,4 @@
-"""Django transport for the original signed browser-module contract."""
+"""Django transport for browser packages and trusted server app packages."""
 
 import json
 import asyncio
@@ -38,7 +38,7 @@ from scripts.gravewright_runner import (
 
 
 def module_directory():
-    return str(host().directory)
+    return str(settings.GRAVEWRIGHT_MODULES_ROOT or Path(settings.MEDIA_ROOT) / 'modules')
 
 
 class HTTPSRedirects(HTTPRedirectHandler):
@@ -296,11 +296,15 @@ def local_install(request):
 @require_GET
 @authenticated
 def installed(request):
+    from config.marketplace_apps import selections
+    server_apps = selections(module_directory())
     return JsonResponse(
         [
             {**row.manifest, "revoked": row.revoked,
              **({"tags": row.record["tags"]} if "tags" in row.record else {}),
-             **({"globalEnabled": row.global_enabled} if row.locale_catalogs else {})}
+             **({"globalEnabled": row.global_enabled} if row.locale_catalogs else {}),
+             **({"globalEnabled": server_apps.get(row.module_id, {}).get('version') == row.version}
+                if 'django' in row.manifest else {})}
             for row in Package.objects.order_by("module_id", "version")
         ],
         safe=False,
@@ -318,6 +322,11 @@ def global_activation(request):
     row = Package.objects.select_for_update().filter(module_id=data['id'], version=data['version']).first()
     if row is None:
         raise ModuleFailure('not_found')
+    if 'django' in row.manifest:
+        from .server_apps import queue_activation
+        result = queue_activation(row, data['enabled'])
+        audit(request, 'module.django_activation', module=row.module_id, version=row.version, enabled=data['enabled'])
+        return JsonResponse(result, status=202)
     if not row.locale_catalogs:
         raise ModuleFailure('invalid_data')
     if data['enabled']:
@@ -508,7 +517,7 @@ def asset(request, module_id, version, digest, asset):
     row = Package.objects.filter(
         module_id=module_id, version=version, digest=digest, revoked=False
     ).first()
-    if not row:
+    if not row or 'django' in row.manifest:
         raise ModuleFailure("not_found")
     name = str(safe_path(asset))
     engine = host()

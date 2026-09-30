@@ -46,6 +46,6 @@ Mapas, músicas, PDFs e outros uploads mantêm suas próprias licenças e titula
 - A preferência de idioma da aplicação oferece `en`; existe documentação em português, mas estas alterações não implementam interface traduzida.
 - O sistema PDF nativo não fornece tipos de itens; o backend genérico de itens não representa um editor/catálogo nativo completo.
 - O carregador de extensões executa JavaScript na página principal. Instale código confiável; assinaturas não fornecem isolamento.
-- Marketplace online e descoberta de releases precisam de configuração do operador. Descoberta de atualização do núcleo não instala versões automaticamente.
+- O marketplace online exige catálogo e chaves confiáveis. Hosts gerenciados instalam atualizações pela Administração mediante solicitação do proprietário. Apps Django da biblioteca de módulos são ativados para todo o servidor e exigem reinício automático; módulos de navegador continuam vinculados às mesas.
 
 Para desenvolvimento ou integrações, continue nos guias de [API](api.md) e [módulos](modules.md).

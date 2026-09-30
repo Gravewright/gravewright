@@ -4,9 +4,15 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.1.1**, an alpha preview. The source includes campaigns, maps and scenes, actors with PDF character sheets, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable frontend modules. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **0.1.2**, an alpha preview. The source includes campaigns, maps and scenes, actors with PDF character sheets, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
 
 ## Run on Windows
+
+Version 0.1.2 adds marketplace installation and server-wide activation of trusted
+Django apps, automatic dependency preparation, migrations and recovery after
+failed activation. It also separates Windows installation from daily startup
+and replaces project files during updates, with an optional `.old` rollback copy.
+See the [0.1.2 release notes](docs/releases/0.1.2.md).
 
 Extract the complete project and double-click **`Install Windows.bat`**. It installs missing tools, prepares dependencies and the frontend, asks for your settings, and generates **`Gravewright Runner.bat`**. Open the generated runner to start the application without installation or configuration questions. Run the installer again to change settings or prepare an updated project. Keep the runner window open while using Gravewright; press **Ctrl+C** to stop it.
 

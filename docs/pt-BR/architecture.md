@@ -254,7 +254,10 @@ exige revisar a seleção, o grafo de dependências e as regras de importação,
 definição do modelo.
 
 `administration/updates.py` consulta metadados de versões de código-fonte do
-repositório configurado e armazena o estado em cache. Ele não substitui a instalação
-em execução. Preferências do servidor e auditoria usam modelos separados; recursos
+repositório configurado e armazena o estado em cache. `administration/automatic_updates.py`
+encaminha atualizações solicitadas pelo proprietário ao supervisor, que substitui
+arquivos e gerencia backup, migrações, reinício e recuperação. O mesmo supervisor
+ativa apps Django do marketplace em ambientes Python isolados.
+Preferências do servidor e auditoria usam modelos separados; recursos
 habilitados dependem da configuração. Leia [Implantação](deployment.md) e
 [Desenvolvimento](development.md) antes de ampliar esses fluxos.

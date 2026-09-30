@@ -53,6 +53,25 @@ def main():
     from django.conf import settings
     media=Path(settings.MEDIA_ROOT);media.mkdir();(media/'fixture').write_bytes(b'preserved')
     content=Path(settings.GRAVEWRIGHT_CONTENT_ROOT);content.mkdir();(content/'fixture').write_bytes(b'preserved')
+    # An enabled marketplace app must survive environment rebuilds and rollback.
+    import io
+    import json
+    from importlib.metadata import version as dependency_version
+    from gravewright.modules.packages import host
+    from gravewright.modules.server_apps import plan
+    from scripts.update_supervisor import write
+    raw = io.BytesIO()
+    manifest = {'id': 'test.update', 'name': 'Update fixture', 'version': '1.0.0',
+                'description': '', 'author': 'Tests', 'license': 'MIT',
+                'sdk': {'requires': '>=1.0.0 <2.0.0', 'tested': '1.0.0'},
+                'django': {'apps': ['update_fixture'], 'requirements': ['jsonschema==' + dependency_version('jsonschema')]}}
+    with zipfile.ZipFile(raw, 'w') as archive_file:
+        archive_file.writestr('manifest.json', json.dumps(manifest))
+        archive_file.writestr('update_fixture/__init__.py', '')
+        archive_file.writestr('update_fixture/apps.py', 'from django.apps import AppConfig\nclass FixtureConfig(AppConfig):\n name="update_fixture"\n gravewright_urlconf="update_fixture.urls"\n')
+        archive_file.writestr('update_fixture/urls.py', 'from django.http import HttpResponse\nfrom django.urls import path\nurlpatterns=[path("__update_fixture",lambda request: HttpResponse("preserved"))]\n')
+    host().install_local(raw.getvalue())
+    write(host().directory / 'server-apps.json', plan('test.update', '1.0.0', True))
     connections.close_all()
     supervisor=Supervisor(ROOT,work/'state',settings.DATABASES['default']['NAME'],media,'127.0.0.1',port)
     files=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=source_root).decode().split('\0')
@@ -106,6 +125,10 @@ def main():
         assert User.objects.get().name=='Preserved owner'
         assert (media/'fixture').read_bytes()==b'preserved'
         assert (content/'fixture').read_bytes()==b'preserved'
+        assert read(host().directory / 'server-apps.json')['test.update']['version'] == '1.0.0'
+        if supervisor.child is not None:
+            with urllib.request.urlopen(f'http://127.0.0.1:{port}/__update_fixture') as response:
+                assert response.read() == b'preserved'
         connections.close_all()
     try:
         supervisor.start(ROOT);supervisor.ready()

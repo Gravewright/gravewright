@@ -93,7 +93,7 @@ class EnvironmentTests(unittest.TestCase):
         from main import main
         with patch.dict(os.environ, {'DJANGO_SETTINGS_MODULE': 'config.settings'}), patch(
             'django.core.management.execute_from_command_line'
-        ) as execute, patch('sys.argv', ['main.py', '--noreload']), patch(
+        ) as execute, patch('sys.argv', ['main.py', '--dev', '--noreload']), patch(
             'django.conf.settings.GRAVEWRIGHT_HOST', '::1'
         ), patch('django.conf.settings.GRAVEWRIGHT_PORT', 3123):
             main()
