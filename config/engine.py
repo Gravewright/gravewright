@@ -2,6 +2,7 @@
 import os
 from ipaddress import ip_network
 from config.environment import env_bool
+from config.size_limits import SIZE_DEFAULTS, size_bytes
 
 
 def positive_int(name, default):
@@ -31,7 +32,6 @@ def configure():
         'JOIN_CODE_REDEEM_MAX_ATTEMPTS': 10,
         'JOIN_CODE_REDEEM_WINDOW_SECONDS': 600,
         'DATABASE_POOL_TIMEOUT': 30,
-        'WS_MAX_MESSAGE_BYTES': 65536,
         'WS_COMMANDS_PER_SECOND': 20,
         'WS_BURST_COMMANDS': 40,
         'SCENE_VIEWPORT_MAX_WIDTH_CHUNKS': 16,
@@ -43,14 +43,12 @@ def configure():
         'TOKEN_CREATE_MANY_MAX': 50,
         'BOARD_MARKERS_MAX_PER_SCENE': 500,
         'BOARD_MEASUREMENTS_MAX_PER_USER': 50,
-        'JOURNAL_IMAGE_MAX_BYTES': 10485760,
-        'JOURNAL_PDF_MAX_BYTES': 26214400,
-        'MAP_UPLOAD_MAX_BYTES': 53687091200,
         'MAP_IMAGE_MAX_WIDTH': 500000,
         'MAP_IMAGE_MAX_HEIGHT': 500000,
         'MAP_MAX_TILE_COUNT': 4096,
     }
     values.update({name: positive_int(name, default) for name, default in defaults.items()})
+    values.update({name: size_bytes(os.environ, name, default) for name, default in SIZE_DEFAULTS.items()})
     if not values['JOIN_CODE_MIN_EXPIRES_HOURS'] <= values['JOIN_CODE_DEFAULT_EXPIRES_HOURS'] <= values['JOIN_CODE_MAX_EXPIRES_HOURS']:
         raise ValueError('Join code expiration must be between the configured minimum and maximum.')
     if values['SCENE_VIEWPORT_MAX_AREA_CHUNKS'] > values['SCENE_VIEWPORT_MAX_WIDTH_CHUNKS'] * values['SCENE_VIEWPORT_MAX_HEIGHT_CHUNKS']:

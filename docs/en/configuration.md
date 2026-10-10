@@ -51,7 +51,7 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `TRUSTED_PROXIES` | empty | Comma-separated proxy IPs/CIDRs trusted for forwarded client IPs and ASGI HTTP/WebSocket schemes; empty ignores forwarding headers |
 | `DATABASE_POOL_TIMEOUT` | `30` | SQLite lock wait in seconds; this is not a connection pool size |
 | `DATABASE_ECHO` | `false` | Configure django.db.backends debug logging; actual SQL capture also follows Django's debug cursor behavior |
-| `WS_MAX_MESSAGE_BYTES` | `65536` | Application limit per WebSocket message in bytes |
+| `WS_MAX_MESSAGE_MB` | `0.0625` | Application limit per WebSocket message in MB (1 MB = 1024 * 1024 bytes) |
 | `WS_COMMANDS_PER_SECOND` | `20` | WebSocket command rate per connection |
 | `WS_BURST_COMMANDS` | `40` | WebSocket command burst capacity |
 | `APP_DEBUG` | `false` | Application/table renderer diagnostics; independent of DJANGO_DEBUG |
@@ -68,10 +68,11 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `TOKEN_CREATE_MANY_MAX` | `50` | Maximum tokens per batch creation command |
 | `BOARD_MARKERS_MAX_PER_SCENE` | `500` | Maximum markers per scene |
 | `BOARD_MEASUREMENTS_MAX_PER_USER` | `50` | Maximum persisted board measurements per user |
-| `JOURNAL_IMAGE_MAX_BYTES` | `10485760` | Journal image attachment limit in bytes (10 MiB) |
-| `JOURNAL_PDF_MAX_BYTES` | `26214400` | Journal PDF attachment limit in bytes (25 MiB) |
+| `JOURNAL_IMAGE_MAX_MB` | `10` | Journal image attachment limit in MB (1 MB = 1024 * 1024 bytes) |
+| `JOURNAL_PDF_MAX_MB` | `25` | Journal PDF attachment limit in MB (1 MB = 1024 * 1024 bytes) |
+| `PDF_SYSTEM_UPLOAD_MAX_MB` | `10` | PDF character sheet upload limit in MB (1 MB = 1024 * 1024 bytes) |
 | `GRAVEWRIGHT_MAP_MAX_PIXELS` | `64000000` | Decoded map pixel limit |
-| `MAP_UPLOAD_MAX_BYTES` | `53687091200` | Map upload byte limit (50 GiB); other limits still apply |
+| `MAP_UPLOAD_MAX_MB` | `51200` | Map upload limit in MB (50 GiB); other limits still apply |
 | `MAP_IMAGE_MAX_WIDTH` | `500000` | Maximum source map width in pixels |
 | `MAP_IMAGE_MAX_HEIGHT` | `500000` | Maximum source map height in pixels |
 | `MAP_MAX_TILE_COUNT` | `4096` | Maximum generated map tiles |

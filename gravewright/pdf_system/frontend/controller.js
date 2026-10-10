@@ -432,10 +432,6 @@ export function pdfController(host, options) {
         input.value = "";
         if (!file || !isGm.value)
             return;
-        if (file.size > 10_000_000) {
-            saveError.value = gwText("The PDF must be no larger than 10 MB.");
-            return;
-        }
         try {
             const body = await props.block.host.call("asset.upload", { file });
             if (disposed)
@@ -443,8 +439,8 @@ export function pdfController(host, options) {
             campaignAssets.value = [...campaignAssets.value, body];
             await chooseSource("asset", body.id);
         }
-        catch {
-            saveError.value = gwText("Could not upload the PDF.");
+        catch (cause) {
+            saveError.value = gwText(cause.message || "Could not upload the PDF.");
         }
     }
     function leaving(event) {

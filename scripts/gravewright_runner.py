@@ -236,6 +236,8 @@ def complete_configuration(config, user, defaults):
     """Fill missing settings from the example without changing saved values."""
     if all(user.get(key) is not None for key in defaults):
         return
+    from config.size_limits import migrate_sizes
+    user = migrate_sizes(user)
     template = (ROOT / '.env.example').read_text(encoding='utf-8')
     original = config.read_text(encoding='utf-8')
     values = {**defaults, **{key: value for key, value in user.items() if value is not None}}
@@ -300,7 +302,9 @@ def prepare_environment(directory, port_override=None):
     the desktop profile still enforces local network bounds. Values are literal;
     ${...} does not interpolate secrets, and existing configuration is preserved.
     """
+    sys.path.insert(0, str(ROOT))
     from dotenv import dotenv_values
+    from config.size_limits import SIZE_DEFAULTS, migrate_sizes
 
     config = ROOT / '.env'
     if not config.exists():
@@ -313,8 +317,8 @@ def prepare_environment(directory, port_override=None):
                 dotenv_values(ROOT / '.env.example', interpolate=False).items()
                 if value is not None}
     user = dotenv_values(config, interpolate=False)
-    allowed = set(defaults) | {'DJANGO_SECRET_KEY', 'DJANGO_SECURE_COOKIES'}
-    values = {**defaults, **{key: value for key, value in user.items()
+    allowed = set(defaults) | set(SIZE_DEFAULTS) | {'DJANGO_SECRET_KEY', 'DJANGO_SECURE_COOKIES'}
+    values = {**defaults, **{key: value for key, value in migrate_sizes(user).items()
                            if key in allowed and value is not None}}
     secret = user.get('DJANGO_SECRET_KEY', '')
     if not secret or len(secret) < 50 or secret.startswith('django-insecure-'):
@@ -359,7 +363,6 @@ def prepare_environment(directory, port_override=None):
         PYTHONUTF8='1',
     )
     # The initial choice is explicit in Windows; source assets are UTF-8 too.
-    sys.path.insert(0, str(ROOT))
     return port
 
 

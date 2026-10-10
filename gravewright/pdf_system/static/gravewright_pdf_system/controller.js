@@ -526,18 +526,14 @@ function pdfController(host, options) {
     input.value = "";
     if (!file || !isGm.value)
       return;
-    if (file.size > 1e7) {
-      saveError.value = text("The PDF must be no larger than 10 MB.");
-      return;
-    }
     try {
       const body = await props.block.host.call("asset.upload", { file });
       if (disposed)
         return;
       campaignAssets.value = [...campaignAssets.value, body];
       await chooseSource("asset", body.id);
-    } catch {
-      saveError.value = text("Could not upload the PDF.");
+    } catch (cause) {
+      saveError.value = text(cause.message || "Could not upload the PDF.");
     }
   }
   function leaving(event) {

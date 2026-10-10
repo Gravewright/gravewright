@@ -147,6 +147,19 @@ class ActorTests(TransactionTestCase):
 
         self.assertFalse(Path(path).exists())
 
+    def test_pdf_upload_uses_configured_limit_instead_of_fixed_ten_mb(self):
+        self.client.force_login(self.gm)
+        url = f"/api/containers/{self.campaign.pk}/actor-upload"
+        raw = b"%PDF-1.4\n%%EOF"
+        for limit, status in ((len(raw) - 1, 400), (len(raw), 200)):
+            with self.subTest(limit=limit), self.settings(PDF_SYSTEM_UPLOAD_MAX_BYTES=limit):
+                response = self.client.post(url, {"file": SimpleUploadedFile("sheet.pdf", raw)})
+                self.assertEqual(response.status_code, status, response.content)
+        large = b"%PDF-1.4\n" + b" " * 10_000_000
+        with self.settings(PDF_SYSTEM_UPLOAD_MAX_BYTES=len(large)):
+            response = self.client.post(url, {"file": SimpleUploadedFile("large.pdf", large)})
+            self.assertEqual(response.status_code, 200, response.content)
+
     def test_pdf_upload_and_delete_repair_all_sheet_sources(self):
         self.client.force_login(self.gm)
         url = f"/api/containers/{self.campaign.pk}/actor-upload"

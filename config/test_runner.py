@@ -31,6 +31,26 @@ class RunnerEnvironmentTests(SimpleTestCase):
         shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
         self.enterContext(patch.object(runner, 'ROOT', root))
 
+    def test_legacy_byte_limits_are_migrated_without_changing_sizes(self):
+        from dotenv import dotenv_values
+        from config.size_limits import SIZE_DEFAULTS, size_bytes
+
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            config = runner.ROOT / '.env'
+            config.write_text('DJANGO_SECRET_KEY=' + 'x' * 64 + '\n'
+                              + ''.join(f'{name}=12345\n' for name in SIZE_DEFAULTS), encoding='utf-8')
+            prepare_environment(Path(temporary))
+            saved = config.read_bytes()
+            values = dotenv_values(config, interpolate=False)
+            for name, default in SIZE_DEFAULTS.items():
+                key = name.removesuffix('_BYTES') + '_MB'
+                self.assertNotIn(name, values)
+                self.assertNotIn(name, os.environ)
+                self.assertEqual(size_bytes(values, name, default), 12345)
+                self.assertEqual(os.environ[key], values[key])
+            prepare_environment(Path(temporary))
+            self.assertEqual(config.read_bytes(), saved)
+
     def test_django_child_and_supervisor_use_database_and_media_from_project_configuration(self):
         from scripts.update_supervisor import Supervisor
 

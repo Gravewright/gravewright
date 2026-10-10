@@ -4,6 +4,7 @@ from pathlib import Path
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.http import FileResponse, Http404, JsonResponse
@@ -63,7 +64,10 @@ def upload(request, campaign_id):
         else:
             raise MapError("Invalid image kind.")
         file = request.FILES.get("file")
-        if not file or file.size > 10_000_000:
+        if kind == "pdf" and (not file or file.size > settings.PDF_SYSTEM_UPLOAD_MAX_BYTES):
+            limit_mb = settings.PDF_SYSTEM_UPLOAD_MAX_BYTES / (1024 * 1024)
+            raise MapError(f"The PDF must be no larger than {limit_mb:g} MB.")
+        if kind != "pdf" and (not file or file.size > 10_000_000):
             raise MapError("The file must be no larger than 10 MB.")
         raw = file.read()
         if kind == "pdf":

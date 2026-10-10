@@ -51,7 +51,7 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `TRUSTED_PROXIES` | vazio | IPs/CIDRs de proxies, separados por vírgula, confiáveis para IP encaminhado e esquemas ASGI HTTP/WebSocket; vazio ignora cabeçalhos de encaminhamento |
 | `DATABASE_POOL_TIMEOUT` | `30` | Espera por lock SQLite em segundos; não é tamanho de pool |
 | `DATABASE_ECHO` | `false` | Configura log debug de django.db.backends; captura efetiva também depende do cursor debug do Django |
-| `WS_MAX_MESSAGE_BYTES` | `65536` | Limite da aplicação por mensagem WebSocket em bytes |
+| `WS_MAX_MESSAGE_MB` | `0.0625` | Limite da aplicação por mensagem WebSocket em MB (1 MB = 1024 * 1024 bytes) |
 | `WS_COMMANDS_PER_SECOND` | `20` | Taxa de comandos WebSocket por conexão |
 | `WS_BURST_COMMANDS` | `40` | Capacidade de rajada de comandos WebSocket |
 | `APP_DEBUG` | `false` | Diagnóstico da aplicação/renderizador; independente de DJANGO_DEBUG |
@@ -68,10 +68,11 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `TOKEN_CREATE_MANY_MAX` | `50` | Máximo de tokens criados por comando em lote |
 | `BOARD_MARKERS_MAX_PER_SCENE` | `500` | Máximo de marcadores por cena |
 | `BOARD_MEASUREMENTS_MAX_PER_USER` | `50` | Máximo de medições persistidas no tabuleiro por usuário |
-| `JOURNAL_IMAGE_MAX_BYTES` | `10485760` | Limite de imagem em diário em bytes (10 MiB) |
-| `JOURNAL_PDF_MAX_BYTES` | `26214400` | Limite de PDF em diário em bytes (25 MiB) |
+| `JOURNAL_IMAGE_MAX_MB` | `10` | Limite de imagem em diário em MB (1 MB = 1024 * 1024 bytes) |
+| `JOURNAL_PDF_MAX_MB` | `25` | Limite de PDF em diário em MB (1 MB = 1024 * 1024 bytes) |
+| `PDF_SYSTEM_UPLOAD_MAX_MB` | `10` | Limite de upload de fichas PDF em MB (1 MB = 1024 * 1024 bytes) |
 | `GRAVEWRIGHT_MAP_MAX_PIXELS` | `64000000` | Limite de pixels decodificados de mapa |
-| `MAP_UPLOAD_MAX_BYTES` | `53687091200` | Limite de bytes de mapa (50 GiB); outros limites continuam aplicáveis |
+| `MAP_UPLOAD_MAX_MB` | `51200` | Limite de upload de mapa em MB (50 GiB); outros limites continuam aplicáveis |
 | `MAP_IMAGE_MAX_WIDTH` | `500000` | Largura máxima do mapa-fonte em pixels |
 | `MAP_IMAGE_MAX_HEIGHT` | `500000` | Altura máxima do mapa-fonte em pixels |
 | `MAP_MAX_TILE_COUNT` | `4096` | Máximo de tiles gerados de mapa |
