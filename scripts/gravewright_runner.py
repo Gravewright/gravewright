@@ -231,6 +231,36 @@ def data_directory(value=None):
     return directory
 
 
+def complete_configuration(config, user, defaults):
+    """Fill missing settings from the example without changing saved values."""
+    if all(user.get(key) is not None for key in defaults):
+        return
+    template = (ROOT / '.env.example').read_text(encoding='utf-8')
+    original = config.read_text(encoding='utf-8')
+    values = {**defaults, **{key: value for key, value in user.items() if value is not None}}
+    # Runner module paths are relative to its data directory.
+    if user.get('GRAVEWRIGHT_MODULES_ROOT') is None:
+        values['GRAVEWRIGHT_MODULES_ROOT'] = 'media/modules'
+    output, written = [], set()
+    for line in template.splitlines():
+        assignment = line.strip()
+        if assignment.startswith('# DJANGO_SECRET_KEY='):
+            assignment = assignment[2:]
+        name = assignment.split('=', 1)[0].strip() if '=' in assignment else ''
+        if not assignment.startswith('#') and name in values:
+            output.append(f'{name}={json.dumps(values[name], ensure_ascii=False)}')
+            written.add(name)
+        else:
+            output.append(line)
+    extra = {key: value for key, value in values.items() if key not in written}
+    comments = [line for line in original.splitlines()
+                if line.lstrip().startswith('#') and line not in template.splitlines()]
+    if extra or comments:
+        output.extend(['', *comments])
+        output.extend(f'{key}={json.dumps(value, ensure_ascii=False)}' for key, value in extra.items())
+    _write_private(config, ('\n'.join(output) + '\n').encode('utf-8'))
+
+
 @contextmanager
 def instance_lock(directory):
     """Hold an OS lock through migrations and server lifetime; crashes release it.
@@ -276,13 +306,7 @@ def prepare_environment(directory, port_override=None):
 
     config = ROOT / '.env'
     if not config.exists():
-        content = (
-            '# Gravewright Runner: local user configuration. Keep this file private.\n'
-            '# Stop the Runner before editing. Feature settings from .env.example\n'
-            '# may be added here. Network/security/storage are managed by the Runner.\n'
-            f'DJANGO_SECRET_KEY={secrets.token_urlsafe(64)}\n'
-            'GRAVEWRIGHT_PORT=3000\n'
-        )
+        content = f'DJANGO_SECRET_KEY={secrets.token_urlsafe(64)}\n'
         # Preserve the secret and settings from installations using user data.
         # An existing project .env always wins; keep the legacy file as backup.
         legacy = directory / '.env'
@@ -307,6 +331,7 @@ def prepare_environment(directory, port_override=None):
             raise ValueError
     except (TypeError, ValueError):
         raise RunnerError('GRAVEWRIGHT_PORT must be a number from 1 to 65535.') from None
+    complete_configuration(config, user, defaults)
     configured_modules = (user.get('GRAVEWRIGHT_MODULES_ROOT') or '').strip()
     modules_root = Path(configured_modules).expanduser() if configured_modules else directory / 'media/modules'
     if not modules_root.is_absolute():

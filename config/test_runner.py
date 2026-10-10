@@ -1,6 +1,7 @@
 """Local Runner configuration and network boundaries without persistent app data."""
 
 import os
+from io import StringIO
 from pathlib import Path
 import sys
 import tempfile
@@ -29,16 +30,22 @@ class RunnerEnvironmentTests(SimpleTestCase):
         self.enterContext(patch.object(runner, 'ROOT', root))
 
     def test_legacy_configuration_is_copied_to_project_and_project_takes_precedence(self):
+        from dotenv import dotenv_values
+
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             directory = Path(temp)
             legacy = directory / '.env'
             content = 'DJANGO_SECRET_KEY=' + 'a' * 64 + '\nGRAVEWRIGHT_PORT=3001\nDEFAULT_LOCALE=pt-BR\n'
             legacy.write_text(content, encoding='utf-8')
             self.assertEqual(prepare_environment(directory), 3001)
-            self.assertEqual((runner.ROOT / '.env').read_bytes(), legacy.read_bytes())
+            saved = (runner.ROOT / '.env').read_bytes()
+            values = dotenv_values(runner.ROOT / '.env', interpolate=False)
+            self.assertEqual(values['DJANGO_SECRET_KEY'], 'a' * 64)
+            self.assertEqual(values['DEFAULT_LOCALE'], 'pt-BR')
+            self.assertEqual(legacy.read_text(encoding='utf-8'), content)
             legacy.write_text('invalid legacy configuration', encoding='utf-8')
             self.assertEqual(prepare_environment(directory), 3001)
-            self.assertEqual((runner.ROOT / '.env').read_text(encoding='utf-8'), content)
+            self.assertEqual((runner.ROOT / '.env').read_bytes(), saved)
 
     def test_configuration_questions_validate_and_preserve_secret_and_custom_values(self):
         from dotenv import dotenv_values
@@ -95,10 +102,18 @@ class RunnerEnvironmentTests(SimpleTestCase):
             self.assertEqual(config.read_text(encoding='utf-8').count('APP_NAME='), 1)
 
     def test_first_run_creates_secret_and_restart_preserves_configuration(self):
+        from dotenv import dotenv_values
+
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             directory = Path(temp)
             self.assertEqual(prepare_environment(directory), 3000)
             original = (runner.ROOT / '.env').read_bytes()
+            sample = dotenv_values(runner.ROOT / '.env.example', interpolate=False)
+            generated = dotenv_values(runner.ROOT / '.env', interpolate=False)
+            self.assertTrue(set(sample).issubset(generated))
+            for line in (runner.ROOT / '.env.example').read_text(encoding='utf-8').splitlines():
+                if line.startswith('#') and not line.startswith('# DJANGO_SECRET_KEY='):
+                    self.assertIn(line, original.decode('utf-8'))
             secret = os.environ['DJANGO_SECRET_KEY']
             self.assertGreaterEqual(len(secret), 50)
             self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(directory / 'media/modules'))
@@ -131,7 +146,28 @@ class RunnerEnvironmentTests(SimpleTestCase):
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], '')
             self.assertEqual(os.environ['TRUSTED_PROXIES'], '')
             self.assertNotEqual(os.environ['GRAVEWRIGHT_RUNNER_TOKEN'], 'inherited')
-            self.assertEqual((runner.ROOT / '.env').read_text(encoding='utf-8'), content)
+            from dotenv import dotenv_values
+            saved = dotenv_values(runner.ROOT / '.env', interpolate=False)
+            for key, value in dotenv_values(stream=StringIO(content), interpolate=False).items():
+                self.assertEqual(saved[key], value)
+
+    def test_incomplete_configuration_gets_example_sections_without_losing_custom_settings(self):
+        from dotenv import dotenv_values
+
+        with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            config = runner.ROOT / '.env'
+            config.write_text('# Owner note\nDJANGO_SECRET_KEY=' + 'b' * 64
+                              + '\nAPP_NAME="Mesa ${literal}"\nCUSTOM_OPTION=keep\n', encoding='utf-8')
+            prepare_environment(Path(temp))
+            values = dotenv_values(config, interpolate=False)
+            self.assertEqual(values['DJANGO_SECRET_KEY'], 'b' * 64)
+            self.assertEqual(values['APP_NAME'], 'Mesa ${literal}')
+            self.assertEqual(values['CUSTOM_OPTION'], 'keep')
+            self.assertIn('# Owner note', config.read_text(encoding='utf-8'))
+            self.assertTrue(set(dotenv_values(runner.ROOT / '.env.example')).issubset(values))
+            original = config.read_bytes()
+            prepare_environment(Path(temp))
+            self.assertEqual(config.read_bytes(), original)
 
     def test_invalid_port_and_missing_secret_fail_without_replacing_user_configuration(self):
         with tempfile.TemporaryDirectory() as temp:

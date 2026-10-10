@@ -24,6 +24,8 @@ Não exige administrador, mudanças permanentes no PATH, Docker ou servidor Redi
 
 ## Configuração e dados pessoais
 
+O `.env` do projeto inclui todas as configurações e seções do `.env.example`. Opções ausentes são preenchidas automaticamente, preservando os valores salvos, a chave privada e as opções personalizadas.
+
 O instalador pergunta nome da mesa, idioma (`en` ou `pt-BR`), porta local, pasta de módulos, códigos de convite, snapshots e exportação de campanhas. Salva as respostas juntas e preserva a chave secreta e outras configurações. Nas próximas instalações, as respostas salvas aparecem como padrão. Caminhos relativos de módulos partem da pasta de dados pessoal.
 
 Ele também oferece o Marketplace padrão do Gravewright uma vez. Aceitar baixa as chaves oficiais, confere o SHA-256 e salva as configurações do catálogo. Recusar registra a escolha; o proprietário ainda pode instalar em Configurações → Marketplace. Apagar `data/.default-marketplace-choice` permite que o instalador ofereça novamente.

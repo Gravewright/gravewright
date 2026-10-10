@@ -24,6 +24,8 @@ No administrator privileges, permanent PATH changes, Docker or Redis server are 
 
 ## Configuration and personal data
 
+The project `.env` includes every setting and section from `.env.example`. Missing settings are filled automatically, preserving saved values, the private secret and custom options.
+
 The installer asks for table name, language (`en` or `pt-BR`), local port, modules folder, join codes, campaign snapshots and campaign exports. It saves the answers together, preserving the secret and unrelated settings. On subsequent installations the saved answers are the defaults. Relative modules paths start at the personal data directory.
 
 It also offers the default Gravewright Marketplace once. Accepting downloads the official public keys, verifies their SHA-256 and saves the catalog settings. Declining records the choice; the owner can still install it under Settings → Marketplace. Deleting `data/.default-marketplace-choice` allows the installer to offer it again.
