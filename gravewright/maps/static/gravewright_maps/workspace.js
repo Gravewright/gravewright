@@ -467,6 +467,16 @@ function tree() {
 }
 async function navigate(map, privateView = true) {
   if (!panel) return;
+  if (privateView && state.is_gm) {
+    try {
+      await command("navigate", {
+        mapId: map?.id === state.activeMapId ? null : (map?.id || null),
+      });
+    } catch (cause) {
+      error(cause.message);
+      return;
+    }
+  }
   calibration?.();
   calibration = undefined;
   if (privateView) following = map?.id === state.activeMapId;
@@ -662,9 +672,10 @@ window.addEventListener("gravewright:connected", () => {
 window.addEventListener("gravewright:maps", (event) => {
   if (!panel) return;
   state = event.detail;
+  following = state.followingActiveMap ?? true;
   const next = state.maps.find(
     (m) =>
-      m.id === (following || !state.is_gm ? state.activeMapId : current?.id),
+      m.id === (following || !state.is_gm ? state.activeMapId : state.navigatingMapId),
   );
   if (!next && current) {
     following = true;

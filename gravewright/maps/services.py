@@ -6,7 +6,7 @@ from django.conf import settings as django_settings
 from django.db import transaction
 from gravewright.campaigns.models import Campaign
 from gravewright.journals.services import member, identifier
-from .models import Scene, Folder, Broadcast, Receipt
+from .models import Scene, Folder, Broadcast, Receipt, SceneNavigation
 
 DEFAULTS = {
     "gridSize": 70,
@@ -186,10 +186,19 @@ def state(campaign_id, user_id):
         else ([broadcast] if broadcast else [])
     )
     folders = Folder.objects.filter(campaign_id=campaign_id) if who.role == "gm" else []
+    navigation = (
+        SceneNavigation.objects.filter(
+            membership=who, scene__campaign_id=campaign_id
+        ).first()
+        if who.role == "gm" else None
+    )
+    active_id = str(broadcast.pk) if broadcast else None
     return {
         "is_gm": who.role == "gm",
         "maps": [view(row) for row in maps],
-        "activeMapId": str(broadcast.pk) if broadcast else None,
+        "activeMapId": active_id,
+        "navigatingMapId": str(navigation.scene_id) if navigation else active_id,
+        "followingActiveMap": navigation is None,
         "folders": [
             {
                 "id": str(row.pk),
@@ -258,6 +267,12 @@ def command(campaign_id, user_id, action, payload, request_id):
 
 
 def apply(who, action, p):
+    if action == "navigate":
+        target = scene(p["mapId"], who) if p.get("mapId") is not None else None
+        SceneNavigation.objects.update_or_create(
+            membership=who, defaults={"scene": target}
+        )
+        return {"navigatingMapId": str(target.pk) if target else None}
     if action == "objects":
         from .objects import apply as object_command
 
@@ -321,6 +336,7 @@ def apply(who, action, p):
         Broadcast.objects.update_or_create(
             campaign_id=who.campaign_id, defaults={"scene": row}
         )
+        SceneNavigation.objects.filter(membership=who).update(scene=None)
     elif action == "update":
         if type(p.get("version")) is not int or p["version"] != row.version:
             raise MapError(

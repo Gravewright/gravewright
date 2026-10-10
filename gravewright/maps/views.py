@@ -14,7 +14,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from gravewright.campaigns.models import Campaign
 from gravewright.journals.services import JournalError, member
 from . import services
-from .models import Scene, Tile, Broadcast
+from .models import Scene, Tile, Broadcast, SceneNavigation
 
 
 def notify(campaign_id):
@@ -125,6 +125,10 @@ def upload(request, campaign_id):
                 Broadcast.objects.update_or_create(
                     campaign_id=campaign_id, defaults={"scene": row}
                 )
+            SceneNavigation.objects.update_or_create(
+                membership=who,
+                defaults={"scene": None if request.POST.get("activate") == "true" else row},
+            )
         stored.clear()
         notify(campaign_id)
         return JsonResponse(services.view(row), status=201)

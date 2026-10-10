@@ -73,6 +73,14 @@ class Broadcast(models.Model):
     scene = models.ForeignKey(Scene, null=True, on_delete=models.SET_NULL)
 
 
+class SceneNavigation(models.Model):
+    """A member's private scene selection; null follows the campaign broadcast."""
+    membership = models.OneToOneField(
+        "gravewright_campaigns.Membership", primary_key=True, on_delete=models.CASCADE
+    )
+    scene = models.ForeignKey(Scene, null=True, blank=True, on_delete=models.SET_NULL)
+
+
 class Receipt(models.Model):
     """Retry result shared by maps, actors, tokens and table.domain resources."""
     campaign = models.ForeignKey(

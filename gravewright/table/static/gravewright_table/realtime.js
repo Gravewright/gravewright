@@ -237,7 +237,7 @@ window.gravewrightRealtime = {
     if (getPath('_presence') !== 'seated') return Promise.reject(new Error('Connect to the table before saving.'));
     const requestId = crypto.randomUUID();
     return new Promise((resolve,reject) => {
-      const payload = {action,data:{...data,mapId:chatMapId},requestId};
+      const payload = {action,data:{...data},requestId};
       mapCommands.set(requestId,{payload,resolve,reject});
       if (!send('maps.command',payload)) {
         mapCommands.delete(requestId);reject(new Error('Connect to the table before saving.'));

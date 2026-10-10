@@ -9,7 +9,7 @@ from django.test import TransactionTestCase, override_settings
 from PIL import Image
 
 from gravewright.maps import services
-from gravewright.maps.models import Folder, Scene, Tile
+from gravewright.maps.models import Folder, Scene, Tile, SceneNavigation
 from gravewright.realtime.tests import test_sockets as fixtures
 
 
@@ -210,6 +210,73 @@ class MapTests(TransactionTestCase):
             self.assertEqual((await self.event(player, "maps.state"))["maps"], [])
         finally:
             await self.finish()
+
+    async def test_activation_and_uploaded_broadcast_survive_leaving_table(self):
+        uploaded = await db(self.upload)()
+        unpublished = await db(self.upload)(False)
+        try:
+            for expected, activate in ((uploaded, unpublished), (unpublished, None)):
+                gm = self.socket(self.gm)
+                self.assertTrue((await gm.connect())[0])
+                await self.event(gm, "chat.history")
+                await gm.send_json_to({"type": "maps.sync"})
+                state = await self.event(gm, "maps.state")
+                self.assertEqual(state["activeMapId"], expected["id"])
+                self.assertEqual(state["navigatingMapId"], unpublished["id"])
+                self.assertEqual(state["followingActiveMap"], activate is None)
+                self.assertEqual(
+                    {row["id"] for row in state["maps"]},
+                    {uploaded["id"], unpublished["id"]},
+                )
+                if activate:
+                    await gm.send_json_to({
+                        "type": "maps.command",
+                        "payload": {
+                            "action": "activate",
+                            "data": {"mapId": activate["id"]},
+                            "requestId": str(uuid.uuid4()),
+                        },
+                    })
+                    await self.event(gm, "maps.ack")
+                    self.assertEqual(
+                        (await self.event(gm, "maps.state"))["activeMapId"],
+                        activate["id"],
+                    )
+                await gm.disconnect()
+                self.sockets.remove(gm)
+        finally:
+            await self.finish()
+
+    def test_private_navigation_is_scoped_and_deletion_resumes_broadcast(self):
+        from gravewright.campaigns.models import Membership
+
+        active = self.upload()
+        private = self.upload(False)
+        Membership.objects.create(campaign=self.campaign, user=self.outsider, role="gm")
+        self.command("navigate", {"mapId": private["id"]})
+        state = services.state(self.campaign.pk, self.gm.pk)
+        self.assertEqual(state["activeMapId"], active["id"])
+        self.assertEqual(state["navigatingMapId"], private["id"])
+        self.assertFalse(state["followingActiveMap"])
+        for user in (self.player, self.outsider):
+            state = services.state(self.campaign.pk, user.pk)
+            self.assertEqual(state["navigatingMapId"], active["id"])
+            self.assertTrue(state["followingActiveMap"])
+        with self.assertRaises(services.MapError):
+            self.command("navigate", {"mapId": private["id"]}, self.player)
+        foreign = Scene.objects.create(
+            campaign=self.other, name="Other table", width=10, height=10,
+        )
+        with self.assertRaises(services.MapError):
+            self.command("navigate", {"mapId": str(foreign.pk)})
+        self.command("navigate", {"mapId": None})
+        self.assertTrue(services.state(self.campaign.pk, self.gm.pk)["followingActiveMap"])
+        self.command("navigate", {"mapId": private["id"]})
+        self.command("delete", {"mapId": private["id"]})
+        state = services.state(self.campaign.pk, self.gm.pk)
+        self.assertEqual(state["navigatingMapId"], active["id"])
+        self.assertTrue(state["followingActiveMap"])
+        self.assertIsNone(SceneNavigation.objects.get(membership__user=self.gm).scene_id)
 
     def object_command(self, map_id, area, action, data, user=None, rid=None):
         if area == "fog" and "expected_version" not in data:
