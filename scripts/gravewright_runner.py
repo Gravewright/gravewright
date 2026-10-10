@@ -33,7 +33,7 @@ DEFAULT_MARKETPLACE_URL = (
 DEFAULT_MARKETPLACE_KEYS_URL = (
     'https://raw.githubusercontent.com/Gravewright/marketplace/main/trusted-keys.json'
 )
-DEFAULT_MARKETPLACE_KEYS_SHA256 = '0cb7f0d636f36ff73e1f49a6f0af5f7b7bba34b2e77a0d0f0ad92b0b53517ec3'
+DEFAULT_MARKETPLACE_KEYS_SHA256 = 'bab20a49a1d4b1f089fc0d52305f78b1c8e092f6b6b15fb7ad0f3e1c25e6e560'
 DEFAULT_MARKETPLACE_CHOICE = '.default-marketplace-choice'
 
 
