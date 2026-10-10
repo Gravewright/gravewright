@@ -1,4 +1,5 @@
 import importlib
+from contextlib import chdir
 import os
 import sys
 import tempfile
@@ -10,6 +11,24 @@ from config.environment import BASE_DIR, env_bool, env_path, load_environment, p
 
 
 class EnvironmentTests(unittest.TestCase):
+    def test_dotenv_uses_project_root_instead_of_user_data_or_working_directory(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
+            work = Path(temporary)
+            root = work / 'project'
+            user = work / 'profile'
+            data = user / 'Gravewright/data'
+            root.mkdir()
+            data.mkdir(parents=True)
+            (root / '.env').write_text('APP_NAME=Project\n')
+            (data / '.env').write_text('APP_NAME=User\nUSER_ONLY=ignored\n')
+            (work / '.env').write_text('APP_NAME=Working directory\nCWD_ONLY=ignored\n')
+            os.environ['LOCALAPPDATA'] = str(user)
+            with chdir(work):
+                load_environment(root)
+            self.assertEqual(os.environ['APP_NAME'], 'Project')
+            self.assertNotIn('USER_ONLY', os.environ)
+            self.assertNotIn('CWD_ONLY', os.environ)
+
     def test_dotenv_priority_and_literal_secrets(self):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, {'PORT': '9000'}, clear=True):
             root = Path(directory)

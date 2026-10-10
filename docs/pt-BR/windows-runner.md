@@ -32,7 +32,7 @@ Os arquivos pessoais ficam, por padrão, em **`%LOCALAPPDATA%\Gravewright`**:
 
 | Caminho | Finalidade |
 | --- | --- |
-| `data/.env` | Chave privada e configurações |
+| `.env` na raiz do projeto | Chave privada e configurações |
 | `data/gravewright.sqlite3` | Contas e campanhas |
 | `data/media/`, `data/compendiums/` | Arquivos privados e conteúdo local |
 | `data/staticfiles/` | Assets públicos coletados |
@@ -42,7 +42,7 @@ Os arquivos pessoais ficam, por padrão, em **`%LOCALAPPDATA%\Gravewright`**:
 | `runner/prepare.lock` | Impede preparação simultânea de dependências |
 | `runner/frontend/<hash-da-pasta>/state.json` | Estado da preparação do frontend |
 
-O `.env`, `.venv` e banco de desenvolvimento do código-fonte são separados. Os padrões vêm de `.env.example` e depois do `.env` pessoal; os limites locais de rede, segurança e armazenamento são impostos pelo runner. A chave é gerada automaticamente. Pare o servidor antes de reconfigurar ou copiar toda a pasta pessoal `data` para backup. Preserve chave, banco e mídia juntos. Faça backup antes de instalar uma nova versão: migrações podem impedir o uso de versões anteriores.
+O instalador cria e lê o `.env` na raiz do projeto, ao lado de `Install Windows.bat`. Se não existir, copia as configurações do antigo `data/.env` pessoal, preservando a chave; um `.env` existente no projeto tem prioridade. O `.venv` e o banco de desenvolvimento continuam separados. Os padrões vêm de `.env.example` e depois do `.env` do projeto; os limites locais de rede, segurança e armazenamento são impostos pelo runner. A chave é gerada automaticamente. Pare o servidor antes de reconfigurar ou copiar o `.env` do projeto e toda a pasta pessoal `data` para backup. Preserve chave, banco e mídia juntos. Faça backup antes de instalar uma nova versão: migrações podem impedir o uso de versões anteriores.
 
 ## Limite da execução local
 

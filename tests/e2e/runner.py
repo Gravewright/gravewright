@@ -46,7 +46,7 @@ def digest(path):
 
 def project_data_state():
     """Compare fingerprints without disclosing the existing development data."""
-    files = [ROOT / ".env"]
+    files = []
     if (ROOT / "data").is_dir():
         files.extend(path for path in (ROOT / "data").rglob("*") if path.is_file())
     return {str(path.relative_to(ROOT)): digest(path) for path in files}
@@ -254,10 +254,10 @@ def main():
                 wait_ready(server, port, output / "first-start.log")
                 for name in ("gravewright.sqlite3", "media", "compendiums", "staticfiles", "logs/runner.log"):
                     assert (data / name).exists(), name
-                configuration = dotenv_values(data / ".env", interpolate=False)
+                configuration = dotenv_values(ROOT / ".env", interpolate=False)
                 secret = configuration["DJANGO_SECRET_KEY"]
                 assert secret and len(secret) >= 32 and not secret.startswith("django-insecure-")
-                config_digest = digest(data / ".env")
+                config_digest = digest(ROOT / ".env")
                 duplicate = subprocess.run(command(data, free_port()), cwd=ROOT.parent, env=env,
                                            capture_output=True, text=True, timeout=30)
                 assert duplicate.returncode != 0, "A second Runner used the same data directory"
@@ -273,7 +273,7 @@ def main():
                     with (output / "restart.log").open("w", encoding="utf-8") as restart_log:
                         server = start(data, port, env, restart_log)
                         wait_ready(server, port, output / "restart.log")
-                        assert digest(data / ".env") == config_digest, "Restart changed the user's configuration"
+                        assert digest(ROOT / ".env") == config_digest, "Restart changed the user's configuration"
                         owner.goto(base + "/game/" + campaign)
                         expect(owner.locator(".game-menubar__presence")).to_have_attribute("data-presence", "seated", timeout=15000)
                         assert json_request(owner, "/api/auth/session")["body"]["authenticated"]
@@ -294,7 +294,7 @@ def main():
                     for application_log in (data / "logs").glob("runner.log*"):
                         shutil.copy2(application_log, output / application_log.name)
         assert not ignored_data.exists(), "Inherited production storage settings were used"
-        assert project_data_state() == original, "The Runner changed development data or project .env"
+        assert project_data_state() == original, "The Runner changed development data"
     print("Runner checks passed with temporary user data; Windows bootstrap needs its own Windows smoke test.", flush=True)
 
 

@@ -2,7 +2,7 @@
 
 Windows installation uses Install Windows.bat; the generated Gravewright Runner.bat
 only starts the prepared app. This helper is also portable for checks with --data-dir.
-It never loads or edits the source checkout's .env or development database.
+Configuration lives in the source checkout's .env; runtime data stays separate.
 """
 
 import argparse
@@ -118,7 +118,7 @@ def configure_environment(directory, *, prompt=input):
     """Collect installer answers before updating the personal environment file."""
     from dotenv import dotenv_values
 
-    user = dotenv_values(directory / '.env', interpolate=False)
+    user = dotenv_values(ROOT / '.env', interpolate=False)
     values = {**dotenv_values(ROOT / '.env.example', interpolate=False), **user}
     fields = (
         ('APP_NAME', 'Table name', 'text'),
@@ -129,7 +129,7 @@ def configure_environment(directory, *, prompt=input):
         ('CAMPAIGN_SNAPSHOTS_ENABLED', 'Campaign snapshots', 'bool'),
         ('CAMPAIGN_EXPORT_ENABLED', 'Campaign export', 'bool'),
     )
-    print(f'Configure: {directory / ".env"}\n'
+    print(f'Configure: {ROOT / ".env"}\n'
           'Enter = keep current value. Ctrl+C = cancel.', flush=True)
     answers = {}
     try:
@@ -172,7 +172,7 @@ def configure_environment(directory, *, prompt=input):
     except (EOFError, KeyboardInterrupt):
         raise RunnerError('Configuration cancelled; answers were not saved. '
                           'Run interactively to configure, or use --check for unattended checks.') from None
-    _update_dotenv(directory / '.env', answers)
+    _update_dotenv(ROOT / '.env', answers)
     print('Configuration saved.', flush=True)
     return True
 
@@ -186,7 +186,7 @@ def install_default_marketplace(directory, download=None):
         'GRAVEWRIGHT_MARKETPLACE_URL': DEFAULT_MARKETPLACE_URL,
         'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': key_path.as_posix(),
     }
-    _update_dotenv(directory / '.env', values)
+    _update_dotenv(ROOT / '.env', values)
     os.environ.update(values)
     _write_private(directory / DEFAULT_MARKETPLACE_CHOICE, b'installed\n')
     return {**values, 'keyPath': str(key_path)}
@@ -274,7 +274,7 @@ def prepare_environment(directory, port_override=None):
     """
     from dotenv import dotenv_values
 
-    config = directory / '.env'
+    config = ROOT / '.env'
     if not config.exists():
         content = (
             '# Gravewright Runner: local user configuration. Keep this file private.\n'
@@ -283,9 +283,13 @@ def prepare_environment(directory, port_override=None):
             f'DJANGO_SECRET_KEY={secrets.token_urlsafe(64)}\n'
             'GRAVEWRIGHT_PORT=3000\n'
         )
+        # Preserve the secret and settings from installations using user data.
+        # An existing project .env always wins; keep the legacy file as backup.
+        legacy = directory / '.env'
+        raw = legacy.read_bytes() if legacy.is_file() else content.encode('utf-8')
         descriptor = os.open(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(descriptor, 'w', encoding='utf-8', newline='\n') as stream:
-            stream.write(content)
+        with os.fdopen(descriptor, 'wb') as stream:
+            stream.write(raw)
 
     defaults = {key: value for key, value in
                 dotenv_values(ROOT / '.env.example', interpolate=False).items()

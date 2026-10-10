@@ -280,7 +280,10 @@ class MarketplaceTests(TestCase):
         raw = b'{\n  "gravewright-2026": "PXbpURq9J1jLkPnnwBVN/5B+zrb0p5MaWQAe/ltJ8LY="\n}\n'
         data = self.directory / "runner-data"
         data.mkdir()
-        (data / ".env").write_text("DJANGO_SECRET_KEY=" + "x" * 64 + "\n")
+        project = self.directory / "project"
+        project.mkdir()
+        (project / ".env").write_text("DJANGO_SECRET_KEY=" + "x" * 64 + "\n")
+        (data / ".env").write_text("# Legacy configuration must stay untouched\n")
         with override_settings(
             RUNNER_DATA=data,
             GRAVEWRIGHT_MARKETPLACE_URL="",
@@ -290,6 +293,8 @@ class MarketplaceTests(TestCase):
             "GRAVEWRIGHT_MARKETPLACE_KEYS_FILE": "",
         }), patch(
             "scripts.gravewright_runner._download_default_keys", return_value=raw,
+        ), patch(
+            "scripts.gravewright_runner.ROOT", project,
         ):
             self.assertFalse(self.client.get("/api/marketplace/default").json()["configured"])
             response = self.client.post("/api/marketplace/default")
@@ -298,7 +303,8 @@ class MarketplaceTests(TestCase):
             self.assertTrue(response.json()["default"])
             self.assertContains(self.client.get("/inside?section=settings"), "data-default-marketplace")
             self.assertTrue((data / "marketplace/trusted-keys.json").is_file())
-            configured = (data / ".env").read_text()
+            configured = (project / ".env").read_text()
+            self.assertEqual((data / '.env').read_text(), '# Legacy configuration must stay untouched\n')
             self.assertIn("GRAVEWRIGHT_MARKETPLACE_URL", configured)
             self.assertIn("GRAVEWRIGHT_MARKETPLACE_KEYS_FILE", configured)
 

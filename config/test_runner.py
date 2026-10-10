@@ -4,11 +4,13 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+import shutil
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
 
 from config.runner_asgi import LocalOnlyMiddleware
+from scripts import gravewright_runner as runner
 from scripts.gravewright_runner import (
     DEFAULT_MARKETPLACE_URL,
     RunnerError,
@@ -20,13 +22,31 @@ from scripts.gravewright_runner import (
 
 
 class RunnerEnvironmentTests(SimpleTestCase):
+    def setUp(self):
+        project = self.enterContext(tempfile.TemporaryDirectory())
+        root = Path(project)
+        shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
+        self.enterContext(patch.object(runner, 'ROOT', root))
+
+    def test_legacy_configuration_is_copied_to_project_and_project_takes_precedence(self):
+        with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            directory = Path(temp)
+            legacy = directory / '.env'
+            content = 'DJANGO_SECRET_KEY=' + 'a' * 64 + '\nGRAVEWRIGHT_PORT=3001\nDEFAULT_LOCALE=pt-BR\n'
+            legacy.write_text(content, encoding='utf-8')
+            self.assertEqual(prepare_environment(directory), 3001)
+            self.assertEqual((runner.ROOT / '.env').read_bytes(), legacy.read_bytes())
+            legacy.write_text('invalid legacy configuration', encoding='utf-8')
+            self.assertEqual(prepare_environment(directory), 3001)
+            self.assertEqual((runner.ROOT / '.env').read_text(encoding='utf-8'), content)
+
     def test_configuration_questions_validate_and_preserve_secret_and_custom_values(self):
         from dotenv import dotenv_values
 
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             directory = Path(temp)
             prepare_environment(directory)
-            config = directory / '.env'
+            config = runner.ROOT / '.env'
             with config.open('a', encoding='utf-8') as stream:
                 stream.write('# Keep this comment\nCUSTOM_OPTION=literal\n')
             secret = os.environ['DJANGO_SECRET_KEY']
@@ -53,12 +73,12 @@ class RunnerEnvironmentTests(SimpleTestCase):
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             directory = Path(temp)
             prepare_environment(directory)
-            original = (directory / '.env').read_bytes()
+            original = (runner.ROOT / '.env').read_bytes()
             for interrupt in (EOFError, KeyboardInterrupt):
                 with patch('builtins.input', side_effect=['Unsaved name', interrupt]) as prompt:
                     with self.assertRaises(RunnerError):
                         configure_environment(directory, prompt=prompt)
-                self.assertEqual((directory / '.env').read_bytes(), original)
+                self.assertEqual((runner.ROOT / '.env').read_bytes(), original)
             configure_environment(directory, prompt=lambda _: '')
             self.assertEqual(prepare_environment(directory), 3000)
             self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(directory / 'media/modules'))
@@ -78,13 +98,13 @@ class RunnerEnvironmentTests(SimpleTestCase):
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             directory = Path(temp)
             self.assertEqual(prepare_environment(directory), 3000)
-            original = (directory / '.env').read_bytes()
+            original = (runner.ROOT / '.env').read_bytes()
             secret = os.environ['DJANGO_SECRET_KEY']
             self.assertGreaterEqual(len(secret), 50)
             self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(directory / 'media/modules'))
             self.assertEqual(prepare_environment(directory, 3333), 3333)
             self.assertEqual(os.environ['DJANGO_SECRET_KEY'], secret)
-            self.assertEqual((directory / '.env').read_bytes(), original)
+            self.assertEqual((runner.ROOT / '.env').read_bytes(), original)
 
     def test_user_features_survive_while_external_settings_cannot_replace_local_bounds(self):
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ, {
@@ -98,7 +118,7 @@ class RunnerEnvironmentTests(SimpleTestCase):
                        'GRAVEWRIGHT_HOST=0.0.0.0\nDJANGO_DEBUG=true\n'
                        'GRAVEWRIGHT_PUBLIC_ORIGIN=https://foreign.example\n'
                        'GRAVEWRIGHT_REDIS_URL=redis://foreign.example/0\n')
-            (directory / '.env').write_text(content, encoding='utf-8')
+            (runner.ROOT / '.env').write_text(content, encoding='utf-8')
             prepare_environment(directory)
             self.assertEqual(os.environ['APP_NAME'], 'Mesa São Paulo')
             self.assertEqual(os.environ['DJANGO_DEBUG'], 'false')
@@ -111,17 +131,17 @@ class RunnerEnvironmentTests(SimpleTestCase):
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], '')
             self.assertEqual(os.environ['TRUSTED_PROXIES'], '')
             self.assertNotEqual(os.environ['GRAVEWRIGHT_RUNNER_TOKEN'], 'inherited')
-            self.assertEqual((directory / '.env').read_text(encoding='utf-8'), content)
+            self.assertEqual((runner.ROOT / '.env').read_text(encoding='utf-8'), content)
 
     def test_invalid_port_and_missing_secret_fail_without_replacing_user_configuration(self):
         with tempfile.TemporaryDirectory() as temp:
             directory = Path(temp)
             for contents in ('GRAVEWRIGHT_PORT=3000\n',
                              'DJANGO_SECRET_KEY=' + 'a' * 64 + '\nGRAVEWRIGHT_PORT=65536\n'):
-                (directory / '.env').write_text(contents, encoding='utf-8')
+                (runner.ROOT / '.env').write_text(contents, encoding='utf-8')
                 with self.assertRaises(RunnerError):
                     prepare_environment(directory)
-                self.assertEqual((directory / '.env').read_text(encoding='utf-8'), contents)
+                self.assertEqual((runner.ROOT / '.env').read_text(encoding='utf-8'), contents)
 
     def test_default_data_uses_user_profile(self):
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ, {'LOCALAPPDATA': temp}):
@@ -139,7 +159,7 @@ class RunnerEnvironmentTests(SimpleTestCase):
             self.assertTrue(offer_default_marketplace(
                 directory, prompt=lambda _: 'sim', download=lambda: raw,
             ))
-            values = dotenv_values(directory / '.env', interpolate=False)
+            values = dotenv_values(runner.ROOT / '.env', interpolate=False)
             key_path = directory / 'marketplace' / 'trusted-keys.json'
             self.assertEqual(values['GRAVEWRIGHT_MARKETPLACE_URL'], DEFAULT_MARKETPLACE_URL)
             self.assertEqual(values['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], key_path.as_posix())

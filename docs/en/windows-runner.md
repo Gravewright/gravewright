@@ -32,7 +32,7 @@ Personal files default to **`%LOCALAPPDATA%\Gravewright`**:
 
 | Path | Purpose |
 | --- | --- |
-| `data/.env` | Private secret and saved configuration |
+| Project root `.env` | Private secret and saved configuration |
 | `data/gravewright.sqlite3` | Accounts and campaigns |
 | `data/media/`, `data/compendiums/` | Private files and local content |
 | `data/staticfiles/` | Collected public assets |
@@ -42,7 +42,7 @@ Personal files default to **`%LOCALAPPDATA%\Gravewright`**:
 | `runner/prepare.lock` | Prevents simultaneous dependency preparation |
 | `runner/frontend/<source-location-hash>/state.json` | Frontend preparation state |
 
-The source checkout's `.env`, `.venv` and development database are separate. Defaults come from `.env.example`, then the personal `.env`; local network/security/storage bounds are enforced by the runner. The secret is generated automatically. Stop the server before changing settings or backing up the entire personal `data` directory. Preserve the secret, database and media together. Back up before installing a new version, since migrations can make older source versions incompatible.
+The installer creates and reads `.env` in the project root, next to `Install Windows.bat`. If it does not exist, settings from the old personal `data/.env` are copied without changing the secret; an existing project `.env` takes precedence. The `.venv` and development database remain separate. Defaults come from `.env.example`, then the project `.env`; local network/security/storage bounds are enforced by the runner. The secret is generated automatically. Stop the server before changing settings or backing up the project `.env` and the entire personal `data` directory. Preserve the secret, database and media together. Back up before installing a new version, since migrations can make older source versions incompatible.
 
 ## Local execution boundary
 

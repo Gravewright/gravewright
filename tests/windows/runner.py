@@ -288,11 +288,10 @@ def exercise(work, output, *, skip_browser):
                                      "test-results", ".env", "data", "media", "staticfiles"),
     )
     source_env = project / ".env"
-    source_env.write_text("DJANGO_SECRET_KEY=source-env-must-stay-untouched", encoding="utf-8")
     sentinel = project / ".venv/developer-data.txt"
     sentinel.parent.mkdir()
     sentinel.write_text("existing developer environment", encoding="utf-8")
-    protected = [source_env, sentinel, project / "uv.lock",
+    protected = [sentinel, project / "uv.lock",
                  project / "gravewright/maps/frontend/package-lock.json"]
     original = {path: digest(path) for path in protected}
     persisted_paths = registry_paths()
@@ -311,10 +310,12 @@ def exercise(work, output, *, skip_browser):
     node = single_match(runtime / "node", "*/node.exe")
     python = single_match(runtime / "environments", "*/Scripts/python.exe")
     check_shortcut(project, output)
-    for expected in (data / ".env", data / "gravewright.sqlite3"):
+    for expected in (source_env, data / "gravewright.sqlite3"):
         if not expected.is_file():
-            raise AssertionError(f"First bootstrap did not create {expected.name} in the requested data directory.")
-    user_configuration = digest(data / ".env")
+            raise AssertionError(f"First bootstrap did not create {expected}.")
+    if (data / '.env').exists():
+        raise AssertionError('Configuration must be created in the project root.')
+    user_configuration = digest(source_env)
     installed_lock = project / "gravewright/maps/frontend/node_modules/.package-lock.json"
     bundle = project / "gravewright/table/static/gravewright_table/media-workspace.js"
     timestamps = {path: path.stat().st_mtime_ns for path in (installed_lock, bundle, uv, node)}
@@ -341,10 +342,10 @@ def exercise(work, output, *, skip_browser):
     for path, timestamp in timestamps.items():
         if path.stat().st_mtime_ns != timestamp:
             raise AssertionError(f"The unchanged bootstrap rewrote {path.name}.")
-    if digest(data / ".env") != user_configuration:
+    if digest(source_env) != user_configuration:
         raise AssertionError("The repeated bootstrap changed the user configuration.")
     if {path: digest(path) for path in protected} != original:
-        raise AssertionError("The BAT changed a source lockfile, .env or developer environment.")
+        raise AssertionError("The BAT changed a source lockfile or developer environment.")
     if registry_paths() != persisted_paths or os.environ.get("PATH", "") != process_path:
         raise AssertionError("The BAT changed the user, machine or parent process PATH.")
 
@@ -353,7 +354,7 @@ def exercise(work, output, *, skip_browser):
     run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure.log',
                 label='Saving interactive configuration with the installed Python...',
                 input_text='Mesa São Paulo\npt-BR\n3001\n\ns\nn\ns\nn\n')
-    configuration = (wizard_data / '.env').read_text(encoding='utf-8')
+    configuration = source_env.read_text(encoding='utf-8')
     for expected in ('APP_NAME="Mesa São Paulo"', 'DEFAULT_LOCALE="pt-BR"',
                      'GRAVEWRIGHT_PORT="3001"', 'CAMPAIGN_SNAPSHOTS_ENABLED="false"'):
         if expected not in configuration:
@@ -362,8 +363,8 @@ def exercise(work, output, *, skip_browser):
                                     label='Asking again and keeping saved settings with Enter...', input_text='\n' * 7)
     if 'Table name [Mesa São Paulo]' not in repeated_questions:
         raise AssertionError('The repeated launch did not ask with the saved default.')
-    if (wizard_data / '.env').read_text(encoding='utf-8') != configuration:
-        raise AssertionError('Repeated configuration changed the personal .env.')
+    if source_env.read_text(encoding='utf-8') != configuration:
+        raise AssertionError('Repeated configuration changed the project .env.')
 
     started = run_batch(project, ['--check', '--no-pause'], launcher='Gravewright Runner.bat',
                         cwd=work, env=env, log=output / 'generated-runner.log',

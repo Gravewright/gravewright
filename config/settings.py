@@ -14,8 +14,8 @@ from config.environment import env_bool, env_path, load_environment, public_orig
 
 # All relative configuration paths resolve against the source tree root.
 BASE_DIR = Path(__file__).resolve().parent.parent
-# The local Runner prepares its own user configuration before importing Django.
-# Never mix a developer/production checkout's .env into that private profile.
+# The local Runner loads the project .env and enforces its local profile before
+# importing Django. Do not load it again and override those prepared values.
 _LOCAL_RUNNER = os.environ.get('DJANGO_SETTINGS_MODULE') == 'config.runner'
 if not _LOCAL_RUNNER:
     load_environment()
