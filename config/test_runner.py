@@ -30,6 +30,56 @@ class RunnerEnvironmentTests(SimpleTestCase):
         root = Path(project)
         shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
         self.enterContext(patch.object(runner, 'ROOT', root))
+        self.enterContext(patch.object(runner, 'LANGUAGE', runner.RunnerLanguage()))
+
+    def test_runner_locale_comes_from_project_not_inherited_or_user_configuration(self):
+        config = runner.ROOT / '.env'
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, DEFAULT_LOCALE='pt-BR'):
+            (Path(temporary) / '.env').write_text('DEFAULT_LOCALE=pt-BR\n', encoding='utf-8')
+            config.write_text('DEFAULT_LOCALE=en\n', encoding='utf-8')
+            runner.LANGUAGE.from_project()
+            self.assertEqual(runner.tr('Configuration saved.'), 'Configuration saved.')
+            config.write_text('DEFAULT_LOCALE=pt-BR\n', encoding='utf-8')
+            runner.LANGUAGE.from_project()
+            self.assertEqual(runner.tr('Configuration saved.'), 'Configuração salva.')
+            self.assertEqual(str(RunnerError('GRAVEWRIGHT_PORT must be a number from 1 to 65535.')),
+                             'GRAVEWRIGHT_PORT deve ser um número de 1 a 65535.')
+
+    def test_installer_changes_language_immediately_in_both_directions(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            directory = Path(temporary)
+            prepare_environment(directory)
+            for locale, expected_port, expected_bool, expected_saved in (
+                    ('pt-BR', 'Porta local', '(s/n)', 'Configuração salva.'),
+                    ('en', 'Local port', '(y/n)', 'Configuration saved.')):
+                answers = iter(['', locale, '', '', '', '', '', ''])
+                prompts = []
+                def answer(message):
+                    prompts.append(message)
+                    return next(answers)
+                with patch('sys.stdout', new_callable=StringIO) as output:
+                    configure_environment(directory, prompt=answer)
+                self.assertIn(expected_port, prompts[2])
+                self.assertIn(expected_bool, prompts[-1])
+                self.assertIn(expected_saved, output.getvalue())
+
+    def test_runner_uses_active_translator_and_preserves_formatted_values(self):
+        runner.LANGUAGE.configure('pt-BR')
+        with patch('gravewright.modules.localization.catalogs', return_value={
+                'pt-BR': {'name': 'Português', 'messages': {'Runner test: {path}': 'Teste do Runner: {path}'}}}):
+            runner.LANGUAGE.load_translator()
+        path = r'C:\Mesa {name}\São Paulo'
+        self.assertEqual(runner.tr('Runner test: {path}', path=path), 'Teste do Runner: ' + path)
+        self.assertEqual(runner.tr('Unknown message: {path}', path=path), 'Unknown message: ' + path)
+        self.assertEqual(runner.tr('Configuration saved.'), 'Configuração salva.')
+
+    def test_portuguese_startup_errors_work_before_database_setup(self):
+        (runner.ROOT / '.env').write_text('DEFAULT_LOCALE=pt-BR\n', encoding='utf-8')
+        with patch.object(runner, 'data_directory', side_effect=lambda _: (_ for _ in ()).throw(
+                RunnerError('The data directory must be separate from the project root.'))):
+            with patch('sys.stderr', new_callable=StringIO) as output:
+                self.assertEqual(runner.main(['--no-browser']), 1)
+            self.assertIn('A pasta de dados deve ser diferente da raiz do projeto.', output.getvalue())
 
     def test_legacy_byte_limits_are_migrated_without_changing_sizes(self):
         from dotenv import dotenv_values

@@ -124,6 +124,53 @@ class LocalizationTests(TestCase):
         self.assertNotContains(response, 'data-language-settings')
         self.assertContains(response, '>Settings</h1>')
 
+    def test_reviewed_portuguese_is_applied_without_changing_signed_package(self):
+        from .localization import catalogs, reviewed_portuguese, validate_catalog
+        from gravewright.web.localization import native_messages, translate_tree
+
+        reviewed = reviewed_portuguese()
+        validate_catalog(reviewed)
+        record, raw = self.release({
+            'pt-BR': {
+                'Settings': 'Configurações', 'Create table': 'Crie a tabela',
+                'Create group': 'Grupo cria', 'Search scenes': 'Cenas de pesquisa',
+                'Roll table': 'Tabela de patinação', 'Actor': 'Ator',
+                'Preview': 'Prévia', 'Unrelated module label': 'Texto do módulo',
+            },
+            'es': {'Create table': 'Crear mesa'},
+        })
+        host().install(record, raw)
+        self.assertNotIn('pt-BR', catalogs())
+        self.assertEqual(self.activate().status_code, 200)
+        available = catalogs()
+        messages = available['pt-BR']['messages']
+        for source, expected in {
+            'Create table': 'Criar mesa', 'Create group': 'Criar grupo',
+            'Search scenes': 'Pesquisar cenas', 'Roll table': 'Tabela de rolagem',
+            'Actor': 'Personagem', 'Type DELETE to confirm': 'Digite DELETE para confirmar',
+            'Preview': 'Prévia', 'Unrelated module label': 'Texto do módulo',
+            'Window': 'Janela', 'Turn off manual lighting': 'Desativar iluminação manual',
+        }.items():
+            self.assertEqual(messages[source], expected)
+        self.assertEqual(available['es']['messages'], {'Create table': 'Crear mesa'})
+        self.assertEqual(available['en']['messages'], {})
+        translated = translate_tree(native_messages(), messages)
+        self.assertEqual(translated['inside']['campaigns']['create'], 'Criar mesa')
+        self.assertEqual(translated['inside']['containers']['create']['title'], 'Criar mesa')
+        self.assertEqual(translated['inside']['containers']['dropFile'], 'Arraste uma imagem aqui ou clique para selecionar')
+        package = Package.objects.get(module_id='gravewright.translator')
+        self.assertEqual(package.locale_catalogs['pt-BR']['messages']['Create table'], 'Crie a tabela')
+        host().verify_installed(package)
+        self.client.post('/inside/language', {'locale': 'pt-BR'})
+        self.assertContains(self.client.get('/inside'), 'Criar mesa')
+        self.assertNotContains(self.client.get('/inside'), 'Crie a tabela')
+        self.user.name = 'Create table'
+        self.user.save()
+        self.assertContains(self.client.get('/inside?section=settings'), 'value="Create table"')
+        self.activate(False)
+        self.assertNotIn('pt-BR', catalogs())
+        self.assertContains(self.client.get('/inside'), 'Create table')
+
     def test_invalid_language_returns_controlled_error(self):
         self.install()
         self.assertEqual(self.client.post('/inside/language', {'locale':'pt-BR'}).status_code,400)

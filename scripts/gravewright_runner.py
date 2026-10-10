@@ -37,8 +37,52 @@ DEFAULT_MARKETPLACE_KEYS_SHA256 = '0cb7f0d636f36ff73e1f49a6f0af5f7b7bba34b2e77a0
 DEFAULT_MARKETPLACE_CHOICE = '.default-marketplace-choice'
 
 
+class RunnerLanguage:
+    """Use the project locale, with reviewed copy available before DB setup."""
+
+    def __init__(self):
+        self.locale = 'en'
+        self.messages = {}
+
+    def configure(self, locale):
+        self.locale = locale or 'en'
+        self.messages = {}
+        if self.locale == 'pt-BR':
+            path = Path(__file__).resolve().parents[1] / 'gravewright/modules/locale_overrides/pt-BR.json'
+            self.messages = json.loads(path.read_text(encoding='utf-8'))
+
+    def from_project(self):
+        from dotenv import dotenv_values
+        defaults = dotenv_values(ROOT / '.env.example', interpolate=False)
+        values = dotenv_values(ROOT / '.env', interpolate=False)
+        self.configure(values.get('DEFAULT_LOCALE', defaults.get('DEFAULT_LOCALE', 'en')))
+
+    def load_translator(self):
+        from gravewright.modules.localization import catalogs
+        catalog = catalogs().get(self.locale)
+        if catalog:
+            self.messages.update(catalog['messages'])
+
+    def text(self, source, **values):
+        translated = self.messages.get(source, source)
+        try:
+            return translated.format(**values) if values else translated
+        except (KeyError, ValueError, IndexError):
+            return source.format(**values) if values else source
+
+
+LANGUAGE = RunnerLanguage()
+
+
+def tr(source, **values):
+    return LANGUAGE.text(source, **values)
+
+
 class RunnerError(Exception):
     """An actionable startup failure safe to display in the launcher console."""
+
+    def __init__(self, source, **values):
+        super().__init__(tr(source, **values))
 
 
 class HTTPSOnlyRedirects(HTTPRedirectHandler):
@@ -93,7 +137,7 @@ def _update_dotenv(path, values):
     except FileNotFoundError:
         original = ''
     except (OSError, UnicodeError) as error:
-        raise RunnerError(f'Could not read the Runner configuration at {path}.') from error
+        raise RunnerError('Could not read the Runner configuration at {path}.', path=path) from error
     remaining = dict(values)
     output = []
     for line in original.splitlines():
@@ -120,6 +164,7 @@ def configure_environment(directory, *, prompt=input):
 
     user = dotenv_values(ROOT / '.env', interpolate=False)
     values = {**dotenv_values(ROOT / '.env.example', interpolate=False), **user}
+    LANGUAGE.configure(values.get('DEFAULT_LOCALE'))
     fields = (
         ('APP_NAME', 'Table name', 'text'),
         ('DEFAULT_LOCALE', 'Language (en, pt-BR)', 'locale'),
@@ -130,19 +175,18 @@ def configure_environment(directory, *, prompt=input):
         ('CAMPAIGN_EXPORT_ENABLED', 'Campaign export', 'bool'),
         ('GRAVEWRIGHT_ALLOW_TUNNELS', 'Allow access through tunnels', 'bool'),
     )
-    print(f'Configure: {ROOT / ".env"}\n'
-          'Enter = keep current value. Ctrl+C = cancel.', flush=True)
+    print(tr('Configure: {config}\nEnter = keep current value. Ctrl+C = cancel.', config=ROOT / ".env"), flush=True)
     answers = {}
     try:
         for key, label, kind in fields:
             current = values.get(key) or ''
             if key == 'GRAVEWRIGHT_MODULES_ROOT' and not user.get(key):
                 current = values.get(key) or 'data/media/modules'
-            hint = ' (y/n)' if kind == 'bool' else ''
+            hint = tr(' (y/n)') if kind == 'bool' else ''
             while True:
-                value = prompt(f'{label}{hint} [{current}]: ').strip() or current
+                value = prompt(f'{tr(label)}{hint} [{current}]: ').strip() or current
                 if any(ord(char) < 32 for char in value):
-                    print('Invalid value.', flush=True)
+                    print(tr('Invalid value.'), flush=True)
                     continue
                 if kind == 'port':
                     try:
@@ -150,31 +194,33 @@ def configure_environment(directory, *, prompt=input):
                     except ValueError:
                         number = 0
                     if not 1 <= number <= 65535:
-                        print('Use 1-65535.', flush=True)
+                        print(tr('Use 1-65535.'), flush=True)
                         continue
                     value = str(number)
                 elif kind == 'locale':
                     value = {'en': 'en', 'pt-br': 'pt-BR'}.get(value.casefold())
                     if value is None:
-                        print('Use en / pt-BR.', flush=True)
+                        print(tr('Use en / pt-BR.'), flush=True)
                         continue
                 elif kind == 'bool':
                     value = {'s': 'true', 'sim': 'true', 'y': 'true', 'yes': 'true',
                              'true': 'true', '1': 'true', 'n': 'false', 'nao': 'false',
                              'não': 'false', 'no': 'false', 'false': 'false', '0': 'false'}.get(value.casefold())
                     if value is None:
-                        print('Use y/n.', flush=True)
+                        print(tr('Use y/n.'), flush=True)
                         continue
                 elif not value:
-                    print('Enter a value.', flush=True)
+                    print(tr('Enter a value.'), flush=True)
                     continue
                 answers[key] = value
+                if kind == 'locale':
+                    LANGUAGE.configure(value)
                 break
     except (EOFError, KeyboardInterrupt):
         raise RunnerError('Configuration cancelled; answers were not saved. '
                           'Run interactively to configure, or use --check for unattended checks.') from None
     _update_dotenv(ROOT / '.env', answers)
-    print('Configuration saved.', flush=True)
+    print(tr('Configuration saved.'), flush=True)
     return True
 
 
@@ -202,18 +248,17 @@ def offer_default_marketplace(directory, prompt=input, download=None):
         return False
     try:
         answer = prompt(
-            'Install the default Gravewright Marketplace? '
-            '[y/N]: '
+            tr('Install the default Gravewright Marketplace? [y/N]: ')
         ).strip().casefold()
     except (EOFError, KeyboardInterrupt):
         print('', flush=True)
         return False
     if answer not in {'y', 'yes', 's', 'sim'}:
         _write_private(marker, b'declined\n')
-        print('Default marketplace installation skipped.', flush=True)
+        print(tr('Default marketplace installation skipped.'), flush=True)
         return False
     result = install_default_marketplace(directory, download=download)
-    print(f'Default marketplace installed. Public keys: {result["keyPath"]}', flush=True)
+    print(tr('Default marketplace installed. Public keys: {path}', path=result["keyPath"]), flush=True)
     return True
 
 
@@ -320,9 +365,10 @@ def prepare_environment(directory, port_override=None):
     allowed = set(defaults) | set(SIZE_DEFAULTS) | {'DJANGO_SECRET_KEY', 'DJANGO_SECURE_COOKIES'}
     values = {**defaults, **{key: value for key, value in migrate_sizes(user).items()
                            if key in allowed and value is not None}}
+    LANGUAGE.configure(values.get('DEFAULT_LOCALE'))
     secret = user.get('DJANGO_SECRET_KEY', '')
     if not secret or len(secret) < 50 or secret.startswith('django-insecure-'):
-        raise RunnerError(f'Set a private DJANGO_SECRET_KEY of at least 50 characters in {config}.')
+        raise RunnerError('Set a private DJANGO_SECRET_KEY of at least 50 characters in {config}.', config=config)
     try:
         port = int(port_override if port_override is not None else values['GRAVEWRIGHT_PORT'])
         if not 1 <= port <= 65535:
@@ -378,8 +424,7 @@ def check_port(port):
         try:
             probe.bind(('127.0.0.1', port))
         except OSError as error:
-            raise RunnerError(f'Port {port} is unavailable. Close the program using it '
-                              'or change GRAVEWRIGHT_PORT in the Runner configuration.') from error
+            raise RunnerError('Port {port} is unavailable. Close the program using it or change GRAVEWRIGHT_PORT in the Runner configuration.', port=port) from error
 
 
 def configure_logging(directory):
@@ -410,7 +455,7 @@ def ensure_portuguese_translation(directory):
         if row and 'pt-BR' in row.locale_catalogs and compatible(row.manifest['sdk']['requires']):
             engine.verify_installed(row)
         else:
-            print('Installing the official Translator for pt-BR...', flush=True)
+            print(tr('Installing the official Translator for pt-BR...'), flush=True)
             official = json.loads(_download_default_keys())
             keys = trusted_keys() if settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE else {}
             if any(key in keys and keys[key] != value for key, value in official.items()):
@@ -448,7 +493,8 @@ def ensure_portuguese_translation(directory):
             Package.objects.filter(global_enabled=True).exclude(locale_catalogs={}).exclude(pk=row.pk).update(global_enabled=False)
             row.global_enabled = True
             row.save(update_fields=['global_enabled'])
-        print(f'Translator {row.version} is installed and active for pt-BR.', flush=True)
+        LANGUAGE.load_translator()
+        print(tr('Translator {version} is installed and active for pt-BR.', version=row.version), flush=True)
     except (ModuleFailure, OSError, ValueError, KeyError, TypeError) as error:
         raise RunnerError('Could not install or verify the required pt-BR Translator. '
                           'Check your connection, signing keys and module files, then retry.') from error
@@ -465,9 +511,10 @@ def prepare_application(directory):
         (directory / name).mkdir(exist_ok=True)
     django.setup()
     call_command('check', verbosity=0)
-    print('Preparing the database and application files...', flush=True)
+    print(tr('Preparing the database and application files...'), flush=True)
     call_command('migrate', interactive=False, verbosity=0)
     ensure_portuguese_translation(directory)
+    LANGUAGE.load_translator()
     call_command('collectstatic', interactive=False, verbosity=0)
 
 
@@ -513,15 +560,15 @@ def serve(port, open_browser=True):
                 with opener.open(url + '/__gravewright_runner__/ready', timeout=1) as response:
                     if response.status == 200 and json.loads(response.read(4096)) == {'runner': token}:
                         ready.set()
-                        print(f'Gravewright is ready: {url}', flush=True)
-                        print('Keep this window open. Press Ctrl+C to stop the Runner.', flush=True)
+                        print(tr('Gravewright is ready: {url}', url=url), flush=True)
+                        print(tr('Keep this window open. Press Ctrl+C to stop the Runner.'), flush=True)
                         if open_browser:
                             try:
                                 if not webbrowser.open(url):
-                                    print('Open the address above in your browser.', flush=True)
+                                    print(tr('Open the address above in your browser.'), flush=True)
                             except Exception:
                                 LOGGER.exception('Could not open the default browser')
-                                print('Open the address above in your browser.', flush=True)
+                                print(tr('Open the address above in your browser.'), flush=True)
                         return
             except (OSError, ValueError):
                 pass
@@ -551,14 +598,15 @@ def serve(port, open_browser=True):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Gravewright Runner: install data and run locally.',
+    LANGUAGE.from_project()
+    parser = argparse.ArgumentParser(description=tr('Gravewright Runner: install data and run locally.'),
                                      allow_abbrev=False)
-    parser.add_argument('--data-dir', help='Override the persistent user-data directory.')
-    parser.add_argument('--port', type=int, help='Use this port for this run without editing configuration.')
-    parser.add_argument('--no-browser', action='store_true', help='Print the address without opening a browser.')
-    parser.add_argument('--check', action='store_true', help='Prepare and check the installation, then exit.')
+    parser.add_argument('--data-dir', help=tr('Override the persistent user-data directory.'))
+    parser.add_argument('--port', type=int, help=tr('Use this port for this run without editing configuration.'))
+    parser.add_argument('--no-browser', action='store_true', help=tr('Print the address without opening a browser.'))
+    parser.add_argument('--check', action='store_true', help=tr('Prepare and check the installation, then exit.'))
     parser.add_argument('--configure-default-marketplace', action='store_true',
-                        help='Ask personal settings and offer the official marketplace, then exit.')
+                        help=tr('Ask personal settings and offer the official marketplace, then exit.'))
     args = parser.parse_args(argv)
     log_path = None
     try:
@@ -578,18 +626,21 @@ def main(argv=None):
             log_path = configure_logging(directory)
             from gravewright.version import release_label
             LOGGER.info('Starting Gravewright Runner - %s', release_label())
-            print(f'Gravewright Runner - {release_label()}\nConfig: {ROOT / ".env"}\n'
-                  f'Database: {os.environ["GRAVEWRIGHT_DATABASE"]}\n'
-                  f'Media: {os.environ["GRAVEWRIGHT_MEDIA_ROOT"]}\n'
-                  f'Runner state: {directory}\nLog: {log_path}', flush=True)
+            print(tr('Gravewright Runner - {version}\nConfig: {config}\n'
+                     'Database: {database}\nMedia: {media}\n'
+                     'Runner state: {directory}\nLog: {log}',
+                     version=release_label(), config=ROOT / '.env',
+                     database=os.environ['GRAVEWRIGHT_DATABASE'],
+                     media=os.environ['GRAVEWRIGHT_MEDIA_ROOT'],
+                     directory=directory, log=log_path), flush=True)
             from scripts.update_supervisor import Supervisor
             state = directory / 'updates'
             if not (state / 'transaction.json').exists():
                 prepare_application(directory)
             def ready():
                 url = f'http://127.0.0.1:{port}'
-                print(f'Gravewright is ready: {url}', flush=True)
-                print('Keep this window open. Press Ctrl+C to stop the Runner.', flush=True)
+                print(tr('Gravewright is ready: {url}', url=url), flush=True)
+                print(tr('Keep this window open. Press Ctrl+C to stop the Runner.'), flush=True)
                 if not args.no_browser:
                     webbrowser.open(url)
             supervisor = Supervisor(ROOT, state, os.environ['GRAVEWRIGHT_DATABASE'], os.environ['GRAVEWRIGHT_MEDIA_ROOT'],
@@ -597,7 +648,7 @@ def main(argv=None):
             if args.check:
                 supervisor.recover()
                 supervisor.command(supervisor.active, supervisor.python(supervisor.active), 'manage.py', 'check')
-                print('Gravewright Runner checks passed.', flush=True)
+                print(tr('Gravewright Runner checks passed.'), flush=True)
             else:
                 import signal
                 def stop_runner(*_):
@@ -606,21 +657,20 @@ def main(argv=None):
                 if hasattr(signal, 'SIGBREAK'):
                     signal.signal(signal.SIGBREAK, stop_runner)
                 supervisor.run()
-                print('Gravewright Runner stopped.', flush=True)
+                print(tr('Gravewright Runner stopped.'), flush=True)
         return 0
     except KeyboardInterrupt:
-        print('\nGravewright Runner stopped.', flush=True)
+        print(tr('\nGravewright Runner stopped.'), flush=True)
         return 0
     except RunnerError as error:
-        print(f'Gravewright Runner: {error}', file=sys.stderr, flush=True)
+        print(tr('Gravewright Runner: {error}', error=error), file=sys.stderr, flush=True)
         return 1
     except Exception:
         if log_path:
             LOGGER.exception('Runner startup failed')
-            print(f'Gravewright Runner could not start. See {log_path}', file=sys.stderr, flush=True)
+            print(tr('Gravewright Runner could not start. See {log}', log=log_path), file=sys.stderr, flush=True)
         else:
-            print('Gravewright Runner could not prepare its configuration. '
-                  'Check the data-directory permissions and installed dependencies.', file=sys.stderr, flush=True)
+            print(tr('Gravewright Runner could not prepare its configuration. Check the data-directory permissions and installed dependencies.'), file=sys.stderr, flush=True)
         return 1
 
 

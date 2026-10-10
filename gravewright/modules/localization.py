@@ -1,10 +1,20 @@
 """Declarative, installation-wide language packs; no package Python is imported."""
 from copy import deepcopy
+from functools import lru_cache
+import json
+from pathlib import Path
 import re
 
 from .models import Package
 
 PLACEHOLDERS = re.compile(r'\{[A-Za-z_][A-Za-z0-9_.]*\}')
+
+
+@lru_cache(maxsize=1)
+def reviewed_portuguese():
+    """Host UI copy corrections, kept separate from signed module artifacts."""
+    path = Path(__file__).with_name('locale_overrides') / 'pt-BR.json'
+    return json.loads(path.read_text(encoding='utf-8'))
 
 
 def validate_catalog(messages):
@@ -25,6 +35,8 @@ def catalogs():
     for package in Package.objects.filter(global_enabled=True, revoked=False).order_by('pk'):
         if compatible(package.manifest.get('sdk', {}).get('requires')):
             result.update(deepcopy(package.locale_catalogs))
+            if package.module_id == 'gravewright.translator' and 'pt-BR' in package.locale_catalogs:
+                result['pt-BR']['messages'].update(reviewed_portuguese())
     return result
 
 
