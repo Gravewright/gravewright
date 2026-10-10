@@ -310,7 +310,7 @@ def exercise(work, output, *, skip_browser):
     node = single_match(runtime / "node", "*/node.exe")
     python = single_match(runtime / "environments", "*/Scripts/python.exe")
     check_shortcut(project, output)
-    for expected in (source_env, data / "gravewright.sqlite3"):
+    for expected in (source_env, project / "data/gravewright.sqlite3"):
         if not expected.is_file():
             raise AssertionError(f"First bootstrap did not create {expected}.")
     if (data / '.env').exists():
@@ -320,14 +320,14 @@ def exercise(work, output, *, skip_browser):
     bundle = project / "gravewright/table/static/gravewright_table/media-workspace.js"
     timestamps = {path: path.stat().st_mtime_ns for path in (installed_lock, bundle, uv, node)}
 
-    database_time = (data / "gravewright.sqlite3").stat().st_mtime_ns
+    database_time = (project / "data/gravewright.sqlite3").stat().st_mtime_ns
     with exclusive_file(runtime / "prepare.lock"):
         locked = run_batch(project, arguments, cwd=work, env=env, log=output / "preparation-lock.log",
                            label="Rejecting a concurrent preparation before installing or migrating...",
                            expected=1, timeout=30)
     if "[1/7] Checking uv" in locked:
         raise AssertionError("The competing launcher entered preparation while its lock was held.")
-    if (data / "gravewright.sqlite3").stat().st_mtime_ns != database_time:
+    if (project / "data/gravewright.sqlite3").stat().st_mtime_ns != database_time:
         raise AssertionError("The competing launcher changed the database while preparation was locked.")
 
     # Make the same tools available as preinstalled applications on PATH.
@@ -360,7 +360,7 @@ def exercise(work, output, *, skip_browser):
         if expected not in configuration:
             raise AssertionError(f'The configuration wizard did not save {expected}.')
     repeated_questions = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure-repeat.log',
-                                    label='Asking again and keeping saved settings with Enter...', input_text='\n' * 7)
+                                    label='Asking again and keeping saved settings with Enter...', input_text='\n' * 8)
     if 'Table name [Mesa São Paulo]' not in repeated_questions:
         raise AssertionError('The repeated launch did not ask with the saved default.')
     if source_env.read_text(encoding='utf-8') != configuration:

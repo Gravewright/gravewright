@@ -128,6 +128,7 @@ def configure_environment(directory, *, prompt=input):
         ('CAMPAIGN_JOIN_CODE_ENABLED', 'Join codes', 'bool'),
         ('CAMPAIGN_SNAPSHOTS_ENABLED', 'Campaign snapshots', 'bool'),
         ('CAMPAIGN_EXPORT_ENABLED', 'Campaign export', 'bool'),
+        ('GRAVEWRIGHT_ALLOW_TUNNELS', 'Allow access through tunnels', 'bool'),
     )
     print(f'Configure: {ROOT / ".env"}\n'
           'Enter = keep current value. Ctrl+C = cancel.', flush=True)
@@ -136,7 +137,7 @@ def configure_environment(directory, *, prompt=input):
         for key, label, kind in fields:
             current = values.get(key) or ''
             if key == 'GRAVEWRIGHT_MODULES_ROOT' and not user.get(key):
-                current = 'media/modules'
+                current = values.get(key) or 'data/media/modules'
             hint = ' (y/n)' if kind == 'bool' else ''
             while True:
                 value = prompt(f'{label}{hint} [{current}]: ').strip() or current
@@ -238,9 +239,6 @@ def complete_configuration(config, user, defaults):
     template = (ROOT / '.env.example').read_text(encoding='utf-8')
     original = config.read_text(encoding='utf-8')
     values = {**defaults, **{key: value for key, value in user.items() if value is not None}}
-    # Runner module paths are relative to its data directory.
-    if user.get('GRAVEWRIGHT_MODULES_ROOT') is None:
-        values['GRAVEWRIGHT_MODULES_ROOT'] = 'media/modules'
     output, written = [], set()
     for line in template.splitlines():
         assignment = line.strip()
@@ -296,10 +294,10 @@ def instance_lock(directory):
 
 
 def prepare_environment(directory, port_override=None):
-    """Merge sample feature defaults with user settings, then enforce local bounds.
+    """Load project configuration and resolve storage relative to the project.
 
-    Environment values from another Django checkout cannot select a different
-    database, Redis server or public origin. User settings are read literally;
+    Inherited application settings are replaced by the project configuration;
+    the desktop profile still enforces local network bounds. Values are literal;
     ${...} does not interpolate secrets, and existing configuration is preserved.
     """
     from dotenv import dotenv_values
@@ -307,13 +305,9 @@ def prepare_environment(directory, port_override=None):
     config = ROOT / '.env'
     if not config.exists():
         content = f'DJANGO_SECRET_KEY={secrets.token_urlsafe(64)}\n'
-        # Preserve the secret and settings from installations using user data.
-        # An existing project .env always wins; keep the legacy file as backup.
-        legacy = directory / '.env'
-        raw = legacy.read_bytes() if legacy.is_file() else content.encode('utf-8')
         descriptor = os.open(config, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         with os.fdopen(descriptor, 'wb') as stream:
-            stream.write(raw)
+            stream.write(content.encode('utf-8'))
 
     defaults = {key: value for key, value in
                 dotenv_values(ROOT / '.env.example', interpolate=False).items()
@@ -332,11 +326,17 @@ def prepare_environment(directory, port_override=None):
     except (TypeError, ValueError):
         raise RunnerError('GRAVEWRIGHT_PORT must be a number from 1 to 65535.') from None
     complete_configuration(config, user, defaults)
-    configured_modules = (user.get('GRAVEWRIGHT_MODULES_ROOT') or '').strip()
-    modules_root = Path(configured_modules).expanduser() if configured_modules else directory / 'media/modules'
-    if not modules_root.is_absolute():
-        modules_root = directory / modules_root
-    modules_root = modules_root.resolve()
+    def storage(name, fallback):
+        path = Path(values.get(name) or fallback).expanduser()
+        return str((path if path.is_absolute() else ROOT / path).resolve())
+
+    database = storage('GRAVEWRIGHT_DATABASE', 'data/gravewright.sqlite3')
+    media = storage('GRAVEWRIGHT_MEDIA_ROOT', 'data/media')
+    modules = storage('GRAVEWRIGHT_MODULES_ROOT', str(Path(media) / 'modules'))
+    tunnels = values.get('GRAVEWRIGHT_ALLOW_TUNNELS', 'false').strip().lower()
+    if tunnels not in {'true', 'false'}:
+        raise RunnerError('GRAVEWRIGHT_ALLOW_TUNNELS must be true or false.')
+    origin = '' if tunnels == 'true' else f'http://127.0.0.1:{port}'
 
     # Purge inherited application settings, including undocumented Runner internals.
     for name in tuple(os.environ):
@@ -345,14 +345,15 @@ def prepare_environment(directory, port_override=None):
     os.environ.update(values)
     os.environ.update(
         DJANGO_SETTINGS_MODULE='config.runner', DJANGO_DEBUG='false',
-        DJANGO_SECRET_KEY=secret, DJANGO_ALLOWED_HOSTS='127.0.0.1',
-        DJANGO_SECURE_COOKIES='false', DATABASE_ECHO='false',
+        DJANGO_SECRET_KEY=secret, DJANGO_ALLOWED_HOSTS='*' if tunnels == 'true' else '127.0.0.1',
+        DJANGO_SECURE_COOKIES=values.get('DJANGO_SECURE_COOKIES', 'false') if tunnels == 'true' else 'false', DATABASE_ECHO='false',
         GRAVEWRIGHT_HOST='127.0.0.1', GRAVEWRIGHT_PORT=str(port),
-        GRAVEWRIGHT_PUBLIC_ORIGIN=f'http://127.0.0.1:{port}',
-        GRAVEWRIGHT_REDIS_URL='', TRUSTED_PROXIES='',
-        GRAVEWRIGHT_DATABASE=str(directory / 'gravewright.sqlite3'),
-        GRAVEWRIGHT_MEDIA_ROOT=str(directory / 'media'),
-        GRAVEWRIGHT_MODULES_ROOT=str(modules_root),
+        GRAVEWRIGHT_PUBLIC_ORIGIN=origin,
+        GRAVEWRIGHT_ALLOW_TUNNELS=tunnels,
+        GRAVEWRIGHT_REDIS_URL='', TRUSTED_PROXIES='127.0.0.1/32,::1/128' if tunnels == 'true' else '',
+        GRAVEWRIGHT_DATABASE=database,
+        GRAVEWRIGHT_MEDIA_ROOT=media,
+        GRAVEWRIGHT_MODULES_ROOT=modules,
         GRAVEWRIGHT_RUNNER_DATA=str(directory),
         GRAVEWRIGHT_RUNNER_TOKEN=secrets.token_urlsafe(32),
         PYTHONUTF8='1',
@@ -389,17 +390,81 @@ def configure_logging(directory):
     return log_dir / 'runner.log'
 
 
+def ensure_portuguese_translation(directory):
+    """Install and globally activate the official signed Portuguese catalogs."""
+    from django.conf import settings
+    if settings.DEFAULT_LOCALE != 'pt-BR':
+        return
+    from django.db import transaction
+    from gravewright.modules.models import Package
+    from gravewright.modules.packages import ModulePackages, ModuleFailure, MAX_ARCHIVE, compatible, host, trusted_keys
+    from gravewright.modules.views import download
+    from gravewright.administration.release_metadata import version_key
+
+    try:
+        engine = host()
+        row = Package.objects.filter(module_id='gravewright.translator', revoked=False).order_by('-pk').first()
+        if row and 'pt-BR' in row.locale_catalogs and compatible(row.manifest['sdk']['requires']):
+            engine.verify_installed(row)
+        else:
+            print('Installing the official Translator for pt-BR...', flush=True)
+            official = json.loads(_download_default_keys())
+            keys = trusted_keys() if settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE else {}
+            if any(key in keys and keys[key] != value for key, value in official.items()):
+                raise RunnerError('The official Translator signing key conflicts with the configured trust store.')
+            keys.update(official)
+            engine = ModulePackages(engine.directory, official)
+            records = json.loads(download(DEFAULT_MARKETPLACE_URL, 2 * 1024 * 1024))
+            if not isinstance(records, list) or len(records) > 5000:
+                raise ValueError('Invalid official catalog')
+            candidates = []
+            for record in records:
+                if not isinstance(record, dict):
+                    raise ValueError('Invalid official catalog record')
+                if record.get('id') == 'gravewright.translator':
+                    engine.verify(record, require_compatible=False)
+                    if record.get('status') != 'revoked' and compatible(record['sdk']):
+                        candidates.append(record)
+            if not candidates:
+                raise RunnerError('The official catalog has no compatible Translator release.')
+            record = max(candidates, key=lambda item: version_key(item['version']))
+            manifest = engine.install(record, download(record['download'], MAX_ARCHIVE))
+            row = Package.objects.get(module_id=manifest['id'], version=manifest['version'])
+            if 'pt-BR' not in row.locale_catalogs:
+                raise RunnerError('The official Translator does not contain pt-BR catalogs.')
+            key_path = directory / 'marketplace/trusted-keys.json'
+            _write_private(key_path, json.dumps(keys).encode('utf-8'))
+            marketplace = {'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': key_path.as_posix()}
+            if not settings.GRAVEWRIGHT_MARKETPLACE_URL:
+                marketplace['GRAVEWRIGHT_MARKETPLACE_URL'] = DEFAULT_MARKETPLACE_URL
+            _update_dotenv(ROOT / '.env', marketplace)
+            os.environ.update(marketplace)
+            for key, value in marketplace.items():
+                setattr(settings, key, value)
+        with transaction.atomic():
+            Package.objects.filter(global_enabled=True).exclude(locale_catalogs={}).exclude(pk=row.pk).update(global_enabled=False)
+            row.global_enabled = True
+            row.save(update_fields=['global_enabled'])
+        print(f'Translator {row.version} is installed and active for pt-BR.', flush=True)
+    except (ModuleFailure, OSError, ValueError, KeyError, TypeError) as error:
+        raise RunnerError('Could not install or verify the required pt-BR Translator. '
+                          'Check your connection, signing keys and module files, then retry.') from error
+
+
 def prepare_application(directory):
     """Run checks and migrations, and collect only public static assets locally."""
     import django
     from django.core.management import call_command
 
-    for name in ('media', 'compendiums', 'staticfiles'):
+    Path(os.environ['GRAVEWRIGHT_DATABASE']).parent.mkdir(parents=True, exist_ok=True)
+    Path(os.environ['GRAVEWRIGHT_MEDIA_ROOT']).mkdir(parents=True, exist_ok=True)
+    for name in ('compendiums', 'staticfiles'):
         (directory / name).mkdir(exist_ok=True)
     django.setup()
     call_command('check', verbosity=0)
     print('Preparing the database and application files...', flush=True)
     call_command('migrate', interactive=False, verbosity=0)
+    ensure_portuguese_translation(directory)
     call_command('collectstatic', interactive=False, verbosity=0)
 
 
@@ -500,6 +565,9 @@ def main(argv=None):
             if not args.check and args.configure_default_marketplace:
                 configure_environment(directory)
                 port = prepare_environment(directory, args.port)
+                prepare_application(directory)
+                from gravewright.administration.models import HostSettings
+                HostSettings.objects.update_or_create(pk=1, defaults={'default_locale': os.environ['DEFAULT_LOCALE']})
                 offer_default_marketplace(directory)
                 return 0
             if not args.check:
@@ -507,10 +575,13 @@ def main(argv=None):
             log_path = configure_logging(directory)
             from gravewright.version import release_label
             LOGGER.info('Starting Gravewright Runner - %s', release_label())
-            print(f'Gravewright Runner - {release_label()}\nData: {directory}\nLog: {log_path}', flush=True)
+            print(f'Gravewright Runner - {release_label()}\nConfig: {ROOT / ".env"}\n'
+                  f'Database: {os.environ["GRAVEWRIGHT_DATABASE"]}\n'
+                  f'Media: {os.environ["GRAVEWRIGHT_MEDIA_ROOT"]}\n'
+                  f'Runner state: {directory}\nLog: {log_path}', flush=True)
             from scripts.update_supervisor import Supervisor
             state = directory / 'updates'
-            if not (state / 'active.json').exists() and not (state / 'transaction.json').exists():
+            if not (state / 'transaction.json').exists():
                 prepare_application(directory)
             def ready():
                 url = f'http://127.0.0.1:{port}'
@@ -518,7 +589,7 @@ def main(argv=None):
                 print('Keep this window open. Press Ctrl+C to stop the Runner.', flush=True)
                 if not args.no_browser:
                     webbrowser.open(url)
-            supervisor = Supervisor(ROOT, state, directory / 'gravewright.sqlite3', directory / 'media',
+            supervisor = Supervisor(ROOT, state, os.environ['GRAVEWRIGHT_DATABASE'], os.environ['GRAVEWRIGHT_MEDIA_ROOT'],
                                     '127.0.0.1', port, on_ready=ready)
             if args.check:
                 supervisor.recover()

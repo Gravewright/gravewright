@@ -6,6 +6,8 @@ from pathlib import Path
 import sys
 import tempfile
 import shutil
+import json
+import subprocess
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
@@ -29,7 +31,33 @@ class RunnerEnvironmentTests(SimpleTestCase):
         shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
         self.enterContext(patch.object(runner, 'ROOT', root))
 
-    def test_legacy_configuration_is_copied_to_project_and_project_takes_precedence(self):
+    def test_django_child_and_supervisor_use_database_and_media_from_project_configuration(self):
+        from scripts.update_supervisor import Supervisor
+
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            state = Path(temporary)
+            config = runner.ROOT / '.env'
+            config.write_text('DJANGO_SECRET_KEY=' + 'x' * 64
+                              + '\nGRAVEWRIGHT_DATABASE=custom/db.sqlite3\n'
+                              'GRAVEWRIGHT_MEDIA_ROOT=custom/uploads\n'
+                              'GRAVEWRIGHT_MODULES_ROOT=custom/modules\n', encoding='utf-8')
+            prepare_environment(state)
+            expected = [str(runner.ROOT / name) for name in
+                        ('custom/db.sqlite3', 'custom/uploads', 'custom/modules')]
+            supervisor = Supervisor(runner.ROOT, state / 'updates',
+                                    os.environ['GRAVEWRIGHT_DATABASE'], os.environ['GRAVEWRIGHT_MEDIA_ROOT'],
+                                    '127.0.0.1', 3000)
+            result = subprocess.run([sys.executable, '-X', 'utf8', '-c',
+                'import django, json; django.setup(); from django.conf import settings; '
+                'print(json.dumps([str(settings.DATABASES["default"]["NAME"]), '
+                'str(settings.MEDIA_ROOT), str(settings.GRAVEWRIGHT_MODULES_ROOT)]))'],
+                env=supervisor.env, capture_output=True, text=True, check=True)
+            self.assertEqual(json.loads(result.stdout), expected)
+            self.assertEqual(str(supervisor.database), expected[0])
+            self.assertEqual(str(supervisor.media), expected[1])
+            self.assertFalse((state / 'gravewright.sqlite3').exists())
+
+    def test_user_data_configuration_is_ignored_even_when_project_env_is_missing(self):
         from dotenv import dotenv_values
 
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
@@ -37,15 +65,18 @@ class RunnerEnvironmentTests(SimpleTestCase):
             legacy = directory / '.env'
             content = 'DJANGO_SECRET_KEY=' + 'a' * 64 + '\nGRAVEWRIGHT_PORT=3001\nDEFAULT_LOCALE=pt-BR\n'
             legacy.write_text(content, encoding='utf-8')
-            self.assertEqual(prepare_environment(directory), 3001)
+            self.assertEqual(prepare_environment(directory), 3000)
             saved = (runner.ROOT / '.env').read_bytes()
             values = dotenv_values(runner.ROOT / '.env', interpolate=False)
-            self.assertEqual(values['DJANGO_SECRET_KEY'], 'a' * 64)
-            self.assertEqual(values['DEFAULT_LOCALE'], 'pt-BR')
+            self.assertNotEqual(values['DJANGO_SECRET_KEY'], 'a' * 64)
+            self.assertEqual(values['DEFAULT_LOCALE'], 'en')
             self.assertEqual(legacy.read_text(encoding='utf-8'), content)
             legacy.write_text('invalid legacy configuration', encoding='utf-8')
-            self.assertEqual(prepare_environment(directory), 3001)
+            self.assertEqual(prepare_environment(directory), 3000)
             self.assertEqual((runner.ROOT / '.env').read_bytes(), saved)
+            (runner.ROOT / '.env').unlink()
+            self.assertEqual(prepare_environment(directory), 3000)
+            self.assertNotEqual((runner.ROOT / '.env').read_bytes(), saved)
 
     def test_configuration_questions_validate_and_preserve_secret_and_custom_values(self):
         from dotenv import dotenv_values
@@ -58,7 +89,7 @@ class RunnerEnvironmentTests(SimpleTestCase):
                 stream.write('# Keep this comment\nCUSTOM_OPTION=literal\n')
             secret = os.environ['DJANGO_SECRET_KEY']
             answers = iter(['Mesa "São Paulo" ${literal}', 'invalid', 'pt-br', '0', '65536',
-                            'abc', '3001', 'C:\\My modules', 'maybe', 's', 'n', 'yes'])
+                            'abc', '3001', 'C:\\My modules', 'maybe', 's', 'n', 'yes', 'n'])
             self.assertTrue(configure_environment(directory, prompt=lambda _: next(answers)))
             values = dotenv_values(config, interpolate=False)
             self.assertEqual(values['APP_NAME'], 'Mesa "São Paulo" ${literal}')
@@ -73,7 +104,7 @@ class RunnerEnvironmentTests(SimpleTestCase):
             self.assertIn('# Keep this comment', config.read_text(encoding='utf-8'))
             with patch('builtins.input', return_value='') as prompt:
                 self.assertTrue(configure_environment(directory, prompt=prompt))
-                self.assertEqual(prompt.call_count, 7)
+                self.assertEqual(prompt.call_count, 8)
             self.assertEqual(dotenv_values(config, interpolate=False), values)
 
     def test_cancelled_configuration_can_be_retried_without_partial_answers(self):
@@ -88,7 +119,7 @@ class RunnerEnvironmentTests(SimpleTestCase):
                 self.assertEqual((runner.ROOT / '.env').read_bytes(), original)
             configure_environment(directory, prompt=lambda _: '')
             self.assertEqual(prepare_environment(directory), 3000)
-            self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(directory / 'media/modules'))
+            self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(runner.ROOT / 'data/media/modules'))
 
     def test_configuration_replaces_export_and_duplicate_assignments(self):
         from dotenv import dotenv_values
@@ -116,7 +147,7 @@ class RunnerEnvironmentTests(SimpleTestCase):
                     self.assertIn(line, original.decode('utf-8'))
             secret = os.environ['DJANGO_SECRET_KEY']
             self.assertGreaterEqual(len(secret), 50)
-            self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(directory / 'media/modules'))
+            self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(runner.ROOT / 'data/media/modules'))
             self.assertEqual(prepare_environment(directory, 3333), 3333)
             self.assertEqual(os.environ['DJANGO_SECRET_KEY'], secret)
             self.assertEqual((runner.ROOT / '.env').read_bytes(), original)
@@ -140,8 +171,8 @@ class RunnerEnvironmentTests(SimpleTestCase):
             self.assertEqual(os.environ['DJANGO_SETTINGS_MODULE'], 'config.runner')
             self.assertEqual(os.environ['DJANGO_ALLOWED_HOSTS'], '127.0.0.1')
             self.assertEqual(os.environ['GRAVEWRIGHT_PUBLIC_ORIGIN'], 'http://127.0.0.1:3000')
-            self.assertEqual(os.environ['GRAVEWRIGHT_DATABASE'], str(directory / 'gravewright.sqlite3'))
-            self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(directory / 'meus-modulos'))
+            self.assertEqual(os.environ['GRAVEWRIGHT_DATABASE'], str(runner.ROOT / 'data/gravewright.sqlite3'))
+            self.assertEqual(os.environ['GRAVEWRIGHT_MODULES_ROOT'], str(runner.ROOT / 'meus-modulos'))
             self.assertEqual(os.environ['GRAVEWRIGHT_REDIS_URL'], '')
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], '')
             self.assertEqual(os.environ['TRUSTED_PROXIES'], '')
@@ -168,6 +199,36 @@ class RunnerEnvironmentTests(SimpleTestCase):
             original = config.read_bytes()
             prepare_environment(Path(temp))
             self.assertEqual(config.read_bytes(), original)
+
+    def test_installer_enables_all_tunnels_without_asking_for_a_url(self):
+        from dotenv import dotenv_values
+
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            directory = Path(temporary)
+            prepare_environment(directory)
+            answers = iter([''] * 7 + ['y'])
+            configure_environment(directory, prompt=lambda _: next(answers))
+            values = dotenv_values(runner.ROOT / '.env', interpolate=False)
+            self.assertEqual(values['GRAVEWRIGHT_ALLOW_TUNNELS'], 'true')
+            self.assertEqual(values['GRAVEWRIGHT_PUBLIC_ORIGIN'], '')
+            prepare_environment(directory)
+            self.assertEqual(os.environ['GRAVEWRIGHT_HOST'], '127.0.0.1')
+            self.assertEqual(os.environ['DJANGO_SECURE_COOKIES'], 'false')
+            self.assertEqual(os.environ['TRUSTED_PROXIES'], '127.0.0.1/32,::1/128')
+            result = subprocess.run([sys.executable, '-X', 'utf8', '-c',
+                'import django, json; django.setup(); from django.conf import settings; '
+                'print(json.dumps([settings.GRAVEWRIGHT_ALLOW_TUNNELS, settings.SESSION_COOKIE_SECURE, '
+                'settings.CSRF_TRUSTED_ORIGINS, settings.ALLOWED_HOSTS]))'],
+                capture_output=True, text=True, check=True)
+            self.assertEqual(json.loads(result.stdout), [True, False, [], ['*']])
+
+    def test_tunnels_do_not_require_or_pin_a_public_origin(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
+            config = runner.ROOT / '.env'
+            config.write_text('DJANGO_SECRET_KEY=' + 'x' * 64 + '\nGRAVEWRIGHT_ALLOW_TUNNELS=true\n', encoding='utf-8')
+            prepare_environment(Path(temporary))
+            self.assertEqual(os.environ['GRAVEWRIGHT_PUBLIC_ORIGIN'], '')
+            self.assertEqual(os.environ['DJANGO_ALLOWED_HOSTS'], '*')
 
     def test_invalid_port_and_missing_secret_fail_without_replacing_user_configuration(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -253,3 +314,35 @@ class RunnerTransportTests(SimpleTestCase):
                       (b'127.0.0.1:3001',), (b'127.0.0.1',)):
             with self.subTest(hosts=hosts):
                 self.assertEqual((await self.request(hosts=hosts))[0]['status'], 400)
+
+    @override_settings(GRAVEWRIGHT_ALLOW_TUNNELS=True, GRAVEWRIGHT_PUBLIC_ORIGIN='')
+    async def test_tunnels_accept_any_public_host_from_local_agents(self):
+        for kind in ('http', 'websocket'):
+            for host in (b'table.example', b'any.ngrok-free.app', b'changing.trycloudflare.com', b'custom.example:8080'):
+                self.assertEqual(await self.request(kind=kind, hosts=(host,)), [{'type': 'accepted'}])
+            rejected = await self.request(kind=kind, hosts=(b'table.example',), peer='192.0.2.1')
+            self.assertEqual(rejected[0].get('status', rejected[0].get('code')), 403 if kind == 'http' else 4403)
+            for hosts in ((), (b'table.example', b'other.example')):
+                rejected = await self.request(kind=kind, hosts=hosts)
+                self.assertEqual(rejected[0].get('status', rejected[0].get('code')), 400 if kind == 'http' else 4403)
+
+    @override_settings(GRAVEWRIGHT_ALLOW_TUNNELS=True, GRAVEWRIGHT_PUBLIC_ORIGIN='', ALLOWED_HOSTS=['*'])
+    async def test_tunnel_websocket_origins_follow_each_host_without_pinning_a_url(self):
+        from gravewright.realtime.security import SameOriginWebSocketMiddleware
+
+        for host in ('first.example', 'second.example', 'third.example:8080'):
+            for scheme in ('http', 'https'):
+                messages = []
+                async def accepted(scope, receive, send):
+                    messages.append('accepted')
+                async def send(message):
+                    messages.append(message)
+                scope = {'type': 'websocket', 'scheme': 'ws', 'client': ('127.0.0.1', 1234),
+                         'headers': [(b'host', host.encode()), (b'origin', f'{scheme}://{host}'.encode())]}
+                application = LocalOnlyMiddleware(SameOriginWebSocketMiddleware(accepted))
+                await application(scope, None, send)
+                self.assertEqual(messages, ['accepted'])
+                messages.clear()
+                scope['headers'][1] = (b'origin', b'https://other.example')
+                await application(scope, None, send)
+                self.assertEqual(messages, [{'type': 'websocket.close', 'code': 4403}])

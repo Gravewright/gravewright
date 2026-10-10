@@ -47,6 +47,9 @@ class SameOriginWebSocketMiddleware:
                 if public_origin:
                     expected = origin_tuple(public_origin)
                     scheme = expected[0]
+                elif getattr(settings, 'GRAVEWRIGHT_ALLOW_TUNNELS', False):
+                    expected = origin_tuple(origins[0])
+                    scheme = expected[0]
                 else:
                     scheme = {'ws': 'http', 'wss': 'https'}[scope.get('scheme', 'ws')]
                     expected = origin_tuple(scheme + '://' + hosts[0])

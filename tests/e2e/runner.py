@@ -44,12 +44,12 @@ def digest(path):
         return hashlib.file_digest(source, "sha256").hexdigest()
 
 
-def project_data_state():
+def project_data_state(root=ROOT):
     """Compare fingerprints without disclosing the existing development data."""
     files = []
-    if (ROOT / "data").is_dir():
-        files.extend(path for path in (ROOT / "data").rglob("*") if path.is_file())
-    return {str(path.relative_to(ROOT)): digest(path) for path in files}
+    if (root / "data").is_dir():
+        files.extend(path for path in (root / "data").rglob("*") if path.is_file())
+    return {str(path.relative_to(root)): digest(path) for path in files}
 
 
 def http_request(port, path, *, headers=None, method="GET", body=None):
@@ -221,12 +221,22 @@ def browser_setup(browser, base, port):
 
 
 def main():
+    global ROOT, RUNNER
     original = project_data_state()
     output = ROOT / "test-results" / "runner"
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="grave-runner-") as temporary:
         work = Path(temporary)
         data = work / "runner data ç"
+        project = work / 'project'
+        shutil.copytree(ROOT, project, ignore=shutil.ignore_patterns(
+            '.git', '.venv', 'venv', 'node_modules', '__pycache__', '.env', '.env.backup-*',
+            'data', 'media', 'staticfiles', 'test-results'))
+        ROOT, RUNNER = project, project / 'scripts/gravewright_runner.py'
+        (ROOT / '.env').write_text('DJANGO_SECRET_KEY=' + 't' * 64 + '\n'
+            + 'GRAVEWRIGHT_DATABASE=' + json.dumps(str(data / 'gravewright.sqlite3')) + '\n'
+            + 'GRAVEWRIGHT_MEDIA_ROOT=' + json.dumps(str(data / 'media')) + '\n'
+            + 'GRAVEWRIGHT_MODULES_ROOT=' + json.dumps(str(data / 'media/modules')) + '\n', encoding='utf-8')
         ignored_data = work / "must-not-be-used"
         env = {
             **os.environ, "PYTHONUNBUFFERED": "1", "DJANGO_SETTINGS_MODULE": "config.does_not_exist",

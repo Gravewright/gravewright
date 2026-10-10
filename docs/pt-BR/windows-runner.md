@@ -26,17 +26,17 @@ Não exige administrador, mudanças permanentes no PATH, Docker ou servidor Redi
 
 O `.env` do projeto inclui todas as configurações e seções do `.env.example`. Opções ausentes são preenchidas automaticamente, preservando os valores salvos, a chave privada e as opções personalizadas.
 
-O instalador pergunta nome da mesa, idioma (`en` ou `pt-BR`), porta local, pasta de módulos, códigos de convite, snapshots e exportação de campanhas. Salva as respostas juntas e preserva a chave secreta e outras configurações. Nas próximas instalações, as respostas salvas aparecem como padrão. Caminhos relativos de módulos partem da pasta de dados pessoal.
+O instalador pergunta nome da mesa, idioma (`en` ou `pt-BR`), porta local, pasta de módulos, códigos de convite, snapshots, exportação de campanhas e se deseja liberar túneis. A opção de túnel é apenas sim/não; não pede URL. Salva as respostas juntas e preserva a chave secreta e outras configurações. Nas próximas instalações, as respostas salvas aparecem como padrão. Caminhos relativos de banco, mídias e módulos partem da raiz do projeto.
+
+Escolher `pt-BR` instala e ativa globalmente o [Translator](https://github.com/Gravewright/translator) oficial assinado. A ausência de tradução ou uma falha de verificação impede a conclusão da instalação; o pacote instalado e verificado é reutilizado offline. As chaves oficiais são adicionadas sem remover as chaves confiáveis existentes.
 
 Ele também oferece o Marketplace padrão do Gravewright uma vez. Aceitar baixa as chaves oficiais, confere o SHA-256 e salva as configurações do catálogo. Recusar registra a escolha; o proprietário ainda pode instalar em Configurações → Marketplace. Apagar `data/.default-marketplace-choice` permite que o instalador ofereça novamente.
 
-Os arquivos pessoais ficam, por padrão, em **`%LOCALAPPDATA%\Gravewright`**:
+O banco e as mídias usam `GRAVEWRIGHT_DATABASE` e `GRAVEWRIGHT_MEDIA_ROOT` do `.env` do projeto, com padrões `data/gravewright.sqlite3` e `data/media` dentro do projeto. Estado do Runner, assets coletados e ferramentas continuam em **`%LOCALAPPDATA%\Gravewright`**:
 
 | Caminho | Finalidade |
 | --- | --- |
-| `.env` na raiz do projeto | Chave privada e configurações |
-| `data/gravewright.sqlite3` | Contas e campanhas |
-| `data/media/`, `data/compendiums/` | Arquivos privados e conteúdo local |
+| `data/compendiums/` | Conteúdo local |
 | `data/staticfiles/` | Assets públicos coletados |
 | `data/logs/runner.log` | Diagnósticos de inicialização e execução |
 | `data/runner.lock` | Impede uso simultâneo dos mesmos dados |
@@ -44,11 +44,11 @@ Os arquivos pessoais ficam, por padrão, em **`%LOCALAPPDATA%\Gravewright`**:
 | `runner/prepare.lock` | Impede preparação simultânea de dependências |
 | `runner/frontend/<hash-da-pasta>/state.json` | Estado da preparação do frontend |
 
-O instalador cria e lê o `.env` na raiz do projeto, ao lado de `Install Windows.bat`. Se não existir, copia as configurações do antigo `data/.env` pessoal, preservando a chave; um `.env` existente no projeto tem prioridade. O `.venv` e o banco de desenvolvimento continuam separados. Os padrões vêm de `.env.example` e depois do `.env` do projeto; os limites locais de rede, segurança e armazenamento são impostos pelo runner. A chave é gerada automaticamente. Pare o servidor antes de reconfigurar ou copiar o `.env` do projeto e toda a pasta pessoal `data` para backup. Preserve chave, banco e mídia juntos. Faça backup antes de instalar uma nova versão: migrações podem impedir o uso de versões anteriores.
+O instalador cria e lê o `.env` na raiz do projeto, ao lado de `Install Windows.bat`. Se não existir, gera uma configuração completa a partir de `.env.example`, com uma nova chave privada. Arquivos de configuração na pasta de dados do usuário nunca são importados. Os ambientes Python são gerenciados separadamente. Os padrões vêm de `.env.example` e depois do `.env` do projeto; os limites locais de rede e segurança são impostos pelo runner. A chave é gerada automaticamente. Pare o servidor antes de reconfigurar ou copiar o `.env` do projeto e toda a pasta pessoal `data` para backup. Preserve chave, banco e mídia juntos. Faça backup antes de instalar uma nova versão: migrações podem impedir o uso de versões anteriores.
 
 ## Limite da execução local
 
-O runner serve HTTP apenas em `127.0.0.1`, com um processo servidor e Channels em memória. Debug Django permanece desligado; verificações de origem, host, sessão, CSRF e permissões continuam ativas. Uploads privados usam rotas protegidas. Para rede local ou internet, siga [implantação](deployment.md) com o perfil ASGI padrão. Não exponha o runner local por túnel ou proxy reverso público.
+O runner serve HTTP apenas em `127.0.0.1`, com um processo servidor e Channels em memória. Debug Django permanece desligado; verificações de origem, host, sessão, CSRF e permissões continuam ativas. Uploads privados usam rotas protegidas. Use `GRAVEWRIGHT_ALLOW_TUNNELS=true` para aceitar qualquer hostname de túnel por um agente local, sem cadastrar URL nem restringir o provedor. Origens HTTP e HTTPS acompanham o Host de cada requisição; WebSockets e CSRF continuam exigindo uma origem correspondente. O servidor continua escutando em `127.0.0.1:<porta>` e confia em cabeçalhos de esquema apenas de agentes locais. Mudar a URL do túnel não exige alterar a configuração. Use `false` para restringir o acesso ao host local. O Runner não instala nem inicia o programa de túnel. Para hospedagem direta em rede local ou internet, siga [implantação](deployment.md).
 
 ## Diagnóstico e validação
 

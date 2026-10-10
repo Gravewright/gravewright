@@ -233,10 +233,7 @@ GRAVEWRIGHT_MODULES_ROOT = (
 )
 
 from config.marketplace_apps import load_apps as _load_marketplace_apps
-_marketplace_directory = GRAVEWRIGHT_MODULES_ROOT or (
-    Path(os.environ['GRAVEWRIGHT_RUNNER_DATA']) / 'media' / 'modules'
-    if _LOCAL_RUNNER else Path(MEDIA_ROOT) / 'modules'
-)
+_marketplace_directory = GRAVEWRIGHT_MODULES_ROOT or Path(MEDIA_ROOT) / 'modules'
 GRAVEWRIGHT_SERVER_APPS += tuple(_load_marketplace_apps(_marketplace_directory))
 INSTALLED_APPS += [name for name in GRAVEWRIGHT_SERVER_APPS if name not in INSTALLED_APPS]
 GRAVEWRIGHT_CONTENT_ROOT = env_path('GRAVEWRIGHT_CONTENT_ROOT', 'data/vtt/compendiums')

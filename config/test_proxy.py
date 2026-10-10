@@ -54,6 +54,20 @@ class ProxySchemeTests(SimpleTestCase):
                     'headers': [(b'x-forwarded-proto', b'https')]}
         self.assertIs(await self.observed_scope(original), original)
 
+    @override_settings(GRAVEWRIGHT_ALLOW_TUNNELS=True, TRUSTED_PROXIES=('127.0.0.1/32',))
+    async def test_tunnels_without_scheme_headers_use_only_an_origin_matching_the_host(self):
+        for host in ('first.example', 'second.example:8080'):
+            for kind, expected in (('http', 'https'), ('websocket', 'wss')):
+                original = {'type': kind, 'scheme': 'http' if kind == 'http' else 'ws',
+                            'client': ('127.0.0.1', 1234),
+                            'headers': [(b'host', host.encode()), (b'origin', f'https://{host}'.encode())]}
+                self.assertEqual((await self.observed_scope(original))['scheme'], expected)
+                original['headers'][1] = (b'origin', b'https://foreign.example')
+                self.assertIs(await self.observed_scope(original), original)
+                original['client'] = ('192.0.2.1', 1234)
+                original['headers'][1] = (b'origin', f'https://{host}'.encode())
+                self.assertIs(await self.observed_scope(original), original)
+
 
 @override_settings(ALLOWED_HOSTS=['testserver'], TRUSTED_PROXIES=('10.0.0.0/8',),
                    SECURE_HSTS_SECONDS=31536000, CSRF_COOKIE_SECURE=True,

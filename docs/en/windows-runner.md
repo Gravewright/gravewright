@@ -26,17 +26,17 @@ No administrator privileges, permanent PATH changes, Docker or Redis server are 
 
 The project `.env` includes every setting and section from `.env.example`. Missing settings are filled automatically, preserving saved values, the private secret and custom options.
 
-The installer asks for table name, language (`en` or `pt-BR`), local port, modules folder, join codes, campaign snapshots and campaign exports. It saves the answers together, preserving the secret and unrelated settings. On subsequent installations the saved answers are the defaults. Relative modules paths start at the personal data directory.
+The installer asks for table name, language (`en` or `pt-BR`), local port, modules folder, join codes, campaign snapshots, campaign exports and whether to allow tunnels. The tunnel option is a single yes/no choice; no URL is requested. It saves the answers together, preserving the secret and unrelated settings. On subsequent installations the saved answers are the defaults. Relative database, media and modules paths start at the project root.
+
+Selecting `pt-BR` automatically installs and globally activates the official signed [Translator](https://github.com/Gravewright/translator). A missing or unverifiable translation is an installation error; an installed, verified package is reused offline. The official signing keys are added without removing existing trusted keys.
 
 It also offers the default Gravewright Marketplace once. Accepting downloads the official public keys, verifies their SHA-256 and saves the catalog settings. Declining records the choice; the owner can still install it under Settings → Marketplace. Deleting `data/.default-marketplace-choice` allows the installer to offer it again.
 
-Personal files default to **`%LOCALAPPDATA%\Gravewright`**:
+The database and media use `GRAVEWRIGHT_DATABASE` and `GRAVEWRIGHT_MEDIA_ROOT` from the project `.env`, defaulting to `data/gravewright.sqlite3` and `data/media` in the project. Runner state, collected assets and tools remain under **`%LOCALAPPDATA%\Gravewright`**:
 
 | Path | Purpose |
 | --- | --- |
-| Project root `.env` | Private secret and saved configuration |
-| `data/gravewright.sqlite3` | Accounts and campaigns |
-| `data/media/`, `data/compendiums/` | Private files and local content |
+| `data/compendiums/` | Local content |
 | `data/staticfiles/` | Collected public assets |
 | `data/logs/runner.log` | Startup/runtime diagnostics |
 | `data/runner.lock` | Prevents concurrent use of the same data |
@@ -44,11 +44,11 @@ Personal files default to **`%LOCALAPPDATA%\Gravewright`**:
 | `runner/prepare.lock` | Prevents simultaneous dependency preparation |
 | `runner/frontend/<source-location-hash>/state.json` | Frontend preparation state |
 
-The installer creates and reads `.env` in the project root, next to `Install Windows.bat`. If it does not exist, settings from the old personal `data/.env` are copied without changing the secret; an existing project `.env` takes precedence. The `.venv` and development database remain separate. Defaults come from `.env.example`, then the project `.env`; local network/security/storage bounds are enforced by the runner. The secret is generated automatically. Stop the server before changing settings or backing up the project `.env` and the entire personal `data` directory. Preserve the secret, database and media together. Back up before installing a new version, since migrations can make older source versions incompatible.
+The installer creates and reads `.env` in the project root, next to `Install Windows.bat`. If it does not exist, a complete configuration is generated from `.env.example` with a new private secret. Configuration files in user-data directories are never imported. Python environments are managed separately. Defaults come from `.env.example`, then the project `.env`; local network/security bounds are enforced by the runner. The secret is generated automatically. Stop the server before changing settings or backing up the project `.env` and the entire personal `data` directory. Preserve the secret, database and media together. Back up before installing a new version, since migrations can make older source versions incompatible.
 
 ## Local execution boundary
 
-The runner serves HTTP only on `127.0.0.1`, with one server process and in-memory Channels. Django debug stays disabled; origin, host, session, CSRF and campaign permissions remain active. Private uploads use guarded application routes. For LAN or internet access, follow [deployment](deployment.md) with the standard ASGI profile. Do not expose the local runner through a tunnel or public reverse proxy.
+The runner serves HTTP only on `127.0.0.1`, with one server process and in-memory Channels. Django debug stays disabled; origin, host, session, CSRF and campaign permissions remain active. Private uploads use guarded application routes. Set `GRAVEWRIGHT_ALLOW_TUNNELS=true` to accept any tunnel hostname through a local agent, with no URL registration or provider restriction. HTTP and HTTPS origins follow each request Host; WebSockets and CSRF still require a matching origin. The server keeps listening on `127.0.0.1:<port>` and trusts scheme headers only from local agents. Changing tunnel URLs requires no configuration change. Set the flag to `false` to restrict access to the local host. The Runner does not install or start tunnel software. For direct LAN or internet hosting, use [deployment](deployment.md).
 
 ## Diagnostics and validation
 

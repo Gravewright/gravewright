@@ -408,7 +408,7 @@ echo Usage: "Install Windows.bat" [--check] [--no-browser] [--data-dir PATH] [--
 echo.
 echo --check prepares tools, dependencies, frontend and database, then exits.
 echo --no-browser is accepted for compatibility; installation never starts the server.
-echo --data-dir selects a separate folder for configuration and campaigns.
+echo --data-dir selects the Runner state folder for logs, updates and collected assets.
 echo --port overrides the port during the installation check only.
 echo --no-pause exits without waiting for a key, for terminals and automation.
 set "GW_EXIT=0"

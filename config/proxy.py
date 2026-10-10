@@ -33,6 +33,19 @@ class TrustedProxySchemeMiddleware:
             ):
                 values = [value for name, value in scope.get('headers', [])
                           if name.lower() == b'x-forwarded-proto']
+                if not values and getattr(settings, 'GRAVEWRIGHT_ALLOW_TUNNELS', False):
+                    # Some tunnel agents omit scheme headers. A browser Origin
+                    # may establish HTTPS only when it matches this exact Host.
+                    from gravewright.realtime.security import origin_tuple
+                    hosts = [value for name, value in scope.get('headers', []) if name.lower() == b'host']
+                    origins = [value for name, value in scope.get('headers', []) if name.lower() == b'origin']
+                    if len(hosts) == len(origins) == 1:
+                        try:
+                            origin = origin_tuple(origins[0].decode('ascii'))
+                            if origin == origin_tuple(origin[0] + '://' + hosts[0].decode('ascii')):
+                                values = [origin[0].encode('ascii')]
+                        except (ValueError, UnicodeError):
+                            pass
                 # Multiple headers and comma-separated chains are ambiguous.
                 if len(values) == 1 and values[0] in {b'http', b'https'}:
                     scheme = values[0].decode('ascii')

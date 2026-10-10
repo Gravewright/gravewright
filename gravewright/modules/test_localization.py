@@ -2,9 +2,11 @@ import base64
 import hashlib
 import io
 import json
+import os
 import zipfile
+from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from gravewright.accounts.models import User, UserPreference
 from gravewright.web.localization import LocalizationExtension, tr
 from jinja2 import Environment
@@ -14,7 +16,58 @@ from .packages import host, canonical, ModuleFailure
 
 
 class LocalizationTests(TestCase):
-    setUp = test_marketplace.MarketplaceTests.setUp
+    def setUp(self):
+        test_marketplace.MarketplaceTests.setUp(self)
+        self.enterContext(override_settings(DEFAULT_LOCALE='en', GRAVEWRIGHT_MODULES_ROOT=self.directory / 'modules'))
+        self.enterContext(patch.dict(os.environ))
+
+    @override_settings(DEFAULT_LOCALE='pt-BR')
+    def test_runner_installs_signed_translator_and_reuses_it_offline(self):
+        from scripts import gravewright_runner as runner
+
+        record, raw = self.release()
+        project = self.directory / 'project'
+        project.mkdir()
+        (project / '.env').write_text('# Installer settings\n', encoding='utf-8')
+        state = self.directory / 'runner-state'
+        with patch.object(runner, 'ROOT', project), patch.object(
+            runner, '_download_default_keys', return_value=self.keyfile.read_bytes()
+        ) as keys, patch('gravewright.modules.views.download', side_effect=[json.dumps([record]).encode(), raw]) as download:
+            runner.ensure_portuguese_translation(state)
+            package = Package.objects.get(module_id='gravewright.translator')
+            self.assertTrue(package.global_enabled)
+            self.assertIn('pt-BR', package.locale_catalogs)
+            self.assertEqual(download.call_count, 2)
+            saved = (project / '.env').read_bytes()
+            runner.ensure_portuguese_translation(state)
+            self.assertEqual(download.call_count, 2)
+            self.assertEqual(keys.call_count, 1)
+            self.assertEqual(Package.objects.count(), 1)
+            self.assertEqual((project / '.env').read_bytes(), saved)
+
+    @override_settings(DEFAULT_LOCALE='pt-BR')
+    def test_runner_rejects_unsigned_translator_before_installing(self):
+        from scripts import gravewright_runner as runner
+
+        record, raw = self.release()
+        record['sha256'] = '0' * 64
+        with patch.object(runner, '_download_default_keys', return_value=self.keyfile.read_bytes()), patch(
+            'gravewright.modules.views.download', return_value=json.dumps([record]).encode()
+        ) as download:
+            with self.assertRaises(runner.RunnerError):
+                runner.ensure_portuguese_translation(self.directory / 'runner-state')
+            self.assertEqual(download.call_count, 1)
+            self.assertFalse(Package.objects.exists())
+
+    @override_settings(DEFAULT_LOCALE='en')
+    def test_runner_does_not_install_translator_for_english(self):
+        from scripts import gravewright_runner as runner
+
+        with patch.object(runner, '_download_default_keys') as download:
+            runner.ensure_portuguese_translation(self.directory)
+            download.assert_not_called()
+        self.assertFalse(Package.objects.exists())
+
     def release(self, catalogs=None, **changes):
         catalogs = catalogs if catalogs is not None else {
             'pt-BR': {'Settings': 'Configurações', 'Campaigns': 'Campanhas', 'Save language': 'Salvar idioma'},
