@@ -92,6 +92,7 @@ window.gravewrightInside = {
   },
   selectConditions(mode) {
     try { localStorage.setItem('gravewright.conditions.anonymous', mode); } catch {}
+    window.dispatchEvent(new CustomEvent('gravewright:condition-layout'));
   },
   cover(file, element) {
     if (!file) return;

@@ -5,7 +5,7 @@
 .account-settings h1{font-size:var(--text-hero)}
 .account-settings h2,.account-settings h3,.account-settings .condition-preferences header strong[data-v-gwcondition]{font-family:inherit;font-size:var(--text-lg);font-weight:var(--weight-medium)}
 .account-settings p,.account-settings small{color:var(--text-muted);font-size:var(--text-md);line-height:var(--leading-normal)}
-.account-settings__columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--step-34);align-items:start}
+.account-settings__columns{display:grid;grid-template-columns:minmax(0,1fr);width:min(800px,100%);align-items:start}
 .account-settings__preferences{display:grid;gap:var(--step-21);min-width:0}
 .account-settings .account-settings__card{display:grid;gap:var(--step-13);min-width:0;padding:0 0 var(--step-21);border:0;border-bottom:var(--border-hairline);border-radius:0;background:none}
 .account-settings__card>header{display:grid;gap:var(--step-5)}

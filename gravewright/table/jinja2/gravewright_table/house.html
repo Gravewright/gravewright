@@ -9,6 +9,7 @@
 </button>
 {% endfor %}
 </div>
+<p class="house-menu__preference-note">{{ house.rendering.localHint }}</p>
 <form class="house-menu__language" method="post" action="/inside/language" data-table-language>
 <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 <input type="hidden" name="next" value="{{ request.path }}">
@@ -16,5 +17,22 @@
 <select id="table-language" name="locale" translate="no" {{ 'disabled' if not language_enabled else '' }}>{% for option in language.options %}<option value="{{ option.id }}" {{ 'selected' if option.id==language.id else '' }}>{{ option.name }}</option>{% endfor %}</select>
 <p role="alert" hidden>{{ 'Não foi possível alterar o idioma. Tente novamente.' if language.id=='pt-BR' else 'No se pudo cambiar el idioma. Inténtalo de nuevo.' if language.id=='es' else 'Could not change the language. Please try again.' }}</p>
 </form>
-<p class="house-menu__preference-note">{{ house.rendering.localHint }}</p>
+<section class="house-menu__preference-group" data-table-ping>
+<header><strong>Map ping</strong><p>Hold on the map to ping. The GM can hold Shift to smoothly focus the table's cameras.</p></header>
+<label class="house-menu__preference-row">Identification color<input type="color" name="pingColor" value="#f2c679" disabled></label>
+<p role="alert" hidden>Could not save the change.</p>
+</section>
+<section class="house-menu__preference-group" data-table-conditions>
+<header><strong>Conditions</strong><p>Choose where to display token conditions on this device.</p></header>
+<div class="house-menu__condition-options" role="group" aria-label="Condition display">
+<button type="button" data-condition-choice="classic" aria-pressed="false"><strong>Classic</strong><small>Icons over tokens on the map.</small></button>
+<button type="button" data-condition-choice="gravewright" aria-pressed="false"><strong translate="no">Gravewright</strong><small>{{ 'No canto superior direito, agrupadas por token.' if language.id=='pt-BR' else 'En la esquina superior derecha, agrupadas por token.' if language.id=='es' else 'In the upper right corner, grouped by token.' }}</small></button>
+</div>
+</section>
+{% if request.user.role=='owner' %}
+<section class="house-menu__preference-group" data-table-marketplace>
+<button type="button" data-install-marketplace hidden>Install default marketplace</button>
+<p role="alert" hidden>Could not save the change.</p>
+</section>
+{% endif %}
 </div></section></div></div>

@@ -293,7 +293,18 @@ def command(campaign, user, action, raw, request_id):
             and isinstance(raw.get("values"), dict)
             and set(raw["values"]) == {"rotation"}
         )
-        if not rotate:
+        conditions = action in {'condition-add', 'condition-remove'}
+        if conditions:
+            if any(not control(t, who) for t in selected):
+                raise maps.MapError('Token is read only.', 'forbidden')
+            if action == 'condition-add' and who.role != 'gm' and raw.get('visibility') != 'everyone':
+                raise maps.MapError('Only the GM can create hidden conditions.', 'forbidden')
+            if action == 'condition-remove' and who.role != 'gm' and any(
+                c['condition_id'] == raw.get('conditionId') and c['visible_to'] != 'everyone'
+                for t in selected for c in t.conditions
+            ):
+                raise maps.MapError('Condition not available.', 'forbidden')
+        if not rotate and not conditions:
             maps.manage(who)
         for t in selected:
             if action == "remove":
@@ -345,10 +356,14 @@ def command(campaign, user, action, raw, request_id):
             elif action == "condition-add":
                 if len(t.conditions) >= 100:
                     raise maps.MapError("Too many conditions.")
+                description = raw.get('description', '')
+                if not isinstance(description, str) or len(description) > 4000:
+                    raise maps.MapError('Invalid condition description.')
                 t.conditions.append(
                     {
                         "condition_id": uuid.uuid4().hex,
                         "label": maps.title(raw.get("label")),
+                        "description": description.strip(),
                         "kind": choice(
                             raw.get("kind"), {"neutral", "positive", "negative"}
                         ),

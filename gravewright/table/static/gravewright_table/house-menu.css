@@ -209,3 +209,15 @@
 /* A cor diz o que ler primeiro; o texto continua dizendo tudo sem ela. */
 .house-menu__findings li[data-status="warn"] { border-left-color: var(--accent, #c09a5a); }
 .house-menu__findings li[data-status="fail"] { border-left-color: #b4453c; }
+.house-menu__preference-group{display:grid;gap:10px;padding-top:16px;border-top:1px solid var(--border);font-size:13px}
+.house-menu__preference-group>header{display:grid;gap:5px}
+.house-menu__preference-group p{margin:0;color:var(--text-muted);font-size:12px;line-height:1.5}
+.house-menu__preference-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.house-menu__preference-row input[type=color]{width:48px;height:30px;padding:3px;border:1px solid var(--border);border-radius:4px;background:var(--surface-field,#151a20)}
+.house-menu__condition-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.house-menu__condition-options button{display:grid;gap:5px;align-content:start;text-align:left;padding:10px;border:1px solid var(--border);border-radius:4px;background:#ffffff05;color:var(--text);cursor:pointer}
+.house-menu__condition-options button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-glow)}
+.house-menu__condition-options small{font-size:11px;line-height:1.4;color:var(--text-muted)}
+.house-menu__preference-group>button{justify-self:start}
+.house-menu__preference-group[hidden]{display:none}
+.house-menu__preferences [role=alert]{color:var(--danger-text,#ffaaaa)}

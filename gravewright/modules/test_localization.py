@@ -105,7 +105,7 @@ class LocalizationTests(TestCase):
         self.assertFalse(self.client.get('/api/module-packages').json()[0]['globalEnabled'])
         response = self.activate()
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertContains(self.client.get('/inside?section=settings'), 'data-language-settings')
+        self.assertNotContains(self.client.get('/inside?section=settings'), 'data-language-settings')
         response = self.client.post('/inside/language', {'locale': 'pt-BR'})
         self.assertEqual(response.status_code, 302, response.content)
         self.user.name = 'Settings'; self.user.save()

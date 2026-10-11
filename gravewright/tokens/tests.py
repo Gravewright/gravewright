@@ -181,6 +181,34 @@ class TokenTests(TransactionTestCase):
         with self.assertRaises(MapError):
             services.state(self.campaign.pk, self.player.pk, self.map.pk)
 
+    def test_condition_controls_require_ownership_and_preserve_gm_conditions(self):
+        token = self.place()
+        payload = {'tokenIds': [str(token.pk)], 'label': 'Poisoned',
+                   'description': 'Disadvantage on checks.', 'kind': 'negative', 'visibility': 'everyone'}
+        self.cmd('condition-add', payload, user=self.player)
+        token.refresh_from_db()
+        self.assertEqual(token.conditions[0]['description'], payload['description'])
+        condition = token.conditions[0]['condition_id']
+        self.cmd('condition-remove', {'tokenIds': [str(token.pk)], 'conditionId': condition}, user=self.player)
+        token.refresh_from_db()
+        self.assertEqual(token.conditions, [])
+        for description in (None, 'x' * 4001):
+            with self.assertRaises(MapError):
+                self.cmd('condition-add', {**payload, 'description': description}, user=self.player)
+        with self.assertRaises(MapError):
+            self.cmd('condition-add', {**payload, 'visibility': 'gm'}, user=self.player)
+        self.cmd('condition-add', {**payload, 'visibility': 'gm'})
+        token.refresh_from_db()
+        secret = token.conditions[0]['condition_id']
+        with self.assertRaises(MapError):
+            self.cmd('condition-remove', {'tokenIds': [str(token.pk)], 'conditionId': secret}, user=self.player)
+        self.actor.permissions = {'default': 'read'}
+        self.actor.save()
+        with self.assertRaises(MapError):
+            self.cmd('condition-add', payload, user=self.player)
+        token.refresh_from_db()
+        self.assertEqual([c['condition_id'] for c in token.conditions], [secret])
+
     def test_idempotent_move_duplicate_and_remove_preserve_actor(self):
         t = self.place()
         rid = uuid.uuid4()

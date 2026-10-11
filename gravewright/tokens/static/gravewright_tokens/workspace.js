@@ -5,6 +5,7 @@ import { node, patchSVG } from "/static/gravewright_maps/layers.js";
 import { clone, icon, context } from "/static/gravewright_actors/workspace.js";
 import { openSheet } from "/static/gravewright_actors/sheet.js";
 import { openPermissions } from '/static/gravewright_table/permissions.js';
+import { quickControls, conditionLayout, conditionTooltip } from './quick-controls.js';
 export function createTokens(surface, board, map, gm, initial) {
   const campaign = document.getElementById("table-workspace").dataset.tableId,
     svg = node("svg", {
@@ -13,7 +14,28 @@ export function createTokens(surface, board, map, gm, initial) {
     }),
     status = document.createElement("p");
   status.className = "token-workspace__status";
-  surface.append(svg, status);
+  const conditionTip = document.createElement('div');
+  conditionTip.className = 'token-condition-tooltip';
+  conditionTip.id = 'token-condition-tooltip';
+  conditionTip.setAttribute('role', 'tooltip');
+  conditionTip.hidden = true;
+  surface.append(svg, status, conditionTip);
+  let activeBadge;
+  const hideConditionTip = () => { conditionTip.hidden = true; activeBadge = undefined; };
+  const showConditionTip = event => {
+    const badge = event.target.closest?.('[data-condition-label]');
+    if (!badge) return;
+    activeBadge = badge;
+    conditionTip.textContent = badge.dataset.conditionLabel;
+    conditionTip.hidden = false;
+    const rect = badge.getBoundingClientRect();
+    conditionTip.style.left = Math.max(8, Math.min(window.innerWidth - conditionTip.offsetWidth - 8, rect.left)) + 'px';
+    conditionTip.style.top = Math.max(42, rect.top - conditionTip.offsetHeight - 8) + 'px';
+  };
+  svg.addEventListener('pointerover', showConditionTip);
+  svg.addEventListener('focusin', showConditionTip);
+  svg.addEventListener('pointerout', hideConditionTip);
+  svg.addEventListener('focusout', hideConditionTip);
   let state = initial,
     rows = [],
     readRevision = 0,
@@ -98,6 +120,11 @@ export function createTokens(surface, board, map, gm, initial) {
       ...data,
       mapId: map.id,
     });
+  const quick = quickControls(surface, { campaign, gm, command, read, repaint,
+    openSheet: token => controller.call('openSheet', token) });
+  const conditionsChanged = () => repaint();
+  window.addEventListener('storage', conditionsChanged);
+  window.addEventListener('gravewright:condition-layout', conditionsChanged);
   controller = tokenController(svg, {
     props: props(),
     repaint,
@@ -225,6 +252,7 @@ export function createTokens(surface, board, map, gm, initial) {
                   }
                 : {
                     label: f.label.value,
+                  description: f.description.value,
                     kind: f.kind.value,
                     visibility: f.visibility.value,
                   };
@@ -307,6 +335,8 @@ export function createTokens(surface, board, map, gm, initial) {
           item("BookOpenText", "Open character sheet", () =>
             controller.call("openSheet", t),
           );
+        if (v.selection.length === 1 && t.canControl)
+          item('Gear', document.documentElement.lang === 'pt-BR' ? 'Controles rápidos' : document.documentElement.lang === 'es' ? 'Controles rápidos' : 'Quick controls', () => quick.open(t.id));
         if (gm) {
           if (v.selection.length === 1)
             item('UsersThree', 'Permissions', () => openPermissions('tokens', t.id));
@@ -379,6 +409,10 @@ export function createTokens(surface, board, map, gm, initial) {
       view = p.viewport,
       scale = view.scale;
     lastViewport = view;
+    quick.update(v.displayed, v.selected, v.interactive && !v.route.length && !selectionPreview, token => ({
+      x: view.x + (token.gridX + token.cells) * g.cell * scale,
+      y: view.y + token.gridY * g.cell * scale,
+    }));
     svg.classList.toggle("token-workspace--pass", !v.interactive);
     svg.classList.toggle("token-workspace--routing", !!v.route.length);
     const group = node("g", {
@@ -412,6 +446,23 @@ export function createTokens(surface, board, map, gm, initial) {
         }
       };
       group.append(r);
+      if (conditionLayout() === 'classic') {
+        const conditions = t.conditions || [], size = t.cells * g.cell;
+        const badgeSize = Math.max(13, Math.min(21, size / 3));
+        const columns = Math.max(1, Math.floor(size / (badgeSize + 2)));
+        const target = (label, x, y, width, height) => {
+          const hit = node('rect', { x, y, width, height, fill: 'transparent',
+            tabindex: 0, role: 'img', 'aria-label': label,
+            'aria-describedby': conditionTip.id, 'data-condition-label': label });
+          group.append(hit);
+        };
+        conditions.slice(0, 8).forEach((condition, index) => target(conditionTooltip(condition),
+          t.gridX * g.cell + (index % columns) * (badgeSize + 2),
+          t.gridY * g.cell - badgeSize - 3 - Math.floor(index / columns) * (badgeSize + 2),
+          badgeSize, badgeSize));
+        if (conditions.length > 8) target(conditions.slice(8).map(conditionTooltip).join('\n\n'),
+          t.gridX * g.cell + size + 3, t.gridY * g.cell - 13, 32, 16);
+      }
     }
     for (const t of v.destinations)
       group.append(
@@ -584,6 +635,8 @@ export function createTokens(surface, board, map, gm, initial) {
     const fragment = document.createDocumentFragment();
     fragment.append(group);
     patchSVG(svg, fragment);
+    if (activeBadge && (!activeBadge.isConnected || !activeBadge.hasAttribute('data-condition-label'))) hideConditionTip();
+    else if (activeBadge) conditionTip.textContent = activeBadge.dataset.conditionLabel;
     status.hidden = !(v.error || v.busy || v.route.length);
     status.setAttribute("role", v.error ? "alert" : "status");
     status.textContent =
@@ -613,7 +666,7 @@ export function createTokens(surface, board, map, gm, initial) {
       selected: v.selected.includes(t.id),
       hovered: hover === t.id,
       bars: t.bars,
-      conditions: t.conditions,
+      conditions: conditionLayout() === 'classic' ? t.conditions : [],
     }));
     const preview =
       gm &&
@@ -659,8 +712,14 @@ export function createTokens(surface, board, map, gm, initial) {
       controller.update(props());
     },
     viewport = () => {
+      hideConditionTip();
       const previous = lastViewport, next = props().viewport;
       lastViewport = next;
+      const g = grid(), v = controller.view;
+      quick.update(v.displayed, v.selected, v.interactive && !v.route.length && !selectionPreview, token => ({
+        x: next.x + (token.gridX + token.cells) * g.cell * next.scale,
+        y: next.y + token.gridY * g.cell * next.scale,
+      }));
       controller.update({ viewport: next }, false);
       // Panning only translates the existing world-coordinate hit targets.
       if (previous?.scale === next.scale && svg.firstElementChild)
@@ -761,6 +820,9 @@ export function createTokens(surface, board, map, gm, initial) {
     destroy() {
       if (closed) return;
       closed = true;
+      quick.destroy();
+      window.removeEventListener('storage', conditionsChanged);
+      window.removeEventListener('gravewright:condition-layout', conditionsChanged);
       window.removeEventListener('gravewright:mixed-selection',mixedSelection);
       window.removeEventListener('gravewright:selection-preview',mixedPreview);
       stopForeign();
@@ -780,6 +842,7 @@ export function createTokens(surface, board, map, gm, initial) {
       surface.removeEventListener("dragover", dragover);
       surface.removeEventListener("drop", drop);
       svg.remove();
+      conditionTip.remove();
       status.remove();
       editor?.remove();
       confirmation?.remove();

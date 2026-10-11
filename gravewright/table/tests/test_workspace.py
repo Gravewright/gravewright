@@ -6,6 +6,19 @@ from gravewright.campaigns.models import Campaign, Membership
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class WorkspaceTests(TestCase):
+    def test_game_preferences_live_in_the_table_instead_of_account_settings(self):
+        self.client.force_login(self.owner)
+        page = self.client.get(self.path)
+        for marker in ('data-table-language', 'data-table-ping', 'data-table-conditions', 'data-table-marketplace'):
+            self.assertContains(page, marker)
+        account = self.client.get('/inside?section=settings')
+        self.assertContains(account, 'account-settings__identity')
+        for marker in ('data-language-settings', 'class="ping-preferences', 'class="condition-preferences', 'data-default-marketplace'):
+            self.assertNotContains(account, marker)
+        self.client.force_login(self.player)
+        Membership.objects.create(campaign=self.campaign, user=self.player)
+        self.assertNotContains(self.client.get(self.path), 'data-table-marketplace')
+
     def test_language_change_returns_to_table_and_rejects_external_redirects(self):
         from gravewright.accounts.models import UserPreference
         self.client.force_login(self.owner)

@@ -307,7 +307,7 @@ class MarketplaceTests(TestCase):
             self.assertEqual(response.status_code, 200, response.content)
             self.assertTrue(response.json()["configured"])
             self.assertTrue(response.json()["default"])
-            self.assertContains(self.client.get("/inside?section=settings"), "data-default-marketplace")
+            self.assertNotContains(self.client.get("/inside?section=settings"), "data-default-marketplace")
             self.assertTrue((data / "marketplace/trusted-keys.json").is_file())
             configured = (project / ".env").read_text()
             self.assertEqual((data / '.env').read_text(), '# Legacy configuration must stay untouched\n')
