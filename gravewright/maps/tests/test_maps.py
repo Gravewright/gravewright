@@ -90,6 +90,27 @@ class MapTests(TransactionTestCase):
             self.client.get(f"/api/maps/{m['id']}/manifest").status_code, 404
         )
 
+    def test_image_resize_is_persisted_in_scene_state(self):
+        from gravewright.maps.models import MapAsset, SceneObject
+
+        scene = Scene.objects.create(campaign=self.campaign, name='Images', width=1024, height=512)
+        asset = MapAsset.objects.create(campaign=self.campaign, name='Image', width=400, height=200,
+                                        file='maps/assets/image.png')
+        def image_command(action, data):
+            return self.command('objects', {'mapId': str(scene.pk), 'area': 'images',
+                                            'action': action, 'data': data})
+        image_command('create', {'asset_id': str(asset.pk), 'x': 100, 'y': 200, 'scale': 1})
+        placement = SceneObject.objects.get(scene=scene, kind='images')
+        image_command('update', {'placement_id': str(placement.pk), 'x': 200, 'y': 250,
+                                 'scale': 1.5, 'expected_version': placement.version})
+        placement.refresh_from_db()
+        self.assertEqual(placement.data['scale'], 1.5)
+        self.command('navigate', {'mapId': str(scene.pk)})
+        navigation = services.state(self.campaign.pk, self.gm.pk)
+        state = services.layer_state(self.campaign.pk, self.gm.pk, navigation['navigatingMapId'])
+        image = next(row for row in state['images'] if row['id'] == str(placement.pk))
+        self.assertEqual((image['x'], image['y'], image['scale']), (200, 250, 1.5))
+
     def test_upload_limits_reject_before_decode_or_file_publication(self):
         from unittest.mock import patch
         self.client.force_login(self.gm)

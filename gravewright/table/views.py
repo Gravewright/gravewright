@@ -61,7 +61,20 @@ def table(request, campaign_id, detached_chat=False):
     }
     from gravewright.web.localization import template_context
     context.update(template_context(request))
-    return render(request, "gravewright_table/page.html", context, using="jinja2")
+    if not detached_chat:
+        from gravewright.actors import services as actors
+        from gravewright.journals import services as journals
+        from gravewright.maps import services as maps
+        from .domain import state
+        context['initial_content'] = {
+            'maps': maps.state(campaign.pk, request.user.pk),
+            'actors': actors.state(campaign.pk, request.user.pk),
+            'journals': journals.state(campaign.pk, request.user.pk),
+            'items': state(campaign.pk, request.user.pk, 'items'),
+        }
+    response = render(request, "gravewright_table/page.html", context, using="jinja2")
+    response['Cache-Control'] = 'private, no-store'
+    return response
 
 
 @require_GET

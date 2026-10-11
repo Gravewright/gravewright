@@ -1,5 +1,6 @@
 
 .directory-context-menu { z-index: 1500; }
+.image-workspace__resize{pointer-events:all;touch-action:none;cursor:nwse-resize;fill:#e9c46a;stroke:#171d23}.image-workspace__resize:focus-visible{outline:2px solid var(--accent)}
 .directory-context-menu button:disabled { cursor: not-allowed; opacity: .4; }
 
 

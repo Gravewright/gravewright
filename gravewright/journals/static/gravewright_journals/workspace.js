@@ -2,6 +2,9 @@ import { mergePatch, getPath } from '/static/gravewright_web/vendor/datastar-1.0
 import { richText, emptyDoc } from './editor.js';
 import { pdfView } from './pdf.js';
 import { renderType, typeLabels, typeIcons } from './types.js';
+import { openPresentation, presentationLabel } from './presentation.js';
+import { openPermissions } from '/static/gravewright_table/permissions.js';
+import { initialContent, restoreContent } from '/static/gravewright_table/content-state.js';
 const panel = document.getElementById('journals-panel'), tableId = document.getElementById('table-workspace').dataset.tableId;
 const clone = name => document.getElementById('journal-' + name).content.firstElementChild.cloneNode(true);
 const icons = document.getElementById('journal-icons').content;
@@ -149,7 +152,7 @@ function tree() {
             if (state.is_gm) {
                 toggle.draggable = true;
                 toggle.addEventListener('dragstart', e => e.dataTransfer.setData('application/x-gravewright-journal', JSON.stringify({ kind: 'folder', id: f.id })));
-                toggle.addEventListener('contextmenu', e => context(e, [['Create journal', () => create(f.id)], ['Create subfolder', () => folderForm(f.id)], ['Edit folder', () => folderForm('', f)], ['Delete folder', () => confirm('Delete this folder? Journals and subfolders will move to the parent folder.', () => commands('folder-delete', { folder_id: f.id }))]], 'gw-folder-menu'));
+                toggle.addEventListener('contextmenu', e => context(e, [['Create journal', () => create(f.id)], ['Create subfolder', () => folderForm(f.id)], ['Edit folder', () => folderForm('', f)], ['Permissions', () => openPermissions('journal-folders', f.id)], ['Delete folder', () => confirm('Delete this folder? Journals and subfolders will move to the parent folder.', () => commands('folder-delete', { folder_id: f.id }))]], 'gw-folder-menu'));
             }
             draw(el.querySelector('.directory-tree'), f.id);
             host.append(el);
@@ -161,7 +164,7 @@ function tree() {
             el.querySelector(':scope > svg').replaceWith(icon(typeIcons[j.type]));
             show(el.querySelector('.directory-entry__grip'), state.is_gm);
             el.addEventListener('click', () => open(j.id));
-            el.addEventListener('contextmenu', e => context(e, [['Open document', () => open(j.id)], ...(state.is_gm ? [['Permissions', () => { open(j.id); windows.get(j.id)?.permissions(); }], ['Delete journal', () => confirm('Delete this journal?', () => commands('delete', { journal_id: j.id }))]] : [])], 'gw-folder-menu'));
+            el.addEventListener('contextmenu', e => context(e, [['Open document', () => open(j.id)], ...(state.is_gm ? [[presentationLabel(), () => windows.has(j.id) ? windows.get(j.id).present() : present(j)], ['Permissions', () => windows.has(j.id) ? windows.get(j.id).permissions() : openPermissions('journals', j.id)], ['Delete journal', () => confirm('Delete this journal?', () => commands('delete', { journal_id: j.id }))]] : [])], 'gw-folder-menu'));
             if (state.is_gm) {
                 el.draggable = true;
                 el.addEventListener('dragstart', e => e.dataTransfer.setData('application/x-gravewright-journal', JSON.stringify({ kind: 'journal', id: j.id })));
@@ -236,11 +239,15 @@ function open(id) {
         return;
     }
     const journal = state.journals.find(j => j.id === id);
+    if (journal?.can_open === false) return;
     if (!journal) {
         waitingOpen.add(id);
         return;
     }
     windows.set(id, new JournalWindow(journal));
+}
+function present(journal, page) {
+    return openPresentation(journal, {members: state.members, targeted: state.targeted_handouts_enabled, page, send: payload => commands('present', payload)});
 }
 async function upload(journalId, file) {
     const data = new FormData();
@@ -292,7 +299,11 @@ class JournalWindow {
     error(text) { this.$('.journal-window__error span').textContent = text; show(this.$('.journal-window__error'), true); this.$('.journal-window__save').textContent = text; }
     update(view) {
         this.remote = view;
-        if (!view.can_edit && this.draft.can_edit) {
+        const pagesRestricted = !this.isGM && (this.draft.sections || []).some(old => {
+            const page = (view.sections || []).find(p => p.id === old.id);
+            return !page || old.can_edit && !page.can_edit;
+        });
+        if (pagesRestricted || !view.can_edit && this.draft.can_edit) {
             this.dirty = false;
             clearTimeout(this.timer);
             this.draft = structuredClone(view);
@@ -361,8 +372,6 @@ class JournalWindow {
         else {
             renderType(this, {...state,is_gm:this.isGM}, upload, open);
         }
-        if (!this.$('.journal-window__permissions').hidden)
-            this.renderPermissions();
     }
     renderIndex() {
         const nav = this.$('.diary-workspace__index');
@@ -418,10 +427,10 @@ class JournalWindow {
                     el.setAttribute('aria-current', 'page');
                 el.addEventListener('click', () => { this.selected = p.id; this.renderIndex(); this.renderPage(); });
                 el.addEventListener('contextmenu', e => {
-                    if (this.editing)
+                    if (this.isGM || this.editing && p.can_edit !== false)
                         this.pageMenu(e, p);
                 });
-                el.draggable = this.editing;
+                el.draggable = this.editing && p.can_edit !== false;
                 el.dataset.pageId = p.id;
                 el.addEventListener('dragstart', e => e.dataTransfer.setData('application/x-gravewright-page', p.id));
                 list.append(el);
@@ -446,7 +455,7 @@ class JournalWindow {
         this.$('.diary-workspace__identity small').textContent = p?.category || 'Journal';
         this.$('.diary-workspace__identity strong').textContent = this.selected === 'gm' ? 'GM area' : p?.title || this.draft.title;
         this.$('[data-page-count]').textContent = p ? `${this.pages.indexOf(p) + 1} / ${this.pages.length}` : '';
-        const editor = (value, label, save) => { const el = document.createElement('div'); host.append(el); const instance = richText(el, value, !this.editing, file => upload(this.draft.id, file), label, next => { save(next); this.touch(); }); this.cleanups.push(() => instance.destroy()); };
+        const editor = (value, label, save) => { const el = document.createElement('div'); host.append(el); const instance = richText(el, value, !this.editing || p?.can_edit === false, file => upload(this.draft.id, file), label, next => { save(next); this.touch(); }); this.cleanups.push(() => instance.destroy()); };
         if (this.selected === 'gm' && this.isGM) {
             const gm = this.draft.diary?.gm;
             if (!gm)
@@ -485,7 +494,7 @@ class JournalWindow {
             editor(p.content, 'Page content', value => p.content = value);
             return;
         }
-        if (this.editing) {
+        if (this.editing && p.can_edit !== false) {
             const el = clone('upload');
             el.querySelector('span').textContent = p.src ? 'Replace file' : 'Upload file';
             const input = el.querySelector('input');
@@ -544,7 +553,7 @@ class JournalWindow {
         this.renderPage();
     }
     pageMenu(e, p) {
-        context(e, [['Rename page', () => prompt('Name', p.title, value => { p.title = value; this.touch(); this.renderIndex(); this.renderPage(); })], ['Move to chapter', () => prompt('Chapter', p.category, value => { p.category = value; this.touch(); this.renderIndex(); this.renderPage(); })], ...(this.isGM ? [[p.audience === 'gm' ? 'Make public' : 'GM only', () => { p.audience = p.audience === 'gm' ? 'public' : 'gm'; this.touch(); this.renderIndex(); }]] : []), ['Remove page', () => {
+        context(e, [...(this.isGM ? [...(p.audience !== 'gm' ? [[presentationLabel(), () => this.present(p)]] : []), ['Permissions', () => this.permissions(p)]] : []), ['Rename page', () => prompt('Name', p.title, value => { p.title = value; this.touch(); this.renderIndex(); this.renderPage(); })], ['Move to chapter', () => prompt('Chapter', p.category, value => { p.category = value; this.touch(); this.renderIndex(); this.renderPage(); })], ...(this.isGM ? [[p.audience === 'gm' ? 'Make public' : 'GM only', () => { p.audience = p.audience === 'gm' ? 'public' : 'gm'; this.touch(); this.renderIndex(); }]] : []), ['Remove page', () => {
                     this.draft.editable_sections = this.pages.filter(row => row.id !== p.id);
                     if (this.selected === p.id)
                         this.selected = this.pages[0]?.id || 'opening';
@@ -553,38 +562,17 @@ class JournalWindow {
                     this.renderPage();
                 }]]);
     }
-    permissions() {
-        const el = this.$('.journal-window__permissions');
-        show(el, el.hidden);
-        if (!el.hidden)
-            this.renderPermissions();
+    async present(page) {
+        if (!await this.flush()) return;
+        return present(this.draft, page);
     }
-    renderPermissions() {
-        this.$('[name=visibility]').value = this.draft.visibility;
-        const host = this.$('[data-member-permissions]');
-        host.replaceChildren();
-        for (const member of state.members.filter(m => m.role !== 'gm')) {
-            const el = clone('permission');
-            el.querySelector('span').textContent = member.name;
-            el.querySelector('select').value = this.draft.permissions?.[member.id] || 'none';
-            el.querySelector('select').addEventListener('change', async (e) => {
-                if (!await this.flush())
-                    return;
-                try {
-                    const result = await commands('access', { journal_id: this.draft.id, target_user_id: member.id, access_level: e.target.value });
-                    this.draft.version = result.version;
-                }
-                catch (error) {
-                    this.error(error.message);
-                }
-            });
-            host.append(el);
-        }
+    async permissions(page) {
+        if (!await this.flush()) return;
+        return openPermissions(page ? 'pages' : 'journals', page ? `${this.draft.id}:${page.id}` : this.draft.id);
     }
     bind() {
         this.$('.journal-window__title').addEventListener('input', e => { this.draft.title = e.target.value; this.touch(); });
         this.$('[data-journal-search]').addEventListener('input', () => this.renderIndex());
-        this.$('[name=visibility]').addEventListener('change', e => { this.editing = true; this.draft.visibility = e.target.value; this.touch(); this.render(); });
         this.$('.diary-workspace__composer').addEventListener('submit', e => { e.preventDefault(); const input = e.target.querySelector('input'); this.add('text', input.value.trim()); input.value = ''; show(e.target, false); });
         this.$('.diary-workspace__index').addEventListener('dragover', e => {
             if (this.editing)
@@ -607,18 +595,9 @@ class JournalWindow {
             this.touch();
             this.renderIndex();
         });
-        const presentation = this.$('[data-presentation]');
-        for (const member of state.targeted_handouts_enabled ? state.members : []) {
-            const option = document.createElement('option'); option.value = member.id; option.textContent = member.name;
-            presentation.querySelector('select').append(option);
-        }
-        presentation.onsubmit = async e => {
-            e.preventDefault(); if (!await this.flush()) return;
-            try { await commands('present', {journal_id:this.draft.id, target:presentation.querySelector('select').value}); presentation.hidden = true; }
-            catch(error) {this.error('Could not present the journal.');}
-        };
+        this.$('[data-action=present]').title = presentationLabel();
         this.el.addEventListener('click', async (e) => {
-            if (e.target.closest('[data-action=present]')) { presentation.hidden = !presentation.hidden; return; }
+            if (e.target.closest('[data-action=present]')) { await this.present(); return; }
 
             const b = e.target.closest('button');
             if (!b)
@@ -690,22 +669,27 @@ class JournalWindow {
 }
 window.gravewrightJournals = { toggle() { mergePatch({ _journalsOpen: !getPath('_journalsOpen') }); requestAnimationFrame(() => panel.dispatchEvent(new Event('focusin', { bubbles: true }))); window.gravewrightRealtime.journalsSubscribe(); }, open };
 window.addEventListener('gravewright:connected', () => window.gravewrightRealtime.journalsSubscribe());
-window.addEventListener('gravewright:journals', event => {
-    state = event.detail;
-    tree();
-    for (const [id, win] of windows) {
-        const view = state.journals.find(j => j.id === id);
-        if (view)
-            win.update(view);
-        else
-            void win.close(true);
-    }
-    for (const id of waitingOpen)
-        if (state.journals.some(j => j.id === id)) {
-            waitingOpen.delete(id);
-            open(id);
+function receiveState(next) {
+    restoreContent('journals', () => {
+        state = next;
+        tree();
+        for (const [id, win] of windows) {
+            const view = state.journals.find(j => j.id === id);
+            if (view && view.can_open !== false)
+                win.update(view);
+            else
+                void win.close(true);
         }
-});
+        for (const id of waitingOpen)
+            if (state.journals.some(j => j.id === id)) {
+                waitingOpen.delete(id);
+                open(id);
+            }
+    });
+}
+window.addEventListener('gravewright:journals', event => receiveState(event.detail));
+const initial = initialContent('journals');
+if(initial)receiveState(initial);
 window.addEventListener('gravewright:access-revoked', () => {
     state = { journals: [], folders: [], members: [], is_gm: false };
     tree();

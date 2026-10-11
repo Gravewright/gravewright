@@ -9,17 +9,19 @@ from .models import Pack,Entry
 
 
 def pack(value,who,edit=False):
+    from gravewright.table.ownership import resource_allows
     row=Pack.objects.filter(pk=identifier(value),campaign_id=who.campaign_id).first()
-    if not row or (who.role!='gm' and (edit or not row.shared)):raise MapError('Compendium not found.', 'not_found')
+    if not row or (who.role!='gm' and (edit or not resource_allows(who,'compendiums',row,default='read' if row.shared else 'none'))):raise MapError('Compendium not found.', 'not_found')
     if edit and row.locked:raise MapError('Unlock the compendium before editing.')
     return row
 
 
 def state(who,scene_id=None):
     from .catalog import summaries
+    from gravewright.table.ownership import resource_allows
     rows=Pack.objects.filter(campaign_id=who.campaign_id).prefetch_related('entries').order_by('name')
     return {'packs':[dict(id=str(p.pk),name=p.name,shared=p.shared,locked=p.locked,version=p.version,systemId=p.system_id,
-        entries=[dict(id=str(e.pk),name=e.name,kind=e.kind,version=e.version) for e in p.entries.all()]) for p in rows if who.role=='gm' or p.shared]+summaries(who),'isGM':who.role=='gm'}
+        entries=[dict(id=str(e.pk),name=e.name,kind=e.kind,version=e.version) for e in p.entries.all()]) for p in rows if resource_allows(who,'compendiums',p,default='read' if p.shared else 'none')]+summaries(who),'isGM':who.role=='gm'}
 
 
 def command(who,action,p):

@@ -15,8 +15,8 @@ def types(system_id, *, campaign_id=None):
 
 
 def access(row, who, edit=False):
-    level = row.permissions.get(str(who.user_id),'none')
-    return who.role == 'gm' or level == 'owner' or (not edit and level == 'read')
+    from gravewright.table.ownership import allows
+    return allows(row.permissions, who, edit=edit)
 
 
 def get(value, who, edit=False):
@@ -28,12 +28,13 @@ def get(value, who, edit=False):
 
 def project(row, who):
     return dict(id=str(row.pk),name=row.name,type=row.type,systemId=row.system_id,folderId=str(row.folder_id) if row.folder_id else None,
-                data=deepcopy(row.data),version=row.version,canEdit=access(row,who,True),
+                data=deepcopy(row.data) if access(row,who) else {},version=row.version,canEdit=access(row,who,True),canOpen=access(row,who),
                 permissions=row.permissions if who.role=='gm' else {})
 
 
 def state(who, scene_id=None):
-    rows=[project(row,who) for row in Item.objects.filter(campaign_id=who.campaign_id).order_by('name') if access(row,who)]
+    from gravewright.table.ownership import allows
+    rows=[project(row,who) for row in Item.objects.filter(campaign_id=who.campaign_id).order_by('name') if allows(row.permissions,who,listing=True)]
     used={row['folderId'] for row in rows}
     folders=list(Folder.objects.filter(campaign_id=who.campaign_id))
     # Include ancestors of visible items, without leaking unrelated private folders.

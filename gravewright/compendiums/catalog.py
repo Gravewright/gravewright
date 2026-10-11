@@ -24,10 +24,14 @@ def available(who):
         for pack in collection.get('packs',[]):
             if not isinstance(pack,dict) or pack.get('type') not in KINDS or not isinstance(pack.get('entries'),list):
                 continue
-            # Native collections are private unless the host explicitly grants reading.
-            if who.role != 'gm' and not ContentAccess.objects.filter(campaign_id=who.campaign_id,collection=index.parent.name,pack=str(pack.get('id')),role=who.role,level__in=['read','owner']).exists():
-                continue
             rid='native:'+str(uuid.uuid5(uuid.NAMESPACE_URL, index.parent.name+'/'+str(pack.get('id'))))
+            # New role defaults preserve legacy grants until explicitly configured.
+            if who.role != 'gm':
+                from gravewright.table.ownership import policy
+                explicit = policy(who, 'compendiums', rid)
+                allowed = explicit.get(who.role, explicit.get('default', 'none')) == 'read' if explicit is not None else ContentAccess.objects.filter(campaign_id=who.campaign_id,collection=index.parent.name,pack=str(pack.get('id')),role=who.role,level__in=['read','owner']).exists()
+                if not allowed:
+                    continue
             yield rid,index.parent,collection,pack
 
 
@@ -49,6 +53,12 @@ def command(who, action, payload):
         level=payload.get('level')
         if level not in ('none','read','owner'):raise MapError('Invalid permissions.')
         ContentAccess.objects.update_or_create(campaign_id=who.campaign_id,collection=base.name,pack=str(pack.get('id')),role='player',defaults={'level':level})
+        from gravewright.table.models import DocumentAccess
+        explicit=DocumentAccess.objects.filter(campaign_id=who.campaign_id,kind='compendiums',resource_id=payload['packId']).first()
+        if explicit:
+            explicit.grants['player']='read' if level in {'read','owner'} else 'none'
+            explicit.version+=1;explicit.save(update_fields=['grants','version'])
+            who._ownership_cache={}
         return {}
     entry=next((e for e in pack.get('entries',[]) if isinstance(e,dict) and str(e.get('id'))==str(payload.get('id'))),None)
     if entry is None:

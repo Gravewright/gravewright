@@ -511,6 +511,8 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
     async def room_handout(self, event):
         if not await self.authorized(): return
         value = event['payload']
+        if value.get('issuer') == str(self.user_id): return
+        if value.get('targets') is not None and str(self.user_id) not in value['targets']: return
         if value['target'] and value['target'] != str(self.user_id): return
         from gravewright.journals.presentations import ticket, resolve
         issued = ticket(value, self.user_id)

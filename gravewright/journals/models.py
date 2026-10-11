@@ -38,7 +38,7 @@ class Access(models.Model):
     """Journal grant, combined with visibility and GM status by services."""
     journal = models.ForeignKey(Journal, related_name='access', on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    level = models.CharField(max_length=8, choices=[('none','None'),('read','Read'),('owner','Owner')])
+    level = models.CharField(max_length=8, choices=[('none','None'),('limited','Limited'),('read','Read'),('owner','Owner')])
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=['journal','user'], name='journal_unique_access')]

@@ -100,7 +100,7 @@ def command(who,action,p):
                 actor=actor_for(entry)
                 if not actor:continue
                 player_ids=set(str(i) for i in Membership.objects.filter(campaign_id=who.campaign_id,role='player').values_list('user_id',flat=True))
-                if any(actor.permissions.get(i)=='owner' for i in player_ids):continue
+                if any(actor.permissions.get(i, actor.permissions.get('default', 'none'))=='owner' for i in player_ids):continue
             result=evaluate(row.config['formula'],1)
             entry['initiative']=number(result['value']['value'],-1e6,1e6)
         row.combatants.sort(key=lambda c:c['initiative'] if c['initiative'] is not None else -float('inf'),reverse=True);row.turn=0

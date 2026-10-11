@@ -3,6 +3,7 @@ import { BrowserBridge } from "./browser-bridge.js";
 import { ModuleRuntime } from "./module-runtime.js";
 import { DOMAIN_NAMES } from "./generated.js";
 import { attachSurface } from "./frontend-api.js";
+import { contentReady, afterContentReady } from '/static/gravewright_table/content-state.js';
 // Table integration: native DOM surfaces are attached to both host-page UI
 // registrations and signed-package mounts, each with its own lifetime ownership.
 const table = document.querySelector("#table-workspace");
@@ -207,6 +208,7 @@ if (table) {
   };
   const runtime = new ModuleRuntime(bridge, report);
   async function refresh(force = false) {
+    if (!contentReady()) return;
     if (scope.signal.aborted) return;
     if (fetching) {
       again = true;
@@ -281,5 +283,5 @@ if (table) {
     for (const release of surfaces.values()) release();
     void runtime.close();
   }, { once: true });
-  void refresh();
+  afterContentReady(() => void refresh());
 }

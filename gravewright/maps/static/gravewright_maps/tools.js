@@ -1593,9 +1593,27 @@ var MeasurementWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "re
   return { gwText: text, PhRuler, PhTrash: PhTrash2, PhX: PhX2, PhPlus, dragMeasure, measurePath, summary, unitsPerPixel, root, rows, draft, selected, kind, color, snap, angle, confirmClear, lengthValue, widthValue, direction, factor, current, visible, formats: formats2, drag, point, release, cancel, load, down, move, up, choose, apply, wheel, remove, key, emit: options.emit };
 });
 
+// gravewright/maps/frontend/features/images/model/image-transform.js
+function resizeImage(image, corner, start, point) {
+  const angle = image.rotation * Math.PI / 180;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const dx = point.x - start.x, dy = point.y - start.y;
+  const localX = dx * cos + dy * sin, localY = -dx * sin + dy * cos;
+  const width = image.natural_width, height = image.natural_height;
+  const scale = Math.max(1e-3, Math.min(100, image.scale + (localX * corner.x * width + localY * corner.y * height) / (width * width + height * height)));
+  const halfX = corner.x * width * (scale - image.scale) / 2;
+  const halfY = corner.y * height * (scale - image.scale) / 2;
+  return {
+    ...image,
+    scale,
+    x: image.x + halfX * cos - halfY * sin,
+    y: image.y + halfX * sin + halfY * cos
+  };
+}
+
 // gravewright/maps/frontend/features/images/ui/ImageWorkspace.native.js
 var PhTrash3 = "PhTrash";
-var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "root", "class": "image-workspace" }, "bind": {}, "events": [{ "event": "pointermove", "code": "move;", "mods": [] }, { "event": "pointerup", "code": "up;", "mods": [] }, { "event": "pointercancel", "code": "cancel;", "mods": [] }], "children": [{ "tag": "g", "attrs": {}, "bind": { "transform": "(`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`)" }, "events": [], "children": [{ "tag": "g", "attrs": {}, "bind": { "key": "(image.id)", "transform": "(`translate(${image.x} ${image.y}) rotate(${image.rotation})`)" }, "events": [], "children": [{ "tag": "rect", "attrs": { "class": "image-workspace__image", "fill": "transparent", "role": "button" }, "bind": { "class": "({ 'image-workspace__image--active': tool === 'select' })", "x": "(-image.natural_width * image.scale / 2)", "y": "(-image.natural_height * image.scale / 2)", "width": "(image.natural_width * image.scale)", "height": "(image.natural_height * image.scale)", "stroke": "(selected === image.id ? '#e9c46a' : 'none')", "stroke-width": "(2 / viewport.scale)", "tabindex": "(tool === 'select' ? 0 : -1)", "aria-label": "(gwText('Scene image'))", "aria-pressed": "(selected === image.id)" }, "events": [{ "event": "pointerdown", "code": "down($event, image);", "mods": [] }, { "event": "contextmenu", "code": "menu($event, image);", "mods": [] }, { "event": "keydown", "code": "selected = image.id;", "mods": ["enter", "stop"] }], "children": [] }], "each": { "names": ["image"], "value": "(images)" } }] }] }, { "tag": "p", "attrs": { "class": "image-workspace__status" }, "bind": { "role": "(error ? 'alert' : 'status')" }, "events": [], "children": [{ "value": "(error || gwText('Saving image\u2026'))" }], "when": "(error || busy)" }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "DirectoryContextMenu", "attrs": {}, "bind": { "x": "(context.x)", "y": "(context.y)", "label": "(gwText('Image actions'))" }, "events": [{ "event": "close", "code": "context = undefined;", "mods": [] }], "children": [{ "tag": "li", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "class": "is-danger" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove from scene'))" }] }] }], "when": "(context)" }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
+var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "root", "class": "image-workspace" }, "bind": {}, "events": [{ "event": "pointermove", "code": "move;", "mods": [] }, { "event": "pointerup", "code": "up;", "mods": [] }, { "event": "pointercancel", "code": "cancel;", "mods": [] }], "children": [{ "tag": "g", "attrs": {}, "bind": { "transform": "(`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`)" }, "events": [], "children": [{ "tag": "g", "attrs": {}, "bind": { "key": "(image.id)", "transform": "(`translate(${image.x} ${image.y}) rotate(${image.rotation})`)" }, "events": [], "children": [{ "tag": "rect", "attrs": { "class": "image-workspace__image", "fill": "transparent", "role": "button" }, "bind": { "class": "({ 'image-workspace__image--active': tool === 'select' })", "x": "(-image.natural_width * image.scale / 2)", "y": "(-image.natural_height * image.scale / 2)", "width": "(image.natural_width * image.scale)", "height": "(image.natural_height * image.scale)", "stroke": "(selected === image.id ? '#e9c46a' : 'none')", "stroke-width": "(2 / viewport.scale)", "tabindex": "(tool === 'select' ? 0 : -1)", "aria-label": "(gwText('Scene image'))", "aria-pressed": "(selected === image.id)" }, "events": [{ "event": "pointerdown", "code": "down($event, image);", "mods": [] }, { "event": "contextmenu", "code": "menu($event, image);", "mods": [] }, { "event": "keydown", "code": "selected = image.id;", "mods": ["enter", "stop"] }], "children": [] }, { "tag": "rect", "attrs": { "class": "image-workspace__resize", "role": "button", "tabindex": "0" }, "bind": { "key": "`handle-${corner.x}-${corner.y}`", "x": "corner.x * image.natural_width * image.scale / 2 - 6 / viewport.scale", "y": "corner.y * image.natural_height * image.scale / 2 - 6 / viewport.scale", "width": "12 / viewport.scale", "height": "12 / viewport.scale", "stroke-width": "1 / viewport.scale", "aria-label": "gwText('Drag to resize')" }, "events": [{ "event": "pointerdown", "code": "down($event, image, corner);", "mods": [] }, { "event": "keydown", "code": "resizeKey($event, image, corner);", "mods": [] }], "children": [{ "tag": "title", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "gwText('Drag to resize')" }] }], "each": { "names": ["corner"], "value": "corners" }, "when": "selected === image.id && tool === 'select'" }], "each": { "names": ["image"], "value": "(images)" } }] }] }, { "tag": "p", "attrs": { "class": "image-workspace__status" }, "bind": { "role": "(error ? 'alert' : 'status')" }, "events": [], "children": [{ "value": "(error || gwText('Saving image\u2026'))" }], "when": "(error || busy)" }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "DirectoryContextMenu", "attrs": {}, "bind": { "x": "(context.x)", "y": "(context.y)", "label": "(gwText('Image actions'))" }, "events": [{ "event": "close", "code": "context = undefined;", "mods": [] }], "children": [{ "tag": "li", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "class": "is-danger" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove from scene'))" }] }] }], "when": "(context)" }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const HttpClient2 = options.HttpClient;
   const BlockStateApi = class {
     command(_c, _b, a, b, p) {
@@ -1610,6 +1628,7 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
   const abort = new AbortController(), api = new BlockStateApi(new HttpClient2(void 0, () => abort.signal));
   const root = ref(), selected = ref(""), preview = ref(), busy = ref(false), error = ref(""), context = ref();
   const images = computed(() => [...props.images].sort((a, b) => a.z_index - b.z_index).map((image) => preview.value?.id === image.id ? preview.value : image));
+  const corners2 = [{ x: -1, y: -1 }, { x: 1, y: -1 }, { x: 1, y: 1 }, { x: -1, y: 1 }];
   let drag;
   function show(image) {
     preview.value = image;
@@ -1619,7 +1638,7 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
     const box = root.value.getBoundingClientRect();
     return { x: (e.clientX - box.left - props.viewport.x) / props.viewport.scale, y: (e.clientY - box.top - props.viewport.y) / props.viewport.scale };
   }
-  function down(e, image) {
+  function down(e, image, corner) {
     if (e.button !== 0 || busy.value || props.tool !== "select")
       return;
     e.preventDefault();
@@ -1628,7 +1647,7 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
     context.value = void 0;
     error.value = "";
     const p = point(e);
-    drag = { pointer: e.pointerId, ...p, image: { ...image } };
+    drag = { pointer: e.pointerId, ...p, corner, image: { ...image } };
     root.value?.setPointerCapture(e.pointerId);
   }
   function move(e) {
@@ -1636,7 +1655,7 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
       return;
     e.stopPropagation();
     const p = point(e);
-    show({ ...drag.image, x: drag.image.x + p.x - drag.x, y: drag.image.y + p.y - drag.y });
+    show(drag.corner ? resizeImage(drag.image, drag.corner, drag, p) : { ...drag.image, x: drag.image.x + p.x - drag.x, y: drag.image.y + p.y - drag.y });
   }
   function release() {
     if (drag && root.value?.hasPointerCapture(drag.pointer))
@@ -1655,13 +1674,13 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
     error.value = "";
     show(image);
     try {
-      await api.command(props.containerId, props.blockId, "images", "update", { placement_id: image.id, x: image.x, y: image.y, expected_version: image.version });
+      await api.command(props.containerId, props.blockId, "images", "update", { placement_id: image.id, x: image.x, y: image.y, scale: image.scale, expected_version: image.version });
       if (!abort.signal.aborted)
         emit("refresh");
     } catch {
       if (!abort.signal.aborted) {
         show();
-        error.value = text("Could not move the image. Refreshing the scene\u2026");
+        error.value = text("Could not save the change.");
         emit("refresh");
       }
     } finally {
@@ -1673,15 +1692,30 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
     if (!drag || drag.pointer !== e.pointerId)
       return;
     e.stopPropagation();
+    move(e);
     const original = drag.image;
+    const resizing = !!drag.corner;
     const image = preview.value;
     release();
-    if (!image || image.x === original.x && image.y === original.y) {
+    if (!image || image.x === original.x && image.y === original.y && image.scale === original.scale) {
       show();
       return;
     }
     const cell = props.cell;
-    void save({ ...image, x: props.grid && !e.altKey ? Math.round(image.x / cell) * cell : image.x, y: props.grid && !e.altKey ? Math.round(image.y / cell) * cell : image.y });
+    void save({ ...image, x: !resizing && props.grid && !e.altKey ? Math.round(image.x / cell) * cell : image.x, y: !resizing && props.grid && !e.altKey ? Math.round(image.y / cell) * cell : image.y });
+  }
+  function resizeKey(e, image, corner) {
+    if (busy.value || props.tool !== "select" || !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const factor = ["ArrowUp", "ArrowRight"].includes(e.key) ? 1.1 : 1 / 1.1;
+    const angle = image.rotation * Math.PI / 180;
+    const dx = corner.x * image.natural_width * image.scale * (factor - 1);
+    const dy = corner.y * image.natural_height * image.scale * (factor - 1);
+    void save(resizeImage(image, corner, { x: 0, y: 0 }, {
+      x: dx * Math.cos(angle) - dy * Math.sin(angle),
+      y: dx * Math.sin(angle) + dy * Math.cos(angle)
+    }));
   }
   async function remove() {
     if (!selected.value || busy.value)
@@ -1754,7 +1788,7 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
     window.removeEventListener("keydown", key);
     window.removeEventListener("blur", cancel);
   });
-  return { gwText: text, PhTrash: PhTrash3, BlockStateApi, HttpClient: HttpClient2, DirectoryContextMenu: DirectoryContextMenu_native_default, root, selected, preview, busy, error, context, images, drag, show, point, down, move, release, cancel, save, up, remove, menu, key, emit: options.emit };
+  return { gwText: text, PhTrash: PhTrash3, BlockStateApi, HttpClient: HttpClient2, DirectoryContextMenu: DirectoryContextMenu_native_default, root, selected, preview, busy, error, context, images, corners: corners2, drag, show, point, down, move, release, cancel, save, up, resizeKey, remove, menu, key, emit: options.emit };
 });
 
 // gravewright/maps/frontend/features/lighting/ui/LightPicker.native.js

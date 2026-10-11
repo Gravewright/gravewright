@@ -13,6 +13,10 @@ from .models import BoardEntry
 
 def via_board(journal, who):
     from .services import permissions
+    from gravewright.table.ownership import policy, allows
+    explicit = policy(who, 'journals', journal.pk)
+    if explicit is not None and not allows(explicit, who):
+        return False
     if journal.type != 'quest' or journal.data.get('status') not in shapes.PLAYER_VISIBLE_STATUSES:
         return False
     return any(permissions(link.board, who)[0] for link in journal.quest_links.select_related('board').filter(
@@ -27,6 +31,10 @@ def project(journal, who, clean):
     if journal.type == 'quest_board':
         entries = []
         for link in journal.board_links.select_related('quest').filter(quest__campaign_id=who.campaign_id, quest__type='quest').order_by('-pinned', 'sort_order', 'id'):
+            from gravewright.table.ownership import policy, allows
+            explicit = policy(who, 'journals', link.quest_id)
+            if explicit is not None and not allows(explicit, who):
+                continue
             card = shapes.build_quest_card(title=link.quest.title, data=link.quest.data)
             if not gm and card['status'] not in shapes.PLAYER_VISIBLE_STATUSES:
                 continue

@@ -118,7 +118,9 @@ def card_file(request,kind,object_id,face):
     if not request.user.is_authenticated:raise Http404
     try:
         if kind=='deck' and face=='back':
-            row=Deck.objects.get(pk=object_id);member(row.campaign_id,request.user.pk);file=row.back
+            row=Deck.objects.get(pk=object_id);who=member(row.campaign_id,request.user.pk);file=row.back
+            from .ownership import resource_allows
+            if not resource_allows(who,'cards',row,default='read') and not row.cards.filter(owner_id=who.user_id,zone='hand').exists():raise Http404
         elif kind=='card' and face=='front':
             row=Card.objects.select_related('deck').get(pk=object_id);who=member(row.deck.campaign_id,request.user.pk)
             if not (who.role=='gm' or row.zone=='hand' and row.owner_id==who.user_id or row.zone=='scene' and row.revealed):raise Http404

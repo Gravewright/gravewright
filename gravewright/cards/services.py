@@ -22,13 +22,14 @@ def card_data(row, who):
 
 
 def state(who,scene_id=None):
+    from gravewright.table.ownership import resource_allows
     decks=Deck.objects.filter(campaign_id=who.campaign_id).order_by('name')
     rows=Card.objects.filter(deck__campaign_id=who.campaign_id).select_related('deck')
     table=[]
     if scene_id:
         target=scene(scene_id,who)
         table=[card_data(c,who) for c in rows.filter(zone='scene',scene=target)]
-    return dict(decks=[dict(id=str(d.pk),name=d.name,version=d.version,draw_count=d.cards.filter(zone='draw').count(),discard_count=d.cards.filter(zone='discard').count()) for d in decks],
+    return dict(decks=[dict(id=str(d.pk),name=d.name,version=d.version,draw_count=d.cards.filter(zone='draw').count(),discard_count=d.cards.filter(zone='discard').count()) for d in decks if resource_allows(who,'cards',d,default='read')],
         hand=[card_data(c,who) for c in rows.filter(zone='hand',owner_id=who.user_id)],cards=table,isGM=who.role=='gm')
 
 
@@ -67,6 +68,9 @@ def command(who,action,p):
     if action in ('draw','shuffle','reset','delete-deck'):
         deck=Deck.objects.filter(pk=identifier(p.get('deck_instance_id')),campaign_id=who.campaign_id).first()
         if not deck:raise MapError('Deck not found.')
+        from gravewright.table.ownership import resource_allows
+        if action=='draw' and not resource_allows(who,'cards',deck,default='read'):
+            raise MapError('Deck not found.', 'not_found')
         if action!='draw':manage(who);version(deck,p)
         if action=='delete-deck':
             from django.db import transaction

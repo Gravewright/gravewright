@@ -1,11 +1,13 @@
 from django.urls import path
 from . import views, media
+from .permission_views import document_permissions
 from gravewright.chat.card_attachments import media as chat_card_media
 
 app_name = 'table'
 urlpatterns = [path('game/<uuid:campaign_id>/chat', views.table, {'detached_chat': True}, name='chat-window'), path('game/<uuid:campaign_id>', views.table, name='workspace')]
 
 urlpatterns += [
+    path('api/containers/<uuid:campaign_id>/ownership/<str:kind>/<str:resource_id>', document_permissions),
     path("game/chat/<int:message_id>/cards/<int:attachment_id>/<str:face>", chat_card_media),
     path('api/containers/<uuid:campaign_id>/permissions-members', views.permission_members),
     path('api/containers/<uuid:campaign_id>/modules-native/<str:module>', views.module_state),

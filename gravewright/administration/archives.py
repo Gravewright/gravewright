@@ -51,6 +51,7 @@ GROUPS = {
     "compendiums": ["gravewright_compendiums.pack", "gravewright_compendiums.entry", "gravewright_compendiums.entryasset", "gravewright_compendiums.contentaccess"],
 }
 SNAPSHOT_MODELS = {
+    "gravewright_table.documentaccess",
     "gravewright_journals.access",
     "gravewright_chat.message",
     "gravewright_chat.cardattachment",

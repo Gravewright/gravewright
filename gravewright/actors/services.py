@@ -29,8 +29,8 @@ def actor_type(system_id, value=None, *, campaign_id=None):
 
 
 def access(actor, who, edit=False):
-    level = actor.permissions.get(str(who.user_id), "none")
-    return who.role == "gm" or level == "owner" or (not edit and level == "read")
+    from gravewright.table.ownership import allows
+    return allows(actor.permissions, who, edit=edit)
 
 
 def get(value, who, edit=False):
@@ -66,22 +66,24 @@ def project(row, who):
         systemId=who.campaign.system or "gravewright-pdf-system",
         folderId=str(row.folder_id) if row.folder_id else None,
         canEdit=access(row, who, True),
+        canOpen=access(row, who),
         version=row.version,
         sheetVersion=row.sheet_version,
-        portraitUrl=image_url(row, "portrait"),
-        tokenUrl=image_url(row, "token"),
+        portraitUrl=image_url(row, "portrait") if access(row, who) else None,
+        tokenUrl=image_url(row, "token") if access(row, who) else None,
         **({"permissions": row.permissions} if who.role == "gm" else {}),
     )
 
 
 def state(campaign, user):
     who = member(campaign, user)
+    from gravewright.table.ownership import allows
     visible = [
         a
         for a in Actor.objects.filter(campaign_id=campaign)
         .prefetch_related("assets")
         .order_by("name")
-        if access(a, who)
+        if allows(a.permissions, who, listing=True)
     ]
     all_folders = {f.pk: f for f in Folder.objects.filter(campaign_id=campaign)}
     allowed = set(all_folders) if who.role == "gm" else set()
@@ -253,19 +255,10 @@ def command(campaign, user, action, data, request_id):
             if action == "actor.delete":
                 row.delete()
             elif action == "actor.permissions":
-                levels = data.get("permissions")
-                members = {
-                    str(m)
-                    for m in Membership.objects.filter(
-                        campaign_id=campaign, user__is_active=True
-                    ).values_list("user_id", flat=True)
-                }
-                if (
-                    not isinstance(levels, dict)
-                    or not set(levels) <= members
-                    or any(v not in ("none", "read", "owner") for v in levels.values())
-                ):
-                    raise MapError("Invalid resource permissions.")
+                from gravewright.table.ownership import validate
+                levels = validate(data.get("permissions"), who, error_class=MapError)
+                if 'version' in data:
+                    revision(row, data['version'])
                 row.permissions = levels
                 row.version += 1
                 row.save()

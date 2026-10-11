@@ -4,6 +4,7 @@ import { getPath } from "/static/gravewright_web/vendor/datastar-1.0.3.js";
 import { node, patchSVG } from "/static/gravewright_maps/layers.js";
 import { clone, icon, context } from "/static/gravewright_actors/workspace.js";
 import { openSheet } from "/static/gravewright_pdf_system/sheet.js";
+import { openPermissions } from '/static/gravewright_table/permissions.js';
 export function createTokens(surface, board, map, gm, initial) {
   const campaign = document.getElementById("table-workspace").dataset.tableId,
     svg = node("svg", {
@@ -303,6 +304,8 @@ export function createTokens(surface, board, map, gm, initial) {
             controller.call("openSheet", t),
           );
         if (gm) {
+          if (v.selection.length === 1)
+            item('UsersThree', 'Permissions', () => openPermissions('tokens', t.id));
           item(
             t.hidden ? "Eye" : "EyeSlash",
             (t.hidden ? "Reveal" : "Hide") + " selection",

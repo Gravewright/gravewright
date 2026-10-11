@@ -8,7 +8,7 @@ const source = path.resolve(__dirname, '../frontend');
 const dependencies = process.argv[2] ? path.resolve(process.argv[2]) : source;
 const req = createRequire(dependencies + '/package.json');
 const tests = [];
-for (const dir of ['widgets/game-board/model', 'features/walls/model', 'features/tokens/model', 'features/drawing/model', 'features/measurement/model', 'features/effects/model', 'features/selection/model'])
+for (const dir of ['widgets/game-board/model', 'features/walls/model', 'features/tokens/model', 'features/drawing/model', 'features/measurement/model', 'features/effects/model', 'features/selection/model', 'features/images/model'])
   for (const name of fs.readdirSync(source + '/' + dir).filter(n => n.endsWith('.test.js')))
     tests.push(source + '/' + dir + '/' + name);
 tests.push(path.resolve(source,'../../pdf_system/frontend/mapping.test.js'));

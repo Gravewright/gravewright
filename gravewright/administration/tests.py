@@ -138,6 +138,7 @@ class ArchiveTests(TestCase):
 
         from gravewright.chat.models import Message, Recipient
         from gravewright.journals.models import Access
+        from gravewright.table.models import DocumentAccess
 
         player = User.objects.create_user(
             email="backup-player@example.test",
@@ -149,6 +150,7 @@ class ArchiveTests(TestCase):
         self.actor.save()
         journal = Journal.objects.filter(campaign=self.campaign).first()
         Access.objects.create(journal=journal, user=player, level="read")
+        DocumentAccess.objects.create(campaign=self.campaign, kind='journals', resource_id=str(journal.pk), grants={'default':'none', str(player.pk):'read'})
         message = Message.objects.create(
             campaign=self.campaign,
             scene=self.scene,
@@ -165,6 +167,7 @@ class ArchiveTests(TestCase):
             Actor.objects.get(pk=self.actor.pk).permissions, {str(player.pk): "owner"}
         )
         self.assertEqual(Access.objects.get(journal_id=journal.pk).user, player)
+        self.assertEqual(DocumentAccess.objects.get(campaign=self.campaign, kind='journals', resource_id=str(journal.pk)).grants, {'default':'none', str(player.pk):'read'})
         self.assertEqual(Message.objects.get(pk=message.pk).author, player)
         self.assertEqual(Recipient.objects.get(message_id=message.pk).user, self.user)
 

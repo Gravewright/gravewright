@@ -10,6 +10,8 @@ import {
 } from "/static/gravewright_web/vendor/datastar-1.0.3.js";
 import { directoryView } from "/static/gravewright_maps/directory.js";
 import { openSheet } from "/static/gravewright_pdf_system/sheet.js";
+import { openPermissions } from "/static/gravewright_table/permissions.js";
+import { initialContent, restoreContent } from '/static/gravewright_table/content-state.js';
 export const clone = (id) =>
   document.getElementById(id).content.firstElementChild.cloneNode(true);
 export const icon = (name) =>
@@ -200,33 +202,10 @@ function folder(existing, parentId) {
     (el.elements.color.value = e.target.value);
 }
 function permissions(actor) {
-  const el = form("actor-permissions", "Permissions — " + actor.name, (el) =>
-    command("actor.permissions", {
-      id: actor.id,
-      permissions: Object.fromEntries(
-        state.players.map((p) => [
-          p.id,
-          el.querySelector(`input[name="p-${p.id}"]:checked`).value,
-        ]),
-      ),
-    }),
-  );
-  for (const p of state.players) {
-    const row = clone("actor-permission-row");
-    row.querySelector("legend").textContent = p.name;
-    for (const input of row.querySelectorAll("input")) {
-      input.name = "p-" + p.id;
-      input.checked = input.value === (actor.permissions?.[p.id] || "none");
-    }
-    el.querySelector("[data-permission-rows]").append(row);
-  }
-  if (!state.players.length) {
-    el.querySelector("[data-permission-rows]").textContent =
-      "No players in this table.";
-    show(el.querySelector("[type=submit]"), false);
-  }
+  return openPermissions('actors', actor.id);
 }
 function open(actor, token) {
+  if (actor.canOpen === false) return;
   sheet?.close();
   sheet = openSheet(campaign, actor.id, token, state.is_gm, () => {
     sheet = undefined;
@@ -312,6 +291,7 @@ function paint() {
       toggle.oncontextmenu = (e) =>
         context(e, [
           { icon: "PencilSimple", label: "Edit folder", run: () => folder(f) },
+          { icon: "UsersThree", label: "Permissions", run: () => openPermissions('actor-folders', f.id) },
           {
             icon: "FolderPlus",
             label: "Create folder",
@@ -349,6 +329,7 @@ function paint() {
         el.querySelector("svg").replaceWith(image);
       }
       el.onclick = () => open(a);
+      el.setAttribute('aria-disabled', String(a.canOpen === false));
       el.draggable = false;
       el.onpointerdown = (e) => {
         if (state.is_gm)
@@ -564,24 +545,27 @@ if (panel) {
       error(cause.message);
     }
   };
-  window.addEventListener("gravewright:actors.state", (e) => {
-    state = e.detail;
+  const receiveState = (next) => restoreContent('actors', () => {
+    state = next;
     syncActorTypes();
     paint();
     if (sheet && sheet.element.dataset.actorId) {
       const a = state.actors.find(
         (a) => a.id === sheet.element.dataset.actorId,
       );
-      if (!a || (sheet.element.dataset.canEdit === "true" && !a.canEdit))
+      if (!a || a.canOpen === false || (sheet.element.dataset.canEdit === "true" && !a.canEdit))
         sheet.close();
     }
   });
+  window.addEventListener("gravewright:actors.state", e => receiveState(e.detail));
+  const initial = initialContent('actors');
+  if(initial)receiveState(initial);
   window.addEventListener("gravewright:actor-error", (e) => error(e.detail));
   window.addEventListener("gravewright:connected", () =>
     window.gravewrightRealtime.actorsSubscribe(),
   );
   window.addEventListener("gravewright:modules.updated", () =>
-    window.gravewrightRealtime.actorsSubscribe(),
+    window.gravewrightRealtime.actorsSubscribe(true),
   );
   window.gravewrightRealtime?.actorsSubscribe();
   window.addEventListener("gravewright:access-revoked", () => {

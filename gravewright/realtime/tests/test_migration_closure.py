@@ -106,6 +106,7 @@ class ClosureTests(TransactionTestCase):
         token = presentations.ticket(event, self.player.pk)
         _, view = presentations.resolve(token, self.player.pk, self.campaign.pk)
         self.assertFalse(view["can_edit"])
+        self.assertEqual([page['id'] for page in view['sections']], ['public'])
         self.assertNotIn("GM secret", str(view))
         self.assertEqual(
             journals.state(self.campaign.pk, self.player.pk)["journals"], []
@@ -124,6 +125,38 @@ class ClosureTests(TransactionTestCase):
                 journals.member(self.campaign.pk, self.player.pk),
                 {"journal_id": str(journal.pk)},
             )
+
+    def test_presentation_selection_grants_and_page_scope(self):
+        from gravewright.table.models import DocumentAccess
+        journal = Journal.objects.create(campaign=self.campaign, title='Private journal', data={
+            'sections': [{'id': 'one', 'title': 'First page'}, {'id': 'two', 'title': 'Second page'},
+                         {'id': 'secret', 'title': 'GM page', 'audience': 'gm'}]})
+        who = journals.member(self.campaign.pk, self.gm.pk)
+        args = {'journal_id': str(journal.pk), 'targets': [str(self.player.pk)], 'page_id': 'one'}
+        event = presentations.present(who, args)['presentation']
+        self.assertEqual(event['targets'], [str(self.player.pk)])
+        _, view = presentations.resolve(presentations.ticket(event, self.player.pk), self.player.pk)
+        self.assertEqual([page['id'] for page in view['sections']], ['one'])
+        self.assertEqual(journals.state(self.campaign.pk, self.player.pk)['journals'], [])
+        with self.assertRaises(journals.JournalError):
+            presentations.present(who, {**args, 'page_id': 'secret'})
+        with self.assertRaises(journals.JournalError):
+            presentations.present(who, {**args, 'targets': []})
+        with self.assertRaises(journals.JournalError):
+            presentations.present(who, {**args, 'targets': [str(self.outsider.pk)]})
+        with self.settings(TARGETED_HANDOUTS_ENABLED=False), self.assertRaises(journals.JournalError):
+            presentations.present(who, args)
+        args.pop('page_id')
+        presentations.present(who, {**args, 'ownership': 'owner'})
+        grants = DocumentAccess.objects.get(campaign=self.campaign, kind='journals', resource_id=str(journal.pk)).grants
+        self.assertEqual(grants[str(self.player.pk)], 'owner')
+        self.assertEqual(grants['default'], 'none')
+        presentations.present(who, {**args, 'ownership': 'read'})
+        self.assertEqual(DocumentAccess.objects.get(campaign=self.campaign, kind='journals', resource_id=str(journal.pk)).grants[str(self.player.pk)], 'owner')
+        presentations.present(who, {'journal_id': str(journal.pk), 'ownership': 'read'})
+        grants = DocumentAccess.objects.get(campaign=self.campaign, kind='journals', resource_id=str(journal.pk)).grants
+        self.assertEqual(grants['default'], 'read')
+        self.assertEqual(grants[str(self.player.pk)], 'owner')
 
     def test_drawings_versions_effect_validation_and_authority(self):
         row = {

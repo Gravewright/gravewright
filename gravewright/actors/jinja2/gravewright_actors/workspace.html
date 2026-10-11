@@ -113,34 +113,6 @@
       <p role="alert" hidden></p>
     </fieldset></form
 ></template>
-<template id="actor-permissions"
-  ><form class="directory-dialog" data-v-gwdialog role="dialog">
-    <header class="directory-dialog__header" data-v-gwdialog>
-      <strong></strong
-      ><button class="directory-dialog__close" type="button" aria-label="Close">
-        {{ icon('X') }}
-      </button>
-    </header>
-    <div class="directory-dialog__fields" data-v-gwdialog>
-      <div class="resource-permissions">
-        <p>Choose access for each player.</p>
-        <div data-permission-rows style="display: contents"></div>
-        <button type="submit">Save permissions</button>
-        <p role="alert" hidden></p>
-      </div>
-    </div></form
-></template>
-<template id="actor-permission-row"
-  ><fieldset class="resource-permissions__row">
-    <legend></legend>
-    {% for value,label,glyph in [('none','None','Prohibit'),('read','Read
-    access','Eye'),('owner','Owner','PencilSimple')] %}<label
-      class="resource-permissions__choice"
-      ><input type="radio" value="{{ value }}" />{{ icon(glyph) }}{{ label
-      }}</label
-    >{% endfor %}
-  </fieldset></template
->
 <template id="actor-icons"
   >{% for name in
   ['User','FilePdf','Trash','NotePencil','PencilSimple','UsersThree','Plus','FolderPlus','Eye','EyeSlash','BookOpenText','Gear','Heart','Copy','Clipboard','ArrowCounterClockwise','ArrowClockwise','X']

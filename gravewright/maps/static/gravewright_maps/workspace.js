@@ -1,3 +1,6 @@
+import { openPermissions } from '/static/gravewright_table/permissions.js';
+import '/static/gravewright_table/realtime.js';
+import { initialContent, sceneRestored } from '/static/gravewright_table/content-state.js';
 import { directoryView } from "./directory.js";
 import {
   mergePatch,
@@ -417,6 +420,7 @@ function tree() {
           [labels.newScene, () => upload(f.id)],
           ...(depth < 2 ? [["Add subfolder", () => folderForm(f.id)]] : []),
           ["Edit folder", () => folderForm(f.parentId, f)],
+          ["Permissions", () => openPermissions('scene-folders', f.id)],
           ["Delete folder", () => deleteFolder(f, el)],
         ]);
       draw(el.querySelector(".directory-tree"), f.id, depth + 1);
@@ -448,6 +452,7 @@ function tree() {
           ],
           [labels.navigateScene, () => navigate(map)],
           [labels.editScene, () => settings(map)],
+          ["Permissions", () => openPermissions('scenes', map.id)],
           [
             labels.removeScene,
             (button) => {
@@ -486,6 +491,7 @@ async function navigate(map, privateView = true) {
   tree();
   const version = ++generation;
   if (!map) {
+    sceneRestored();
     window.dispatchEvent(new CustomEvent("gravewright:module-scene"));
     window.gravewrightRealtime.mapLayers(null);
     boardMapId = undefined;
@@ -502,16 +508,16 @@ async function navigate(map, privateView = true) {
     return;
   }
   try {
-    const response = await fetch(`/api/maps/${map.id}/manifest`, {
-      cache: "no-store",
-    });
-    if (!response.ok) throw Error(labels.mapFailed);
-    const manifest = await response.json();
-    const layerResponse = await fetch(`/api/maps/${map.id}/state`, {
-      cache: "no-store",
-    });
-    if (!layerResponse.ok) throw Error(labels.mapFailed);
-    const layerState = await layerResponse.json();
+    // Network reads and module loading are independent; avoid a startup waterfall.
+    const read = async path => {
+      const response = await fetch(`/api/maps/${map.id}/${path}`, {cache: 'no-store'});
+      if (!response.ok) throw Error(labels.mapFailed);
+      return response.json();
+    };
+    const [manifest, layerState, {createBoard}, {createLayers}, {createTokens}] = await Promise.all([
+      read('manifest'), read('state'), import('./vendor/board.js'), import('./layers.js'),
+      import('/static/gravewright_tokens/workspace.js'),
+    ]);
     if (version !== generation) return;
     const grid = {
       width: manifest.width,
@@ -539,6 +545,7 @@ async function navigate(map, privateView = true) {
       tokens?.update(layerState);
       layers?.setMap(map);
       layers?.update(layerState);
+      sceneRestored();
       window.dispatchEvent(new Event("gravewright:module-scene"));
       return;
     }
@@ -554,7 +561,6 @@ async function navigate(map, privateView = true) {
     boardNode = clone("board");
     document.querySelector(".game-table__scene-frame").append(boardNode);
     show(document.querySelector(".game-table__empty-scene"), false);
-    const { createBoard } = await import("./vendor/board.js");
     if (version !== generation) return;
     board = createBoard(
       boardNode.querySelector(".game-board__surface"),
@@ -573,7 +579,6 @@ async function navigate(map, privateView = true) {
     boardMapId = map.id;
     await board.ready;
     if (version !== generation) return;
-    const { createLayers } = await import("./layers.js");
     if (version !== generation) return;
     layers = createLayers(
       boardNode.querySelector(".game-board__surface"),
@@ -582,13 +587,13 @@ async function navigate(map, privateView = true) {
       state.is_gm,
       layerState,
     );
-    const {createTokens}=await import('/static/gravewright_tokens/workspace.js');
     if(version!==generation)return;
     tokens=createTokens(boardNode.querySelector('.game-board__surface'),board,map,state.is_gm,layerState);
     window.gravewrightRealtime.mapLayers(map.id);
+    sceneRestored();
     window.dispatchEvent(new Event("gravewright:module-scene"));
   } catch (cause) {
-    if (version === generation) error(cause.message);
+    if (version === generation) { error(cause.message); sceneRestored(); }
   }
 }
 if (panel) {
@@ -669,9 +674,9 @@ window.addEventListener("click", () => menu?.remove());
 window.addEventListener("gravewright:connected", () => {
   if (panel) window.gravewrightRealtime.mapsSubscribe();
 });
-window.addEventListener("gravewright:maps", (event) => {
+function receiveState(nextState) {
   if (!panel) return;
-  state = event.detail;
+  state = nextState;
   following = state.followingActiveMap ?? true;
   const next = state.maps.find(
     (m) =>
@@ -683,10 +688,13 @@ window.addEventListener("gravewright:maps", (event) => {
       state.maps.find((m) => m.id === state.activeMapId),
       false,
     );
-  } else if (next?.id !== current?.id || next?.version !== current?.version)
+  } else if (!next && !current || next?.id !== current?.id || next?.version !== current?.version)
     void navigate(next, false);
   tree();
-});
+}
+window.addEventListener('gravewright:maps', event => receiveState(event.detail));
+const initial = initialContent('maps');
+if(initial)receiveState(initial);
 window.addEventListener("gravewright:access-revoked", () => {
   state = { maps: [], folders: [], activeMapId: null, is_gm: false };
   void navigate(undefined, false);

@@ -25,12 +25,8 @@ def document(value, limit=256*1024):
 
 
 def permissions(value, who):
-    if not isinstance(value, dict) or len(value) > 1000:
-        raise MapError('Invalid permissions.')
-    valid = {str(i) for i in Membership.objects.filter(campaign_id=who.campaign_id).values_list('user_id', flat=True)}
-    if any(k not in valid or v not in ('none','read','owner') for k,v in value.items()):
-        raise MapError('Invalid permissions.')
-    return dict(value)
+    from .ownership import validate
+    return validate(value, who, error_class=MapError)
 
 
 def module(name):

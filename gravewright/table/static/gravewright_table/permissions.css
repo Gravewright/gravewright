@@ -1,0 +1,22 @@
+.ownership-modal-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:#0005;padding:16px}
+.ownership-dialog{box-sizing:border-box;width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;padding:0;border:1px solid #806b43;border-radius:12px;background:#171c20;color:#e8e4d8;box-shadow:0 12px 40px #0009}
+.ownership-dialog form{padding:18px;display:flex;flex-direction:column;gap:16px}
+.ownership-dialog header{display:flex;align-items:center;gap:12px;border-bottom:1px solid #ffffff1a;padding-bottom:12px}
+.ownership-dialog header strong{flex:1;min-width:0;overflow-wrap:anywhere}
+.ownership-dialog header button{font-size:24px;background:none;border:0;color:inherit;cursor:pointer}
+.ownership-dialog p{margin:0;font-size:13px;line-height:1.5}
+.ownership-dialog__gm{display:flex;align-items:center;justify-content:flex-end;gap:10px;font-size:12px}
+.ownership-dialog__row{display:grid;grid-template-columns:minmax(90px,1fr) minmax(140px,1.7fr);align-items:center;gap:16px;margin-bottom:12px;font-size:14px}
+.ownership-dialog__row span{overflow-wrap:anywhere}
+.ownership-dialog select{width:100%;padding:9px;border-radius:5px;border:1px solid #40464e;background:#252c34;color:inherit}
+.ownership-dialog__help{color:#b7b5ad}
+.ownership-dialog [role=alert]{color:#ffb7ac}
+.ownership-dialog footer{display:flex;flex-direction:column;gap:8px}
+.ownership-dialog footer button{padding:10px;border:1px solid #b99857;border-radius:5px;background:#b99857;color:#111820;cursor:pointer}
+.ownership-dialog button:disabled{opacity:.5;cursor:wait}
+.ownership-dialog [hidden]{display:none!important}
+.journal-presentation-modal fieldset{margin:0;padding:12px;border:1px solid #40464e;border-radius:5px;min-width:0}
+.journal-presentation-modal legend{padding:0 6px;font-size:13px}
+.journal-presentation-modal .ownership-dialog__gm{justify-content:space-between;margin:8px 0;font-size:14px}
+.journal-presentation-modal .ownership-dialog__gm span{overflow-wrap:anywhere;min-width:0}
+.journal-presentation-modal input[type=checkbox]{flex-shrink:0;accent-color:#b99857}

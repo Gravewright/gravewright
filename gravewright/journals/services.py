@@ -40,10 +40,9 @@ def writable(who):
 
 
 def permissions(journal, who):
-    levels = {row.user_id: row.level for row in journal.access.all()}
-    gm = who.role == 'gm'
-    own = levels.get(who.user_id) == 'owner'
-    return gm or own or journal.visibility in {'shared','handout'} or levels.get(who.user_id) == 'read', gm or own
+    from gravewright.table.ownership import allows, journal_grants
+    grants = journal_grants(journal, who)
+    return allows(grants, who), allows(grants, who, edit=True)
 
 
 def get(journal_id, who, edit=False):
@@ -105,16 +104,21 @@ def clean_data(raw, journal, who):
             aid=section['assetId']
             section['src']=f'/game/journal/asset/{aid}' if aid else ''
         if who.role != 'gm':
+            from gravewright.table.ownership import page_level
             existing=shapes.normalize_diary_data(journal.data)
             clean['gm']=existing['gm']
             clean['content']=preserve_secrets(clean['content'],existing['content'])
             old={s['id']:s for s in existing['sections']}
             for section in sections:
-                if section['id'] in old and old[section['id']]['audience']=='gm':
-                    raise JournalError('Page not found or access denied.')
+                if section['id'] in old and page_level(journal,old[section['id']],who) != 'owner':
+                    if page_level(journal,old[section['id']],who) not in {'read','owner'}:
+                        raise JournalError('Page not found or access denied.')
+                    stored=deepcopy(old[section['id']])
+                    section.clear();section.update(stored)
                 section['audience']='public'
                 section['content']=preserve_secrets(section['content'],old.get(section['id'],{}).get('content',{}))
-            clean['sections']=sorted(sections+[s for s in existing['sections'] if s['audience']=='gm'], key=lambda s:s['sortOrder'])
+            submitted={s['id'] for s in sections}
+            clean['sections']=sorted(sections+[s for s in existing['sections'] if s['id'] not in submitted and page_level(journal,s,who) != 'owner'], key=lambda s:s['sortOrder'])
             if len(clean['sections'])>64:
                 raise JournalError('This journal already has 64 pages.')
     clean = types.clean_type(raw, clean, journal, who)
@@ -148,21 +152,30 @@ def projection(journal, who):
           'folder_id':str(journal.folder_id) if journal.folder_id else None,
           'visibility':journal.visibility,'version':journal.version,'can_edit':permissions(journal,who)[1]}
     if gm:
-        view['permissions']={str(a.user_id):a.level for a in journal.access.all()}
+        from gravewright.table.ownership import journal_grants
+        view['permissions']=journal_grants(journal,who)
     if journal.type=='diary':
         view['content_doc']=documents.filter_doc_for_role(clean['content'],is_gm=gm)
         view['cover_image']=clean['cover']
-        view['sections']=[{**s,'content':documents.filter_doc_for_role(s['content'],is_gm=gm)} for s in clean['sections'] if gm or s['audience']=='public']
+        from gravewright.table.ownership import page_level
+        view['sections']=[{**s,'can_edit':page_level(journal,s,who)=='owner','content':documents.filter_doc_for_role(s['content'],is_gm=gm)} for s in clean['sections'] if page_level(journal,s,who) in {'read','owner'}]
         view['editable_sections']=deepcopy(view['sections'])
         if gm: view['diary']={'gm':clean['gm']}
     view.update(types.project(journal, who, clean))
     view['listed'] = permissions(journal, who)[0]
+    view['can_open'] = view['listed'] or types.via_board(journal, who)
     return view
 
 
 def state(campaign_id,user_id):
     who=member(campaign_id,user_id)
-    journals=[projection(j,who) for j in Journal.objects.filter(campaign_id=campaign_id).prefetch_related('access') if permissions(j,who)[0] or types.via_board(j,who)]
+    from gravewright.table.ownership import allows, journal_grants
+    journals=[]
+    for j in Journal.objects.filter(campaign_id=campaign_id).prefetch_related('access'):
+        if permissions(j,who)[0] or types.via_board(j,who):
+            journals.append(projection(j,who))
+        elif allows(journal_grants(j,who),who,listing=True):
+            journals.append({'id':str(j.pk),'title':j.title,'type':j.type,'folder_id':str(j.folder_id) if j.folder_id else None,'visibility':j.visibility,'version':j.version,'can_edit':False,'can_open':False,'listed':True})
     folders=list(Folder.objects.filter(campaign_id=campaign_id))
     if who.role!='gm':
         visible={j['folder_id'] for j in journals}|{str(f.pk) for f in folders if f.creator_id==user_id}
@@ -243,6 +256,13 @@ def apply(who,action,p):
         if gm:
             visibility=p.get('visibility',j.visibility)
             if visibility not in {'private','shared','handout'}:raise JournalError('Invalid visibility.')
+            if visibility != j.visibility:
+                from gravewright.table.models import DocumentAccess
+                explicit=DocumentAccess.objects.filter(campaign_id=who.campaign_id,kind='journals',resource_id=str(j.pk)).first()
+                if explicit:
+                    explicit.grants['default']='read' if visibility in {'shared','handout'} else 'none'
+                    explicit.save(update_fields=['grants'])
+                    who._ownership_cache={}
             j.visibility=visibility
         j.data=clean_data(p.get('data'),j,who)
     elif action=='move':
@@ -252,8 +272,13 @@ def apply(who,action,p):
         if not gm:raise JournalError('Only the GM can change access.')
         target=member(who.campaign_id,identifier(p.get('target_user_id')))
         level=p.get('access_level')
-        if level not in {'none','read','owner'}:raise JournalError('Invalid access level.')
+        if level not in {'none','limited','read','owner'}:raise JournalError('Invalid access level.')
         Access.objects.update_or_create(journal=j,user_id=target.user_id,defaults={'level':level})
+        from gravewright.table.models import DocumentAccess
+        explicit=DocumentAccess.objects.filter(campaign_id=who.campaign_id,kind='journals',resource_id=str(j.pk)).first()
+        if explicit:
+            explicit.grants[str(target.user_id)]=level;explicit.save(update_fields=['grants'])
+            who._ownership_cache={}
     elif action=='delete':
         if not gm:raise JournalError('Only the GM can delete documents.')
         j.delete();return {}

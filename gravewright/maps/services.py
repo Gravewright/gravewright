@@ -102,10 +102,12 @@ def scene(scene_id, who, write=False):
     ).first()
     if write:
         manage(who)
+    from gravewright.table.ownership import resource_allows
     if row is None or (
         who.role != "gm"
         and (
             row.visibility != "players"
+            or not resource_allows(who, 'scenes', row, default='read')
             or not Broadcast.objects.filter(
                 campaign_id=who.campaign_id, scene=row
             ).exists()
@@ -172,13 +174,14 @@ def view(row):
 
 def state(campaign_id, user_id):
     who = member(campaign_id, user_id)
+    from gravewright.table.ownership import resource_allows
     active = (
         Broadcast.objects.filter(campaign_id=campaign_id)
         .select_related("scene")
         .first()
     )
     broadcast = active.scene if active else None
-    if broadcast and broadcast.visibility == "gm" and who.role != "gm":
+    if broadcast and who.role != "gm" and (broadcast.visibility == "gm" or not resource_allows(who, 'scenes', broadcast, default='read')):
         broadcast = None
     maps = (
         Scene.objects.filter(campaign_id=campaign_id)

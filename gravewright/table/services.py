@@ -99,7 +99,8 @@ def search(campaign_id, user_id, query):
     for row in Item.objects.filter(campaign_id=campaign_id,name__icontains=query)[:200]:
         if access(row,who):add(row,'item')
     for row in Pack.objects.filter(campaign_id=campaign_id,name__icontains=query)[:200]:
-        if who.role=='gm' or row.shared:add(row,'compendium')
+        from .ownership import resource_allows
+        if resource_allows(who,'compendiums',row,default='read' if row.shared else 'none'):add(row,'compendium')
     from gravewright.compendiums.catalog import summaries
     for pack in summaries(who):
         if query.casefold() in pack['name'].casefold():

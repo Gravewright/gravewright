@@ -1,4 +1,4 @@
-// gravewright/pdf_system/frontend/pdf-geometry.js
+// ../../pdf_system/frontend/pdf-geometry.js
 function fieldBounds(viewport, rect, offsetTop = 0) {
   const [x1, y1] = viewport.convertToViewportPoint(rect[0], rect[1]);
   const [x2, y2] = viewport.convertToViewportPoint(rect[2], rect[3]);
@@ -11,12 +11,12 @@ function fieldBounds(viewport, rect, offsetTop = 0) {
   };
 }
 
-// gravewright/pdf_system/frontend/text.js
+// ../../pdf_system/frontend/text.js
 function text(value, ...args) {
   return value.replace(/\{(\d+)\}/g, (_, i) => String(args[Number(i)] ?? ""));
 }
 
-// gravewright/pdf_system/frontend/pdfjs-loader.js
+// ../../pdf_system/frontend/pdfjs-loader.js
 var cached;
 function loadPdfjs(url) {
   if (!cached) {
@@ -34,7 +34,7 @@ function loadPdfjs(url) {
   return cached;
 }
 
-// gravewright/pdf_system/frontend/mapping.js
+// ../../pdf_system/frontend/mapping.js
 var BAR_SLOTS = [
   { key: "bar1Value", label: text("Bar 1 \xB7 Current"), path: "sheet.bars.bar_1.value" },
   { key: "bar1Max", label: text("Bar 1 \xB7 Maximum"), path: "sheet.bars.bar_1.max" },
@@ -105,7 +105,7 @@ function writeCanonical(actor, path, value) {
   cursor[last] = value;
 }
 
-// gravewright/pdf_system/sheet-shape.js
+// ../../pdf_system/sheet-shape.js
 function pdfCharacterDefaults() {
   return {
     pdf: { template: "generic", page: 1, zoom: 1, spread: false, asset: "", textColor: "#111111" },
@@ -128,7 +128,7 @@ function normalizePdfCharacterData(value) {
   return merge(defaults, value);
 }
 
-// gravewright/pdf_system/frontend/controller.js
+// ../../pdf_system/frontend/controller.js
 function pdfController(host, options) {
   const props = options.props;
   const box = (initial) => {
