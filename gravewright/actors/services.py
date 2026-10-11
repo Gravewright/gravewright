@@ -81,6 +81,7 @@ def state(campaign, user):
     visible = [
         a
         for a in Actor.objects.filter(campaign_id=campaign)
+        .defer("data")
         .prefetch_related("assets")
         .order_by("name")
         if allows(a.permissions, who, listing=True)

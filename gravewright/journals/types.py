@@ -19,8 +19,11 @@ def via_board(journal, who):
         return False
     if journal.type != 'quest' or journal.data.get('status') not in shapes.PLAYER_VISIBLE_STATUSES:
         return False
-    return any(permissions(link.board, who)[0] for link in journal.quest_links.select_related('board').filter(
-        board__campaign_id=who.campaign_id, board__type='quest_board').prefetch_related('board__access'))
+    links = getattr(journal, '_directory_quest_links', None)
+    if links is None:
+        links=journal.quest_links.select_related('board').filter(
+            board__campaign_id=who.campaign_id, board__type='quest_board').prefetch_related('board__access')
+    return any(permissions(link.board, who)[0] for link in links)
 
 
 def project(journal, who, clean):
@@ -30,7 +33,10 @@ def project(journal, who, clean):
         return {'quest': builder(title=journal.title, data=clean)}
     if journal.type == 'quest_board':
         entries = []
-        for link in journal.board_links.select_related('quest').filter(quest__campaign_id=who.campaign_id, quest__type='quest').order_by('-pinned', 'sort_order', 'id'):
+        links=getattr(journal, '_directory_board_links', None)
+        if links is None:
+            links=journal.board_links.select_related('quest').filter(quest__campaign_id=who.campaign_id, quest__type='quest').order_by('-pinned', 'sort_order', 'id')
+        for link in links:
             from gravewright.table.ownership import policy, allows
             explicit = policy(who, 'journals', link.quest_id)
             if explicit is not None and not allows(explicit, who):

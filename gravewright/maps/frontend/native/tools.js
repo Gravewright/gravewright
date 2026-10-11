@@ -2,6 +2,7 @@ import {createSelection} from '../features/selection/ui/selection-workspace.js';
 import Drawing from '../features/drawing/ui/DrawingWorkspace.native.js';
 import Measurement from '../features/measurement/ui/MeasurementWorkspace.native.js';
 import Images from '../features/images/ui/ImageWorkspace.native.js';
+import {previewBoardImage} from '../features/images/model/image-preview.js';
 import Sources from '../features/scene-layers/ui/SceneSourcesWorkspace.native.js';
 import Library from '../features/table-library/ui/AssetUploadLibrary.native.js';
 import { vMovableResizable } from '../shared/lib/dom/movable-resizable.js';
@@ -71,7 +72,7 @@ export function createTools(surface, board, map, gm, api, stateAPI) {
         if (compose && !images)
             images = Images(hosts.images, { ...common, props: { ...base(), images: state.images, tool }, emit(type, value) { if (type === 'refresh')
                     void api.read(); if (type === 'preview')
-                    void board.update({ state: value ? { ...state, images: state.images.map(i => i.id === value.id ? value : i) } : state }); } });
+                    void previewBoardImage(board, state, value); } });
         else if (!compose && images) {
             images.destroy();
             images = undefined;

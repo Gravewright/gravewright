@@ -2,6 +2,7 @@ import {sceneObjects,hit,corners,centerOf,transformedPoint} from '../model/objec
 import {applySelection,transformMeasures} from '../model/selection-commands.js';
 import {effects,translatedCopies} from '../../effects/model/effects.js';
 import {resizeImage} from '../../images/model/image-transform.js';
+import {previewBoardImage} from '../../images/model/image-preview.js';
 import {text as gwText} from '../../../shared/config/i18n/text.js';
 
 // This controller observes the shared surface in capture phase. Token-only
@@ -36,7 +37,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  }
  function publish(){const value=preview?{...preview,objects:drag?.objects||chosen()}:undefined;board.previewSelection?.(value);window.dispatchEvent(new CustomEvent('gravewright:selection-preview',{detail:value}));paint();}
  function select(keys){selected=keys;window.dispatchEvent(new CustomEvent('gravewright:mixed-selection',{detail:{ids:chosen().filter(o=>o.kind==='token').map(o=>o.id),mixed:mixed()}}));paint();}
- function cancel(){clearTimeout(timer);clearTimeout(pingTimer);if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);drag=undefined;preview=undefined;if(resizePreview){resizePreview=undefined;void board.update({state});}menu?.remove();menu=undefined;publish();}
+ function cancel(){clearTimeout(timer);clearTimeout(pingTimer);if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);drag=undefined;preview=undefined;if(resizePreview){resizePreview=undefined;void previewBoardImage(board,state);}menu?.remove();menu=undefined;publish();}
  // Dedicated image controls own their gestures; capture listeners must let them through.
  const ignored=e=>e.target.closest('button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.image-workspace');
  function down(e){
@@ -54,7 +55,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
   paint();
  }
  function move(e){if(!active())return;lastPoint=point(e);if(!drag||drag.id!==e.pointerId)return;stop(e);drag.to=lastPoint;
-  if(drag.image){resizePreview=resizeImage(drag.image,drag.corner,drag.from,lastPoint);void board.update({state:{...state,images:state.images.map(i=>i.id===resizePreview.id?resizePreview:i)}});paint();return;}
+  if(drag.image){resizePreview=resizeImage(drag.image,drag.corner,drag.from,lastPoint);void previewBoardImage(board,state,resizePreview);paint();return;}
   if(Math.hypot(lastPoint.x-drag.from.x,lastPoint.y-drag.from.y)*board.viewport().scale>10)clearTimeout(pingTimer);
   if(drag.moving){preview={center:centerOf(drag.objects),dx:lastPoint.x-drag.from.x,dy:lastPoint.y-drag.from.y,angle:0};publish();}
   else{const a=drag.from,b=lastPoint;select([...new Set([...drag.additive,...all().filter(o=>corners(o).every(p=>p.x>=Math.min(a.x,b.x)&&p.x<=Math.max(a.x,b.x)&&p.y>=Math.min(a.y,b.y)&&p.y<=Math.max(a.y,b.y))).map(o=>o.key)])]);}
@@ -67,7 +68,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
   busy=true;notice.hidden=true;
   try{await api.command('images','update',{placement_id:image.id,x:image.x,y:image.y,scale:image.scale,expected_version:image.version});await api.read();}
   catch(error){if(!signal.aborted){notice.textContent=error.message;notice.hidden=false;}}
-  finally{busy=false;resizePreview=undefined;if(!signal.aborted){void board.update({state});paint();}}
+  finally{busy=false;resizePreview=undefined;if(!signal.aborted){void previewBoardImage(board,state);paint();}}
  }
  const tokenCommand=(action,data)=>window.gravewrightRealtime.resourceCommand('tokens',action,{...data,mapId:map.id});
  const tokenApi={remove:(_,id)=>tokenCommand('remove',{tokenIds:[id]}),move:async(_,id,data)=>{const result=await tokenCommand('move',{id,...data});return result.tokens.find(t=>t.id===id);},command:(_c,_m,action,data)=>tokenCommand(action,data)};

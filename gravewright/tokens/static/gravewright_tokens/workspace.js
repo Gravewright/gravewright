@@ -29,6 +29,7 @@ export function createTokens(surface, board, map, gm, initial) {
     sheetId,
     menu,
     lastRender = "",
+    lastViewport,
     frame = 0,
     selectionPreview;
   const repaint = () => {
@@ -106,7 +107,10 @@ export function createTokens(surface, board, map, gm, initial) {
       if (closed) return;
       if (type === "motion")
         window.gravewrightRealtime.tokenDrag({ mapId: map.id, ...args[0] });
-      if (type === "hover") hover = args[0];
+      if (type === "hover") {
+        if (hover === args[0]) return;
+        hover = args[0];
+      }
       if (type === "changed") {
         rows = args[0];
         controller?.update({ tokens: rows });
@@ -374,6 +378,7 @@ export function createTokens(surface, board, map, gm, initial) {
       g = grid(),
       view = p.viewport,
       scale = view.scale;
+    lastViewport = view;
     svg.classList.toggle("token-workspace--pass", !v.interactive);
     svg.classList.toggle("token-workspace--routing", !!v.route.length);
     const group = node("g", {
@@ -653,7 +658,15 @@ export function createTokens(surface, board, map, gm, initial) {
       state = e.detail;
       controller.update(props());
     },
-    viewport = () => controller.update({ viewport: props().viewport });
+    viewport = () => {
+      const previous = lastViewport, next = props().viewport;
+      lastViewport = next;
+      controller.update({ viewport: next }, false);
+      // Panning only translates the existing world-coordinate hit targets.
+      if (previous?.scale === next.scale && svg.firstElementChild)
+        svg.firstElementChild.setAttribute('transform', `translate(${next.x} ${next.y}) scale(${next.scale})`);
+      else repaint();
+    };
   const focusToken=({detail})=>{
     const token=rows.find(row=>row.id===detail.id);if(!token)return;
     const g=grid();board.ping({x:g.x+(token.gridX+token.cells/2)*g.cell,y:g.y+(token.gridY+(token.heightCells||token.cells)/2)*g.cell},true);

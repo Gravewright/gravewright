@@ -1,4 +1,4 @@
-// shared/config/i18n/text.js
+// gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
 function notifyTextChange() {
   for (const listener of listeners)
@@ -40,7 +40,7 @@ if (typeof window !== "undefined") {
   if (window.gravewrightLocale) apply(window.gravewrightLocale);
 }
 
-// features/tokens/model/token-interaction.js
+// gravewright/maps/frontend/features/tokens/model/token-interaction.js
 function hitToken(point, tokens, cell) {
   return [...tokens].reverse().find((t) => point.x >= t.gridX * cell && point.x <= (t.gridX + t.cells) * cell && point.y >= t.gridY * cell && point.y <= (t.gridY + (t.heightCells ?? t.cells)) * cell);
 }
@@ -64,12 +64,12 @@ function movementBlocked(token, to, walls, cell) {
   });
 }
 
-// features/tokens/model/token-vision.js
+// gravewright/maps/frontend/features/tokens/model/token-vision.js
 function distancePerCell(value) {
   return Number.isFinite(value) && value > 0 ? value : 1;
 }
 
-// features/tokens/model/token-route.js
+// gravewright/maps/frontend/features/tokens/model/token-route.js
 function routeMeasurements(route, measureValue) {
   const scale = distancePerCell(measureValue);
   const segments = route.slice(1).map((step, index) => {
@@ -102,7 +102,7 @@ function routePosition(route, lengths, distance) {
   return { tokens: to.map((token, i) => ({ ...token, gridX: from[i].gridX + (token.gridX - from[i].gridX) * t, gridY: from[i].gridY + (token.gridY - from[i].gridY) * t })), passed: segment, done: false };
 }
 
-// features/tokens/model/token-pathfinding.js
+// gravewright/maps/frontend/features/tokens/model/token-pathfinding.js
 function suggestTokenRoute(route, walls, cell, width, height, limits = {}) {
   if (route.length < 2 || !(cell > 0) || !Number.isFinite(width + height + cell))
     return;
@@ -194,7 +194,7 @@ function suggestTokenRoute(route, walls, cell, width, height, limits = {}) {
   }
 }
 
-// features/tokens/model/token-motion.js
+// gravewright/maps/frontend/features/tokens/model/token-motion.js
 var TOKEN_SETTLE_MS = 120;
 function interpolateTokens(from, to, progress) {
   const starts = new Map(from.map((token) => [token.id, token]));
@@ -207,13 +207,13 @@ function interpolateTokens(from, to, progress) {
   });
 }
 
-// features/tokens/ui/controller.js
+// gravewright/maps/frontend/features/tokens/ui/controller.js
 import { renderingPreferences } from "/static/gravewright_maps/render-profile.js";
 
-// widgets/game-board/model/board-input.js
+// gravewright/maps/frontend/widgets/game-board/model/board-input.js
 var LONG_PRESS_MS = 700;
 
-// features/tokens/ui/controller.js
+// gravewright/maps/frontend/features/tokens/ui/controller.js
 function tokenController(element, options) {
   const props = { ...options.props }, emit = options.emit, nextTick = () => Promise.resolve();
   const box = (initial) => {
@@ -961,7 +961,7 @@ function tokenController(element, options) {
   const listeners2 = Object.entries(events).map(([name, fn]) => {
     const handler = (e) => {
       fn(e);
-      options.repaint();
+      if (name !== "pointermove") options.repaint();
     };
     element.addEventListener(name, handler);
     return [name, handler];
@@ -1031,7 +1031,7 @@ function tokenController(element, options) {
       options.repaint();
       return result;
     },
-    update(next) {
+    update(next, repaint = true) {
       const oldTool = props.tool;
       Object.assign(props, next);
       if (oldTool !== props.tool)
@@ -1056,7 +1056,7 @@ function tokenController(element, options) {
       }
       if (next.walls && walking.value && route.value.length && !props.gm && route.value.slice(1).some((step, i) => step.some((t, j) => movementBlocked(route.value[i][j], t, props.walls, props.cell))))
         cancel();
-      options.repaint();
+      if (repaint) options.repaint();
     },
     destroy() {
       closed = true;

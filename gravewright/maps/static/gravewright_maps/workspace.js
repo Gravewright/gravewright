@@ -515,7 +515,7 @@ async function navigate(map, privateView = true) {
       return response.json();
     };
     const [manifest, layerState, {createBoard}, {createLayers}, {createTokens}] = await Promise.all([
-      read('manifest'), read('state'), import('./vendor/board.js'), import('./layers.js'),
+      read('manifest'), read('state'), import('./vendor/board.js?v=image-preview-1'), import('./layers.js'),
       import('/static/gravewright_tokens/workspace.js'),
     ]);
     if (version !== generation) return;

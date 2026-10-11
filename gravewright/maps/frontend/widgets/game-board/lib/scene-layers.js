@@ -16,6 +16,7 @@ export class SceneLayers {
     board;
     #layers = [];
     #abort = new AbortController();
+    #imageLoads = new Map();
     #textures = new Set();
     #frame = 0;
     #keys = new SceneRenderKey();
@@ -45,7 +46,7 @@ export class SceneLayers {
         const p = value && keys.has(key) ? transformedPoint(base, value.center, value.dx, value.dy, value.angle) : base;
         base.node.position.set(p.x, p.y);
         base.node.angle = base.angle + (value && keys.has(key) ? value.angle : 0);
-    } }
+    } this.board.invalidate?.(); }
     #cardNodes = new Map();
     #cardRows = [];
     previewCard(card) {
@@ -56,9 +57,22 @@ export class SceneLayers {
                 node.angle = value.rotation;
             }
         }
+        this.board.invalidate?.();
     }
     #imagePreview;
     #imagePlacements = [];
+    syncImages(images) {
+        this.#imagePlacements = images;
+        for (const row of images) {
+            const sprite = this.#imageSprites.get(row.id);
+            if (!sprite) continue;
+            sprite.alpha = row.layer === 'gm' ? .55 : 1;
+            sprite.zIndex = row.z_index;
+            this.#selectionNodes.set(`image:${row.id}`, {node:sprite,x:row.x,y:row.y,angle:row.rotation});
+        }
+        this.previewImage(this.#imagePreview);
+        this.previewSelection(this.#selectionPreview);
+    }
     previewImage(image) {
         this.#imagePreview = image;
         for (const placement of this.#imagePlacements) {
@@ -70,6 +84,7 @@ export class SceneLayers {
                 sprite.scale.set(row.scale);
             }
         }
+        this.board.invalidate?.();
     }
     constructor(board) {
         this.board = board;
@@ -81,6 +96,9 @@ export class SceneLayers {
     }
     clear() {
         this.#generation++;
+        this.#abort.abort();
+        this.#abort = new AbortController();
+        this.#imageLoads.clear();
         this.#imageSprites.clear();
         this.#cardNodes.clear();
         this.#selectionNodes.clear();
@@ -113,11 +131,13 @@ export class SceneLayers {
         const staticKey = this.#keys.static(state, cell, width, height, gm, profile);
         const visionKey = this.#keys.vision(state);
         if (staticKey === this.#staticKey && this.#lightState) {
+            this.syncImages(state.images);
             this.fog(state, cell, width, height, gm);
             if (visionKey !== this.#visionKey) {
                 this.darkness({ ...this.#lightState, vision: state.vision, previewTokenVision: state.previewTokenVision }, cell, width, height, gm);
                 this.#visionKey = visionKey;
             }
+            this.board.invalidate?.();
             return;
         }
         this.clear();
@@ -141,18 +161,11 @@ export class SceneLayers {
                 if (!texture)
                     return;
                 const sprite = new Sprite(texture);
-                sprite.position.set(placement.x, placement.y);
                 sprite.anchor.set(.5);
-                sprite.scale.set(placement.scale);
-                sprite.angle = placement.rotation;
-                if (placement.layer === "gm")
-                    sprite.alpha = .55;
-                sprite.zIndex = placement.z_index;
                 this.#imageSprites.set(placement.id, sprite);
-                this.registerSelection(`image:${placement.id}`, sprite);
                 imageLayer.addChild(sprite);
-                this.previewImage(this.#imagePreview);
-                this.previewSelection(this.#selectionPreview);
+                // An authoritative transform may have arrived while this art decoded.
+                this.syncImages(this.#imagePlacements);
             }).catch(() => { });
         }
         const drawings = this.layer("drawings", 185);
@@ -257,6 +270,7 @@ export class SceneLayers {
                     sprite.width = 56;
                     sprite.height = 80;
                     node.addChild(sprite);
+                    this.board.invalidate?.();
                 }).catch(() => { });
         }
         this.fog(state, cell, width, height, gm);
@@ -333,11 +347,13 @@ export class SceneLayers {
                     dot.blendMode = particle.blend;
                 });
             }
+            this.board.invalidate?.();
             if (quality.fps && (movingLights || particles.length || state.shaders.some(s => s.enabled)))
                 this.#frame = requestAnimationFrame(tick);
         };
         if (animatedLights.length || particles.length || state.shaders.some(s => s.enabled))
             tick();
+        this.board.invalidate?.();
     }
     clearVision() {
         this.#visionLayer?.dispose();
@@ -475,18 +491,22 @@ export class SceneLayers {
         this.#fogSprite.scale.set(1 / scale);
         this.#fogSprite.alpha = gm ? (state.fog.gmOpacity ?? .5) : 1;
     }
-    async image(url, visit) {
-        const response = await fetch(url, { signal: this.#abort.signal, credentials: "same-origin" });
-        if (!response.ok)
-            return;
-        const bitmap = await createImageBitmap(await response.blob());
-        if (this.#closed || visit !== this.#generation) {
-            bitmap.close();
-            return;
+    image(url, visit) {
+        // Sharing one decoded texture per URL avoids duplicate fetches and GPU uploads.
+        let pending = this.#imageLoads.get(url);
+        if (!pending) {
+            pending = (async () => {
+                const response = await fetch(url, { signal: this.#abort.signal, credentials: "same-origin" });
+                if (!response.ok) return;
+                const bitmap = await createImageBitmap(await response.blob());
+                if (this.#closed || visit !== this.#generation) { bitmap.close(); return; }
+                this.#bitmaps.add(bitmap);
+                const texture = Texture.from(bitmap);
+                this.#textures.add(texture);
+                return texture;
+            })();
+            this.#imageLoads.set(url, pending);
         }
-        this.#bitmaps.add(bitmap);
-        const texture = Texture.from(bitmap);
-        this.#textures.add(texture);
-        return texture;
+        return pending;
     }
 }

@@ -7,7 +7,7 @@ import uuid
 from django.db import transaction
 from . import types
 from gravewright.campaigns.models import Membership, Campaign
-from .models import Journal, Folder, Access, Asset, Receipt
+from .models import Journal, Folder, Access, Asset, Receipt, BoardEntry
 from . import documents, data as shapes
 
 
@@ -26,7 +26,7 @@ def identifier(value):
 
 def member(campaign_id, user_id):
     """Resolve current active membership, including streamer link validity."""
-    found = Membership.objects.select_related('user').filter(campaign_id=campaign_id, user_id=user_id, user__is_active=True).first()
+    found = Membership.objects.select_related('user', 'campaign').filter(campaign_id=campaign_id, user_id=user_id, user__is_active=True).first()
     if found is None:
         raise JournalError('You no longer have access to this table.', 'not_a_member')
     if found.role == 'streamer':
@@ -167,11 +167,28 @@ def projection(journal, who):
     return view
 
 
+def directory_rows(campaign_id):
+    """Resolve board relationships once, reusing the already-authorized projection rows."""
+    rows=list(Journal.objects.filter(campaign_id=campaign_id).prefetch_related('access'))
+    by_id={row.pk:row for row in rows}
+    for row in rows:
+        row._directory_board_links=[]
+        row._directory_quest_links=[]
+    if any(row.type=='quest_board' for row in rows):
+        for link in BoardEntry.objects.filter(board__campaign_id=campaign_id,quest__campaign_id=campaign_id).order_by('-pinned','sort_order','id'):
+            board,quest=by_id.get(link.board_id),by_id.get(link.quest_id)
+            if board and quest and board.type=='quest_board' and quest.type=='quest':
+                link.board,link.quest=board,quest
+                board._directory_board_links.append(link)
+                quest._directory_quest_links.append(link)
+    return rows
+
+
 def state(campaign_id,user_id):
     who=member(campaign_id,user_id)
     from gravewright.table.ownership import allows, journal_grants
     journals=[]
-    for j in Journal.objects.filter(campaign_id=campaign_id).prefetch_related('access'):
+    for j in directory_rows(campaign_id):
         if permissions(j,who)[0] or types.via_board(j,who):
             journals.append(projection(j,who))
         elif allows(journal_grants(j,who),who,listing=True):

@@ -14,3 +14,8 @@ assert.notEqual(key(state), keys.static(state, 70, 1400, 900, true, 'performance
 assert.equal(key(state), key({ ...state, fog: { ...state.fog, gmOpacity: .3 } }));
 
 assert.equal(key(state), key({ ...state, fog: { enabled: true, ops: [{ mode: "reveal" }] } }));
+
+const images = {...state, images: [{id:'art',src:'/art.png',x:10,y:20,scale:1,rotation:0,layer:'game',z_index:0}]};
+assert.equal(key(images), key({...images, images:[{...images.images[0],x:100,scale:2,rotation:90,layer:'gm',z_index:3}]}));
+assert.notEqual(key(images), key({...images, images:[{...images.images[0],src:'/other.png'}]}));
+assert.notEqual(key(images), key({...images, images:[]}));

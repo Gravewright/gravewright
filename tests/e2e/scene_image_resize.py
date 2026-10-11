@@ -1,5 +1,9 @@
 """Exercise image resizing through the full table UI against ownership_server.py."""
 import json
+import subprocess
+import sys
+from io import BytesIO
+from PIL import Image, ImageChops
 from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 
@@ -12,6 +16,10 @@ with sync_playwright() as playwright:
     context = browser.new_context(viewport={'width': 1440, 'height': 1000})
     context.add_cookies([{**SEED['sessions'][0], 'url': BASE}])
     page = context.new_page()
+    if '--cached-board' in sys.argv:
+        old_board = subprocess.check_output(['git', 'show',
+            'HEAD:gravewright/maps/static/gravewright_maps/vendor/board.js'], cwd=ROOT)
+        page.route('**/vendor/board.js*', lambda route: route.fulfill(body=old_board, content_type='text/javascript'))
     errors = []
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(f'{BASE}/game/{SEED["campaign"]}', wait_until='domcontentloaded')
@@ -27,7 +35,7 @@ with sync_playwright() as playwright:
         });
         const asset = await response.json(); if (!response.ok) throw Error(JSON.stringify(asset));
         await gravewrightRealtime.mapCommand('objects', {mapId: scene, area: 'images', action: 'create',
-            data: {asset_id: asset.id || asset.asset_id, x: 400, y: 300, scale: 1}});
+            data: {asset_id: asset.id || asset.asset_id, x: 400, y: 300, scale: 1, z_index: 10000}});
         const state = await (await fetch(`/api/maps/${scene}/state`)).json();
         return state.images.find(i => i.asset_id === (asset.id || asset.asset_id));
     }""", {'campaign': SEED['campaign'], 'scene': SEED['scene']})
@@ -41,8 +49,12 @@ with sync_playwright() as playwright:
     box = handles.nth(2).bounding_box()
     x, y = box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
     page.mouse.move(x, y)
+    canvas = page.locator('.game-board canvas').first
+    before_pixels = Image.open(BytesIO(canvas.screenshot())).convert('RGB')
     page.mouse.down()
     page.mouse.move(x + 60, y + 30, steps=8)
+    after_pixels = Image.open(BytesIO(canvas.screenshot())).convert('RGB')
+    assert ImageChops.difference(before_pixels, after_pixels).getbbox(), 'Image preview must update rendered pixels.'
     page.mouse.up()
     page.wait_for_function("""({scene, width, id}) => fetch(`/api/maps/${scene}/state`).then(r => r.json())
         .then(state => state.images.some(i => i.id === id && i.natural_width * i.scale > width + 10))""",

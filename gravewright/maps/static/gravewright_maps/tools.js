@@ -1,4 +1,4 @@
-// shared/config/i18n/text.js
+// gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
 function notifyTextChange() {
   for (const listener of listeners)
@@ -40,7 +40,7 @@ if (typeof window !== "undefined") {
   if (window.gravewrightLocale) apply(window.gravewrightLocale);
 }
 
-// features/drawing/model/drawing.js
+// gravewright/maps/frontend/features/drawing/model/drawing.js
 function bounds(row) {
   const xs = row.points.map((p) => p.x), ys = row.points.map((p) => p.y), pad = row.width / 2 + 2;
   const x = Math.min(...xs), y = Math.min(...ys);
@@ -94,7 +94,7 @@ function hit(row, p, tolerance) {
   });
 }
 
-// features/selection/model/objects.js
+// gravewright/maps/frontend/features/selection/model/objects.js
 function rotate(p, c, degrees) {
   const a = degrees * Math.PI / 180, dx = p.x - c.x, dy = p.y - c.y;
   return { x: c.x + dx * Math.cos(a) - dy * Math.sin(a), y: c.y + dx * Math.sin(a) + dy * Math.cos(a) };
@@ -179,7 +179,7 @@ function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0, y: 0 }
   return out.sort((a, b) => a.rank - b.rank);
 }
 
-// features/selection/model/selection-commands.js
+// gravewright/maps/frontend/features/selection/model/selection-commands.js
 async function applySelection(api, tokens, container, block, map, cell, state, objects, action, center, dx = 0, dy = 0, angle = 0, origin = { x: 0, y: 0 }) {
   const failed = [], done = [];
   const drawings = objects.filter((o) => o.kind === "drawing");
@@ -246,7 +246,7 @@ function transformMeasures(rows, ids, action, center, dx, dy, angle) {
   return rows.filter((m) => action !== "delete" || !ids.includes(m.id)).map((m) => ids.includes(m.id) ? { ...m, origin: transformedPoint(m.origin, center, dx, dy, angle), direction: m.direction + angle } : m);
 }
 
-// features/effects/model/effects.js
+// gravewright/maps/frontend/features/effects/model/effects.js
 function defaults() {
   return { light_response: 0, light_emission: 0, bright_radius: 2, dim_radius: 4, angle: 360, animation: "none", x: 0, y: 0, kind: "smoke", scale: 3, density: 0.6, color: "#9aa3ad", enabled: true, rotation: 0, name: "Shader", source: "void main() { float a = 0.35 * uIntensity; finalColor = vec4(uColor * a, a); }", radius: 0, opacity: 1, intensity: 0.6, speed: 1, blend_mode: "normal" };
 }
@@ -270,7 +270,7 @@ function translatedCopies(items, at) {
   return items.map((e) => ({ kind: e.kind, data: payload(e.kind, { ...e.data, x: at.x + e.x - center.x, y: at.y + e.y - center.y }) }));
 }
 
-// features/images/model/image-transform.js
+// gravewright/maps/frontend/features/images/model/image-transform.js
 function resizeImage(image, corner, start, point) {
   const angle = image.rotation * Math.PI / 180;
   const cos = Math.cos(angle), sin = Math.sin(angle);
@@ -288,7 +288,16 @@ function resizeImage(image, corner, start, point) {
   };
 }
 
-// features/selection/ui/selection-workspace.js
+// gravewright/maps/frontend/features/images/model/image-preview.js
+function previewBoardImage(board, state, image) {
+  if (typeof board.previewImage === "function") return board.previewImage(image);
+  return board.update({ state: image ? {
+    ...state,
+    images: state.images.map((row) => row.id === image.id ? image : row)
+  } : state });
+}
+
+// gravewright/maps/frontend/features/selection/ui/selection-workspace.js
 function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   const abort = new AbortController(), signal = abort.signal, svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.classList.add("selection-workspace");
@@ -358,7 +367,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     preview = void 0;
     if (resizePreview) {
       resizePreview = void 0;
-      void board.update({ state });
+      void previewBoardImage(board, state);
     }
     menu?.remove();
     menu = void 0;
@@ -399,7 +408,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     drag.to = lastPoint;
     if (drag.image) {
       resizePreview = resizeImage(drag.image, drag.corner, drag.from, lastPoint);
-      void board.update({ state: { ...state, images: state.images.map((i) => i.id === resizePreview.id ? resizePreview : i) } });
+      void previewBoardImage(board, state, resizePreview);
       paint();
       return;
     }
@@ -446,7 +455,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
       busy = false;
       resizePreview = void 0;
       if (!signal.aborted) {
-        void board.update({ state });
+        void previewBoardImage(board, state);
         paint();
       }
     }
@@ -643,7 +652,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   } };
 }
 
-// native/widget.js
+// gravewright/maps/frontend/native/widget.js
 var CELL = /* @__PURE__ */ Symbol("cell");
 var expressions = /* @__PURE__ */ new Map();
 function evaluate(code, ctx, eventMode = false) {
@@ -1059,7 +1068,7 @@ function widget(markup, setup) {
   };
 }
 
-// shared/ui/directory/DirectoryContextMenu.native.js
+// gravewright/maps/frontend/shared/ui/directory/DirectoryContextMenu.native.js
 var DirectoryContextMenu_native_default = widget([{ "tag": "menu", "attrs": { "ref": "menu", "class": "gw-folder-menu directory-context-menu" }, "bind": { "aria-label": "label", "style": "{ left: `${position.x}px`, top: `${position.y}px` }" }, "events": [{ "event": "click", "code": "", "mods": ["stop"] }, { "event": "contextmenu", "code": "", "mods": ["prevent", "stop"] }], "children": [{ "tag": "slot", "attrs": {}, "bind": {}, "events": [], "children": [] }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const props = options.props;
   const emit = options.emit;
@@ -1111,7 +1120,7 @@ var DirectoryContextMenu_native_default = widget([{ "tag": "menu", "attrs": { "r
   return { props, emit, menu, position, place, outside, other, keyboard };
 });
 
-// features/drawing/ui/DrawingWorkspace.native.js
+// gravewright/maps/frontend/features/drawing/ui/DrawingWorkspace.native.js
 var PhCursor = "PhCursor";
 var PhPencilSimple = "PhPencilSimple";
 var PhLineSegment = "PhLineSegment";
@@ -1434,7 +1443,7 @@ var DrawingWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": 
   return { gwText: text, PhCursor, PhPencilSimple, PhLineSegment, PhArrowUpRight, PhRectangle, PhCircle, PhTextT, PhEraser, PhArrowCounterClockwise, PhArrowClockwise, PhTrash, PhCopy, PhClipboard, PhX, BlockStateApi, HttpClient: HttpClient2, DirectoryContextMenu: DirectoryContextMenu_native_default, bounds, hit, path, translated, root, tool, rows, version, selected, draft, marquee, color, fill, filled, width, opacity, fontSize, text: text2, busy, error, clearConfirm, context, undo, redo, clipboard, drag, tools, palette, visible, editable, copyRows, point, pick, release, cancel, save, create, down, move, up, choose, remove, copy, paste, history, styleSelection, edit, menu, key, emit: options.emit };
 });
 
-// features/measurement/model/measurement.js
+// gravewright/maps/frontend/features/measurement/model/measurement.js
 var unitsPerPixel = (cell, value) => (Number.isFinite(value) && value > 0 ? value : 1) / (Number.isFinite(cell) && cell > 0 ? cell : 70);
 function dragMeasure(seed, end, constrain = false) {
   let dx = end.x - seed.origin.x, dy = end.y - seed.origin.y;
@@ -1494,7 +1503,7 @@ function summary(m, factor, unit) {
   return `${measure(length)} \xB7 ${m.kind === "cone" ? `${n(m.angle)}\xB0` : `${text("width")} ${measure(width)}`} \xB7 ${n(area(m) * factor * factor)} ${unit}\xB2`;
 }
 
-// features/measurement/ui/MeasurementWorkspace.native.js
+// gravewright/maps/frontend/features/measurement/ui/MeasurementWorkspace.native.js
 var PhRuler = "PhRuler";
 var PhTrash2 = "PhTrash";
 var PhX2 = "PhX";
@@ -1669,7 +1678,7 @@ var MeasurementWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "re
   return { gwText: text, PhRuler, PhTrash: PhTrash2, PhX: PhX2, PhPlus, dragMeasure, measurePath, summary, unitsPerPixel, root, rows, draft, selected, kind, color, snap, angle, confirmClear, lengthValue, widthValue, direction, factor, current, visible, formats: formats2, drag, point, release, cancel, load, down, move, up, choose, apply, wheel, remove, key, emit: options.emit };
 });
 
-// features/images/ui/ImageWorkspace.native.js
+// gravewright/maps/frontend/features/images/ui/ImageWorkspace.native.js
 var PhTrash3 = "PhTrash";
 var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "root", "class": "image-workspace" }, "bind": {}, "events": [{ "event": "pointermove", "code": "move;", "mods": [] }, { "event": "pointerup", "code": "up;", "mods": [] }, { "event": "pointercancel", "code": "cancel;", "mods": [] }], "children": [{ "tag": "g", "attrs": {}, "bind": { "transform": "(`translate(${viewport.x} ${viewport.y}) scale(${viewport.scale})`)" }, "events": [], "children": [{ "tag": "g", "attrs": {}, "bind": { "key": "(image.id)", "transform": "(`translate(${image.x} ${image.y}) rotate(${image.rotation})`)" }, "events": [], "children": [{ "tag": "rect", "attrs": { "class": "image-workspace__image", "fill": "transparent", "role": "button" }, "bind": { "class": "({ 'image-workspace__image--active': tool === 'select' })", "x": "(-image.natural_width * image.scale / 2)", "y": "(-image.natural_height * image.scale / 2)", "width": "(image.natural_width * image.scale)", "height": "(image.natural_height * image.scale)", "stroke": "(selected === image.id ? '#e9c46a' : 'none')", "stroke-width": "(2 / viewport.scale)", "tabindex": "(tool === 'select' ? 0 : -1)", "aria-label": "(gwText('Scene image'))", "aria-pressed": "(selected === image.id)" }, "events": [{ "event": "pointerdown", "code": "down($event, image);", "mods": [] }, { "event": "contextmenu", "code": "menu($event, image);", "mods": [] }, { "event": "keydown", "code": "selected = image.id;", "mods": ["enter", "stop"] }], "children": [] }, { "tag": "rect", "attrs": { "class": "image-workspace__resize", "role": "button", "tabindex": "0" }, "bind": { "key": "`handle-${corner.x}-${corner.y}`", "x": "corner.x * image.natural_width * image.scale / 2 - 6 / viewport.scale", "y": "corner.y * image.natural_height * image.scale / 2 - 6 / viewport.scale", "width": "12 / viewport.scale", "height": "12 / viewport.scale", "stroke-width": "1 / viewport.scale", "aria-label": "gwText('Drag to resize')" }, "events": [{ "event": "pointerdown", "code": "down($event, image, corner);", "mods": [] }, { "event": "keydown", "code": "resizeKey($event, image, corner);", "mods": [] }], "children": [{ "tag": "title", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "gwText('Drag to resize')" }] }], "each": { "names": ["corner"], "value": "corners" }, "when": "selected === image.id && tool === 'select'" }], "each": { "names": ["image"], "value": "(images)" } }] }] }, { "tag": "p", "attrs": { "class": "image-workspace__status" }, "bind": { "role": "(error ? 'alert' : 'status')" }, "events": [], "children": [{ "value": "(error || gwText('Saving image\u2026'))" }], "when": "(error || busy)" }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "DirectoryContextMenu", "attrs": {}, "bind": { "x": "(context.x)", "y": "(context.y)", "label": "(gwText('Image actions'))" }, "events": [{ "event": "close", "code": "context = undefined;", "mods": [] }], "children": [{ "tag": "li", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "class": "is-danger" }, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "remove;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove from scene'))" }] }] }], "when": "(context)" }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const HttpClient2 = options.HttpClient;
@@ -1849,10 +1858,10 @@ var ImageWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
   return { gwText: text, PhTrash: PhTrash3, BlockStateApi, HttpClient: HttpClient2, DirectoryContextMenu: DirectoryContextMenu_native_default, root, selected, preview, busy, error, context, images, corners: corners2, drag, show, point, down, move, release, cancel, save, up, resizeKey, remove, menu, key, emit: options.emit };
 });
 
-// features/lighting/ui/LightPicker.native.js
+// gravewright/maps/frontend/features/lighting/ui/LightPicker.native.js
 import { renderingPreferences } from "/static/gravewright_maps/render-profile.js";
 
-// shared/rendering/effect-quality.js
+// gravewright/maps/frontend/shared/rendering/effect-quality.js
 var EFFECT_QUALITY = {
   performance: { fps: 15, lightFps: 8, particles: 0.25, particleLimit: 300, lightMap: 256, shaderDetail: 1, shaders: true },
   balanced: { fps: 30, lightFps: 15, particles: 0.5, particleLimit: 600, lightMap: 512, shaderDetail: 3, shaders: true },
@@ -1862,7 +1871,7 @@ function effectQuality(profile) {
   return EFFECT_QUALITY[profile];
 }
 
-// features/lighting/model/light-profiles.js
+// gravewright/maps/frontend/features/lighting/model/light-profiles.js
 var lightPresets = [
   { id: "torch", get name() {
     return text("Torch");
@@ -1964,7 +1973,7 @@ function paintAnimatedLight(ctx, light, x, y, radius, now) {
   ctx.restore();
 }
 
-// features/lighting/ui/LightPicker.native.js
+// gravewright/maps/frontend/features/lighting/ui/LightPicker.native.js
 var PhFlame = "PhFlame";
 var PhWaveform = "PhWaveform";
 var PhLightbulb = "PhLightbulb";
@@ -2032,7 +2041,7 @@ var LightPicker_native_default = widget([{ "tag": "section", "attrs": { "ref": "
   return { gwText: text, PhFlame, PhWaveform, PhLightbulb, PhX: PhX3, renderingPreferences, effectQuality, lightPresets, paintAnimatedLight, hovered, current, panel, canvas, position, frame, restart, stopProfile, icons, place, outside, emit: options.emit };
 });
 
-// shared/lib/dom/movable-resizable.js
+// gravewright/maps/frontend/shared/lib/dom/movable-resizable.js
 var cleanups = /* @__PURE__ */ new WeakMap();
 var windows = /* @__PURE__ */ new Set();
 function mount(element) {
@@ -2116,7 +2125,7 @@ var vMovableResizable = { mounted: mount, unmounted(element) {
   cleanups.delete(element);
 } };
 
-// features/lighting/ui/LightEditor.native.js
+// gravewright/maps/frontend/features/lighting/ui/LightEditor.native.js
 var PhX4 = "PhX";
 var PhTrash4 = "PhTrash";
 var LightEditor_native_default = widget([{ "tag": "section", "attrs": { "class": "gw-window light-editor", "role": "dialog" }, "bind": { "aria-label": "(gwText('Light source'))" }, "events": [{ "event": "pointerdown", "code": "", "mods": ["stop"] }, { "event": "wheel", "code": "", "mods": ["stop"] }, { "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "header", "attrs": { "class": "light-editor__header", "data-move-handle": "" }, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Light source'))" }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": "(gwText('Close'))" }, "events": [{ "event": "click", "code": "emit('close');", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "div", "attrs": { "class": "light-editor__body" }, "bind": {}, "events": [], "children": [{ "tag": "template", "attrs": {}, "bind": { "key": "(range.key)" }, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.name)" }] }, { "tag": "div", "attrs": { "class": "light-editor__slider" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "range" }, "bind": { "min": "(range.min)", "max": "(Math.max(range.max, draft[range.key]))", "step": "(range.step)", "disabled": "(range.key === 'dim_radius' && draft.dim_radius === 0)" }, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft[range.key])", "mods": ["number"] } }, { "tag": "output", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(range.key === 'dim_radius' && draft.dim_radius === 0 ? '\u221E' : draft[range.key])" }, { "value": "(['angle', 'rotation'].includes(range.key) ? '\xB0' : '')" }] }] }], "when": "(range.key !== 'rotation' || draft.angle < 360)" }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": { "checked": "(draft.dim_radius === 0)" }, "events": [{ "event": "change", "code": "unlimited;", "mods": [] }], "children": [] }, { "value": "(gwText('Unlimited'))" }], "when": "(range.key === 'dim_radius')" }], "each": { "names": ["range"], "value": "(ranges)" } }, { "tag": "div", "attrs": { "class": "light-editor__pair" }, "bind": {}, "events": [], "children": [{ "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Animation'))" }] }, { "tag": "select", "attrs": {}, "bind": {}, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [{ "tag": "option", "attrs": { "value": "none" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Steady'))" }] }, { "tag": "option", "attrs": { "value": "torch" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Torch'))" }] }, { "tag": "option", "attrs": { "value": "pulse" }, "bind": {}, "events": [], "children": [{ "value": "(gwText('Pulse'))" }] }, { "tag": "option", "attrs": {}, "bind": { "value": "(draft.animation)" }, "events": [], "children": [{ "value": "(draft.animation)" }], "when": "(!['none', 'torch', 'pulse'].includes(draft.animation))" }], "model": { "path": "(draft.animation)", "mods": [] } }] }, { "tag": "label", "attrs": { "class": "light-editor__field" }, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Color'))" }] }, { "tag": "input", "attrs": { "type": "color" }, "bind": {}, "events": [{ "event": "input", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.color)", "mods": [] } }] }] }, { "tag": "label", "attrs": { "class": "light-editor__check" }, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "checkbox" }, "bind": {}, "events": [{ "event": "change", "code": "emit('change');", "mods": [] }], "children": [], "model": { "path": "(draft.enabled)", "mods": [] } }, { "value": "(gwText('On'))" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "(gwText('Radii use grid cells. Walls block light.'))" }] }, { "tag": "p", "attrs": { "role": "alert" }, "bind": {}, "events": [], "children": [{ "value": "(props.error)" }], "when": "(props.error)" }, { "tag": "footer", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "span", "attrs": { "role": "status" }, "bind": {}, "events": [], "children": [{ "value": "(busy ? gwText('Saving\u2026') : gwText('Changes saved automatically'))" }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "(busy)" }, "events": [{ "event": "click", "code": "emit('remove');", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": "(gwText('Remove'))" }] }] }] }], "movable": true }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
@@ -2150,7 +2159,7 @@ var LightEditor_native_default = widget([{ "tag": "section", "attrs": { "class":
   return { gwText: text, PhX: PhX4, PhTrash: PhTrash4, vMovableResizable, draft, ranges, unlimited, emit: options.emit };
 });
 
-// features/scene-layers/lib/shader-presets.js
+// gravewright/maps/frontend/features/scene-layers/lib/shader-presets.js
 var shaderPresets = [
   {
     "opacity": 1,
@@ -3344,7 +3353,7 @@ var shaderPresets = [
   }
 ];
 
-// features/effects/model/shader-source.js
+// gravewright/maps/frontend/features/effects/model/shader-source.js
 function normalizeShaderSource(value) {
   const lines = value.replace(/\r\n?/g, "\n").trim().split("\n");
   const output = [];
@@ -3393,10 +3402,10 @@ function normalizeShaderSource(value) {
   return output.join("\n").trim();
 }
 
-// features/effects/model/shader-prompt.js
+// gravewright/maps/frontend/features/effects/model/shader-prompt.js
 var shaderPrompt = "Write a generative GLSL ES 3.00 fragment shader for Gravewright.\n\nOUTPUT CONTRACT \u2014 RAW SOURCE FILE\nYour entire reply will be pasted directly into a GLSL compiler, not a Markdown renderer.\nReturn exactly one complete, compilable shader source as plain text.\nDo not use Markdown: no code fences (including glsl fences), headings, lists, blockquotes, inline backticks, or explanatory paragraphs.\nDo not escape GLSL operators for Markdown (write * directly, never backslash-star), and do not add backslashes at the ends of source lines. Do not label any part as arduino, cpp, java, or another language.\nDo not split the shader into snippets. Do not include a filename, language label, introduction, conclusion, or instructions for copying it.\nStart directly with GLSL source. Keep top-level declarations at column 1; indent only inside functions. End immediately after the final closing brace.\nReturn helper functions and exactly one void main(). Do not include #version, precision, uniform/input/output declarations: the engine supplies them.\nBefore replying, silently verify that the entire response can be pasted unchanged into the source field. Output only that source.\n\nRENDERING CONTRACT\nThe shader draws a transparent frame over the map. It does not receive the scene image. The frame already matches the range and is clipped by range, walls, and doors; do not implement this clipping in GLSL. Always write premultiplied alpha: finalColor = vec4(color * a, a). The engine applies blending afterward: Normal, Add, Multiply, or Screen. Do not implement blending in the shader.\n\nALREADY AVAILABLE: DO NOT DECLARE\n  in vec2 vTextureCoord;\n  out vec4 finalColor;\n  uniform sampler2D uTexture;      // white frame texture, not the map\n  uniform sampler2D uLightBuffer;  // accumulated scene lighting\n  uniform float uTime;            // seconds, resets every hour\n  uniform float uIntensity;       // 0..1, internal effect strength\n  uniform float uOpacity;         // 0..1, applied automatically after main()\n  uniform float uScale;           // 0.1..20\n  uniform float uSpeed;           // 0..8\n  uniform vec3 uColor;            // channels 0..1\n  uniform vec2 uResolution;       // frame size in pixels\n  uniform float uAspect;\n  uniform vec2 uOrigin;           // origin in world coordinates\n  uniform float uRadius;          // world range; 0 = entire scene\n  uniform float uRotation;        // radians\n  uniform vec3 uCamera;           // x/y offset and zoom\n  uniform vec2 uScreen;           // screen size in pixels\n  vec2 gwScreen(vec2 uv);         // screen pixel\n  vec2 gwScreenUV(vec2 uv);       // screen position 0..1\n  vec2 gwWorld(vec2 uv);          // world point; stays fixed during pan/zoom\n  vec2 gwRotated(vec2 uv);        // world rotated around uOrigin\n  float gwFeature();             // feature size tied to range and uScale\n  vec2 gwPattern(vec2 uv);        // (gwRotated(uv) - uOrigin) / gwFeature(); returns (0,0) at the click\n  vec4 gwLight(vec2 uv);          // rgb = light color; a = intensity\n\nRULES\n1. Build patterns in gwPattern(vTextureCoord): it returns exactly vec2(0.0) at the clicked point, which is always the effect's center/start. Use gwWorld/gwRotated only for absolute world coordinates. Do not use raw vTextureCoord for map-bound patterns or subtract uOrigin from gwPattern again.\n2. Use uTime * uSpeed for animation, uIntensity for internal strength/alpha, and uColor as the dominant color. uScale already affects gwFeature(); do not apply it again with gwPattern.\n3. The engine multiplies finalColor by uOpacity after main(). Do not multiply by uOpacity, or transparency will be applied twice.\n4. gwLight(vTextureCoord) is optional. Use it for effects that respond to lights. Do not make effects disappear completely without light unless requested.\n5. Use GLSL ES 3.00 syntax and explicit, compatible types. Define every helper you call. Do not use Shadertoy mainImage, iTime, iResolution, or gl_FragColor.\n6. In smoothstep(edge0, edge1, x), keep edge0 < edge1. Invert with 1.0 - smoothstep(low, high, x); reversed edges have undefined results.\n7. Avoid division by zero, NaN/Inf, unbounded loops, and excessive per-pixel work. Multiple shaders may run simultaneously. Code can contain up to 32,000 characters.\n\nDESIRED EFFECT\n<describe appearance, motion, density, and lighting behavior here>\n\nFINAL REMINDER\nReply with raw GLSL only, from the first source line to the last closing brace. No Markdown or surrounding text.";
 
-// features/effects/ui/shader-prompt-dialog.js
+// gravewright/maps/frontend/features/effects/ui/shader-prompt-dialog.js
 function shaderInstructions(description) {
   return shaderPrompt.replace("<describe appearance, motion, density, and lighting behavior here>", () => description.trim());
 }
@@ -3516,7 +3525,7 @@ function openShaderPrompt(onInsert, onClose) {
   return close;
 }
 
-// features/effects/model/legacy-labels.js
+// gravewright/maps/frontend/features/effects/model/legacy-labels.js
 var effectLabels = {
   get "lighting.shaders.whole_scene"() {
     return text("Entire scene");
@@ -3748,7 +3757,7 @@ var effectLabels = {
   }
 };
 
-// features/effects/ui/EffectEditor.native.js
+// gravewright/maps/frontend/features/effects/ui/EffectEditor.native.js
 var PhX5 = "PhX";
 var PhTrash5 = "PhTrash";
 var PhCheck = "PhCheck";
@@ -3812,10 +3821,10 @@ var EffectEditor_native_default = widget([{ "tag": "section", "attrs": { "class"
   return { gwText: text, PhX: PhX5, PhTrash: PhTrash5, PhCheck, PhBooks, PhMagicWand, PhCopy: PhCopy2, vMovableResizable, shaderPresets, effectLabels, draft, particleNames, t, search, category, choice, categories, presets, chosen, apply, showPrompt, ranges, emit: options.emit };
 });
 
-// features/effects/ui/EffectPreview.native.js
+// gravewright/maps/frontend/features/effects/ui/EffectPreview.native.js
 import { renderingPreferences as renderingPreferences2 } from "/static/gravewright_maps/render-profile.js";
 
-// features/scene-layers/lib/shader-language.js
+// gravewright/maps/frontend/features/scene-layers/lib/shader-language.js
 var PREAMBLE = `#version 300 es
 precision highp float;
 
@@ -3947,7 +3956,7 @@ var USER_PREFIX = `#define uTexture gwUTexture
 `;
 var USER_SUFFIX = "\n#undef main\nvoid main() { gwUserMain(); finalColor *= gwUOpacity; finalColor = gwIlluminate(finalColor, vTextureCoord, gwULightResponse); }\n";
 
-// features/effects/model/particle-profiles.js
+// gravewright/maps/frontend/features/effects/model/particle-profiles.js
 function phaseOf(id) {
   let hash = 0;
   for (let i = 0; i < id.length; i++)
@@ -4180,7 +4189,7 @@ function particlesOf(emitter, now, cellSize) {
   return out;
 }
 
-// features/effects/ui/EffectPreview.native.js
+// gravewright/maps/frontend/features/effects/ui/EffectPreview.native.js
 var EffectPreview_native_default = widget([{ "tag": "div", "attrs": { "class": "effect-preview", "role": "img" }, "bind": { "aria-label": "(gwText('Preview: {0}', label))" }, "events": [], "children": [{ "tag": "div", "attrs": { "ref": "host", "class": "effect-preview__surface" }, "bind": {}, "events": [], "children": [{ "tag": "canvas", "attrs": { "ref": "canvas" }, "bind": {}, "events": [], "children": [] }] }, { "tag": "span", "attrs": { "class": "effect-preview__label" }, "bind": {}, "events": [], "children": [{ "value": "(failed ? gwText('Preview unavailable') : label)" }] }] }], (options, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
   const HttpClient2 = options.HttpClient;
   const BlockStateApi = class {
@@ -4368,7 +4377,7 @@ var EffectPreview_native_default = widget([{ "tag": "div", "attrs": { "class": "
   return { gwText: text, renderingPreferences: renderingPreferences2, effectQuality, PREAMBLE, USER_PREFIX, USER_SUFFIX, shaderPresets, PARTICLE_DEFAULTS, PARTICLE_KINDS, particlesOf, defaults, host, canvas, failed, gl, ctx, program, buffer, white, observer, frame, closed, started, stopProfile, animate, compile, render, emit: options.emit };
 });
 
-// features/effects/ui/EffectPicker.native.js
+// gravewright/maps/frontend/features/effects/ui/EffectPicker.native.js
 var PhCloud = "PhCloud";
 var PhFireSimple = "PhFireSimple";
 var PhDotsThreeOutline = "PhDotsThreeOutline";
@@ -4427,7 +4436,7 @@ var EffectPicker_native_default = widget([{ "tag": "section", "attrs": { "ref": 
   return { gwText: text, PhCloud, PhFireSimple, PhDotsThreeOutline, PhSparkle, PhCloudRain, PhSnowflake, PhLightbulb: PhLightbulb2, PhLeaf, PhCirclesThreePlus, PhWind, PhDrop, PhPentagram, PhCode, PhCodeBlock, PhX: PhX6, shaderPresets, effectLabels, EffectPreview: EffectPreview_native_default, icons, title, hovered, previewChoice, previewLabel, panel, position, place, outside, emit: options.emit };
 });
 
-// features/effects/model/shader-validation.js
+// gravewright/maps/frontend/features/effects/model/shader-validation.js
 var ShaderDraftValidator = class {
   gl;
   validate(source) {
@@ -4456,7 +4465,7 @@ var ShaderDraftValidator = class {
   }
 };
 
-// features/scene-layers/ui/SceneSourcesWorkspace.native.js
+// gravewright/maps/frontend/features/scene-layers/ui/SceneSourcesWorkspace.native.js
 var PhCopy3 = "PhCopy";
 var PhClipboard2 = "PhClipboard";
 var PhTrash6 = "PhTrash";
@@ -4896,7 +4905,7 @@ var SceneSourcesWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "r
   return { gwText: text, PhCopy: PhCopy3, PhClipboard: PhClipboard2, PhTrash: PhTrash6, BlockStateApi, HttpClient: HttpClient2, DirectoryContextMenu: DirectoryContextMenu_native_default, LightPicker: LightPicker_native_default, LightEditor: LightEditor_native_default, lightPresets, EffectEditor: EffectEditor_native_default, EffectPicker: EffectPicker_native_default, PARTICLE_DEFAULTS, ShaderDraftValidator, shaderPresets, effects, defaults, hitEffect, inMarquee, payload, translatedCopies, lights, batchArea, lightChoice, noun, area: area2, identityKey, rowKey, root, items, selection, clipboard, selected, context, picker, particleChoice, shaderChoice, editor, editing, draft, error, busy, clearConfirm, delta, marquee, gesture, editorVisit, previewFrame, pendingDelta, lastPoint, closed, queue, saveTimer, shaderTimer, validator, writer, containerId, blockId, point, center, refs, run, open, closePicker, action, choose, shaderData, save, previewShader, changed, flush, closeEditor, createAt, down, paintPreview, previewMove, move, up, doubleClick, menu, copy, paste, discardPending, remove, clear, wheel, keyboard, emit: options.emit };
 });
 
-// shared/lifecycle/scope.js
+// gravewright/maps/frontend/shared/lifecycle/scope.js
 var ResourceScope = class {
   #abort = new AbortController();
   #cleanups = [];
@@ -4936,7 +4945,7 @@ var ResourceScope = class {
   }
 };
 
-// features/table-library/model/library-upload.js
+// gravewright/maps/frontend/features/table-library/model/library-upload.js
 var IMAGE_ACCEPT = "image/png,image/jpeg,image/webp";
 var AUDIO_ACCEPT = "audio/ogg,audio/opus,audio/mpeg,audio/mp4,audio/wav,.ogg,.opus,.mp3,.m4a,.wav";
 var mimeByExtension = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", ogg: "audio/ogg", opus: "audio/opus", mp3: "audio/mpeg", m4a: "audio/mp4", wav: "audio/wav", pdf: "application/pdf" };
@@ -4978,7 +4987,7 @@ function uploadError(error) {
   return text("Could not complete the action. Check the connection and try again.");
 }
 
-// features/table-library/ui/AssetUploadLibrary.native.js
+// gravewright/maps/frontend/features/table-library/ui/AssetUploadLibrary.native.js
 var PhImage = "PhImage";
 var PhMusicNotes = "PhMusicNotes";
 var PhWaveform2 = "PhWaveform";
@@ -5137,7 +5146,7 @@ var AssetUploadLibrary_native_default = widget([{ "tag": "section", "attrs": { "
   return { gwText: text, PhImage, PhMusicNotes, PhWaveform: PhWaveform2, PhFilePdf, PhFolder, PhFolderOpen, PhFolderPlus, PhMagnifyingGlass, PhTrash: PhTrash7, PhArrowsLeftRight, HttpClient: HttpClient2, ResourceScope, DirectoryContextMenu: DirectoryContextMenu_native_default, IMAGE_ACCEPT, AUDIO_ACCEPT, assetKinds, bytesLabel, uploadError, uploadFile, validateUpload, scope, http, root, state, folder, kind, search, folderName, busy, error, notice, progress, dragging, context, removing, moving, target, uploads, filters, visible, visibleBytes, refreshId, refresh, command, upload, choose, openContext, dragAsset, drop, emit: options.emit };
 });
 
-// native/tools.js
+// gravewright/maps/frontend/native/tools.js
 var HttpClient = class {
   signal;
   constructor(_base, signal = () => void 0) {
@@ -5227,7 +5236,7 @@ function createTools(surface, board, map, gm, api, stateAPI) {
         if (type === "refresh")
           void api.read();
         if (type === "preview")
-          void board.update({ state: value ? { ...state, images: state.images.map((i) => i.id === value.id ? value : i) } : state });
+          void previewBoardImage(board, state, value);
       } });
     else if (!compose && images) {
       images.destroy();

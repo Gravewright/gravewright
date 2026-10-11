@@ -24,6 +24,18 @@ from .models import Actor, Asset, Folder
     ALLOWED_HOSTS=["testserver"],
 )
 class ActorTests(TransactionTestCase):
+    def test_directory_does_not_load_sheet_json(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+        self.actor.data['large_sheet']='x'*100000
+        self.actor.save(update_fields=['data'])
+        with CaptureQueriesContext(connection) as queries:
+            result=services.state(self.campaign.pk,self.gm.pk)
+        self.assertEqual(result['actors'][0]['name'],self.actor.name)
+        actor_queries=[q['sql'] for q in queries if 'FROM "gravewright_actors_actor"' in q['sql']]
+        self.assertTrue(actor_queries)
+        self.assertFalse(any('"gravewright_actors_actor"."data"' in q for q in actor_queries))
+
     def setUp(self):
         fixtures.SocketTests.setUp(self)
         temp = TemporaryDirectory()

@@ -51,6 +51,15 @@ export class PixiBoardRenderer {
     /** The tiles asked for by the most recent `setTiles`; in-flight loads are judged against it. */
     #wanted = new Map();
     #destroyed = false;
+    #renderFrame = 0;
+    /** Coalesce visual changes; a still scene consumes no render-loop frames. */
+    invalidate() {
+        if (this.#destroyed || this.#renderFrame) return;
+        this.#renderFrame = requestAnimationFrame(() => {
+            this.#renderFrame = 0;
+            if (!this.#destroyed) this.#application.render();
+        });
+    }
     constructor(application, label) {
         this.#application = application;
         // Tiles stack by level rather than by arrival, so a coarse backdrop stays under the finer level
@@ -67,6 +76,7 @@ export class PixiBoardRenderer {
         application.stage.addChild(this.#world);
         application.canvas.setAttribute("role", "img");
         this.setLabel(label);
+        this.invalidate();
     }
     get surface() {
         return { width: this.#application.screen.width, height: this.#application.screen.height };
@@ -77,6 +87,7 @@ export class PixiBoardRenderer {
     setViewport(view) {
         this.#world.position.set(view.x, view.y);
         this.#world.scale.set(view.scale);
+        this.invalidate();
     }
     async setTiles(tiles) {
         if (this.#destroyed)
@@ -110,6 +121,7 @@ export class PixiBoardRenderer {
     }
     setGrid(grid) {
         this.#grid.clear();
+        this.invalidate();
         if (!grid.visible || grid.cellSize <= 0 || grid.opacity <= 0)
             return;
         // Refuse pathological density: below this threshold the lines merge into a fill and cost tens
@@ -136,9 +148,9 @@ export class PixiBoardRenderer {
         this.#world.addChild(container);
         const layer = {
             id,
-            setOrder: (next) => { container.zIndex = next; },
-            setVisible: (visible) => { container.visible = visible; },
-            clear: () => { container.removeChildren().forEach((child) => child.destroy({ children: true })); },
+            setOrder: (next) => { container.zIndex = next; this.invalidate(); },
+            setVisible: (visible) => { container.visible = visible; this.invalidate(); },
+            clear: () => { container.removeChildren().forEach((child) => child.destroy({ children: true })); this.invalidate(); },
             // Everything above this line is engine-neutral; this is the one door, and it is marked.
             native: () => ({ engine, container }),
             dispose: () => {
@@ -147,9 +159,11 @@ export class PixiBoardRenderer {
                 this.#layers.delete(id);
                 container.removeFromParent();
                 container.destroy({ children: true });
+                this.invalidate();
             },
         };
         this.#layers.set(id, { layer, container });
+        this.invalidate();
         return layer;
     }
     drawShape(id, position, shapes) {
@@ -163,6 +177,7 @@ export class PixiBoardRenderer {
         }
         graphics.position.set(position.x, position.y);
         graphics.clear();
+        this.invalidate();
         for (const shape of shapes) {
             if (shape.kind === "circle")
                 graphics.circle(0, 0, shape.radius);
@@ -185,6 +200,7 @@ export class PixiBoardRenderer {
         this.#shapes.delete(id);
         graphics.removeFromParent();
         graphics.destroy();
+        this.invalidate();
     }
     clear() {
         this.#wanted = new Map();
@@ -202,6 +218,7 @@ export class PixiBoardRenderer {
     resize() {
         if (!this.#destroyed)
             this.#application.resize();
+        this.invalidate();
     }
     setLabel(label) {
         this.#application.canvas.setAttribute("aria-label", label);
@@ -210,6 +227,8 @@ export class PixiBoardRenderer {
         if (this.#destroyed)
             return;
         this.#destroyed = true;
+        cancelAnimationFrame(this.#renderFrame);
+        this.#renderFrame = 0;
         this.#wanted = new Map();
         for (const controller of this.#inFlight.values())
             controller.abort();
@@ -261,6 +280,7 @@ export class PixiBoardRenderer {
             sprite.zIndex = tile.depth;
             this.#sprites.set(key, sprite);
             this.#tiles.addChild(sprite);
+            this.invalidate();
             return undefined;
         }
         catch {
@@ -329,6 +349,7 @@ export class PixiBoardRenderer {
     #placePiece(view, piece) {
         const radius = piece.size / 2, radiusY = (piece.height ?? piece.size) / 2;
         view.root.position.set(piece.x, piece.y);
+        this.invalidate();
         const { x: _x, y: _y, ...appearance } = piece;
         const key = JSON.stringify(appearance);
         if (view.appearance === key)
@@ -404,6 +425,7 @@ export class PixiBoardRenderer {
         this.#pieces.delete(key);
         view.root.removeFromParent();
         view.root.destroy({ children: true });
+        this.invalidate();
         if (view.retainedImageUrl)
             pieceAssets.release(view.retainedImageUrl);
     }
@@ -416,12 +438,13 @@ export class PixiBoardRenderer {
         // The texture is this renderer's to free: it was built from bytes it fetched itself, and no
         // asset cache is holding a second reference to it.
         sprite.destroy({ texture: true, textureSource: true });
+        this.invalidate();
     }
 }
 export const createPixiBoardRenderer = async ({ host, background, label }) => {
     const application = new Application();
     try {
-        await application.init({ resizeTo: host, background, antialias: true, autoDensity: true, resolution: Math.min(devicePixelRatio, MAX_RESOLUTION) });
+        await application.init({ resizeTo: host, background, antialias: true, autoDensity: true, autoStart: false, resolution: Math.min(devicePixelRatio, MAX_RESOLUTION) });
     }
     catch (error) {
         // A stage that failed halfway through `init` still holds a renderer; leaving it alive would

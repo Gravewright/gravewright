@@ -454,14 +454,14 @@ export function createBoard(element, options, emit) {
         }
         tilePump.request();
     }
-    return { viewport, worldAt, previewSelection(value){sceneLayers?.previewSelection(value);}, previewCard(value){sceneLayers?.previewCard(value);}, warm, hint(value) { warm(value.region, value.expires_at_ms, observed(value)); }, streamingStats: prefetchSnapshot, prioritize, ping, ready: readyPromise, async update(next) { const changed = next.manifest && JSON.stringify(next.manifest) !== JSON.stringify(props.manifest); Object.assign(props, next); await readyPromise; if (disposed)
-            return; board?.setLabel(props.label); if (changed)
+    return { viewport, worldAt, previewSelection(value){sceneLayers?.previewSelection(value);}, previewImage(value){sceneLayers?.previewImage(value);}, previewCard(value){sceneLayers?.previewCard(value);}, warm, hint(value) { warm(value.region, value.expires_at_ms, observed(value)); }, streamingStats: prefetchSnapshot, prioritize, ping, ready: readyPromise, async update(next) { const changed = next.manifest && JSON.stringify(next.manifest) !== JSON.stringify(props.manifest); Object.assign(props, next); await readyPromise; if (disposed)
+            return; if ('label' in next) board?.setLabel(props.label); if (changed)
             await render();
         else {
-            if (props.grid)
+            if (next.grid)
                 board?.setGrid(props.grid);
-            await applyPieces();
-            applySceneLayers();
+            if ('pieces' in next) await applyPieces();
+            if (['state','tokenPresentation','grid','gm'].some(key=>key in next)) applySceneLayers();
         } }, destroy() {
             tileBlobCache.clear();
             for (const [name, listener] of Object.entries(listeners))

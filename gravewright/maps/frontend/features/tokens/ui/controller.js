@@ -845,7 +845,9 @@ export function tokenController(element, options) {
     const listeners = Object.entries(events).map(([name, fn]) => {
         const handler = (e) => {
             fn(e);
-            options.repaint();
+            // Movement publishes its changed state or hover itself. Empty motion
+            // over the same object must not rebuild every token's hit target.
+            if (name !== 'pointermove') options.repaint();
         };
         element.addEventListener(name, handler);
         return [name, handler];
@@ -913,7 +915,7 @@ export function tokenController(element, options) {
             options.repaint();
             return result;
         },
-        update(next) {
+        update(next, repaint = true) {
             const oldTool = props.tool;
             Object.assign(props, next);
             if (oldTool !== props.tool)
@@ -953,7 +955,7 @@ export function tokenController(element, options) {
                     .slice(1)
                     .some((step, i) => step.some((t, j) => movementBlocked(route.value[i][j], t, props.walls, props.cell))))
                 cancel();
-            options.repaint();
+            if (repaint) options.repaint();
         },
         destroy() {
             closed = true;
