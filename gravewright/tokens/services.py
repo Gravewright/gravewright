@@ -87,6 +87,7 @@ def project(t, who):
         or actors.image_url(t.actor, "portrait"),
         "version": t.version,
         "hidden": t.hidden,
+        "layer": "gm" if t.hidden else "game",
         "locked": t.locked,
         "rotation": t.rotation,
         "elevation": t.elevation,

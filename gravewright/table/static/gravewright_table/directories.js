@@ -47,7 +47,7 @@ function itemSheet(item){
 }
 
 
-function render(name){if(name==='combat'&&states.combat){window.gravewrightCombatState={...states.combat,sceneId:scene};window.dispatchEvent(new CustomEvent('gravewright:combat-state',{detail:window.gravewrightCombatState}));}if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
+function render(name){if(name==='compendiums'){const toggle=document.querySelector('[data-native-directory-toggle="content"]');if(toggle)toggle.hidden=!states.compendiums?.packs?.length;if(!states.compendiums?.packs?.length&&panel(name))panel(name).hidden=true;}if(name==='combat'&&states.combat){window.gravewrightCombatState={...states.combat,sceneId:scene};window.dispatchEvent(new CustomEvent('gravewright:combat-state',{detail:window.gravewrightCombatState}));}if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
  if(name==='compendiums'){if(!target._content)target._content=mountCompendiums(target.querySelector('[data-entries]'),state);else target._content.update(state);return;}
  if(name==='combat'){if(target.contains(document.activeElement)&&document.activeElement.matches('[data-combat-initiative]'))return;target.dataset.selectedTokenCount=String(window.gravewrightTokenSelection?.length||0);window.GravewrightCombatPanel?.renderPanel(target,state);if(pending[name])target.querySelectorAll('button,input').forEach(el=>el.disabled=true);return;}
  const list=target.querySelector('[data-entries]'),query=target.querySelector('input[type=search]').value.toLowerCase();list.replaceChildren();

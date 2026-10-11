@@ -9,7 +9,7 @@ async function applySelection(api, tokens, container, block, map, cell, state, o
     try {
       if (["hide", "show"].includes(action)) {
         if (o.kind !== "image") continue;
-        await command("images", "update", { placement_id: o.id, layer: action === "hide" ? "gm" : "game", expected_version: d.version });
+        await command("images", "update", { placement_id: o.id, layer: action === "hide" ? "gm-image-layer" : "map", expected_version: d.version });
       } else if (action === "flip") {
         if (o.kind !== "card") continue;
         await command("cards", "update", { placement_id: o.id, expected_version:d.version, face_state: d.card?.face_state === "face_up" ? "face_down" : "face_up" });

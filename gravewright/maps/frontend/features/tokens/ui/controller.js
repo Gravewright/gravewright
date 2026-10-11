@@ -326,7 +326,9 @@ export function tokenController(element, options) {
         publish(first);
         routeFrame = requestAnimationFrame(tick);
     }
-    const selection = derive(() => props.tokens.filter((t) => selected.value.includes(t.id)));
+    const onLayer = t => props.gm || (t.layer || (t.hidden ? 'gm' : 'game')) === (props.layer || 'game');
+  const selectable = tokens => tokens.filter(onLayer);
+  const selection = derive(() => props.tokens.filter((t) => onLayer(t) && selected.value.includes(t.id)));
     const interactive = derive(() => props.tool === "select");
     let closed = false, queue = Promise.resolve(), drag;
     const abort = new AbortController(), reader = { list: () => options.read() }, writer = {
@@ -420,7 +422,7 @@ export function tokenController(element, options) {
     function down(e) {
         if (!interactive.value)
             return;
-        const p = point(e), token = hitToken(p, displayed.value, props.cell);
+        const p = point(e), token = hitToken(p, selectable(displayed.value), props.cell);
         if (e.button === 0 && e.ctrlKey && selected.value.length) {
             stop(e);
             addWaypoint(p, e.altKey);
@@ -513,7 +515,7 @@ export function tokenController(element, options) {
         if (!interactive.value)
             return;
         if (!drag) {
-            emit("hover", hitToken(lastPoint, props.tokens, props.cell)?.id);
+            emit("hover", hitToken(lastPoint, selectable(props.tokens), props.cell)?.id);
             return;
         }
         if (drag.pointer !== e.pointerId)
@@ -529,7 +531,7 @@ export function tokenController(element, options) {
                 ...new Set([
                     ...(drag.additive ? drag.selection : []),
                     ...props.tokens
-                        .filter((t) => inMarquee(t, drag.from, lastPoint, props.cell) &&
+                        .filter((t) => onLayer(t) && inMarquee(t, drag.from, lastPoint, props.cell) &&
                         (props.gm || t.canControl))
                         .map((t) => t.id),
                 ]),
@@ -704,7 +706,7 @@ export function tokenController(element, options) {
     function menu(e) {
         if (!interactive.value)
             return;
-        const token = hitToken(point(e), displayed.value, props.cell);
+        const token = hitToken(point(e), selectable(displayed.value), props.cell);
         if (!token || (!props.gm && !token.canControl))
             return;
         stop(e);
@@ -715,7 +717,7 @@ export function tokenController(element, options) {
     function double(e) {
         if (!interactive.value)
             return;
-        const token = hitToken(point(e), displayed.value, props.cell);
+        const token = hitToken(point(e), selectable(displayed.value), props.cell);
         if (token?.canOpenSheet) {
             stop(e);
             cancel();
@@ -765,7 +767,7 @@ export function tokenController(element, options) {
         if (mod && e.key.toLowerCase() === "a") {
             stop(e);
             selected.value = props.tokens
-                .filter((t) => props.gm || t.canControl)
+                .filter((t) => onLayer(t) && (props.gm || t.canControl))
                 .map((t) => t.id);
             return;
         }
@@ -916,9 +918,10 @@ export function tokenController(element, options) {
             return result;
         },
         update(next, repaint = true) {
-            const oldTool = props.tool;
+            const oldTool = props.tool, oldLayer = props.layer;
             Object.assign(props, next);
-            if (oldTool !== props.tool)
+            if (oldLayer !== props.layer) { selected.value = []; context.value = undefined; }
+      if (oldTool !== props.tool || oldLayer !== props.layer)
                 cancel();
             if (next.tokens) {
                 const rows = props.tokens;
@@ -929,7 +932,7 @@ export function tokenController(element, options) {
                         (sheet.value.canControl && !fresh.canControl))
                         sheet.value = undefined;
                 }
-                selected.value = selected.value.filter((id) => rows.some((t) => t.id === id));
+                selected.value = selected.value.filter((id) => rows.some((t) => t.id === id && onLayer(t)));
                 if (drag?.original.some((t) => !rows.some((r) => r.id === t.id &&
                     r.version === t.version &&
                     r.canControl &&

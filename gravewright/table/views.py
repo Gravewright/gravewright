@@ -58,7 +58,8 @@ def table(request, campaign_id, detached_chat=False):
         "directories": [
             p
             for p in DOCK["directories"]
-            if owner or p["id"] not in {"scenes"}
+            if (owner or p["id"] not in {"scenes"})
+            and not (campaign.system == 'gravewright-pdf-system' and p['id'] == 'items')
         ],
     }
     from gravewright.web.localization import template_context

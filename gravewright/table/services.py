@@ -52,21 +52,49 @@ def update_lobby(campaign_id, user_id, payload):
     return lobby(campaign_id, user_id)
 
 
-def search(campaign_id, user_id, query):
+def search(campaign_id, user_id, query, *, kind='', recent=None):
     if not settings.COMMAND_PALETTE_ENABLED:
         raise JournalError('Command search is disabled.', 'forbidden')
     who = member(campaign_id, user_id)
     if not isinstance(query, str) or len(query) > 200:
         raise JournalError('Invalid search.')
     query = query.strip()
-    if len(query) < 2:
+    if kind not in ('', 'actor', 'item', 'journal', 'quest', 'quest_board', 'scene', 'compendium'):
+        raise JournalError('Invalid search filter.')
+    recent_mode = len(query) < 2 and recent is not None
+    references = []
+    if recent is not None:
+        from uuid import UUID
+        if not isinstance(recent, list) or len(recent) > 12:
+            raise JournalError('Invalid recent documents.')
+        for ref in recent:
+            if not isinstance(ref, dict) or ref.get('type') not in ('actor','item','journal','scene','compendium') or not isinstance(ref.get('id'),str):
+                raise JournalError('Invalid recent document.')
+            value=ref['id']
+            try:canonical=str(UUID(value.removeprefix('native:') if ref['type']=='compendium' else value))
+            except ValueError:raise JournalError('Invalid recent document.') from None
+            if len(value)>43:raise JournalError('Invalid recent document.')
+            value=('native:' if value.startswith('native:') else '')+canonical
+            references.append((ref['type'],value))
+    if len(query) < 2 and not recent_mode:
         return []
     results = []
-    def add(row, kind):
-        results.append(dict(id=str(row.pk), type=kind, title=row.name if hasattr(row, 'name') else row.title,
-            subtitle='', snippet='', icon={'actor':'ph-user','journal':'ph-book-open','scene':'ph-map'}.get(kind,'ph-stack'),
-            target=dict(action='open_'+kind, id=str(row.pk))))
-    for row in Actor.objects.filter(campaign_id=campaign_id, name__icontains=query).order_by('name')[:200]:
+    def rows(model, resource, field='name'):
+        qs=model.objects.filter(campaign_id=campaign_id)
+        if recent_mode:
+            qs=qs.filter(pk__in=[value for name,value in references if name==resource and not value.startswith('native:')])
+        elif resource!='journal':qs=qs.filter(**{field+'__icontains':query})
+        if kind and kind!=resource and not (resource=='journal' and kind in ('quest','quest_board')):return qs.none()
+        return qs.order_by(field)
+    def add(row, resource):
+        category=row.type if resource=='journal' and row.type in ('quest','quest_board') else resource
+        if kind and kind!=category:return False
+        actions=['open']+(['activate'] if resource=='scene' and who.role=='gm' else [])
+        results.append(dict(id=str(row.pk), type=resource, kind=category, title=row.name if hasattr(row, 'name') else row.title,
+            subtitle='', snippet='', actions=actions, icon={'actor':'ph-user','journal':'ph-book-open','scene':'ph-map'}.get(resource,'ph-stack'),
+            target=dict(action='open_'+resource, id=str(row.pk))))
+        return True
+    for row in rows(Actor,'actor')[:200]:
         if actors.access(row, who): add(row, 'actor')
     def readable_text(value):
         if isinstance(value, str):
@@ -75,20 +103,22 @@ def search(campaign_id, user_id, query):
             return ' '.join(readable_text(v) for v in value)
         if isinstance(value, dict):
             return ' '.join(readable_text(v) for k, v in value.items()
-                            if k in ('text', 'content', 'doc', 'title', 'description', 'sections'))
+                            if k in ('text', 'content', 'doc', 'title', 'description', 'sections', 'public', 'summary', 'description_markdown', 'objectives', 'rewards', 'gm', 'notes', 'secrets'))
         return ''
-    for row in Journal.objects.filter(campaign_id=campaign_id).prefetch_related('access').order_by('title'):
-        if not permissions(row, who)[0]:
+    for row in rows(Journal,'journal','title').prefetch_related('access'):
+        from gravewright.journals.types import via_board
+        if not (permissions(row, who)[0] or via_board(row, who)):
             continue
         view = projection(row, who)
-        body = readable_text([view.get('content_doc', {}), view.get('sections', [])])
+        body = readable_text([view.get('content_doc', {}), view.get('sections', []), view.get('quest', {})])
         index = body.casefold().find(query.casefold())
-        if query.casefold() in row.title.casefold() or index >= 0:
-            add(row, 'journal')
-            if index >= 0:
+        if recent_mode or query.casefold() in row.title.casefold() or index >= 0:
+            if not add(row, 'journal'):continue
+            if index >= 0 and not recent_mode:
                 results[-1]['snippet'] = body[max(0, index - 50):index + len(query) + 100]
+            elif body:results[-1]['snippet']=body[:160]
 
-    for row in Scene.objects.filter(campaign_id=campaign_id, name__icontains=query).order_by('name')[:200]:
+    for row in rows(Scene,'scene')[:200]:
         from gravewright.maps.services import scene
         try:scene(row.pk,who)
         except MapError:continue
@@ -96,15 +126,15 @@ def search(campaign_id, user_id, query):
     from gravewright.items.models import Item
     from gravewright.items.services import access
     from gravewright.compendiums.models import Pack
-    for row in Item.objects.filter(campaign_id=campaign_id,name__icontains=query)[:200]:
+    for row in rows(Item,'item')[:200]:
         if access(row,who):add(row,'item')
-    for row in Pack.objects.filter(campaign_id=campaign_id,name__icontains=query)[:200]:
+    for row in rows(Pack,'compendium')[:200]:
         from .ownership import resource_allows
         if resource_allows(who,'compendiums',row,default='read' if row.shared else 'none'):add(row,'compendium')
     from gravewright.compendiums.catalog import summaries
     for pack in summaries(who):
-        if query.casefold() in pack['name'].casefold():
-            results.append(dict(id=pack['id'], type='compendium', title=pack['name'],
-                subtitle='', snippet='', icon='ph-stack',
+        if kind in ('','compendium') and ((recent_mode and ('compendium',pack['id']) in references) or (not recent_mode and query.casefold() in pack['name'].casefold())):
+            results.append(dict(id=pack['id'], type='compendium', kind='compendium', title=pack['name'],
+                subtitle='', snippet='', actions=['open'], icon='ph-stack',
                 target=dict(action='open_compendium', id=pack['id'])))
-    return sorted(results, key=lambda r: (r['title'].casefold(), r['type'], r['id']))[:20]
+    return sorted(results, key=lambda r: references.index((r['type'],r['id'])) if recent_mode else (r['title'].casefold(), r['type'], r['id']))[:20]

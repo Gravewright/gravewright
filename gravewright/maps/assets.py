@@ -47,7 +47,7 @@ def state(request, campaign_id):
                 for r in SceneObject.objects.filter(
                     scene_id=active, kind="images"
                 ).values_list("data", flat=True)
-                if r.get("layer") != "gm"
+                if r.get("layer") not in {"gm", "gm-image-layer"}
             ]
             assets = assets.filter(pk__in=ids)
         result = []
@@ -254,7 +254,7 @@ def file(request, asset_id):
                 not SceneObject.objects.filter(
                     scene_id=active, kind="images", data__asset_id=str(asset.pk)
                 )
-                .exclude(data__layer="gm")
+                .exclude(data__layer__in=["gm", "gm-image-layer"])
                 .exists()
             ):
                 raise Http404

@@ -1,15 +1,11 @@
 import { registerEscapeClose } from '/static/gravewright_web/escape.js';
+import { mountCommandPalette } from './command-palette.js';
 
 const table = document.querySelector('#table-workspace');
 const palette = document.querySelector('[data-command-palette]');
 const lobby = document.querySelector('[data-lobby-panel-window]');
 const send = (type, value) => window.gravewrightRealtime?.tableTool(type, value);
-let selected = 0, results = [], timer, searchId, previousFocus;
-const input = palette?.querySelector('input');
-const status = palette?.querySelector('[data-command-palette-status]');
-const list = palette?.querySelector('[data-command-palette-results]');
-function closePalette() { if (!palette) return; palette.hidden = true; previousFocus?.focus(); }
-if (palette) registerEscapeClose(palette.querySelector('[role=dialog]'), closePalette);
+mountCommandPalette(palette,table);
 const house = document.querySelector('.house-menu');
 if (house) {
   house.setAttribute('aria-modal', 'true');
@@ -17,47 +13,6 @@ if (house) {
 }
 const participants = document.querySelector('.game-roster');
 if (participants) registerEscapeClose(participants, () => document.querySelector('.game-menubar__roster > button').click());
-function choose(index) {
-  selected = index;
-  for (const [i, el] of [...list.children].entries()) el.setAttribute('aria-selected', String(i === selected));
-  input.setAttribute('aria-activedescendant', list.children[selected]?.id || '');
-}
-function openResult(result) {
-  closePalette();
-  window.dispatchEvent(new CustomEvent('gravewright:search-open', {detail:result}));
-}
-input?.addEventListener('input', () => {
-  clearTimeout(timer);
-  timer = setTimeout(() => {
-    searchId = crypto.randomUUID();
-    status.textContent = 'Searching…';
-    if (!send('table.search', {query:input.value, requestId:searchId})) status.textContent = 'Connect to the table to search.';
-  }, 180);
-});
-window.addEventListener('gravewright:table.search', ({detail}) => {
-  if (detail.requestId !== searchId) return;
-  results = detail.results; list.replaceChildren();
-  for (const [i, result] of results.entries()) {
-    const button = document.createElement('button'); button.type = 'button';
-    button.className = 'command-palette-result'; button.id = 'search-result-'+i; button.role = 'option';
-    const title = document.createElement('strong'), subtitle = document.createElement('small');
-    title.textContent = result.title; subtitle.textContent = result.type;
-    button.append(title, subtitle); button.onclick = () => openResult(result); list.append(button);
-  }
-  status.textContent = results.length ? '' : 'No results.'; choose(0);
-});
-palette?.addEventListener('pointerdown', e => { if (e.target === palette) closePalette(); });
-window.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && palette) {
-    e.preventDefault(); previousFocus = document.activeElement; palette.hidden = false; input.focus(); return;
-  }
-  if (palette && !palette.hidden) {
-    if (e.key === 'Escape') {e.preventDefault();closePalette();}
-    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {e.preventDefault();if(results.length)choose((selected+(e.key==='ArrowDown'?1:-1)+results.length)%results.length);}
-    else if (e.key === 'Enter' && results[selected]) {e.preventDefault();openResult(results[selected]);}
-    else if (e.key === 'Tab') {e.preventDefault();input.focus();}
-  }
-});
 function openLobby() {
   if (!lobby) return;
   const rosterToggle = document.querySelector('.game-menubar__roster > button');
@@ -88,8 +43,7 @@ if (lobby) {
   });
 }
 window.addEventListener('gravewright:table.tool_error', ({detail})=>{
-  if(detail.tool==='table.search' && detail.requestId===searchId)status.textContent=detail.message;
-  else if(detail.tool.startsWith('lobby.') && lobby){const notice=lobby.querySelector('[data-lobby-notice]');notice.hidden=false;notice.textContent=detail.message;}
+  if(detail.tool.startsWith('lobby.') && lobby){const notice=lobby.querySelector('[data-lobby-notice]');notice.hidden=false;notice.textContent=detail.message;}
 });
 window.addEventListener('gravewright:connected',()=>{if(lobby&&!lobby.hidden)send('lobby.sync');});
 

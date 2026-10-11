@@ -143,6 +143,28 @@ class MapTests(TransactionTestCase):
         image = next(row for row in state['images'] if row['id'] == str(placement.pk))
         self.assertEqual((image['x'], image['y'], image['scale']), (200, 250, 1.5))
 
+    def test_gm_image_support_layer_is_private_and_can_return_to_map(self):
+        from gravewright.maps.models import MapAsset, SceneObject, Broadcast
+        scene = Scene.objects.create(campaign=self.campaign, name='Images', width=1024, height=512)
+        Broadcast.objects.update_or_create(campaign=self.campaign, defaults={'scene': scene})
+        asset = MapAsset.objects.create(campaign=self.campaign, name='Private image', width=400, height=200,
+                                       file='maps/assets/private.png')
+        def change(action, data):
+            return self.command('objects', {'mapId': str(scene.pk), 'area': 'images', 'action': action, 'data': data})
+        change('create', {'asset_id': str(asset.pk), 'layer': 'gm-image-layer'})
+        placement = SceneObject.objects.get(scene=scene, kind='images')
+        self.assertEqual(placement.data['layer'], 'gm-image-layer')
+        self.assertEqual(services.layer_state(self.campaign.pk, self.gm.pk, scene.pk)['images'][0]['layer'], 'gm-image-layer')
+        self.assertEqual(services.layer_state(self.campaign.pk, self.player.pk, scene.pk)['images'], [])
+        self.client.force_login(self.player)
+        self.assertEqual(self.client.get(f'/game/map-assets/{asset.pk}').status_code, 404)
+        change('update', {'placement_id': str(placement.pk), 'layer': 'map', 'expected_version': placement.version})
+        self.assertEqual(len(services.layer_state(self.campaign.pk, self.player.pk, scene.pk)['images']), 1)
+        # Existing hidden placements are projected into the support layer too.
+        placement.refresh_from_db();placement.data['layer'] = 'gm';placement.save()
+        self.assertEqual(services.layer_state(self.campaign.pk, self.player.pk, scene.pk)['images'], [])
+        self.assertEqual(services.layer_state(self.campaign.pk, self.gm.pk, scene.pk)['images'][0]['layer'], 'gm-image-layer')
+
     def test_upload_limits_reject_before_decode_or_file_publication(self):
         from unittest.mock import patch
         self.client.force_login(self.gm)

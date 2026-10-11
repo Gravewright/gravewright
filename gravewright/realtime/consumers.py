@@ -162,7 +162,7 @@ class TableConsumer(SceneStreamMixin, AsyncWebsocketConsumer):
             from gravewright.table import services as table_services
             try:
                 if kind == 'table.search':
-                    results = await db(table_services.search)(self.campaign_id, self.user_id, payload.get('query', ''))
+                    results = await db(table_services.search)(self.campaign_id, self.user_id, payload.get('query', ''), kind=payload.get('kind',''), recent=payload.get('recent'))
                     await self.emit('table.search', {'requestId': payload.get('requestId'), 'results': results})
                 elif kind == 'lobby.update':
                     await db(table_services.update_lobby)(self.campaign_id, self.user_id, payload)

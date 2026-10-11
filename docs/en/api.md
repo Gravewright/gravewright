@@ -57,7 +57,7 @@ Additional forms:
 | `chat.send(payload, options)` | Send `{text, sceneId?}` through native chat processing |
 | `chat.remove(id, options)` / `chat.clear(options)` | Delete one/all visible-domain messages under native moderation rules |
 | `dice.roll(expression, payload, options)` | Roll and publish; payload supports `repeat`, `label`, `visibility`, scene context |
-| `table.search(query, options)` | Search resources visible to the current user |
+| `table.search(query, options)` | Search documents with at least read access. Options accept `kind` (`actor`, `item`, `journal`, `quest`, `quest_board`, `scene`, `compendium`) and `recent` (up to 12 `{id, type}` references with an empty query). Results include authorized `snippet`, `kind`, and `actions`; recent references are revalidated on every request. |
 | `table.lobby(options)` / `table.updateLobby(payload, options)` | Read/change native lobby state |
 
 The six combat transition helpers (`nextTurn`, `previousTurn`, `nextRound`, `previousRound`, `start`, `stop`) also fetch the current version if omitted. Explicit versions make concurrent editing intentional:

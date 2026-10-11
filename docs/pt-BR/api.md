@@ -57,7 +57,7 @@ Formas adicionais:
 | `chat.send(payload, options)` | Envia `{text, sceneId?}` pelo processamento nativo |
 | `chat.remove(id, options)` / `chat.clear(options)` | Exclui uma/todas as mensagens conforme regras nativas de moderação |
 | `dice.roll(expression, payload, options)` | Rola e publica; suporta `repeat`, `label`, `visibility` e cena |
-| `table.search(query, options)` | Busca recursos visíveis ao usuário |
+| `table.search(query, options)` | Busca documentos com acesso mínimo de leitura. As opções aceitam `kind` (`actor`, `item`, `journal`, `quest`, `quest_board`, `scene`, `compendium`) e `recent` (até 12 referências `{id, type}` com consulta vazia). Os resultados incluem `snippet` autorizado, `kind` e `actions`; as referências recentes são revalidadas a cada consulta. |
 | `table.lobby(options)` / `table.updateLobby(payload, options)` | Lê/altera a sala de espera nativa |
 
 Os seis atalhos de transição de combate (`nextTurn`, `previousTurn`, `nextRound`, `previousRound`, `start`, `stop`) também buscam a versão atual quando omitida. Fornecer versões explicitamente permite detectar alterações concorrentes:

@@ -357,6 +357,7 @@ export function createLayers(surface, board, map, gm, initial) {
         active = gm && getPath("_layer") === "walls";
       walls.hidden = !active;
       walls.style.display = active ? "" : "none";
+      walls.style.pointerEvents = getPath('_tool') === 'select' ? 'none' : '';
       walls.classList.toggle(
         "wall-workspace--measure",
         getPath("_tool") === "measure",

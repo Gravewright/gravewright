@@ -54,7 +54,7 @@ export function createDomainApi(call, { events, ui, context = {} } = {}) {
   };
   api.dice = { roll: (expression, payload = {}, options) => request('dice', 'roll', { ...payload, expression }, options) };
   api.table = {
-    search: (query, options) => request('table', 'search', { query }, options),
+    search: (query, {kind, recent, ...options} = {}) => request('table', 'search', {query, ...(kind !== undefined ? {kind} : {}), ...(recent !== undefined ? {recent} : {})}, options),
     lobby: (options) => request('table', 'lobby', {}, options),
     updateLobby: (payload, options) => request('table', 'updateLobby', payload, options),
   };

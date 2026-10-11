@@ -170,6 +170,8 @@ class TokenTests(TransactionTestCase):
         self.assertEqual(services.project(t, who)["conditions"], [])
         self.assertEqual(len(services.vision(self.map, who)), 1)
         self.cmd("hidden", {"tokenIds": [str(t.pk)], "hidden": True})
+        gm_tokens = services.state(self.campaign.pk, self.gm.pk, self.map.pk)["tokens"]
+        self.assertEqual(next(row for row in gm_tokens if row['id'] == str(t.pk))['layer'], 'gm')
         self.assertEqual(
             services.state(self.campaign.pk, self.player.pk, self.map.pk)["tokens"], []
         )

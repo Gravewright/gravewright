@@ -15,7 +15,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  let state=api.state,selected=[],drag,preview,resizePreview,busy=false,menu,dialog,timer,pingTimer,clipboard=[],lastPoint={x:0,y:0};
  const cell=()=>map.gridSize*map.imageScale,origin=()=>({x:(map.gridOffsetX||0)*map.imageScale,y:(map.gridOffsetY||0)*map.imageScale});
  const active=()=>stateAPI.getPath('_tool')==='select'&&!document.querySelector('.grid-calibration-panel')&&document.querySelector('#table-workspace')?.dataset.role!=='streamer';
- const all=()=>sceneObjects(state,window.gravewrightTokenState?.tokens||[],cell(),gm,measurements.rows(),origin());
+ const all=()=>sceneObjects(state,(window.gravewrightTokenState?.tokens||[]).filter(t=>gm||(t.layer||(t.hidden?'gm':'game'))===(stateAPI.getPath('_layer')||'game')),cell(),gm,measurements.rows(),origin()).filter(o=>o.kind!=='image'||!['gm','gm-image-layer'].includes(o.data.layer)||stateAPI.getPath('_layer')==='composition');
  const chosen=()=>all().filter(o=>selected.includes(o.key));
  const mixed=()=>chosen().some(o=>o.kind!=='token');
  const point=e=>{const b=surface.getBoundingClientRect(),v=board.viewport();return {x:(e.clientX-b.left-v.x)/v.scale,y:(e.clientY-b.top-v.y)/v.scale};};
@@ -99,7 +99,8 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
   if(clipboard.length)add('Paste lights and effects',()=>void paste());
   if(chosen().length===1&&!['image','card','zone'].includes(o.kind))add('Edit',()=>editObject(o,e));
   add('Rotate selection −90°',()=>rotate(-90));add('Rotate selection +90°',()=>rotate(90));
-  if(chosen().some(o=>o.kind==='image')){add('Hide images from players',()=>void execute('hide'));add('Reveal images to players',()=>void execute('show'));}
+  if(chosen().some(o=>o.kind==='image'&&!['gm','gm-image-layer'].includes(o.data.layer)))add(modalText('Move to GM image layer','Mover para camada de imagens do GM'),()=>void execute('hide'));
+  if(chosen().some(o=>o.kind==='image'&&['gm','gm-image-layer'].includes(o.data.layer)))add(modalText('Move to image layer','Mover para camada de imagens'),()=>void execute('show'));
   if(chosen().some(o=>o.kind==='card'))add('Flip selected cards',()=>void execute('flip'));
   add('Delete selection',confirmDelete);document.body.append(menu);
  }

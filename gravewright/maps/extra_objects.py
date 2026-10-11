@@ -144,7 +144,7 @@ def image(scene, raw, previous=None):
         "rotation": number(p.get("rotation", 0)) % 360,
         "scale": number(p.get("scale", 1), 0.001, 100),
         "z_index": number(p.get("z_index", 0), -10000, 10000),
-        "layer": choice(p.get("layer", "map"), {"map", "gm"}),
+        "layer": "gm-image-layer" if p.get("layer") == "gm" else choice(p.get("layer", "map"), {"map", "gm-image-layer"}),
     }
 
 

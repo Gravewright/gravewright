@@ -61,12 +61,17 @@ export class SceneLayers {
     }
     #imagePreview;
     #imagePlacements = [];
+    #imageLayer;
+    #gmImageLayer;
     syncImages(images) {
         this.#imagePlacements = images;
         for (const row of images) {
             const sprite = this.#imageSprites.get(row.id);
             if (!sprite) continue;
-            sprite.alpha = row.layer === 'gm' ? .55 : 1;
+            const hidden = ['gm', 'gm-image-layer'].includes(row.layer);
+            const layer = hidden ? this.#gmImageLayer : this.#imageLayer;
+            if (layer && sprite.parent !== layer) layer.addChild(sprite);
+            sprite.alpha = hidden ? .55 : 1;
             sprite.zIndex = row.z_index;
             this.#selectionNodes.set(`image:${row.id}`, {node:sprite,x:row.x,y:row.y,angle:row.rotation});
         }
@@ -153,6 +158,9 @@ export class SceneLayers {
         const readLight = state.particles.some(e => (e.light_response ?? 0) > 0) && quality.particles > 0;
         const imageLayer = this.layer("images", 150);
         imageLayer.sortableChildren = true;
+        this.#imageLayer = imageLayer;
+        this.#gmImageLayer = this.layer('gm-image-layer', 155);
+        this.#gmImageLayer.sortableChildren = true;
         this.#imagePlacements = state.images;
         for (const placement of [...state.images].sort((a, b) => a.z_index - b.z_index)) {
             if (!placement.src)

@@ -75,7 +75,7 @@ def invoke(campaign_id, user_id, domain, method, payload, request_id=None, scene
                              visibility=p.get('visibility', 'public'), map_id=scene)
         if domain == 'table':
             if method == 'search':
-                return table.search(campaign_id, user_id, p.get('query', ''))
+                return table.search(campaign_id, user_id, p.get('query', ''), kind=p.get('kind',''), recent=p.get('recent'))
             if method == 'lobby':
                 return table.lobby(campaign_id, user_id)
             if method == 'updateLobby':

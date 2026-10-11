@@ -165,8 +165,10 @@ def layer_state(scene, who):
     for obj in scene.elements.all():
         if obj.kind in result:
             result[obj.kind].append(entry(obj))
+    for row in result['images']:
+        if row.get('layer') == 'gm':row['layer'] = 'gm-image-layer'
     if who.role != "gm":
-        result["images"] = [r for r in result["images"] if r.get("layer") != "gm"]
+        result["images"] = [r for r in result["images"] if r.get("layer") != "gm-image-layer"]
         result["drawings"]["rows"] = [
             r
             for r in result["drawings"].get("rows", [])

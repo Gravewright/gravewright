@@ -90,6 +90,7 @@ export function createTokens(surface, board, map, gm, initial) {
       systemId: "gravewright-pdf-system",
       scene: map,
       gm,
+      layer: getPath('_layer') || 'game',
       cell: g.cell,
       width: Math.max(0, map.width - g.x),
       height: Math.max(0, map.height - g.y),
@@ -97,7 +98,7 @@ export function createTokens(surface, board, map, gm, initial) {
       dynamic: state.lighting.mode === "dynamic",
       measureValue: map.measureValue,
       measureUnit: map.measureUnit,
-      tool: ["game", "gm"].includes(getPath("_layer"))
+      tool: gm || ["game", "gm"].includes(getPath("_layer"))
         ? getPath("_tool")
         : "inactive",
     };
@@ -359,7 +360,10 @@ export function createTokens(surface, board, map, gm, initial) {
             item('UsersThree', 'Permissions', () => openPermissions('tokens', t.id));
           item(
             t.hidden ? "Eye" : "EyeSlash",
-            (t.hidden ? "Reveal" : "Hide") + " selection",
+            window.gravewrightLocale?.messages?.text?.[t.hidden ? 'Move to game layer' : 'Move to GM layer']
+              || (locale.startsWith('pt') ? (t.hidden ? 'Mover para camada de jogo' : 'Mover para camada GM')
+                : locale.startsWith('es') ? (t.hidden ? 'Mover a la capa de juego' : 'Mover a la capa GM')
+                : (t.hidden ? 'Move to game layer' : 'Move to GM layer')),
             () => controller.call("command", "hidden", { hidden: !t.hidden }),
           );
           item("Eye", "Vision", () => controller.call("edit", "vision"));
@@ -781,7 +785,7 @@ export function createTokens(surface, board, map, gm, initial) {
   window.addEventListener("gravewright:map-layers", layers);
   window.addEventListener("gravewright:map-viewport", viewport);
   const observer = new MutationObserver(() =>
-    controller.update({ tool: props().tool }),
+    controller.update({ tool: props().tool, layer: props().layer }),
   );
   observer.observe(document.getElementById("table-workspace"), {
     attributes: true,

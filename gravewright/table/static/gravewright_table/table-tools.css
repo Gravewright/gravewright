@@ -528,6 +528,14 @@ body[data-game-layout="classic"] .game-panel-body {
 }
 
 
+.game-dock__item[hidden]{display:none!important}
+.command-palette-filter{margin:0 12px 6px;width:calc(100% - 24px);padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-field,#10151b);color:var(--text);font:inherit;font-size:12px}
+.command-palette-result .command-palette-result-main{flex:1;min-width:0;border:0;background:transparent;color:inherit;text-align:left;padding:0;cursor:pointer}
+.command-palette-result-copy{display:grid;gap:3px}
+.command-palette-snippet{color:var(--text-muted);font-size:12px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.command-palette-action{flex-shrink:0;padding:5px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-field,#10151b);color:var(--text);font-size:11px;cursor:pointer}
+.command-palette :is(button,select):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
 body.command-palette-open {
     overflow: hidden;
 }

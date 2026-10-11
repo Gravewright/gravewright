@@ -291,6 +291,7 @@ export function lightingWorkspace(surface, board, map, gm, api) {
         v = board.viewport(),
         view = controller.view;
       svg.style.display = active ? "" : "none";
+      svg.style.pointerEvents = getPath('_tool') === 'select' ? 'none' : '';
       const g = node("g", {
         transform: `translate(${v.x},${v.y}) scale(${v.scale})`,
       });
