@@ -1,4 +1,5 @@
 import { pdfController } from "./controller.js";
+import { detachWindow } from '/static/gravewright_table/window-controls.js';
 import {
   Editor,
   StarterKit,
@@ -23,7 +24,8 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
   }
   if(token){el.dataset.tokenId=token.id;el.dataset.sceneId=token.mapId;}
   document.body.append(el);
-  let closed = false,
+  let popup,
+    closed = false,
     queued = false,
     controller,
     notes = [],
@@ -133,6 +135,7 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
     }
     if (closed) return;
     closed = true;
+    popup?.close();
     controller.destroy();
     notes.forEach((e) => e.destroy());
     el.remove();
@@ -144,10 +147,10 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
   el.onclick = async (e) => {
     const w = e.target.closest("[data-window]")?.dataset.window;
     if (w === "close") return close();
-    if (w === "maximize")
-      el.classList.toggle(
-        token ? "token-sheet--maximized" : "actor-directory__sheet--maximized",
-      );
+    if (w === "detach") {
+      popup = detachWindow(el, 'actor-' + actorId, el.querySelector('header strong').textContent, {width:1000,height:800});
+      return;
+    }
     if (w === "minimize") {
       el.classList.toggle("gw-window--minimized");
       show(
@@ -297,7 +300,7 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
     }
     for (const input of el.querySelectorAll("[data-field]")) {
       input.disabled = !a.canEdit;
-      if (document.activeElement !== input)
+      if (input.ownerDocument.activeElement !== input)
         input.value =
           input.dataset.field === "name"
             ? a.name

@@ -1,4 +1,5 @@
 import { mergePatch, getPath } from '/static/gravewright_web/vendor/datastar-1.0.3.js';
+import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
 import { richText, emptyDoc } from './editor.js';
 import { pdfView } from './pdf.js';
 import { renderType, typeLabels, typeIcons } from './types.js';
@@ -208,27 +209,7 @@ panel.addEventListener('click', e => {
         popup = detach(panel, 'journals-directory', 'Journals');
 });
 function detach(el, id, title) {
-    const doc = el.ownerDocument;
-    if (doc !== document) {
-        doc.defaultView.focus();
-        return;
-    }
-    const child = window.open('', id, 'popup,width=987,height=754');
-    if (!child)
-        return;
-    child.document.title = title;
-    for (const style of document.querySelectorAll('style,link[rel=stylesheet]'))
-        child.document.head.append(style.cloneNode(true));
-    const marker = document.createComment('detached-journal');
-    el.replaceWith(marker);
-    child.document.body.append(el);
-    el.classList.add(el === panel ? 'game-panel--detached' : 'journal-window--detached');
-    child.addEventListener('pagehide', () => {
-        if (marker.isConnected)
-            marker.replaceWith(el);
-        el.classList.remove('journal-window--detached', 'game-panel--detached');
-    });
-    return child;
+    return detachWindow(el, id, title, {width:987});
 }
 function open(id) {
     const existing = windows.get(id);
@@ -667,7 +648,7 @@ class JournalWindow {
         });
     }
 }
-window.gravewrightJournals = { toggle() { mergePatch({ _journalsOpen: !getPath('_journalsOpen') }); requestAnimationFrame(() => panel.dispatchEvent(new Event('focusin', { bubbles: true }))); window.gravewrightRealtime.journalsSubscribe(); }, open };
+window.gravewrightJournals = { toggle() { if (popup && !popup.closed) { popup.focus(); return; } if (panel.classList.contains('game-panel--minimized')) { restoreWindow(panel); mergePatch({_journalsOpen:true}); return; } mergePatch({ _journalsOpen: !getPath('_journalsOpen') }); requestAnimationFrame(() => panel.dispatchEvent(new Event('focusin', { bubbles: true }))); window.gravewrightRealtime.journalsSubscribe(); }, open };
 window.addEventListener('gravewright:connected', () => window.gravewrightRealtime.journalsSubscribe());
 function receiveState(next) {
     restoreContent('journals', () => {

@@ -79,7 +79,7 @@
 .journal-pdf__canvas { flex: 1; min-height: 0; overflow: auto; }
 .journal-pdf__canvas canvas { display: block; margin-inline: auto; }
 
-.journal-window--minimized.gw-movable-resizable { top: auto !important; bottom: var(--fib-10) !important; height: auto !important; min-height: 0 !important; }
+.journal-window--minimized.gw-movable-resizable { top: var(--fib-10); bottom: auto !important; height: auto !important; min-height: 0 !important; resize: none; }
 .diary-workspace__index, .diary-workspace__page { scrollbar-width: thin; scrollbar-color: rgba(192,154,90,.55) rgba(255,255,255,.04); }
 
 /* Legacy contract: terms and portrait, then description; independent outcome columns. */

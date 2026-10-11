@@ -19,7 +19,6 @@
 .actor-directory__empty { padding: var(--step-13); color: var(--text-muted); font-size: 12px; text-align: center; }
 /* Sits to the left of the 340px game panel and fills the rest of the board. */
 .gw-window.actor-directory__sheet { position: fixed; top: 20px; right: 372px; bottom: 20px; left: 80px; width: auto; height: auto; max-width: none; max-height: none; }
-.gw-window.actor-directory__sheet--maximized { inset: 13px; }
 .actor-directory__sheet-heading { display: grid; flex: 1; min-width: 0; }
 .actor-directory__sheet-heading strong, .actor-directory__sheet-heading small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .actor-directory__sheet-heading strong { color: var(--text); font-size: 13px; font-weight: 650; }

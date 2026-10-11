@@ -19,3 +19,57 @@
 /* Keep panel focus ordering below the dock and scene dialogs. */
 .game-panel-stack{position:fixed;inset:0;z-index:7;pointer-events:none}
 .game-panel-stack .game-panel{pointer-events:auto}
+
+/* One window frame for directory forms and scene configuration. */
+.gw-movable-resizable{box-sizing:border-box}
+.ownership-modal-overlay[hidden]{display:none!important}
+.ownership-modal-overlay>.table-modal-window,.ownership-modal-overlay>.table-form-modal{position:relative;inset:auto;transform:none;box-sizing:border-box;width:min(560px,calc(100vw - 32px));min-width:min(280px,calc(100vw - 32px));min-height:180px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:0;display:flex;flex-direction:column;gap:0;overflow:auto;resize:both;border:1px solid var(--border-accent-strong,#806b43);border-radius:12px;background:var(--surface,#171c20);color:var(--text,#e8e4d8);box-shadow:var(--shadow-window,0 12px 40px #0009)}
+.ownership-modal-overlay>.game-scene-settings{width:min(640px,calc(100vw - 32px));min-height:340px}
+.table-form-modal>form{display:flex;flex-direction:column;min-height:0;height:100%;flex:1}
+:is(.table-form-modal form,.table-modal-window)>header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;flex-shrink:0;margin:0;padding:8px 13px;border-bottom:1px solid var(--border,#40464e);background:linear-gradient(180deg,#ffffff06,transparent)}
+:is(.table-form-modal form,.table-modal-window)>header strong{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:is(.table-form-modal form,.table-modal-window)>header button{flex-shrink:0;min-width:29px;height:29px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--text-muted,#c4c4bd);cursor:pointer}
+.table-form-modal__body,.table-modal-body{flex:1;min-height:0;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.table-form-modal [data-fields],.table-modal-body>[role=tabpanel]{display:grid;gap:16px}
+.table-form-modal label{display:grid;gap:6px;font-size:13px;color:var(--text-muted,#b7b5ad)}
+.table-form-modal :is(input,select,textarea){box-sizing:border-box;width:100%;min-height:36px;padding:8px 10px;border:1px solid var(--border,#40464e);border-radius:5px;background:var(--surface-field,#151a20);color:var(--text,#e8e4d8);font:inherit}
+.table-form-modal textarea{min-height:90px;resize:vertical}
+.table-form-modal [type=checkbox]{width:auto;min-height:0;justify-self:start}
+.table-form-modal [role=alert],.table-modal-window [role=alert]{margin:0;color:var(--danger,#ef9999);font-size:13px}
+:is(.table-form-modal form,.table-modal-window)>footer{display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;margin:0;padding:12px 16px;border-top:1px solid var(--border,#40464e)}
+:is(.table-form-modal,.table-modal-window) :is(footer button,[data-current-view]){min-height:36px;padding:8px 13px;border:1px solid var(--border,#40464e);border-radius:5px;background:transparent;color:inherit;cursor:pointer}
+:is(.table-form-modal,.table-modal-window) footer [type=submit]{background:var(--accent,#b99857);border-color:var(--accent,#b99857);color:var(--on-accent,#111820)}
+:is(.table-form-modal,.table-modal-window) button:disabled{opacity:.5;cursor:default}
+:is(.table-form-modal,.table-modal-window) [hidden]{display:none!important}
+.table-modal-tabs{display:flex;gap:4px;flex-shrink:0;padding:8px 13px;border-bottom:1px solid var(--border,#40464e);overflow-x:auto}
+.table-modal-tabs button{min-height:34px;padding:6px 13px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--text-muted,#b7b5ad);white-space:nowrap;cursor:pointer}
+.table-modal-tabs [aria-selected=true]{border-color:var(--border-accent,#806b43);background:var(--accent-glow,#b9985720);color:var(--accent,#b99857)}
+.table-modal-body p{font-size:13px;line-height:1.5}
+[data-movable][data-window-minimized]{height:auto!important;min-height:0!important;bottom:auto!important;resize:none}
+.game-panel.game-panel--minimized{height:auto!important;min-height:0!important;resize:none}
+.game-panel.game-panel--detached,.journal-window.journal-window--detached{position:static!important;inset:auto!important;transform:none!important;width:100%!important;height:100dvh!important;min-width:0!important;max-width:none!important;max-height:100dvh!important;resize:none}
+.gw-window.gw-window--detached{position:static!important;inset:auto!important;transform:none!important;width:100%!important;height:100dvh!important;min-width:0!important;max-width:none!important;max-height:100dvh!important;resize:none;border:0;border-radius:0}
+.gw-window--detached [data-window=detach],.gw-window--detached [data-window=minimize]{display:none}
+.gw-window.gw-window--minimized{height:auto!important;min-height:0!important;bottom:auto!important;resize:none}
+[data-window-error]{padding:10px;color:var(--danger,#ef9999);font-size:13px}
+.dice-tray.dice-tray--detached{position:static!important;inset:auto!important;transform:none!important;width:100%!important;height:100dvh!important;max-height:100dvh!important;min-width:0!important;max-width:none!important;margin:0;resize:none;border:0;border-radius:0}
+.dice-tray--detached [data-dice-action=detach],.dice-tray--detached [data-dice-action=minimize]{display:none}
+:is(.game-panel--detached,.journal-window--detached)>header :is([data-map-panel=detach],[data-map-panel=minimize],[data-actor-panel=detach],[data-actor-panel=minimize],[data-journal-directory=detach],[data-journal-directory=minimize],[data-visibility-action=detach],[data-visibility-action=minimize],[data-action=detach],[data-action=minimize]){display:none}
+[data-movable][data-window-minimized]>:not(header){display:none!important}
+[data-window-action]{font-size:16px;line-height:1}
+.game-panel>header>div:last-child{display:flex;align-items:center;gap:4px}
+:is(.table-form-modal,.table-modal-window) header [data-close],.game-panel header :is([data-close],[data-map-panel=close],[data-actor-panel=close],[data-journal-directory=close]){order:2}
+.ownership-modal-overlay>.table-modal-window>footer{justify-content:flex-end}
+.ownership-modal-overlay>.table-modal-window>footer>button{order:0}
+#items-panel .game-directory{padding:8px;overflow:auto}
+#items-panel :is(.directory-toolbar__actions,.directory-entry){display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+#items-panel .directory-entry{padding:10px 0;border-bottom:1px solid var(--border)}
+#items-panel .directory-entry>button:first-child{flex:1;min-width:100px;text-align:left;font-weight:600}
+#items-panel :is(.game-directory button,.game-directory input){box-sizing:border-box;min-height:32px;padding:6px 9px;border:1px solid var(--border);border-radius:5px;background:var(--surface-field,#151a20);color:var(--text);font:inherit;font-size:13px}
+#items-panel .game-directory button{cursor:pointer}
+#items-panel .game-directory button:hover{border-color:var(--accent)}
+#items-panel .directory-toolbar__search{display:flex;align-items:center;gap:8px;margin-block:8px}
+#items-panel .directory-toolbar__search input{width:100%;min-width:0}
+[data-move-handle]{touch-action:none}
+:is(.table-form-modal,.table-modal-window,.ownership-dialog) :is(button,input,select,textarea):focus-visible{outline:2px solid var(--focus-ring,var(--accent));outline-offset:2px}
+@media(max-width:600px){.game-scene-settings__wide{grid-template-columns:1fr}.table-modal-body,.table-form-modal__body{padding:12px}.table-modal-tabs button{padding-inline:8px}}

@@ -6,6 +6,8 @@ export const presentationLabel = () => text('Show to players', 'Exibir para os j
 export function openPresentation(journal, {members, targeted, page, send}) {
   const modal = document.createElement('section');
   modal.className = 'ownership-dialog journal-presentation-modal';
+  modal.dataset.movable = '';
+  modal.dataset.windowKey = 'journal-presentation';
   modal.innerHTML = '<form><header><strong id="presentation-title"></strong><button type="button" data-close>×</button></header><fieldset><legend></legend><label class="ownership-dialog__gm"><span></span><input type="checkbox" name="allPlayers" checked></label><div data-players></div></fieldset><label class="journal-field" data-access><span></span><select name="ownership"></select></label><p class="ownership-dialog__help"></p><p role="alert" hidden></p><footer><button type="submit"></button></footer></form>';
   modal.setAttribute('aria-labelledby', 'presentation-title');
   modal.querySelector('strong').textContent = `${presentationLabel()}: ${page?.title || journal.title}`;

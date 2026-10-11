@@ -1,4 +1,5 @@
 import { sourceController } from "./sources/sources.js";
+import { detachWindow } from '/static/gravewright_table/window-controls.js';
 import { lightPresets, paintAnimatedLight } from "./sources/light-profiles.js";
 import {
   getPath,
@@ -109,18 +110,7 @@ export function lightingWorkspace(surface, board, map, gm, api) {
         popup.focus();
         return;
       }
-      popup = window.open("", "map-visibility", "popup,width=420,height=700");
-      if (!popup) return;
-      for (const css of document.querySelectorAll("link[rel=stylesheet]"))
-        popup.document.head.append(css.cloneNode(true));
-      popup.document.body.append(panel);
-      panel.classList.add("game-panel--detached");
-      popup.onpagehide = () => {
-        if (panel && !closed) {
-          document.getElementById("table-workspace").append(panel);
-          panel.classList.remove("game-panel--detached");
-        }
-      };
+      popup = detachWindow(panel, 'map-visibility', 'Visibility', {width:420,height:700});
     };
     panel.querySelector("[data-visibility-action=minimize]").onclick = () =>
       panel.classList.toggle("game-panel--minimized");

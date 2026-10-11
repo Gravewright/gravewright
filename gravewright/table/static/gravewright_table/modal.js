@@ -26,12 +26,31 @@ export function mountModal(modal, {canClose = () => true} = {}) {
       }
     }
   };
+  let closed = false, suspended = false;
+  modal.suspend = () => {
+    if (closed || suspended) return;
+    suspended = true; overlay.hidden = true;
+    for (const [element, inert] of background) element.inert = inert;
+    document.body.style.overflow = overflow;
+    document.removeEventListener('keydown', keydown, true);
+  };
+  modal.resume = () => {
+    if (closed || !suspended) return;
+    suspended = false; overlay.hidden = false;
+    for (const [element] of background) if (element.isConnected) element.inert = true;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', keydown, true);
+    (focusable()[0] || modal).focus();
+  };
   modal.close = () => {
+    if (closed) return;
+    closed = true;
     document.removeEventListener('keydown', keydown, true);
     overlay.remove();
     for (const [element, inert] of background) element.inert = inert;
     document.body.style.overflow = overflow;
     if (active === modal) { active = undefined; if (previous?.isConnected) previous.focus(); }
+    modal.dispatchEvent(new Event('close'));
   };
   active = modal;
   overlay.append(modal);

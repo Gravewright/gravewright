@@ -1,3 +1,5 @@
+import { openFormModal } from './form-modal.js';
+import { restoreWindow } from './window-controls.js';
 import { gravewright } from '/static/gravewright_modules/frontend-api.js';
 import { executeNative } from '/static/gravewright_modules/domain-api.js';
 import { openPermissions } from './permissions.js';
@@ -16,14 +18,15 @@ async function command(name,action,data){
  finally{pending[name]=false;panel(name)?.querySelectorAll('button,input,select').forEach(el=>el.disabled=false);render(name);}
 }
 
-function button(text,action){const el=document.createElement('button');el.type='button';el.textContent=text;el.onclick=()=>Promise.resolve().then(action).catch(e=>{const p=el.closest('dialog,aside')?.querySelector('[role=alert]');if(p){p.hidden=false;p.textContent=e.message;}});return el;}
-function dialog(title,fields,save){const el=document.createElement('dialog');el.className='directory-dialog';el.innerHTML='<form><header><strong></strong><button type="button" data-close aria-label="Close">×</button></header><p role="alert" hidden></p><div data-fields></div><footer><button type="submit">Save</button></footer></form>';el.querySelector('strong').textContent=title;const body=el.querySelector('[data-fields]');for(const field of fields){const label=document.createElement('label');label.textContent=field.label;const input=document.createElement(field.options?'select':field.multiline?'textarea':'input');input.name=field.name;if(field.options)for(const o of field.options)input.add(new Option(o.label,o.value));else input.type=field.type||'text';input.value=field.value??'';if(field.type==='checkbox')input.checked=!!field.value;label.append(input);body.append(label);}el.querySelector('[data-close]').onclick=()=>el.close();el.onclose=()=>el.remove();el.querySelector('form').onsubmit=async e=>{e.preventDefault();const submit=el.querySelector('[type=submit]');submit.disabled=true;try{await save(e.target);el.close();}catch(error){const p=el.querySelector('[role=alert]');p.hidden=false;p.textContent=error.message;}finally{submit.disabled=false;}};document.body.append(el);el.showModal();return el;}
+function button(text,action){const el=document.createElement('button');el.type='button';el.textContent=text;el.onclick=()=>Promise.resolve().then(action).catch(e=>{const p=el.closest('[role=dialog],aside')?.querySelector('[role=alert]');if(p){p.hidden=false;p.textContent=e.message;}});return el;}
+function dialog(title,fields,save,options={}){return openFormModal(title,fields,save,{key:'directory-form:'+fields.map(field=>field.name).join('-'),...options});}
+
 function createItem(item){
  const types=states.items?.types||[];
  const el=dialog(item?item.name:'Create item',[
   {name:'name',label:'Name',value:item?.name},
   {name:'type',label:'Type',value:item?.type||'',options:item?[{value:item.type,label:item.type}]:types.map(t=>({value:t.id,label:t.label}))}
- ],form=>command('items',item?'update':'create',{id:item?.id,version:item?.version,name:form.elements.name.value,type:form.elements.type.value}));
+ ],form=>command('items',item?'update':'create',{id:item?.id,version:item?.version,name:form.elements.name.value,type:form.elements.type.value}),{key:item?'item:'+item.id:'item:create'});
  if(item)el.querySelector('[name=type]').disabled=true;
  if(!item&&!types.length){
   const message=document.createElement('p');message.textContent='Enable a system that provides item types to create items.';
@@ -32,14 +35,22 @@ function createItem(item){
  return el;
 }
 
-function itemSheet(item){if(item.canOpen===false)return;createItem(item);const sheet=[...document.querySelectorAll('dialog.directory-dialog')].at(-1);if(sheet){sheet.classList.add('item-sheet');sheet.dataset.itemId=item.id;sheet.querySelector('[name=type]').disabled=true;if(!item.canEdit){sheet.querySelector('[name=name]').readOnly=true;sheet.querySelector('[type=submit]').hidden=true;}}}
+function itemSheet(item){
+ if(item.canOpen===false)return;
+ const existing=windows.get(item.id);
+ if(existing?.isConnected){existing.focus();return;}
+ const sheet=createItem(item);sheet.classList.add('item-sheet');sheet.dataset.itemId=item.id;windows.set(item.id,sheet);
+ sheet.addEventListener('close',()=>windows.delete(item.id),{once:true});
+ if(!item.canEdit){sheet.querySelector('[name=name]').readOnly=true;sheet.querySelector('[type=submit]').hidden=true;}
+}
+
 
 function render(name){if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
  if(name==='compendiums'){if(!target._content)target._content=window.gravewrightTableMedia?.mountCompendiums(target.querySelector('[data-entries]'));else target._content.call('load');return;}
  if(name==='combat'){if(target.contains(document.activeElement)&&document.activeElement.matches('[data-combat-initiative]'))return;target.dataset.selectedTokenCount=String(window.gravewrightTokenSelection?.length||0);window.GravewrightCombatPanel?.renderPanel(target,state);if(pending[name])target.querySelectorAll('button,input').forEach(el=>el.disabled=true);return;}
  const list=target.querySelector('[data-entries]'),query=target.querySelector('input[type=search]').value.toLowerCase();list.replaceChildren();
  if(name==='items'){
-  for(const sheet of document.querySelectorAll('dialog.item-sheet')){const current=state.items.find(item=>item.id===sheet.dataset.itemId);if(!current||current.canOpen===false)sheet.close();else if(!current.canEdit){sheet.querySelector('[name=name]').readOnly=true;sheet.querySelector('[type=submit]').hidden=true;}}
+  for(const sheet of document.querySelectorAll('.item-sheet[role=dialog]')){const current=state.items.find(item=>item.id===sheet.dataset.itemId);if(!current||current.canOpen===false)sheet.close();else if(!current.canEdit){sheet.querySelector('[name=name]').readOnly=true;sheet.querySelector('[type=submit]').hidden=true;}}
   if(!(state.items||[]).length){const empty=document.createElement('p');empty.className='item-directory__empty';empty.textContent='No items in this table.';list.append(empty);}
   for(const folder of state.folders||[])if(gm){const row=document.createElement('div');row.className='sheet-folder-header';row.textContent=folder.name;row.append(button('Permissions',()=>openPermissions('item-folders',folder.id,{onSave:()=>refresh('items')})),button('Rename',()=>dialog('Rename folder',[{name:'name',label:'Name',value:folder.name}],form=>command('items','folder-update',{id:folder.id,name:form.elements.name.value,parentId:folder.parentId}))),button('Delete',()=>dialog('Delete folder',[],()=>command('items','folder-delete',{id:folder.id}))));list.append(row);}
   for(const item of state.items||[])if(item.name.toLowerCase().includes(query)){const row=document.createElement('div');row.className='directory-entry item-card';row.dataset.itemId=item.id;row.draggable=true;row.addEventListener('dragstart',event=>{event.dataTransfer.effectAllowed='copy';event.dataTransfer.setData('application/x-gravewright-item',JSON.stringify({id:item.id,tableId:table}));});row.append(button(item.name,()=>itemSheet(item)));if(item.canEdit)row.append(button('Edit',()=>createItem(item)));if(gm){row.append(button('Duplicate',()=>command('items','duplicate',{id:item.id,version:item.version})),button('Permissions',()=>permission(item)),button('Delete',()=>dialog('Delete '+item.name,[],()=>command('items','delete',{id:item.id,version:item.version}))));}list.append(row);}
@@ -49,7 +60,7 @@ function render(name){if(name==='items'&&!contentReady()){restoreContent('items'
 async function permission(item){return openPermissions('items',item.id,{onSave:()=>refresh('items')});}
 async function addEntry(pack){const choices=[];for(const [kind,url,key]of [['actor',`/api/containers/${table}/actors`,'actors'],['item',`/api/containers/${table}/modules-native/items`,'items'],['journal',`/api/containers/${table}/journals`,'journals']]){const r=await fetch(url);if(!r.ok)continue;const data=await r.json();for(const row of data[key]||[])choices.push({value:kind+':'+row.id,label:kind+' · '+(row.name||row.title)});}dialog('Add document',[{name:'entry',label:'Document',options:choices}],form=>{const[kind,id]=form.elements.entry.value.split(':');return command('compendiums','add',{packId:pack.id,kind,resourceId:id});});}
 for(const name of modules){const el=panel(name);if(!el)continue;el.querySelector('[data-close]').onclick=()=>{el.hidden=true;};el.querySelector('input[type=search]')?.addEventListener('input',()=>render(name));el.querySelector('[data-create]')?.addEventListener('click',()=>name==='items'?createItem():dialog('Create compendium',[{name:'name',label:'Name'}],form=>command(name,'create',{name:form.elements.name.value})));el.querySelector('[data-folder]')?.addEventListener('click',()=>dialog('Create folder',[{name:'name',label:'Name'}],form=>command('items','folder-create',{name:form.elements.name.value})));}
-document.addEventListener('click',e=>{const toggle=e.target.closest('[data-native-directory-toggle]');if(toggle){const name=toggle.dataset.nativeDirectoryToggle==='content'?'compendiums':toggle.dataset.nativeDirectoryToggle;panel(name).hidden=!panel(name).hidden;window.gravewrightRealtime.subscribeModule(name,scene);void refresh(name).catch(e=>notify(name,e));}});
+document.addEventListener('click',e=>{const toggle=e.target.closest('[data-native-directory-toggle]');if(toggle){const name=toggle.dataset.nativeDirectoryToggle==='content'?'compendiums':toggle.dataset.nativeDirectoryToggle;const target=panel(name);if(target.hasAttribute('data-window-minimized')){restoreWindow(target);target.hidden=false;}else target.hidden=!target.hidden;window.gravewrightRealtime.subscribeModule(name,scene);void refresh(name).catch(e=>notify(name,e));}});
 window.addEventListener('gravewright:resources',({detail})=>{if(modules.includes(detail.module)&&(detail.module!=='combat'||(detail.sceneId??null)===(scene??null))){states[detail.module]=detail.state;render(detail.module);}});
 restoreContent('items', () => render('items'));
 window.addEventListener('gravewright:connected',()=>{for(const name of modules)window.gravewrightRealtime.subscribeModule(name,scene);});

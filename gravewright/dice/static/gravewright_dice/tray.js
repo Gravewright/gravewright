@@ -1,5 +1,6 @@
 // UI behavior ported from DiceTray.vue and DicePresets.vue; formulas use the server engine.
 import { mergePatch, getPath } from '/static/gravewright_web/vendor/datastar-1.0.3.js';
+import { detachWindow } from '/static/gravewright_table/window-controls.js';
 import { dicePresets, buildPreset } from './presets.js';
 const tray = document.getElementById('dice-tray'), workspace = document.getElementById('table-workspace');
 const $ = s => tray.querySelector(s), field = n => $(`[name="${n}"]`);
@@ -205,9 +206,7 @@ window.gravewrightDice = {
     detach() { if (popup && !popup.closed) {
         popup.focus();
         return;
-    } popup = window.open('', `dice-${workspace.dataset.tableId}`, 'popup,width=420,height=700'); if (!popup)
-        return; popup.document.title = 'Dice tray'; for (const style of document.querySelectorAll('style,link[rel="stylesheet"]'))
-        popup.document.head.append(style.cloneNode(true)); const marker = document.createComment('dice-tray'); tray.replaceWith(marker); popup.document.body.append(tray); tray.classList.add('dice-tray--detached'); popup.addEventListener('pagehide', () => { marker.replaceWith(tray); tray.classList.remove('dice-tray--detached'); popup = null; }); }
+    } minimized = false; show($('form'), true); popup = detachWindow(tray, 'dice-' + workspace.dataset.tableId, 'Dice tray', {width:420,height:700}); }
 };
 window.addEventListener('pagehide', () => popup?.close());
 for (const p of dicePresets) {

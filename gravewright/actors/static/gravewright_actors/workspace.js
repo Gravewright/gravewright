@@ -1,3 +1,4 @@
+import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
 import {
   beginTreeDrag,
   cancelTreeDrag,
@@ -457,6 +458,8 @@ function paint() {
 }
 window.gravewrightActors = {
   toggle() {
+    if (popup && !popup.closed) { popup.focus(); return; }
+    if (panel.classList.contains('game-panel--minimized')) { restoreWindow(panel); mergePatch({_actorsOpen:true}); return; }
     mergePatch({ _actorsOpen: !getPath("_actorsOpen") });
   },
   open: (actorId, token) => open({ id: actorId }, token),
@@ -472,18 +475,7 @@ if (panel) {
         popup.focus();
         return;
       }
-      popup = window.open("", "actors-directory", "popup,width=377,height=754");
-      if (!popup) return;
-      for (const css of document.querySelectorAll("link[rel=stylesheet]"))
-        popup.document.head.append(css.cloneNode(true));
-      const marker = document.createComment("actors-directory");
-      panel.replaceWith(marker);
-      popup.document.body.append(panel);
-      panel.classList.add("game-panel--detached");
-      popup.onpagehide = () => {
-        marker.replaceWith(panel);
-        panel.classList.remove("game-panel--detached");
-      };
+      popup = detachWindow(panel, 'actors-directory', 'Characters', {width:377});
     }
     if (a === "create") edit();
     if (a === "folder") folder();

@@ -1,3 +1,4 @@
+import { openDetachedWindow } from './window-controls.js';
 let chatMapId = null;
 let streamRegion, streamGeneration = 0;
 const resourceCommands=new Map();let actorsSubscribed=!!document.getElementById('actors-panel'),tokenMapId=null;
@@ -307,7 +308,7 @@ window.gravewrightRealtime = {
   },
   detach() {
     if (popup && !popup.closed) { popup.focus(); return; }
-    popup = window.open(`/game/${tableId}/chat`, `gravewright-${tableId}-chat`, 'popup,width=420,height=760');
+    popup = openDetachedWindow({url:`/game/${tableId}/chat`,width:420,height:760});
     if (!popup) return;
     mergePatch({_chatDetached: true});
     clearInterval(popupTimer);

@@ -21,10 +21,12 @@ export async function openPermissions(kind, id, {onSave} = {}) {
   const data = await request(url);
   const dialog = document.createElement('section');
   dialog.className = 'ownership-dialog';
+  dialog.dataset.movable = '';
+  dialog.dataset.windowKey = 'permissions:' + kind;
   dialog.setAttribute('role', 'dialog');
   dialog.setAttribute('aria-modal', 'true');
   dialog.tabIndex = -1;
-  dialog.innerHTML = '<form><header><strong id="ownership-title"></strong><button type="button" data-close>×</button></header><p data-hint></p><label class="ownership-dialog__gm"><span></span><input type="checkbox" name="showGM"></label><div data-rows></div><p class="ownership-dialog__help"></p><p role="alert" hidden></p><footer><button type="button" data-reload hidden></button><button type="submit"></button></footer></form>';
+  dialog.innerHTML = '<form><header data-move-handle><strong id="ownership-title"></strong><button type="button" data-close>×</button></header><p data-hint></p><label class="ownership-dialog__gm"><span></span><input type="checkbox" name="showGM"></label><div data-rows></div><p class="ownership-dialog__help"></p><p role="alert" hidden></p><footer><button type="button" data-reload hidden></button><button type="submit"></button></footer></form>';
   dialog.setAttribute('aria-labelledby', 'ownership-title');
   dialog.querySelector('strong').textContent = `${text('Permissions', 'Permissões')}: ${data.title}`;
   const close = dialog.querySelector('[data-close]');

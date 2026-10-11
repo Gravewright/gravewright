@@ -1,4 +1,7 @@
 import { openPermissions } from '/static/gravewright_table/permissions.js';
+import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
+import { mountModal } from '/static/gravewright_table/modal.js';
+import { mountFormTabs, modalText } from '/static/gravewright_table/form-modal.js';
 import '/static/gravewright_table/realtime.js';
 import { initialContent, sceneRestored } from '/static/gravewright_table/content-state.js';
 import { directoryView } from "./directory.js";
@@ -67,32 +70,35 @@ function options(select) {
     select.append(new Option(folder.label, folder.id));
 }
 function form(kind, onSubmit) {
-  dialog?.remove();
+  if (dialog?.close) dialog.close(); else dialog?.remove();
   const el = clone(kind);
+  el.classList.add('table-modal-window');
+  el.dataset.windowKey = 'scene-form:' + kind;
   dialog = el;
-  el.querySelector("header button").onclick = () => el.remove();
-  el.onkeydown = (e) => {
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      el.remove();
-    }
-  };
+  let saving = false;
+  el.querySelector("header button").onclick = () => { if (!saving) el.close(); };
+  const cancel = el.querySelector('[data-cancel]');
+  if (cancel) { cancel.textContent = modalText('Cancel','Cancelar'); cancel.onclick = () => { if (!saving) el.close(); }; }
   el.onsubmit = async (e) => {
     e.preventDefault();
+    if (saving) return;
+    saving = true;
     const button = el.querySelector("button[type=submit]");
     button.disabled = true;
     try {
       await onSubmit(el);
-      el.remove();
+      el.close();
     } catch (cause) {
       const error = el.querySelector("[role=alert]");
       error.textContent = cause.message;
       show(error, true);
     } finally {
       button.disabled = false;
+      saving = false;
     }
   };
-  (kind === "settings" ? workspace : document.body).append(el);
+  mountFormTabs(el);
+  mountModal(el, {canClose: () => !saving});
   return el;
 }
 function populate(el, data) {
@@ -207,16 +213,22 @@ function settings(map) {
       settings: { ...values(el), initialView },
     }),
   );
-  populate(el, map);
+  populate(el, { ...defaults, ...map });
   el.querySelector("[data-settings-title]").textContent =
     labels.editSceneTitle.replace("{name}", map.name);
   el.querySelector("[data-current-view]").onclick = () => {
     initialView = board?.viewport();
+    const status = el.querySelector('[data-view-status]');
+    status.textContent = modalText('Current view captured. Save to apply.', 'Visão atual capturada. Salve para aplicar.');
+    status.hidden = false;
   };
+  el.querySelector('[data-view-hint]').textContent = modalText('Choose the view used when this scene opens.', 'Escolha a visão usada ao abrir esta cena.');
+  el.querySelector('[data-current-view]').disabled = current?.id !== map.id;
   const calibrate = el.querySelector("[data-calibrate]");
   calibrate.disabled = current?.id !== map.id;
   calibrate.onclick = async () => {
     const module = await import("./calibration.js");
+    el.suspend();
     show(el, false);
     calibration = module.calibrate(
       boardNode.querySelector(".game-board__surface"),
@@ -237,6 +249,7 @@ function settings(map) {
             else input.value = value;
           }
         show(el, true);
+        el.resume();
       },
     );
   };
@@ -250,9 +263,6 @@ function folderForm(parentId = "", existing) {
     }),
   );
   if (existing || parentId) {
-    const rect = panel.getBoundingClientRect();
-    el.style.left = Math.max(13, rect.left - 258) + "px";
-    el.style.top = Math.max(13, rect.top + 51) + "px";
     const title = existing ? "Edit folder" : "Create folder";
     el.setAttribute("aria-label", title);
     el.querySelector("header strong").textContent = title;
@@ -608,18 +618,7 @@ if (panel) {
         popup.focus();
         return;
       }
-      popup = window.open("", "maps-directory", "popup,width=377,height=754");
-      if (!popup) return;
-      for (const css of document.querySelectorAll("link[rel=stylesheet]"))
-        popup.document.head.append(css.cloneNode(true));
-      const marker = document.createComment("maps-directory");
-      panel.replaceWith(marker);
-      popup.document.body.append(panel);
-      panel.classList.add("game-panel--detached");
-      popup.onpagehide = () => {
-        marker.replaceWith(panel);
-        panel.classList.remove("game-panel--detached");
-      };
+      popup = detachWindow(panel, 'maps-directory', labels.scenes || 'Scenes', {width:377});
     }
   };
   panel.querySelector("input[type=search]").oninput = tree;
@@ -644,6 +643,8 @@ if (panel) {
 }
 window.gravewrightMaps = {
   toggle() {
+    if (popup && !popup.closed) { popup.focus(); return; }
+    if (panel.classList.contains('game-panel--minimized')) { restoreWindow(panel); mergePatch({_mapsOpen:true}); return; }
     mergePatch({ _mapsOpen: !getPath("_mapsOpen") });
     requestAnimationFrame(() =>
       panel.dispatchEvent(new Event("focusin", { bubbles: true })),
@@ -699,7 +700,7 @@ window.addEventListener("gravewright:access-revoked", () => {
   state = { maps: [], folders: [], activeMapId: null, is_gm: false };
   void navigate(undefined, false);
   tree();
-  dialog?.remove();
+  dialog?.close();
   popup?.close();
 });
 window.addEventListener("pagehide", () => {
