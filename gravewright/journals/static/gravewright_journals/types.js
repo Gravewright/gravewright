@@ -1,5 +1,6 @@
 // QuestSheet, QuestBoard and RollTable behavior ported from the original UI.
 import { richText, emptyDoc } from './editor.js';
+import { writeReference } from '/static/gravewright_table/references.js';
 export const typeLabels = { diary: 'Journal', quest: 'Quest', quest_board: 'Quest board', roll_table: 'Roll table' };
 export const typeIcons = { diary: 'BookOpenText', quest: 'FlagBanner', quest_board: 'Kanban', roll_table: 'DiceFive' };
 const statuses = ['draft', 'available', 'active', 'completed', 'failed', 'archived'];
@@ -177,6 +178,8 @@ function board(w, host, state, open) {
             continue;
         const card = entry.card, el = clone(editing ? 'board-edit-card' : 'board-read-card');
         el.dataset.status = card.status;
+        el.draggable = true;
+        el.addEventListener('dragstart', event => writeReference(event.dataTransfer, {type: 'journal', id: entry.quest_id, title: card.title}));
         el.classList.toggle('quest-board__card--pinned', entry.pinned);
         list.append(el);
         if (editing) {

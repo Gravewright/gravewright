@@ -282,6 +282,13 @@ def apply(who,action,p):
                     who._ownership_cache={}
             j.visibility=visibility
         j.data=clean_data(p.get('data'),j,who)
+        if j.type == 'diary':
+            from gravewright.maps.models import SceneObject
+            removed, _ = SceneObject.objects.filter(scene__campaign_id=who.campaign_id,
+                kind='journalPins', data__journalId=str(j.pk)).exclude(data__pageId='').exclude(
+                data__pageId__in=[page['id'] for page in j.data['sections']]).delete()
+            if removed:
+                result['map_locations_changed'] = True
     elif action=='move':
         if not gm:raise JournalError('Only the GM can move documents.')
         j.folder=folder(p.get('target_folder_id'),who,True)
@@ -298,7 +305,10 @@ def apply(who,action,p):
             who._ownership_cache={}
     elif action=='delete':
         if not gm:raise JournalError('Only the GM can delete documents.')
-        j.delete();return {}
+        from gravewright.maps.models import SceneObject
+        removed, _ = SceneObject.objects.filter(scene__campaign_id=who.campaign_id,
+            kind='journalPins', data__journalId=str(j.pk)).delete()
+        j.delete();return {'map_locations_changed': True} if removed else {}
     else:
         result = types.apply(j, who, action, p)
     j.version+=1;j.save()

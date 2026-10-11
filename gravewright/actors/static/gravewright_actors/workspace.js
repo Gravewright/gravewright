@@ -1,4 +1,5 @@
 import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
+import { writeReference } from '/static/gravewright_table/references.js';
 import {
   beginTreeDrag,
   cancelTreeDrag,
@@ -353,6 +354,7 @@ function paint() {
           );
       };
       el.ondragstart = (e) => {
+        writeReference(e.dataTransfer, {type: 'actor', id: a.id, title: a.name});
         e.dataTransfer.setData(
           "application/x-gravewright-actor",
           JSON.stringify({ actorId: a.id }),

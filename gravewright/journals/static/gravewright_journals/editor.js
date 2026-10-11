@@ -1,5 +1,7 @@
 // The original Tiptap editor, adapted from JournalRichText.vue without Vue.
 import { Editor, Node, Extension, mergeAttributes, StarterKit, Link, Placeholder, Suggestion } from './vendor/editor.js';
+import { readReference, referenceMime, referenceHref, followReference, pickReference } from '/static/gravewright_table/references.js';
+import { modalText } from '/static/gravewright_table/form-modal.js';
 export const emptyDoc = () => ({ format: 'gw-journal-doc-v1', version: 1, doc: { type: 'doc', content: [{ type: 'paragraph' }] } });
 const Image = Node.create({ name: 'gwImage', group: 'block', atom: true, draggable: true,
     addAttributes: () => ({ visibility: { default: 'public' }, assetId: { default: '' }, src: { default: '' }, alt: { default: '' }, caption: { default: '' }, align: { default: 'center' }, width: { default: null } }),
@@ -18,6 +20,23 @@ export function richText(host, value, readonly, upload, label, onChange) {
     const surface = doc.createElement('div');
     surface.className = 'journal-rich-text__surface';
     host.append(surface);
+    surface.addEventListener('click', followReference, true);
+    const insertReference = (ref, position) => {
+        if (closed) return;
+        const chain = editor.chain().focus();
+        if (position !== undefined) chain.setTextSelection(position);
+        chain.insertContent([{type: 'text', text: ref.title.slice(0, 240), marks: [{type: 'link', attrs: {href: referenceHref(ref)}}]}, {type: 'text', text: ' '}]).run();
+    };
+    if (!readonly) {
+        const reference = doc.createElement('button');
+        reference.type = 'button'; reference.className = 'journal-rich-text__reference';
+        reference.textContent = modalText('Insert reference', 'Inserir referência');
+        reference.onclick = () => pickReference(ref => insertReference(ref));
+        host.prepend(reference);
+        surface.addEventListener('dragover', event => {
+            if (event.dataTransfer.types.includes(referenceMime)) event.preventDefault();
+        });
+    }
     const input = doc.createElement('input');
     input.type = 'file';
     input.accept = 'image/png,image/jpeg,image/webp';
@@ -73,7 +92,14 @@ export function richText(host, value, readonly, upload, label, onChange) {
         editorProps: { attributes: { role: 'textbox', 'aria-label': label || 'Page content', 'aria-multiline': 'true' }, handlePaste: (_, event) => { if (!readonly && event.clipboardData?.files.length) {
                 void files(event.clipboardData.files);
                 return true;
-            } return false; }, handleDrop: (_, event) => { if (!readonly && event.dataTransfer?.files.length) {
+            } return false; }, handleDrop: (_, event) => {
+                const ref = !readonly && readReference(event.dataTransfer);
+                if (ref) {
+                    event.preventDefault();
+                    insertReference(ref, editor.view.posAtCoords({left: event.clientX, top: event.clientY})?.pos);
+                    return true;
+                }
+                if (!readonly && event.dataTransfer?.files.length) {
                 void files(event.dataTransfer.files);
                 return true;
             } return false; } },

@@ -131,6 +131,7 @@ def layer_state(scene, who):
         "shaders": [],
         "cards": [],
         "markers": [],
+        "journalPins": [],
         "spatialSounds": [],
         "vision": __import__("gravewright.tokens.services", fromlist=["vision"]).vision(
             scene, who
@@ -179,6 +180,8 @@ def layer_state(scene, who):
     from .zones import visible as zone_visible
     result['zones'] = [{**z,'sceneId':str(scene.pk)} for z in result['zones'] if zone_visible(z,who)]
     result['markers'] = [{**r,'canEdit':who.role=='gm' or r.get('owner')==str(who.user_id)} for r in result['markers']]
+    from .journal_pins import visible as visible_pins
+    result['journalPins'] = visible_pins(result['journalPins'], who)
     result['capabilities'] = {
         'dynamicLighting': settings.DYNAMIC_LIGHTING_ENABLED,
         'fogExpectedVersion': settings.FOG_REQUIRE_EXPECTED_VERSION,
@@ -219,6 +222,9 @@ def apply(scene, who, area, action, p):
         raise MapError('Dynamic lighting is disabled.', 'forbidden')
     env, _ = SceneState.objects.get_or_create(scene=scene)
     result = {}
+    if area == 'journalPins':
+        from .journal_pins import apply as pins
+        return pins(scene, who, env, action, p)
     if area == "zones":
         from .zones import apply as zones
         result=zones(scene,who,action,p)

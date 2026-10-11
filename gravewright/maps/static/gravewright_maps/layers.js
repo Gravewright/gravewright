@@ -1,4 +1,5 @@
 import { createTools } from "./tools.js";
+import { journalPins } from './journal-pins.js';
 import { lightingWorkspace } from "./lighting.js";
 import { wallController } from "./walls/ui/walls.js";
 import { wallPresets, wallPreset, wallPayload } from "./walls/model/walls.js";
@@ -66,7 +67,7 @@ export function createLayers(surface, board, map, gm, initial) {
     menu,
     confirm,
     painting = false,
-    lighting, extra;
+    lighting, extra, pins;
   const walls = node("svg", { class: "wall-workspace" }),
     doors = node("svg", { class: "door-controls" }),
     hint = document.createElement("div");
@@ -95,6 +96,7 @@ export function createLayers(surface, board, map, gm, initial) {
     controller?.update({ state });
     lighting?.update(state);
     extra?.update(state);
+    pins?.update(state);
     paint();
   }
   function closeDialog(name) {
@@ -614,6 +616,8 @@ export function createLayers(surface, board, map, gm, initial) {
       return state;
     },
   });
+  pins = journalPins(surface, board, map, gm, {command, read});
+  pins.update(state);
   extra = createTools(surface,board,map,gm,{command,read,get state(){return state;}},{getPath,mergePatch});
   return {
     update,
@@ -634,6 +638,7 @@ export function createLayers(surface, board, map, gm, initial) {
       closed = true;
       window.removeEventListener('gravewright:selection-edit',editSelection);
       extra?.destroy();
+      pins?.destroy();
       lighting?.destroy();
       controller.destroy();
       for (const name of ["picker", "editor", "menu", "confirm"])

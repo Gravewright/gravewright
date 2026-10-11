@@ -1,6 +1,7 @@
 import { mergePatch, getPath } from '/static/gravewright_web/vendor/datastar-1.0.3.js';
 import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
 import { richText, emptyDoc } from './editor.js';
+import { writeReference, readReference } from '/static/gravewright_table/references.js';
 import { pdfView } from './pdf.js';
 import { renderType, typeLabels, typeIcons } from './types.js';
 import { openPresentation, presentationLabel } from './presentation.js';
@@ -16,7 +17,7 @@ const show = (el, on) => {
     else
         el.setAttribute('hidden', '');
 };
-let state = { journals: [], folders: [], members: [], is_gm: false }, waitingOpen = new Set(), windows = new Map(), menu, dialog, popup;
+let state = { journals: [], folders: [], members: [], is_gm: false }, waitingOpen = new Map(), windows = new Map(), menu, dialog, popup;
 const commands = (action, data) => window.gravewrightRealtime.journalCommand(action, data);
 const storedKey = `gravewright.directory.${tableId}.journals`;
 let closedFolders = new Set();
@@ -168,7 +169,10 @@ function tree() {
             el.addEventListener('contextmenu', e => context(e, [['Open document', () => open(j.id)], ...(state.is_gm ? [[presentationLabel(), () => windows.has(j.id) ? windows.get(j.id).present() : present(j)], ['Permissions', () => windows.has(j.id) ? windows.get(j.id).permissions() : openPermissions('journals', j.id)], ['Delete journal', () => confirm('Delete this journal?', () => commands('delete', { journal_id: j.id }))]] : [])], 'gw-folder-menu'));
             if (state.is_gm) {
                 el.draggable = true;
-                el.addEventListener('dragstart', e => e.dataTransfer.setData('application/x-gravewright-journal', JSON.stringify({ kind: 'journal', id: j.id })));
+                el.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('application/x-gravewright-journal', JSON.stringify({ kind: 'journal', id: j.id }));
+                    writeReference(e.dataTransfer, {type: 'journal', id: j.id, title: j.title});
+                });
             }
             host.append(el);
         }
@@ -211,9 +215,12 @@ panel.addEventListener('click', e => {
 function detach(el, id, title) {
     return detachWindow(el, id, title, {width:987});
 }
-function open(id) {
+function open(id, pageId) {
     const existing = windows.get(id);
     if (existing) {
+        if (pageId && existing.pages.some(page => page.id === pageId)) {
+            existing.selected = pageId; existing.renderIndex(); existing.renderPage();
+        }
         existing.el.classList.remove('journal-window--minimized');
         existing.el.dispatchEvent(new Event('focusin', { bubbles: true }));
         existing.el.ownerDocument.defaultView.focus();
@@ -222,10 +229,15 @@ function open(id) {
     const journal = state.journals.find(j => j.id === id);
     if (journal?.can_open === false) return;
     if (!journal) {
-        waitingOpen.add(id);
+        waitingOpen.set(id, pageId);
+        window.gravewrightRealtime.journalsSubscribe();
         return;
     }
-    windows.set(id, new JournalWindow(journal));
+    const win = new JournalWindow(journal);
+    windows.set(id, win);
+    if (pageId && win.pages.some(page => page.id === pageId)) {
+        win.selected = pageId; win.renderIndex(); win.renderPage();
+    }
 }
 function present(journal, page) {
     return openPresentation(journal, {members: state.members, targeted: state.targeted_handouts_enabled, page, send: payload => commands('present', payload)});
@@ -411,9 +423,12 @@ class JournalWindow {
                     if (this.isGM || this.editing && p.can_edit !== false)
                         this.pageMenu(e, p);
                 });
-                el.draggable = this.editing && p.can_edit !== false;
+                el.draggable = true;
                 el.dataset.pageId = p.id;
-                el.addEventListener('dragstart', e => e.dataTransfer.setData('application/x-gravewright-page', p.id));
+                el.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('application/x-gravewright-page', p.id);
+                    writeReference(e.dataTransfer, {type: 'journal', id: this.draft.id, pageId: p.id, title: p.title});
+                });
                 list.append(el);
             }
             section.append(list);
@@ -563,8 +578,10 @@ class JournalWindow {
             if (!this.editing)
                 return;
             e.preventDefault();
+            const reference = readReference(e.dataTransfer);
+            if (reference && reference.id !== this.draft.id) return;
             const id = e.dataTransfer.getData('application/x-gravewright-page'), page = this.pages.find(p => p.id === id);
-            if (!page)
+            if (!page || page.can_edit === false)
                 return;
             const target = e.target.closest('[data-page-id]')?.dataset.pageId;
             page.category = e.target.closest('[data-chapter]')?.dataset.chapter || '';
@@ -649,6 +666,7 @@ class JournalWindow {
     }
 }
 window.gravewrightJournals = { toggle() { if (popup && !popup.closed) { popup.focus(); return; } if (panel.classList.contains('game-panel--minimized')) { restoreWindow(panel); mergePatch({_journalsOpen:true}); return; } mergePatch({ _journalsOpen: !getPath('_journalsOpen') }); requestAnimationFrame(() => panel.dispatchEvent(new Event('focusin', { bubbles: true }))); window.gravewrightRealtime.journalsSubscribe(); }, open };
+window.gravewrightJournals.flush = id => windows.get(id)?.flush() ?? Promise.resolve(true);
 window.addEventListener('gravewright:connected', () => window.gravewrightRealtime.journalsSubscribe());
 function receiveState(next) {
     restoreContent('journals', () => {
@@ -661,10 +679,10 @@ function receiveState(next) {
             else
                 void win.close(true);
         }
-        for (const id of waitingOpen)
+        for (const [id, pageId] of waitingOpen)
             if (state.journals.some(j => j.id === id)) {
                 waitingOpen.delete(id);
-                open(id);
+                open(id, pageId);
             }
     });
 }
