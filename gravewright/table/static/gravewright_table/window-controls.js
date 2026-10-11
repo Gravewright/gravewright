@@ -1,3 +1,5 @@
+import { bindEscape } from '/static/gravewright_web/escape.js';
+
 const detachedWindows = new WeakMap();
 
 export function openDetachedWindow({url = 'about:blank', width = 420, height = 754, source = window} = {}) {
@@ -38,6 +40,7 @@ export function detachWindow(element, id, title, {width = 420, height = 754} = {
   detachedWindows.set(element, child);
   child.name = `gravewright-${id}-${crypto.randomUUID()}`;
   const target = child.document;
+  bindEscape(target);
   target.title = title;
   target.documentElement.lang = source.documentElement.lang;
   target.documentElement.dataset.renderProfile = source.documentElement.dataset.renderProfile || 'performance';

@@ -1,3 +1,5 @@
+import { registerEscapeClose } from '/static/gravewright_web/escape.js';
+
 const table = document.querySelector('#table-workspace');
 const palette = document.querySelector('[data-command-palette]');
 const lobby = document.querySelector('[data-lobby-panel-window]');
@@ -7,6 +9,14 @@ const input = palette?.querySelector('input');
 const status = palette?.querySelector('[data-command-palette-status]');
 const list = palette?.querySelector('[data-command-palette-results]');
 function closePalette() { if (!palette) return; palette.hidden = true; previousFocus?.focus(); }
+if (palette) registerEscapeClose(palette.querySelector('[role=dialog]'), closePalette);
+const house = document.querySelector('.house-menu');
+if (house) {
+  house.setAttribute('aria-modal', 'true');
+  registerEscapeClose(house, () => document.querySelector('.game-menubar__logo').click());
+}
+const participants = document.querySelector('.game-roster');
+if (participants) registerEscapeClose(participants, () => document.querySelector('.game-menubar__roster > button').click());
 function choose(index) {
   selected = index;
   for (const [i, el] of [...list.children].entries()) el.setAttribute('aria-selected', String(i === selected));

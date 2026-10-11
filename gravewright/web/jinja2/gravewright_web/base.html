@@ -8,6 +8,7 @@
     {% block styles %}<link rel="stylesheet" href="{{ static('gravewright_web/css/index.css') }}" />{% endblock %}
     {% block before_scripts %}{% endblock %}
     <script type="importmap" nonce="{{ request.csp_nonce }}">{{ module_import_map()|tojson }}</script>
+    <script type="module" src="{{ static('gravewright_web/escape.js') }}"></script>
     <script type="module" src="{{ static('gravewright_web/vendor/datastar-1.0.3.js') }}"></script>
     <script type="module" src="{{ static('gravewright_modules/frontend-api.js') }}"></script>
     {% if language_enabled %}<script id="gravewright-language" type="application/json">{{ language|tojson }}</script>

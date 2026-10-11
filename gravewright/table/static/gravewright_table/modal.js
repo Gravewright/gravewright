@@ -1,3 +1,5 @@
+import { registerEscapeClose } from '/static/gravewright_web/escape.js';
+
 let active;
 
 export function mountModal(modal, {canClose = () => true} = {}) {
@@ -13,11 +15,7 @@ export function mountModal(modal, {canClose = () => true} = {}) {
   const focusable = () => [...modal.querySelectorAll('button, input, select, textarea, a[href], [tabindex]')]
     .filter(element => !element.disabled && element.tabIndex >= 0 && element.getClientRects().length);
   const keydown = event => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      if (canClose()) modal.close();
-    } else if (event.key === 'Tab') {
+    if (event.key === 'Tab') {
       const elements = focusable(), first = elements[0] || modal, last = elements.at(-1) || modal;
       if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
         event.preventDefault(); last.focus();
@@ -45,6 +43,7 @@ export function mountModal(modal, {canClose = () => true} = {}) {
   modal.close = () => {
     if (closed) return;
     closed = true;
+    unregisterEscape();
     document.removeEventListener('keydown', keydown, true);
     overlay.remove();
     for (const [element, inert] of background) element.inert = inert;
@@ -53,6 +52,7 @@ export function mountModal(modal, {canClose = () => true} = {}) {
     modal.dispatchEvent(new Event('close'));
   };
   active = modal;
+  const unregisterEscape = registerEscapeClose(modal, () => { if (!suspended && canClose()) modal.close(); });
   overlay.append(modal);
   document.body.append(overlay);
   for (const [element] of background) element.inert = true;
