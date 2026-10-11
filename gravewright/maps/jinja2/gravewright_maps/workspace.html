@@ -6,7 +6,7 @@
 <script type="application/json" id="map-text">{{ game|tojson }}</script>
 
 {% include 'gravewright_maps/calibration.html' %}
-<template id="map-icons">{% for name in ['Broadcast','NavigationArrow','PencilSimple','Trash','Plus','FolderPlus'] %}<span data-map-icon="{{ name }}">{{ icon(name) }}</span>{% endfor %}</template>
+<template id="map-icons">{% for name in ['Broadcast','NavigationArrow','PencilSimple','Trash','Plus','FolderPlus','Eye','DownloadSimple'] %}<span data-map-icon="{{ name }}">{{ icon(name) }}</span>{% endfor %}</template>
 
 {% include 'gravewright_maps/layers.html' %}
 

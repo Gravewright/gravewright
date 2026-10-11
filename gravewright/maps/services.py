@@ -348,6 +348,14 @@ def apply(who, action, p):
         raw = p.get("settings")
         if not isinstance(raw, dict):
             raise MapError("Invalid scene settings.")
+        if 'lighting' in p:
+            from .models import SceneState
+            from .objects import apply as object_command
+            environment = SceneState.objects.filter(scene=row).first()
+            expected = p.get('environmentVersion')
+            if type(expected) is not int or expected != (environment.version if environment else 1):
+                raise MapError('The scene environment changed. Reopen its settings and try again.', 'conflict')
+            object_command(row, who, 'lighting', 'update', p['lighting'])
         if "name" in raw:
             row.name = title(raw["name"])
         if "visibility" in raw:

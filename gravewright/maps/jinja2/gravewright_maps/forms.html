@@ -11,23 +11,24 @@
 <p role="alert" hidden></p></fieldset></form></template>
 <template id="map-settings"><form data-movable data-window-key="scene-settings" class="game-scene-settings table-modal-window" role="dialog" aria-label="Edit scene">
 <header data-move-handle><strong><span data-settings-title></span></strong><button type="button" data-close aria-label="Close">{{ icon('X') }}</button></header>
-<nav class="table-modal-tabs" role="tablist" aria-label="Scene settings">
-<button type="button" role="tab" data-modal-tab="general" data-label-en="General" data-label-pt="Geral">General</button>
-<button type="button" role="tab" data-modal-tab="grid" data-label-en="Grid and scale" data-label-pt="Grade e escala">Grid and scale</button>
-<button type="button" role="tab" data-modal-tab="view" data-label-en="Initial view" data-label-pt="Visão inicial">Initial view</button>
-</nav>
 <div class="table-modal-body">
-<section role="tabpanel" data-modal-panel="general">
+<div class="scene-settings-columns">
+<section class="scene-settings-column">
 <label><span>{{ game.sceneName }}</span><input name="name" required maxlength="120" /></label>
+<label><span>{{ game.imageScale }}</span><input name="imageScale" type="number" min="0.01" max="100" step="0.01" /></label>
 <div class="game-scene-settings__wide"><label><span>{{ game.group }}</span><select name="groupId"><option value="">{{ game.noGroup }}</option></select></label><label><span>{{ game.visibility }}</span><select name="visibility"><option value="players">{{ game.players }}</option><option value="gm">{{ game.gmOnly }}</option></select></label></div>
+<label>{{ 'Modo de visão' if language.id == 'pt-BR' else 'Vision mode' }}<select name="lightingMode"><option value="none">{{ 'Visão livre' if language.id == 'pt-BR' else 'Full vision' }}</option><option value="dynamic">{{ 'Iluminação dinâmica' if language.id == 'pt-BR' else 'Dynamic lighting' }}</option><option value="manual">{{ 'Iluminação manual' if language.id == 'pt-BR' else 'Manual lighting' }}</option></select></label>
+<p data-view-hint></p><button type="button" data-current-view>{{ icon('Crosshair') }}{{ game.useCurrentView }}</button><p role="status" data-view-status hidden></p>
+<label>{{ 'Escuridão' if language.id == 'pt-BR' else 'Darkness' }}<input name="darkness" type="range" min="0" max="1" step="0.05"><output data-darkness-value></output></label>
+<label class="game-scene-editor__check"><input name="lightsOut" type="checkbox">{{ 'Luzes da cena apagadas' if language.id == 'pt-BR' else 'Scene lights off' }}</label>
 </section>
-<section role="tabpanel" data-modal-panel="grid" hidden>
-<div class="game-scene-settings__wide"><label><span>{{ game.gridSize }}</span><input name="gridSize" type="number" min="1" max="10000" step="0.0001" /></label><label><span>{{ game.imageScale }}</span><input name="imageScale" type="number" min="0.01" max="100" step="0.01" /></label></div>
+<section class="scene-settings-column">
+<label><span>{{ game.gridSize }}</span><input name="gridSize" type="number" min="1" max="10000" step="0.0001" /></label>
 <div class="game-scene-settings__wide"><label><span>{{ game.measureValue }}</span><input name="measureValue" type="number" min="0.0001" max="1000000" step="any" required /></label><label><span>{{ game.measureUnit }}</span><input name="measureUnit" type="text" maxlength="24" placeholder="{{ game.measureUnitPlaceholder }}" /></label></div>
 <section class="game-scene-settings__calibration"><div><strong>{{ game.gridCalibration }}</strong><small>{{ game.gridCalibrationHint }}</small></div><button type="button" data-calibrate>{{ icon('GridFour') }}{{ game.mapGrid }}</button></section>
 <section class="game-scene-settings__grid"><label class="game-scene-editor__check"><input name="gridVisible" type="checkbox" />{{ game.showGrid }}</label><label><span>{{ game.gridColor }}</span><input name="gridColor" type="color" /></label><label class="game-scene-editor__range"><span>{{ game.gridOpacity }}</span><input name="gridOpacity" type="range" min="0" max="1" step="0.1" /><output>0.4</output></label></section>
 </section>
-<section role="tabpanel" data-modal-panel="view" hidden><p data-view-hint></p><button type="button" data-current-view>{{ icon('Crosshair') }}{{ game.useCurrentView }}</button><p role="status" data-view-status hidden></p></section>
+</div>
 <p role="alert" hidden></p>
 </div>
 <footer class="game-scene-settings__actions"><button type="button" data-cancel>Cancel</button><button class="game-scene-settings__save" type="submit">{{ icon('FloppyDisk') }}{{ game.saveScene }}</button></footer>

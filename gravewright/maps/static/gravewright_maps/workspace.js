@@ -3,7 +3,7 @@ import { detachWindow, restoreWindow } from '/static/gravewright_table/window-co
 import { mountModal } from '/static/gravewright_table/modal.js';
 import { mountFormTabs, modalText } from '/static/gravewright_table/form-modal.js';
 import '/static/gravewright_table/realtime.js';
-import { initialContent, sceneRestored } from '/static/gravewright_table/content-state.js';
+import { initialContent, sceneRestored, afterContentReady } from '/static/gravewright_table/content-state.js';
 import { directoryView } from "./directory.js";
 import {
   mergePatch,
@@ -47,6 +47,46 @@ let state = { maps: [], folders: [], activeMapId: null, is_gm: false },
   layers,
   tokens,
   boardMapId;
+const sceneText = {
+  preview: modalText('View scene', 'Visualizar cena'),
+  activate: modalText('Activate for players', 'Ativar para jogadores'),
+  preload: modalText('Preload scene', 'Pré-carregar cena'),
+  preparing: modalText('Preparing', 'Em preparação'),
+  loading: modalText('Preloading', 'Pré-carregando'),
+  ready: modalText('Preloaded', 'Pré-carregada'),
+};
+let preloadTask, preloadAbort, preloadGeneration = 0, preparing, prepared, preparedTimer;
+function cancelPreparation() {
+  ++preloadGeneration;
+  preloadAbort?.abort(); preloadTask?.cancel();
+  preloadAbort = preloadTask = undefined; preparing = undefined;
+}
+async function prepare(map) {
+  cancelPreparation();
+  const revision = preloadGeneration;
+  clearTimeout(preparedTimer);
+  preparing = map.id; prepared = undefined; tree();
+  await new Promise(resolve => afterContentReady(resolve));
+  if (revision !== preloadGeneration) return;
+  const abort = preloadAbort = new AbortController();
+  try {
+    const [{ preloadScene }, response] = await Promise.all([
+      import('./vendor/board.js?v=scene-preparation-1'),
+      fetch(`/api/maps/${map.id}/manifest`, {signal: abort.signal, cache: 'no-store', priority: 'low'}),
+    ]);
+    if (!response.ok) throw Error(labels.mapFailed);
+    const manifest = await response.json();
+    if (revision !== preloadGeneration) return;
+    const surface = document.querySelector('.game-table__scene-frame');
+    preloadTask = preloadScene(manifest, {width: surface.clientWidth, height: surface.clientHeight}, map.initialView);
+    await preloadTask.done;
+    if (revision === preloadGeneration) {
+      prepared = {id: map.id, version: map.version};
+      preparedTimer = setTimeout(() => { prepared = undefined; tree(); }, 60_000);
+    }
+  } catch (cause) { if (revision === preloadGeneration && cause.name !== 'AbortError') error(cause.message); }
+  finally { if (revision === preloadGeneration) { preparing = undefined; tree(); } }
+}
 const closedKey = `gravewright.directory.${campaign}.scenes`;
 const expandedFolder = (id) => {
   try {
@@ -206,14 +246,37 @@ function upload(groupId = "") {
 }
 function settings(map) {
   let initialView = map.initialView;
-  const el = form("settings", async (el) =>
-    command("update", {
+  let environmentVersion, originalLighting;
+  const el = form("settings", async (el) => {
+    const {lightingMode, darkness, lightsOut, ...settings} = values(el);
+    const lighting = {mode: lightingMode, darkness, lights_out: lightsOut};
+    return command("update", {
       mapId: map.id,
       version: map.version,
-      settings: { ...values(el), initialView },
-    }),
-  );
+      settings: { ...settings, initialView },
+      ...(JSON.stringify(lighting) === originalLighting ? {} : {lighting, environmentVersion}),
+    });
+  });
   populate(el, { ...defaults, ...map });
+  const save = el.querySelector('[type=submit]');
+  save.disabled = true;
+  el.querySelector('.table-modal-body').inert = true;
+  void fetch(`/api/maps/${map.id}/state`, {cache: 'no-store'}).then(async response => {
+    if (!response.ok) throw Error(labels.mapFailed);
+    const state = await response.json();
+    if (!el.isConnected) return;
+    environmentVersion = state.version;
+    const lighting = state.lighting;
+    el.elements.lightingMode.querySelector('[value=dynamic]').disabled = !state.capabilities?.dynamicLighting;
+    el.elements.lightingMode.value = lighting.mode;
+    el.elements.darkness.value = lighting.darkness;
+    el.elements.lightsOut.checked = lighting.lights_out;
+    originalLighting = JSON.stringify({mode: lighting.mode, darkness: lighting.darkness, lights_out: lighting.lights_out});
+    el.querySelector('[data-darkness-value]').textContent = Math.round(lighting.darkness * 100) + '%';
+    save.disabled = false;
+    el.querySelector('.table-modal-body').inert = false;
+  }).catch(cause => { if (el.isConnected) { const alert = el.querySelector('[role=alert]'); alert.textContent = cause.message; alert.hidden = false; } });
+  el.elements.darkness.oninput = () => { el.querySelector('[data-darkness-value]').textContent = Math.round(el.elements.darkness.value * 100) + '%'; };
   el.querySelector("[data-settings-title]").textContent =
     labels.editSceneTitle.replace("{name}", map.name);
   el.querySelector("[data-current-view]").onclick = () => {
@@ -298,6 +361,9 @@ function context(event, items) {
     [labels.newScene]: "Plus",
     [labels.activateScene]: "Broadcast",
     [labels.navigateScene]: "NavigationArrow",
+    [sceneText.preview]: 'Eye',
+    [sceneText.activate]: 'Broadcast',
+    [sceneText.preload]: 'DownloadSimple',
     [labels.editScene]: "PencilSimple",
     [labels.removeScene]: "Trash",
   };
@@ -441,9 +507,18 @@ function tree() {
     host.append(list);
     for (const map of maps.filter((m) => (m.groupId || "") === parent)) {
       const el = clone("entry");
+      el.dataset.sceneId = map.id;
+      el.onclick = () => navigate(map);
       el.querySelector("strong").textContent = map.name;
       show(el.querySelector("[data-broadcast]"), map.id === state.activeMapId);
-      show(el.querySelector("[data-navigating]"), map.id === current?.id);
+      el.querySelector('[data-broadcast]').textContent = modalText('Active for players', 'Ativa para jogadores');
+      el.querySelector('[data-navigating]').textContent = sceneText.preparing;
+      show(el.querySelector("[data-navigating]"), map.id === current?.id && map.id !== state.activeMapId);
+      if (preparing === map.id || prepared?.id === map.id && prepared.version === map.version) {
+        const badge = document.createElement('small'); badge.dataset.scenePrepared = '';
+        badge.textContent = preparing === map.id ? sceneText.loading : sceneText.ready;
+        el.append(badge);
+      }
       el.classList.toggle("gw-folder-item--active", map.id === current?.id);
       el.draggable = true;
       el.ondragstart = (e) =>
@@ -454,13 +529,13 @@ function tree() {
       el.oncontextmenu = (e) =>
         context(e, [
           [
-            labels.activateScene,
+            sceneText.activate,
             async () => {
-              following = true;
               await command("activate", { mapId: map.id });
             },
           ],
-          [labels.navigateScene, () => navigate(map)],
+          [sceneText.preview, () => navigate(map)],
+          [sceneText.preload, () => prepare(map)],
           [labels.editScene, () => settings(map)],
           ["Permissions", () => openPermissions('scenes', map.id)],
           [
@@ -482,6 +557,8 @@ function tree() {
 }
 async function navigate(map, privateView = true) {
   if (!panel) return;
+  cancelPreparation();
+  if (prepared?.id === map?.id) { prepared = undefined; clearTimeout(preparedTimer); }
   if (privateView && state.is_gm) {
     try {
       await command("navigate", {
@@ -525,7 +602,7 @@ async function navigate(map, privateView = true) {
       return response.json();
     };
     const [manifest, layerState, {createBoard}, {createLayers}, {createTokens}] = await Promise.all([
-      read('manifest'), read('state'), import('./vendor/board.js?v=image-preview-1'), import('./layers.js'),
+      read('manifest'), read('state'), import('./vendor/board.js?v=scene-preparation-1'), import('./layers.js'),
       import('/static/gravewright_tokens/workspace.js'),
     ]);
     if (version !== generation) return;
@@ -564,7 +641,7 @@ async function navigate(map, privateView = true) {
     layers?.destroy();
     layers = undefined;
     window.gravewrightRealtime.stopViewport();
-    board?.destroy();
+    board?.destroy({preservePrefetch: true});
     board = undefined;
     boardMapId = undefined;
     boardNode?.remove();
@@ -708,6 +785,8 @@ window.addEventListener('gravewright:maps', event => receiveState(event.detail))
 const initial = initialContent('maps');
 if(initial)receiveState(initial);
 window.addEventListener("gravewright:access-revoked", () => {
+  clearTimeout(preparedTimer);
+  cancelPreparation(); prepared = undefined;
   state = { maps: [], folders: [], activeMapId: null, is_gm: false };
   void navigate(undefined, false);
   tree();
@@ -715,6 +794,8 @@ window.addEventListener("gravewright:access-revoked", () => {
   popup?.close();
 });
 window.addEventListener("pagehide", () => {
+  clearTimeout(preparedTimer);
+  cancelPreparation();
   calibration?.();
   tokens?.destroy();
     tokens=undefined;

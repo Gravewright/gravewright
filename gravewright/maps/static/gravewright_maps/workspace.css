@@ -11,3 +11,23 @@
 .document-reference-results{display:flex;flex-direction:column;gap:5px;max-height:320px;overflow:auto}
 .document-reference-results button{text-align:left;padding:8px;border:1px solid var(--border);border-radius:5px;background:var(--panel);color:var(--text)}
 .document-reference-results button[aria-pressed=true]{border-color:var(--accent)}
+
+#maps-panel .game-directory--scenes{display:flex;flex-direction:column}
+#maps-panel .game-directory--scenes>.directory-toolbar{flex:0 0 auto}
+#maps-panel .game-directory--scenes>[data-map-tree]{flex:1 1 0;min-height:0;overflow:auto}
+[data-scene-prepared]{color:var(--accent);font-size:10px}
+.game-scene-settings .table-modal-body .game-scene-editor__check{display:flex;align-items:center;gap:8px}
+.game-scene-settings .table-modal-body .game-scene-editor__check input{flex:0 0 auto;width:auto;margin:0}
+.scene-settings-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
+.scene-settings-column{display:flex;flex-direction:column;gap:14px;min-width:0}
+.scene-settings-column+.scene-settings-column{border-left:1px solid var(--border);padding-left:24px}
+.scene-settings-column .game-scene-settings__wide{display:grid;grid-template-columns:1fr;gap:14px}
+.scene-settings-column [data-view-hint]{margin:0}
+.scene-settings-column .game-scene-settings__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.scene-settings-column .game-scene-settings__grid label{min-width:0}
+.scene-settings-column .game-scene-settings__grid input[type=range]{width:100%;min-width:0}
+.scene-settings-column .game-scene-settings__calibration{flex-direction:column;align-items:stretch;gap:10px;padding:12px}
+.scene-settings-column .game-scene-settings__calibration button{width:100%;min-height:34px;white-space:nowrap;gap:8px}
+.scene-settings-column .game-scene-settings__calibration button svg{flex:0 0 18px;width:18px;height:18px}
+.scene-settings-column .game-scene-settings__calibration button:hover{border-color:var(--accent)}
+@media(max-width:560px){.scene-settings-columns{grid-template-columns:1fr;gap:18px}.scene-settings-column+.scene-settings-column{border-left:0;border-top:1px solid var(--border);padding-left:0;padding-top:18px}}

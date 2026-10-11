@@ -37,6 +37,8 @@ def changed(campaign_id, user_id, resource, action, request_id, result=None):
         events = [{'type': name} for name in ('room.actors','room.tokens','room.map_layers')]
     elif resource == 'maps':
         events = [{'type':'room.map_layers' if action == 'objects' else 'room.maps'}]
+        if action == 'update':
+            events.append({'type': 'room.map_layers'})
     elif resource == 'journals':
         if result.get('presentation'):
             events.append({'type':'room.handout','payload':result['presentation'],'request_id':str(request_id)})

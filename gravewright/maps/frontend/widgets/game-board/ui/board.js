@@ -3,7 +3,7 @@ import { tileBlobCache } from "../model/tile-blob-cache.js";
 import { pingShapes, PING_DURATION } from "../model/map-ping.js";
 import { LONG_PRESS_MS, movedBeyondThreshold, zoomAround } from "../model/board-input.js";
 import { PRIORITY, TileScheduler } from "../model/tile-scheduler.js";
-import { fitToSurface, planTiles, sameRegion, visibleRange, worldPoint } from "../model/board-view.js";
+import { fitToSurface, planTiles, regionTileUrls, sameRegion, visibleRange, worldPoint } from "../model/board-view.js";
 import { StableRegionHeartbeat } from "../model/stable-region-heartbeat.js";
 import { AsyncWorkPump } from "../model/async-work-pump.js";
 import { warmTiles } from "../lib/warm-tiles.js";
@@ -11,6 +11,14 @@ import { createPixiBoardRenderer } from "../lib/pixi-board-renderer.js";
 import { renderingPreferences } from "../../../shared/rendering/render-profile.js";
 import { SceneLayers } from "../lib/scene-layers.js";
 // Lifecycle and DOM events use an explicit controller; no Vue runtime.
+export function preloadScene(manifest, surface, initialView) {
+    const region = visibleRange(manifest, initialView || fitToSurface(surface, manifest), surface);
+    const task = warmTiles(manifest, region);
+    return { cancel: task.cancel, done: task.done.then(() => {
+        if (!regionTileUrls(manifest, region, 24).some(url => tileBlobCache.has(url)))
+            throw new Error('Unable to preload this scene.');
+    }) };
+}
 export function createBoard(element, options, emit) {
     const props = { ...options };
     const host = { value: element };
@@ -172,7 +180,6 @@ export function createBoard(element, options, emit) {
         retries.add(timer);
     }
     function forgetTiles() {
-        tileBlobCache.clear();
         previousSample = undefined;
         interactions = 0;
         warming?.cancel();
@@ -462,8 +469,8 @@ export function createBoard(element, options, emit) {
                 board?.setGrid(props.grid);
             if ('pieces' in next) await applyPieces();
             if (['state','tokenPresentation','grid','gm'].some(key=>key in next)) applySceneLayers();
-        } }, destroy() {
-            tileBlobCache.clear();
+        } }, destroy({preservePrefetch = false} = {}) {
+            if (!preservePrefetch) tileBlobCache.clear();
             for (const [name, listener] of Object.entries(listeners))
                 element.removeEventListener(name, listener);
             window.removeEventListener("keydown", shiftPing);

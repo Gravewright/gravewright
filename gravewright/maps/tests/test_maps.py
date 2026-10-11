@@ -90,6 +90,38 @@ class MapTests(TransactionTestCase):
             self.client.get(f"/api/maps/{m['id']}/manifest").status_code, 404
         )
 
+    def test_scene_settings_and_environment_save_atomically(self):
+        from gravewright.maps.models import SceneState
+
+        m = self.upload()
+        payload = {
+            'mapId': m['id'], 'version': m['version'],
+            'settings': {'name': 'Prepared keep'}, 'environmentVersion': 1,
+            'lighting': {'mode': 'manual', 'darkness': 0.35, 'lights_out': False},
+        }
+        with self.assertRaises(services.MapError):
+            self.command('update', payload, user=self.player)
+        self.command('update', payload)
+        scene = Scene.objects.get(pk=m['id'])
+        environment = SceneState.objects.get(scene=scene)
+        self.assertEqual(scene.name, 'Prepared keep')
+        self.assertEqual(environment.lighting['darkness'], 0.35)
+        self.assertEqual(environment.version, 2)
+        payload['version'] = scene.version
+        payload['settings'] = {'name': 'Stale update'}
+        with self.assertRaises(services.MapError):
+            self.command('update', payload)
+        scene.refresh_from_db()
+        self.assertEqual(scene.name, 'Prepared keep')
+        payload['environmentVersion'] = 2
+        payload['settings'] = {'gridSize': -1}
+        payload['lighting']['darkness'] = 0.8
+        with self.assertRaises(services.MapError):
+            self.command('update', payload)
+        environment.refresh_from_db()
+        self.assertEqual(environment.lighting['darkness'], 0.35)
+        self.assertEqual(environment.version, 2)
+
     def test_image_resize_is_persisted_in_scene_state(self):
         from gravewright.maps.models import MapAsset, SceneObject
 
