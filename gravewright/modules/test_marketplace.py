@@ -30,11 +30,17 @@ class MarketplaceTests(TestCase):
         }))
         override = override_settings(
             MEDIA_ROOT=temporary.name,
+            GRAVEWRIGHT_MODULES_ROOT=None,
             GRAVEWRIGHT_MARKETPLACE_URL="https://publisher.example/catalog.json",
             GRAVEWRIGHT_MARKETPLACE_KEYS_FILE=str(self.keyfile),
         )
         override.enable()
         self.addCleanup(override.disable)
+        environment = patch.dict(os.environ, {
+            'GRAVEWRIGHT_DJANGO_REGISTRY': str(self.directory / 'modules' / 'server-apps.json'),
+        })
+        environment.start()
+        self.addCleanup(environment.stop)
         self.user = User.objects.create_user(
             email="owner@marketplace.test", name="Owner", role="owner"
         )

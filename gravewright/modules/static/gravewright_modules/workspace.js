@@ -1,8 +1,8 @@
 import { HttpClient } from "./http-client.js";
 import { BrowserBridge } from "./browser-bridge.js";
 import { ModuleRuntime } from "./module-runtime.js";
-import { DOMAIN_NAMES } from "./generated.js";
 import { attachSurface } from "./frontend-api.js";
+import { packageAction } from "./package-actions.js";
 import { contentReady, afterContentReady } from '/static/gravewright_table/content-state.js';
 // Table integration: native DOM surfaces are attached to both host-page UI
 // registrations and signed-package mounts, each with its own lifetime ownership.
@@ -41,14 +41,18 @@ if (table) {
       p.textContent = "No JavaScript modules installed.";
       pane.append(p);
     }
+    const list = document.createElement('ul');
+    list.className = 'module-marketplace__list';
+    pane.append(list);
     for (const pkg of packages) {
-      const row = document.createElement("article");
+      const row = document.createElement("li");
       row.className = "module-marketplace__item";
-      const div = document.createElement("div"), strong = document.createElement("strong"), small = document.createElement("small");
+      row.dataset.packageId = pkg.id;
+      row.dataset.packageVersion = pkg.version;
+      const strong = document.createElement("strong"), actions = document.createElement('div');
+      actions.className = 'module-marketplace__actions';
       strong.textContent = pkg.name;
-      small.textContent = `${pkg.version} \xB7 ${pkg.description}`;
-      div.append(strong, small);
-      row.append(div);
+      row.append(strong, actions);
       const active = state?.modules.some((m) => m.id === pkg.id && m.version === pkg.version);
       if (!pkg.revoked && active && runtime.canCustomize(pkg.id)) {
         const customize = document.createElement("button");
@@ -61,13 +65,13 @@ if (table) {
           try { await runtime.customize(pkg.id); } catch (error) { report(error); }
           finally { customize.disabled = false; }
         };
-        row.append(customize);
+        actions.append(customize);
       }
       if (pkg.revoked) {
         const span = document.createElement("span");
         span.textContent = "Revoked";
-        row.append(span);
-      } else if (manage) {
+        actions.append(span);
+      } else if (manage && !pkg.locales && !pkg.django) {
         const b = document.createElement("button");
         b.type = "button";
         b.textContent = active ? "Deactivate" : "Activate";
@@ -78,33 +82,28 @@ if (table) {
           else modules[pkg.id] = pkg.version;
           await configure(modules, Object.fromEntries(Object.entries(state.replacements).filter(([, id]) => modules[id])));
         };
-        row.append(b);
+        actions.append(b);
       }
-      pane.append(row);
-    }
-    if (manage && state?.modules.length) {
-      const fieldset = document.createElement("fieldset");
-      fieldset.className = "module-marketplace__replacements";
-      const legend = document.createElement("legend");
-      legend.textContent = "Interface replacements";
-      fieldset.append(legend);
-      for (const domain of DOMAIN_NAMES) {
-        const label = document.createElement("label"), select = document.createElement("select");
-        label.append(document.createTextNode(domain));
-        select.add(new Option("Automatic", ""));
-        for (const pkg of state.modules) select.add(new Option(pkg.id, pkg.id));
-        select.value = state.replacements[domain] ?? "";
-        select.onchange = () => {
-          const replacements = { ...state.replacements };
-          if (select.value) replacements[domain] = select.value;
-          else delete replacements[domain];
-          select.disabled = true;
-          void configure(Object.fromEntries(state.modules.map((m) => [m.id, m.version])), replacements);
+      if (pane.dataset.packageManage === 'true') for (const action of ['update', 'remove']) {
+        const button = document.createElement('button');
+        button.type = 'button'; button.dataset.action = action;
+        const pt = document.documentElement.lang.startsWith('pt'), es = document.documentElement.lang.startsWith('es');
+        button.textContent = action === 'update' ? (pt ? 'Atualizar' : es ? 'Actualizar' : 'Update') : (pt ? 'Remover' : es ? 'Eliminar' : 'Remove');
+        button.onclick = async () => {
+          const controls = [...pane.querySelectorAll('button')];
+          const disabled = controls.map(control => control.disabled);
+          controls.forEach(control => control.disabled = true);
+          try {
+            const result = await packageAction(http, pkg, action);
+            if (result.cancelled) return;
+            await refresh(true);
+            if (result.restartRequired || (pkg.globalEnabled && (action === 'remove' || result.updated))) location.reload();
+          } catch (failure) { report(failure); }
+          finally { controls.forEach((control, index) => control.disabled = disabled[index]); }
         };
-        label.append(select);
-        fieldset.append(label);
+        actions.append(button);
       }
-      pane.append(fieldset);
+      list.append(row);
     }
   }, attach = function(element, domain, context = {}, viewport) {
     if (surfaces.has(element)) return;
@@ -222,7 +221,7 @@ if (table) {
         await runtime.reconcile(next);
         state = next;
       }
-      packages = (await http.get("/api/module-packages")).filter((row) => !row.locales && !row.django);
+      packages = await http.get("/api/module-packages");
       render();
     } catch (error) {
       report(error);
@@ -259,8 +258,8 @@ if (table) {
   window.addEventListener("gravewright:modules.updated", (event) => {
     if (event.detail.moduleSetRevision !== state?.moduleSetRevision) {
       runtime.invalidate();
-      void refresh();
     }
+    void refresh();
   }, { signal: scope.signal });
   window.addEventListener("gravewright:connected", () => refresh(), { signal: scope.signal });
   window.addEventListener("gravewright:access-revoked", () => {

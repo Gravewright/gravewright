@@ -12,6 +12,9 @@ urlpatterns = [
     path("api/module-packages/install-local", views.local_install),
     path("api/module-packages", views.installed),
     path("api/module-packages/activation", views.global_activation),
+    path("api/module-packages/update", views.update_package),
+    path("api/module-packages/remove", views.remove_package),
+    path("api/module-packages/removal-preview", views.removal_preview),
     path(
         "api/module-packages/<str:module_id>/<str:version>/<str:digest>/<path:asset>",
         views.asset,

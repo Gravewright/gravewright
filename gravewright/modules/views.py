@@ -3,6 +3,7 @@
 import json
 import asyncio
 import mimetypes
+import re
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -309,6 +310,97 @@ def installed(request):
         ],
         safe=False,
     )
+
+
+def selected_package(request, *, removal=False):
+    data = read_json(request)
+    fields = set(data) - ({'confirmedTables'} if removal else set())
+    if fields != {'id', 'version'} or any(not isinstance(data[key], str) for key in ('id', 'version')):
+        raise ModuleFailure('invalid_data')
+    if removal and (not isinstance(data.get('confirmedTables', []), list)
+                    or any(not isinstance(value, str) for value in data.get('confirmedTables', []))):
+        raise ModuleFailure('invalid_data')
+    row = Package.objects.filter(module_id=data['id'], version=data['version']).first()
+    if row is None:
+        raise ModuleFailure('not_found')
+    return row
+
+
+@require_POST
+@owner
+def removal_preview(request):
+    from .lifecycle import usage
+    row = selected_package(request)
+    system = 'system' in row.manifest
+    return JsonResponse({'tables': usage(host(), row), 'system': system,
+                         'resetsSystem': system and not Package.objects.filter(
+                             module_id=row.module_id, revoked=False).exclude(pk=row.pk).exists()})
+
+
+def server_active(engine, row):
+    from config.marketplace_apps import selections
+    return ('django' in row.manifest
+            and selections(engine.directory).get(row.module_id, {}).get('version') == row.version)
+
+
+@require_POST
+@owner
+def update_package(request):
+    from .lifecycle import replace_release
+    from .packages import package_type
+    row = selected_package(request)
+    engine = host(require_trust=True)
+    def version(value):
+        if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', value):
+            raise ModuleFailure('invalid_data')
+        return tuple(map(int, value.split('.')))
+    candidates = [record for record in catalog(engine)
+                  if record['id'] == row.module_id and record.get('status', 'active') == 'active'
+                  and compatible(record['sdk']) and version(record['version']) > version(row.version)
+                  and record.get('type', 'module') == package_type(row.manifest)]
+    if not candidates:
+        return JsonResponse({'updated': False, 'version': row.version})
+    record = max(candidates, key=lambda value: version(value['version']))
+    engine.install(record, download(record['download'], MAX_ARCHIVE))
+    with transaction.atomic():
+        row = Package.objects.select_for_update().filter(pk=row.pk).first()
+        if row is None:
+            raise ModuleFailure('not_found')
+        replacement = Package.objects.get(module_id=row.module_id, version=record['version'])
+        if package_type(row.manifest) != package_type(replacement.manifest) or bool(row.locale_catalogs) != bool(replacement.locale_catalogs):
+            raise ModuleFailure('invalid_data')
+        if server_active(engine, row):
+            from .server_apps import queue_activation
+            result = queue_activation(replacement, True)
+        else:
+            result = {}
+        audit(request, 'module.update', module=row.module_id, version=replacement.version)
+        if not result:
+            replace_release(engine, row, replacement)
+    return JsonResponse({'updated': True, 'version': replacement.version, **result})
+
+
+@require_POST
+@owner
+@transaction.atomic
+def remove_package(request):
+    from gravewright.campaigns.models import Campaign
+    from .lifecycle import replace_release, usage
+    row = selected_package(request, removal=True)
+    row = Package.objects.select_for_update().filter(pk=row.pk).first()
+    if row is None:
+        raise ModuleFailure('not_found')
+    engine = host()
+    list(Campaign.objects.select_for_update().order_by('pk'))
+    affected = {table['id'] for table in usage(engine, row)}
+    if not affected <= set(read_json(request).get('confirmedTables', [])):
+        return JsonResponse({'error': 'removal_confirmation_required'}, status=409)
+    if server_active(engine, row):
+        from .server_apps import queue_activation
+        return JsonResponse(queue_activation(row, False), status=202)
+    audit(request, 'module.remove', module=row.module_id, version=row.version)
+    replace_release(engine, row)
+    return JsonResponse({'removed': True})
 
 
 @require_POST

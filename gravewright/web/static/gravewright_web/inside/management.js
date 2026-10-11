@@ -1,3 +1,4 @@
+import { packageAction } from "/static/gravewright_modules/package-actions.js";
 import { HttpClient } from "/static/gravewright_modules/http-client.js";
 const http = new HttpClient();
 const text = (root, selector, value) => {
@@ -45,7 +46,10 @@ async function run(root, work) {
   } finally {
     root.dataset.busy = "false";
     root.setAttribute("aria-busy", "false");
-    disabled.forEach(([el, value]) => el.disabled = el.dataset.unavailable === undefined ? value : el.dataset.unavailable === 'true');
+    disabled.forEach(([el, value]) => {
+      el.disabled = el.dataset.unavailable === undefined ? value : el.dataset.unavailable === 'true';
+      el.removeAttribute('aria-busy');
+    });
   }
 }
 function modules(root) {
@@ -181,6 +185,29 @@ function modules(root) {
       const status = row.builtin ? ui('Built-in', 'Integrado', 'Integrado') : local?.revoked ? ui('Revoked', 'Revogado', 'Revocado') : local?.globalEnabled ? ui('Active', 'Ativo', 'Activo') : local ? ui('Installed', 'Instalado', 'Instalado') : ui('Available', 'Disponível', 'Disponible');
       text(card, '[data-status]', status);
       card.dataset.status = row.builtin ? 'builtin' : local?.revoked ? 'revoked' : local?.globalEnabled ? 'active' : 'installed';
+      card.dataset.packageId = row.id;
+      card.dataset.packageVersion = row.version;
+      for (const action of ['update', 'remove']) {
+        const button = card.querySelector(`[data-action=${action}]`);
+        button.hidden = !local || !!row.builtin;
+        button.onclick = () => run(root, async () => {
+          button.setAttribute('aria-busy', 'true');
+          const result = await packageAction(http, local ?? row, action);
+          if (result.cancelled) return;
+          await refresh();
+          for (const catalog of manager.querySelectorAll('[data-module-catalog]')) if (catalog !== root) catalog.dispatchEvent(new Event('packages-changed'));
+          if ((local?.globalEnabled && (action === 'remove' || result.updated)) || result.restartRequired) location.reload();
+          else if (action === 'update' && !result.updated) {
+            const current = [...grid.querySelectorAll('[data-package-id]')].find(card => card.dataset.packageId === row.id && card.dataset.packageVersion === row.version);
+            const update = current?.querySelector('[data-action=update]');
+            if (update) {
+              update.disabled = true;
+              update.title = ui('Up to date', 'Atualizado', 'Actualizado');
+              update.setAttribute('aria-label', update.title);
+            }
+          }
+        });
+      }
       card.querySelector('[data-action=details]').onclick = () => {
         text(detail, '[data-detail-title]', local?.name ?? row.name ?? row.id);
         text(detail, '[data-description]', local?.description ?? row.description ?? '');
