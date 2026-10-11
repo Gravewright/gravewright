@@ -119,7 +119,6 @@
 :is(body:has(#table-workspace),body.game-detached) :is(.actor-directory__sheet-heading,.journal-window__identity) small { display:none; }
 :is(body:has(#table-workspace),body.game-detached) :is(.gw-window__titlebar,.journal-window__titlebar,.directory-dialog>header,.upload-library>header,.dice-tray>header,.table-form-modal form>header,.table-modal-window>header,.ownership-dialog form>header) strong,
 :is(body:has(#table-workspace),body.game-detached) .journal-window__title { font-size:13px; font-weight:650; }
-:is(body:has(#table-workspace),body.game-detached) .gw-window__grip { width:18px; height:2px; box-shadow:none; }
 :is(body:has(#table-workspace),body.game-detached) .gw-window__controls { gap:4px; }
 :is(body:has(#table-workspace),body.game-detached) :is(.gw-window__titlebar .gw-window__control,.journal-window__titlebar .gw-window__control,.game-panel>header button,.directory-dialog>header button,.upload-library>header button,.dice-tray>header button,.table-form-modal form>header button,.table-modal-window>header button,.ownership-dialog form>header button) {
   display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;

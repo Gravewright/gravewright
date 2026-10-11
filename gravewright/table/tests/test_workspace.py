@@ -1,10 +1,32 @@
 from django.test import TestCase, override_settings
+from unittest.mock import patch
 from gravewright.accounts.models import User
 from gravewright.campaigns.models import Campaign, Membership
 
 
 @override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 class WorkspaceTests(TestCase):
+    def test_language_change_returns_to_table_and_rejects_external_redirects(self):
+        from gravewright.accounts.models import UserPreference
+        self.client.force_login(self.owner)
+        available = {'en': {'name': 'English', 'messages': {}},
+                     'pt-BR': {'name': 'Português (Brasil)', 'messages': {}}}
+        with patch('gravewright.modules.localization.catalogs', return_value=available):
+            page = self.client.get(self.path)
+            self.assertContains(page, 'id="table-language"')
+            self.assertContains(page, 'value="pt-BR"')
+            response = self.client.post('/inside/language', {'locale': 'pt-BR', 'next': self.path})
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response['Location'], self.path)
+            self.assertEqual(UserPreference.objects.get(user=self.owner).locale, 'pt-BR')
+            response = self.client.post('/inside/language', {'locale': 'en', 'next': 'https://other.test'})
+            self.assertEqual(response['Location'], '/inside?section=settings')
+            response = self.client.post('/inside/language', {'locale': 'pt-BR'}, HTTP_ACCEPT='application/json')
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json(), {'locale': 'pt-BR'})
+            self.assertNotIn('Location', response)
+            self.assertEqual(UserPreference.objects.get(user=self.owner).locale, 'pt-BR')
+
     def setUp(self):
         self.owner = User.objects.create_user('gm@example.test', 'password-12345', name='GM', role='owner')
         self.player = User.objects.create_user('player@example.test', 'password-12345', name='Player')

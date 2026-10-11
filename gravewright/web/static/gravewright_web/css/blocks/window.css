@@ -61,13 +61,7 @@
 }
 
 .gw-window__grip {
-    display: block;
-    flex: 0 0 auto;
-    width: var(--size-42);
-    height: var(--fib-3);
-    border-radius: var(--radius-pill);
-    background: rgba(192, 154, 90, 0.5);
-    box-shadow: 0 0 18px rgba(192, 154, 90, 0.14);
+    display: none;
 }
 
 .gw-window__title {

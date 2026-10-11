@@ -10,6 +10,7 @@ from datastar_py.django import DatastarResponse, ServerSentEventGenerator as SSE
 from gravewright.accounts.client_ip import client_ip
 from django.http import JsonResponse
 from django.shortcuts import render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.template.loader import render_to_string
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
@@ -212,7 +213,11 @@ def language(request):
     if len(available) < 2 or locale not in available:
         return api_error(accounts.AuthError('invalid_locale'))
     UserPreference.objects.update_or_create(user=request.user, defaults={'locale': locale})
-    response = navigate(request, '/inside?section=settings')
+    destination = request.POST.get('next', '')
+    if not url_has_allowed_host_and_scheme(destination, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        destination = '/inside?section=settings'
+    response = (JsonResponse({'locale': locale}) if request.headers.get('Accept') == 'application/json'
+                else navigate(request, destination))
     response.set_signed_cookie('gravewright-language', locale, max_age=365 * 24 * 3600,
                                secure=settings.SESSION_COOKIE_SECURE, httponly=True, samesite='Strict')
     return response

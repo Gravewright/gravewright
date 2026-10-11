@@ -3,13 +3,18 @@
 <header><strong>{{ house.rendering.title }}</strong><p>{{ house.rendering.description }}</p></header>
 <div class="house-menu__profiles" role="radiogroup" aria-label="{{ house.rendering.title }}">
 {% for profile in ['performance','balanced','quality'] %}
-<button type="button" role="radio" aria-checked="{{ 'true' if profile=='performance' else 'false' }}" class="house-menu__profile" data-render-choice="{{ profile }}">
-<span class="house-menu__profile-preview" data-profile="{{ profile }}"><i></i><i></i><i></i></span>
+<button type="button" role="radio" aria-checked="{{ 'true' if profile=='performance' else 'false' }}" class="house-menu__profile" data-render-choice="{{ profile }}" title="{{ house.rendering.profiles[profile].detail }}">
 <strong>{{ house.rendering.profiles[profile].name }}</strong>
 <small>{{ house.rendering.profiles[profile].description }}</small>
-<em>{{ house.rendering.profiles[profile].detail }}</em>
 </button>
 {% endfor %}
 </div>
+<form class="house-menu__language" method="post" action="/inside/language" data-table-language>
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+<input type="hidden" name="next" value="{{ request.path }}">
+<label for="table-language">{{ 'Idioma da interface' if language.id=='pt-BR' else 'Idioma de la interfaz' if language.id=='es' else 'Interface language' }}</label>
+<select id="table-language" name="locale" translate="no" {{ 'disabled' if not language_enabled else '' }}>{% for option in language.options %}<option value="{{ option.id }}" {{ 'selected' if option.id==language.id else '' }}>{{ option.name }}</option>{% endfor %}</select>
+<p role="alert" hidden>{{ 'Não foi possível alterar o idioma. Tente novamente.' if language.id=='pt-BR' else 'No se pudo cambiar el idioma. Inténtalo de nuevo.' if language.id=='es' else 'Could not change the language. Please try again.' }}</p>
+</form>
 <p class="house-menu__preference-note">{{ house.rendering.localHint }}</p>
 </div></section></div></div>

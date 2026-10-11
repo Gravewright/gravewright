@@ -2,7 +2,6 @@ import { HttpClient } from "./http-client.js";
 import { BrowserBridge } from "./browser-bridge.js";
 import { ModuleRuntime } from "./module-runtime.js";
 import { attachSurface } from "./frontend-api.js";
-import { packageAction } from "./package-actions.js";
 import { contentReady, afterContentReady } from '/static/gravewright_table/content-state.js';
 // Table integration: native DOM surfaces are attached to both host-page UI
 // registrations and signed-package mounts, each with its own lifetime ownership.
@@ -25,11 +24,6 @@ if (table) {
       browse.rel = "noopener";
       header.append(browse);
     }
-    const retry = document.createElement("button");
-    retry.type = "button";
-    retry.textContent = "Refresh";
-    retry.onclick = () => refresh(true);
-    header.append(retry);
     pane.append(header);
     const error = document.createElement("p");
     error.className = "module-marketplace__error";
@@ -83,25 +77,6 @@ if (table) {
           await configure(modules, Object.fromEntries(Object.entries(state.replacements).filter(([, id]) => modules[id])));
         };
         actions.append(b);
-      }
-      if (pane.dataset.packageManage === 'true') for (const action of ['update', 'remove']) {
-        const button = document.createElement('button');
-        button.type = 'button'; button.dataset.action = action;
-        const pt = document.documentElement.lang.startsWith('pt'), es = document.documentElement.lang.startsWith('es');
-        button.textContent = action === 'update' ? (pt ? 'Atualizar' : es ? 'Actualizar' : 'Update') : (pt ? 'Remover' : es ? 'Eliminar' : 'Remove');
-        button.onclick = async () => {
-          const controls = [...pane.querySelectorAll('button')];
-          const disabled = controls.map(control => control.disabled);
-          controls.forEach(control => control.disabled = true);
-          try {
-            const result = await packageAction(http, pkg, action);
-            if (result.cancelled) return;
-            await refresh(true);
-            if (result.restartRequired || (pkg.globalEnabled && (action === 'remove' || result.updated))) location.reload();
-          } catch (failure) { report(failure); }
-          finally { controls.forEach((control, index) => control.disabled = disabled[index]); }
-        };
-        actions.append(button);
       }
       list.append(row);
     }

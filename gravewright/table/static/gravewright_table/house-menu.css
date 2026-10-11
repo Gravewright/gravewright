@@ -167,26 +167,19 @@
 .house-menu__action--on:hover { border-color: var(--danger); background: transparent; color: var(--danger-text); }
 .house-menu__badge { margin-left: auto; color: var(--text-faint); font-size: var(--text-2xs); font-weight: var(--weight-bold); letter-spacing: var(--tracking-wide); text-transform: uppercase; }
 
-.house-menu__preferences { display: grid; align-content: start; gap: var(--step-21); padding: var(--step-21); overflow-y: auto; }
+.house-menu__preferences { display: grid; align-content: start; gap: 16px; padding: 16px; overflow-y: auto; }
 .house-menu__preferences > header { display: grid; gap: var(--step-5); }
-.house-menu__preferences > header strong { color: var(--text-bright); font-family: var(--font-display); font-size: var(--text-lg); }
+.house-menu__preferences > header strong { color: var(--text-bright); font-size: 13px; }
 .house-menu__preferences > header p, .house-menu__preference-note { margin: 0; color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-relaxed); }
 .house-menu__profiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--step-13); }
-.house-menu__profile { display: grid; min-width: 0; align-content: start; gap: var(--step-8); padding: var(--step-13); border: var(--fib-1) solid var(--border); border-radius: var(--radius-xl); background: rgb(255 255 255 / 2%); color: var(--text); text-align: left; transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
-.house-menu__profile:hover { border-color: var(--border-accent); background: var(--accent-glow); transform: translateY(calc(var(--fib-2) * -1)); }
+.house-menu__profile { display: grid; min-width: 0; align-content: start; gap: 5px; padding: 10px; border: 1px solid var(--border); border-radius: 4px; background: rgb(255 255 255 / 2%); color: var(--text); text-align: left; cursor: pointer; transition: border-color var(--transition-fast), background var(--transition-fast); }
+.house-menu__profile:hover { border-color: var(--border-accent); background: var(--accent-glow); }
 .house-menu__profile--on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 11%, transparent); box-shadow: inset 0 0 0 var(--fib-1) var(--border-accent); }
 .house-menu__profile strong { color: var(--text-bright); font-size: var(--text-md); }
-.house-menu__profile small { min-height: var(--size-34); color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-normal); }
-.house-menu__profile em { color: var(--text-faint); font-size: var(--text-2xs); font-style: normal; line-height: var(--leading-normal); }
-.house-menu__profile-preview { display: flex; height: var(--fib-10); align-items: flex-end; justify-content: center; gap: var(--step-5); overflow: hidden; border: var(--fib-1) solid var(--border); border-radius: var(--radius-lg); background: linear-gradient(145deg, var(--plate-a), var(--plate-b)); }
-.house-menu__profile-preview i { width: var(--step-13); border-radius: var(--radius-pill) var(--radius-pill) 0 0; background: color-mix(in srgb, var(--accent) 70%, var(--surface-raised)); }
-.house-menu__profile-preview i:nth-child(1) { height: var(--fib-7); opacity: .5; }
-.house-menu__profile-preview i:nth-child(2) { height: var(--fib-8); opacity: .75; }
-.house-menu__profile-preview i:nth-child(3) { height: var(--fib-9); }
-.house-menu__profile-preview[data-profile="performance"] i:nth-child(n+2) { opacity: .18; }
-.house-menu__profile-preview[data-profile="balanced"] { box-shadow: inset 0 0 var(--step-13) rgb(192 154 90 / 8%); }
-.house-menu__profile-preview[data-profile="quality"] { box-shadow: inset 0 0 var(--step-21) rgb(192 154 90 / 18%); }
+.house-menu__profile small { color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-normal); }
 .house-menu__preference-note { padding-top: var(--step-13); border-top: var(--fib-1) solid var(--border); }
+.house-menu__language { display: grid; grid-template-columns: minmax(0,1fr) minmax(140px,220px); gap: 12px; align-items: center; padding-top: 16px; border-top: 1px solid var(--border); font-size: 13px; }
+.house-menu__language select { width: 100%; min-width: 0; }
 
 @media (max-width: 700px) {
     .house-menu { width: calc(100vw - 24px); height: min(620px,calc(100dvh - 24px)); grid-template-columns: 1fr; grid-template-rows: auto minmax(0,1fr); }
