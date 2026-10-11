@@ -1,11 +1,13 @@
 from django.http import JsonResponse, HttpResponse
 from django.utils.deprecation import MiddlewareMixin
+from secrets import token_urlsafe
 
 
 class AuthSecurityMiddleware(MiddlewareMixin):
     """Bound authentication bodies before CSRF middleware parses form data."""
 
     def process_request(self, request):
+        request.csp_nonce = token_urlsafe(24)
         is_api = request.path.startswith('/api/auth/')
         is_auth = is_api or request.path in {'/setup', '/register', '/login', '/logout', '/inside/account'}
         content_length = request.META.get('CONTENT_LENGTH', '')
@@ -26,7 +28,8 @@ class AuthSecurityMiddleware(MiddlewareMixin):
             response['Cache-Control'] = 'no-store'
             # Datastar compiles trusted expressions in data-* attributes.
             response['Content-Security-Policy'] = (
-                "default-src 'none'; script-src 'self' 'unsafe-eval'; "
+                "default-src 'none'; script-src 'self' 'unsafe-eval' "
+                f"'nonce-{request.csp_nonce}'; "
                 "style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https: http:; "
                 "font-src 'self'; media-src 'self' blob:; connect-src 'self'; base-uri 'none'; "
                 "form-action 'self'; frame-ancestors 'none'"

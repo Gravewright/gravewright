@@ -1,31 +1,14 @@
 import { pdfController } from "./controller.js";
-import { detachWindow } from '/static/gravewright_table/window-controls.js';
 import {
   Editor,
   StarterKit,
   Link,
 } from "/static/gravewright_journals/vendor/editor.js";
 const show = (el, on) => el.toggleAttribute("hidden", !on);
-export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
-  const el = document
-    .getElementById("pdf-sheet-window")
-    .content.firstElementChild.cloneNode(true);
-  const snapshot = token?.linkMode === "snapshot";
-  if (token) {
-    el.classList.remove("actor-directory__sheet");
-    el.classList.add("token-sheet");
-    el.querySelector("header").className = "gw-window__header";
-    el.querySelector(".gw-window__grip").remove();
-    const heading = document.createElement("strong"),
-      small = document.createElement("small");
-    small.textContent = snapshot ? "Independent copy" : "Linked to actor";
-    heading.append(document.createTextNode(""), small);
-    el.querySelector(".actor-directory__sheet-heading").replaceWith(heading);
-  }
-  if(token){el.dataset.tokenId=token.id;el.dataset.sceneId=token.mapId;}
-  document.body.append(el);
-  let popup,
-    closed = false,
+export function mountSheet({ root: el, window: hostWindow, campaign, actorId, token, gm, setTitle, lifecycle: extensionLifecycle }) {
+  el.append(document.getElementById('system-sheet-body').content.cloneNode(true));
+  const snapshot = token?.linkMode === 'snapshot';
+  let closed = false,
     queued = false,
     controller,
     notes = [],
@@ -111,7 +94,12 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
         { cache: "no-store" },
       );
       if (!r.ok) throw Error("Character sheet unavailable.");
-      return r.json();
+      const value = await r.json();
+      // Switching systems does not convert existing document data. A PDF
+      // provider cannot interpret a foreign sheet as its own schema.
+      if (['pdf', 'fields', 'token', 'bars'].some(key => !value.data?.[key] || typeof value.data[key] !== 'object' || Array.isArray(value.data[key])))
+        throw Error("Character sheet unavailable.");
+      return value;
     },
     save: (value) =>
       window.gravewrightRealtime.resourceCommand("actors", "sheet.save", {
@@ -123,41 +111,12 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
         sheetVersion: value.sheetVersion,
       }),
   });
-  async function extensionLifecycle(name) {
-    const tasks = [];
-    el.dispatchEvent(new CustomEvent(name, { detail: { waitUntil: task => tasks.push(task) } }));
-    await Promise.all(tasks);
-  }
-  async function close(force = false) {
-    if (!force) {
-      try { await extensionLifecycle('gravewright:sheet-flush'); await controller.call('flush'); }
-      catch (error) { const alert=el.querySelector('.pdf-sheet__error');show(alert,true);alert.querySelector('span').textContent=error.message;return; }
-    }
-    if (closed) return;
+  function destroy() {
     closed = true;
-    popup?.close();
     controller.destroy();
-    notes.forEach((e) => e.destroy());
-    el.remove();
-    window.removeEventListener("gravewright:access-revoked", revoke);
-    onClose();
+    notes.forEach(editor => editor.destroy());
   }
-  const revoke = () => close(true);
-  window.addEventListener("gravewright:access-revoked", revoke);
   el.onclick = async (e) => {
-    const w = e.target.closest("[data-window]")?.dataset.window;
-    if (w === "close") return close();
-    if (w === "detach") {
-      popup = detachWindow(el, 'actor-' + actorId, el.querySelector('header strong').textContent, {width:1000,height:800});
-      return;
-    }
-    if (w === "minimize") {
-      el.classList.toggle("gw-window--minimized");
-      show(
-        el.querySelector(".gw-window__body"),
-        !el.classList.contains("gw-window--minimized"),
-      );
-    }
     const t = e.target.closest(".pdf-sheet__tabs > [data-tab]")?.dataset.tab;
     if (t) {
       try {
@@ -205,12 +164,8 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
     for (const p of el.querySelectorAll(".pdf-sheet > [data-panel]"))
       show(p, !!a && p.dataset.panel === tab);
     if (!a) return;
-    el.dataset.actorId = actorId;
-    el.dataset.canEdit = String(a.canEdit);
-    el.setAttribute("aria-label", token ? "Ficha: " + a.name : a.name);
-    if (token)
-      el.querySelector("header strong").firstChild.textContent = a.name + " ";
-    else el.querySelector("header strong").textContent = a.name;
+    hostWindow.dataset.canEdit = String(a.canEdit);
+    setTitle(a.name);
     el.querySelector(".pdf-sheet").style.setProperty(
       "--pdf-field-text",
       a.data.pdf.textColor,
@@ -386,8 +341,8 @@ export function openSheet(campaign, actorId, token, gm, onClose = () => {}) {
       }
   }
   return {
-    close,
-    element: el,
+    destroy,
+    flush: () => controller.call("flush"),
     get dirty() {
       return (
         controller.view.pending ||

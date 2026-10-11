@@ -351,7 +351,6 @@ class JournalWindow {
         const edit = this.$('[data-action=edit]');
         edit.querySelector('svg').replaceWith(icon(this.editing ? 'Eye' : 'PencilSimple'));
         edit.querySelector('span').textContent = this.editing ? 'Read' : 'Edit';
-        show(this.$('[data-action=permissions]'), this.isGM && !d.presentation_ticket);
         show(this.$('[data-action=present]'), this.isGM && !d.presentation_ticket);
         show(this.$('[data-action=gm]'), this.isGM && this.editing);
         show(this.$('[data-filter=gm]'), this.isGM);

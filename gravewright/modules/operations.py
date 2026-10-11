@@ -125,7 +125,7 @@ def invoke(request, table_id, scene_id, name, payload, upload=None):
             if token.scene_id != scene_id:
                 raise ModuleFailure("not_found")
             cell, ox, oy, _, _ = tokens.geometry(token.scene)
-            size = tokens.data(token)["token"]["size"]
+            size = tokens.presentation(token)["token"]["size"]
             if name == "token.move":
                 expected(revision("token", token.pk, token.version))
                 tokens.command(

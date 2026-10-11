@@ -11,6 +11,20 @@ class Element {
 }
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
+test('type-specific host sheet registrations only mount matching actors', async () => {
+  const registry = new SurfaceRegistry(() => ({}));
+  const mounted = [];
+  for (const type of ['hero', 'creature']) registry.register('actor.sheet', {
+    mode: 'replace', types: [type], mount(){ mounted.push(type); },
+  });
+  for (const actorType of ['hero', 'creature', 'other']) registry.attach(new Element(), 'actor.sheet', { actorType });
+  await tick();
+  assert.deepEqual(mounted, ['hero', 'creature']);
+  assert.throws(() => registry.register('actor.sheet', { mode: 'replace', types: ['hero'], mount(){} }), {code:'conflict'});
+  assert.throws(() => registry.register('actor.sheet', { types: [], mount(){} }), {code:'invalid_data'});
+  registry.close();
+});
+
 test('registration handles current and future surfaces; disposal revokes the captured API', async () => {
   const registry = new SurfaceRegistry((context,life) => ({check:()=>life.check()}));
   const first = new Element(), second = new Element(), blocks = [];

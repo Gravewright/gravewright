@@ -51,6 +51,54 @@ function surface() {
     }
   } };
 }
+
+test('system sheet replaces the whole document and actor registration also serves tokens', async () => {
+  const mounted = [];
+  const module = id => ({ start(){}, stop(){}, register({register}) {
+    register('actor.sheet', { mode: 'replace', mount(block) { mounted.push([id, block.context.tokenId]); } });
+  } });
+  const f = fixture({ system: module('system'), addon: module('addon') });
+  const actor = surface(), token = surface();
+  actor.surface.domain = 'actor.sheet'; token.surface.domain = 'token.sheet';
+  actor.surface.context.systemId = token.surface.context.systemId = 'system';
+  token.surface.context.tokenId = 'token';
+  f.runtime.attach(actor.surface); f.runtime.attach(token.surface);
+  await f.runtime.reconcile(f.state(['addon', 'system']));
+  assert.deepEqual(mounted, [['system', undefined], ['system', 'token']]);
+  assert.deepEqual(actor.visibility, [false]);
+  assert.deepEqual(token.visibility, [false]);
+  await f.runtime.close();
+});
+
+test('sheet types select distinct presentations and a token sheet overrides actor fallback', async () => {
+  const mounted = [];
+  const f = fixture({ system: { start(){}, stop(){}, register({register}) {
+    for (const type of ['hero', 'creature']) register('actor.sheet', { mode: 'replace', types: [type], mount(){ mounted.push(type); } });
+    register('token.sheet', { mode: 'replace', types: ['hero'], mount(){ mounted.push('token-hero'); } });
+  } } });
+  for (const [domain, actorType] of [['actor.sheet','hero'], ['token.sheet','hero'], ['token.sheet','creature'], ['actor.sheet','other']]) {
+    const s = surface(); s.surface.domain = domain;
+    Object.assign(s.surface.context, { systemId: 'system', actorType });
+    f.runtime.attach(s.surface);
+  }
+  await f.runtime.reconcile(f.state(['system']));
+  assert.deepEqual(mounted, ['hero', 'token-hero', 'creature']);
+  await f.runtime.close();
+});
+
+test('explicit sheet preference wins and failed mount restores the system default', async () => {
+  const mounted = [];
+  const f = fixture(Object.fromEntries(['system', 'addon'].map(id => [id, {
+    start(){}, stop(){}, register({register}) { register('actor.sheet', { mode:'replace', mount(){ mounted.push(id); if(id === 'addon') throw Error('failed'); } }); },
+  }])));
+  const s = surface(); s.surface.domain = 'actor.sheet'; s.surface.context.systemId = 'system';
+  f.runtime.attach(s.surface);
+  await f.runtime.reconcile(f.state(['system','addon'], '1', { 'actor.sheet':'addon' }));
+  assert.deepEqual(mounted, ['addon']);
+  assert.deepEqual(s.visibility, [false, true]);
+  assert.equal(s.root.children.length, 0);
+  await f.runtime.close();
+});
 test("all cleanups drain and pending operations reject when their scope closes", async () => {
   const failures = [];
   const life = new Lifetime((e) => failures.push(e));

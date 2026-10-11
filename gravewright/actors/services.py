@@ -1,4 +1,4 @@
-"""Actor directory, resource ownership and revision-checked PDF sheets."""
+"""Actor directory, resource ownership and revision-checked system sheets."""
 
 from copy import deepcopy
 
@@ -9,7 +9,7 @@ from gravewright.campaigns.models import Campaign, Membership
 from gravewright.journals.services import identifier, member
 from gravewright.maps.models import Receipt
 from gravewright.maps.services import MapError, color, manage, title
-from gravewright.pdf_system.schema import normalize
+from gravewright.campaigns.systems import normalize_actor, remove_asset_references
 
 from .models import Actor, Asset, Folder
 
@@ -151,7 +151,7 @@ def sheet(campaign, user, actor_id, token_id=None):
         view.update(
             canEdit=control(t, who),
             sheetVersion=row.sheet_version if t.linked else t.sheet_version,
-            name=data.get("token", {}).get("name", row.name)
+            name=(data.get("token") if isinstance(data.get("token"), dict) else {}).get("name", row.name)
             if not t.linked
             else row.name,
             tokenId=str(t.pk) if not t.linked else None,
@@ -165,7 +165,7 @@ def sheet(campaign, user, actor_id, token_id=None):
 
 
 def save_sheet(who, data):
-    """Validate revisions and PDF references before updating actor or token sheet data."""
+    """Validate revisions and system data before updating actor or token sheet data."""
     token = None
     if data.get("tokenId"):
         from gravewright.tokens.services import control
@@ -182,15 +182,10 @@ def save_sheet(who, data):
     target = token or row
     revision(target, data.get("sheetVersion"), "sheet_version")
     old = token.snapshot if token else row.data
-    clean = normalize(data.get("data"), old, who.role == "gm")
-    asset = clean["pdf"]["asset"]
-    if (
-        asset
-        and not Asset.objects.filter(
-            pk=identifier(asset), campaign_id=who.campaign_id, kind="pdf"
-        ).exists()
-    ):
-        raise MapError("PDF not found.")
+    clean = normalize_actor(
+        who.campaign.system, data.get("data"), old, who.role == "gm",
+        campaign_id=who.campaign_id,
+    )
     if token:
         token.snapshot = clean
         token.sheet_version += 1
@@ -230,15 +225,9 @@ def command(campaign, user, action, data, request_id):
     else:
         manage(who)
         if action == "actor.create":
-            clean = normalize(data.get("data", {}))
-            aid = clean["pdf"]["asset"]
-            if (
-                aid
-                and not Asset.objects.filter(
-                    pk=identifier(aid), campaign_id=campaign, kind="pdf"
-                ).exists()
-            ):
-                raise MapError("PDF not found.")
+            clean = normalize_actor(
+                who.campaign.system, data.get("data", {}), campaign_id=campaign,
+            )
             row = Actor.objects.create(
                 campaign_id=campaign,
                 name=title(data.get("name")),
@@ -311,18 +300,7 @@ def command(campaign, user, action, data, request_id):
             ).first()
             if not asset:
                 raise MapError("PDF not found.")
-            from gravewright.tokens.models import Token
-
-            for a in Actor.objects.filter(campaign_id=campaign):
-                if a.data.get("pdf", {}).get("asset") == str(asset.pk):
-                    a.data["pdf"].update(asset="", template="generic")
-                    a.sheet_version += 1
-                    a.save()
-            for t in Token.objects.filter(scene__campaign_id=campaign, linked=False):
-                if t.snapshot.get("pdf", {}).get("asset") == str(asset.pk):
-                    t.snapshot["pdf"].update(asset="", template="generic")
-                    t.sheet_version += 1
-                    t.save()
+            remove_asset_references(who.campaign.system, campaign, asset)
             asset.delete()
         else:
             raise MapError("Unknown actor command.")

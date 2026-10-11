@@ -113,7 +113,8 @@ if (table) {
     element.append(root);
     const native = [...element.children].filter((e) => e !== root), hidden = native.map((e) => e.hidden);
     const release = runtime.attach({ domain, root, viewport, context: { tableId, mountId: "", moduleSetRevision: "0", ...context }, defaultVisible: async (visible) => {
-      native.forEach((el, i) => el.hidden = visible ? hidden[i] : true);
+      if (element.setDefaultVisible) await element.setDefaultVisible(visible);
+      else native.forEach((el, i) => el.hidden = visible ? hidden[i] : true);
     } });
     const releasePublic = attachSurface(element, domain, { tableId, ...context });
     surfaces.set(element, () => {
@@ -141,7 +142,7 @@ if (table) {
     }
     document.querySelectorAll(".actor-directory__sheet[data-actor-id],.token-sheet[data-actor-id]").forEach((el) => {
       if (el.dataset.sceneId && el.dataset.sceneId !== window.gravewrightMaps?.current?.id) return;
-      attach(el.querySelector('[data-panel="ficha"]') ?? el, el.classList.contains("token-sheet") ? "token.sheet" : "actor.sheet", { actorId: el.dataset.actorId, ...el.dataset.tokenId ? { tokenId: el.dataset.tokenId } : {}, ...el.dataset.sceneId ? sceneContext() : {} });
+      attach(el.querySelector('.actor-sheet__content') ?? el, el.classList.contains("token-sheet") ? "token.sheet" : "actor.sheet", { actorId: el.dataset.actorId, systemId: el.dataset.systemId, actorType: el.dataset.actorType, canEdit: el.dataset.canEdit === "true", ...el.dataset.tokenId ? { tokenId: el.dataset.tokenId } : {}, ...el.dataset.sceneId ? sceneContext() : {} });
     });
   }, sceneContext = function() {
     const map = window.gravewrightMaps?.current;

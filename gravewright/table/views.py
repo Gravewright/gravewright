@@ -33,7 +33,9 @@ def table(request, campaign_id, detached_chat=False):
         for m in campaign.memberships.all()
     )
     layers = DOCK["layers"] if owner else DOCK["layers"][:1]
+    from gravewright.campaigns.systems import sheet_provider
     context = {
+        "actor_sheet_provider": sheet_provider(campaign.system),
         **TEXT,
         't': lambda key: TOOL_TEXT.get(key, key),
         'renderer_debug': settings.APP_DEBUG,

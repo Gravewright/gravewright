@@ -6,6 +6,10 @@
 .journal-window--detached { position: static; transform: none; width: 100%; height: 100dvh; border: 0; border-radius: 0; }
 .journal-window__titlebar { display: flex; align-items: center; gap: var(--fib-5); min-height: var(--fib-8); padding: var(--fib-4) var(--fib-5); border-bottom: var(--fib-1) solid var(--border); flex-shrink: 0; background: rgba(255,255,255,.025); }
 .journal-window__identity { display: grid; min-width: 0; flex: 1; gap: var(--fib-3); }
+.journal-window__actions { display: flex; align-items: center; gap: var(--gap-snug); }
+.journal-window__titlebar .journal-button { min-height: var(--control-height-sm); padding: 0 8px; font-size: var(--text-sm); }
+.journal-window__titlebar svg { width: 16px; height: 16px; }
+.journal-window__titlebar .gw-window__controls { padding-left: 8px; border-left: 1px solid var(--border); }
 .journal-window__identity small, .journal-window__save { font-size: var(--fib-6); color: var(--text-muted); }
 .journal-window__title { width: 100%; border: 0; background: transparent; color: inherit; font: inherit; }
 .journal-window__body { display: flex; flex: 1; min-height: 0; overflow: hidden; }

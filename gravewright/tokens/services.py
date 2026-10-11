@@ -1,6 +1,7 @@
 """Authoritative scene token commands and ephemeral, recipient-filtered motion."""
 
 import itertools
+import math
 import uuid
 from copy import deepcopy
 
@@ -40,9 +41,26 @@ def data(t):
     return t.actor.data if t.linked else t.snapshot
 
 
+def presentation(t):
+    """Read optional token hints without imposing a sheet schema on systems."""
+    raw = data(t)
+    config = raw.get('token') if isinstance(raw.get('token'), dict) else {}
+    size = config.get('size', 1)
+    if type(size) not in (int, float) or not math.isfinite(size) or not 1 <= size <= 100:
+        size = 1
+    display = config.get('display') if isinstance(config.get('display'), dict) else {}
+    bars = raw.get('bars') if isinstance(raw.get('bars'), dict) else {}
+    safe_bars = {}
+    for key in ('bar_1', 'bar_2'):
+        bar = bars.get(key)
+        if isinstance(bar, dict) and all(type(bar.get(k)) in (int, float) and math.isfinite(bar[k]) for k in ('value', 'max')):
+            safe_bars[key] = {k: bar[k] for k in ('value', 'max')}
+    return {'token': {**config, 'size': size, 'display': display}, 'bars': safe_bars}
+
+
 def project(t, who):
     """Expose geometry and only the bars, names and conditions this member sees."""
-    sheet = data(t)
+    sheet = presentation(t)
     config = sheet["token"]
     gm = who.role == "gm"
     own = control(t, who)
@@ -55,6 +73,8 @@ def project(t, who):
         "id": str(t.pk),
         "mapId": str(t.scene_id),
         "actorId": str(t.actor_id),
+        "actorType": t.actor.type,
+        "systemId": who.campaign.system or 'gravewright-pdf-system',
         "linkMode": "linked" if t.linked else "snapshot",
         "gridX": t.grid_x,
         "gridY": t.grid_y,
@@ -113,8 +133,8 @@ def vision(scene, who):
     return (
         [
             {
-                "x": ox + (t.grid_x + data(t)["token"]["size"] / 2) * cell,
-                "y": oy + (t.grid_y + data(t)["token"]["size"] / 2) * cell,
+                "x": ox + (t.grid_x + presentation(t)["token"]["size"] / 2) * cell,
+                "y": oy + (t.grid_y + presentation(t)["token"]["size"] / 2) * cell,
                 "radius": t.vision_range * cell,
                 "elevation": t.elevation,
             }
@@ -130,7 +150,7 @@ def position(t, x, y):
     x = number(x, 0)
     y = number(y, 0)
     cell, ox, oy, w, h = geometry(t.scene)
-    size = data(t)["token"]["size"]
+    size = presentation(t)["token"]["size"]
     if x > max(0, (w - ox) / cell - size) or y > max(0, (h - oy) / cell - size):
         raise maps.MapError("Token is outside the map.")
     return x, y
@@ -138,7 +158,7 @@ def position(t, x, y):
 
 def blocked(t, a, b, walls=None):
     cell, ox, oy, _, _ = geometry(t.scene)
-    size = data(t)["token"]["size"]
+    size = presentation(t)["token"]["size"]
     ax = ox + (a[0] + size / 2) * cell
     ay = oy + (a[1] + size / 2) * cell
     rx = (b[0] - a[0]) * cell
@@ -231,12 +251,14 @@ def command(campaign, user, action, raw, request_id):
         for t in existing:
             if t.linked:
                 t.snapshot = deepcopy(actor.data)
-                t.snapshot["token"]["name"] = actor.name
+                if isinstance(t.snapshot.get('token'), dict):
+                    t.snapshot["token"]["name"] = actor.name
                 t.linked = False
                 t.version += 1
                 t.save()
         snapshot = deepcopy(actor.data)
-        snapshot["token"]["name"] = actor.name
+        if isinstance(snapshot.get('token'), dict):
+            snapshot["token"]["name"] = actor.name
         t = Token(
             scene=scene, actor=actor, linked=linked, snapshot={} if linked else snapshot
         )
@@ -279,14 +301,15 @@ def command(campaign, user, action, raw, request_id):
                 continue
             if action == "duplicate":
                 snapshot = deepcopy(data(t))
-                snapshot["token"]["name"] = snapshot["token"].get("name", t.actor.name)
+                if isinstance(snapshot.get('token'), dict):
+                    snapshot["token"]["name"] = snapshot["token"].get("name", t.actor.name)
                 t.pk = uuid.uuid4()
                 t.linked = False
                 t.snapshot = snapshot
                 t.version = 1
                 t.sheet_version = 1
                 cell, ox, oy, w, h = geometry(scene)
-                size = snapshot["token"]["size"]
+                size = presentation(t)["token"]["size"]
                 t.grid_x = min(t.grid_x + 1, max(0, (w - ox) / cell - size))
                 t.grid_y = min(t.grid_y + 1, max(0, (h - oy) / cell - size))
                 created.append(str(t.pk))

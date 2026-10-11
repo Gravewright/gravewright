@@ -340,14 +340,45 @@ Native item rows expose `application/x-gravewright-item` drag data containing
 `{id, tableId}`. Resolve the ID through the authenticated item API before copying
 it into a sheet; do not treat data supplied by a drag payload as authoritative.
 
-Actor and token sheet replacements mount inside the native character-sheet tab.
-They retain the movable window, title bar, Token and Notes tabs. Before switching
-tabs or closing, the window emits `gravewright:sheet-flush`; a mounted extension
+Actor and token sheet replacements own the **complete window body**. The host
+provides only the movable title bar, detach/minimize/close controls, permissions
+and document identity. PDF, Token and Notes tabs belong exclusively to the
+bundled PDF system module; other systems never load its controller, templates or
+styles. The bundled module registers its descriptor, sheet provider and data
+validator through its AppConfig. Legacy PDF campaigns keep their existing ID
+and stored data, with no conversion required.
+
+Signed system packages can register different sheets for declared actor types:
+
+```js
+register("actor.sheet", {
+  mode: "replace",
+  types: ["hero"],
+  mount({ root, context, api, signal }) {
+    // Render the entire sheet, including any navigation your system needs.
+    // context includes actorId, actorType, systemId and canEdit.
+    // Use api.actors.sheet(...) and api.actors.saveSheet(...) for document data.
+  }
+});
+```
+
+Omitting `types` applies the registration to all actor types. Disjoint type lists
+allow multiple registrations on the same surface. An explicit table replacement
+wins; otherwise the campaign's system sheet takes precedence over competing
+add-ons. A token uses the system's actor sheet with `tokenId` and `sceneId` in its
+context unless that package registers a matching `token.sheet` replacement.
+Actor and snapshot-token data for external systems retain their own JSON shape;
+the host enforces size, JSON safety, ownership and revision checks without
+injecting PDF fields. Optional `token` and `bars` presentation hints still work;
+missing hints use neutral scene defaults without changing stored sheet data.
+
+Before closing, the window emits `gravewright:sheet-flush`; a mounted extension
 can call `event.detail.waitUntil(promise)` synchronously to await pending writes.
-A rejection keeps the window open and displays the error. Returning to the sheet
-emits `gravewright:sheet-refresh` with the same wait contract, after native token
-or notes writes finish. Bind listeners on `root.closest('.gw-window')` using the
-mount abort signal. Keep internal tab attributes namespaced to the extension.
+A rejection keeps the window open and displays the error. Bind listeners on
+`root.closest('.gw-window')` using the mount abort signal. Custom sheets own
+flush/refresh behavior when switching their internal tabs. The PDF provider
+continues emitting `gravewright:sheet-flush` and `gravewright:sheet-refresh` when
+switching its own tabs.
 
 For separately maintained source checkouts, set `GRAVEWRIGHT_SERVER_APP_PATHS`
 to their package root directories (`:` separated on Linux/macOS, `;` on Windows).

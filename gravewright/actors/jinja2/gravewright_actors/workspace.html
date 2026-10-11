@@ -118,5 +118,6 @@
   ['User','FilePdf','Trash','NotePencil','PencilSimple','UsersThree','Plus','FolderPlus','Eye','EyeSlash','BookOpenText','Gear','Heart','Copy','Clipboard','ArrowCounterClockwise','ArrowClockwise','X']
   %}<span data-icon="{{ name }}">{{ icon(name) }}</span>{% endfor %}</template
 >
-{% include 'gravewright_pdf_system/sheet.html' %} {% include
+{% include 'gravewright_actors/sheet.html' %}
+{% if actor_sheet_provider %}{% include actor_sheet_provider.template %}{% endif %} {% include
 'gravewright_tokens/workspace.html' %}

@@ -119,9 +119,9 @@ def movement_events(scene, token, before):
     from django.db import transaction
     from asgiref.sync import async_to_sync
     from channels.layers import get_channel_layer
-    from gravewright.tokens.services import geometry, data
+    from gravewright.tokens.services import geometry, presentation
     cell,ox,oy,_,_=geometry(scene)
-    size=data(token)['token']['size']
+    size=presentation(token)['token']['size']
     start=(ox+(before[0]+size/2)*cell,oy+(before[1]+size/2)*cell)
     end=(ox+(token.grid_x+size/2)*cell,oy+(token.grid_y+size/2)*cell)
     for obj in scene.elements.filter(kind='zones'):

@@ -96,6 +96,8 @@ function mount(element) {
         function control(label, action, glyph) { const button = doc.createElement('button'); button.type='button'; button.className='gw-window__control'; button.setAttribute('aria-label',label); button.title=label; button.dataset.windowAction=action; button.textContent=glyph; host.append(button); controls.push(button); return button; }
         const reset = control(text('Reset window layout','Redefinir posição e tamanho'), 'reset', '↺');
         reset.onclick = () => { layouts.delete(key); try { if(scope) localStorage.setItem(scope,JSON.stringify([...layouts])); } catch {} Object.assign(element.style,initial); resize(); };
+        const firstControl = [...host.children].find(child => child !== reset && child.tagName === 'BUTTON');
+        if (firstControl) host.insertBefore(reset, firstControl);
         if (element.classList.contains('game-panel') && !header.querySelector('[data-map-panel=minimize],[data-actor-panel=minimize],[data-journal-directory=minimize],[data-visibility-action=minimize],[data-action=minimize],[data-window-action=minimize]')) {
             const button = control(text('Minimize','Minimizar'),'minimize','−');
             button.onclick = () => { const on = element.toggleAttribute('data-window-minimized'); button.setAttribute('aria-label',on?text('Restore','Restaurar'):text('Minimize','Minimizar')); button.title=button.getAttribute('aria-label'); button.textContent=on?'□':'−'; };

@@ -10,12 +10,13 @@ from gravewright.modules.models import ModuleSet, Package
 from gravewright.modules.packages import compatible
 
 
-NATIVE_SYSTEM_ID = 'gravewright-pdf-system'
-NATIVE_RULESET = {
-    'systemId': NATIVE_SYSTEM_ID,
-    'title': 'Gravewright PDF System',
-    'actorTypes': [{'id': 'character', 'label': 'Character'}],
-}
+from .systems import DEFAULT_SYSTEM, bundled
+
+NATIVE_SYSTEM_ID = DEFAULT_SYSTEM
+
+
+def native_ruleset():
+    return deepcopy(bundled(NATIVE_SYSTEM_ID)['descriptor'])
 
 
 def activate_selected_system(campaign, previous_system=None):
@@ -73,7 +74,7 @@ def list_rulesets():
             continue
         latest[package.module_id] = (version, descriptor)
     installed = sorted((row for _, row in latest.values()), key=lambda row: (row['title'].casefold(), row['systemId']))
-    return [deepcopy(NATIVE_RULESET), *installed]
+    return [native_ruleset(), *installed]
 
 
 def get_ruleset(system_id='', *, campaign_id=None):
@@ -82,7 +83,7 @@ def get_ruleset(system_id='', *, campaign_id=None):
     An unavailable selected release never silently falls back to another version.
     """
     if not system_id or system_id == NATIVE_SYSTEM_ID:
-        return deepcopy(NATIVE_RULESET)
+        return native_ruleset()
     if campaign_id is not None:
         modules = ModuleSet.objects.filter(campaign_id=campaign_id).values_list('modules', flat=True).first() or {}
         if system_id in modules:

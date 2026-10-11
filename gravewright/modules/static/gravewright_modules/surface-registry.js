@@ -17,8 +17,12 @@ export class SurfaceRegistry {
     const entry = typeof declaration === 'function' ? { mount: declaration } : { ...declaration };
     entry.mode ??= 'augment';
     if (typeof entry.mount !== 'function' || !['augment', 'replace'].includes(entry.mode)) throw new ModuleError('invalid_data');
+    if (entry.types !== undefined) {
+      if (!['actor.sheet', 'token.sheet'].includes(domain) || !Array.isArray(entry.types) || !entry.types.length || entry.types.some(type => typeof type !== 'string' || !type.length) || new Set(entry.types).size !== entry.types.length) throw new ModuleError('invalid_data');
+      entry.types = [...entry.types];
+    }
     const entries = this.registrations.get(domain) ?? new Set();
-    if (entry.mode === 'replace' && [...entries].some(e => e.mode === 'replace')) throw new ModuleError('conflict');
+    if (entry.mode === 'replace' && [...entries].some(e => e.mode === 'replace' && (!entry.types || !e.types || entry.types.some(type => e.types.includes(type))))) throw new ModuleError('conflict');
     entries.add(entry);
     this.registrations.set(domain, entries);
     for (const surface of this.surfaces) if (surface.domain === domain) this.mount(surface, entry);
@@ -43,6 +47,7 @@ export class SurfaceRegistry {
     };
   }
   mount(surface, entry) {
+    if (entry.types && !entry.types.includes(surface.context.actorType)) return;
     const life = new Lifetime(this.report);
     surface.mounts.set(entry, life);
     const root = surface.element.ownerDocument.createElement('div');

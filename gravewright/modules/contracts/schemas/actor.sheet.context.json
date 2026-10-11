@@ -49,6 +49,15 @@
         "gm",
         "player"
       ]
+    },
+    "systemId": {
+      "type": "string"
+    },
+    "actorType": {
+      "type": "string"
+    },
+    "canEdit": {
+      "type": "boolean"
     }
   },
   "required": [

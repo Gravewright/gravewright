@@ -37,7 +37,7 @@ def state(who, scene_id=None):
         actor=token.actor if token else Actor.objects.filter(pk=entry.get('actorId'),campaign_id=who.campaign_id).first()
         if not actor:continue
         if who.role!='gm' and (entry.get('hidden') or (token.hidden if token else not actors.access(actor,who))):continue
-        data=tokens.data(token) if token else {}
+        data=tokens.presentation(token) if token else {}
         index=row.combatants.index(entry)
         controlled=tokens.control(token,who) if token else actors.access(actor,who,True)
         bars=data.get('bars',{}).get('bar_1',{})

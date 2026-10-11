@@ -76,8 +76,10 @@ class ModuleRuntime {
               if (!registering || !this.domains.includes(domain)) throw new ModuleError("invalid_data", "Unknown domain or late registration");
               const declaration = typeof value === "function" ? { mode: "augment", mount: value } : value;
               if (!declaration || !["augment", "replace"].includes(declaration.mode ?? "augment") || typeof declaration.mount !== "function") throw new ModuleError("invalid_data");
-              if (this.declarations.some((d) => d.module === active && d.domain === domain)) throw new ModuleError("conflict", "Duplicate domain registration");
-              this.declarations.push({ module: active, domain, ...declaration, mode: declaration.mode ?? "augment" });
+              const types = declaration.types;
+              if (types !== undefined && (!['actor.sheet', 'token.sheet'].includes(domain) || !Array.isArray(types) || !types.length || types.some(type => typeof type !== 'string' || !type.length) || new Set(types).size !== types.length)) throw new ModuleError('invalid_data', 'Invalid sheet types');
+              if (this.declarations.some(d => d.module === active && d.domain === domain && (!types || !d.types || types.some(type => d.types.includes(type))))) throw new ModuleError('conflict', 'Overlapping domain registration');
+              this.declarations.push({ module: active, domain, ...declaration, ...(types ? { types: [...types] } : {}), mode: declaration.mode ?? "augment" });
             } };
             try {
               const result = api.register({ ...registration, api: this.bridge.api?.(identity, life, { register: registration.register }) });
@@ -106,7 +108,7 @@ class ModuleRuntime {
     if (this.closed) throw new ModuleError("stale_context");
     this.surfaces.set(surface, []);
     void this.serial(async () => {
-      if (this.surfaces.has(surface)) await this.mountSurface(surface);
+      if (this.surfaces.has(surface) && (this.state || !surface.context.systemId)) await this.mountSurface(surface);
     });
     return () => {
       const lives = this.surfaces.get(surface) ?? [];
@@ -120,12 +122,18 @@ class ModuleRuntime {
     await Promise.all(old.map((life) => life.close()));
     const lives = [];
     this.surfaces.set(surface, lives);
-    const candidates = this.declarations.filter((d) => d.domain === surface.domain && d.mode === "replace");
-    // Competing replacements need a table choice; augmentations always remain.
-    const preference = this.state?.replacements[surface.domain];
-    const selected = candidates.length === 1 ? candidates[0] : candidates.find((d) => d.module.descriptor.id === preference);
+    const eligible = d => !d.types || d.types.includes(surface.context.actorType ?? surface.context.itemType);
+    const matches = d => eligible(d) && (d.domain === surface.domain ||
+      surface.domain === 'token.sheet' && d.domain === 'actor.sheet' && d.mode === 'replace' &&
+      !this.declarations.some(other => other.module === d.module && other.domain === 'token.sheet' && other.mode === 'replace' && eligible(other)));
+    const candidates = this.declarations.filter(d => matches(d) && d.mode === 'replace');
+    const preference = this.state?.replacements[surface.domain] ??
+      (surface.domain === 'token.sheet' ? this.state?.replacements['actor.sheet'] : undefined);
+    const selected = candidates.find(d => d.module.descriptor.id === preference) ??
+      candidates.find(d => d.module.descriptor.id === surface.context.systemId) ??
+      (candidates.length === 1 ? candidates[0] : undefined);
     await surface.defaultVisible(!selected);
-    for (const declaration of this.declarations.filter((d) => d.domain === surface.domain && (d.mode === "augment" || d === selected))) {
+    for (const declaration of this.declarations.filter(d => matches(d) && (d.mode === 'augment' || d === selected))) {
       if (!this.surfaces.has(surface)) return;
       const life = new Lifetime(this.report);
       lives.push(life);

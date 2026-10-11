@@ -83,6 +83,92 @@ class SystemDocumentTypeTests(TestCase):
         with self.assertRaises(MapError):
             self.create_actor(type="character")
 
+    def test_custom_sheet_data_round_trip_has_no_pdf_defaults(self):
+        data = {'abilities': {'might': 4}, 'inventory': [{'name': 'Sword'}]}
+        actor = self.create_actor(data=data)
+        self.assertEqual(actor.data, data)
+        view = services.sheet(self.campaign.pk, self.gm.pk, actor.pk)
+        services.command(self.campaign.pk, self.gm.pk, 'sheet.save', {
+            **view, 'actorId': str(actor.pk), 'data': {'abilities': {'might': 7}},
+        }, uuid.uuid4())
+        actor.refresh_from_db()
+        self.assertEqual(actor.data, {'abilities': {'might': 7}})
+        with self.assertRaises(MapError):
+            services.command(self.campaign.pk, self.gm.pk, 'sheet.save', {
+                **view, 'actorId': str(actor.pk),
+            }, uuid.uuid4())
+
+    def test_custom_sdk_data_update_uses_system_shape(self):
+        actor = self.create_actor(data={'health': 12})
+        request = SimpleNamespace(user=self.gm)
+        view = invoke(request, self.campaign.pk, None, 'actor.data.read', {'id': str(actor.pk)})
+        invoke(request, self.campaign.pk, None, 'actor.data.update', {
+            'id': str(actor.pk), 'data': {'health': 9, 'skills': ['sneak']},
+            'expectedRevision': view['revision'],
+        })
+        actor.refresh_from_db()
+        self.assertEqual(actor.data, {'health': 9, 'skills': ['sneak']})
+
+    def test_custom_data_is_bounded_json_and_effects_stay_protected(self):
+        from gravewright.campaigns.systems import normalize_actor
+        for data in ({'value': float('nan')}, {'nested': [{'__proto__': {}}]}, {'large': 'x' * 500_001}):
+            with self.assertRaises(MapError):
+                normalize_actor('example.rules', data)
+        with self.assertRaises(MapError):
+            normalize_actor('example.rules', {'effects': [{'label': 'New'}]}, {}, False)
+        self.assertEqual(normalize_actor('example.rules', {}, {'effects': [{'label': 'Old'}]}, False), {'effects': [{'label': 'Old'}]})
+
+    def test_custom_sheet_writes_keep_document_ownership_checks(self):
+        player = User.objects.create_user(email='sheet-player@example.test', name='Player', password='password', role='participant')
+        Membership.objects.create(campaign=self.campaign, user=player, role='player')
+        actor = self.create_actor(data={'health': 12})
+        actor.permissions = {'default': 'read'}
+        actor.save(update_fields=['permissions'])
+        view = services.sheet(self.campaign.pk, player.pk, actor.pk)
+        payload = {**view, 'actorId': str(actor.pk), 'data': {'health': 8}}
+        with self.assertRaises(MapError):
+            services.command(self.campaign.pk, player.pk, 'sheet.save', payload, uuid.uuid4())
+        actor.permissions[str(player.pk)] = 'owner'
+        actor.save(update_fields=['permissions'])
+        services.command(self.campaign.pk, player.pk, 'sheet.save', payload, uuid.uuid4())
+        actor.refresh_from_db()
+        self.assertEqual(actor.data, {'health': 8})
+
+    def test_custom_tokens_place_duplicate_move_and_save_without_pdf_shape(self):
+        from gravewright.maps.models import Scene
+        from gravewright.tokens.models import Token
+        from gravewright.tokens import services as tokens
+        actor = self.create_actor(data={'health': 12})
+        scene = Scene.objects.create(campaign=self.campaign, name='Custom scene', width=800, height=600)
+        result = tokens.command(self.campaign.pk, self.gm.pk, 'place', {
+            'mapId': str(scene.pk), 'actorId': str(actor.pk), 'gridX': 0, 'gridY': 0,
+        }, uuid.uuid4())
+        linked = Token.objects.get(pk=result['createdIds'][0])
+        self.assertEqual(result['tokens'][0]['cells'], 1)
+        result = tokens.command(self.campaign.pk, self.gm.pk, 'duplicate', {
+            'mapId': str(scene.pk), 'tokenIds': [str(linked.pk)],
+        }, uuid.uuid4())
+        copy = Token.objects.get(pk=result['createdIds'][0])
+        self.assertEqual(copy.snapshot, {'health': 12})
+        view = services.sheet(self.campaign.pk, self.gm.pk, actor.pk, copy.pk)
+        services.command(self.campaign.pk, self.gm.pk, 'sheet.save', {
+            **view, 'actorId': str(actor.pk), 'data': {'health': 8},
+        }, uuid.uuid4())
+        copy.refresh_from_db(); actor.refresh_from_db()
+        self.assertEqual(copy.snapshot, {'health': 8})
+        self.assertEqual(actor.data, {'health': 12})
+        tokens.command(self.campaign.pk, self.gm.pk, 'move', {
+            'mapId': str(scene.pk), 'id': str(copy.pk), 'version': copy.version, 'gridX': 2, 'gridY': 2,
+        }, uuid.uuid4())
+
+    def test_custom_table_has_no_pdf_assets_or_template(self):
+        self.client.force_login(self.gm)
+        response = self.client.get('/game/' + str(self.campaign.pk))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotRegex(response.content.decode(), r'(?:src|href)="[^"]*gravewright_pdf_system/')
+        self.assertNotContains(response, 'pdf-sheet__tabs')
+        self.assertContains(response, 'actor-sheet-window')
+
     def test_sdk_create_read_and_list_preserve_type(self):
         request = SimpleNamespace(user=self.gm)
         created = invoke(request, self.campaign.pk, None, "actor.create", {"name": "SDK creature", "type": "creature"})

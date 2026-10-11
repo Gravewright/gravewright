@@ -11,7 +11,7 @@ import {
   mergePatch,
 } from "/static/gravewright_web/vendor/datastar-1.0.3.js";
 import { directoryView } from "/static/gravewright_maps/directory.js";
-import { openSheet } from "/static/gravewright_pdf_system/sheet.js";
+import { openSheet } from "./sheet.js";
 import { openPermissions } from "/static/gravewright_table/permissions.js";
 import { initialContent, restoreContent } from '/static/gravewright_table/content-state.js';
 export const clone = (id) =>
@@ -162,7 +162,7 @@ function edit(actor, folderId) {
         name: el.elements.name.value,
         actorType: actor?.actorType || el.elements.actorType.value,
         folderId: folderId ?? actor?.folderId,
-        data: { pdf: { asset: el.elements.template.value } },
+        data: state.systemId === 'gravewright-pdf-system' ? { pdf: { asset: el.elements.template.value } } : {},
       }),
   );
   el.elements.name.value = actor?.name || "";
@@ -206,10 +206,10 @@ function folder(existing, parentId) {
 function permissions(actor) {
   return openPermissions('actors', actor.id);
 }
-function open(actor, token) {
+async function open(actor, token) {
   if (actor.canOpen === false) return;
-  sheet?.close();
-  sheet = openSheet(campaign, actor.id, token, state.is_gm, () => {
+  if (sheet && !await sheet.close()) return;
+  sheet = openSheet(campaign, actor, token, document.getElementById('table-workspace').dataset.role === 'gm', () => {
     sheet = undefined;
   });
 }
@@ -391,7 +391,9 @@ function paint() {
     panel.querySelector(".actor-directory__empty"),
     !view.visibleEntries.size,
   );
+  show(panel.querySelector('[data-actor-panel="upload"]'), state.systemId === "gravewright-pdf-system");
   const templates = panel.querySelector("[data-templates]");
+  show(templates, state.systemId === "gravewright-pdf-system");
   templates.replaceChildren();
   const folder = clone("journal-folder");
   folder.querySelector(".gw-folder__label").textContent = "Templates";
@@ -464,7 +466,7 @@ window.gravewrightActors = {
     if (panel.classList.contains('game-panel--minimized')) { restoreWindow(panel); mergePatch({_actorsOpen:true}); return; }
     mergePatch({ _actorsOpen: !getPath("_actorsOpen") });
   },
-  open: (actorId, token) => open({ id: actorId }, token),
+  open: (actorId, token) => open(state.actors.find(actor => actor.id === actorId) || initialContent('actors')?.actors.find(actor => actor.id === actorId) || { id: actorId, ...token }, token),
 };
 if (panel) {
   panel.querySelector(".game-directory").dataset.treeScroll = "";
@@ -548,7 +550,7 @@ if (panel) {
         (a) => a.id === sheet.element.dataset.actorId,
       );
       if (!a || a.canOpen === false || (sheet.element.dataset.canEdit === "true" && !a.canEdit))
-        sheet.close();
+        sheet.close(true);
     }
   });
   window.addEventListener("gravewright:actors.state", e => receiveState(e.detail));

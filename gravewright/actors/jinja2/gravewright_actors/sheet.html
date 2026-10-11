@@ -1,0 +1,18 @@
+<template id="actor-sheet-window">
+  <section data-movable class="gw-window actor-directory__sheet" role="dialog"
+    {% if actor_sheet_provider %}data-sheet-provider="{{ actor_sheet_provider.entry }}"{% endif %}>
+    <header class="gw-window__titlebar" data-move-handle>
+      <span class="gw-window__grip" aria-hidden="true"></span>
+      <span class="actor-directory__sheet-heading"><strong></strong><small></small></span>
+      <div class="gw-window__controls">
+        {% for action,label,glyph in [('detach','Detach','ArrowUpRight'),('minimize','Minimize','Minus'),('close','Close character sheet','X')] %}
+        <button class="gw-window__control" type="button" data-window="{{ action }}" aria-label="{{ label }}">{{ icon(glyph) }}</button>
+        {% endfor %}
+      </div>
+    </header>
+    <div class="gw-window__body gw-window__body--flush">
+      <p class="actor-sheet__error" role="alert" hidden></p>
+      <div class="actor-sheet__content"><div class="actor-sheet__native"></div></div>
+    </div>
+  </section>
+</template>

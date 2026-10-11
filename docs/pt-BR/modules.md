@@ -357,3 +357,45 @@ configurá-las é suportado. O git ignora o conteúdo das duas pastas, para que 
 extensões fiquem fora deste repositório.
 
 [Porte ético de módulos](ethical-module-porting.md)
+
+As substituições de `actor.sheet` e `token.sheet` controlam o **corpo inteiro da
+janela**. A base fornece a barra de título, mover, destacar, minimizar, fechar,
+permissões e identidade do documento. As abas de PDF, Token e Notas pertencem
+apenas ao módulo integrado PDF System. Sistemas terceiros não carregam seu
+controlador, seus modelos nem seus estilos. O módulo integrado registra sua
+definição, implementação de ficha e validação de dados pelo AppConfig. Mesas PDF
+existentes mantêm o identificador e os dados, sem conversão.
+
+Pacotes de sistema assinados podem fornecer fichas por tipo de ator:
+
+```js
+register("actor.sheet", {
+  mode: "replace",
+  types: ["hero"],
+  mount({ root, context, api, signal }) {
+    // Desenhe a ficha inteira, incluindo as abas próprias do sistema.
+    // context contém actorId, actorType, systemId e canEdit.
+    // Leia com api.actors.sheet(...) e salve com api.actors.saveSheet(...).
+  }
+});
+```
+
+Sem `types`, a ficha atende todos os tipos. Listas de tipos sem sobreposição
+permitem várias fichas na mesma superfície. Uma substituição escolhida na mesa
+tem prioridade; depois, a ficha do sistema da campanha prevalece sobre outros
+módulos. Tokens reutilizam a ficha de ator do sistema, com `tokenId` e `sceneId`
+no contexto, salvo quando o pacote registra uma substituição `token.sheet`
+compatível com o tipo.
+
+Dados de atores e cópias independentes de tokens de sistemas terceiros mantêm
+seu formato JSON próprio. A base verifica tamanho, segurança do JSON, acesso e
+revisões sem inserir campos de PDF. As propriedades opcionais `token` e `bars`
+continuam fornecendo informações visuais para a cena; sem elas, a cena usa
+valores neutros sem modificar os dados armazenados.
+
+Antes de fechar, a janela emite `gravewright:sheet-flush`. O módulo pode chamar
+`event.detail.waitUntil(promise)` durante o evento para aguardar gravações. Uma
+rejeição mantém a janela aberta e mostra o erro. Registre o evento em
+`root.closest('.gw-window')`, usando o `signal` da montagem. Cada ficha controla
+as gravações ao trocar suas próprias abas. O módulo PDF continua emitindo
+`gravewright:sheet-flush` e `gravewright:sheet-refresh` nas trocas de suas abas.

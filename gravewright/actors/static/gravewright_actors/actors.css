@@ -27,3 +27,10 @@
 @media (max-width: 700px) { .gw-window.actor-directory__sheet { inset: 8px; } }
 
 .resource-permissions{display:grid;gap:8px}.resource-permissions p{margin:0;color:var(--text-muted)}.resource-permissions__row{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:5px 8px 8px;border:1px solid var(--border);border-radius:5px}.resource-permissions__row legend{padding:0 5px;font-size:13px}.resource-permissions__choice{display:flex;align-items:center;gap:3px;font-size:13px;cursor:pointer}.resource-permissions__choice svg{width:13px;height:13px}.resource-permissions [role=alert]{color:#ffaaaa}
+
+/* A system sheet fills the neutral window and owns its navigation. */
+.actor-sheet__content { flex: 1; height: 100%; min-height: 0; overflow: auto; }
+.actor-sheet__native, .actor-sheet__content > .gw-module-surface,
+.actor-sheet__content > .gw-module-surface > .gw-module-root,
+.actor-sheet__content > .gw-api-surface { height: 100%; min-height: 0; }
+.actor-sheet__error { padding: 13px; margin: 0; color: var(--danger-text); }
