@@ -15,7 +15,7 @@ def check(gm, player, data, output):
     source=editor.locator('#effect-shader-source').input_value()
     button=editor.get_by_role('button',name='AI prompt',exact=True)
     button.click()
-    modal=gm.locator('dialog.shader-prompt-dialog')
+    modal=gm.locator('.shader-prompt-dialog')
     expect(modal).to_be_visible()
     confirm=modal.get_by_role('button',name='Copy instructions and continue',exact=True)
     expect(confirm).to_be_disabled()

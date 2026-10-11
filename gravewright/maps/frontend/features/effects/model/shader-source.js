@@ -1,3 +1,4 @@
+import { text as gwText } from '../../../shared/config/i18n/text.js';
 /** Normalize Markdown wrappers without dropping GLSL between fenced snippets. */
 export function normalizeShaderSource(value) {
     const lines = value.replace(/\r\n?/g, '\n').trim().split('\n');
@@ -35,4 +36,16 @@ export function normalizeShaderSource(value) {
         continuation = directive && /\\[ \t]*$/.test(line);
     }
     return output.join('\n').trim();
+}
+
+export function shaderSource(value) {
+    const source = normalizeShaderSource(value);
+    const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, '');
+    if (!source) throw new Error(gwText('Paste the GLSL code returned by your AI. The field is empty.'));
+    if (source.length > 32000) throw new Error(gwText('The shader exceeds the limit of 32,000 characters. Ask your AI for a shorter version.'));
+    if (!/\bvoid\s+main\s*\(\s*(?:void\s*)?\)/.test(code)) {
+        throw new Error(gwText('The pasted code does not contain void main(). Copy the complete shader, including its main function.'));
+    }
+
+    return source;
 }

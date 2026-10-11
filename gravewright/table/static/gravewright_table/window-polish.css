@@ -25,6 +25,18 @@
 .ownership-modal-overlay[hidden]{display:none!important}
 .ownership-modal-overlay>.table-modal-window,.ownership-modal-overlay>.table-form-modal{position:relative;inset:auto;transform:none;box-sizing:border-box;width:min(560px,calc(100vw - 32px));min-width:min(280px,calc(100vw - 32px));min-height:180px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);padding:0;display:flex;flex-direction:column;gap:0;overflow:auto;resize:both;border:1px solid var(--border-accent-strong,#806b43);border-radius:12px;background:var(--surface,#171c20);color:var(--text,#e8e4d8);box-shadow:var(--shadow-window,0 12px 40px #0009)}
 .ownership-modal-overlay>.game-scene-settings{width:min(640px,calc(100vw - 32px));min-height:340px}
+.ownership-modal-overlay>.directory-dialog{position:relative;inset:auto;transform:none;width:min(420px,calc(100vw - 32px));max-height:calc(100dvh - 32px);margin:0;box-sizing:border-box;overflow:auto}
+[data-lobby-panel-window].game-panel{height:auto;min-height:0;bottom:auto;resize:none}
+[data-lobby-panel-window] .game-panel-body{flex:0 1 auto;padding:14px;font-size:13px}
+[data-lobby-panel-window] .game-panel-body>p:first-child{margin-top:0;line-height:1.5}
+[data-lobby-panel-window] form{display:grid;gap:12px}
+[data-lobby-panel-window] .permission-toggle{display:flex;align-items:center;gap:8px}
+[data-lobby-panel-window] [type=submit]{justify-self:end;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:6px 10px;border-radius:4px;background:var(--accent);color:var(--on-accent,#111820)}
+[data-lobby-panel-window] [type=submit] svg{width:16px;height:16px}
+.game-roster>.game-modal-control{width:100%;height:auto;min-height:30px;margin-top:6px;justify-content:flex-start;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-field,#151a20);font-size:13px}
+.ownership-modal-overlay>.directory-dialog>footer{display:flex;justify-content:flex-end;gap:8px;padding:10px 12px;border-top:1px solid var(--border)}
+.ownership-modal-overlay>.directory-dialog>footer button{min-height:32px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.ownership-modal-overlay>.directory-dialog>footer [type=submit]{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#111820)}
 .table-form-modal>form{display:flex;flex-direction:column;min-height:0;height:100%;flex:1}
 :is(.table-form-modal form,.table-modal-window)>header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;flex-shrink:0;margin:0;padding:8px 13px;border-bottom:1px solid var(--border,#40464e);background:linear-gradient(180deg,#ffffff06,transparent)}
 :is(.table-form-modal form,.table-modal-window)>header strong{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -81,6 +93,17 @@
 .journal-marker-modal footer [data-remove-marker]:hover{border-color:var(--danger,#ef9999);background:transparent}
 
 /* Match document windows and forms to the compact directory panels. */
+:where(body:has(#table-workspace),body.game-detached) { color-scheme:dark; }
+/* Quiet defaults for first-party controls; component styles keep precedence. */
+:where(body:has(#table-workspace),body.game-detached) :where(.light-editor,.wall-editor,.token-editor,.effect-editor,.grid-calibration-panel,.sound-editor,.game-table,.game-panel,.gw-window,.journal-window,.directory-dialog,.upload-library,.ownership-dialog,.table-form-modal,.table-modal-window,.dice-tray,.house-menu,.journal-prompt,.command-palette) :where(button,input,select,textarea) { font:inherit; color:var(--text,#e8e4d8); accent-color:var(--accent,#b99857); }
+:where(body:has(#table-workspace),body.game-detached) :where(.light-editor,.wall-editor,.token-editor,.effect-editor,.grid-calibration-panel,.sound-editor,.game-table,.game-panel,.gw-window,.journal-window,.directory-dialog,.upload-library,.ownership-dialog,.table-form-modal,.table-modal-window,.dice-tray,.house-menu,.journal-prompt,.command-palette) :where(button) { min-height:30px; padding:5px 9px; border:1px solid var(--border,#40464e); border-radius:4px; background:var(--surface-field,#151a20); cursor:pointer; }
+:where(body:has(#table-workspace),body.game-detached) :where(.light-editor,.wall-editor,.token-editor,.effect-editor,.grid-calibration-panel,.sound-editor,.game-table,.game-panel,.gw-window,.journal-window,.directory-dialog,.upload-library,.ownership-dialog,.table-form-modal,.table-modal-window,.dice-tray,.house-menu,.journal-prompt,.command-palette) :where(input:not([type=checkbox],[type=radio],[type=range],[type=color]),select,textarea) { box-sizing:border-box; min-height:32px; max-width:100%; padding:6px 9px; border:1px solid var(--border,#40464e); border-radius:4px; background:var(--surface-field,#151a20); }
+:where(body:has(#table-workspace),body.game-detached) :where(input[type=range]) { background:transparent; }
+:where(body:has(#table-workspace),body.game-detached) :where(input[type=file])::file-selector-button { padding:5px 9px; margin-right:8px; border:1px solid var(--border-accent,#806b43); border-radius:3px; background:var(--accent-glow,#b9985720); color:var(--text,#e8e4d8); font:inherit; cursor:pointer; }
+:where(body:has(#table-workspace),body.game-detached) :where(button:disabled) { cursor:default; opacity:.5; }
+:where(body:has(#table-workspace),body.game-detached) :where(button,input,select,textarea):focus-visible { outline:2px solid var(--focus-ring,var(--accent)); outline-offset:2px; }
+.table-modal-window .table-modal-body :is(input:not([type=checkbox],[type=radio],[type=range],[type=color]),select,textarea) { width:100%; }
+:is(body:has(#table-workspace),body.game-detached) .house-menu :is(.house-menu__profile,.house-menu__profile-preview) { border-radius:4px; }
 :is(body:has(#table-workspace),body.game-detached) { --table-window-radius:6px; --table-titlebar-height:34px; }
 :is(body:has(#table-workspace),body.game-detached) :is(.gw-window,.game-panel,.journal-window,.directory-dialog,.upload-library,.ownership-dialog,.table-form-modal,.table-modal-window,.dice-tray,.house-menu,.journal-prompt,.command-palette) {
   border-radius:var(--table-window-radius);

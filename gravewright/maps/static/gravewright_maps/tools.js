@@ -1,3 +1,6 @@
+// gravewright/maps/frontend/features/selection/ui/selection-workspace.js
+import { openFormModal, modalText } from "/static/gravewright_table/form-modal.js";
+
 // gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
 function notifyTextChange() {
@@ -524,26 +527,11 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     }
   }
   function confirmDelete() {
-    dialog?.remove();
-    dialog = document.createElement("dialog");
-    dialog.className = "directory-dialog";
-    const form = document.createElement("form"), title = document.createElement("h3"), text2 = document.createElement("p"), remove = document.createElement("button"), close = document.createElement("button");
-    title.textContent = "Remove scene objects";
-    text2.textContent = `Remove ${chosen().length} object(s)? Cards go to the discard pile; actor and asset definitions are preserved.`;
-    remove.textContent = "Remove selection";
-    remove.type = "submit";
-    close.textContent = "Cancel";
-    close.type = "button";
-    close.onclick = () => dialog.close();
-    form.append(title, text2, close, remove);
-    form.onsubmit = (e) => {
-      e.preventDefault();
-      void execute("delete");
-    };
-    dialog.append(form);
-    document.body.append(dialog);
-    dialog.onclose = () => dialog.remove();
-    dialog.showModal();
+    dialog?.close();
+    dialog = openFormModal(modalText("Remove scene objects", "Remover objetos da cena"), [], () => execute("delete"), { key: "scene-selection-delete", submitLabel: modalText("Remove selection", "Remover sele\xE7\xE3o") });
+    const text2 = document.createElement("p");
+    text2.textContent = modalText(`Remove ${chosen().length} selected object(s)?`, `Remover ${chosen().length} objeto(s) selecionado(s)?`);
+    dialog.querySelector("[data-fields]").append(text2);
   }
   function context(e) {
     if (!active() || ignored(e)) return;
@@ -591,7 +579,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     editObject(o, e);
   }
   function key(e) {
-    if (!active() || e.target.closest?.("input,textarea,select,[contenteditable=true],.directory-dialog") || document.querySelector("dialog[open]")) return;
+    if (!active() || e.target.closest?.("input,textarea,select,[contenteditable=true],[role=dialog],[role=alertdialog]") || document.querySelector(".ownership-modal-overlay:not([hidden])")) return;
     if (e.target.closest?.(".image-workspace")) return;
     if (e.target.hasAttribute?.("data-image-resize") && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
       const image = chosen()[0]?.data;
@@ -646,7 +634,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   }, destroy() {
     abort.abort();
     cancel();
-    dialog?.remove();
+    dialog?.close();
     svg.remove();
     notice.remove();
   } };
@@ -3401,14 +3389,6 @@ function normalizeShaderSource(value) {
   }
   return output.join("\n").trim();
 }
-
-// gravewright/maps/frontend/features/effects/model/shader-prompt.js
-var shaderPrompt = "Write a generative GLSL ES 3.00 fragment shader for Gravewright.\n\nOUTPUT CONTRACT \u2014 RAW SOURCE FILE\nYour entire reply will be pasted directly into a GLSL compiler, not a Markdown renderer.\nReturn exactly one complete, compilable shader source as plain text.\nDo not use Markdown: no code fences (including glsl fences), headings, lists, blockquotes, inline backticks, or explanatory paragraphs.\nDo not escape GLSL operators for Markdown (write * directly, never backslash-star), and do not add backslashes at the ends of source lines. Do not label any part as arduino, cpp, java, or another language.\nDo not split the shader into snippets. Do not include a filename, language label, introduction, conclusion, or instructions for copying it.\nStart directly with GLSL source. Keep top-level declarations at column 1; indent only inside functions. End immediately after the final closing brace.\nReturn helper functions and exactly one void main(). Do not include #version, precision, uniform/input/output declarations: the engine supplies them.\nBefore replying, silently verify that the entire response can be pasted unchanged into the source field. Output only that source.\n\nRENDERING CONTRACT\nThe shader draws a transparent frame over the map. It does not receive the scene image. The frame already matches the range and is clipped by range, walls, and doors; do not implement this clipping in GLSL. Always write premultiplied alpha: finalColor = vec4(color * a, a). The engine applies blending afterward: Normal, Add, Multiply, or Screen. Do not implement blending in the shader.\n\nALREADY AVAILABLE: DO NOT DECLARE\n  in vec2 vTextureCoord;\n  out vec4 finalColor;\n  uniform sampler2D uTexture;      // white frame texture, not the map\n  uniform sampler2D uLightBuffer;  // accumulated scene lighting\n  uniform float uTime;            // seconds, resets every hour\n  uniform float uIntensity;       // 0..1, internal effect strength\n  uniform float uOpacity;         // 0..1, applied automatically after main()\n  uniform float uScale;           // 0.1..20\n  uniform float uSpeed;           // 0..8\n  uniform vec3 uColor;            // channels 0..1\n  uniform vec2 uResolution;       // frame size in pixels\n  uniform float uAspect;\n  uniform vec2 uOrigin;           // origin in world coordinates\n  uniform float uRadius;          // world range; 0 = entire scene\n  uniform float uRotation;        // radians\n  uniform vec3 uCamera;           // x/y offset and zoom\n  uniform vec2 uScreen;           // screen size in pixels\n  vec2 gwScreen(vec2 uv);         // screen pixel\n  vec2 gwScreenUV(vec2 uv);       // screen position 0..1\n  vec2 gwWorld(vec2 uv);          // world point; stays fixed during pan/zoom\n  vec2 gwRotated(vec2 uv);        // world rotated around uOrigin\n  float gwFeature();             // feature size tied to range and uScale\n  vec2 gwPattern(vec2 uv);        // (gwRotated(uv) - uOrigin) / gwFeature(); returns (0,0) at the click\n  vec4 gwLight(vec2 uv);          // rgb = light color; a = intensity\n\nRULES\n1. Build patterns in gwPattern(vTextureCoord): it returns exactly vec2(0.0) at the clicked point, which is always the effect's center/start. Use gwWorld/gwRotated only for absolute world coordinates. Do not use raw vTextureCoord for map-bound patterns or subtract uOrigin from gwPattern again.\n2. Use uTime * uSpeed for animation, uIntensity for internal strength/alpha, and uColor as the dominant color. uScale already affects gwFeature(); do not apply it again with gwPattern.\n3. The engine multiplies finalColor by uOpacity after main(). Do not multiply by uOpacity, or transparency will be applied twice.\n4. gwLight(vTextureCoord) is optional. Use it for effects that respond to lights. Do not make effects disappear completely without light unless requested.\n5. Use GLSL ES 3.00 syntax and explicit, compatible types. Define every helper you call. Do not use Shadertoy mainImage, iTime, iResolution, or gl_FragColor.\n6. In smoothstep(edge0, edge1, x), keep edge0 < edge1. Invert with 1.0 - smoothstep(low, high, x); reversed edges have undefined results.\n7. Avoid division by zero, NaN/Inf, unbounded loops, and excessive per-pixel work. Multiple shaders may run simultaneously. Code can contain up to 32,000 characters.\n\nDESIRED EFFECT\n<describe appearance, motion, density, and lighting behavior here>\n\nFINAL REMINDER\nReply with raw GLSL only, from the first source line to the last closing brace. No Markdown or surrounding text.";
-
-// gravewright/maps/frontend/features/effects/ui/shader-prompt-dialog.js
-function shaderInstructions(description) {
-  return shaderPrompt.replace("<describe appearance, motion, density, and lighting behavior here>", () => description.trim());
-}
 function shaderSource(value) {
   const source = normalizeShaderSource(value);
   const code = source.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, "");
@@ -3419,12 +3399,20 @@ function shaderSource(value) {
   }
   return source;
 }
+
+// gravewright/maps/frontend/features/effects/model/shader-prompt.js
+var shaderPrompt = "Write a generative GLSL ES 3.00 fragment shader for Gravewright.\n\nOUTPUT CONTRACT \u2014 RAW SOURCE FILE\nYour entire reply will be pasted directly into a GLSL compiler, not a Markdown renderer.\nReturn exactly one complete, compilable shader source as plain text.\nDo not use Markdown: no code fences (including glsl fences), headings, lists, blockquotes, inline backticks, or explanatory paragraphs.\nDo not escape GLSL operators for Markdown (write * directly, never backslash-star), and do not add backslashes at the ends of source lines. Do not label any part as arduino, cpp, java, or another language.\nDo not split the shader into snippets. Do not include a filename, language label, introduction, conclusion, or instructions for copying it.\nStart directly with GLSL source. Keep top-level declarations at column 1; indent only inside functions. End immediately after the final closing brace.\nReturn helper functions and exactly one void main(). Do not include #version, precision, uniform/input/output declarations: the engine supplies them.\nBefore replying, silently verify that the entire response can be pasted unchanged into the source field. Output only that source.\n\nRENDERING CONTRACT\nThe shader draws a transparent frame over the map. It does not receive the scene image. The frame already matches the range and is clipped by range, walls, and doors; do not implement this clipping in GLSL. Always write premultiplied alpha: finalColor = vec4(color * a, a). The engine applies blending afterward: Normal, Add, Multiply, or Screen. Do not implement blending in the shader.\n\nALREADY AVAILABLE: DO NOT DECLARE\n  in vec2 vTextureCoord;\n  out vec4 finalColor;\n  uniform sampler2D uTexture;      // white frame texture, not the map\n  uniform sampler2D uLightBuffer;  // accumulated scene lighting\n  uniform float uTime;            // seconds, resets every hour\n  uniform float uIntensity;       // 0..1, internal effect strength\n  uniform float uOpacity;         // 0..1, applied automatically after main()\n  uniform float uScale;           // 0.1..20\n  uniform float uSpeed;           // 0..8\n  uniform vec3 uColor;            // channels 0..1\n  uniform vec2 uResolution;       // frame size in pixels\n  uniform float uAspect;\n  uniform vec2 uOrigin;           // origin in world coordinates\n  uniform float uRadius;          // world range; 0 = entire scene\n  uniform float uRotation;        // radians\n  uniform vec3 uCamera;           // x/y offset and zoom\n  uniform vec2 uScreen;           // screen size in pixels\n  vec2 gwScreen(vec2 uv);         // screen pixel\n  vec2 gwScreenUV(vec2 uv);       // screen position 0..1\n  vec2 gwWorld(vec2 uv);          // world point; stays fixed during pan/zoom\n  vec2 gwRotated(vec2 uv);        // world rotated around uOrigin\n  float gwFeature();             // feature size tied to range and uScale\n  vec2 gwPattern(vec2 uv);        // (gwRotated(uv) - uOrigin) / gwFeature(); returns (0,0) at the click\n  vec4 gwLight(vec2 uv);          // rgb = light color; a = intensity\n\nRULES\n1. Build patterns in gwPattern(vTextureCoord): it returns exactly vec2(0.0) at the clicked point, which is always the effect's center/start. Use gwWorld/gwRotated only for absolute world coordinates. Do not use raw vTextureCoord for map-bound patterns or subtract uOrigin from gwPattern again.\n2. Use uTime * uSpeed for animation, uIntensity for internal strength/alpha, and uColor as the dominant color. uScale already affects gwFeature(); do not apply it again with gwPattern.\n3. The engine multiplies finalColor by uOpacity after main(). Do not multiply by uOpacity, or transparency will be applied twice.\n4. gwLight(vTextureCoord) is optional. Use it for effects that respond to lights. Do not make effects disappear completely without light unless requested.\n5. Use GLSL ES 3.00 syntax and explicit, compatible types. Define every helper you call. Do not use Shadertoy mainImage, iTime, iResolution, or gl_FragColor.\n6. In smoothstep(edge0, edge1, x), keep edge0 < edge1. Invert with 1.0 - smoothstep(low, high, x); reversed edges have undefined results.\n7. Avoid division by zero, NaN/Inf, unbounded loops, and excessive per-pixel work. Multiple shaders may run simultaneously. Code can contain up to 32,000 characters.\n\nDESIRED EFFECT\n<describe appearance, motion, density, and lighting behavior here>\n\nFINAL REMINDER\nReply with raw GLSL only, from the first source line to the last closing brace. No Markdown or surrounding text.";
+
+// gravewright/maps/frontend/features/effects/ui/shader-prompt-dialog.js
+import { mountModal } from "/static/gravewright_table/modal.js";
+function shaderInstructions(description) {
+  return shaderPrompt.replace("<describe appearance, motion, density, and lighting behavior here>", () => description.trim());
+}
 function openShaderPrompt(onInsert, onClose) {
   const previousFocus = document.activeElement;
-  const dialog = document.createElement("dialog");
-  dialog.className = "shader-prompt-dialog";
+  const dialog = document.createElement("section");
+  dialog.className = "table-modal-window shader-prompt-dialog";
   dialog.setAttribute("aria-labelledby", "shader-prompt-title");
-  document.body.append(dialog);
   let description = "", response = "", disposed = false;
   function element(tag, text2, parent = dialog) {
     const node = document.createElement(tag);
@@ -3435,33 +3423,29 @@ function openShaderPrompt(onInsert, onClose) {
   function close() {
     if (disposed) return;
     disposed = true;
-    window.removeEventListener("keydown", modalEscape, true);
     dialog.close();
-    dialog.remove();
     if (previousFocus?.isConnected) previousFocus.focus();
     onClose();
   }
-  function modalEscape(event) {
-    if (event.key !== "Escape" || disposed) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    close();
-  }
-  window.addEventListener("keydown", modalEscape, true);
-  dialog.addEventListener("cancel", (event) => {
-    event.preventDefault();
-    close();
-  });
+  dialog.addEventListener("close", close);
   dialog.addEventListener("keydown", (event) => event.stopPropagation());
   dialog.addEventListener("click", (event) => event.stopPropagation());
   function render(step) {
     dialog.replaceChildren();
-    element("h2", step === 1 ? "Describe your shader" : "Paste the AI-generated code").id = "shader-prompt-title";
-    const hint = element("p", step === 1 ? "Describe the appearance, colors and movement you want. We will add the technical instructions and copy everything for your AI." : "Instructions copied! Paste them into your favorite AI. Then copy its complete GLSL response and paste it below. Insert into editor will place the code in the GLSL code field; save it there when you are ready.");
+    const header = element("header");
+    element("strong", step === 1 ? "Describe your shader" : "Paste the AI-generated code", header).id = "shader-prompt-title";
+    const dismiss = element("button", "\xD7", header);
+    dismiss.type = "button";
+    dismiss.dataset.close = "";
+    dismiss.setAttribute("aria-label", text("Close"));
+    dismiss.onclick = close;
+    const body = element("div");
+    body.className = "table-modal-body";
+    const hint = element("p", step === 1 ? "Describe the appearance, colors and movement you want. We will add the technical instructions and copy everything for your AI." : "Instructions copied! Paste them into your favorite AI. Then copy its complete GLSL response and paste it below. Insert into editor will place the code in the GLSL code field; save it there when you are ready.", body);
     hint.id = "shader-prompt-hint";
-    const label = element("label", step === 1 ? "Desired effect" : "GLSL returned by the AI");
+    const label = element("label", step === 1 ? "Desired effect" : "GLSL returned by the AI", body);
     label.htmlFor = "shader-prompt-input";
-    const input = element("textarea");
+    const input = element("textarea", "", body);
     input.id = "shader-prompt-input";
     input.setAttribute("aria-describedby", hint.id);
     input.rows = 8;
@@ -3469,7 +3453,7 @@ function openShaderPrompt(onInsert, onClose) {
     input.spellcheck = step === 1;
     input.value = step === 1 ? description : response;
     input.placeholder = text(step === 1 ? "Example: slow violet mist with a few glowing sparks." : "Paste the complete shader code here.");
-    const error = element("p");
+    const error = element("p", "", body);
     error.className = "shader-prompt-dialog__error";
     error.setAttribute("role", "alert");
     const actions = element("footer");
@@ -3520,7 +3504,7 @@ function openShaderPrompt(onInsert, onClose) {
     input.focus();
   }
   render(1);
-  dialog.showModal();
+  mountModal(dialog);
   dialog.querySelector("textarea").focus();
   return close;
 }

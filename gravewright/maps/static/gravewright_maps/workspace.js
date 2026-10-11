@@ -642,6 +642,9 @@ if (panel) {
   };
 }
 window.gravewrightMaps = {
+  createScene() {
+    if (panel) upload();
+  },
   showDirectory() {
     if (popup && !popup.closed) { popup.focus(); return; }
     restoreWindow(panel);

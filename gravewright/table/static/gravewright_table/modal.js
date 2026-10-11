@@ -52,9 +52,9 @@ export function mountModal(modal, {canClose = () => true} = {}) {
     modal.dispatchEvent(new Event('close'));
   };
   active = modal;
-  const unregisterEscape = registerEscapeClose(modal, () => { if (!suspended && canClose()) modal.close(); });
   overlay.append(modal);
   document.body.append(overlay);
+  const unregisterEscape = registerEscapeClose(modal, () => { if (!suspended && canClose()) modal.close(); });
   for (const [element] of background) element.inert = true;
   document.body.style.overflow = 'hidden';
   document.addEventListener('keydown', keydown, true);

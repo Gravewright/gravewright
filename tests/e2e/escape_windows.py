@@ -75,12 +75,10 @@ with sync_playwright() as p:
     expect(page.locator('.journal-window')).to_have_count(0)
 
     # A confirmation uses Cancel, never the destructive action.
-    page.evaluate("""() => {
-      const modal = document.getElementById('journal-confirm').content.firstElementChild.cloneNode(true);
+    page.evaluate("""async () => {
+      const {openFormModal} = await import('/static/gravewright_table/form-modal.js');
+      const modal = openFormModal('Confirm deletion', [], () => {window.escapeDeleted = true;}, {key:'confirm-review',submitLabel:'Delete'});
       modal.id = 'confirm-review';
-      modal.querySelector('button').onclick = () => { window.escapeDeleted = true; };
-      modal.querySelector('[data-escape-close]').onclick = () => modal.remove();
-      document.body.append(modal);
     }""")
     page.keyboard.press('Escape')
     expect(page.locator('#confirm-review')).to_have_count(0)

@@ -1,3 +1,5 @@
+import { mountModal } from '/static/gravewright_table/modal.js';
+import { openFormModal, modalText } from '/static/gravewright_table/form-modal.js';
 import { mergePatch, getPath } from '/static/gravewright_web/vendor/datastar-1.0.3.js';
 import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
 import { richText, emptyDoc } from './editor.js';
@@ -46,43 +48,35 @@ function context(event, items, cls = 'journal-context') {
 }
 document.addEventListener('click', dismiss);
 function confirm(text, action) {
-    const el = clone('confirm');
-    el.querySelector('p').textContent = text;
-    const [yes, no] = el.querySelectorAll('button');
-    yes.addEventListener('click', async () => {
-        try {
-            yes.disabled = true;
-            await action();
-            el.remove();
-        }
-        catch (e) {
-            el.querySelector('p').textContent = e.message;
-            yes.disabled = false;
-        }
-    });
-    no.addEventListener('click', () => el.remove());
-    document.body.append(el);
+    const el = openFormModal(modalText('Confirm deletion', 'Confirmar exclusão'), [], action, {key:'journal-confirm',submitLabel:modalText('Delete','Excluir')});
+    const message = document.createElement('p'); message.textContent = text;
+    el.querySelector('[data-fields]').append(message);
 }
-function prompt(label, value, action) { const el = clone('prompt'); el.querySelector('label span').textContent = label; el.querySelector('input').value = value; el.addEventListener('submit', e => { e.preventDefault(); action(el.querySelector('input').value); el.remove(); }); el.querySelector('button[type=button]').addEventListener('click', () => el.remove()); document.body.append(el); el.querySelector('input').focus(); }
+function prompt(label, value, action) {
+    return openFormModal(label, [{name:'value',label,value,required:true}], form => action(form.elements.value.value), {key:'journal-prompt'});
+}
 function form(name, submit) {
-    dialog?.remove();
+    dialog?.close();
     const el = clone(name);
     dialog = el;
-    el.querySelector('.directory-dialog__close').addEventListener('click', () => el.remove());
-    el.querySelector('[data-cancel]')?.addEventListener('click', () => el.remove());
-    el.addEventListener('keydown', e => {
-        if (e.key === 'Escape') {
-            e.stopPropagation();
-            el.remove();
-        }
-    });
+    const footer = document.createElement('footer');
+    let cancel = el.querySelector('[data-cancel]');
+    if (!cancel) {
+        cancel = document.createElement('button'); cancel.type = 'button'; cancel.dataset.cancel = '';
+        cancel.textContent = modalText('Cancel','Cancelar');
+    }
+    footer.append(cancel, el.querySelector('[type=submit]')); el.append(footer);
+    const close = () => { if (!el.querySelector('fieldset').disabled) el.close(); };
+    el.querySelector('.directory-dialog__close').addEventListener('click', close);
+    cancel.addEventListener('click', close);
     el.addEventListener('submit', async (e) => {
         e.preventDefault();
         const fieldset = el.querySelector('fieldset');
         fieldset.disabled = true;
+        for (const button of el.querySelectorAll('button')) button.disabled = true;
         try {
             await submit(el);
-            el.remove();
+            el.close();
         }
         catch (e) {
             const p = el.querySelector('[role=alert]');
@@ -91,9 +85,10 @@ function form(name, submit) {
         }
         finally {
             fieldset.disabled = false;
+            for (const button of el.querySelectorAll('button')) button.disabled = false;
         }
     });
-    document.body.append(el);
+    mountModal(el, {canClose: () => !el.querySelector('fieldset').disabled});
     el.querySelector('input')?.focus();
     return el;
 }

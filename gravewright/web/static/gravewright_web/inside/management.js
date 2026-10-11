@@ -1,3 +1,16 @@
+import { mountModal } from '/static/gravewright_table/modal.js';
+function openPackageModal(element) {
+  const placeholder = document.createComment('package-modal');
+  element.before(placeholder); element.hidden = false;
+  const title = element.querySelector('header h2');
+  title.id ||= 'package-modal-' + crypto.randomUUID();
+  element.setAttribute('aria-labelledby', title.id);
+  element.addEventListener('close', () => {
+    element.hidden = true; placeholder.replaceWith(element);
+  }, {once:true});
+  mountModal(element, {canClose: () => !element.querySelector('button:disabled')});
+  element.parentElement.classList.add('module-catalog__overlay');
+}
 import { packageAction } from "/static/gravewright_modules/package-actions.js";
 import { HttpClient } from "/static/gravewright_modules/http-client.js";
 const http = new HttpClient();
@@ -213,7 +226,7 @@ function modules(root) {
         text(detail, '[data-description]', local?.description ?? row.description ?? '');
         text(detail, '[data-identity]', [row.id, row.version, local?.author ?? row.author, local?.license ?? row.license].filter(Boolean).join(' · '));
         text(detail, '[data-detail-status]', status);
-        detail.showModal();
+        openPackageModal(detail);
       };
       show(card, "[data-action=install]", !local);
       card.querySelector("[data-action=install]").onclick = () => run(root, async () => {
@@ -346,7 +359,7 @@ function modules(root) {
         const configuration = await http.get('/api/module-packages/install-local');
         text(localDialog, '[data-local-directory]', configuration.directory);
         localDialog.dataset.maxBytes = configuration.maxBytes;
-        localDialog.showModal();
+        openPackageModal(localDialog);
         localDialog.querySelector('input[type=file]').focus();
       } catch (error) {
         text(browser, '[role=alert]', error.message || ui('Could not read the local installation configuration.', 'Não foi possível ler a configuração da instalação local.', 'No se pudo leer la configuración de instalación local.'));
@@ -379,7 +392,7 @@ function modules(root) {
       });
     };
     document.addEventListener('keydown', event => {
-      if (browser.hidden || manager.querySelector('dialog[open]')) return;
+      if (browser.hidden || document.querySelector('.module-catalog__overlay')) return;
       if (event.key === 'Escape') { event.preventDefault(); closeBrowser(); }
       if (event.key === 'Tab') {
         const focusable = [...browser.querySelectorAll('button,input,select,a[href],[tabindex="0"]')].filter(el => !el.disabled && el.getClientRects().length);

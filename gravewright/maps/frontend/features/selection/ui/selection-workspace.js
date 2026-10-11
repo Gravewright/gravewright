@@ -1,3 +1,4 @@
+import {openFormModal,modalText} from '/static/gravewright_table/form-modal.js';
 import {sceneObjects,hit,corners,centerOf,transformedPoint} from '../model/objects.js';
 import {applySelection,transformMeasures} from '../model/selection-commands.js';
 import {effects,translatedCopies} from '../../effects/model/effects.js';
@@ -85,7 +86,12 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  function rotate(angle,defer=false){if(busy||drag||!chosen().length)return;preview={...(preview||{center:centerOf(chosen()),dx:0,dy:0,angle:0}),angle:(preview?.angle||0)+angle};publish();clearTimeout(timer);if(defer)timer=setTimeout(()=>void execute('transform'),180);else void execute('transform');}
  function copy(){clipboard=[...effects(state),...effects(state,'lighting')].filter(o=>selected.includes(o.key));menu?.remove();}
  async function paste(){if(!clipboard.length||busy)return;busy=true;try{for(const area of ['effects','light-selection']){const rows=translatedCopies(clipboard,lastPoint).filter(o=>(o.kind==='light')===(area==='light-selection'));if(rows.length)await api.command(area,'paste',{effects:rows});}await api.read();}catch(error){notice.textContent=error.message;notice.hidden=false;}finally{busy=false;}}
- function confirmDelete(){dialog?.remove();dialog=document.createElement('dialog');dialog.className='directory-dialog';const form=document.createElement('form'),title=document.createElement('h3'),text=document.createElement('p'),remove=document.createElement('button'),close=document.createElement('button');title.textContent='Remove scene objects';text.textContent=`Remove ${chosen().length} object(s)? Cards go to the discard pile; actor and asset definitions are preserved.`;remove.textContent='Remove selection';remove.type='submit';close.textContent='Cancel';close.type='button';close.onclick=()=>dialog.close();form.append(title,text,close,remove);form.onsubmit=e=>{e.preventDefault();void execute('delete');};dialog.append(form);document.body.append(dialog);dialog.onclose=()=>dialog.remove();dialog.showModal();}
+ function confirmDelete(){
+  dialog?.close();
+  dialog=openFormModal(modalText('Remove scene objects','Remover objetos da cena'),[],()=>execute('delete'),{key:'scene-selection-delete',submitLabel:modalText('Remove selection','Remover seleção')});
+  const text=document.createElement('p');text.textContent=modalText(`Remove ${chosen().length} selected object(s)?`,`Remover ${chosen().length} objeto(s) selecionado(s)?`);
+  dialog.querySelector('[data-fields]').append(text);
+ }
  function context(e){if(!active()||ignored(e))return;const o=pick(point(e));if(!o||o.kind==='token'&&!mixed())return;stop(e);cancel();lastPoint=point(e);if(!selected.includes(o.key))select([o.key]);menu=document.createElement('menu');menu.className='directory-context-menu gw-folder-menu';menu.style.position='fixed';menu.style.left=`${e.clientX}px`;menu.style.top=`${e.clientY}px`;
   function add(label,fn){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{menu?.remove();fn();};menu.append(b);}
   if(chosen().some(o=>['light','particle','shader'].includes(o.kind)))add('Copy lights and effects',copy);
@@ -98,7 +104,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  }
  function editObject(object,event){window.dispatchEvent(new CustomEvent('gravewright:selection-edit',{detail:{object,event}}));}
  function double(e){if(!active()||ignored(e))return;const o=pick(point(e));if(!o||o.kind==='token')return;stop(e);editObject(o,e);}
- function key(e){if(!active()||e.target.closest?.('input,textarea,select,[contenteditable=true],.directory-dialog')||document.querySelector('dialog[open]'))return;
+ function key(e){if(!active()||e.target.closest?.('input,textarea,select,[contenteditable=true],[role=dialog],[role=alertdialog]')||document.querySelector('.ownership-modal-overlay:not([hidden])'))return;
   if(e.target.closest?.('.image-workspace'))return;
   if(e.target.hasAttribute?.('data-image-resize')&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){
    const image=chosen()[0]?.data;if(!image||busy)return;stop(e);const corner=[{x:-1,y:-1},{x:1,y:-1},{x:1,y:1},{x:-1,y:1}][Number(e.target.dataset.imageResize)],factor=['ArrowUp','ArrowRight'].includes(e.key)?1.1:1/1.1,angle=image.rotation*Math.PI/180,dx=corner.x*image.natural_width*image.scale*(factor-1),dy=corner.y*image.natural_height*image.scale*(factor-1);
@@ -115,5 +121,5 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  window.addEventListener('keydown',key,{capture:true,signal});window.addEventListener('blur',cancel,{signal});
  window.addEventListener('gravewright:token-selection',()=>{if(!mixed())select((window.gravewrightTokenSelection||[]).map(id=>'token:'+id));},{signal});
  window.addEventListener('gravewright:map-viewport',paint,{signal});
- return {update(next){state=next;const valid=new Set(all().map(o=>o.key));selected=selected.filter(k=>valid.has(k));if(!active()){cancel();selected=[];}paint();},destroy(){abort.abort();cancel();dialog?.remove();svg.remove();notice.remove();}};
+ return {update(next){state=next;const valid=new Set(all().map(o=>o.key));selected=selected.filter(k=>valid.has(k));if(!active()){cancel();selected=[];}paint();},destroy(){abort.abort();cancel();dialog?.close();svg.remove();notice.remove();}};
 }

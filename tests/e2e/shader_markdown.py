@@ -17,7 +17,7 @@ def check(gm, player, data, output):
     editor=gm.locator('.effect-editor--shader')
     original=editor.locator('#effect-shader-source').input_value()
     editor.get_by_role('button',name='AI prompt',exact=True).click()
-    modal=gm.locator('dialog.shader-prompt-dialog')
+    modal=gm.locator('.shader-prompt-dialog')
     modal.get_by_label('Desired effect',exact=True).fill('A swirling sandstorm')
     modal.get_by_role('button',name='Copy instructions and continue',exact=True).click()
     modal.get_by_label('GLSL returned by the AI',exact=True).fill(raw)

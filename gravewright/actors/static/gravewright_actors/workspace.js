@@ -1,5 +1,6 @@
 import { detachWindow, restoreWindow } from '/static/gravewright_table/window-controls.js';
 import { writeReference } from '/static/gravewright_table/references.js';
+import { openFormModal, modalText } from '/static/gravewright_table/form-modal.js';
 import {
   beginTreeDrag,
   cancelTreeDrag,
@@ -214,19 +215,10 @@ async function open(actor, token) {
   });
 }
 function remove(actor) {
-  const el = clone("journal-confirm");
-  el.querySelector("p").textContent = "Remove " + actor.name + "?";
-  const b = el.querySelectorAll("button");
-  b[0].onclick = async () => {
-    try {
-      await command("actor.delete", { id: actor.id });
-      el.remove();
-    } catch (e) {
-      error(e.message);
-    }
-  };
-  b[1].onclick = () => el.remove();
-  document.body.append(el);
+  const el = openFormModal(modalText('Remove character','Remover personagem'), [], () => command('actor.delete', {id:actor.id}), {key:'actor-delete:'+actor.id,submitLabel:modalText('Delete','Excluir')});
+  const text = document.createElement('p');
+  text.textContent = modalText('Remove ','Remover ') + actor.name + '?';
+  el.querySelector('[data-fields]').append(text);
 }
 function paint() {
   if (!panel) return;
@@ -391,7 +383,8 @@ function paint() {
     panel.querySelector(".actor-directory__empty"),
     !view.visibleEntries.size,
   );
-  show(panel.querySelector('[data-actor-panel="upload"]'), state.systemId === "gravewright-pdf-system");
+  const uploadButton = panel.querySelector('[data-actor-panel="upload"]');
+  if (uploadButton) show(uploadButton, state.systemId === "gravewright-pdf-system");
   const templates = panel.querySelector("[data-templates]");
   show(templates, state.systemId === "gravewright-pdf-system");
   templates.replaceChildren();

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {normalizeShaderSource} from '../../gravewright/maps/frontend/features/effects/model/shader-source.js';
-import {shaderSource} from '../../gravewright/maps/frontend/features/effects/ui/shader-prompt-dialog.js';
+import {shaderSource} from '../../gravewright/maps/frontend/features/effects/model/shader-source.js';
 
 test('escaped fences and invisible formatting from copied responses are removed', () => {
     const source = 'void main() { finalColor = vec4(0.0); }';

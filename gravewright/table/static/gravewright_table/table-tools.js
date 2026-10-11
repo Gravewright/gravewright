@@ -58,7 +58,12 @@ window.addEventListener('keydown', e => {
     else if (e.key === 'Tab') {e.preventDefault();input.focus();}
   }
 });
-function openLobby() { if (lobby) {lobby.hidden = false;send('lobby.sync');} }
+function openLobby() {
+  if (!lobby) return;
+  const rosterToggle = document.querySelector('.game-menubar__roster > button');
+  if (rosterToggle?.getAttribute('aria-expanded') === 'true') rosterToggle.click();
+  lobby.hidden = false; send('lobby.sync');
+}
 window.addEventListener('gravewright:lobby-open', openLobby);
 // The original readiness panel is reached from the participants menu.
 const roster = document.querySelector('[data-roster]') || document.querySelector('.game-roster');
