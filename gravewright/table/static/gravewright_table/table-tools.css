@@ -679,6 +679,16 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
     gap: 6px;
 }
 
+.gw-combat-toolbar {
+    width: 100%;
+    justify-content: center;
+}
+
+.gw-combat-toolbar > .gw-combat-icon {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
 
 .gw-combat-rollbar {
     padding-bottom: 8px;
@@ -734,6 +744,11 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
 }
 
 
+[data-native-directory="combat"] {
+    --combat-current: #4ade80;
+    --combat-next: #facc15;
+}
+
 .gw-combat-combatant {
     display: flex;
     align-items: center;
@@ -779,6 +794,11 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
     font-variant-numeric: tabular-nums;
     font-size: 0.75rem;
     color: var(--text-faint);
+}
+
+.gw-combat-combatant__turn-star {
+    color: var(--combat-current);
+    font-size: 1rem;
 }
 
 

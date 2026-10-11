@@ -33,15 +33,18 @@ def check(gm,player,data,output):
     # Escape closes the shape editor; selecting a token requires Select mode.
     gm.get_by_role('button',name='Select',exact=True).click()
     gm.get_by_role('button',name='Token: Fighter',exact=True).click()
+    gm.get_by_role('button',name='Token: Fighter',exact=True).click(button='right')
+    gm.get_by_role('menuitem',name='Add to initiative',exact=True).click()
     gm.locator('[data-native-directory-toggle="combat"]').click()
     gm.locator('#combat-panel').wait_for(state='visible')
-    gm.locator('#combat-panel [data-combat-action="combatants/add-selected"]').click()
-    gm.locator('#combat-panel [data-combat-initiative]').fill('12 + A')
+    assert gm.locator('#combat-panel [data-combat-action^="initiative/roll-"]').count() == 0
+    assert gm.locator('#combat-panel .gw-combat-toolbar > button').count() == 5
+    gm.locator('#combat-panel [data-combat-initiative]').fill('12')
     gm.locator('#combat-panel [data-combat-initiative]').press('Tab')
     gm.locator('#combat-panel [data-combat-action="start"]').click()
     gm.locator('#combat-panel [data-combat-action="turn/next"]').click()
     gm.locator('#combat-panel .gw-combat-header__title').get_by_text('Round 2',exact=True).wait_for()
-    print('Combat selection, textual initiative and turn advancement verified',flush=True)
+    print('PDF combat selection, initiative rolling, manual initiative and turn advancement verified',flush=True)
     gm.locator('#combat-panel [data-close]').click()
     gm.locator('[data-native-directory-toggle="items"]').click()
     gm.locator('#items-panel').wait_for(state='visible')

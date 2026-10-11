@@ -27,7 +27,18 @@ def validate_asset(data, campaign_id):
 
 def register():
     from gravewright.campaigns.systems import register as register_system
-    register_system(DESCRIPTOR['systemId'], descriptor=DESCRIPTOR, sheet=SHEET, normalize=normalize, validate=validate_asset, remove_asset=remove_asset_references)
+    register_system(DESCRIPTOR['systemId'], descriptor=DESCRIPTOR, sheet=SHEET, normalize=normalize, validate=validate_asset, remove_asset=remove_asset_references,
+                    combat={'formula': '1d20 + @initiative', 'manual_input': 'number', 'roll': roll_initiative})
+
+
+def roll_initiative(formula, data):
+    """The PDF initiative mapping writes to init on the authoritative sheet."""
+    import re
+    from gravewright.dice.engine import evaluate
+    from gravewright.maps.objects import number
+    modifier = number(data.get('init', 0), -1e6, 1e6)
+    expression = re.sub(r'@initiative\b', lambda _: f'({modifier})', formula)
+    return evaluate(expression, 1)['value']['value']
 
 
 def remove_asset_references(campaign_id, asset):

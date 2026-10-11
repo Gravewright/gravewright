@@ -9,8 +9,8 @@ DEFAULT_SYSTEM = 'gravewright-pdf-system'
 _bundled = {}
 
 
-def register(system_id, *, descriptor, sheet, normalize, validate=None, remove_asset=None):
-    _bundled[system_id] = dict(descriptor=descriptor, sheet=sheet, normalize=normalize, validate=validate, remove_asset=remove_asset)
+def register(system_id, *, descriptor, sheet, normalize, validate=None, remove_asset=None, combat=None):
+    _bundled[system_id] = dict(descriptor=descriptor, sheet=sheet, normalize=normalize, validate=validate, remove_asset=remove_asset, combat=combat)
 
 
 def bundled(system_id):

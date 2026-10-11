@@ -45,6 +45,7 @@
         nextUp: "Next",
         moveUp: "Move up",
         moveDown: "Move down",
+        configure: "Configure initiative",
     };
 
     function el(tag, className, text) {
@@ -73,6 +74,18 @@
     function labelsFor(panel) {
         const data = panel?.dataset || {};
         const out = { ...FALLBACK_LABELS };
+        if (document.documentElement.lang.toLowerCase().startsWith('pt')) Object.assign(out, {
+            start: 'Iniciar combate', end: 'Encerrar combate', empty: 'Nenhum combatente nesta cena.',
+            noCombatants: 'Nenhum combatente na ordem.', inactive: 'Fora de combate', waitingGm: 'Aguardando o mestre.',
+            round: 'Rodada', turn: 'Turno', initiative: 'Iniciativa', rollAll: 'Rolar iniciativa',
+            rollNpcs: 'Rolar para NPCs', rollMissing: 'Rolar iniciativas pendentes', rollOne: 'Rolar iniciativa',
+            setInitiative: 'Definir iniciativa', previousTurn: 'Turno anterior', nextTurn: 'Próximo turno',
+            previousRound: 'Rodada anterior', nextRound: 'Próxima rodada', addSelected: 'Adicionar tokens selecionados',
+            actions: 'Ações do combatente', centerToken: 'Centralizar token', openSheet: 'Abrir ficha',
+            setTurn: 'Definir turno atual', remove: 'Remover do combate', hide: 'Ocultar dos jogadores',
+            reveal: 'Exibir aos jogadores', markDefeated: 'Marcar como derrotado', clearDefeated: 'Remover derrota',
+            nextUp: 'Próximo', moveUp: 'Mover para cima', moveDown: 'Mover para baixo', configure: 'Configurar iniciativa',
+        });
         Object.keys(FALLBACK_LABELS).forEach((key) => {
             const value = data[`label${key.charAt(0).toUpperCase()}${key.slice(1)}`];
             if (value) out[key] = value;
@@ -253,7 +266,13 @@
         row.dataset.combatantId = combatant.id;
         row.dataset.tokenId = combatant.token_id || "";
 
-        row.append(el("span", "gw-combat-combatant__position", combatant.position), portrait(combatant));
+        const position = el("span", "gw-combat-combatant__position", combatant.is_current ? '★' : combatant.position);
+        if (combatant.is_current) {
+            position.classList.add('gw-combat-combatant__turn-star');
+            position.setAttribute('aria-label', L.turn);
+            position.title = L.turn;
+        }
+        row.append(position, portrait(combatant));
 
         const main = el("div", "gw-combat-combatant__main");
         main.appendChild(el("span", "gw-combat-combatant__name", combatant.name || "???"));
@@ -292,15 +311,11 @@
     }
 
     function toolbar(panel, state, L, active) {
-        const selected = Number(panel.dataset.selectedTokenCount || 0);
         const bar = el("div", "gw-combat-toolbar");
         bar.append(
-            button(active ? "end" : "start", active ? "ph-stop" : "ph-play", active ? L.end : L.start),
-            button("combatants/add-selected", "ph-plus-circle",
-                selected ? `${L.addSelected} (${selected})` : L.addSelected, { disabled: selected < 1 }),
+            button(active ? "end" : "start", active ? "ph-stop" : "ph-play", active ? L.end : L.start, {disabled: !state.sceneId || !active && !state.combatants?.length}),
             button("turn/previous", "ph-caret-left", L.previousTurn, { disabled: !active }),
             button("turn/next", "ph-caret-right", L.nextTurn, { primary: true, disabled: !active }),
-            button("combatants/add-actor", "ph-user-plus", "Add actor"),
             button("round/previous", "ph-arrow-counter-clockwise", L.previousRound, { disabled: !active || state.round <= 1 }),
             button("round/next", "ph-arrow-clockwise", L.nextRound, { disabled: !active }),
         );
@@ -310,7 +325,7 @@
 
 
     function canRoll(state) {
-        return state?.config?.input === "roll";
+        return systemId(state) !== 'gravewright-pdf-system' && state?.config?.input === "roll";
     }
 
     function rollBar(state, L, active) {
@@ -340,7 +355,11 @@
         target.appendChild(header(state, L, active));
         if (isGm) {
             target.appendChild(toolbar(panel, state, L, active));
-            if (canRoll(state)) target.appendChild(rollBar(state, L, active));
+            if (canRoll(state)) target.appendChild(rollBar(state, L, combatants.length > 0));
+        } else if (active && combatants.some(row => row.current && row.canControl)) {
+            const controls = el('div', 'gw-combat-toolbar');
+            controls.appendChild(button('turn/next', 'ph-caret-right', L.nextTurn, {primary: true}));
+            target.appendChild(controls);
         }
 
         const list = el("div", "gw-combat-list");

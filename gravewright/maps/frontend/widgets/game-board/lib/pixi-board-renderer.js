@@ -357,7 +357,7 @@ export class PixiBoardRenderer {
         view.appearance = key;
         view.root.alpha = piece.hidden ? .4 : 1;
         view.art.angle = piece.rotation ?? 0;
-        view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.mask ? 0 : .85 }).stroke({ width: Math.max(1, piece.size * (piece.selected ? .08 : .04)), color: piece.accent });
+        view.ring.clear().ellipse(0, 0, radius, radiusY).fill({ color: PIECE_GROUND, alpha: view.mask ? 0 : .85 }).stroke({ width: Math.max(1, piece.size * .04), color: piece.accent });
         view.mask?.clear().ellipse(0, 0, radius, radiusY).fill({ color: "#ffffff" });
         if (view.art instanceof Sprite) {
             const source = Math.max(view.art.texture.width, view.art.texture.height) || 1;
@@ -379,8 +379,6 @@ export class PixiBoardRenderer {
             const r = radius * .55;
             details.moveTo(-r, -r).lineTo(r, r).moveTo(r, -r).lineTo(-r, r).stroke({ width: 4, color: '#e77c7c' });
         }
-        if (piece.selected || piece.hovered)
-            details.ellipse(0, 0, radius + 3, radiusY + 3).stroke({ width: 2, color: piece.accent, alpha: .8 });
         Object.entries(piece.bars ?? {}).slice(0, 2).forEach(([slot, bar], index) => {
             if (!(bar.max > 0))
                 return;

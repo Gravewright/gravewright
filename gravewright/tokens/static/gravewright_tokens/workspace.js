@@ -123,6 +123,8 @@ export function createTokens(surface, board, map, gm, initial) {
   const quick = quickControls(surface, { campaign, gm, command, read, repaint,
     openSheet: token => controller.call('openSheet', token) });
   const conditionsChanged = () => repaint();
+  const combatChanged = () => repaint();
+  window.addEventListener('gravewright:combat-state', combatChanged);
   window.addEventListener('storage', conditionsChanged);
   window.addEventListener('gravewright:condition-layout', conditionsChanged);
   controller = tokenController(svg, {
@@ -338,6 +340,18 @@ export function createTokens(surface, board, map, gm, initial) {
         if (v.selection.length === 1 && t.canControl)
           item('Gear', document.documentElement.lang === 'pt-BR' ? 'Controles rápidos' : document.documentElement.lang === 'es' ? 'Controles rápidos' : 'Quick controls', () => quick.open(t.id));
         if (gm) {
+          const locale = document.documentElement.lang;
+          const addLabel = window.gravewrightLocale?.messages?.text?.['Add to initiative']
+            || (locale.startsWith('pt') ? 'Adicionar à iniciativa' : locale.startsWith('es') ? 'Añadir a la iniciativa' : 'Add to initiative');
+          const selectedIds = v.selection.map(token => token.id);
+          item('Sword', addLabel, async () => {
+            const {gravewright} = await import('/static/gravewright_modules/frontend-api.js');
+            let encounter = await gravewright.combat.state({sceneId: map.id});
+            for (const tokenId of new Set(selectedIds)) {
+              if (encounter.combatants.some(entry => entry.token_id === tokenId)) continue;
+              encounter = await gravewright.combat.add({sceneId: map.id, tokenId, version: encounter.version});
+            }
+          }, v.busy);
           if (v.selection.length === 1)
             item('UsersThree', 'Permissions', () => openPermissions('tokens', t.id));
           item(
@@ -418,6 +432,9 @@ export function createTokens(surface, board, map, gm, initial) {
     const group = node("g", {
       transform: `translate(${view.x} ${view.y}) scale(${scale})`,
     });
+    const combat = window.gravewrightCombatState;
+    const turns = new Map(combat?.active && combat.sceneId === map.id
+      ? combat.combatants.filter(entry => entry.token_id).map(entry => [entry.token_id, entry]) : []);
     for (const stored of v.displayed) {
       let t=stored;
       if(selectionPreview?.objects.some(o=>o.key==='token:'+stored.id)){
@@ -426,6 +443,31 @@ export function createTokens(surface, board, map, gm, initial) {
         const y=g.y+(stored.gridY+(stored.heightCells??stored.cells)/2)*g.cell-center.y;
         t={...stored,gridX:(center.x+x*Math.cos(a)-y*Math.sin(a)+dx-g.x)/g.cell-stored.cells/2,
           gridY:(center.y+x*Math.sin(a)+y*Math.cos(a)+dy-g.y)/g.cell-(stored.heightCells??stored.cells)/2,rotation:(stored.rotation||0)+angle};
+      }
+      const turn = turns.get(t.id);
+      if (turn?.is_current || turn?.is_next) {
+        const nextTurn = !turn.is_current;
+        const turnClass = nextTurn ? ' token-workspace__turn--next' : '';
+        const radiusX = t.cells * g.cell / 2;
+        const radiusY = (t.heightCells ?? t.cells) * g.cell / 2;
+        const spread = 20 / scale;
+        group.append(node('ellipse', {
+          class: 'token-workspace__turn-wave' + turnClass,
+          cx: (t.gridX + t.cells / 2) * g.cell,
+          cy: (t.gridY + (t.heightCells ?? t.cells) / 2) * g.cell,
+          rx: radiusX + spread, ry: radiusY + spread,
+          style: `--wave-start-x:${radiusX / (radiusX + spread)};--wave-start-y:${radiusY / (radiusY + spread)}`,
+          'stroke-width': 3, 'vector-effect': 'non-scaling-stroke', 'pointer-events': 'none',
+        }));
+        group.append(node('ellipse', {
+        class: 'token-workspace__turn-disc' + turnClass,
+        [nextTurn ? 'data-combat-next' : 'data-combat-current']: t.id,
+        cx: (t.gridX + t.cells / 2) * g.cell,
+        cy: (t.gridY + (t.heightCells ?? t.cells) / 2) * g.cell,
+        rx: t.cells * g.cell / 2 + 4 / scale,
+        ry: (t.heightCells ?? t.cells) * g.cell / 2 + 4 / scale,
+        'stroke-width': 3 / scale, 'pointer-events': 'none',
+        }));
       }
       const r = node("rect", {
         x: t.gridX * g.cell,
@@ -822,6 +864,7 @@ export function createTokens(surface, board, map, gm, initial) {
       closed = true;
       quick.destroy();
       window.removeEventListener('storage', conditionsChanged);
+      window.removeEventListener('gravewright:combat-state', combatChanged);
       window.removeEventListener('gravewright:condition-layout', conditionsChanged);
       window.removeEventListener('gravewright:mixed-selection',mixedSelection);
       window.removeEventListener('gravewright:selection-preview',mixedPreview);

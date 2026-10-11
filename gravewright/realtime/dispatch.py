@@ -35,6 +35,8 @@ def changed(campaign_id, user_id, resource, action, request_id, result=None):
     events = []
     if resource in ('actors', 'tokens'):
         events = [{'type': name} for name in ('room.actors','room.tokens','room.map_layers')]
+        if resource == 'actors' or action in ('condition-add', 'condition-remove', 'remove', 'hidden', 'configure'):
+            events.append({'type': 'room.resources', 'module': 'combat'})
     elif resource == 'maps':
         events = [{'type':'room.map_layers' if action == 'objects' else 'room.maps'}]
         if action == 'update':

@@ -86,17 +86,25 @@ if (table) {
     root.className = "gw-module-surface";
     root.dataset.domain = domain;
     element.append(root);
-    const native = [...element.children].filter((e) => e !== root), hidden = native.map((e) => e.hidden);
+    const native = [...element.children].filter((e) => e !== root);
+    let hidden, suppressed = false;
     const release = runtime.attach({ domain, root, viewport, context: { tableId, mountId: "", moduleSetRevision: "0", ...context }, defaultVisible: async (visible) => {
       if (element.setDefaultVisible) await element.setDefaultVisible(visible);
-      else native.forEach((el, i) => el.hidden = visible ? hidden[i] : true);
+      else if (!visible && !suppressed) {
+        hidden = native.map(el => el.hidden);
+        suppressed = true;
+        native.forEach(el => el.hidden = true);
+      } else if (visible && suppressed) {
+        native.forEach((el, i) => el.hidden = hidden[i]);
+        suppressed = false;
+      }
     } });
     const releasePublic = attachSurface(element, domain, { tableId, ...context });
     surfaces.set(element, () => {
       releasePublic();
       release();
       root.remove();
-      native.forEach((el, i) => el.hidden = hidden[i]);
+      if (suppressed) native.forEach((el, i) => el.hidden = hidden[i]);
     });
   }, scan = function() {
     document.querySelectorAll(".item-sheet[data-item-id]").forEach(el=>attach(el,"item.sheet",{itemId:el.dataset.itemId}));

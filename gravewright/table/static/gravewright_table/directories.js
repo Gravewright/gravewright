@@ -1,11 +1,11 @@
-import { openFormModal } from './form-modal.js';
+import { openFormModal, modalText } from './form-modal.js';
 import { writeReference } from './references.js';
 import { restoreWindow } from './window-controls.js';
 import { gravewright } from '/static/gravewright_modules/frontend-api.js';
 import { executeNative } from '/static/gravewright_modules/domain-api.js';
 import { openPermissions } from './permissions.js';
 import { initialContent, restoreContent, contentReady } from './content-state.js';
-const root=document.querySelector('#table-workspace'),table=root?.dataset.tableId,gm=root?.dataset.role==='gm',states={items:initialContent('items')},windows=new Map();let scene;
+const root=document.querySelector('#table-workspace'),table=root?.dataset.tableId,gm=root?.dataset.role==='gm',states={items:initialContent('items')},windows=new Map();let scene=window.gravewrightMaps?.current?.id||null;
 const modules=['items','combat','compendiums'],pending={};
 const panel=name=>document.querySelector(`[data-native-directory="${name}"]`);
 function notify(name,error){const node=panel(name)?.querySelector('[data-error]');if(node){node.hidden=!error;node.textContent=error?.message||'';}}
@@ -46,7 +46,7 @@ function itemSheet(item){
 }
 
 
-function render(name){if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
+function render(name){if(name==='combat'&&states.combat){window.gravewrightCombatState={...states.combat,sceneId:scene};window.dispatchEvent(new CustomEvent('gravewright:combat-state',{detail:window.gravewrightCombatState}));}if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
  if(name==='compendiums'){if(!target._content)target._content=window.gravewrightTableMedia?.mountCompendiums(target.querySelector('[data-entries]'));else target._content.call('load');return;}
  if(name==='combat'){if(target.contains(document.activeElement)&&document.activeElement.matches('[data-combat-initiative]'))return;target.dataset.selectedTokenCount=String(window.gravewrightTokenSelection?.length||0);window.GravewrightCombatPanel?.renderPanel(target,state);if(pending[name])target.querySelectorAll('button,input').forEach(el=>el.disabled=true);return;}
  const list=target.querySelector('[data-entries]'),query=target.querySelector('input[type=search]').value.toLowerCase();list.replaceChildren();
@@ -65,18 +65,20 @@ document.addEventListener('click',e=>{const toggle=e.target.closest('[data-nativ
 window.addEventListener('gravewright:resources',({detail})=>{if(modules.includes(detail.module)&&(detail.module!=='combat'||(detail.sceneId??null)===(scene??null))){states[detail.module]=detail.state;render(detail.module);}});
 restoreContent('items', () => render('items'));
 window.addEventListener('gravewright:connected',()=>{for(const name of modules)window.gravewrightRealtime.subscribeModule(name,scene);});
-window.addEventListener('gravewright:module-scene',()=>{scene=window.gravewrightMaps?.current?.id||null;states.combat={active:false,round:0,turn:0,combatants:[],version:0};render('combat');for(const name of modules)window.gravewrightRealtime?.subscribeModule(name,scene);});
+window.addEventListener('gravewright:module-scene',()=>{const next=window.gravewrightMaps?.current?.id||null;if(next===scene)return;scene=next;states.combat={active:false,round:0,turn:0,combatants:[],version:0};render('combat');for(const name of modules)window.gravewrightRealtime?.subscribeModule(name,scene);});
 window.addEventListener('gravewright:search-open',({detail})=>{if(detail.type==='item')void refresh('items').then(()=>{const item=states.items.items.find(i=>i.id===detail.id);if(item)itemSheet(item);});if(detail.type==='compendium'){panel('compendiums').hidden=false;void refresh('compendiums');}});
 const combat=panel('combat');
-combat?.addEventListener('change',e=>{if(e.target.dataset.combatInitiative)void command('combat','initiative',{tokenId:e.target.dataset.combatInitiative,value:states.combat.config?.input==='text'?e.target.value:Number(e.target.value),version:Number(e.target.dataset.combatVersion)}).catch(()=>{});});
+function combatantIdentity(id){const entry=states.combat?.combatants.find(row=>row.id===id);return entry?.token_id?{tokenId:entry.token_id}:{actorId:entry?.actor_id};}
+combat?.addEventListener('change',e=>{if(e.target.dataset.combatInitiative)void command('combat','initiative',{...combatantIdentity(e.target.dataset.combatInitiative),value:states.combat.config?.input==='text'?e.target.value:Number(e.target.value),version:Number(e.target.dataset.combatVersion)}).catch(()=>{});});
 combat?.querySelector('[data-initiative-config]')?.addEventListener('submit',e=>{e.preventDefault();void command('combat','configure',{formula:e.target.elements.formula.value,version:states.combat?.version||0}).catch(()=>{});});
 combat?.addEventListener('click',async e=>{const b=e.target.closest('[data-combat-action]');if(!b)return;const action=b.dataset.combatAction,tokenId=b.dataset.combatantId;try{
- if(action==='combatants/add-actor'){const r=await fetch(`/api/containers/${table}/actors`);if(!r.ok)throw Error('Unable to load actors.');const data=await r.json();dialog('Add actor',[{name:'actor',label:'Actor',options:data.actors.map(a=>({value:a.id,label:a.name}))}],form=>command('combat','add',{actorId:form.elements.actor.value,version:states.combat?.version||0}));return;}
- if(action==='combatants/add-selected'){for(const id of window.gravewrightTokenSelection||[])await command('combat','add',{tokenId:id,version:states.combat?.version||0});return;}
+ if(action==='initiative/configure'){dialog(modalText('Combat initiative','Iniciativa do combate'),[{name:'formula',label:modalText('Roll formula (leave empty for manual initiative)','Fórmula de rolagem (deixe vazio para iniciativa manual)'),value:states.combat?.config?.formula||''}],form=>command('combat','configure',{formula:form.elements.formula.value,version:states.combat?.version||0}),{key:'combat:initiative'});return;}
+ if(action==='combatants/add-actor'){const r=await fetch(`/api/containers/${table}/actors`);if(!r.ok)throw Error('Unable to load actors.');const data=await r.json();dialog(modalText('Add character','Adicionar personagem'),[{name:'actor',label:modalText('Character','Personagem'),options:data.actors.map(a=>({value:a.id,label:a.name}))}],form=>command('combat','add',{actorId:form.elements.actor.value,version:states.combat?.version||0}));return;}
+ if(action==='combatants/add-selected'){for(const id of [...(window.gravewrightTokenSelection||[])])await command('combat','add',{tokenId:id,version:states.combat?.version||0});return;}
  if(action==='token/sheet'){const token=(window.gravewrightTokenState?.tokens||[]).find(t=>t.id===b.dataset.tokenId);if(token)window.gravewrightActors.open(token.actorId,token);return;}
  if(action==='token/focus'){window.dispatchEvent(new CustomEvent('gravewright:focus-token',{detail:{id:b.dataset.tokenId}}));return;}
  const actions={end:'stop',start:'start','turn/next':'next','turn/previous':'previous','round/next':'next-round','round/previous':'previous-round','turn/set':'set-turn','order/up':'order-up','order/down':'order-down','combatants/remove':'remove','initiative/roll-all':'roll','initiative/roll-npcs':'roll','initiative/roll-missing':'roll','initiative/roll-one':'roll','flags/hidden':'toggle','flags/defeated':'toggle'};
- await command('combat',actions[action],{tokenId,scope:action.startsWith('initiative/roll-')?action.slice('initiative/roll-'.length):undefined,version:states.combat?.version||0,...action==='flags/hidden'?{hidden:b.dataset.value==='1'}:{},...action==='flags/defeated'?{defeated:b.dataset.value==='1'}:{}});
+ await command('combat',actions[action],{...combatantIdentity(tokenId),scope:action.startsWith('initiative/roll-')?action.slice('initiative/roll-'.length):undefined,version:states.combat?.version||0,...action==='flags/hidden'?{hidden:b.dataset.value==='1'}:{},...action==='flags/defeated'?{defeated:b.dataset.value==='1'}:{}});
  }catch(error){notify('combat',error);}});
 window.addEventListener('gravewright:token-selection',()=>{if(combat&&!combat.hidden&&!combat.contains(document.activeElement))render('combat');});
 window.gravewrightItems={open:async id=>{await refresh('items');const item=states.items.items.find(i=>i.id===id);if(item)itemSheet(item);}};

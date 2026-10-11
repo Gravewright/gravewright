@@ -236,6 +236,17 @@ O auxiliar declarativo de fórmulas em `combat/formula_engine.py` é distinto da
 gramática de dados do chat. A iniciativa atual chama `dice.engine.evaluate`; alterar
 um interpretador não altera automaticamente o outro.
 
+O PDF System fornece seus próprios padrões de combate e cálculo de iniciativa
+pelo registro de sistemas. A fórmula padrão é `1d20 + @initiative`; a variável
+`@initiative` lê o valor canônico `init` alimentado pelo mapeamento do PDF.
+Tokens vinculados usam a ficha do personagem; tokens independentes usam sua
+cópia. A API de combate permite fórmulas por cena e rolagens antes do início.
+O gerenciador do PDF System oferece iniciativa numérica manual, sem controles
+de rolagem ou fórmula. Tokens são adicionados pelo menu de contexto. Alterações
+na ordem preservam o combatente do turno atual. Outros sistemas não herdam
+essas regras do PDF System. Os tokens atual e próximo recebem indicadores
+expansivos verde e amarelo, também usados na lateral do gerenciador.
+
 ## Arquivos portáteis e administração
 
 `administration/archives.py` define explicitamente os modelos de conteúdo permitidos.

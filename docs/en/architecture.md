@@ -229,6 +229,16 @@ The older declarative formula helper in `combat/formula_engine.py` is distinct f
 the chat dice grammar. Current combat initiative calls `dice.engine.evaluate`;
 changing one engine does not automatically change the other.
 
+The bundled PDF System supplies its own combat defaults and initiative evaluator
+through the system registry. Its default formula is `1d20 + @initiative`, where
+`@initiative` reads the PDF mapping's canonical `init` value. Linked tokens use
+the actor sheet; independent tokens use their snapshot. The combat API supports
+per-scene formulas and rolls before combat starts. The PDF System tracker exposes
+manual numeric initiative, without roll or formula controls. Tokens are added
+through their context menu. Reordering during combat preserves the current
+combatant. Other systems do not inherit these PDF rules. Current and next tokens
+have green and yellow expanding indicators, mirrored in the tracker sidebar.
+
 ## Archives and host administration
 
 `administration/archives.py` explicitly allowlists native content models. Exports

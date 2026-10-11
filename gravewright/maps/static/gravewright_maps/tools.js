@@ -339,6 +339,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     svg.append(group);
     for (const o of all().filter((o2) => ["light", "particle", "shader", "sound"].includes(o2.kind))) group.append(node("circle", { cx: o.x, cy: o.y, r: 5 / v.scale, fill: o.kind === "sound" ? "#65c9b8" : "#cda5e8" }));
     for (const original of chosen()) {
+      if (original.kind === "token") continue;
       const o = resizePreview?.id === original.id ? { ...original, ...resizePreview, width: resizePreview.natural_width * resizePreview.scale, height: resizePreview.natural_height * resizePreview.scale } : original;
       const vertices = corners(o), points = vertices.map((p) => preview ? transformedPoint(p, preview.center, preview.dx, preview.dy, preview.angle) : p).map((p) => `${p.x},${p.y}`).join(" ");
       group.append(node("polygon", { points, fill: "#e1b46608", stroke: "#ffe29a", "stroke-width": 1.5 / v.scale, "stroke-dasharray": `${5 / v.scale} ${3 / v.scale}`, "data-selected-object": o.key }));
