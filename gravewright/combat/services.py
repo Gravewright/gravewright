@@ -79,7 +79,13 @@ def state(who, scene_id=None):
         if not isinstance(bars, dict) or any(type(bars.get(key)) not in (int,float) or not math.isfinite(bars[key]) for key in ('value','max')):
             bars={}
         maximum=bars.get('max',0);value=bars.get('value',0)
+        resources=[]
+        for slot in ('bar_1','bar_2'):
+            resource=source_bars.get(slot) if isinstance(source_bars,dict) else None
+            if controlled and isinstance(resource,dict) and all(type(resource.get(key)) in (int,float) and math.isfinite(resource[key]) for key in ('value','max')) and resource['max']>0:
+                resources.append(dict(slot=slot,value=resource['value'],max=resource['max'],percent=resource['value']/resource['max']*100))
         rows.append({'position':len(rows)+1,'conditions_count':len(token.conditions) if token else len(actor.data.get('conditions',[])),
+            'bars':resources,
             'bar':{'value':value,'max':maximum,'percent':value/maximum*100} if controlled and maximum>0 else None,
             'is_next':row.active and index==next_index,'has_acted':row.active and index<row.turn,
             **entry,'id':identity(entry),'token_id':entry.get('tokenId'),'actor_id':str(actor.pk),
@@ -106,6 +112,7 @@ def command(who,action,p):
             old['tokenId']=identity(row.combatants[old['turn']])
     previous_round=row.round
     current_id=identity(row.combatants[row.turn]) if row.combatants and row.turn<len(row.combatants) else None
+    previous_entry=deepcopy(row.combatants[row.turn]) if row.combatants and row.turn<len(row.combatants) else None
     if action=='add':
         if p.get('tokenId'):
             token=tokens.get(p['tokenId'],who)
@@ -192,6 +199,11 @@ def command(who,action,p):
         remaining={identity(c) for c in row.combatants}
         row.history=[old for old in row.history if old.get('tokenId') in remaining]
     if action in ('next','next-round') and row.combatants:
+        from .conditions import advance as advance_conditions
+        boundary=row.round>previous_round
+        if previous_entry:
+            advance_conditions(row,'end',previous_entry,round_boundary=boundary)
+        advance_conditions(row,'start',row.combatants[row.turn],round_boundary=boundary)
         from .effects import advance
         active=row.combatants[row.turn]
         advance(who.campaign_id,active.get('tokenId') if action=='next' else None,actor_id=active.get('actorId') if action=='next' else None,new_round=row.round>previous_round)

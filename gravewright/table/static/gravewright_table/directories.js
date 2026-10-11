@@ -5,6 +5,7 @@ import { gravewright } from '/static/gravewright_modules/frontend-api.js';
 import { executeNative } from '/static/gravewright_modules/domain-api.js';
 import { openPermissions } from './permissions.js';
 import { initialContent, restoreContent, contentReady } from './content-state.js';
+import { mountCompendiums } from './compendiums.js';
 const root=document.querySelector('#table-workspace'),table=root?.dataset.tableId,gm=root?.dataset.role==='gm',states={items:initialContent('items')},windows=new Map();let scene=window.gravewrightMaps?.current?.id||null;
 const modules=['items','combat','compendiums'],pending={};
 const panel=name=>document.querySelector(`[data-native-directory="${name}"]`);
@@ -47,7 +48,7 @@ function itemSheet(item){
 
 
 function render(name){if(name==='combat'&&states.combat){window.gravewrightCombatState={...states.combat,sceneId:scene};window.dispatchEvent(new CustomEvent('gravewright:combat-state',{detail:window.gravewrightCombatState}));}if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
- if(name==='compendiums'){if(!target._content)target._content=window.gravewrightTableMedia?.mountCompendiums(target.querySelector('[data-entries]'));else target._content.call('load');return;}
+ if(name==='compendiums'){if(!target._content)target._content=mountCompendiums(target.querySelector('[data-entries]'),state);else target._content.update(state);return;}
  if(name==='combat'){if(target.contains(document.activeElement)&&document.activeElement.matches('[data-combat-initiative]'))return;target.dataset.selectedTokenCount=String(window.gravewrightTokenSelection?.length||0);window.GravewrightCombatPanel?.renderPanel(target,state);if(pending[name])target.querySelectorAll('button,input').forEach(el=>el.disabled=true);return;}
  const list=target.querySelector('[data-entries]'),query=target.querySelector('input[type=search]').value.toLowerCase();list.replaceChildren();
  if(name==='items'){
@@ -72,6 +73,25 @@ function combatantIdentity(id){const entry=states.combat?.combatants.find(row=>r
 combat?.addEventListener('change',e=>{if(e.target.dataset.combatInitiative)void command('combat','initiative',{...combatantIdentity(e.target.dataset.combatInitiative),value:states.combat.config?.input==='text'?e.target.value:Number(e.target.value),version:Number(e.target.dataset.combatVersion)}).catch(()=>{});});
 combat?.querySelector('[data-initiative-config]')?.addEventListener('submit',e=>{e.preventDefault();void command('combat','configure',{formula:e.target.elements.formula.value,version:states.combat?.version||0}).catch(()=>{});});
 combat?.addEventListener('click',async e=>{const b=e.target.closest('[data-combat-action]');if(!b)return;const action=b.dataset.combatAction,tokenId=b.dataset.combatantId;try{
+ if(action==='resource/edit'){
+  const entry=states.combat?.combatants.find(row=>row.id===tokenId),slot=b.dataset.resourceSlot;
+  if(!entry?.canControl||!['bar_1','bar_2'].includes(slot))return;
+  const resource=entry.bars?.find(bar=>bar.slot===slot)||entry.bar;
+  const label=slot==='bar_2'?modalText('Bar 2','Barra 2'):modalText('Bar 1','Barra 1');
+  dialog(`${entry.name} · ${label}`,[{name:'value',label:modalText('Value (+3, -5 or 10)','Valor (+3, -5 ou 10)'),value:String(resource.value),required:true}],async form=>{
+   const raw=form.elements.value.value.trim().replace(',','.');
+   if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(raw))throw Error(modalText('Enter a valid number.','Informe um número válido.'));
+   const response=await fetch(`/api/containers/${table}/actors/${entry.actor_id}/sheet${entry.token_id?'?tokenId='+encodeURIComponent(entry.token_id):''}`,{cache:'no-store'});
+   if(!response.ok)throw Error(modalText('Resource unavailable.','Recurso indisponível.'));
+   const sheet=await response.json(),bar=sheet.data?.bars?.[slot];
+   if(!sheet.canEdit||!bar||!Number.isFinite(bar.value)||!(bar.max>0))throw Error(modalText('Resource unavailable.','Recurso indisponível.'));
+   const value=/^[+-]/.test(raw)?bar.value+Number(raw):Number(raw);
+   if(!Number.isFinite(value))throw Error(modalText('Enter a valid number.','Informe um número válido.'));
+   bar.value=value;
+   await gravewright.actors.saveSheet({actorId:entry.actor_id,tokenId:entry.token_id||undefined,name:sheet.name,version:sheet.version,sheetVersion:sheet.sheetVersion,data:sheet.data});
+   await refresh('combat');
+  },{key:`combat:resource:${tokenId}:${slot}`});return;
+ }
  if(action==='initiative/configure'){dialog(modalText('Combat initiative','Iniciativa do combate'),[{name:'formula',label:modalText('Roll formula (leave empty for manual initiative)','Fórmula de rolagem (deixe vazio para iniciativa manual)'),value:states.combat?.config?.formula||''}],form=>command('combat','configure',{formula:form.elements.formula.value,version:states.combat?.version||0}),{key:'combat:initiative'});return;}
  if(action==='combatants/add-actor'){const r=await fetch(`/api/containers/${table}/actors`);if(!r.ok)throw Error('Unable to load actors.');const data=await r.json();dialog(modalText('Add character','Adicionar personagem'),[{name:'actor',label:modalText('Character','Personagem'),options:data.actors.map(a=>({value:a.id,label:a.name}))}],form=>command('combat','add',{actorId:form.elements.actor.value,version:states.combat?.version||0}));return;}
  if(action==='combatants/add-selected'){for(const id of [...(window.gravewrightTokenSelection||[])])await command('combat','add',{tokenId:id,version:states.combat?.version||0});return;}

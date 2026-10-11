@@ -801,6 +801,25 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
     font-size: 1rem;
 }
 
+.gw-compendiums{display:grid;gap:8px;min-width:0}
+.gw-compendiums>input,.gw-compendiums select{box-sizing:border-box;width:100%;min-width:0;padding:7px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface-field,#10151b);color:var(--text);font:inherit;font-size:12px}
+.gw-compendiums__filters{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gw-compendiums__pack{border-bottom:1px solid var(--border);padding:4px 0}
+.gw-compendiums__pack>summary{cursor:pointer;padding:6px 0;font-weight:600;font-size:12px;overflow-wrap:anywhere}
+.gw-compendiums__pack>summary small{float:right;color:var(--text-muted);margin-left:6px}
+.gw-compendiums__pack>button{margin:4px 0;font-size:11px}
+.gw-compendiums__entry{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 6px;padding:6px 0;border-top:1px solid var(--border)}
+.gw-compendiums__entry[draggable=true]{cursor:grab}
+.gw-compendiums__entry>small{grid-column:1;color:var(--text-muted);font-size:10px}
+.gw-compendiums__entry>button:last-child:not(.gw-compendiums__name){grid-column:2;grid-row:1/3;font-size:11px}
+.gw-compendiums__entry .gw-compendiums__name{justify-content:flex-start;text-align:left;display:block;width:100%;padding:0;min-height:0;border:0;background:transparent;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gw-compendiums__empty{margin:8px 0;color:var(--text-muted);font-size:12px}
+.gw-compendiums__error{color:var(--danger-text,#ffaaaa);font-size:12px}
+.gw-compendium-drop{outline:2px solid var(--accent);outline-offset:-3px}
+.ownership-modal-overlay>.table-modal-window.gw-compendium-preview{width:min(500px,calc(100vw - 24px));min-height:0;max-height:80vh}
+.gw-compendium-preview__type{margin:0 0 12px;color:var(--text-muted);font-size:11px}
+.gw-compendium-preview__text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.6}
+
 
 .gw-combat-combatant__portrait {
     position: relative;
@@ -905,11 +924,25 @@ body[data-game-layout="classic"] .game-panel[data-modal-id^="panel-settings-"] .
 }
 
 
-.gw-combat-bar {
+.gw-combat-combatant .gw-combat-bar {
     display: flex;
     align-items: center;
     gap: 6px;
+    width: 100%;
+    min-height: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
 }
+
+.gw-combat-bar:hover { background: #ffffff08; }
+.gw-combat-bar:focus-visible { outline: 1px solid var(--accent); outline-offset: 2px; }
+.gw-combat-bar--secondary .gw-combat-bar__fill { background: #3b82f6; }
 
 
 .gw-combat-bar__track {

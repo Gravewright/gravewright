@@ -247,6 +247,23 @@ na ordem preservam o combatente do turno atual. Outros sistemas não herdam
 essas regras do PDF System. Os tokens atual e próximo recebem indicadores
 expansivos verde e amarelo, também usados na lateral do gerenciador.
 
+Condições de tokens aceitam `duration: {type: "turns" | "rounds",
+value: 1..10000, expires: "start" | "end"}` opcional. O servidor inicializa
+`remaining`; turnos seguem o token afetado e rodadas seguem as mudanças de rodada
+do combate. Apenas tokens participantes daquela cena avançam. Condições expiradas
+são removidas; permanentes continuam. Voltar turnos e encerrar o combate não
+alteram os contadores. Recibos evitam contagem duplicada em reenvios. Os dois modos
+de condições exibem o tempo restante e o momento de expiração nos tooltips.
+
+O diretório nativo de compêndios filtra os metadados localmente por nome, tipo de
+documento e coleção. A prévia busca somente a entrada autorizada selecionada e
+exibe texto na modal compartilhada. O mestre pode importar pela entrada, pela
+prévia ou arrastando ao diretório correspondente. O arrasto informa campanha,
+compêndio, entrada e tipo; o destino confere esses dados no catálogo visível antes
+de usar o comando de importação autorizado existente. Jogadores podem visualizar
+compêndios acessíveis, mas não importar. Arquivos e dependências continuam usando
+o mecanismo de importação existente.
+
 ## Arquivos portáteis e administração
 
 `administration/archives.py` define explicitamente os modelos de conteúdo permitidos.

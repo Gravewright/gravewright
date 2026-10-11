@@ -24,7 +24,41 @@ function badge(condition) {
 }
 export function conditionTooltip(condition) {
   const description = typeof condition.description === 'string' ? condition.description.trim() : '';
-  return condition.label + (description ? '\n' + description : '');
+  const clock = condition.duration;
+  const text = durationLabels();
+  const remaining = clock?.remaining ?? clock?.value;
+  const duration = ['turns','rounds'].includes(clock?.type) && Number.isInteger(remaining)
+    ? `\n${remaining} ${text[clock.type + (remaining === 1 ? 'Single' : '')]} · ${text[clock.type + (clock.expires === 'start' ? 'Start' : 'End')]}` : '';
+  return condition.label + (description ? '\n' + description : '') + duration;
+}
+
+function durationLabels() {
+  const lang = document.documentElement.lang;
+  const values = lang.startsWith('pt')
+    ? ['Duração','Sem duração','Turnos','Rodadas','Quantidade','Expira','Início do turno','Fim do turno','Início da rodada','Fim da rodada','turnos restantes','rodadas restantes','turno restante','rodada restante']
+    : lang.startsWith('es')
+    ? ['Duración','Sin duración','Turnos','Rondas','Cantidad','Expira','Inicio del turno','Final del turno','Inicio de la ronda','Final de la ronda','turnos restantes','rondas restantes','turno restante','ronda restante']
+    : ['Duration','No duration','Turns','Rounds','Amount','Expires','Start of turn','End of turn','Start of round','End of round','turns remaining','rounds remaining','turn remaining','round remaining'];
+  return Object.fromEntries(['duration','none','turnsLabel','roundsLabel','amount','expires','turnsStart','turnsEnd','roundsStart','roundsEnd','turns','rounds','turnsSingle','roundsSingle'].map((key,i)=>[key,values[i]]));
+}
+
+export function conditionDurationFields(form) {
+  const text = durationLabels(), wrap = element('div','token-condition-duration');
+  const unit = element('select'), count = element('input'), phase = element('select');
+  unit.name = 'conditionDurationUnit'; count.name = 'conditionDurationCount'; phase.name = 'conditionDurationPhase';
+  for (const [value,label] of [['',text.none],['turns',text.turnsLabel],['rounds',text.roundsLabel]]) unit.add(new Option(label,value));
+  count.type='number'; count.min='1'; count.max='10000'; count.step='1'; count.value='1';
+  const field=(caption,input)=>{const label=element('label','',caption);label.append(input);wrap.append(label);return label;};
+  field(text.duration,unit);
+  const amount=field(text.amount,count), expires=field(text.expires,phase);
+  const update=()=>{
+    amount.hidden=expires.hidden=!unit.value;count.disabled=phase.disabled=!unit.value;count.required=!!unit.value;
+    const old=phase.value||'end';phase.replaceChildren();
+    for(const value of ['end','start'])phase.add(new Option(text[(unit.value||'turns')+(value==='end'?'End':'Start')],value));
+    phase.value=old;
+  };
+  unit.onchange=update;update();form.append(wrap);
+  return ()=>unit.value?{type:unit.value,value:Number(count.value),expires:phase.value}:null;
 }
 
 export function quickControls(surface, { campaign, gm, command, read, openSheet, repaint }) {
@@ -120,6 +154,7 @@ export function quickControls(surface, { campaign, gm, command, read, openSheet,
     conditions.append(element('strong', '', text[2]));
     for (const condition of token.conditions || []) {
       const row = element('div', 'token-quick-controls__condition');
+      row.title = conditionTooltip(condition);
       const remove = button('×', () => save(() => command('condition-remove', { tokenIds: [token.id], conditionId: condition.condition_id })));
       remove.setAttribute('aria-label', text[4] + ' ' + condition.label);
       row.append(badge(condition), element('span', '', condition.label), remove); conditions.append(row);
@@ -135,6 +170,7 @@ export function quickControls(surface, { campaign, gm, command, read, openSheet,
     description.placeholder = document.documentElement.lang === 'pt-BR' ? 'Descrição do efeito' : document.documentElement.lang === 'es' ? 'Descripción del efecto' : 'Effect description';
     description.setAttribute('aria-label', description.placeholder);
     form.append(description);
+    const getDuration = conditionDurationFields(form);
     let visibility;
     if (gm) {
       const label = element('label', 'token-quick-controls__visibility', text[8]);
@@ -142,7 +178,7 @@ export function quickControls(surface, { campaign, gm, command, read, openSheet,
     }
     form.onsubmit = event => {
       event.preventDefault();
-      void save(() => command('condition-add', { tokenIds: [token.id], label: name.value.trim(), description: description.value, kind: kind.value, visibility: visibility?.checked ? 'gm' : 'everyone' }));
+      void save(() => command('condition-add', { tokenIds: [token.id], label: name.value.trim(), description: description.value, kind: kind.value, visibility: visibility?.checked ? 'gm' : 'everyone', duration: getDuration() }));
     };
     conditions.append(form); panel.append(conditions);
     if (token.canOpenSheet) panel.append(button(text[9], () => openSheet(token)));

@@ -239,6 +239,22 @@ through their context menu. Reordering during combat preserves the current
 combatant. Other systems do not inherit these PDF rules. Current and next tokens
 have green and yellow expanding indicators, mirrored in the tracker sidebar.
 
+Token conditions accept an optional `duration: {type: "turns" | "rounds",
+value: 1..10000, expires: "start" | "end"}`. The server initializes `remaining`;
+turn clocks follow the affected token, and round clocks follow encounter round
+boundaries. Only participating tokens in that scene advance. Expired conditions
+are removed; permanent conditions remain. Backward navigation and stopping combat
+do not change clocks. Retry receipts prevent duplicate ticking. Both condition
+layouts show remaining time and expiry phase in their tooltips.
+
+The native compendium directory filters its metadata locally by name, document
+kind and collection. Previews fetch only the selected authorized entry and display
+plain text in the shared modal. GMs can import from the entry, preview, or by
+dragging to the matching document directory. Drag payloads carry campaign, pack,
+entry and kind; the receiver verifies them against its visible catalog before
+using the existing authorized import command. Players can preview readable packs
+but cannot import. Imports retain the existing archive and dependency handling.
+
 ## Archives and host administration
 
 `administration/archives.py` explicitly allowlists native content models. Exports

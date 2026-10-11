@@ -46,6 +46,29 @@ class PdfCombatTests(TestCase):
         self.actor.save()
         self.assertIsNone(self.state('combat')['combatants'][0]['bar'])
 
+    def test_combat_bars_follow_linked_and_snapshot_sources_and_permissions(self):
+        self.actor.data['bars'] = {'bar_1': {'value': 8, 'max': 10}, 'bar_2': {'value': 3, 'max': 6}}
+        self.actor.save()
+        self.token.linked = True
+        self.token.save()
+        snapshot = deepcopy(self.actor.data)
+        snapshot['bars']['bar_1']['value'] = 2
+        other = Token.objects.create(scene=self.scene, actor=self.actor, linked=False, snapshot=snapshot)
+        self.execute('add', tokenId=str(self.token.pk))
+        self.execute('add', tokenId=str(other.pk))
+        rows = {row['id']: row for row in self.state('combat')['combatants']}
+        self.assertEqual(rows[str(self.token.pk)]['bars'], [
+            {'slot': 'bar_1', 'value': 8, 'max': 10, 'percent': 80},
+            {'slot': 'bar_2', 'value': 3, 'max': 6, 'percent': 50},
+        ])
+        self.assertEqual(rows[str(other.pk)]['bars'][0]['value'], 2)
+        self.actor.permissions = {'default': 'read'}
+        self.actor.save()
+        for row in self.state('combat', self.player)['combatants']:
+            self.assertEqual(row['bars'], [])
+            self.assertIsNone(row['bar'])
+            self.assertFalse(row['canControl'])
+
     def test_combatant_image_prefers_token_and_falls_back_to_portrait(self):
         self.execute('add', tokenId=str(self.token.pk))
         self.execute('add', actorId=str(self.actor.pk))

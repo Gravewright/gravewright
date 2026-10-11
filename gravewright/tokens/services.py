@@ -354,6 +354,8 @@ def command(campaign, user, action, raw, request_id):
                         else number(v),
                     )
             elif action == "condition-add":
+                from gravewright.combat.conditions import duration
+                clock = duration(raw.get('duration'))
                 if len(t.conditions) >= 100:
                     raise maps.MapError("Too many conditions.")
                 description = raw.get('description', '')
@@ -368,6 +370,7 @@ def command(campaign, user, action, raw, request_id):
                             raw.get("kind"), {"neutral", "positive", "negative"}
                         ),
                         "visible_to": choice(raw.get("visibility"), {"everyone", "gm"}),
+                        **({'duration': clock} if clock else {}),
                     }
                 )
             elif action == "condition-remove":

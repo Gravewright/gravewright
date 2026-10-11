@@ -5,7 +5,7 @@ import { node, patchSVG } from "/static/gravewright_maps/layers.js";
 import { clone, icon, context } from "/static/gravewright_actors/workspace.js";
 import { openSheet } from "/static/gravewright_actors/sheet.js";
 import { openPermissions } from '/static/gravewright_table/permissions.js';
-import { quickControls, conditionLayout, conditionTooltip } from './quick-controls.js';
+import { quickControls, conditionLayout, conditionTooltip, conditionDurationFields } from './quick-controls.js';
 export function createTokens(surface, board, map, gm, initial) {
   const campaign = document.getElementById("table-workspace").dataset.tableId,
     svg = node("svg", {
@@ -218,6 +218,7 @@ export function createTokens(surface, board, map, gm, initial) {
             span = document.createElement("span"),
             b = document.createElement("button");
           span.textContent = c.label;
+          span.title = conditionTooltip(c);
           b.type = "button";
           b.setAttribute("aria-label", "Remove " + c.label);
           b.append(icon("Trash"));
@@ -234,6 +235,7 @@ export function createTokens(surface, board, map, gm, initial) {
         f.label.required = mode === "conditions";
         f.rotation.required = mode === "configure";
         f.elevation.required = mode === "configure";
+        const getDuration = mode === 'conditions' ? conditionDurationFields(el.querySelector('[data-mode="conditions"]')) : () => null;
         form.onsubmit = (e) => {
           e.preventDefault();
           const values =
@@ -257,6 +259,7 @@ export function createTokens(surface, board, map, gm, initial) {
                   description: f.description.value,
                     kind: f.kind.value,
                     visibility: f.visibility.value,
+                    duration: getDuration(),
                   };
           controller.call(
             "command",

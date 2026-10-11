@@ -46,6 +46,9 @@
         moveUp: "Move up",
         moveDown: "Move down",
         configure: "Configure initiative",
+        bar1: "Bar 1",
+        bar2: "Bar 2",
+        adjustResource: "Adjust resource",
     };
 
     function el(tag, className, text) {
@@ -85,6 +88,7 @@
             setTurn: 'Definir turno atual', remove: 'Remover do combate', hide: 'Ocultar dos jogadores',
             reveal: 'Exibir aos jogadores', markDefeated: 'Marcar como derrotado', clearDefeated: 'Remover derrota',
             nextUp: 'Próximo', moveUp: 'Mover para cima', moveDown: 'Mover para baixo', configure: 'Configurar iniciativa',
+            bar1: 'Barra 1', bar2: 'Barra 2', adjustResource: 'Ajustar recurso',
         });
         Object.keys(FALLBACK_LABELS).forEach((key) => {
             const value = data[`label${key.charAt(0).toUpperCase()}${key.slice(1)}`];
@@ -159,11 +163,20 @@
 
 
 
-    function resourceBar(bar) {
+    function resourceBar(bar, combatant, L) {
         if (!bar) return null;
         const percent = bar.percent == null ? 0 : Math.max(0, Math.min(100, Number(bar.percent) || 0));
         const level = percent <= 25 ? "is-critical" : (percent <= 50 ? "is-wounded" : "is-healthy");
-        const wrap = el("div", `gw-combat-bar ${level}`);
+        const wrap = el("button", `gw-combat-bar ${level}`);
+        wrap.type = 'button';
+        wrap.dataset.combatAction = 'resource/edit';
+        wrap.dataset.combatantId = combatant.id;
+        wrap.dataset.resourceSlot = bar.slot || 'bar_1';
+        wrap.disabled = !combatant.canControl;
+        const label = bar.slot === 'bar_2' ? L.bar2 : L.bar1;
+        wrap.title = `${L.adjustResource}: ${label}`;
+        wrap.setAttribute('aria-label', `${L.adjustResource}: ${combatant.name}, ${label}, ${bar.value}/${bar.max}`);
+        if (bar.slot === 'bar_2') wrap.classList.add('gw-combat-bar--secondary');
         const track = el("span", "gw-combat-bar__track");
         const fill = el("span", "gw-combat-bar__fill");
         fill.style.width = `${percent}%`;
@@ -287,8 +300,10 @@
         });
         if (meta.length) main.appendChild(el("span", "gw-combat-combatant__meta", meta.join(" · ")));
 
-        const bar = resourceBar(combatant.bar);
-        if (bar) main.appendChild(bar);
+        for (const value of combatant.bars || (combatant.bar ? [combatant.bar] : [])) {
+            const bar = resourceBar(value, combatant, L);
+            if (bar) main.appendChild(bar);
+        }
         row.appendChild(main);
 
         row.append(initiativeCell(combatant, state, isGm, L), combatantMenu(combatant, state, isGm, L));
