@@ -642,6 +642,13 @@ if (panel) {
   };
 }
 window.gravewrightMaps = {
+  showDirectory() {
+    if (popup && !popup.closed) { popup.focus(); return; }
+    restoreWindow(panel);
+    mergePatch({ _mapsOpen: true });
+    requestAnimationFrame(() => panel.dispatchEvent(new Event('focusin', { bubbles: true })));
+    window.gravewrightRealtime.mapsSubscribe();
+  },
   toggle() {
     if (popup && !popup.closed) { popup.focus(); return; }
     if (panel.classList.contains('game-panel--minimized')) { restoreWindow(panel); mergePatch({_mapsOpen:true}); return; }
@@ -678,6 +685,7 @@ window.addEventListener("gravewright:connected", () => {
 function receiveState(nextState) {
   if (!panel) return;
   state = nextState;
+  mergePatch({ _hasScenes: state.maps.length > 0 });
   following = state.followingActiveMap ?? true;
   const next = state.maps.find(
     (m) =>

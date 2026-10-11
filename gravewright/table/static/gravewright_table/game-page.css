@@ -11,6 +11,10 @@
 .game-table__wordmark { margin-top: var(--step-5); color: var(--text); font-family: var(--font-display); font-size: var(--text-xl); font-weight: var(--weight-bold); letter-spacing: .18em; text-transform: uppercase; }
 .game-table__empty-title { margin: var(--step-13) 0 0; color: var(--accent); font-family: var(--font-display); font-size: var(--text-lg); font-weight: var(--weight-bold); }
 .game-table__empty-hint { max-width: 46ch; margin: 0; font-size: var(--text-md); line-height: var(--leading-relaxed); }
+.game-table__empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 16px; }
+.game-table__empty-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.game-table__empty-actions button:hover { border-color: var(--accent); color: var(--accent); }
+.game-table__empty-actions svg { width: 20px; height: 20px; }
 .game-table__scene-notice { margin: var(--step-13) 0 0; font-size: var(--text-md); }
 /* The menu bar: one thin strip the scene runs under, holding what identifies the table and what
    leaves it. Glass rather than a slab, so the board stays visible through it. */

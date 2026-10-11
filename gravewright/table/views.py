@@ -74,6 +74,8 @@ def table(request, campaign_id, detached_chat=False):
             'journals': journals.state(campaign.pk, request.user.pk),
             'items': state(campaign.pk, request.user.pk, 'items'),
         }
+        context['has_scenes'] = bool(context['initial_content']['maps']['maps'])
+        context['has_actors'] = bool(context['initial_content']['actors']['actors'])
     response = render(request, "gravewright_table/page.html", context, using="jinja2")
     response['Cache-Control'] = 'private, no-store'
     return response

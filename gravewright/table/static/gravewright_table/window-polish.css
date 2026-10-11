@@ -79,3 +79,36 @@
 .journal-marker-modal footer{flex-wrap:wrap}
 .journal-marker-modal footer [data-remove-marker]{margin-right:auto;color:var(--danger,#ef9999);border-color:transparent}
 .journal-marker-modal footer [data-remove-marker]:hover{border-color:var(--danger,#ef9999);background:transparent}
+
+/* Match document windows and forms to the compact directory panels. */
+:is(body:has(#table-workspace),body.game-detached) { --table-window-radius:6px; --table-titlebar-height:34px; }
+:is(body:has(#table-workspace),body.game-detached) :is(.gw-window,.game-panel,.journal-window,.directory-dialog,.upload-library,.ownership-dialog,.table-form-modal,.table-modal-window,.dice-tray,.house-menu,.journal-prompt,.command-palette) {
+  border-radius:var(--table-window-radius);
+}
+:is(body:has(#table-workspace),body.game-detached) .gw-window { background:var(--surface,#171c20); backdrop-filter:none; }
+:is(body:has(#table-workspace),body.game-detached) :is(.gw-window__titlebar,.journal-window__titlebar,.game-panel>header,.directory-dialog>header,.upload-library>header,.dice-tray>header,.table-form-modal form>header,.table-modal-window>header,.ownership-dialog form>header) {
+  box-sizing:border-box; display:flex; align-items:center; gap:8px;
+  min-height:var(--table-titlebar-height); padding:3px 8px; margin:0;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#ffffff06,transparent);
+}
+:is(body:has(#table-workspace),body.game-detached) :is(.actor-directory__sheet-heading,.journal-window__identity) { display:block; line-height:20px; }
+:is(body:has(#table-workspace),body.game-detached) :is(.actor-directory__sheet-heading,.journal-window__identity) small { display:none; }
+:is(body:has(#table-workspace),body.game-detached) :is(.gw-window__titlebar,.journal-window__titlebar,.directory-dialog>header,.upload-library>header,.dice-tray>header,.table-form-modal form>header,.table-modal-window>header,.ownership-dialog form>header) strong,
+:is(body:has(#table-workspace),body.game-detached) .journal-window__title { font-size:13px; font-weight:650; }
+:is(body:has(#table-workspace),body.game-detached) .gw-window__grip { width:18px; height:2px; box-shadow:none; }
+:is(body:has(#table-workspace),body.game-detached) .gw-window__controls { gap:4px; }
+:is(body:has(#table-workspace),body.game-detached) :is(.gw-window__titlebar .gw-window__control,.journal-window__titlebar .gw-window__control,.game-panel>header button,.directory-dialog>header button,.upload-library>header button,.dice-tray>header button,.table-form-modal form>header button,.table-modal-window>header button,.ownership-dialog form>header button) {
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:26px; height:26px; min-width:26px; min-height:26px; padding:0;
+  border:1px solid transparent; border-radius:3px; background:transparent;
+  color:var(--text-muted); font-size:16px; line-height:1; cursor:pointer;
+}
+:is(body:has(#table-workspace),body.game-detached) .journal-window__titlebar .journal-button { min-height:26px; height:26px; padding:0 6px; }
+:is(body:has(#table-workspace),body.game-detached) :is(.gw-window__control,.game-panel>header button,.directory-dialog>header button,.upload-library>header button,.dice-tray>header button,.table-form-modal form>header button,.table-modal-window>header button,.ownership-dialog form>header button):hover {
+  border-color:var(--border-accent); background:var(--accent-glow); color:var(--accent);
+}
+:is(body:has(#table-workspace),body.game-detached) :is(.gw-window__titlebar,.journal-window__titlebar,.game-panel>header,.directory-dialog>header,.upload-library>header,.dice-tray>header,.table-form-modal form>header,.table-modal-window>header,.ownership-dialog form>header) button svg { width:15px; height:15px; }
+:is(body:has(#table-workspace),body.game-detached) .ownership-dialog form { padding:14px; }
+:is(body:has(#table-workspace),body.game-detached) .ownership-dialog form>header { margin:-14px -14px 0; }
+:is(body:has(#table-workspace),body.game-detached) :is(.gw-window--detached,.journal-window--detached,.game-panel--detached,.dice-tray--detached) { border-radius:0; }

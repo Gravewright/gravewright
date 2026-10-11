@@ -461,6 +461,12 @@ function paint() {
   templates.append(folder);
 }
 window.gravewrightActors = {
+  showDirectory() {
+    if (popup && !popup.closed) { popup.focus(); return; }
+    restoreWindow(panel);
+    mergePatch({ _actorsOpen: true });
+    requestAnimationFrame(() => panel.dispatchEvent(new Event('focusin', { bubbles: true })));
+  },
   toggle() {
     if (popup && !popup.closed) { popup.focus(); return; }
     if (panel.classList.contains('game-panel--minimized')) { restoreWindow(panel); mergePatch({_actorsOpen:true}); return; }
@@ -543,6 +549,7 @@ if (panel) {
   };
   const receiveState = (next) => restoreContent('actors', () => {
     state = next;
+    mergePatch({ _hasActors: state.actors.length > 0 });
     syncActorTypes();
     paint();
     if (sheet && sheet.element.dataset.actorId) {

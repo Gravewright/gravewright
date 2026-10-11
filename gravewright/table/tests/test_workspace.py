@@ -46,6 +46,21 @@ class WorkspaceTests(TestCase):
         self.campaign.delete()
         self.assertEqual(self.client.get(self.path).status_code, 404)
 
+    def test_setup_guide_stops_with_either_a_character_or_an_inactive_scene(self):
+        from gravewright.actors.models import Actor
+        from gravewright.maps.models import Scene
+
+        self.client.force_login(self.owner)
+        empty = self.client.get(self.path)
+        self.assertContains(empty, 'game-dock__item game-dock__guide', count=2)
+        self.assertContains(empty, 'data-empty-scenes')
+        self.assertContains(empty, 'data-empty-actors')
+        actor = Actor.objects.create(campaign=self.campaign, name='First character')
+        self.assertNotContains(self.client.get(self.path), 'game-dock__item game-dock__guide')
+        actor.delete()
+        Scene.objects.create(campaign=self.campaign, name='Prepared scene', width=800, height=600)
+        self.assertNotContains(self.client.get(self.path), 'game-dock__item game-dock__guide')
+
     @override_settings(COMMAND_PALETTE_ENABLED=False,LOBBY_READY_CHECK_ENABLED=False,APP_DEBUG=True)
     def test_table_flags_control_the_available_tools(self):
         self.client.force_login(self.owner)
