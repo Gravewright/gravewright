@@ -18,6 +18,7 @@ from django.db import DataError, IntegrityError, models, transaction
 
 from gravewright.accounts.services import AuthError
 from gravewright.campaigns.models import Campaign, Membership
+from gravewright.campaigns.systems import default_system_id
 
 MAX_ARCHIVE = 256 * 1024 * 1024
 MAX_EXPANDED = 1024 * 1024 * 1024
@@ -315,7 +316,7 @@ def import_campaign(raw, user, title="", *, target=None, merge=False):
                 campaign.name = name.strip()
                 campaign.description = str(payload["campaign"].get("description", ""))[:500]
                 campaign.system = str(
-                    payload["campaign"].get("system", "gravewright-pdf-system")
+                    payload["campaign"].get("system", default_system_id())
                 )[:120]
                 campaign.image_url = str(payload["campaign"].get("image_url", ""))[:2048]
             identifiers = {str(payload["campaign"]["id"]): str(campaign.pk)}

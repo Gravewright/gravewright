@@ -7,6 +7,7 @@ import sys
 import tempfile
 import shutil
 import json
+import hashlib
 import subprocess
 from unittest.mock import patch
 
@@ -348,6 +349,39 @@ class RunnerEnvironmentTests(SimpleTestCase):
                 directory,
                 prompt=lambda _: self.fail('The saved choice must prevent another question.'),
             ))
+
+
+class RunnerDefaultKeysTests(SimpleTestCase):
+    # Exact bytes from the reviewed official marketplace revision. This is a
+    # public trust-store fixture, not a signing key or an online test dependency.
+    keys = (b'{\n  "gravewright-2026": "PXbpURq9J1jLkPnnwBVN/5B+zrb0p5MaWQAe/ltJ8LY=",\n'
+            b'  "gravewright-2026-10": "GEEbh7w29FAsH+XqMhGV+nlCZhroohrJEOwoNy5g48E="\n}\n')
+
+    def setUp(self):
+        self.enterContext(patch.object(runner, 'LANGUAGE', runner.RunnerLanguage()))
+        self.opener = self.enterContext(patch.object(runner, 'build_opener')).return_value
+        self.response = self.opener.open.return_value.__enter__.return_value
+
+    def test_reviewed_immutable_trust_store_matches_pin_and_keeps_both_signing_keys(self):
+        self.response.read.return_value = self.keys
+        self.assertEqual(runner._download_default_keys(), self.keys)
+        self.assertEqual(hashlib.sha256(self.keys).hexdigest(), runner.DEFAULT_MARKETPLACE_KEYS_SHA256)
+        request = self.opener.open.call_args.args[0]
+        self.assertEqual(request.full_url, 'https://raw.githubusercontent.com/Gravewright/marketplace/'
+                         '56aefb9db91666f7573bfdcdc2f6e9a6f2100527/trusted-keys.json')
+        self.assertEqual(self.opener.open.call_args.kwargs['timeout'], 30)
+        self.response.read.assert_called_once_with(1024 * 1024 + 1)
+        self.assertEqual(set(json.loads(self.keys)), {'gravewright-2026', 'gravewright-2026-10'})
+
+    def test_valid_json_with_a_replaced_public_key_still_fails_integrity(self):
+        self.response.read.return_value = self.keys.replace(b'GEEbh7w', b'HEEbh7w')
+        with self.assertRaisesRegex(RunnerError, 'failed its integrity check'):
+            runner._download_default_keys()
+
+    def test_oversized_download_is_rejected_before_json_validation(self):
+        self.response.read.return_value = b' ' * (1024 * 1024 + 1)
+        with self.assertRaisesRegex(RunnerError, 'failed its integrity check'):
+            runner._download_default_keys()
 
 
 @override_settings(GRAVEWRIGHT_PORT=3000)

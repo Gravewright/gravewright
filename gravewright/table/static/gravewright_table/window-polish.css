@@ -6,7 +6,7 @@
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label]{min-width:var(--step-29);min-height:var(--step-29);border-radius:var(--fib-4)}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button[aria-label]:hover{background:#ffffff0a}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) header button:is([data-action="close"],[data-close],[data-visibility-action="close"],[data-library-close],.directory-dialog__close):hover{background:#dc68681a;color:#ef9999}
-:is(.game-panel,.journal-window,.upload-library,.directory-dialog,.card-hand__veil,.token-editor,.light-editor,.wall-editor) :is(button,input,select,textarea,summary):focus-visible{outline:var(--fib-2) solid var(--focus-ring,var(--accent));outline-offset:var(--fib-2)}
+:is(.game-panel,.journal-window,.upload-library,.directory-dialog,.card-modal,.token-editor,.light-editor,.wall-editor) :is(button,input,select,textarea,summary):focus-visible{outline:var(--fib-2) solid var(--focus-ring,var(--accent));outline-offset:var(--fib-2)}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) :is(input,select,textarea){accent-color:var(--accent)}
 :is(.game-panel,.journal-window,.upload-library,.directory-dialog) :is(button,summary){-webkit-tap-highlight-color:transparent}
 .game-dock .game-dock__item svg{width:var(--fib-7);height:var(--fib-7)}.game-dock .game-dock__item:hover{transform:translateY(calc(-1 * var(--fib-3)));box-shadow:0 var(--fib-4) var(--fib-6) #0005}.game-dock .game-dock__tip{padding:var(--fib-4) var(--fib-5);font-size:var(--step-11);line-height:1.4;pointer-events:none;z-index:4;border:var(--fib-1) solid var(--border);background:#171d23fa;border-radius:var(--fib-4)}.game-dock .game-dock__item--on::after{content:"";position:absolute;bottom:var(--fib-3);width:var(--fib-6);height:var(--fib-2);border-radius:var(--fib-3);background:currentColor;opacity:.65}
@@ -26,6 +26,49 @@
 .ownership-modal-overlay>.table-modal-window,.ownership-modal-overlay>.table-form-modal{position:relative;inset:auto;transform:none;box-sizing:border-box;width:min(var(--size-560),calc(100vw - var(--step-32)));min-width:min(var(--size-280),calc(100vw - var(--step-32)));min-height:var(--size-180);max-width:calc(100vw - var(--step-32));max-height:calc(100dvh - var(--step-32));padding:0;display:flex;flex-direction:column;gap:0;overflow:auto;resize:both;border:var(--fib-1) solid var(--border-accent-strong,#806b43);border-radius:var(--step-12);background:var(--surface,#171c20);color:var(--text,#e8e4d8);box-shadow:var(--shadow-window,0 var(--step-12) var(--step-40) #0009)}
 .ownership-modal-overlay>.game-scene-settings{width:min(var(--size-640),calc(100vw - var(--step-32)));min-height:var(--size-340)}
 .ownership-modal-overlay>.directory-dialog{position:relative;inset:auto;transform:none;width:min(var(--size-420),calc(100vw - var(--step-32)));max-height:calc(100dvh - var(--step-32));margin:0;box-sizing:border-box;overflow:auto}
+.ownership-modal-overlay>.table-modal-window.card-modal{min-height:0;overflow:hidden;padding:0;gap:0;}
+.ownership-modal-overlay>.table-modal-window.card-hand-modal{width:min(720px,calc(100vw - var(--step-32)));min-width:min(340px,calc(100vw - var(--step-32)));max-height:calc(100dvh - var(--step-32));}
+.card-hand-modal__body{min-width:0;min-height:0;overflow:auto;overscroll-behavior:contain;}
+.card-hand-modal .card-hand{min-width:0;padding:var(--fib-6);overflow:visible;}
+.card-hand-modal .card-hand__bar{gap:var(--fib-5);padding:var(--fib-5);border-radius:var(--fib-4);}
+.card-hand-modal .card-hand__bar select{min-width:0;flex:1 1 180px;}
+.card-hand-modal .card-hand__bar button{min-height:var(--step-32);white-space:nowrap;}
+.card-hand-modal .card-hand__fan{justify-content:safe center;min-height:260px;padding:var(--fib-8) var(--fib-7) var(--fib-7);}
+.card-hand-modal .card-hand__empty{max-width:100%;margin:0;text-align:center;line-height:1.6;}
+.card-hand-modal .card-hand__decks{min-width:0;}
+.card-hand-modal .card-hand__deck>div:first-of-type{min-width:0;}
+.card-hand-modal .card-hand__deck strong{overflow-wrap:anywhere;}
+.card-hand-modal .card-hand__deck-actions{width:100%;justify-content:flex-end;}
+.ownership-modal-overlay>.table-modal-window.card-modal--draw,
+.ownership-modal-overlay>.table-modal-window.card-modal--remove{width:min(420px,calc(100vw - var(--step-32)));}
+.ownership-modal-overlay>.table-modal-window.card-modal--preview{width:fit-content;min-width:min(280px,calc(100vw - var(--step-32)));resize:none;}
+.card-modal__body{overscroll-behavior:contain;}
+.card-modal__body>form{min-width:0;margin:0;}
+.card-modal__body p{margin:0;}
+.card-modal__subtitle,.card-modal small{color:var(--text-muted);font-size:var(--step-11);}
+.card-modal--preview .card-modal__body{align-items:center;}
+.card-modal--preview .card-modal__body>img{display:block;max-width:min(460px,calc(100vw - 68px));max-height:calc(100dvh - 120px);width:auto;height:auto;object-fit:contain;}
+.card-modal--preview .card-modal__body>svg{width:144px;height:210px;}
+.card-modal .card-hand__choices{min-width:0;}
+.card-modal .card-hand__choices input[type=radio]{width:13px;height:13px;margin:0;padding:0;accent-color:var(--accent);}
+.card-modal .card-hand__choices svg,.card-modal .card-hand__quantity svg{width:18px;height:18px;flex-shrink:0;}
+.card-modal .card-hand__quantity{margin-bottom:0;}
+.card-modal .card-hand__quantity>span{align-items:center;}
+.card-modal .card-hand__quantity :is(input,button){box-sizing:border-box;min-height:32px;border:1px solid var(--border);border-radius:var(--fib-4);background:var(--surface-field,#151a20);color:inherit;font:inherit;}
+.card-modal .card-hand__quantity input[type=number]{width:64px;flex:0 0 64px;padding:var(--fib-4);}
+.card-modal .card-hand__quantity button{display:grid;place-items:center;width:32px;padding:var(--fib-4);cursor:pointer;}
+.card-modal .card-hand__quantity button:hover{border-color:var(--accent);color:var(--accent);}
+.card-modal .card-modal__danger{color:var(--danger,#ef9999);}
+@media(max-width:480px){
+ .card-hand-modal .card-hand{padding:var(--fib-5);}
+ .card-hand-modal .card-hand__bar select{flex-basis:calc(100% - 34px);}
+ .card-hand-modal .card-hand__bar small{margin-right:auto;}
+ .card-hand-modal .card-hand__fan{min-height:230px;}
+ .card-hand-modal .card-hand__deck-actions{justify-content:flex-start;}
+ .ownership-modal-overlay>.table-modal-window.card-modal{resize:none;}
+ .card-modal .card-hand__choices{gap:var(--fib-5);}
+ .card-modal .card-hand__choices label{padding:var(--fib-5) var(--fib-4);gap:var(--fib-4);}
+}
 [data-lobby-panel-window].game-panel{height:auto;min-height:0;bottom:auto;resize:none}
 [data-lobby-panel-window] .game-panel-body{flex:0 1 auto;padding:var(--step-14);font-size:var(--fib-6)}
 [data-lobby-panel-window] .game-panel-body>p:first-child{margin-top:0;line-height:1.5}
@@ -73,15 +116,50 @@
 :is(.table-form-modal,.table-modal-window) header [data-close],.game-panel header :is([data-close],[data-map-panel=close],[data-actor-panel=close],[data-journal-directory=close]){order:2}
 .ownership-modal-overlay>.table-modal-window>footer{justify-content:flex-end}
 .ownership-modal-overlay>.table-modal-window>footer>button{order:0}
-#items-panel .game-directory{padding:var(--fib-5);overflow:auto}
-#items-panel :is(.directory-toolbar__actions,.directory-entry){display:flex;align-items:center;gap:var(--fib-4);flex-wrap:wrap}
-#items-panel .directory-entry{padding:var(--step-10) 0;border-bottom:var(--fib-1) solid var(--border)}
-#items-panel .directory-entry>button:first-child{flex:1;min-width:var(--size-100);text-align:left;font-weight:600}
-#items-panel :is(.game-directory button,.game-directory input){box-sizing:border-box;min-height:var(--step-32);padding:var(--step-6) var(--step-9);border:var(--fib-1) solid var(--border);border-radius:var(--fib-4);background:var(--surface-field,#151a20);color:var(--text);font:inherit;font-size:var(--fib-6)}
-#items-panel .game-directory button{cursor:pointer}
-#items-panel .game-directory button:hover{border-color:var(--accent)}
-#items-panel .directory-toolbar__search{display:flex;align-items:center;gap:var(--fib-5);margin-block:var(--fib-5)}
-#items-panel .directory-toolbar__search input{width:100%;min-width:0}
+/* Native Items follows the compact document directory used by Journals. */
+#items-panel .game-directory{padding:var(--fib-5);overflow:auto;min-height:0}
+#items-panel .directory-toolbar{display:grid;gap:var(--fib-5);margin-bottom:var(--fib-5)}
+#items-panel .directory-toolbar__actions{display:flex;gap:var(--fib-5)}
+#items-panel .directory-toolbar__actions:empty{display:none}
+#items-panel .directory-toolbar__actions button{display:inline-flex;align-items:center;justify-content:center;gap:var(--fib-5);flex:1;min-width:0;min-height:var(--fib-8);padding:var(--fib-4) var(--fib-5);border:var(--fib-1) solid var(--border);border-radius:var(--fib-4);background:var(--surface-field,#151a20);color:var(--text);font:inherit;font-size:var(--fib-6);cursor:pointer}
+#items-panel .directory-toolbar__actions button:hover{border-color:var(--accent);background:var(--surface-raised,#20262d)}
+#items-panel .directory-toolbar svg{width:var(--fib-7);height:var(--fib-7);flex-shrink:0;color:var(--text-muted,#b7b5ad)}
+#items-panel .directory-toolbar__search{display:flex;align-items:center;gap:var(--fib-5);min-height:var(--fib-8);padding-inline:var(--fib-5);border:var(--fib-1) solid var(--border);border-radius:var(--fib-4);background:var(--surface-field,#151a20)}
+#items-panel .directory-toolbar__search:focus-within{border-color:var(--accent)}
+#items-panel .directory-toolbar__search input{box-sizing:border-box;flex:1;width:100%;min-width:0;min-height:var(--fib-8);padding:var(--fib-4) 0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:var(--fib-6)}
+#items-panel .directory-toolbar__search input::placeholder{color:var(--text-faint,#8f969f)}
+#items-panel .directory-tree{min-width:0;padding:0}
+#items-panel .item-directory__entry{display:flex;align-items:center;gap:var(--fib-4);min-height:var(--fib-8);padding:var(--fib-4) var(--fib-5);border:0;border-bottom:var(--fib-1) solid var(--border);border-radius:0;background:transparent}
+#items-panel .item-directory__entry:hover{background:var(--surface-raised,#20262d)}
+#items-panel .item-directory__open{display:flex;align-items:center;gap:var(--fib-5);flex:1;min-width:0;min-height:var(--fib-8);padding:0;border:0;border-radius:var(--fib-3);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+#items-panel .item-directory__open>svg{width:var(--fib-7);height:var(--fib-7);flex-shrink:0;color:var(--text-muted,#b7b5ad)}
+#items-panel .item-directory__open:disabled{cursor:default;opacity:.55}
+#items-panel .item-directory__info{display:grid;gap:var(--fib-2);min-width:0;flex:1;line-height:1.25}
+#items-panel .item-directory__info strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fib-6);font-weight:600}
+#items-panel .item-directory__info small{font-size:var(--step-11);color:var(--text-faint,#8f969f)}
+#items-panel .item-directory__more{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:var(--fib-8);min-height:var(--fib-8);padding:var(--fib-4);border:0;border-radius:var(--fib-3);background:transparent;color:var(--text-muted,#b7b5ad);cursor:pointer}
+#items-panel .item-directory__more svg{width:var(--step-16);height:var(--step-16)}
+#items-panel .item-directory__more:hover{background:var(--accent-glow,#b9985720);color:var(--accent)}
+#items-panel .item-directory__folder{margin-top:var(--fib-5)}
+#items-panel .item-directory__folder-header{display:flex;align-items:center;gap:var(--fib-4);min-height:var(--fib-8);padding:0 var(--fib-4) 0 var(--fib-5);border:var(--fib-1) solid var(--border);border-left:var(--fib-2) solid var(--folder-color,var(--accent));border-radius:var(--fib-3);background:color-mix(in srgb,var(--folder-color,var(--accent)) 8%,var(--surface-field,#151a20))}
+#items-panel .item-directory__folder-toggle{display:flex;align-items:center;gap:var(--fib-5);flex:1;min-width:0;min-height:var(--fib-8);padding:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:var(--fib-6);text-align:left;cursor:pointer}
+#items-panel .item-directory__folder-toggle>svg{width:var(--step-16);height:var(--step-16);flex-shrink:0;color:var(--folder-color,var(--accent))}
+#items-panel .item-directory__folder-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+#items-panel .item-directory__folder-toggle small{color:var(--text-faint,#8f969f);font-size:var(--step-11)}
+#items-panel .item-directory__folder-toggle .item-directory__caret{width:var(--step-12);height:var(--step-12);color:var(--text-faint,#8f969f);transition:transform .15s ease}
+#items-panel .item-directory__folder-toggle[aria-expanded=true] .item-directory__caret{transform:rotate(90deg)}
+#items-panel .item-directory__folder-content{padding-left:var(--fib-6)}
+#items-panel .item-directory__folder-content[hidden]{display:none}
+#items-panel .item-directory__empty{display:grid;justify-items:center;gap:var(--fib-5);padding:var(--fib-7) var(--fib-6);color:var(--text-muted,#b7b5ad);text-align:center}
+#items-panel .item-directory__empty>svg{width:var(--fib-8);height:var(--fib-8);opacity:.6}
+#items-panel .item-directory__empty p{margin:0;font-size:var(--fib-6);line-height:1.5}
+.item-directory-menu{position:fixed;z-index:1500;display:grid;gap:var(--fib-2);min-width:var(--size-180);max-width:calc(100vw - 16px);margin:0;padding:var(--fib-5);list-style:none;border:var(--fib-1) solid var(--border,#40464e);border-radius:var(--fib-4);background:var(--surface-raised,#20262d);box-shadow:0 var(--fib-5) var(--fib-7) #0008;color:var(--text,#e8e4d8)}
+.item-directory-menu button{display:flex;align-items:center;gap:var(--fib-5);min-height:var(--fib-8);padding:var(--fib-4) var(--fib-5);border:0;border-radius:var(--fib-3);background:transparent;color:inherit;font:inherit;font-size:var(--fib-6);text-align:left;cursor:pointer}
+.item-directory-menu button>svg{width:var(--step-16);height:var(--step-16);flex-shrink:0;color:var(--accent,#b99857)}
+.item-directory-menu button:hover,.item-directory-menu button:focus-visible{outline:0;background:var(--accent-glow,#b9985720)}
+.item-directory-menu .item-directory-menu__danger{color:var(--danger,#ef9999)}
+.item-directory-menu .item-directory-menu__danger>svg{color:inherit}
+@media(prefers-reduced-motion:reduce){#items-panel .item-directory__caret{transition:none}}
 [data-move-handle]{touch-action:none}
 :is(.table-form-modal,.table-modal-window,.ownership-dialog) :is(button,input,select,textarea):focus-visible{outline:var(--fib-2) solid var(--focus-ring,var(--accent));outline-offset:var(--fib-2)}
 @media(max-width:600px){.game-scene-settings__wide{grid-template-columns:1fr}.table-modal-body,.table-form-modal__body{padding:var(--step-12)}.table-modal-tabs button{padding-inline:var(--fib-5)}}

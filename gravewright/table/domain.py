@@ -47,6 +47,14 @@ def state(campaign_id, user_id, name, scene_id=None, preview_token_id=None):
 @transaction.atomic
 def command(campaign_id, user_id, name, action, data, request_id):
     """Serialize a resource command and record its retry result before notification."""
+    if name == 'compendiums' and action == 'read':
+        # Reads must recheck live grants, including when a caller reuses a
+        # request ID. They neither create write receipts nor invalidate state.
+        who = member(campaign_id, user_id)
+        if not isinstance(data, dict):
+            raise MapError('Invalid command.')
+        identifier(request_id)
+        return module(name).command(who, action, data) or {}
     Campaign.objects.select_for_update().get(pk=campaign_id)
     who = member(campaign_id, user_id)
     from gravewright.journals.services import writable

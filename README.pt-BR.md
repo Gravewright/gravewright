@@ -4,19 +4,19 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **0.2.0**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, atores com fichas PDF, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **0.2.1**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
 ## Executar no Windows
 
-A versão 0.2.0 traz fichas independentes por sistema, combate no PDF System, busca
-com permissões, camadas de GM, janelas revisadas e API de tradução para módulos.
-Consulte as [notas da release](docs/releases/0.2.0.md).
+A versão 0.2.1 amplia as APIs para sistemas independentes, compêndios instaláveis,
+provedores de combate, salvamento ao fechar fichas e modais nativos consistentes.
+Consulte as [notas da release](docs/releases/0.2.1.md).
 
 Extraia o projeto completo e dê dois cliques em **`Install Windows.bat`**. Ele instala ferramentas ausentes, prepara dependências e frontend, faz as perguntas de configuração e gera **`Gravewright Runner.bat`**. Abra o runner gerado para iniciar a aplicação sem instalações ou perguntas. Execute o instalador novamente para mudar configurações ou preparar uma versão atualizada do projeto. Mantenha a janela do executor aberta enquanto usar o Gravewright; pressione **Ctrl+C** para encerrar.
 
 O executor funciona diretamente no **CMD do Windows**. Use Windows 10 versão 1803 ou superior, ou Windows 11, em x64; `curl.exe`, `tar.exe` e `certutil.exe` nativos cuidam dos downloads, extração e verificação de integridade.
 
-O executor guarda configurações, campanhas e uploads em `%LOCALAPPDATA%\Gravewright`, separados da pasta do código. Funciona apenas neste computador e dispensa um servidor Redis. Um atalho com o ícone do Gravewright é criado ao lado do launcher. Veja o [guia do executor Windows](docs/pt-BR/windows-runner.md) para requisitos, backups e solução de problemas.
+O instalador salva configurações no `.env` do projeto. Os caminhos do banco e uploads seguem essa configuração; os padrões são `data/gravewright.sqlite3` e `data/media` no projeto. Ferramentas, caches, logs e arquivos estáticos coletados do Runner ficam em `%LOCALAPPDATA%\Gravewright`. O executor atende apenas este computador e dispensa Redis. Um atalho com o ícone do Gravewright é criado ao lado do launcher. Veja o [guia do executor Windows](docs/pt-BR/windows-runner.md) para requisitos e solução de problemas, e o guia de [implantação e backups](docs/pt-BR/deployment.md).
 
 ## Executar localmente pelo terminal
 
@@ -65,7 +65,7 @@ O executor de testes Django usa `data/test-gravewright.sqlite3`; `--noinput` per
 
 ## Contribuir
 
-Leia [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md) e o [guia de desenvolvimento](docs/pt-BR/development.md). Inglês é o idioma principal da documentação, com guias correspondentes em português. Comentários e docstrings usam inglês. A configuração de idioma da aplicação atualmente oferece inglês; a documentação em português não significa que a interface já esteja traduzida.
+Leia [CONTRIBUTING.pt-BR.md](CONTRIBUTING.pt-BR.md) e o [guia de desenvolvimento](docs/pt-BR/development.md). Inglês é o idioma principal da documentação, com guias correspondentes em português. Comentários e docstrings usam inglês. O idioma base da aplicação é inglês; o módulo oficial [Translator](https://github.com/Gravewright/translator) oferece português e espanhol. Sistemas podem registrar seus próprios catálogos pela API de tradução.
 
 Relate problemas comuns nas issues do repositório, com passos para reproduzir e versões relevantes. Para vulnerabilidades, siga [SECURITY.pt-BR.md](SECURITY.pt-BR.md).
 

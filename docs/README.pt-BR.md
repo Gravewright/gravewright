@@ -25,3 +25,5 @@ Políticas: [contribuição](../CONTRIBUTING.pt-BR.md), [segurança](../SECURITY
 Para a implementação de dados, consulte os documentos existentes de [arquitetura da gramática](../gravewright/dice/grammar/ARCHITECTURE.pt-BR.md) e [notação](../gravewright/dice/grammar/notation/GRAMMAR.pt-BR.md).
 
 Os contratos de módulos processáveis por máquina ficam em [contracts/](../gravewright/modules/contracts/), acompanhados da [nota de transporte](../gravewright/modules/contracts/transport.pt-BR.md).
+
+Release atual: [notas do Gravewright 0.2.1](releases/0.2.1.md).

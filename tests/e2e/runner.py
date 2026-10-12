@@ -234,9 +234,9 @@ def main():
             'data', 'media', 'staticfiles', 'test-results'))
         ROOT, RUNNER = project, project / 'scripts/gravewright_runner.py'
         (ROOT / '.env').write_text('DJANGO_SECRET_KEY=' + 't' * 64 + '\n'
-            + 'GRAVEWRIGHT_DATABASE=' + json.dumps(str(data / 'gravewright.sqlite3')) + '\n'
-            + 'GRAVEWRIGHT_MEDIA_ROOT=' + json.dumps(str(data / 'media')) + '\n'
-            + 'GRAVEWRIGHT_MODULES_ROOT=' + json.dumps(str(data / 'media/modules')) + '\n', encoding='utf-8')
+            + 'GRAVEWRIGHT_DATABASE=' + json.dumps(str(data / 'gravewright.sqlite3'), ensure_ascii=False) + '\n'
+            + 'GRAVEWRIGHT_MEDIA_ROOT=' + json.dumps(str(data / 'media'), ensure_ascii=False) + '\n'
+            + 'GRAVEWRIGHT_MODULES_ROOT=' + json.dumps(str(data / 'media/modules'), ensure_ascii=False) + '\n', encoding='utf-8')
         ignored_data = work / "must-not-be-used"
         env = {
             **os.environ, "PYTHONUNBUFFERED": "1", "DJANGO_SETTINGS_MODULE": "config.does_not_exist",

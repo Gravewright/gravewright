@@ -51,19 +51,49 @@ Os documentos da gramática de dados são mantidos junto à implementação. Os 
 
 ## Identificadores da versão
 
-A versão atual é **0.2.0**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
+A versão atual é **0.2.1**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
 
 | Local | Identificador |
 | --- | --- |
-| Nome público, aplicação e Runner | `0.2.0` |
-| Projeto Python e `uv.lock` | `0.2.0` |
-| Pacote frontend, package lock e API de atualização | `0.2.0` |
-| Tag do release | `v0.2.0` |
-| Artefato do código-fonte | `Gravewright-0.2.0-django.zip` |
+| Nome público, aplicação e Runner | `0.2.1` |
+| Projeto Python e `uv.lock` | `0.2.1` |
+| Pacote frontend, package lock e API de atualização | `0.2.1` |
+| Tag do release | `v0.2.1` |
+| Artefato do código-fonte | `Gravewright-0.2.1-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
 
-A release `0.2.0` usa o canal de atualização `stable`. Esse canal descreve o identificador da versão; o projeto continua em desenvolvimento inicial. O canal selecionado continua sendo uma preferência do host.
+A release `0.2.1` usa o canal de atualização `stable`. Esse canal descreve o identificador da versão; o projeto continua em desenvolvimento inicial. O canal selecionado continua sendo uma preferência do host.
+
+## Gerar o pacote de uma release
+
+Alinhe `pyproject.toml`, `uv.lock`, o `package.json` do frontend e seu lockfile;
+adicione notas bilíngues em `docs/releases/VERSÃO.md` e atualize os índices e
+READMEs nos dois idiomas. Compile o frontend com
+`node gravewright/maps/scripts/build.cjs` e execute as verificações de
+[testes](testing.md), incluindo instalação nova e atualização.
+
+Inclua no índice Git os novos fontes, migrações, testes e documentos antes de
+empacotar:
+
+```bash
+uv run --locked python scripts/build_release.py --check
+uv run --locked python scripts/build_release.py
+```
+
+O gerador seleciona arquivos públicos rastreados pelo Git, verifica versões e
+arquivos obrigatórios e grava `dist/Gravewright-VERSÃO-django.zip` e seu SHA-256.
+Ele usa o conteúdo da árvore de trabalho; publique a partir do código revisado
+e commitado. `--include-untracked` permite revisar um pacote antes do commit;
+arquivos ignorados continuam excluídos. Extensões instaladas, dados locais,
+segredos, dependências e launchers específicos da máquina são excluídos nos
+dois modos. Use `SOURCE_DATE_EPOCH` com um timestamp Unix fixo para gerar
+timestamps reproduzíveis no ZIP.
+
+Teste uma cópia extraída do ZIP final com armazenamento descartável. Publique o
+commit correspondente como `vVERSÃO`, com ZIP, checksum e notas bilíngues.
+Confira o digest do arquivo publicado e os dois workflows de CI; gerar o pacote
+sozinho não valida o funcionamento da aplicação nem publica uma release.
 
 ## Antes de enviar
 

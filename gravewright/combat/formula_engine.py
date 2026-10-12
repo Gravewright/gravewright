@@ -2,13 +2,13 @@
 
 Supports::
 
-    paths   @core.name  @sheet.hp.value  @sheet.attributes.str.score
+    paths   @core.name  @sheet.charge.value  @sheet.reactor.output
     vars    input.amount  helper args
     math    + - * /  (unary -)
     funcs   floor ceil round abs min max clamp  if(cond, a, b)
     compare == != < <= > >=   logic && ||
     dice    1d20, die(8), successes(5, 6, 6), under(2, 20, 10), fate(), draw(52)
-    helpers abilityMod(@sheet.attributes.str.score)   (from formulas.gw.json)
+    helpers outputBonus(@sheet.reactor.output)   (defined by the system)
 
 Evaluation is a hand-written tokenizer + recursive-descent parser, so a system
 author can never run arbitrary code. Dice are rolled as they are evaluated and

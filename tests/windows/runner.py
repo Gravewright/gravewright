@@ -361,7 +361,7 @@ def exercise(work, output, *, skip_browser):
             raise AssertionError(f'The configuration wizard did not save {expected}.')
     repeated_questions = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure-repeat.log',
                                     label='Asking again and keeping saved settings with Enter...', input_text='\n' * 8)
-    if 'Table name [Mesa São Paulo]' not in repeated_questions:
+    if 'Nome da mesa [Mesa São Paulo]' not in repeated_questions:
         raise AssertionError('The repeated launch did not ask with the saved default.')
     if source_env.read_text(encoding='utf-8') != configuration:
         raise AssertionError('Repeated configuration changed the project .env.')
@@ -369,8 +369,9 @@ def exercise(work, output, *, skip_browser):
     started = run_batch(project, ['--check', '--no-pause'], launcher='Gravewright Runner.bat',
                         cwd=work, env=env, log=output / 'generated-runner.log',
                         label='Running the generated launcher offline without configuration or tool preparation...')
-    if 'Gravewright Runner checks passed.' not in started or any(
-        text in started for text in ('[1/7]', 'Table name', 'npm ci', 'Configuration saved.')
+    if 'Verificações do Gravewright Runner concluídas com sucesso.' not in started or any(
+        text in started for text in ('[1/7]', 'Table name', 'Nome da mesa', 'npm ci',
+                                    'Configuration saved.', 'Configuração salva.')
     ):
         raise AssertionError('The generated runner must only execute the prepared application.')
     if str(wizard_data) not in started:

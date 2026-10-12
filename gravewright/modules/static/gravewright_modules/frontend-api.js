@@ -3,6 +3,10 @@ import { Lifetime, ModuleError } from './lifetime.js';
 import { createDomainApi, createEvents } from './domain-api.js';
 import { SurfaceRegistry } from './surface-registry.js';
 import { createTranslator } from './i18n.js';
+import { mountModal } from '/static/gravewright_table/modal.js';
+import { createUiApi, setModalHost } from './modal-api.js';
+
+setModalHost(mountModal, document);
 
 // Host-page API lifetime. Signed modules receive a separately leased adapter
 // from BrowserBridge instead of using this global page-owned object.
@@ -29,7 +33,7 @@ export function tableApi(tableId, sceneId, life = page) {
     return result.value;
   }, options.signal);
   return createDomainApi(call, { context, i18n: createTranslator('gravewright', life), events: createEvents(window, life, context,
-    domain => call(domain === 'maps.layers' ? 'maps' : domain, domain === 'maps.layers' ? 'layers' : 'state', {}, {})), ui: registry.public });
+    domain => call(domain === 'maps.layers' ? 'maps' : domain, domain === 'maps.layers' ? 'layers' : 'state', {}, {})), ui: createUiApi(life, registry.public) });
 }
 
 // These adapters reuse the site's authenticated endpoints, including server-side owner checks.

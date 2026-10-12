@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+from functools import cached_property
 import io
 import json
 import re
@@ -182,7 +183,12 @@ class ModulePackages:
         self.keys = validate_keys(keys if keys is not None else {})
         self.directory = directory
         self.directory.mkdir(parents=True, exist_ok=True)
-        self.contracts = Contracts()
+
+    @cached_property
+    def contracts(self):
+        # Reading verified package bytes needs no JSON-schema compiler. Keep
+        # validation lazy and local to this host instance for mutation/SDK calls.
+        return Contracts()
 
     def verify(self, record: dict, *, require_compatible=True):
         """Authenticate a catalog record, optionally allowing incompatible releases."""
@@ -378,12 +384,27 @@ class ModulePackages:
             if "system" in manifest:
                 # A package owns its own ruleset identity; it cannot replace the
                 # built-in system or declare ambiguous document type IDs.
-                if manifest["id"] == "gravewright-pdf-system":
+                from gravewright.campaigns.systems import bundled
+                if bundled(manifest["id"]) is not None:
                     raise ModuleFailure("invalid_data")
                 for field in ("actorTypes", "itemTypes"):
                     types = manifest["system"].get(field, [])
                     if len({row["id"] for row in types}) != len(types):
                         raise ModuleFailure("invalid_data")
+            if "content" in manifest:
+                from gravewright.compendiums.content import MAX_COLLECTION_BYTES, validate_collection
+                definition = manifest['system']
+                actor_types = {row['id'] for row in definition.get('actorTypes', [])}
+                item_types = {row['id'] for row in definition.get('itemTypes', [])}
+                for relative in manifest['content']['compendiums']:
+                    path = str(safe_path(relative))
+                    if not path.endswith('.json') or package.getinfo(path).file_size > MAX_COLLECTION_BYTES:
+                        raise ModuleFailure('invalid_data', 'Invalid compendium path or size')
+                    try:
+                        value = json.loads(package.read(path))
+                    except RecursionError:
+                        raise ModuleFailure('invalid_data', 'Invalid compendium JSON depth') from None
+                    validate_collection(value, manifest['id'], actor_types, item_types)
             if (
                 manifest["id"] != record["id"]
                 or manifest["version"] != record["version"]
@@ -476,7 +497,7 @@ class ModulePackages:
             raise ModuleFailure("invalid_data", "Invalid module archive") from None
 
     def verify_installed(self, row, asset=None):
-        """Recheck the trusted archive and extracted bytes, including on activation."""
+        """Recheck trust and extracted bytes; return verified bytes for one asset."""
         record = row.record
         self._verify_stored_record(record)
         archive = self.directory / "archives" / (row.digest + ".zip")
@@ -505,8 +526,13 @@ class ModulePackages:
                     path = root / name
                     if any(
                         p.is_symlink() for p in (path, *path.parents)
-                    ) or path.read_bytes() != package.read(name):
+                    ):
                         raise ModuleFailure("invalid_data", "Installed package changed")
+                    extracted = path.read_bytes()
+                    if extracted != package.read(name):
+                        raise ModuleFailure("invalid_data", "Installed package changed")
+                    if asset is not None:
+                        return extracted
         except OSError, zipfile.BadZipFile, KeyError:
             raise ModuleFailure(
                 "invalid_data", "Installed package unavailable"

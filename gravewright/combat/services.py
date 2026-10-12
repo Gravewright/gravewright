@@ -14,7 +14,10 @@ from .models import Encounter
 from gravewright.actors import services as actors
 from gravewright.actors.models import Actor
 from gravewright.dice.grammar.errors import RollError
+from .providers import get as combat_provider
 import math
+import re
+import uuid
 
 
 def initiative_score(entry):
@@ -28,20 +31,61 @@ def initiative_score(entry):
 def system_combat(who):
     from gravewright.campaigns.systems import bundled
     module = bundled(who.campaign.system)
-    return (module or {}).get('combat') or {}
+    if module:
+        return module.get('combat') or {}
+    from gravewright.campaigns.catalog import get_ruleset
+    descriptor = get_ruleset(who.campaign.system, campaign_id=who.campaign_id) or {}
+    combat = descriptor.get('combat', {})
+    return {'formula': combat.get('formula', ''), 'manual_input': combat.get('manualInput', 'text'),
+            'show_roll': combat.get('showRoll', True),
+            'requires_provider': combat.get('requiresProvider', False)}
+
+
+def system_provider(who):
+    from gravewright.campaigns.systems import resolve_system_id
+    provider = combat_provider(resolve_system_id(who.campaign.system))
+    if system_combat(who).get('requires_provider') and provider is None:
+        raise MapError('The selected system requires its server extension to be enabled.', 'unavailable')
+    return provider
 
 
 def configuration(who, row=None):
     provider = system_combat(who)
-    config = {'formula': provider.get('formula', ''), **(row.config if row else {})}
+    # Encounter identity belongs to state, not the user-editable configuration.
+    stored = {key: value for key, value in row.config.items() if key != '_encounter_id'} if row else {}
+    config = {'formula': provider.get('formula', ''), **stored}
     return {**config, 'input': 'roll' if config['formula'] else provider.get('manual_input', 'text'),
+            'can_roll': provider.get('show_roll', True),
             'system_id': who.campaign.system}
 
 
-def roll_initiative(who, formula, data):
+def roll_initiative(who, formula, data, *, conditions=()):
     try:
-        roll = system_combat(who).get('roll')
-        result = roll(formula, data) if roll else evaluate(formula, 1)['value']['value']
+        provider = system_combat(who)
+        roll = provider.get('roll')
+        if roll:
+            result = roll(formula, data)
+        else:
+            implementation = system_provider(who)
+            if implementation and implementation.prepare_initiative:
+                try:
+                    prepared = implementation.prepare_initiative(formula, deepcopy(data), conditions=deepcopy(conditions))
+                    if not isinstance(prepared, (tuple, list)) or len(prepared) != 2:
+                        raise ValueError('Invalid initiative preparation result.')
+                    formula, data = prepared
+                    if not isinstance(formula, str) or len(formula) > 500 or not isinstance(data, dict):
+                        raise ValueError('Invalid initiative preparation result.')
+                except ValueError as error:
+                    raise MapError(str(error)) from None
+            def attribute(match):
+                value = data
+                for key in match.group(1).split('.'):
+                    value = value.get(key, 0) if isinstance(value, dict) else 0
+                if type(value) not in (int, float) or abs(value) > 1e6 or not math.isfinite(value):
+                    raise MapError('Invalid initiative attribute.')
+                return f'({value})'
+            expression = re.sub(r'@([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)', attribute, formula)
+            result = evaluate(expression, 1)['value']['value']
         return number(result, -1e6, 1e6)
     except RollError as error:
         raise MapError(str(error)) from None
@@ -60,9 +104,9 @@ def actor_for(entry):
 
 
 def state(who, scene_id=None):
-    if not scene_id:return dict(active=False,round=0,turn=0,combatants=[],version=0)
+    if not scene_id:return dict(encounterId=None,active=False,round=0,turn=0,combatants=[],version=0)
     target=scene(scene_id,who);row=Encounter.objects.filter(scene=target).first()
-    if not row:return dict(sceneId=str(target.pk),active=False,round=0,turn=0,combatants=[],version=0,config=configuration(who))
+    if not row:return dict(sceneId=str(target.pk),encounterId=None,active=False,round=0,turn=0,combatants=[],version=0,config=configuration(who))
     rows=[]
     next_index=next(((row.turn+offset)%len(row.combatants) for offset in range(1,len(row.combatants))
                      if not row.combatants[(row.turn+offset)%len(row.combatants)].get('defeated')),None)
@@ -93,7 +137,9 @@ def state(who, scene_id=None):
             'name':data.get('token',{}).get('name') or actor.name,'canControl':controlled,
             'current':row.active and index==row.turn,'is_current':row.active and index==row.turn,
             'can_move_up':index>0,'can_move_down':index<len(row.combatants)-1})
-    return dict(sceneId=str(target.pk),active=row.active,round=row.round,turn=row.turn,combatants=rows,current_name=next((c['name'] for c in rows if c['is_current']),''),next_name=next((c['name'] for c in rows if c['is_next']),''),version=row.version,config=configuration(who, row))
+    # Old active encounters get a stable read-only fallback until their next start.
+    encounter_id = row.config.get('_encounter_id') or (f'legacy:{target.pk}' if row.active else None)
+    return dict(sceneId=str(target.pk),encounterId=encounter_id,active=row.active,round=row.round,turn=row.turn,combatants=rows,current_name=next((c['name'] for c in rows if c['is_current']),''),next_name=next((c['name'] for c in rows if c['is_next']),''),version=row.version,config=configuration(who, row))
 
 
 def command(who,action,p):
@@ -111,6 +157,7 @@ def command(who,action,p):
         if 'tokenId' not in old and 0<=old.get('turn',-1)<len(row.combatants):
             old['tokenId']=identity(row.combatants[old['turn']])
     previous_round=row.round
+    skipped_entries=[]
     current_id=identity(row.combatants[row.turn]) if row.combatants and row.turn<len(row.combatants) else None
     previous_entry=deepcopy(row.combatants[row.turn]) if row.combatants and row.turn<len(row.combatants) else None
     if action=='add':
@@ -156,7 +203,8 @@ def command(who,action,p):
             token=Token.objects.select_related('actor').filter(pk=entry['tokenId'],scene=target).first() if entry.get('tokenId') else None
             actor=token.actor if token else actor_for(entry)
             if not actor:continue
-            entry['initiative']=roll_initiative(who,config['formula'],tokens.data(token) if token else actor.data)
+            entry['initiative']=roll_initiative(who,config['formula'],tokens.data(token) if token else actor.data,
+                                               conditions=token.conditions if token else ())
         row.combatants.sort(key=initiative_score,reverse=True)
         row.turn=next((i for i,c in enumerate(row.combatants) if identity(c)==current_id),0) if row.active else 0
     elif action=='toggle':
@@ -173,9 +221,11 @@ def command(who,action,p):
             row.combatants[index],row.combatants[target_index]=row.combatants[target_index],row.combatants[index]
     elif action in ('next-round','previous-round'):
         if not row.active:raise MapError('Combat has not started.')
+        if action=='next-round':skipped_entries=deepcopy(row.combatants[row.turn+1:])
         row.history=(row.history+[dict(round=row.round,turn=row.turn,tokenId=identity(row.combatants[row.turn]))])[-256:];row.round=max(1,row.round+(-1 if action=='previous-round' else 1));row.turn=0
     elif action=='start':
         if not row.combatants:raise MapError('Add combatants first.')
+        row.config={**row.config, '_encounter_id':str(uuid.uuid4())}
         row.active=True;row.round=1;row.turn=0;row.history=[]
     elif action=='stop':row.active=False;row.round=0;row.turn=0;row.history=[]
     elif action=='next':
@@ -186,6 +236,7 @@ def command(who,action,p):
             row.turn+=1
             if row.turn>=len(row.combatants):row.turn=0;row.round+=1
             if not row.combatants[row.turn].get('defeated'):break
+            skipped_entries.append(deepcopy(row.combatants[row.turn]))
     elif action=='previous':
         if not row.history:raise MapError('No previous turn.')
         old=row.history.pop();row.round=old['round'];row.turn=next((i for i,c in enumerate(row.combatants) if identity(c)==old.get('tokenId')),min(old['turn'],max(0,len(row.combatants)-1)))
@@ -200,13 +251,21 @@ def command(who,action,p):
         row.history=[old for old in row.history if old.get('tokenId') in remaining]
     if action in ('next','next-round') and row.combatants:
         from .conditions import advance as advance_conditions
-        boundary=row.round>previous_round
-        if previous_entry:
-            advance_conditions(row,'end',previous_entry,round_boundary=boundary)
-        advance_conditions(row,'start',row.combatants[row.turn],round_boundary=boundary)
         from .effects import advance
-        active=row.combatants[row.turn]
-        advance(who.campaign_id,active.get('tokenId') if action=='next' else None,actor_id=active.get('actorId') if action=='next' else None,new_round=row.round>previous_round)
+        boundary=row.round>previous_round
+        provider=system_provider(who)
+        ticked=set()
+        def phase(name, entry, *, boundary=False, periodic=False):
+            advance_conditions(row,name,entry,round_boundary=boundary)
+            advance(row,name,entry,round_boundary=boundary,provider=provider,periodic=periodic,ticked=ticked)
+        if previous_entry:
+            phase('end',previous_entry,boundary=boundary)
+        # Skipping a turn advances its explicit clocks without rolling damage.
+        # The shared tick set prevents one linked actor clock counting twice.
+        for skipped in skipped_entries:
+            phase('start',skipped)
+            phase('end',skipped)
+        phase('start',row.combatants[row.turn],boundary=boundary,periodic=action=='next')
     row.version+=1;row.save()
     return state(who,str(target.pk))
 

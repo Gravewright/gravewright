@@ -4,19 +4,21 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.2.0**, an alpha preview. The source includes campaigns, maps and scenes, actors with PDF character sheets, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **0.2.1**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
 
 ## Run on Windows
 
-Version 0.2.0 adds independent system sheets, PDF combat, permission-aware search,
-GM layers, refined windows and module translation APIs.
-See the [0.2.0 release notes](docs/releases/0.2.0.md).
+Version 0.2.1 adds system-defined combat providers and packaged compendiums,
+shared modal windows that await pending saves, translated document types and
+revised item and card interfaces. See the [0.2.1 release notes](docs/releases/0.2.1.md).
 
 Extract the complete project and double-click **`Install Windows.bat`**. It installs missing tools, prepares dependencies and the frontend, asks for your settings, and generates **`Gravewright Runner.bat`**. Open the generated runner to start the application without installation or configuration questions. Run the installer again to change settings or prepare an updated project. Keep the runner window open while using Gravewright; press **Ctrl+C** to stop it.
 
 The runner executes directly in **Windows CMD**. Use Windows 10 version 1803 or newer, or Windows 11, on x64; built-in `curl.exe`, `tar.exe` and `certutil.exe` handle downloads, extraction and integrity checks.
 
-The runner stores your settings, campaigns and uploads under `%LOCALAPPDATA%\Gravewright`, separately from the source folder. It runs on this computer only and does not need a Redis server. A shortcut with the Gravewright icon is created beside the launcher. See the [Windows runner guide](docs/en/windows-runner.md) for requirements, backups and troubleshooting.
+The installer saves settings in the project's `.env`. Database and upload paths follow that configuration; their defaults are `data/gravewright.sqlite3` and `data/media` in the project. Runner tools, caches, logs and collected assets use `%LOCALAPPDATA%\Gravewright`. The runner listens on the local computer and does not need a Redis server. A shortcut with the Gravewright icon is created beside the launcher. See the [Windows runner guide](docs/en/windows-runner.md) for requirements, backups and troubleshooting.
+
+Before updating, stop the application and back up the configured database, private media and `.env` together. Managed installations can use Administration → Updates after publication; source installations must install locked dependencies and run migrations. After moving or replacing a Windows project, rerun **`Install Windows.bat`** to prepare it and regenerate its runner. See [deployment and backups](docs/en/deployment.md).
 
 ## Run locally from a terminal
 
@@ -53,6 +55,8 @@ Start with the [documentation index](docs/README.md), [architecture](docs/en/arc
 
 The [API guide](docs/en/api.md) distinguishes Python calls, HTTP routes and WebSocket/browser contracts. The [module guide](docs/en/modules.md) explains manifests, package verification, lifecycle and examples. The [frontend guide](docs/en/frontend.md) describes assets, rendering and generated contracts.
 
+Systems using `system.combat`, `content.compendiums` or the module modal API require **VTT 0.2.1 or newer**. These are additive host capabilities; the browser SDK remains **1.0.0**, and an SDK range alone does not establish support in older VTT releases. Systems and their content ship separately from the VTT; the 5e SRD system 0.1.0 is not included in this release.
+
 For a quick check:
 
 ```bash
@@ -65,7 +69,7 @@ The Django test runner uses `data/test-gravewright.sqlite3`; `--noinput` permits
 
 ## Contribute
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [development guide](docs/en/development.md). English is the primary documentation language; Portuguese guides are maintained alongside it. Code comments and docstrings use English. The current application locale setting supports English; the Portuguese documentation does not imply a translated application UI.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [development guide](docs/en/development.md). English is the primary documentation language; Portuguese guides are maintained alongside it. Code comments and docstrings use English. The official Translator supplies installable interface languages; modules register private catalogs through the host's translation API. User-authored content retains its original text.
 
 Report ordinary bugs through the repository's issue tracker, including reproduction steps and relevant versions. Follow [SECURITY.md](SECURITY.md) for vulnerability reports.
 

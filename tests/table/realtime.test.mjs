@@ -4,8 +4,12 @@ import {randomUUID} from 'node:crypto';
 import {test} from 'node:test';
 import {runInNewContext} from 'node:vm';
 
+const contentSource = readFileSync(new URL('../../gravewright/table/static/gravewright_table/content-state.js', import.meta.url), 'utf8')
+  .replace(/^export /gm, '');
+const contentExports = 'contentStates, initialContent, contentReady, afterContentReady, clearContent';
+
 const source = readFileSync(new URL('../../gravewright/table/static/gravewright_table/realtime.js', import.meta.url), 'utf8')
-  .replace(/^import .* from .*;$/m, '');
+  .replace(/^import .* from .*;$/gm, '');
 
 function table() {
   const signals = {}, sockets = [];
@@ -21,7 +25,7 @@ function table() {
   }
   const root = {dataset: {tableId: 'table', role: 'gm'}, querySelector: () => null};
   const window = {addEventListener() {}, dispatchEvent() {}};
-  runInNewContext(source, {
+  runInNewContext(`const {${contentExports}} = (() => {\n${contentSource}\nreturn {${contentExports}};\n})();\n${source}`, {
     window,
     document: {getElementById: id => id === 'table-workspace' ? root : null, querySelector: () => null, addEventListener() {}},
     location: {protocol: 'http:', host: 'localhost'},

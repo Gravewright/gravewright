@@ -4,6 +4,7 @@ import { HttpClient, ApiError } from "./http-client.js";
 import { ModuleError } from "./lifetime.js";
 import { createDomainApi, createEvents } from "./domain-api.js";
 import { createTranslator } from './i18n.js';
+import { createUiApi } from './modal-api.js';
 const errorCodes = ["not_found", "permission_denied", "invalid_data", "conflict", "unavailable", "cancelled", "stale_context"];
 /** Translate module-owned handles into authenticated, revision-checked requests. */
 class BrowserBridge {
@@ -58,7 +59,7 @@ class BrowserBridge {
     if (file instanceof Blob) {
       const form = new FormData();
       form.append("metadata", JSON.stringify({ ...metadata, payload: { ...payload, file: void 0 } }));
-      form.append("file", file, file instanceof File ? file.name : "upload.pdf");
+      form.append("file", file, file instanceof File ? file.name : "upload.bin");
       body = form;
     } else {
       headers["content-type"] = "application/json";
@@ -73,7 +74,7 @@ class BrowserBridge {
       const blob = await response.blob();
       onProgress?.({ loaded: blob.size, total: blob.size });
       const disposition = response.headers.get("content-disposition") ?? "";
-      let filename = disposition.match(/filename="([^"\r\n]*)"/)?.[1] ?? "download.pdf";
+      let filename = disposition.match(/filename="([^"\r\n]*)"/)?.[1] ?? "download.bin";
       const encoded = disposition.match(/filename\*=utf-8''([^;]+)/i)?.[1];
       if (encoded) filename = decodeURIComponent(encoded);
       return { blob, name: filename, contentType: blob.type, size: blob.size };
@@ -116,7 +117,7 @@ class BrowserBridge {
       }, signal);
     }, options.signal);
     return createDomainApi(call, { context: identity, i18n: createTranslator(identity.moduleId, life), events: createEvents(window, life, identity,
-      domain => call(domain === 'maps.layers' ? 'maps' : domain, domain === 'maps.layers' ? 'layers' : 'state', {}, {})), ui });
+      domain => call(domain === 'maps.layers' ? 'maps' : domain, domain === 'maps.layers' ? 'layers' : 'state', {}, {})), ui: createUiApi(life, ui) });
   }
   events(identity, life) {
     return { on: (name, handler) => {

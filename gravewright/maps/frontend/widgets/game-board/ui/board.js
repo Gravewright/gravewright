@@ -206,7 +206,7 @@ export function createBoard(element, options, emit) {
     function assetDragOver(event) {
         if (event.dataTransfer?.types.includes('application/x-gravewright-hand-card') || (props.gm && event.dataTransfer?.types.includes('application/x-gravewright-library-image'))) {
             event.preventDefault();
-            event.dataTransfer.dropEffect = 'copy';
+            event.dataTransfer.dropEffect = event.dataTransfer.types.includes('application/x-gravewright-hand-card') ? 'move' : 'copy';
         }
     }
     function assetDrop(event) {

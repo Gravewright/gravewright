@@ -6,6 +6,23 @@ O Gravewright instala pacotes ZIP assinados com JavaScript para o navegador ou a
 
 A licença de módulos de terceiros está descrita na [política de licenciamento](../../LICENSING.pt-BR.md). O manifesto registra a licença escolhida pelo autor; a instalação não a altera.
 
+## Compatibilidade com o VTT
+
+O VTT **0.2.1** é a primeira release pública com o contrato de provedores
+`system.combat`, `content.compendiums` instaláveis, `api.ui.openModal` nativo e
+o ciclo de salvamento assíncrono ao fechar fichas documentados abaixo. São
+recursos adicionais do host; o contrato do SDK continua na versão **1.0.0**.
+A faixa de versão do SDK sozinha não distingue o VTT 0.2.0 do 0.2.1: pacotes
+que usam esses recursos devem documentar o VTT 0.2.1 como mínimo e verificar
+APIs opcionais do navegador antes de chamá-las. O VTT 0.2.0 já introduziu
+catálogos privados em `context.i18n`; o 0.2.1 também resolve os nomes traduzidos
+dos tipos de documento nos diretórios nativos.
+
+Regras, escolhas, layout das fichas e catálogos de tradução de jogos pertencem
+ao sistema instalado ou ao app complementar confiável. O núcleo valida
+descritores, autorização e armazenamento sem interpretar regras de jogos.
+Veja as [notas da 0.2.1](../releases/0.2.1.md) para instalação e atualização.
+
 ## Confiança e limites da instalação
 
 Módulos instalados executam como módulos ES na página principal da aplicação. Não há sandbox de iframe, Shadow DOM nem isolamento JavaScript por capacidades. O código pode interagir com a página e o ambiente do navegador. A assinatura autentica o publicador configurado e os bytes do arquivo; não comprova que o código é seguro. Configure chaves de publicadores cujo código você aceita executar nas sessões dos usuários.
@@ -114,11 +131,80 @@ Um pacote também pode fornecer um sistema de campanha adicionando `system` ao m
 }
 ```
 
-O ID e o título do sistema vêm de `id` e `name` do pacote. Cada pacote declara um sistema e não pode substituir `gravewright-pdf-system`. Declare pelo menos um tipo de ator; tipos de itens são opcionais. Os IDs dos tipos devem ser únicos em cada lista, começar com letra minúscula e conter apenas letras minúsculas, dígitos, sublinhados ou hífens (máximo de 80 caracteres). Cada lista aceita até 64 entradas, com rótulos de 1–120 caracteres.
+Opcionalmente, declare a iniciativa usada pelo gerenciador de combate nativo:
+
+```json
+"combat": { "formula": "1d20 + @combat.initiative", "manualInput": "number" }
+```
+
+Esse objeto pertence a `system`. A fórmula tem até 120 caracteres e usa a
+gramática nativa de dados. Referências `@caminho.do.campo` consultam números
+finitos na ficha do ator ou no snapshot independente do token; campos ausentes
+valem zero, enquanto valores não numéricos são rejeitados. A ficha do sistema
+deve persistir os modificadores calculados. O gerenciador consulta a versão
+instalada selecionada para a mesa. `showRoll: false` oculta os controles nativos
+de rolar iniciativa. `manualInput` aceita `number` ou `text` e é
+usado se a configuração de uma cena desativar a fórmula. Não há execução de
+JavaScript ou Python fornecido pelo manifesto.
+Para regras dinâmicas do sistema, veja [provedores de combate](#provedores-de-combate-do-sistema).
+
+O ID e o título do sistema vêm de `id` e `name` do pacote. Cada pacote declara um sistema e não pode substituir uma identidade registrada por um provedor embutido. Declare pelo menos um tipo de ator; tipos de itens são opcionais. Os IDs dos tipos devem ser únicos em cada lista, começar com letra minúscula e conter apenas letras minúsculas, dígitos, sublinhados ou hífens (máximo de 80 caracteres). Cada lista aceita até 64 entradas, com rótulos de 1–120 caracteres.
+
+Os descritores de tipo aceitam `labelKey` (chave de tradução de até 120 caracteres)
+e `icon` (nome de ícone de até 80 caracteres). Os diretórios de atores e itens consultam
+`labelKey` no catálogo registrado pelo próprio pacote com `context.i18n.register`;
+na ausência da tradução, usam `label`. Os ícones disponíveis para itens incluem `Backpack`,
+`Sword`, `ShieldCheck`, `Scroll`, `Sparkle` e `User`; um nome indisponível usa o
+ícone padrão. Por exemplo, `{"id":"component","label":"Component",
+"labelKey":"types.component","icon":"Backpack"}`. O core não mantém tabelas
+de nomes ou ícones por tipo de jogo. Consumidores de `i18n.onChange` também são
+atualizados quando o catálogo de seu namespace é registrado ou removido.
 
 Após a instalação assinada, o sistema aparece em Systems, `/api/rulesets` e no formulário de campanha. O catálogo usa a versão instalada compatível e não revogada mais recente de cada pacote, comparando os números da versão. Módulos comuns sem `system` continuam disponíveis em Installed modules. Campanhas existentes podem manter um sistema indisponível ao editar seus detalhes, mas ele não pode ser escolhido para uma nova campanha.
 
 Salvar uma mesa com um sistema instalado seleciona seus tipos e ativa seu pacote de interface. A versão exata já ativa é preservada; trocar o sistema remove o pacote anterior e mantém os demais módulos e preferências de interface. A mesa usa os tipos da versão exata ativada, ou da versão instalada mais recente quando nenhuma está ativada. Os dados dos atores mantêm a estrutura nativa existente; dados específicos do módulo usam as APIs de documentos e armazenamento de módulos. Instalar outra versão não muda automaticamente a versão ativada na mesa.
+
+## Provedores de combate do sistema
+
+O core não seleciona perfis de regras de jogos. Uma extensão de servidor
+confiável registra callbacks para o ID do próprio sistema em `AppConfig.ready()`:
+
+```python
+from api.combat import register_provider
+
+register_provider('publisher.starship',
+                  prepare_initiative=prepare_initiative,
+                  advance_effects=advance_effects)
+```
+
+`prepare_initiative(formula, data, *, conditions=())` recebe cópias isoladas e
+retorna `(formula, data)`. O parser nativo de dados avalia a fórmula retornada
+e valida o resultado numérico; ele não conhece os modificadores do sistema.
+`advance_effects(data, event)` altera uma cópia limitada da ficha e retorna
+`True` quando precisa persistir. Nomes de campos, ativação de equipamentos,
+recursos, condições e relógios de efeitos pertencem ao sistema. Sem provedor,
+os efeitos da ficha permanecem intocados. Registrar outro sistema não afeta o
+selecionado; registros conflitantes para um mesmo ID impedem a inicialização.
+
+O evento contém `phase` (`start`/`end`), `roundBoundary`, `isCurrent`, `periodic`,
+`actorType`, `tokenId`/`actorId`/`conditions` da origem do evento e
+`ownerTokenId`/`ownerActorId` do documento recebido. Tokens vinculados compartilham
+um documento de ator; tokens independentes recebem seu próprio snapshot.
+`documentKey` é uma tupla opaca de identidade; `clockKeys` é um conjunto
+compartilhado pelas fases de um comando para o sistema evitar contagem repetida.
+Turnos pulados recebem `periodic=False`; voltar no combate não executa esses
+callbacks.
+
+O host conserva permissões, limites do encontro, transações, limites de JSON,
+revisões, recibos contra repetição e publicação. Falhas no callback desfazem o
+comando. Callbacks devem evitar efeitos externos, pois a transação não consegue
+desfazê-los. São extensões Python confiáveis, ativadas pelo proprietário através
+do mecanismo existente de pacotes Django, sem imports solicitados pelo manifesto
+do navegador. Um sistema pode distribuir sua interface e suas regras de servidor
+em pacotes separados. Declare `"requiresProvider": true` em `system.combat`
+quando precisar desse backend: ações de combate falham claramente se ele estiver
+ausente, em vez de usar regras incompletas. O VTT não contém regras substitutas
+específicas de jogos.
 
 ## Catálogo assinado e ativação
 
@@ -399,3 +485,136 @@ rejeição mantém a janela aberta e mostra o erro. Registre o evento em
 `root.closest('.gw-window')`, usando o `signal` da montagem. Cada ficha controla
 as gravações ao trocar suas próprias abas. O módulo PDF continua emitindo
 `gravewright:sheet-flush` e `gravewright:sheet-refresh` nas trocas de suas abas.
+
+Fichas de item também preservam a barra de título e emitem
+`gravewright:sheet-flush` antes de fechar. Registre o evento em
+`root.closest('.item-sheet')`; `event.detail.waitUntil(promise)` aguarda
+gravações, inclusive ao pressionar ESC. Uma rejeição mantém o item aberto.
+A perda de acesso fecha a janela imediatamente, sem aguardar novas escritas.
+
+## Compêndios fornecidos por um pacote de sistema
+
+Um sistema de navegador pode declarar até 16 coleções JSON no manifesto:
+
+```json
+"content": {"compendiums": ["compendiums/entities.json", "compendiums/gear.json"]}
+```
+
+Os caminhos devem ser relativos ao pacote e terminar em `.json`. Caminhos
+absolutos, travessia de diretórios, URLs e links simbólicos para fora do pacote
+aprovado são rejeitados. Cada coleção admite até 8 MiB, 64 compêndios e 20.000
+entradas no total. Cada entrada admite 256 KiB; o JSON admite até 24 níveis de
+aninhamento. O conteúdo é JSON declarativo, e o campo `data` pertence ao
+provedor. O núcleo não executa expressões nem busca recursos externos a partir
+desses campos:
+
+```json
+{
+  "name": "Equipamentos de exemplo",
+  "packs": [{
+    "id": "equipamentos", "label": "Equipamentos", "type": "item_pack",
+    "entries": [{
+      "id": "kit-exploracao", "name": "Kit de exploração", "type": "gear",
+      "systemId": "autor.sistema-exemplo",
+      "data": {"revision": "original", "description": "Texto simples"}
+    }]
+  }]
+}
+```
+
+Os tipos de compêndio aceitos são `actor_pack`, `item_pack` e `spell_pack`.
+Toda entrada deve usar o `systemId` do próprio fornecedor e um tipo registrado
+em `system.actorTypes` ou `system.itemTypes`. IDs de compêndio são únicos na
+coleção; IDs de entrada são únicos no compêndio. IDs aceitam letras ASCII,
+números, ponto, sublinhado, dois-pontos e hífen, até 120 caracteres, começando
+com letra ou número. Nomes e rótulos admitem até 120 caracteres. Mantenha os IDs
+e caminhos relativos estáveis nas atualizações para preservar permissões e
+referências.
+
+A instalação valida as declarações e os arquivos. A interface nativa mostra
+essas coleções apenas nas mesas que usam a versão exata, ativa, fixada,
+aprovada e não revogada desse sistema. Cada leitura confere os arquivos
+instalados com o ZIP aprovado; editar um arquivo não autoriza novo conteúdo.
+A coleção não declara IDs de mesas: a base vincula o acesso internamente.
+Por padrão, os compêndios são privados do mestre. As concessões de leitura e
+os padrões de papel existentes controlam a visibilidade para jogadores;
+importar documentos continua sendo uma ação do mestre. A base trata `data`
+como JSON opaco e conserva os campos do fornecedor, sem interpretar revisões
+ou regras de jogo. Atualize a base para uma versão com suporte a
+`content.compendiums` antes de instalar um pacote com essa declaração opcional.
+
+Os JSON declarados como coleções não são servidos pelas URLs genéricas de
+arquivos do pacote. Leia e importe suas entradas pela API de compêndios da
+mesa, que verifica o sistema ativo e as permissões de leitura atuais.
+
+Use `api.compendiums.state()` para obter os IDs de compêndios e entradas
+visíveis. `api.compendiums.read({packId, id})` continua retornando uma entrada;
+`api.compendiums.read({packId, ids: [id1, id2]})` retorna `{entries: [...]}` com
+os mesmos documentos, na ordem pedida. O lote aceita de 1 a 100 IDs únicos;
+não combine `id` com `ids`. IDs inválidos ou duplicados geram `invalid_data`;
+uma entrada ausente falha o lote inteiro com `not_found`, sem resposta parcial.
+Compêndios nativos conservam seus documentos completos; compêndios criados
+na mesa conservam o envelope individual com `kind`, `data` e `version`.
+
+Cada leitura revalida a associação à mesa, as permissões e, para coleções
+instaladas, a versão ativa e sua integridade. Leitura não cria recibos de
+mutação nem publica `compendiums.changed`; reutilizar um ID de requisição não
+conserva acesso após revogação. Um papel somente de leitura pode ler quando
+possui uma concessão válida, mas continua sem permissão para importar.
+
+O índice inicial contém apenas metadados dos compêndios e os campos `id`,
+`name`, `kind`, `type` e `version` de cada entrada. Ele não inclui o corpo dos
+documentos nem arquivos de transferência. `type` é o tipo registrado pelo
+fornecedor, sem categoria de regras definida pela base; `spell_pack` é um tipo
+de compêndio mantido por compatibilidade que encaminha documentos de item,
+sem acrescentar regras de magia. Documentos completos são carregados por
+leituras individuais ou em lote autorizadas. Coleções instaladas usam o mesmo
+cache limitado e verificado para qualquer fornecedor ou tipo de documento.
+Permissões, seleção de pacote e revogação são verificadas a cada requisição e
+nunca ficam no cache do conteúdo. Importações legadas de atores sem tipo usam
+o padrão declarado pelo sistema, como a criação de atores, sem um tipo fixo
+definido pela base.
+
+## Modais de módulos
+
+Use `api.ui.openModal(element, {nested = true, canClose = () => true})` para
+janelas de módulos. O método monta o componente de modal compartilhado do
+Gravewright de forma síncrona e retorna o mesmo elemento, com os métodos
+`close()`, `suspend()` e `resume()`. Passe um `section`, `div` ou `form` criado
+no documento do host. Elementos HTML nativos `dialog` e elementos de outro
+documento são rejeitados. A base adiciona `table-modal-window`, mantém o foco
+na modal, desativa o fundo, restaura o foco ao fechar e trata Escape. O módulo
+fornece conteúdo, nome acessível, traduções e botão de fechar; a modal não ganha
+uma barra de título móvel automaticamente.
+
+```js
+mount({root, api, signal}) {
+  const doc = root.ownerDocument;
+  const panel = doc.createElement('section');
+  panel.setAttribute('aria-label', 'Detalhes'); // Use sua tradução.
+  const close = doc.createElement('button');
+  close.type = 'button';
+  close.textContent = 'Fechar'; // Use sua tradução.
+  panel.append(close);
+  const modal = api.ui.openModal(panel);
+  close.addEventListener('click', () => modal.close(), {signal});
+}
+```
+
+`nested: true` preserva a modal anterior abaixo da nova; fechar a filha restaura
+a anterior. Use `nested: false` para solicitar o fechamento da modal anterior.
+`canClose` é uma verificação síncrona para Escape; chamadas explícitas a
+`close()` continuam sob controle do módulo. `close()` emite
+`gravewright:sheet-flush`: registre o evento no elemento retornado e chame
+`event.detail.waitUntil(promise)` durante o evento para aguardar gravações
+pendentes. Uma rejeição mantém a modal aberta. `suspend()` oculta a modal
+temporariamente para interações como escolher um ponto no mapa; `resume()`
+restaura sua exibição.
+
+A API pertence ao ciclo de vida da ativação ou superfície. O descarte força
+o fechamento da modal, mesmo com uma gravação pendente, e libera o foco e o
+estado do fundo. O fechamento normal libera a limpeza do ciclo de vida
+imediatamente. Abrir após o descarte gera `stale_context`; abrir um elemento
+já montado gera `conflict`. O helper está disponível em `start`, `customize`,
+registro e callbacks de superfícies. `api.ui.register` conserva seu
+comportamento restrito à fase de registro.

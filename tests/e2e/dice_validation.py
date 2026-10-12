@@ -16,15 +16,15 @@ def check(gm, player, data, output):
     tray = gm.locator('#dice-tray')
     for index, (button, visibility) in enumerate([('Roll', 'public'), ('To GM', 'gm'), ('Enter', 'public')]):
         gm.get_by_role('button', name='Dice tray', exact=True).click()
-        tray.get_by_role('button', name='RPG presets', exact=True).click()
+        tray.get_by_role('button', name='Formula presets', exact=True).click()
         expression = tray.locator('[name=expression]')
         repeat = tray.locator('[name=repeat]')
         # Applying a valid preset must work even if the roll draft is invalid.
         repeat.fill('0')
         tray.get_by_role('button', name='Use preset', exact=True).click()
-        expect(expression).to_have_value('4d6dl1')
-        expect(repeat).to_have_value('6')
-        tray.locator('[data-preset-field=attributes]').fill('0')
+        expect(expression).to_have_value('3d6')
+        expect(repeat).to_have_value('1')
+        tray.locator('[data-preset-field=count]').fill('0')
         expect(tray.get_by_role('button', name='Use preset', exact=True)).to_be_disabled()
         expression.fill('1d1')
         repeat.fill('0')
@@ -47,8 +47,8 @@ def check(gm, player, data, output):
         assert calls[-1]['visibility'] == visibility
 
     gm.get_by_role('button', name='Dice tray', exact=True).click()
-    tray.get_by_role('button', name='RPG presets', exact=True).click()
-    tray.get_by_role('button', name='d20 check', exact=True).click()
+    tray.get_by_role('button', name='Formula presets', exact=True).click()
+    tray.get_by_role('button', name='1d20', exact=True).click()
     tray.locator('[data-preset-field=bonus]').fill('')
     expect(tray.get_by_role('button', name='Use preset', exact=True)).to_be_disabled()
     print('Independent preset/roll validation passed: Roll, To GM, Enter, invalid repeat and empty modifier.', flush=True)

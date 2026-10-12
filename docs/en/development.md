@@ -51,19 +51,47 @@ The existing dice grammar documents are maintained next to their implementation.
 
 ## Release identifiers
 
-The current release is **0.2.0**. Its equivalent identifiers follow the formats required by each tool:
+The current release is **0.2.1**. Its equivalent identifiers follow the formats required by each tool:
 
 | Location | Identifier |
 | --- | --- |
-| Public release name, application and Runner | `0.2.0` |
-| Python project and `uv.lock` | `0.2.0` |
-| Frontend package, package lock and update API | `0.2.0` |
-| Release tag | `v0.2.0` |
-| Source release artifact | `Gravewright-0.2.0-django.zip` |
+| Public release name, application and Runner | `0.2.1` |
+| Python project and `uv.lock` | `0.2.1` |
+| Frontend package, package lock and update API | `0.2.1` |
+| Release tag | `v0.2.1` |
+| Source release artifact | `Gravewright-0.2.1-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) is the source of the installed version. [`gravewright/version.py`](../../gravewright/version.py) derives its public identifier and label; keep the frontend package metadata aligned when changing it. API/SDK contract versions and third-party module versions have independent lifecycles.
 
-Release `0.2.0` uses the `stable` update channel. This channel describes the version identifier; the project remains an early development preview. The selected channel remains a host preference.
+Release `0.2.1` uses the `stable` update channel. This channel describes the version identifier; the project remains an early development preview. The selected channel remains a host preference.
+
+## Build a release archive
+
+Align `pyproject.toml`, `uv.lock`, the frontend `package.json` and its lockfile;
+add bilingual notes under `docs/releases/VERSION.md` and update both documentation
+indexes and READMEs. Build the frontend with
+`node gravewright/maps/scripts/build.cjs`, then run the checks in
+[testing](testing.md), including fresh-install and upgrade scenarios.
+
+Stage all new source, migration, test and documentation files before packaging:
+
+```bash
+uv run --locked python scripts/build_release.py --check
+uv run --locked python scripts/build_release.py
+```
+
+The builder selects Git-tracked public files, validates version metadata and
+required files, and writes `dist/Gravewright-VERSION-django.zip` plus its SHA-256
+sidecar. It uses working-tree contents, so publish from the reviewed, committed
+tree. `--include-untracked` allows a precommit review snapshot; ignored files
+remain excluded. Installed extensions, local data, secrets, dependencies and
+machine-specific launchers are excluded in both modes. Set `SOURCE_DATE_EPOCH`
+to a fixed Unix timestamp for reproducible archive timestamps.
+
+Test an extracted copy of the final ZIP with disposable storage. Publish the
+matching commit as `vVERSION` with the ZIP, checksum and bilingual notes. Verify
+the uploaded asset digest and both repository CI workflows; archive creation
+alone does not validate application behavior or publish a release.
 
 ## Before submitting
 

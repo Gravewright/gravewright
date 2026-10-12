@@ -87,7 +87,7 @@ export function createTokens(surface, board, map, gm, initial) {
       containerId: campaign,
       blockId: map.blockId,
       mapId: map.id,
-      systemId: "gravewright-pdf-system",
+      systemId: state.systemId || document.getElementById("table-workspace").dataset.systemId || "",
       scene: map,
       gm,
       layer: getPath('_layer') || 'game',

@@ -1,7 +1,8 @@
 """Item permissions, directory projections and mutations inside table.domain.
 
-The native PDF system currently supplies no item types. Extension-facing callers
-must use public_state/public_command, which recheck membership and record retries."""
+Document types come from the campaign's registered provider. Extension-facing
+callers must use public_state/public_command, which recheck membership and
+record retries."""
 
 from copy import deepcopy
 from gravewright.campaigns.catalog import get_ruleset

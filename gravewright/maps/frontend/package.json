@@ -1,7 +1,7 @@
 {
   "name": "gravewright-maps-assets",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "license": "LicenseRef-Gravewright-GPL-3.0-only-with-module-permission",
   "scripts": {
     "build": "node ../scripts/build.cjs",

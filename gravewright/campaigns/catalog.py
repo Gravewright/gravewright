@@ -10,13 +10,12 @@ from gravewright.modules.models import ModuleSet, Package
 from gravewright.modules.packages import compatible
 
 
-from .systems import DEFAULT_SYSTEM, bundled
-
-NATIVE_SYSTEM_ID = DEFAULT_SYSTEM
+from .systems import bundled, bundled_descriptors
 
 
 def native_ruleset():
-    return deepcopy(bundled(NATIVE_SYSTEM_ID)['descriptor'])
+    provider = bundled('')
+    return deepcopy(provider['descriptor']) if provider else None
 
 
 def activate_selected_system(campaign, previous_system=None):
@@ -28,7 +27,7 @@ def activate_selected_system(campaign, previous_system=None):
     if previous_system and previous_system != campaign.system:
         modules.pop(previous_system, None)
         replacements = {key: value for key, value in replacements.items() if value != previous_system}
-    if campaign.system and campaign.system != NATIVE_SYSTEM_ID and campaign.system not in modules:
+    if campaign.system and not bundled(campaign.system) and campaign.system not in modules:
         descriptor = get_ruleset(campaign.system)
         if descriptor is None:
             return
@@ -43,7 +42,7 @@ def _descriptor(package):
     system = manifest.get('system')
     if not isinstance(system, dict) or not compatible(manifest.get('sdk', {}).get('requires')):
         return None
-    if package.module_id == NATIVE_SYSTEM_ID or manifest.get('id') != package.module_id:
+    if bundled(package.module_id) or manifest.get('id') != package.module_id:
         return None
     if manifest.get('version') != package.version or not re.fullmatch(
             r'(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)', package.version):
@@ -54,13 +53,14 @@ def _descriptor(package):
         'version': manifest['version'],
         'actorTypes': system['actorTypes'],
         'itemTypes': system.get('itemTypes', []),
+        **({'combat': deepcopy(system['combat'])} if 'combat' in system else {}),
     }
 
 
 def list_rulesets():
     """Read currently eligible releases, keeping the newest version of each ID.
 
-    The native identity is reserved. No marketplace configuration or remote
+    Registered provider identities are reserved. No marketplace configuration or remote
     request is needed to discover packages that were already installed.
     """
     latest = {}
@@ -74,7 +74,7 @@ def list_rulesets():
             continue
         latest[package.module_id] = (version, descriptor)
     installed = sorted((row for _, row in latest.values()), key=lambda row: (row['title'].casefold(), row['systemId']))
-    return [native_ruleset(), *installed]
+    return [*bundled_descriptors(), *installed]
 
 
 def get_ruleset(system_id='', *, campaign_id=None):
@@ -82,8 +82,11 @@ def get_ruleset(system_id='', *, campaign_id=None):
 
     An unavailable selected release never silently falls back to another version.
     """
-    if not system_id or system_id == NATIVE_SYSTEM_ID:
-        return native_ruleset()
+    provider = bundled(system_id)
+    if provider:
+        return deepcopy(provider['descriptor'])
+    if not system_id:
+        return None
     if campaign_id is not None:
         modules = ModuleSet.objects.filter(campaign_id=campaign_id).values_list('modules', flat=True).first() or {}
         if system_id in modules:

@@ -41,7 +41,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
  function select(keys){selected=keys;window.dispatchEvent(new CustomEvent('gravewright:mixed-selection',{detail:{ids:chosen().filter(o=>o.kind==='token').map(o=>o.id),mixed:mixed()}}));paint();}
  function cancel(){clearTimeout(timer);clearTimeout(pingTimer);if(drag&&surface.hasPointerCapture(drag.id))surface.releasePointerCapture(drag.id);drag=undefined;preview=undefined;if(resizePreview){resizePreview=undefined;void previewBoardImage(board,state);}menu?.remove();menu=undefined;publish();}
  // Dedicated image controls own their gestures; capture listeners must let them through.
- const ignored=e=>e.target.closest('button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.image-workspace');
+ const ignored=e=>e.target.closest('button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.image-workspace,.card-placement');
  function down(e){
   if(!active()||busy||e.button!==0||ignored(e))return;
   const p=point(e),handle=e.target.closest('[data-image-resize]');

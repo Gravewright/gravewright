@@ -383,7 +383,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
     menu = void 0;
     publish();
   }
-  const ignored = (e) => e.target.closest("button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.image-workspace");
+  const ignored = (e) => e.target.closest("button,input,textarea,select,dialog,.gw-window,.directory-context-menu,.game-dock,.door-controls,.image-workspace,.card-placement");
   function down(e) {
     if (!active() || busy || e.button !== 0 || ignored(e)) return;
     const p = point(e), handle = e.target.closest("[data-image-resize]");

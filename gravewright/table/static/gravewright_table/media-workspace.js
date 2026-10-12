@@ -3,6 +3,12 @@ import { openPermissions } from "/static/gravewright_table/permissions.js";
 
 // gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
+function onTextChange(listener) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
 function notifyTextChange() {
   for (const listener of listeners)
     listener();
@@ -723,27 +729,13 @@ function cardFace(card, flipped) {
 }
 
 // gravewright/maps/frontend/features/cards/ui/CardHand.native.js
-var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "host", "class": "card-hand" }, "bind": { "aria-label": 'gwText("Your hand")' }, "events": [], "children": [{ "tag": "header", "attrs": { "class": "card-hand__bar" }, "bind": {}, "events": [], "children": [{ "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "tag": "select", "attrs": {}, "bind": { "aria-label": 'gwText("Deck")', "disabled": "!state.decks.length" }, "events": [], "children": [{ "tag": "option", "attrs": { "value": "" }, "bind": {}, "events": [], "children": [{ "value": 'gwText("No deck available")' }], "when": "!state.decks.length" }, { "tag": "option", "attrs": {}, "bind": { "key": "d.id", "value": "d.id" }, "events": [], "children": [{ "value": "d.name" }], "each": { "names": ["d"], "value": "state.decks" } }], "model": { "path": "deckId", "mods": [] } }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy || !deck?.draw_count" }, "events": [{ "event": "click", "code": "deck && openDraw(deck);", "mods": [] }], "children": [{ "tag": "PhPlus", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Draw")' }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "deck?.draw_count ?? 0" }, { "text": " " }, { "value": 'gwText("remaining")' }] }, { "tag": "button", "attrs": {}, "bind": { "aria-pressed": "manage" }, "events": [{ "event": "click", "code": "manage = !manage;", "mods": [] }], "children": [{ "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'manage ? gwText("Hand") : gwText("Decks")' }], "when": "gm" }] }, { "tag": "p", "attrs": { "class": "card-hand__error", "role": "alert" }, "bind": {}, "events": [], "children": [{ "value": "error" }], "when": "error" }, { "tag": "div", "attrs": { "class": "card-hand__fan" }, "bind": { "style": '({ "--card-width": `${layout.width}px`, "--overlap": `${layout.overlap}px` })' }, "events": [], "children": [{ "tag": "p", "attrs": { "class": "card-hand__empty" }, "bind": {}, "events": [], "children": [{ "value": 'gwText("Your hand is empty. Draw a card.")' }], "when": "!cards.length" }, { "tag": "article", "attrs": { "class": "card-hand__card", "tabindex": "0" }, "bind": { "key": "card.id", "style": "pose(index)", "draggable": "!busy", "aria-label": "card.name", "title": 'gwText("Drag to the table")' }, "events": [{ "event": "dragstart", "code": "drag($event, card);", "mods": [] }, { "event": "dblclick", "code": "preview = card;", "mods": [] }, { "event": "keydown", "code": "preview = card;", "mods": ["enter", "prevent"] }], "children": [{ "tag": "img", "attrs": { "draggable": "false" }, "bind": { "src": "cardFace(card, flipped.has(card.id))", "alt": 'flipped.has(card.id) ? gwText("Back") : card.name' }, "events": [], "children": [], "when": "cardFace(card, flipped.has(card.id))" }, { "tag": "PhCardsThree", "attrs": { "class": "card-hand__back" }, "bind": {}, "events": [], "children": [], "otherwise": true }, { "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "card.name" }] }, { "tag": "div", "attrs": { "class": "card-hand__actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "aria-label": "`Ampliar ${card.name}`" }, "events": [{ "event": "click", "code": "preview = card;", "mods": [] }], "children": [{ "tag": "PhMagnifyingGlassPlus", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": 'flipped.has(card.id) ? gwText("Show front") : gwText("Show back")' }, "events": [{ "event": "click", "code": "flip(card);", "mods": [] }], "children": [{ "tag": "PhArrowsClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy", "aria-label": 'gwText("Discard card")' }, "events": [{ "event": "click", "code": 'command("discard", { card_ids: [card.id] });', "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }], "each": { "names": ["card", "index"], "value": "cards" } }], "when": "!manage" }, { "tag": "div", "attrs": { "class": "card-hand__decks" }, "bind": {}, "events": [], "children": [{ "tag": "details", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "summary", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("Create deck")' }] }, { "tag": "DeckUpload", "attrs": {}, "bind": { "container-id": "containerId" }, "events": [{ "event": "created", "code": "refresh;", "mods": [] }], "children": [] }] }, { "tag": "p", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("No deck in play.")' }], "when": "!state.decks.length" }, { "tag": "article", "attrs": { "class": "card-hand__deck" }, "bind": { "key": "d.id" }, "events": [], "children": [{ "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "tag": "div", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "d.name" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "d.draw_count" }, { "text": " " }, { "value": 'gwText("cards remaining")' }] }] }, { "tag": "div", "attrs": { "class": "card-hand__deck-actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "disabled": "busy || !d.draw_count" }, "events": [{ "event": "click", "code": "openDraw(d);", "mods": [] }], "children": [{ "tag": "PhPlus", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Draw")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": 'command("shuffle", { deck_instance_id: d.id });', "mods": [] }], "children": [{ "tag": "PhShuffle", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Shuffle")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": 'command("reset", { deck_instance_id: d.id });', "mods": [] }], "children": [{ "tag": "PhArrowsClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Recall")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": "deleteDeck = d;", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Remove")' }] }, { "tag": "button", "attrs": { "type": "button" }, "bind": {}, "events": [{ "event": "click", "code": "permissions(d);", "mods": ["stop", "prevent"] }], "children": [{ "value": 'gwText("Permissions")' }], "when": "props.gm" }] }], "each": { "names": ["d"], "value": "state.decks" } }], "otherwise": true }, { "tag": "Teleport", "attrs": { "to": "body" }, "bind": {}, "events": [], "children": [{ "tag": "div", "attrs": { "class": "card-hand__veil" }, "bind": {}, "events": [{ "event": "keydown", "code": "", "mods": ["stop"] }, { "event": "click", "code": "preview = void 0;", "mods": ["self"] }, { "event": "keydown", "code": "preview = void 0;", "mods": ["esc", "stop"] }], "children": [{ "tag": "section", "attrs": { "class": "card-hand__preview", "role": "dialog", "aria-modal": "true" }, "bind": { "aria-label": "preview.name" }, "events": [], "children": [{ "tag": "header", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'flipped.has(preview.id) ? gwText("Back") : preview.name' }] }, { "tag": "button", "attrs": { "autofocus": "" }, "bind": { "aria-label": 'gwText("Close preview")' }, "events": [{ "event": "click", "code": "preview = void 0;", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "img", "attrs": {}, "bind": { "src": "cardFace(preview, flipped.has(preview.id))", "alt": "preview.name" }, "events": [], "children": [], "when": "cardFace(preview, flipped.has(preview.id))" }, { "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [], "otherwise": true }] }], "when": "preview" }, { "tag": "div", "attrs": { "class": "card-hand__veil" }, "bind": {}, "events": [{ "event": "keydown", "code": "", "mods": ["stop"] }, { "event": "click", "code": "!busy && (drawDeck = void 0);", "mods": ["self"] }, { "event": "keydown", "code": "!busy && (drawDeck = void 0);", "mods": ["esc", "stop"] }], "children": [{ "tag": "form", "attrs": { "class": "card-hand__draw", "role": "dialog", "aria-modal": "true" }, "bind": { "aria-label": 'gwText("Draw cards")' }, "events": [{ "event": "submit", "code": "draw;", "mods": ["prevent"] }], "children": [{ "tag": "header", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "tag": "div", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "drawDeck.name" }] }, { "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("Draw cards")' }] }] }, { "tag": "button", "attrs": { "type": "button" }, "bind": { "disabled": "busy", "aria-label": 'gwText("Close draw dialog")' }, "events": [{ "event": "click", "code": "drawDeck = void 0;", "mods": [] }], "children": [{ "tag": "PhX", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "div", "attrs": { "class": "card-hand__choices" }, "bind": {}, "events": [], "children": [{ "tag": "fieldset", "attrs": {}, "bind": { "disabled": "busy" }, "events": [], "children": [{ "tag": "legend", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("Destination")' }] }, { "tag": "label", "attrs": {}, "bind": { "key": "choice.id" }, "events": [], "children": [{ "tag": "input", "attrs": { "type": "radio" }, "bind": { "value": "choice.id" }, "events": [], "children": [], "model": { "path": "destination", "mods": [] } }, { "tag": "component", "attrs": {}, "bind": { "is": "choice.icon" }, "events": [], "children": [] }, { "value": "choice.label" }], "each": { "names": ["choice"], "value": '[{ id: "hand", label: gwText("Hand"), icon: PhHand }, { id: "table", label: gwText("Table"), icon: PhMapTrifold }, { id: "chat", label: "Chat", icon: PhChatCircleText }]' } }] }, { "tag": "fieldset", "attrs": {}, "bind": { "disabled": "busy" }, "events": [], "children": [{ "tag": "legend", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("State")' }] }, { "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "radio", "value": "face_up" }, "bind": {}, "events": [], "children": [], "model": { "path": "face", "mods": [] } }, { "tag": "PhEye", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Front")' }] }, { "tag": "label", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "input", "attrs": { "type": "radio", "value": "face_down" }, "bind": {}, "events": [], "children": [], "model": { "path": "face", "mods": [] } }, { "tag": "PhEyeSlash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Back")' }] }] }] }, { "tag": "label", "attrs": { "class": "card-hand__quantity" }, "bind": {}, "events": [], "children": [{ "value": 'gwText("Quantity")' }, { "tag": "span", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button" }, "bind": { "disabled": "busy || count <= 1", "aria-label": 'gwText("Decrease quantity")' }, "events": [{ "event": "click", "code": "count--;", "mods": [] }], "children": [{ "tag": "PhMinus", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "input", "attrs": { "type": "number", "min": "1", "step": "1", "required": "" }, "bind": { "max": "drawDeck.draw_count", "disabled": "busy" }, "events": [], "children": [], "model": { "path": "count", "mods": ["number"] } }, { "tag": "button", "attrs": { "type": "button" }, "bind": { "disabled": "busy || count >= drawDeck.draw_count", "aria-label": 'gwText("Increase quantity")' }, "events": [{ "event": "click", "code": "count++;", "mods": [] }], "children": [{ "tag": "PhPlus", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "drawDeck.draw_count" }, { "value": 'gwText(" available")' }] }] }, { "tag": "p", "attrs": { "class": "card-hand__error", "role": "alert" }, "bind": {}, "events": [], "children": [{ "value": "error" }], "when": "error" }, { "tag": "footer", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": { "type": "button" }, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": "drawDeck = void 0;", "mods": [] }], "children": [{ "value": 'gwText("Cancel")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [], "children": [{ "value": 'busy ? gwText("Drawing\\u2026") : gwText("Draw")' }] }] }] }], "when": "drawDeck" }, { "tag": "div", "attrs": { "class": "card-hand__veil" }, "bind": {}, "events": [{ "event": "keydown", "code": "", "mods": ["stop"] }], "children": [{ "tag": "section", "attrs": { "class": "card-hand__draw", "role": "dialog" }, "bind": { "aria-label": 'gwText("Remove deck")' }, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("Remove ")' }, { "value": "deleteDeck.name" }, { "text": "?" }] }, { "tag": "p", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": `gwText("This deck's cards in hands, the discard pile, and the table will be removed.")` }] }, { "tag": "footer", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": "deleteDeck = void 0;", "mods": [] }], "children": [{ "value": 'gwText("Cancel")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": 'command("delete", { deck_instance_id: deleteDeck.id }).then((result) => {\n  if (result) deleteDeck = void 0;\n});', "mods": [] }], "children": [{ "value": 'gwText("Remove")' }] }] }] }], "when": "deleteDeck" }] }] }], (options2, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
-  const PhCardsThree = "PhCardsThree";
-  const PhPlus = "PhPlus";
-  const PhMinus = "PhMinus";
-  const PhMagnifyingGlassPlus = "PhMagnifyingGlassPlus";
-  const PhArrowsClockwise = "PhArrowsClockwise";
-  const PhTrash = "PhTrash";
-  const PhShuffle = "PhShuffle";
-  const PhX = "PhX";
-  const PhHand = "PhHand";
-  const PhEye = "PhEye";
-  const PhEyeSlash = "PhEyeSlash";
-  const PhChatCircleText = "PhChatCircleText";
-  const PhMapTrifold = "PhMapTrifold";
-  const HttpClient = options2.HttpClient;
-  const props = options2.props;
-  const emit = options2.emit;
-  const scope = new ResourceScope(), http = new HttpClient(void 0, () => scope.signal), root2 = `/api/containers/${encodeURIComponent(props.containerId)}/library`;
-  const state = ref({ decks: [], hand: [] }), deckId = ref(""), manage = ref(false), busy = ref(false), error = ref(""), flipped = ref(/* @__PURE__ */ new Set()), preview = ref(), drawDeck = ref(), count = ref(1), destination = ref("hand"), face = ref("face_up"), deleteDeck = ref();
-  const host2 = ref(), available = ref(550);
-  let observer, visit = 0;
+var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "host", "class": "card-hand" }, "bind": { "aria-label": 'gwText("Your hand")' }, "events": [], "children": [{ "tag": "header", "attrs": { "class": "card-hand__bar" }, "bind": {}, "events": [], "children": [{ "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "tag": "select", "attrs": {}, "bind": { "aria-label": 'gwText("Deck")', "disabled": "!state.decks.length" }, "events": [], "children": [{ "tag": "option", "attrs": { "value": "" }, "bind": {}, "events": [], "children": [{ "value": 'gwText("No deck available")' }], "when": "!state.decks.length" }, { "tag": "option", "attrs": {}, "bind": { "key": "d.id", "value": "d.id" }, "events": [], "children": [{ "value": "d.name" }], "each": { "names": ["d"], "value": "state.decks" } }], "model": { "path": "deckId", "mods": [] } }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy || !deck?.draw_count" }, "events": [{ "event": "click", "code": "deck && openDraw(deck);", "mods": [] }], "children": [{ "tag": "PhPlus", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Draw cards")' }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "deck?.draw_count ?? 0" }, { "text": " " }, { "value": 'gwText("cards remaining")' }] }, { "tag": "button", "attrs": {}, "bind": { "aria-pressed": "manage" }, "events": [{ "event": "click", "code": "manage = !manage;", "mods": [] }], "children": [{ "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'manage ? gwText("Hand") : gwText("Decks")' }], "when": "gm" }] }, { "tag": "p", "attrs": { "class": "card-hand__error", "role": "alert" }, "bind": {}, "events": [], "children": [{ "value": "error" }], "when": "error" }, { "tag": "div", "attrs": { "class": "card-hand__fan" }, "bind": { "style": '({ "--card-width": `${layout.width}px`, "--overlap": `${layout.overlap}px` })' }, "events": [], "children": [{ "tag": "p", "attrs": { "class": "card-hand__empty" }, "bind": {}, "events": [], "children": [{ "value": 'gwText("Your hand is empty. Draw a card.")' }], "when": "!cards.length" }, { "tag": "article", "attrs": { "class": "card-hand__card", "tabindex": "0" }, "bind": { "key": "card.id", "style": "pose(index)", "draggable": "!busy", "aria-label": "card.name", "title": 'gwText("Drag to the table")' }, "events": [{ "event": "dragstart", "code": "drag($event, card);", "mods": [] }, { "event": "dblclick", "code": "openPreview(card);", "mods": [] }, { "event": "keydown", "code": "openPreview(card);", "mods": ["enter", "prevent"] }], "children": [{ "tag": "img", "attrs": { "draggable": "false" }, "bind": { "src": "cardFace(card, flipped.has(card.id))", "alt": 'flipped.has(card.id) ? gwText("Card back") : card.name' }, "events": [], "children": [], "when": "cardFace(card, flipped.has(card.id))" }, { "tag": "PhCardsThree", "attrs": { "class": "card-hand__back" }, "bind": {}, "events": [], "children": [], "otherwise": true }, { "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "card.name" }] }, { "tag": "div", "attrs": { "class": "card-hand__actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "aria-label": 'gwText("Preview: {0}", card.name)' }, "events": [{ "event": "click", "code": "openPreview(card);", "mods": [] }], "children": [{ "tag": "PhMagnifyingGlassPlus", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "aria-label": 'flipped.has(card.id) ? gwText("Show front") : gwText("Show back")' }, "events": [{ "event": "click", "code": "flip(card);", "mods": [] }], "children": [{ "tag": "PhArrowsClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy", "aria-label": 'gwText("Discard card")' }, "events": [{ "event": "click", "code": 'command("discard", { card_ids: [card.id] });', "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }] }] }], "each": { "names": ["card", "index"], "value": "cards" } }], "when": "!manage" }, { "tag": "div", "attrs": { "class": "card-hand__decks" }, "bind": {}, "events": [], "children": [{ "tag": "details", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "summary", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("Create deck")' }] }, { "tag": "DeckUpload", "attrs": {}, "bind": { "container-id": "containerId" }, "events": [{ "event": "created", "code": "refresh;", "mods": [] }], "children": [] }] }, { "tag": "p", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": 'gwText("No deck in play.")' }], "when": "!state.decks.length" }, { "tag": "article", "attrs": { "class": "card-hand__deck" }, "bind": { "key": "d.id" }, "events": [], "children": [{ "tag": "PhCardsThree", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "tag": "div", "attrs": {}, "bind": {}, "events": [], "children": [{ "tag": "strong", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "d.name" }] }, { "tag": "small", "attrs": {}, "bind": {}, "events": [], "children": [{ "value": "d.draw_count" }, { "text": " " }, { "value": 'gwText("cards remaining")' }] }] }, { "tag": "div", "attrs": { "class": "card-hand__deck-actions" }, "bind": {}, "events": [], "children": [{ "tag": "button", "attrs": {}, "bind": { "disabled": "busy || !d.draw_count" }, "events": [{ "event": "click", "code": "openDraw(d);", "mods": [] }], "children": [{ "tag": "PhPlus", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Draw cards")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": 'command("shuffle", { deck_instance_id: d.id });', "mods": [] }], "children": [{ "tag": "PhShuffle", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Shuffle")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": 'command("reset", { deck_instance_id: d.id });', "mods": [] }], "children": [{ "tag": "PhArrowsClockwise", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Recall")' }] }, { "tag": "button", "attrs": {}, "bind": { "disabled": "busy" }, "events": [{ "event": "click", "code": "openDelete(d);", "mods": [] }], "children": [{ "tag": "PhTrash", "attrs": {}, "bind": {}, "events": [], "children": [] }, { "value": 'gwText("Remove")' }] }, { "tag": "button", "attrs": { "type": "button" }, "bind": {}, "events": [{ "event": "click", "code": "permissions(d);", "mods": ["stop", "prevent"] }], "children": [{ "value": 'gwText("Permissions")' }], "when": "props.gm" }] }], "each": { "names": ["d"], "value": "state.decks" } }], "otherwise": true }] }], (options2, { ref, computed, watch, onMounted, onBeforeUnmount, nextTick, defineExpose }) => {
+  const PhCardsThree = "PhCardsThree", PhPlus = "PhPlus", PhMagnifyingGlassPlus = "PhMagnifyingGlassPlus", PhArrowsClockwise = "PhArrowsClockwise", PhTrash = "PhTrash", PhShuffle = "PhShuffle";
+  const props = options2.props, emit = options2.emit;
+  const scope = new ResourceScope(), http = new options2.HttpClient(void 0, () => scope.signal), root2 = `/api/containers/${encodeURIComponent(props.containerId)}/library`;
+  const state = ref({ decks: [], hand: [] }), deckId = ref(""), manage = ref(false), busy = ref(false), error = ref(""), flipped = ref(/* @__PURE__ */ new Set());
+  const host2 = ref(), available = ref(550), count = ref(1), destination = ref("hand"), face = ref("face_up");
+  let observer, visit = 0, childModal, preview, drawDeck;
   const deck = computed(() => state.value.decks.find((d) => d.id === deckId.value));
   const cards = computed(() => state.value.hand.filter((c) => c.deck_instance_id === deckId.value));
   const layout = computed(() => fanLayout(cards.value.length, available.value - 42));
@@ -753,7 +745,7 @@ var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "hos
   }
   async function permissions(item) {
     try {
-      await openPermissions2("cards", item.id, { onSave: refresh2 });
+      await openPermissions2("cards", item.id, { onSave: refresh2, nested: true });
     } catch (cause) {
       error.value = cause.message;
     }
@@ -766,7 +758,8 @@ var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "hos
       state.value = next;
       if (!next.decks.some((d) => d.id === deckId.value)) deckId.value = next.decks[0]?.id ?? "";
       flipped.value = new Set([...flipped.value].filter((id2) => next.hand.some((c) => c.id === id2)));
-      if (preview.value && !next.hand.some((c) => c.id === preview.value.id)) preview.value = void 0;
+      if (preview && !next.hand.some((c) => c.id === preview.id)) closeChild();
+      syncChild();
     } catch {
       if (!scope.closed) error.value = text("Could not load your cards.");
     }
@@ -785,8 +778,89 @@ var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "hos
       if (!scope.closed) busy.value = false;
     }
   }
+  function element(tag, className2, text2) {
+    const node = document.createElement(tag);
+    if (className2) node.className = className2;
+    if (text2 !== void 0) node.textContent = text2;
+    return node;
+  }
+  function glyph(name) {
+    return document.querySelector("#map-native-icons")?.content.querySelector(`[data-icon="${name}"][data-weight="regular"]`)?.firstElementChild?.cloneNode(true);
+  }
+  function control(label, action, icon) {
+    const node = element("button");
+    node.type = "button";
+    if (icon) {
+      node.setAttribute("aria-label", label);
+      const svg = glyph(icon);
+      if (svg) node.append(svg);
+      else node.textContent = label;
+    } else node.textContent = label;
+    node.onclick = action;
+    return node;
+  }
+  function closeChild(force = false) {
+    childModal?.close(force);
+  }
+  function openChild(kind, title) {
+    if (busy.value) return;
+    closeChild();
+    error.value = "";
+    const modal = options2.openModal(title, { kind, canClose: () => !busy.value });
+    childModal = modal;
+    modal.addEventListener("close", () => {
+      if (childModal !== modal) return;
+      childModal = void 0;
+      preview = drawDeck = void 0;
+    }, { once: true });
+    return modal;
+  }
+  function syncChild() {
+    const modal = childModal;
+    if (!modal) return;
+    for (const node of modal.querySelectorAll("button,input,fieldset")) node.disabled = busy.value;
+    const alert = modal.querySelector('[role="alert"]');
+    if (alert) {
+      alert.textContent = error.value;
+      alert.hidden = !error.value;
+    }
+    if (!drawDeck) return;
+    drawDeck = state.value.decks.find((item) => item.id === drawDeck.id) || drawDeck;
+    const amount = modal.querySelector('[name="count"]');
+    if (amount) {
+      amount.max = drawDeck.draw_count;
+      if (document.activeElement !== amount) amount.value = count.value;
+    }
+    for (const node of modal.querySelectorAll('[name="destination"]')) node.checked = node.value === destination.value;
+    for (const node of modal.querySelectorAll('[name="face"]')) node.checked = node.value === face.value;
+    const decrease = modal.querySelector('[data-quantity="decrease"]'), increase = modal.querySelector('[data-quantity="increase"]');
+    if (decrease) decrease.disabled = busy.value || count.value <= 1;
+    if (increase) increase.disabled = busy.value || count.value >= drawDeck.draw_count;
+    const submit = modal.querySelector('[type="submit"]');
+    if (submit) submit.disabled = busy.value || !drawDeck.draw_count;
+    const remaining = modal.querySelector("[data-remaining]");
+    if (remaining) remaining.textContent = `${drawDeck.draw_count} ${text("cards remaining")}`;
+  }
+  function openPreview(card) {
+    const modal = openChild("preview", flipped.value.has(card.id) ? text("Card back") : card.name);
+    if (!modal) return;
+    preview = card;
+    const src = cardFace(card, flipped.value.has(card.id));
+    if (src) {
+      const image = element("img");
+      image.src = src;
+      image.alt = flipped.value.has(card.id) ? text("Card back") : card.name;
+      image.draggable = false;
+      modal.body.append(image);
+    } else {
+      const icon = glyph("PhCardsThree");
+      if (icon) modal.body.append(icon);
+    }
+  }
   function openDraw(target) {
-    drawDeck.value = target;
+    const modal = openChild("draw", text("Draw cards"));
+    if (!modal) return;
+    drawDeck = target;
     count.value = 1;
     try {
       destination.value = sessionStorage.getItem("gravewright.cards.draw.destination") || "hand";
@@ -795,22 +869,108 @@ var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "hos
     }
     if (!["hand", "table", "chat"].includes(destination.value)) destination.value = "hand";
     if (!["face_up", "face_down"].includes(face.value)) face.value = "face_up";
+    const form = element("form");
+    form.id = "cards-draw-" + crypto.randomUUID();
+    form.onsubmit = (event) => {
+      event.preventDefault();
+      void draw();
+    };
+    const choices = element("div", "card-hand__choices");
+    function choiceGroup(name, title, values, selected) {
+      const group = element("fieldset");
+      group.append(element("legend", "", title));
+      for (const [value, label, icon] of values) {
+        const choice = element("label"), input = element("input");
+        input.type = "radio";
+        input.name = name;
+        input.value = value;
+        input.checked = selected.value === value;
+        input.onchange = () => {
+          selected.value = value;
+          syncChild();
+        };
+        choice.append(input);
+        const svg = glyph(icon);
+        if (svg) choice.append(svg);
+        choice.append(document.createTextNode(label));
+        group.append(choice);
+      }
+      choices.append(group);
+    }
+    choiceGroup("destination", text("Destination"), [["hand", text("Hand"), "PhHand"], ["table", text("Table"), "PhMapTrifold"], ["chat", text("Chat"), "PhChatCircleText"]], destination);
+    choiceGroup("face", text("Face"), [["face_up", text("Face up"), "PhEye"], ["face_down", text("Face down"), "PhEyeSlash"]], face);
+    const quantity = element("label", "card-hand__quantity", text("Quantity")), stepper = element("span"), amount = element("input");
+    amount.type = "number";
+    amount.name = "count";
+    amount.min = "1";
+    amount.step = "1";
+    amount.required = true;
+    amount.max = target.draw_count;
+    amount.value = "1";
+    amount.oninput = () => {
+      count.value = amount.valueAsNumber;
+      syncChild();
+    };
+    const decrease = control(text("Decrease quantity"), () => {
+      count.value = Math.max(1, count.value - 1);
+      syncChild();
+    }, "PhMinus");
+    const increase = control(text("Increase quantity"), () => {
+      count.value = Math.min(drawDeck.draw_count, count.value + 1);
+      syncChild();
+    }, "PhPlus");
+    decrease.dataset.quantity = "decrease";
+    increase.dataset.quantity = "increase";
+    stepper.append(decrease, amount, increase);
+    const remaining = element("small");
+    remaining.dataset.remaining = "";
+    quantity.append(stepper, remaining);
+    const alert = element("p", "card-hand__error");
+    alert.setAttribute("role", "alert");
+    alert.hidden = true;
+    form.append(choices, quantity, alert);
+    modal.body.append(element("small", "card-modal__subtitle", target.name), form);
+    const cancel = control(text("Cancel"), () => closeChild()), submit = element("button", "", text("Draw cards"));
+    submit.type = "submit";
+    submit.setAttribute("form", form.id);
+    modal.footer.append(cancel, submit);
+    syncChild();
+    amount.focus();
+  }
+  function openDelete(target) {
+    const modal = openChild("remove", text("Remove deck"));
+    if (!modal) return;
+    modal.body.append(element("strong", "", `${text("Remove")} ${target.name}?`), element("p", "", text("This deck's cards in hands, the discard pile, and the table will be removed.")));
+    const alert = element("p", "card-hand__error");
+    alert.setAttribute("role", "alert");
+    alert.hidden = true;
+    modal.body.append(alert);
+    const cancel = control(text("Cancel"), () => closeChild());
+    const remove = control(text("Remove"), async () => {
+      const result = await command2("delete", { deck_instance_id: target.id });
+      if (result && childModal === modal) closeChild();
+    });
+    remove.classList.add("card-modal__danger");
+    modal.footer.append(cancel, remove);
+    cancel.focus();
   }
   async function draw() {
-    if (!drawDeck.value || busy.value) return;
+    if (!drawDeck || busy.value) return;
     if (destination.value !== "hand" && !props.blockId) {
       error.value = text("Open a scene to use this destination.");
+      syncChild();
       return;
     }
-    const result = await command2("draw", { deck_instance_id: drawDeck.value.id, count: count.value, destination: destination.value === "table" ? "hand" : destination.value, reveal: face.value === "face_up", ...destination.value === "chat" ? { block_id: props.blockId } : {} });
+    const selectedDestination = destination.value, reveal = face.value === "face_up";
+    const result = await command2("draw", { deck_instance_id: drawDeck.id, count: count.value, destination: selectedDestination === "table" ? "hand" : selectedDestination, reveal, ...selectedDestination === "chat" ? { block_id: props.blockId } : {} });
     if (!result || scope.closed) return;
     try {
-      sessionStorage.setItem("gravewright.cards.draw.destination", destination.value);
+      sessionStorage.setItem("gravewright.cards.draw.destination", selectedDestination);
       sessionStorage.setItem("gravewright.cards.draw.face", face.value);
     } catch {
     }
-    drawDeck.value = void 0;
-    if (destination.value === "table") emit("place", result.cards ?? [], face.value === "face_up");
+    closeChild();
+    if (selectedDestination === "table") emit("place", result.cards ?? [], reveal);
   }
   function flip(card) {
     const next = new Set(flipped.value);
@@ -824,17 +984,17 @@ var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "hos
       return;
     }
     event.dataTransfer?.setData("application/x-gravewright-hand-card", JSON.stringify({ cardId: card.id, reveal: !flipped.value.has(card.id) }));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+    emit("dragstart");
   }
   watch(() => props.revision, () => void refresh2());
-  function escape(event) {
-    if (event.key === "Escape" && !busy.value) {
-      preview.value = void 0;
-      drawDeck.value = void 0;
-      deleteDeck.value = void 0;
-    }
-  }
+  watch(() => busy.value, (value) => {
+    emit("busy", value);
+    syncChild();
+  });
+  watch(() => error.value, syncChild);
+  defineExpose({ canClose: () => !busy.value });
   onMounted(() => {
-    window.addEventListener("keydown", escape);
     void refresh2();
     observer = new ResizeObserver((entries) => {
       available.value = entries[0]?.contentRect.width ?? 550;
@@ -842,11 +1002,11 @@ var CardHand_native_default = widget([{ "tag": "section", "attrs": { "ref": "hos
     if (host2.value) observer.observe(host2.value);
   });
   onBeforeUnmount(() => {
-    window.removeEventListener("keydown", escape);
+    closeChild(true);
     scope.dispose();
     observer?.disconnect();
   });
-  return { permissions, gwText: text, PhCardsThree, PhPlus, PhMinus, PhMagnifyingGlassPlus, PhArrowsClockwise, PhTrash, PhShuffle, PhX, PhHand, PhEye, PhEyeSlash, PhChatCircleText, PhMapTrifold, HttpClient, ResourceScope, DeckUpload: DeckUpload_native_default, cardFace, fanLayout, fanPose, props, emit, scope, http, root: root2, state, deckId, manage, busy, error, flipped, preview, drawDeck, count, destination, face, deleteDeck, host: host2, available, observer, visit, deck, cards, layout, pose, refresh: refresh2, command: command2, openDraw, draw, flip, drag, escape };
+  return { permissions, gwText: text, PhCardsThree, PhPlus, PhMagnifyingGlassPlus, PhArrowsClockwise, PhTrash, PhShuffle, DeckUpload: DeckUpload_native_default, cardFace, props, emit, state, deckId, manage, busy, error, flipped, host: host2, available, deck, cards, layout, pose, refresh: refresh2, command: command2, openPreview, openDelete, openDraw, draw, flip, drag };
 });
 
 // gravewright/maps/frontend/features/cards/ui/CardPlacement.native.js
@@ -1420,6 +1580,7 @@ var AudioWorkspace_native_default = widget([{ "tag": "svg", "attrs": { "ref": "r
 import { getPath, mergePatch } from "/static/gravewright_web/vendor/datastar-1.0.3.js";
 import { gravewright } from "/static/gravewright_modules/frontend-api.js";
 import { executeNative } from "/static/gravewright_modules/domain-api.js";
+import { mountModal } from "/static/gravewright_table/modal.js";
 var root = document.querySelector("#table-workspace");
 var campaign = root?.dataset.tableId;
 var states = {};
@@ -1433,6 +1594,8 @@ var master = 0.7;
 var unlocked = false;
 var placement;
 var clockOffset = 0;
+var handModal;
+var handDragFrame;
 var channels = { music: 1, ambience: 1, sfx: 1, cinematic: 1 };
 var map = () => window.gravewrightMaps?.current;
 var rt = () => window.gravewrightRealtime;
@@ -1546,7 +1709,49 @@ async function areaCommand(area, action, data = {}) {
   return result;
 }
 function options(props, emit) {
-  return { props, emit, HttpClient: Client, command: areaCommand, read: () => fresh("cards") };
+  return { props, emit, HttpClient: Client, command: areaCommand, read: () => fresh("cards"), openModal: (title, config) => openCardModal(title, { ...config, nested: true }) };
+}
+function openCardModal(label, { kind = "hand", nested = false, canClose = () => true } = {}) {
+  const modal = document.createElement("section"), header = document.createElement("header"), title = document.createElement("strong"), dismiss = document.createElement("button"), body = document.createElement("div");
+  modal.className = `table-modal-window card-modal card-modal--${kind}`;
+  if (kind === "hand") modal.classList.add("card-hand-modal");
+  else modal.classList.add(`card-hand__${kind}`);
+  modal.dataset.movable = "";
+  modal.dataset.windowKey = `cards-${kind}`;
+  header.dataset.moveHandle = "";
+  const titleId = "cards-title-" + crypto.randomUUID();
+  title.id = titleId;
+  modal.setAttribute("aria-labelledby", titleId);
+  dismiss.type = "button";
+  dismiss.dataset.close = "";
+  dismiss.setAttribute("aria-label", text("Close"));
+  const glyph = document.querySelector("#map-native-icons")?.content.querySelector('[data-icon="PhX"][data-weight="regular"]')?.firstElementChild;
+  if (glyph) dismiss.append(glyph.cloneNode(true));
+  else dismiss.textContent = "\xD7";
+  const setTitle = (value) => {
+    title.textContent = value;
+    modal.setAttribute("aria-label", value);
+  };
+  setTitle(label);
+  header.append(title, dismiss);
+  body.className = kind === "hand" ? "card-hand-modal__body" : "table-modal-body card-modal__body";
+  modal.append(header, body);
+  modal.body = body;
+  modal.setTitle = setTitle;
+  let footer;
+  Object.defineProperty(modal, "footer", { get() {
+    if (!footer) {
+      footer = document.createElement("footer");
+      modal.append(footer);
+    }
+    return footer;
+  } });
+  dismiss.onclick = () => {
+    if (canClose()) modal.close();
+  };
+  const unlisten = onTextChange(() => dismiss.setAttribute("aria-label", text("Close")));
+  modal.addEventListener("close", unlisten, { once: true });
+  return mountModal(modal, { nested, canClose });
 }
 function host(name) {
   if (!nodes[name]) {
@@ -1556,11 +1761,21 @@ function host(name) {
   }
   return nodes[name];
 }
+function resumeHand() {
+  cancelAnimationFrame(handDragFrame);
+  handDragFrame = void 0;
+  if (handModal?.isConnected) handModal.resume();
+}
 function close(name) {
+  if (name === "hand" && handModal) {
+    handModal.close();
+    return;
+  }
   widgets[name]?.destroy();
   delete widgets[name];
   nodes[name]?.remove();
   delete nodes[name];
+  if (name === "placement") resumeHand();
 }
 function cardProjection(c) {
   return { id: c.id, x: c.x, y: c.y, rotation: c.rotation, scale: c.scale, z_index: c.z_index, width: 56, height: 80, version: c.version, card: { ...c, src: c.face_state === "face_up" ? c.frontUrl : c.backUrl }, can_manage: c.canControl, can_move: c.canControl, can_reveal: c.canControl };
@@ -1584,13 +1799,32 @@ function refresh() {
 }
 function showHand() {
   if (widgets.hand) {
-    close("hand");
+    if (widgets.hand.call("canClose")) close("hand");
     return;
   }
-  widgets.hand = CardHand_native_default(host("hand"), options(base(), (event, cards, reveal) => {
+  const modal = openCardModal(text("Your hand"), { canClose: () => widgets.hand?.call("canClose") !== false }), mount = modal.body, dismiss = modal.querySelector("[data-close]");
+  nodes.hand = mount;
+  const unlisten = onTextChange(() => modal.setTitle(text("Your hand")));
+  modal.addEventListener("close", () => {
+    cancelAnimationFrame(handDragFrame);
+    document.removeEventListener("dragend", resumeHand, true);
+    unlisten();
+    if (handModal === modal) handModal = void 0;
+    close("hand");
+  }, { once: true });
+  handModal = modal;
+  widgets.hand = CardHand_native_default(mount, options(base(), (event, cards, reveal) => {
+    if (event === "busy") dismiss.disabled = !!cards;
+    if (event === "dragstart") {
+      document.addEventListener("dragend", resumeHand, { capture: true, once: true });
+      handDragFrame = requestAnimationFrame(() => {
+        if (handModal === modal) modal.suspend();
+      });
+    }
     if (event === "place" && scene) {
       placement = { cards, reveal };
       close("placement");
+      modal.suspend();
       widgets.placement = CardPlacement_native_default(host("placement"), options({ ...base(), ...placement }, (type) => {
         if (type === "close") close("placement");
         if (type === "refresh") void fresh("cards").then(refresh);

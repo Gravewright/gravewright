@@ -56,6 +56,8 @@ Additional forms:
 | `chat.history(payload, options)` | Read visible messages |
 | `chat.send(payload, options)` | Send `{text, sceneId?}` through native chat processing |
 | `chat.remove(id, options)` / `chat.clear(options)` | Delete one/all visible-domain messages under native moderation rules |
+| `compendiums.read({packId, id}, options)` | Read one entry using current table access; retain its compendium document/envelope |
+| `compendiums.read({packId, ids}, options)` | Read 1–100 unique IDs and return `{entries: [...]}` in requested order; missing entries fail the whole batch |
 | `dice.roll(expression, payload, options)` | Roll and publish; payload supports `repeat`, `label`, `visibility`, scene context |
 | `table.search(query, options)` | Search documents with at least read access. Options accept `kind` (`actor`, `item`, `journal`, `quest`, `quest_board`, `scene`, `compendium`) and `recent` (up to 12 `{id, type}` references with an empty query). Results include authorized `snippet`, `kind`, and `actions`; recent references are revalidated on every request. |
 | `table.lobby(options)` / `table.updateLobby(payload, options)` | Read/change native lobby state |
@@ -170,6 +172,7 @@ Public imports and signatures, with `campaign_id`/`user_id` denoting identifiers
 | `api.maps` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `layer_state(campaign_id, user_id, scene_id)` |
 | `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.items`, `api.combat`, `api.cards`, `api.audio`, `api.compendiums` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)` |
+| `api.combat.register_provider` | Trusted system callback registration from `AppConfig.ready()`; see [system combat providers](modules.md#system-combat-providers) |
 | `api.resources` | `state(campaign_id, user_id, name, scene_id=None, preview_token_id=None)`, `command(campaign_id, user_id, name, action, data, request_id)` |
 | `api.chat` | `history(campaign_id, user_id, map_id=None)`, `send(campaign_id, user_id, text, request_id, map_id=None)`, `remove(campaign_id, user_id, message_id=None)` |
 | `api.dice` | `evaluate(expression, repeat=1, *, random_source=None)`, `roll(campaign_id, user_id, expression, request_id, *, repeat=1, label="", visibility="public", map_id=None)` |
@@ -244,7 +247,7 @@ locale to its base language, then English, then the source key. `t(key, params)`
 substitutes named or numbered placeholders as plain text. Use `textContent` for
 rendering. `has(key)` checks coverage; `number(value, options)` uses
 `Intl.NumberFormat`; `onChange(handler)` returns an unsubscribe function for locale
-events. Changing the interface language currently reloads the page, preserving the
+events and registration/removal of catalogs in that namespace. Changing the interface language currently reloads the page, preserving the
 table URL.
 
 Catalogs are isolated by module ID and shared across that module's contexts on the

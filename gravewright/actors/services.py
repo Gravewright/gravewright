@@ -9,7 +9,10 @@ from gravewright.campaigns.models import Campaign, Membership
 from gravewright.journals.services import identifier, member
 from gravewright.maps.models import Receipt
 from gravewright.maps.services import MapError, color, manage, title
-from gravewright.campaigns.systems import normalize_actor, remove_asset_references
+from gravewright.campaigns.systems import (
+    actor_templates, asset_provider, asset_provider_for, normalize_actor, remove_asset_references,
+    resolve_system_id,
+)
 
 from .models import Actor, Asset, Folder
 
@@ -63,7 +66,7 @@ def project(row, who):
         containerId=str(row.campaign_id),
         name=row.name,
         actorType=row.type,
-        systemId=who.campaign.system or "gravewright-pdf-system",
+        systemId=resolve_system_id(who.campaign.system),
         folderId=str(row.folder_id) if row.folder_id else None,
         canEdit=access(row, who, True),
         canOpen=access(row, who),
@@ -77,6 +80,7 @@ def project(row, who):
 
 def state(campaign, user):
     who = member(campaign, user)
+    provider = asset_provider(who.campaign.system)
     from gravewright.table.ownership import allows
     visible = [
         a
@@ -107,12 +111,10 @@ def state(campaign, user):
             for f in all_folders.values()
             if f.pk in allowed
         ],
-        "templates": [
-            {"id": str(a.pk), "name": a.name}
-            for a in Asset.objects.filter(campaign_id=campaign, kind="pdf")
-        ],
+        "templates": actor_templates(who.campaign.system, campaign),
+        "templateConfig": deepcopy(provider.get('template')) if provider else None,
         "is_gm": who.role == "gm",
-        "systemId": who.campaign.system or "gravewright-pdf-system",
+        "systemId": resolve_system_id(who.campaign.system),
         "players": [
             {"id": str(m.user_id), "name": m.user.name}
             for m in Membership.objects.select_related("user").filter(
@@ -296,10 +298,10 @@ def command(campaign, user, action, data, request_id):
                 row.save()
         elif action == "asset.delete":
             asset = Asset.objects.filter(
-                pk=identifier(data.get("id")), campaign_id=campaign, kind="pdf"
+                pk=identifier(data.get("id")), campaign_id=campaign, actor__isnull=True,
             ).first()
-            if not asset:
-                raise MapError("PDF not found.")
+            if not asset or not asset_provider_for(kind=asset.kind):
+                raise MapError("Asset not found.", "not_found")
             remove_asset_references(who.campaign.system, campaign, asset)
             asset.delete()
         else:

@@ -340,7 +340,7 @@
 
 
     function canRoll(state) {
-        return systemId(state) !== 'gravewright-pdf-system' && state?.config?.input === "roll";
+        return state?.config?.can_roll !== false && state?.config?.input === "roll";
     }
 
     function rollBar(state, L, active) {

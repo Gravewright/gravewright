@@ -56,3 +56,18 @@ test('locale listeners are cleaned up when their context closes', async () => {
   locale('pt-BR');window.dispatchEvent(new Event('gravewright:locale'));
   assert.deepEqual(received,['es']);
 });
+
+test('native consumers follow provider catalogs, including late registration and disposal', async () => {
+  locale('pt-BR');
+  const life=new Lifetime(),provider=createTranslator('example.inventory',life),native=createTranslator('example.inventory'),unrelated=createTranslator('example.unrelated');
+  const labels=[],stop=native.onChange(()=>labels.push(native.t('types.component')));
+  const dispose=provider.register({en:{'types.component':'Component'},'pt-BR':{'types.component':'Componente'}});
+  assert.deepEqual(labels,['Componente']);
+  const other=unrelated.register({en:{'types.component':'Unrelated'}});
+  assert.deepEqual(labels,['Componente']);
+  dispose();dispose();assert.deepEqual(labels,['Componente','types.component']);
+  provider.register({en:{'types.component':'Module component'}});
+  assert.equal(labels.at(-1),'Module component');
+  stop();await life.close();other();
+  assert.equal(labels.at(-1),'Module component');
+});

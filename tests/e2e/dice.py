@@ -200,7 +200,9 @@ def main():
                 expect(tray).to_be_visible()
                 def action(name):
                     tray.get_by_role('button',name=name,exact=True).click()
-                    if reference: reference.locator('.dice-tray').get_by_role('button',name=name,exact=True).click()
+                    if reference:
+                        previous_name = {'Formula presets': 'RPG presets', 'Count dice ≥ target': 'Success pool'}.get(name, name)
+                        reference.locator('.dice-tray').get_by_role('button',name=previous_name,exact=True).click()
                 def fill(selector,value):
                     tray.locator(selector).fill(value)
                     if reference: reference.locator('.dice-tray').locator(selector).fill(value)
@@ -215,20 +217,20 @@ def main():
                 fill('#dice-modifier','2')
                 expect(tray.locator('.dice-tray__expression')).to_have_value('2d6dl1 + 2')
                 dice_capture('pool')
-                action('RPG presets')
+                action('Formula presets')
                 left=tray.locator('.dice-tray__preset-column').bounding_box()
                 right=tray.locator('.dice-tray__roll-column').bounding_box()
                 assert right['x'] >= left['x'] + left['width']
                 assert abs(right['y']-left['y']) < 2
                 assert tray.bounding_box()['width'] > 700
                 dice_capture('presets')
-                action('Success pool')
+                action('Count dice ≥ target')
                 dice_capture('success-preset')
                 action('Use preset')
                 expect(tray.locator('.dice-tray__expression')).to_have_value('5d10 >= 8')
                 expect(tray.locator('[data-dice-tab=presets]')).to_have_attribute('aria-pressed','true')
                 # Save a user preset without evaluating it.
-                action('RPG presets')
+                action('Formula presets')
                 tray.locator('.dice-presets__saved summary').click()
                 if reference: reference.locator('.dice-presets__saved summary').click()
                 tray.get_by_label('Preset name',exact=True).fill('My pool')
@@ -272,7 +274,7 @@ def main():
                 expect(popup.locator('.dice-tray')).to_be_visible()
                 popup.close()
                 expect(tray).to_be_visible()
-                action('RPG presets')
+                action('Formula presets')
                 page.set_viewport_size({'width':390,'height':740})
                 tray.evaluate("el=>{el.style.left='8px';el.style.top='8px'}")
                 left=tray.locator('.dice-tray__preset-column').bounding_box()

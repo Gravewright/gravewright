@@ -33,9 +33,12 @@ def table(request, campaign_id, detached_chat=False):
         for m in campaign.memberships.all()
     )
     layers = DOCK["layers"] if owner else DOCK["layers"][:1]
-    from gravewright.campaigns.systems import sheet_provider
+    from gravewright.campaigns.catalog import get_ruleset
+    from gravewright.campaigns.systems import resolve_system_id, sheet_provider
+    ruleset = get_ruleset(campaign.system, campaign_id=campaign.pk) or {}
     context = {
         "actor_sheet_provider": sheet_provider(campaign.system),
+        "system_id": resolve_system_id(campaign.system),
         **TEXT,
         't': lambda key: TOOL_TEXT.get(key, key),
         'renderer_debug': settings.APP_DEBUG,
@@ -54,12 +57,12 @@ def table(request, campaign_id, detached_chat=False):
             ]
             for layer in layers
         },
-        # The original catalog has no item capability without a system module.
+        # Directories follow the selected system's document capabilities.
         "directories": [
             p
             for p in DOCK["directories"]
             if (owner or p["id"] not in {"scenes"})
-            and not (campaign.system == 'gravewright-pdf-system' and p['id'] == 'items')
+            and (p['id'] != 'items' or ruleset.get('itemTypes'))
         ],
     }
     from gravewright.web.localization import template_context

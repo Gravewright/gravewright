@@ -32,14 +32,7 @@
             {{ icon('Plus') }}{{ game.newActor }}</button
           ><button data-v-gwtoolbar type="button" data-actor-panel="folder">
             {{ icon('FolderPlus') }}{{ game.createActorFolder }}</button
-          ><button data-v-gwtoolbar type="button" data-actor-panel="upload">
-            {{ icon('UploadSimple') }}{{ game.uploadTemplate }}</button
-          ><input
-            type="file"
-            accept="application/pdf"
-            hidden
-            data-template-upload
-          />
+          >{% if actor_sheet_provider and actor_sheet_provider.directory_actions_template %}{% include actor_sheet_provider.directory_actions_template %}{% endif %}
         </div>
         {% endif %}<label class="directory-toolbar__search" data-v-gwtoolbar
           >{{ icon('MagnifyingGlass',scope='data-v-gwtoolbar') }}<input
@@ -115,8 +108,8 @@
 ></template>
 <template id="actor-icons"
   >{% for name in
-  ['User','FilePdf','Trash','NotePencil','PencilSimple','UsersThree','Plus','FolderPlus','Eye','EyeSlash','BookOpenText','Gear','Heart','Copy','Clipboard','ArrowCounterClockwise','ArrowClockwise','Sword','X']
-  %}<span data-icon="{{ name }}">{{ icon(name) }}</span>{% endfor %}</template
+  ['User','FileText','Trash','NotePencil','PencilSimple','UsersThree','Plus','FolderPlus','Eye','EyeSlash','BookOpenText','Gear','Heart','Copy','Clipboard','ArrowCounterClockwise','ArrowClockwise','Sword','X']
+  %}<span data-icon="{{ name }}">{{ icon(name) }}</span>{% endfor %}{% if actor_sheet_provider and actor_sheet_provider.directory_icons_template %}{% include actor_sheet_provider.directory_icons_template %}{% endif %}</template
 >
 {% include 'gravewright_actors/sheet.html' %}
 {% if actor_sheet_provider %}{% include actor_sheet_provider.template %}{% endif %} {% include

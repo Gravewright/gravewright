@@ -106,9 +106,12 @@ class ModuleRuntime {
   }
   attach(surface) {
     if (this.closed) throw new ModuleError("stale_context");
-    this.surfaces.set(surface, []);
+    const lives = [];
+    this.surfaces.set(surface, lives);
     void this.serial(async () => {
-      if (this.surfaces.has(surface) && (this.state || !surface.context.systemId)) await this.mountSurface(surface);
+      // Reconciliation may mount this surface while its attach job is queued.
+      // mountSurface replaces the array even for an empty/default mount.
+      if (this.surfaces.get(surface) === lives && (this.state || !surface.context.systemId)) await this.mountSurface(surface);
     });
     return () => {
       const lives = this.surfaces.get(surface) ?? [];

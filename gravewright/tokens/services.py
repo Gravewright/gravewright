@@ -10,6 +10,7 @@ from django.db import transaction
 
 from gravewright.actors import services as actors
 from gravewright.campaigns.models import Campaign
+from gravewright.campaigns.systems import resolve_system_id
 from gravewright.journals.services import identifier, member
 from gravewright.maps import services as maps
 from gravewright.maps.models import Receipt
@@ -74,7 +75,7 @@ def project(t, who):
         "mapId": str(t.scene_id),
         "actorId": str(t.actor_id),
         "actorType": t.actor.type,
-        "systemId": who.campaign.system or 'gravewright-pdf-system',
+        "systemId": resolve_system_id(who.campaign.system),
         "linkMode": "linked" if t.linked else "snapshot",
         "gridX": t.grid_x,
         "gridY": t.grid_y,

@@ -15,6 +15,7 @@ import { directoryView } from "/static/gravewright_maps/directory.js";
 import { openSheet } from "./sheet.js";
 import { openPermissions } from "/static/gravewright_table/permissions.js";
 import { initialContent, restoreContent } from '/static/gravewright_table/content-state.js';
+import { createTranslator } from '/static/gravewright_modules/i18n.js';
 export const clone = (id) =>
   document.getElementById(id).content.firstElementChild.cloneNode(true);
 export const icon = (name) =>
@@ -92,6 +93,7 @@ window.addEventListener("click", () => menu?.remove());
 const panel = document.getElementById("actors-panel"),
   workspace = document.getElementById("table-workspace"),
   campaign = workspace.dataset.tableId;
+const typeTranslator = createTranslator(workspace.dataset.systemId || 'gravewright');
 const labels = JSON.parse(
   document.getElementById("map-text")?.textContent || "{}",
 );
@@ -100,6 +102,7 @@ let state = {
     actorTypes: [],
     folders: [],
     templates: [],
+    templateConfig: null,
     players: [],
     is_gm: false,
   },
@@ -144,13 +147,34 @@ function form(id, title, save) {
   el.querySelector("input")?.focus();
   return el;
 }
+function renderActorTypeLabel(node, type) {
+  const descriptor = typeof type === 'string'
+    ? state.actorTypes.find(entry => entry.id === type) : type;
+  const label = descriptor?.label || descriptor?.id || type;
+  const translated = descriptor?.labelKey && typeTranslator.has(descriptor.labelKey);
+  node.textContent = translated ? typeTranslator.t(descriptor.labelKey) : label;
+  if (translated) node.setAttribute('translate', 'no');
+  else node.removeAttribute('translate');
+  return node;
+}
 function syncActorTypes() {
   const select = dialog?.querySelector('[name=actorType]');
   if (!select || select.disabled) return;
   const selected = select.value;
-  select.replaceChildren(...state.actorTypes.map((type) => new Option(type.label, type.id)));
+  select.replaceChildren(...state.actorTypes.map((type) =>
+    renderActorTypeLabel(new Option('', type.id), type)));
   if (state.actorTypes.some((type) => type.id === selected)) select.value = selected;
   dialog.querySelector('[type=submit]').disabled = !state.actorTypes.length;
+}
+function templateData(value) {
+  const path = state.templateConfig?.dataPath;
+  if (!Array.isArray(path) || !path.length || path.length > 16 ||
+      path.some(key => typeof key !== 'string' || !key || ['__proto__', 'constructor', 'prototype'].includes(key))) return {};
+  const data = {};
+  let cursor = data;
+  for (const key of path.slice(0, -1)) cursor = cursor[key] = {};
+  cursor[path.at(-1)] = value;
+  return data;
 }
 function edit(actor, folderId) {
   const el = form(
@@ -163,7 +187,7 @@ function edit(actor, folderId) {
         name: el.elements.name.value,
         actorType: actor?.actorType || el.elements.actorType.value,
         folderId: folderId ?? actor?.folderId,
-        data: state.systemId === 'gravewright-pdf-system' ? { pdf: { asset: el.elements.template.value } } : {},
+        data: templateData(el.elements.template.value),
       }),
   );
   el.elements.name.value = actor?.name || "";
@@ -172,11 +196,11 @@ function edit(actor, folderId) {
   show(el.querySelector("[data-actor-type]"), !actor);
   show(
     el.querySelector("[data-actor-template]"),
-    !actor && state.systemId === 'gravewright-pdf-system' && !!state.templates.length,
+    !actor && !!state.templateConfig && !!state.templates.length,
   );
   show(
     el.querySelector("[data-no-templates]"),
-    !actor && state.systemId === 'gravewright-pdf-system' && !state.templates.length,
+    !actor && !!state.templateConfig && !state.templates.length,
   );
   el.querySelector("[type=submit] span").textContent = actor
     ? "Save"
@@ -314,8 +338,7 @@ function paint() {
     )) {
       const el = clone("actor-entry");
       el.querySelector("strong").textContent = a.name;
-      el.querySelector("small").textContent =
-        state.actorTypes.find((type) => type.id === a.actorType)?.label || a.actorType;
+      renderActorTypeLabel(el.querySelector("small"), a.actorType);
       if (a.portraitUrl) {
         const image = document.createElement("img");
         image.src = a.portraitUrl;
@@ -384,10 +407,11 @@ function paint() {
     !view.visibleEntries.size,
   );
   const uploadButton = panel.querySelector('[data-actor-panel="upload"]');
-  if (uploadButton) show(uploadButton, state.systemId === "gravewright-pdf-system");
+  if (uploadButton) show(uploadButton, !!state.templateConfig);
   const templates = panel.querySelector("[data-templates]");
-  show(templates, state.systemId === "gravewright-pdf-system");
+  show(templates, !!state.templateConfig);
   templates.replaceChildren();
+  if (!state.templateConfig) return;
   const folder = clone("journal-folder");
   folder.querySelector(".gw-folder__label").textContent = "Templates";
   folder.querySelector(".gw-folder__count").textContent =
@@ -421,9 +445,9 @@ function paint() {
       strong = document.createElement("strong"),
       small = document.createElement("small");
     strong.textContent = a.name;
-    small.textContent = "PDF";
+    small.textContent = state.templateConfig.label || '';
     text.append(strong, small);
-    row.append(icon("FilePdf"), text);
+    row.append(icon(state.templateConfig.icon || 'FileText'), text);
     if (state.is_gm) {
       const b = document.createElement("button");
       b.className = "actor-directory__template-remove";
@@ -468,6 +492,11 @@ window.gravewrightActors = {
   open: (actorId, token) => open(state.actors.find(actor => actor.id === actorId) || initialContent('actors')?.actors.find(actor => actor.id === actorId) || { id: actorId, ...token }, token),
 };
 if (panel) {
+  const stopTypeLabels = typeTranslator.onChange(() => {
+    syncActorTypes();
+    paint();
+  });
+  window.addEventListener('pagehide', stopTypeLabels, { once: true });
   panel.querySelector(".game-directory").dataset.treeScroll = "";
   panel.onclick = (e) => {
     const a = e.target.closest("[data-actor-panel]")?.dataset.actorPanel;

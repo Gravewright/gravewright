@@ -18,7 +18,7 @@ catch {
 let terms = [], selected = 0, tab = 'manual', minimized = false, historyOpen = false, busy = false, popup;
 let recent = load('history').filter(p => typeof p.expression === 'string' && typeof p.label === 'string').slice(0, 30);
 let saved = load('presets').filter(p => typeof p.id === 'string' && typeof p.name === 'string' && typeof p.expression === 'string' && p.expression.length <= 512 && Number.isInteger(p.repeat) && p.repeat >= 1 && p.repeat <= 12).slice(0, 24);
-let preset = dicePresets[0], values = { attributes: 6 }, prepared;
+let preset = dicePresets[0], values = Object.fromEntries(preset.fields.map(f => [f.key, f.initial])), prepared;
 function error(text = '') { const el = $('.dice-tray__error'); el.textContent = text; show(el, !!text); }
 function persist(kind, entries) { try {
     localStorage.setItem(storageKey(kind), JSON.stringify(entries));

@@ -4,7 +4,6 @@ from pathlib import Path
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.http import FileResponse, Http404, JsonResponse
@@ -13,6 +12,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 from gravewright.journals.services import JournalError
 from gravewright.maps.services import MapError
+from gravewright.campaigns.systems import asset_content_type, asset_provider, asset_provider_for
 
 from . import services
 from .models import Asset
@@ -55,26 +55,27 @@ def upload(request, campaign_id):
     asset = None
     try:
         who = services.member(campaign_id, request.user.pk)
-        kind = request.POST.get("kind", "pdf")
+        file = request.FILES.get("file")
+        kind = request.POST.get("kind")
+        provider = asset_provider_for(kind=kind) if kind else (
+            asset_provider(who.campaign.system)
+            or asset_provider_for(content_type=getattr(file, 'content_type', None))
+        )
+        if kind is None and provider:
+            kind = provider['kind']
         actor = None
-        if kind == "pdf":
+        if provider:
             services.manage(who)
         elif kind in ("portrait", "token"):
             actor = services.get(request.POST.get("actorId"), who, True)
         else:
             raise MapError("Invalid image kind.")
-        file = request.FILES.get("file")
-        if kind == "pdf" and (not file or file.size > settings.PDF_SYSTEM_UPLOAD_MAX_BYTES):
-            limit_mb = settings.PDF_SYSTEM_UPLOAD_MAX_BYTES / (1024 * 1024)
-            raise MapError(f"The PDF must be no larger than {limit_mb:g} MB.")
-        if kind != "pdf" and (not file or file.size > 10_000_000):
+        if provider:
+            raw, ext = provider['validate_upload'](file)
+        elif not file or file.size > 10_000_000:
             raise MapError("The file must be no larger than 10 MB.")
-        raw = file.read()
-        if kind == "pdf":
-            if not raw.startswith(b"%PDF-"):
-                raise MapError("Choose a PDF document.")
-            ext = ".pdf"
         else:
+            raw = file.read()
             with Image.open(BytesIO(raw)) as image:
                 if (
                     image.format not in {"PNG", "JPEG", "WEBP"}
@@ -96,7 +97,7 @@ def upload(request, campaign_id):
             else:
                 services.manage(who)
             folder=None
-            if kind=="pdf" and request.POST.get("folder_id"):
+            if provider and request.POST.get("folder_id"):
                 from gravewright.maps.models import AssetFolder
                 from gravewright.journals.services import identifier
                 folder=AssetFolder.objects.filter(pk=identifier(request.POST["folder_id"]),campaign_id=campaign_id).first()
@@ -157,7 +158,7 @@ def asset(request, asset_id):
                 raise Http404
         response = FileResponse(
             item.file.open("rb"),
-            content_type="application/pdf" if item.kind == "pdf" else "image/png",
+            content_type=asset_content_type(item.kind),
         )
         response["Cache-Control"] = "private, no-store"
         response["X-Content-Type-Options"] = "nosniff"

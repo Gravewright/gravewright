@@ -16,7 +16,7 @@ async function request(url, payload) {
   return data;
 }
 
-export async function openPermissions(kind, id, {onSave} = {}) {
+export async function openPermissions(kind, id, {onSave, nested = false} = {}) {
   const url = `/api/containers/${root().dataset.tableId}/ownership/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`;
   const data = await request(url);
   const dialog = document.createElement('section');
@@ -100,7 +100,7 @@ export async function openPermissions(kind, id, {onSave} = {}) {
       reload.hidden = false;
     } finally { save.disabled = false; close.disabled = false; }
   };
-  mountModal(dialog, {canClose: () => !save.disabled});
+  mountModal(dialog, {canClose: () => !save.disabled, nested});
   controls.get('default')?.focus();
   return dialog;
 }

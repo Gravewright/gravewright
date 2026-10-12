@@ -7,6 +7,7 @@ from channels.layers import get_channel_layer
 from django.db import transaction
 
 from gravewright.campaigns.models import Campaign
+from gravewright.campaigns.systems import default_system_id
 from .models import ContextLease, ModuleSet, Package
 from .packages import ModuleFailure
 
@@ -56,7 +57,7 @@ def replace_release(engine, row, replacement=None):
                             and not Package.objects.filter(module_id=row.module_id, revoked=False)
                             .exclude(pk=row.pk).exists())
             if reset_system:
-                campaign.system = 'gravewright-pdf-system'
+                campaign.system = default_system_id()
                 campaign.save(update_fields=['system'])
             selected = ModuleSet.objects.select_for_update().filter(campaign=campaign).first()
             if not selected:

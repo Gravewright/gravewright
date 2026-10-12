@@ -612,6 +612,11 @@ def asset(request, module_id, version, digest, asset):
     if not row or 'django' in row.manifest:
         raise ModuleFailure("not_found")
     name = str(safe_path(asset))
+    # Collections require table-scoped read grants. The generic asset URL has
+    # no table identity, so documents are served only through the catalog API.
+    protected = row.manifest.get('content', {}).get('compendiums', [])
+    if name.casefold() in {path.casefold() for path in protected}:
+        raise ModuleFailure("not_found")
     engine = host()
     engine.verify_installed(row, name)
     path = engine.directory / "packages" / module_id / version / digest / name

@@ -13,6 +13,16 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 120
+        },
+        "labelKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "icon": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+          "maxLength": 80
         }
       },
       "required": [
@@ -121,10 +131,37 @@
       },
       "additionalProperties": false
     },
+    "content": {
+      "type": "object",
+      "description": "Read-only declarative compendiums of documents for this installed system.",
+      "properties": {
+        "compendiums": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 240 }
+        }
+      },
+      "required": ["compendiums"],
+      "additionalProperties": false
+    },
     "system": {
       "type": "object",
       "description": "Registers this package ID and name as an installed campaign system.",
       "properties": {
+        "combat": {
+          "type": "object",
+          "description": "Declarative initiative. @paths read finite numeric values from the actor or independent token sheet.",
+          "properties": {
+            "formula": { "type": "string", "minLength": 1, "maxLength": 120 },
+            "manualInput": { "enum": ["number", "text"] },
+            "showRoll": { "type": "boolean", "description": "Whether the native tracker shows initiative roll controls. Defaults to true." },
+            "requiresProvider": { "type": "boolean", "description": "Require a trusted server extension registered for this system identity. The host supplies no game rules." }
+          },
+          "required": ["formula"],
+          "additionalProperties": false
+        },
         "actorTypes": {
           "type": "array",
           "minItems": 1,
@@ -188,6 +225,10 @@
   ],
   "additionalProperties": false,
   "allOf": [
+    {
+      "if": { "required": ["content"] },
+      "then": { "required": ["system"] }
+    },
     {
       "if": {
         "required": [

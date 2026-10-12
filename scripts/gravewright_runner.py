@@ -31,9 +31,14 @@ DEFAULT_MARKETPLACE_URL = (
     'gravewright.marketplace.json'
 )
 DEFAULT_MARKETPLACE_KEYS_URL = (
-    'https://raw.githubusercontent.com/Gravewright/marketplace/main/trusted-keys.json'
+    'https://raw.githubusercontent.com/Gravewright/marketplace/'
+    '56aefb9db91666f7573bfdcdc2f6e9a6f2100527/trusted-keys.json'
 )
-DEFAULT_MARKETPLACE_KEYS_SHA256 = 'bab20a49a1d4b1f089fc0d52305f78b1c8e092f6b6b15fb7ad0f3e1c25e6e560'
+# Reviewed official key addition, 2026-10-10: retain the existing key and trust
+# the approved GitHub Actions signing key. Pin the immutable revision and bytes
+# together so a later edit to main cannot break this installer's integrity check.
+# https://github.com/Gravewright/marketplace/commit/56aefb9db91666f7573bfdcdc2f6e9a6f2100527
+DEFAULT_MARKETPLACE_KEYS_SHA256 = '8f98a1bc4abf9c394b2818c9a34d28bb73cf39dd0b159a42ccb541b8a0b32815'
 DEFAULT_MARKETPLACE_CHOICE = '.default-marketplace-choice'
 
 

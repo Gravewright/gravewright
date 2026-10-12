@@ -69,6 +69,27 @@ class SystemCatalogTests(TestCase):
             'name': 'Installed system table', 'description': '', 'system': system,
         }, content_type='application/json')
 
+    def test_provider_type_presentation_passes_through_without_known_game_types(self):
+        definition = {
+            'actorTypes': [{'id': 'vehicle', 'label': 'Vehicle', 'labelKey': 'types.vehicle', 'icon': 'User'}],
+            'itemTypes': [{'id': 'component', 'label': 'Component', 'labelKey': 'types.component', 'icon': 'Backpack'}],
+        }
+        self.install(system=definition)
+        result = self.create_campaign()
+        self.assertEqual(result.status_code, 201, result.content)
+        from gravewright.items.services import types
+        campaign = Campaign.objects.get()
+        self.assertEqual(types(campaign.system, campaign_id=campaign.pk), definition['itemTypes'])
+        self.assertEqual(get_ruleset(campaign.system)['actorTypes'], definition['actorTypes'])
+
+    def test_provider_type_icons_are_names_without_paths_or_markup(self):
+        for index, icon in enumerate(['../image.svg', '<svg>', 'https://example.test/icon.svg', 'x' * 81]):
+            with self.subTest(icon=icon), self.assertRaises(ModuleFailure):
+                self.install(module_id=f'example.badicon{index}', system={
+                    'actorTypes': [{'id': 'entity', 'label': 'Entity'}],
+                    'itemTypes': [{'id': 'component', 'label': 'Component', 'icon': icon}],
+                })
+
     def test_signed_install_updates_api_inside_and_campaign_creation_without_restart(self):
         self.assertEqual(len(self.client.get('/api/rulesets').json()['rulesets']), 1)
         self.assertNotContains(self.client.get('/inside?section=systems'), 'Example System')
@@ -242,3 +263,32 @@ class SystemCatalogTests(TestCase):
         selected = ModuleSet.objects.get(campaign_id=campaign_id)
         self.assertEqual(selected.modules, {'future.pinned': '1.0.0'})
         self.assertEqual(selected.revision, revision)
+
+    def test_installed_system_initiative_uses_the_pinned_release_and_numeric_sheet_data(self):
+        from gravewright.combat.services import configuration, roll_initiative
+        from gravewright.campaigns.models import Membership
+        from gravewright.maps.services import MapError
+        declaration = {'actorTypes': [{'id': 'hero', 'label': 'Hero'}],
+                       'combat': {'formula': '1d20 + @combat.initiative', 'manualInput': 'number'}}
+        self.install('example.initiative', system=declaration)
+        created = self.create_campaign('example.initiative')
+        self.assertEqual(created.status_code, 201, created.content)
+        who = Membership.objects.select_related('campaign').get(campaign_id=created.json()['id'])
+        self.install('example.initiative', version='2.0.0', system={
+            **declaration, 'combat': {'formula': '1d6'}})
+        self.assertEqual(configuration(who)['formula'], '1d20 + @combat.initiative')
+        self.assertEqual(configuration(who)['input'], 'roll')
+        for _ in range(8):
+            result = roll_initiative(who, '1d20 + @combat.initiative', {'combat': {'initiative': 5}})
+            self.assertGreaterEqual(result, 6)
+            self.assertLessEqual(result, 25)
+        self.assertEqual(roll_initiative(who, '@missing + 2', {}), 2)
+        for bad in ['1d20', True, {}, float('inf'), 1e9, 10**1000]:
+            with self.subTest(bad=bad), self.assertRaises(MapError):
+                roll_initiative(who, '@init + 1', {'init': bad})
+
+    def test_system_combat_manifest_rejects_unbounded_or_executable_configuration(self):
+        for combat in [{'formula': ''}, {'formula': 'x' * 121}, {'formula': 3},
+                       {'formula': '1d20', 'manualInput': 'javascript'}, {'formula': '1d20', 'roll': 'code'}]:
+            with self.subTest(combat=combat), self.assertRaises(ModuleFailure):
+                self.install(system={'actorTypes': [{'id': 'hero', 'label': 'Hero'}], 'combat': combat})

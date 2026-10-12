@@ -9,6 +9,8 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
+from .systems import default_system_id
+
 
 def cover_path(instance, filename):
     return f'campaigns/{instance.id}/{uuid.uuid4().hex}{Path(filename).suffix.lower()}'
@@ -30,7 +32,7 @@ class Campaign(models.Model):
                               related_name='owned_campaigns')
     name = models.CharField(max_length=80)
     description = models.TextField(max_length=500, blank=True)
-    system = models.CharField(max_length=120, default='gravewright-pdf-system', blank=True)
+    system = models.CharField(max_length=120, default=default_system_id, blank=True)
     cover = models.ImageField(upload_to=cover_path, blank=True)
     image_url = models.URLField(max_length=2048, blank=True)
     created_at = models.DateTimeField(default=timezone.now)

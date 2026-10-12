@@ -6,6 +6,22 @@ Gravewright installs signed ZIP packages containing browser JavaScript or truste
 
 Third-party module licensing is described in the [licensing policy](../../LICENSING.md). The manifest records the module author's chosen license; installation does not change it.
 
+## Host compatibility
+
+VTT **0.2.1** is the first public release with the `system.combat` provider
+contract, installed `content.compendiums`, native `api.ui.openModal`, and the
+asynchronous sheet-save closing lifecycle documented below. These are additive
+host features; the SDK contract version remains **1.0.0**. An SDK version range
+alone does not distinguish VTT 0.2.0 from 0.2.1: packages using these features
+must document VTT 0.2.1 as their minimum and check optional browser APIs before
+calling them. VTT 0.2.0 already introduced private `context.i18n` catalogs;
+0.2.1 also resolves translated document-type labels in native directories.
+
+Game rules, choices, sheet layouts and game translation catalogs belong to the
+installed system or its trusted companion app. The core validates descriptors,
+authorization and storage without interpreting a game's rules. See the
+[0.2.1 release notes](../releases/0.2.1.md) for installation and upgrade steps.
+
 ## Trust and installation boundaries
 
 Browser modules execute as ES modules in the application's main browser page. There is no iframe sandbox, Shadow DOM, or capability-based JavaScript isolation. Modules can interact with the page and browser environment. A signature authenticates the configured publisher and archive bytes; it does not prove that code is safe. Configure signing keys for publishers whose code you are prepared to run in users' sessions.
@@ -114,11 +130,78 @@ A package can also provide a campaign system by adding `system` to its manifest:
 }
 ```
 
-The system ID and title come from the package's `id` and `name`. Each package declares one system; it cannot replace `gravewright-pdf-system`. Declare at least one actor type; item types are optional. Type IDs must be unique within each list, start with a lowercase letter, and contain only lowercase letters, digits, underscores or hyphens (80 characters maximum). Each list supports up to 64 entries with labels of 1–120 characters.
+Optionally declare initiative for the native combat manager:
+
+```json
+"combat": { "formula": "1d20 + @combat.initiative", "manualInput": "number" }
+```
+
+This object belongs inside `system`. The formula accepts up to 120 characters
+using the native dice grammar. `@field.path` references read finite numeric
+values from the actor sheet or independent token snapshot; missing fields are
+zero, while nonnumeric values are rejected. The system sheet must persist its
+calculated modifiers. Combat uses the table's selected installed release.
+`showRoll` optionally hides native initiative roll controls when `false`.
+`manualInput` accepts `number` or `text` and applies if scene configuration
+disables the formula. A manifest cannot supply executable JavaScript or Python.
+For live system rules, see [system combat providers](#system-combat-providers).
+
+The system ID and title come from the package's `id` and `name`. Each package declares one system; it cannot replace an identity registered by a bundled provider. Declare at least one actor type; item types are optional. Type IDs must be unique within each list, start with a lowercase letter, and contain only lowercase letters, digits, underscores or hyphens (80 characters maximum). Each list supports up to 64 entries with labels of 1–120 characters.
+
+Type descriptors optionally accept `labelKey` (a translation key up to 120
+characters) and `icon` (an icon name up to 80 characters). Actor and item directories
+resolve `labelKey` in the package's own catalog registered with
+`context.i18n.register`, falling back to `label`. Available item icons include
+`Backpack`, `Sword`, `ShieldCheck`, `Scroll`, `Sparkle` and `User`; unavailable
+names use the default icon. For example, `{"id":"component","label":"Component",
+"labelKey":"types.component","icon":"Backpack"}`. The host keeps no game-type
+label or icon mappings. `i18n.onChange` consumers also update when their namespace
+catalog is registered or disposed.
 
 After a signed installation, the system appears in Systems, `/api/rulesets`, and the campaign form. The catalog uses the newest compatible, non-revoked installed version per package, ordered by numeric version. Ordinary modules without `system` remain available under Installed modules. Existing campaigns can retain an unavailable system when editing their details, but it cannot be selected for a new campaign.
 
 Saving a campaign with an installed system selects its document types and activates its browser package. The existing exact release is retained when already active; switching systems removes the previous system package while preserving unrelated modules and replacement preferences. Tables use the document types of that exact activated release, or the latest installed version if none is activated. Actor data keeps the existing native document structure; module-specific data uses the supported module storage and document APIs. Installing a new version does not automatically change a table's activated release.
+
+## System combat providers
+
+The core never selects a named game-rule profile. A trusted server extension
+registers callbacks for its own system ID from `AppConfig.ready()`:
+
+```python
+from api.combat import register_provider
+
+register_provider('publisher.starship',
+                  prepare_initiative=prepare_initiative,
+                  advance_effects=advance_effects)
+```
+
+`prepare_initiative(formula, data, *, conditions=())` receives isolated copies
+and returns `(formula, data)`. The native dice parser evaluates the returned
+formula and validates numeric results; it does not know the system's modifiers.
+`advance_effects(data, event)` mutates a bounded sheet copy and returns `True`
+when it needs persistence. The system owns field names, equipment activation,
+resource rules, conditions and effect clocks. Without a provider, sheet effects
+are left untouched. Registration for another system never affects the selected
+system; duplicate conflicting registrations fail startup.
+
+The event contains `phase` (`start`/`end`), `roundBoundary`, `isCurrent`,
+`periodic`, `actorType`, event-source `tokenId`/`actorId`/`conditions`, and
+`ownerTokenId`/`ownerActorId` for the supplied document. Linked tokens share one
+actor document; independent tokens receive their own snapshot. `documentKey`
+is an opaque tuple identifying that document; `clockKeys` is a set shared across
+one command's phases for system-owned clock deduplication. Skipped turns have
+`periodic=False`; backward navigation never dispatches these callbacks.
+
+The host retains membership, ownership, encounter boundaries, transactions,
+JSON limits, revisions, retry receipts and publication. A callback failure rolls
+back the command. Callbacks must avoid external side effects: the transaction
+cannot undo them. These are trusted Python extensions enabled by the host owner
+through the existing Django package mechanism, never imports requested by a
+browser manifest. A system may distribute its browser UI and server rules as
+separate packages. Add `"requiresProvider": true` inside `system.combat` when
+its rules require that backend: combat actions fail clearly if it is missing,
+instead of silently using incomplete rules. No game-specific fallback is built
+into the VTT.
 
 ## Signed catalog and activation
 
@@ -380,6 +463,12 @@ flush/refresh behavior when switching their internal tabs. The PDF provider
 continues emitting `gravewright:sheet-flush` and `gravewright:sheet-refresh` when
 switching its own tabs.
 
+Item sheet replacements retain the native title bar and also emit
+`gravewright:sheet-flush` before closing. Bind the listener on
+`root.closest('.item-sheet')` and call `event.detail.waitUntil(promise)` to
+await writes, including when the user presses ESC. Rejection keeps the item
+open. Losing read access forces immediate closure without waiting for writes.
+
 For separately maintained source checkouts, set `GRAVEWRIGHT_SERVER_APP_PATHS`
 to their package root directories (`:` separated on Linux/macOS, `;` on Windows).
 Relative paths resolve against the VTT checkout. These explicitly trusted paths
@@ -398,3 +487,126 @@ deleting the shipped defaults without configuring them is supported. Git ignores
 the contents of both folders, so extensions stay out of this repository.
 
 [Ethical module porting](ethical-module-porting.md)
+
+## Compendiums supplied by a system package
+
+A browser system may declare up to 16 JSON collections in its manifest:
+
+```json
+"content": {"compendiums": ["compendiums/entities.json", "compendiums/gear.json"]}
+```
+
+Paths must be relative package paths ending in `.json`. Absolute paths, traversal,
+URLs and symlinks outside the approved package are rejected. Each collection is
+limited to 8 MiB, 64 packs and 20,000 entries in total. An entry is limited to
+256 KiB; JSON nesting is limited to 24 levels. Collections contain declarative
+JSON, and each entry's `data` belongs to its provider. The core does not execute
+expressions or fetch external assets from those fields:
+
+```json
+{
+  "name": "Example equipment",
+  "packs": [{
+    "id": "gear", "label": "Equipment", "type": "item_pack",
+    "entries": [{
+      "id": "survey-kit", "name": "Survey kit", "type": "gear",
+      "systemId": "author.example-system",
+      "data": {"revision": "original", "description": "Plain text"}
+    }]
+  }]
+}
+```
+
+Supported pack kinds are `actor_pack`, `item_pack` and `spell_pack`. Every entry
+must use the provider's own `systemId` and a type registered in its
+`system.actorTypes` or `system.itemTypes`. Pack IDs must be unique within the
+collection; entry IDs must be unique within their pack. IDs accept ASCII
+letters, digits, dots, underscores, colons and hyphens, up to 120 characters,
+and must start with a letter or digit. Names and labels are limited to 120
+characters. Keep IDs and relative paths stable across updates so permissions
+and entry references remain stable.
+
+Installation validates the declarations and files. The native compendium UI
+exposes them only in campaigns using that system's exact active, pinned,
+approved and non-revoked package version. Every read checks installed bytes
+against the approved archive; changing a file does not authorize new content.
+Collections do not declare campaign IDs. The host binds access internally.
+Packs are private to the GM by default. Existing compendium read grants and
+role defaults control player visibility; importing documents remains a GM
+action. The host treats `data` as opaque JSON and retains the provider's fields;
+it does not interpret revisions or game rules. Update the VTT
+base to a version supporting `content.compendiums` before installing a package
+that uses this optional declaration.
+
+Declared collection JSON files are not served by generic package asset URLs.
+Read and import their entries through the table-scoped compendium API, which
+checks the active system and the user's current read grants.
+
+Use `api.compendiums.state()` to discover visible pack and entry IDs.
+`api.compendiums.read({packId, id})` still returns one entry;
+`api.compendiums.read({packId, ids: [id1, id2]})` returns `{entries: [...]}`
+containing the same documents in requested order. A batch accepts 1–100 unique
+IDs; do not combine `id` with `ids`. Invalid or duplicate IDs produce
+`invalid_data`. A missing entry fails the entire batch with `not_found`,
+without partial results. Native packs retain full source documents; packs
+created in a table retain their individual `kind`, `data` and `version` envelope.
+
+Every read rechecks table membership and current grants, plus the active
+version and integrity of installed collections. Reads create no mutation
+receipts and publish no `compendiums.changed` event. Reusing a request ID does
+not retain access after revocation. A read-only role may read under a valid
+grant and still cannot import documents.
+
+The root index contains only pack metadata and each entry's `id`, `name`,
+`kind`, `type` and `version`. It does not include document bodies or archives.
+`type` is the provider's registered document type, not a host rules category;
+`spell_pack` is a compatibility pack kind that routes to item documents without
+adding spell rules. Full documents are loaded through authorized individual or
+batch reads. Installed collections share the same bounded, verified content
+cache regardless of provider or document type; permissions, package selection
+and revocation are checked on each request and are never cached with content.
+Legacy actor imports without a type use the system's declared actor default,
+the same contract as actor creation, instead of a built-in actor type.
+
+## Module modal windows
+
+Use `api.ui.openModal(element, {nested = true, canClose = () => true})` for
+module windows. It mounts the shared Gravewright modal component synchronously
+and returns the same element, with `close()`, `suspend()` and `resume()` methods.
+Pass a `section`, `div` or `form` created in the host document. Native HTML
+`dialog` elements and elements from another document are rejected. The host adds
+`table-modal-window`, traps focus, makes the background inert, restores focus
+on close, and handles Escape. Modules provide their content, accessible name,
+translated labels and close button; a modal does not automatically gain a
+movable title bar.
+
+```js
+mount({root, api, signal}) {
+  const doc = root.ownerDocument;
+  const panel = doc.createElement('section');
+  panel.setAttribute('aria-label', 'Details'); // Use your translated label.
+  const close = doc.createElement('button');
+  close.type = 'button';
+  close.textContent = 'Close'; // Use your translated label.
+  panel.append(close);
+  const modal = api.ui.openModal(panel);
+  close.addEventListener('click', () => modal.close(), {signal});
+}
+```
+
+`nested: true` keeps an existing modal underneath the new one; closing the child
+restores the parent. Set `nested: false` to request closing the previous modal.
+`canClose` is a synchronous guard for Escape; explicit `close()` calls remain
+under the module's control. `close()` emits `gravewright:sheet-flush`, so attach
+a listener to the returned element and call `event.detail.waitUntil(promise)`
+during the event to await pending writes. A rejected write keeps the modal open.
+`suspend()` temporarily hides the modal for interactions such as picking on
+the map; `resume()` restores it.
+
+The API is bound to the activation or surface lifetime. Disposal forces the
+modal closed, even when a save is pending, and releases its focus and background
+state. Normal close releases the lifetime cleanup immediately. Opening a modal
+after disposal throws `stale_context`; opening an already mounted element
+throws `conflict`. This helper is available to `start`, `customize`, registration
+and surface callbacks. `api.ui.register` retains its existing registration-phase
+behavior.

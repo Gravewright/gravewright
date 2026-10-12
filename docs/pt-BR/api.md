@@ -56,6 +56,8 @@ Formas adicionais:
 | `chat.history(payload, options)` | Lê mensagens visíveis |
 | `chat.send(payload, options)` | Envia `{text, sceneId?}` pelo processamento nativo |
 | `chat.remove(id, options)` / `chat.clear(options)` | Exclui uma/todas as mensagens conforme regras nativas de moderação |
+| `compendiums.read({packId, id}, options)` | Lê uma entrada com o acesso atual da mesa; conserva o documento/envelope do compêndio |
+| `compendiums.read({packId, ids}, options)` | Lê de 1 a 100 IDs únicos e retorna `{entries: [...]}` na ordem pedida; não retorna resultados parciais se alguma entrada faltar |
 | `dice.roll(expression, payload, options)` | Rola e publica; suporta `repeat`, `label`, `visibility` e cena |
 | `table.search(query, options)` | Busca documentos com acesso mínimo de leitura. As opções aceitam `kind` (`actor`, `item`, `journal`, `quest`, `quest_board`, `scene`, `compendium`) e `recent` (até 12 referências `{id, type}` com consulta vazia). Os resultados incluem `snippet` autorizado, `kind` e `actions`; as referências recentes são revalidadas a cada consulta. |
 | `table.lobby(options)` / `table.updateLobby(payload, options)` | Lê/altera a sala de espera nativa |
@@ -170,6 +172,7 @@ Imports e assinaturas públicas; `campaign_id`/`user_id` representam identificad
 | `api.maps` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)`, `layer_state(campaign_id, user_id, scene_id)` |
 | `api.journals` | `state(campaign_id, user_id)`, `command(campaign_id, user_id, action, data, request_id)` |
 | `api.items`, `api.combat`, `api.cards`, `api.audio`, `api.compendiums` | `state(campaign_id, user_id, scene_id=None)`, `command(campaign_id, user_id, action, data, request_id)` |
+| `api.combat.register_provider` | Registro de callbacks pelo sistema em `AppConfig.ready()`; veja [provedores de combate](modules.md#provedores-de-combate-do-sistema) |
 | `api.resources` | `state(campaign_id, user_id, name, scene_id=None, preview_token_id=None)`, `command(campaign_id, user_id, name, action, data, request_id)` |
 | `api.chat` | `history(campaign_id, user_id, map_id=None)`, `send(campaign_id, user_id, text, request_id, map_id=None)`, `remove(campaign_id, user_id, message_id=None)` |
 | `api.dice` | `evaluate(expression, repeat=1, *, random_source=None)`, `roll(campaign_id, user_id, expression, request_id, *, repeat=1, label="", visibility="public", map_id=None)` |
@@ -244,8 +247,9 @@ interface escolhido pelo usu?rio. A busca usa o idioma exato, o idioma base, o
 ingl?s e, por ?ltimo, a pr?pria chave. `t(chave, par?metros)` substitui par?metros
 nomeados ou num?ricos como texto simples; use `textContent` ao exibir o resultado.
 `has(chave)` verifica a cobertura; `number(valor, op??es)` usa `Intl.NumberFormat`;
-`onChange(callback)` acompanha eventos de idioma e devolve uma fun??o para cancelar
-a assinatura. A troca de idioma recarrega a p?gina preservando a URL da mesa.
+`onChange(callback)` acompanha eventos de idioma e registro/remoção de catálogos
+do mesmo namespace, devolvendo uma função para cancelar a assinatura. A troca de
+idioma recarrega a página preservando a URL da mesa.
 
 Os cat?logos s?o isolados pelo ID do m?dulo e compartilhados entre seus contextos
 na p?gina. `register` devolve uma fun??o de remo??o; o descarte do contexto que fez

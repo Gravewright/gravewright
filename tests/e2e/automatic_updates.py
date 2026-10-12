@@ -25,15 +25,28 @@ sys.path.insert(0, str(ROOT))
 def main():
     global ROOT
     source_root = ROOT
-    work = Path(tempfile.mkdtemp(prefix='gravewright-auto-update-'))
+    work = Path(tempfile.mkdtemp(prefix='gravewright-auto-update-')).resolve()
     ROOT = work / 'application'
-    shutil.copytree(source_root, ROOT, ignore=shutil.ignore_patterns(
-        '.git', '.venv', 'node_modules', '__pycache__', '.env', 'data', 'media', 'staticfiles', 'test-results'))
+    local_patterns = shutil.ignore_patterns(
+        '.git', '.venv', 'node_modules', '__pycache__', '.env', 'data', 'media',
+        'staticfiles', 'test-results', 'dist', 'build', 'Gravewright Runner.bat',
+        'Gravewright Runner.lnk')
+    def ignore_local(folder, names):
+        ignored = set(local_patterns(folder, names))
+        ignored.update(name for name in names if name.startswith('.env.') and name != '.env.example')
+        # Operator-installed systems are not part of the VTT acceptance fixture.
+        if Path(folder) in (source_root / 'extensions/api', source_root / 'extensions/django'):
+            ignored.update(name for name in names if not (name.startswith('README') and name.endswith('.md')))
+        return ignored
+    shutil.copytree(source_root, ROOT, ignore=ignore_local)
     sys.path.insert(0, str(ROOT))
     print('Isolated workspace:', work, flush=True)
     with socket.socket() as sock:
         sock.bind(('127.0.0.1',0)); port=sock.getsockname()[1]
-    os.environ.update(GRAVEWRIGHT_HOST='127.0.0.1',GRAVEWRIGHT_PORT=str(port))
+    for name in tuple(os.environ):
+        if name.startswith(('DJANGO_', 'GRAVEWRIGHT_')):
+            del os.environ[name]
+    os.environ.update(PYTHON_DOTENV_DISABLED='1', GRAVEWRIGHT_HOST='127.0.0.1',GRAVEWRIGHT_PORT=str(port))
     os.environ.update(DJANGO_SETTINGS_MODULE='config.settings', GRAVEWRIGHT_DATABASE=str(work/'db.sqlite3'), GRAVEWRIGHT_MEDIA_ROOT=str(work/'media'), GRAVEWRIGHT_CONTENT_ROOT=str(work/'compendiums'))
     if '--runner' in sys.argv:
         from scripts.gravewright_runner import prepare_environment
@@ -46,13 +59,23 @@ def main():
     django.setup()
     from django.core.management import call_command
     from django.db import connections
+    from django.conf import settings
     from gravewright.accounts.models import User
     from scripts.update_supervisor import Supervisor, read, download
+    assert Path(settings.BASE_DIR).resolve() == ROOT.resolve(), 'Acceptance loaded the real application'
+    database = Path(settings.DATABASES['default']['NAME']).resolve()
+    media = Path(settings.MEDIA_ROOT).resolve()
+    content = Path(settings.GRAVEWRIGHT_CONTENT_ROOT).resolve()
+    assert all(path.is_relative_to(work) for path in (database, media, content)), 'Storage escaped the isolated fixture'
+    # Runner configuration resolves relative storage under the copied project;
+    # copytree deliberately excludes those local directories.
+    database.parent.mkdir(parents=True, exist_ok=True)
+    media.mkdir(parents=True, exist_ok=True)
+    content.mkdir(parents=True, exist_ok=True)
     call_command('migrate', interactive=False, verbosity=0)
     User.objects.create_user(name='Preserved owner',email='upgrade@example.test',password='upgrade-test-password',role='owner')
-    from django.conf import settings
-    media=Path(settings.MEDIA_ROOT);media.mkdir();(media/'fixture').write_bytes(b'preserved')
-    content=Path(settings.GRAVEWRIGHT_CONTENT_ROOT);content.mkdir();(content/'fixture').write_bytes(b'preserved')
+    (media/'fixture').write_bytes(b'preserved')
+    (content/'fixture').write_bytes(b'preserved')
     # An enabled marketplace app must survive environment rebuilds and rollback.
     import io
     import json

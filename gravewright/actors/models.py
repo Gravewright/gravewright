@@ -1,8 +1,10 @@
-"""Campaign actor records, reusable PDF/image assets and actor folder structure."""
+"""Campaign actor records, reusable system/image assets and actor folders."""
 
 import uuid
 
 from django.db import models
+
+from gravewright.campaigns.systems import default_asset_kind
 
 
 class Folder(models.Model):
@@ -33,7 +35,7 @@ class Actor(models.Model):
 
 
 class Asset(models.Model):
-    """Campaign PDF template or actor portrait/token image served after authorization."""
+    """System asset or actor portrait/token image served after authorization."""
     folder = models.ForeignKey("gravewright_maps.AssetFolder", null=True, blank=True, on_delete=models.SET_NULL)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     campaign = models.ForeignKey(
@@ -42,7 +44,7 @@ class Asset(models.Model):
     actor = models.ForeignKey(
         Actor, null=True, on_delete=models.CASCADE, related_name="assets"
     )
-    kind = models.CharField(max_length=8, default="pdf")
+    kind = models.CharField(max_length=8, default=default_asset_kind)
     name = models.CharField(max_length=240)
     file = models.FileField(upload_to="actors/%Y/%m/")
     created_at = models.DateTimeField(auto_now_add=True)
