@@ -112,6 +112,35 @@ class ModuleTests(TestCase):
                 state["moduleSetRevision"],
             )
 
+    def test_operator_storage_alias_allows_activation_but_never_package_symlinks(self):
+        storage = Path(self.temp.name) / "real-storage"
+        storage.mkdir()
+        alias = Path(self.temp.name) / "operator-alias"
+        try:
+            alias.symlink_to(storage, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("Directory symlink creation unavailable on this host.")
+        host = ModulePackages(alias / "modules", self.host.keys)
+        record, raw = self.package()
+        host.install(record, raw)
+        state = host.configure(self.campaign.pk, {"example.test": "1.0.0"}, {}, "0")
+        self.assertEqual(state["modules"][0]["id"], "example.test")
+        row = Package.objects.get()
+        path = host.directory / "packages" / row.module_id / row.version / row.digest / "main.js"
+        expected = path.read_bytes()
+        self.assertEqual(host.verify_installed(row, "main.js"), expected)
+
+        # An identical byte stream still cannot be substituted through a link
+        # inside the package, even though the operator's storage alias is valid.
+        outside = storage / "outside.js"
+        outside.write_bytes(expected)
+        path.unlink()
+        path.symlink_to(outside)
+        with self.assertRaises(ModuleFailure):
+            host.verify_installed(row, "main.js")
+        with self.assertRaises(ModuleFailure):
+            host.configure(self.campaign.pk, {"example.test": "1.0.0"}, {}, state["moduleSetRevision"])
+
     def test_revision_checked_storage_and_revocation(self):
         state = self.activate()
         rev = state["moduleSetRevision"]

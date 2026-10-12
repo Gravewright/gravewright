@@ -39,6 +39,7 @@ def recover_source(project, data):
     The restored supervisor completes database/media recovery from the same
     journal. Leave that journal intact until the regular recovery commits.
     """
+    project, data = Path(project).resolve(), Path(data).resolve()
     transaction = data / 'updates/transaction.json'
     if not transaction.exists():
         return sys.executable

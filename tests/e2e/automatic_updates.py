@@ -175,7 +175,7 @@ def main():
             assert (old / '.gravewright-rollback/database.sqlite3').is_file()
             if '--runner' in sys.argv:
                 assert any('release test 1' in p.read_text() for p in (directory / '.runner-launchers').glob('*.bat'))
-                assert supervisor.python(ROOT) in (ROOT / 'Gravewright Runner.bat').read_text()
+                assert str(Path(supervisor.python(ROOT)).resolve()) in (ROOT / 'Gravewright Runner.bat').read_text()
             print('PASS: in-place replacement, new/removed files, updated BATs, preserved .env and retained .old.',flush=True)
             for failure in ['migration','startup']:
                 target=archive(2,failure)

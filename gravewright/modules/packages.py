@@ -181,7 +181,10 @@ class ModulePackages:
     """
     def __init__(self, directory: Path, keys: dict[str, str] | None = None):
         self.keys = validate_keys(keys if keys is not None else {})
-        self.directory = directory
+        # Resolve operator-selected storage aliases once (for example macOS
+        # /var or Windows short paths). Links inside installed packages remain
+        # forbidden by verify_installed; trusted ancestors are not package data.
+        self.directory = Path(directory).resolve()
         self.directory.mkdir(parents=True, exist_ok=True)
 
     @cached_property

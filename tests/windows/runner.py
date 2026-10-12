@@ -421,11 +421,15 @@ def main():
     output = ROOT / "test-results/windows-runner"
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="gravewright-bat-") as temporary:
+        # Hosted Windows TEMP can use an 8.3 profile alias (RUNNER~1), while
+        # the launcher prints canonical paths. Derive all fixture paths from
+        # the same resolved root without weakening the data-directory check.
+        work = Path(temporary).resolve()
         try:
-            exercise(Path(temporary), output, skip_browser=arguments.skip_browser)
+            exercise(work, output, skip_browser=arguments.skip_browser)
         except Exception:
             try:
-                diagnose_failure(Path(temporary), output)
+                diagnose_failure(work, output)
             except Exception as diagnostic_error:
                 (output / "diagnostic-error.txt").write_text(str(diagnostic_error), encoding="utf-8")
             raise

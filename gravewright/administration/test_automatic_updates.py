@@ -56,8 +56,8 @@ class ArchiveTests(SimpleTestCase):
                 shutil.copy2(source / name, stage / 'scripts/windows' / name)
             create_runner(stage, sys.executable, data, runtime_project=origin)
             content = next((data / '.runner-launchers').glob('*.bat')).read_text(encoding='utf-8')
-            self.assertIn(f'pushd "{origin}"', content)
-            self.assertIn(f'--project "{origin}"', content)
+            self.assertIn(f'pushd "{origin.resolve()}"', content)
+            self.assertIn(f'--project "{origin.resolve()}"', content)
             self.assertNotIn(str(stage), content)
 
     def test_external_startup_recovery_repairs_project_before_importing_it(self):
@@ -84,6 +84,61 @@ class ArchiveTests(SimpleTestCase):
             self.assertFalse((project / 'new-file').exists())
             self.assertEqual((project / '.env').read_text(), 'private')
             self.assertTrue(transaction.exists())  # Data recovery still has to commit.
+
+    def test_external_startup_recovery_accepts_aliases_without_touching_private_data(self):
+        from scripts.windows.launch_runner import recover_source
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            project, data = root / 'app', root / 'data'
+            project.mkdir(); data.mkdir()
+            backup = data / 'updates/backups/test/project'
+            backup.mkdir(parents=True)
+            (backup / 'module.py').write_text('previous source')
+            (project / 'module.py').write_text('interrupted source')
+            (project / 'incoming.py').write_text('partial addition')
+            (project / '.env').write_text('private configuration')
+            (project / 'data').mkdir()
+            (project / 'data/campaign').write_text('private campaign')
+            transaction = data / 'updates/transaction.json'
+            write(transaction, {'backup': 'test', 'previous_python': 'previous-python',
+                                'project_files': ['module.py'],
+                                'incoming_files': ['module.py', 'incoming.py']})
+            # Deterministic aliases exercise the same canonical comparison as
+            # Windows short paths and macOS /var -> /private/var, without
+            # requiring privileges to create directory symlinks on Windows.
+            self.assertEqual(recover_source(project / '..' / 'app', data / '..' / 'data'), 'previous-python')
+            self.assertEqual((project / 'module.py').read_text(), 'previous source')
+            self.assertFalse((project / 'incoming.py').exists())
+            self.assertEqual((project / '.env').read_text(), 'private configuration')
+            self.assertEqual((project / 'data/campaign').read_text(), 'private campaign')
+            self.assertTrue(transaction.exists())
+
+    def test_external_startup_recovery_rejects_escapes_through_aliases(self):
+        from scripts.windows.launch_runner import recover_source
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            project, data = root / 'app', root / 'data'
+            project.mkdir(); data.mkdir()
+            backup = data / 'updates/backups/test/project'
+            backup.mkdir(parents=True)
+            (backup / 'module.py').write_text('previous source')
+            (project / 'module.py').write_text('interrupted source')
+            outside = root / 'outside.py'
+            outside.write_text('outside must survive')
+            for field, value in [('incoming_files', ['module.py', '../outside.py']),
+                                 ('project_files', ['../outside.py']),
+                                 ('backup', '../../../../outside')]:
+                with self.subTest(field=field):
+                    journal = {'backup': 'test', 'previous_python': 'previous-python',
+                               'project_files': ['module.py'], 'incoming_files': ['module.py']}
+                    journal[field] = value
+                    write(data / 'updates/transaction.json', journal)
+                    with self.assertRaisesRegex(ValueError, 'Invalid recovery'):
+                        recover_source(project / '..' / 'app', data / '..' / 'data')
+                    self.assertEqual(outside.read_text(), 'outside must survive')
+                    self.assertEqual((project / 'module.py').read_text(), 'interrupted source')
 
     def test_project_replacement_and_recovery_preserve_private_files(self):
         with tempfile.TemporaryDirectory() as temp:
