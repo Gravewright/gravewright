@@ -1,4 +1,4 @@
-// shared/config/i18n/text.js
+// gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
 function notifyTextChange() {
   for (const listener of listeners)
@@ -30,7 +30,7 @@ if (typeof window !== "undefined") {
   if (window.gravewrightLocale) apply(window.gravewrightLocale);
 }
 
-// features/lighting/model/light-profiles.js
+// gravewright/maps/frontend/features/lighting/model/light-profiles.js
 var lightPresets = [
   { id: "torch", get name() {
     return text("Torch");

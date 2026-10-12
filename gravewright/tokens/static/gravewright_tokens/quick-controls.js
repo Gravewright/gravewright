@@ -1,4 +1,5 @@
 import { registerEscapeClose } from '/static/gravewright_web/escape.js';
+import { rpgIcon } from '/static/gravewright_web/rpg-icons.js';
 const layoutKey = 'gravewright.conditions.anonymous';
 export function conditionLayout() {
   try { return localStorage.getItem(layoutKey) === 'classic' ? 'classic' : 'gravewright'; }
@@ -16,8 +17,8 @@ function element(tag, className, text) {
   return el;
 }
 function badge(condition) {
-  const el = element('span', 'token-condition token-condition--' + condition.kind,
-    condition.kind === 'negative' ? '☠' : condition.kind === 'positive' ? '✦' : '◆');
+  const el = element('span', 'token-condition token-condition--' + condition.kind);
+  el.append(rpgIcon(['negative','positive'].includes(condition.kind) ? condition.kind : 'neutral'));
   el.title = condition.label;
   el.setAttribute('aria-label', condition.label);
   return el;

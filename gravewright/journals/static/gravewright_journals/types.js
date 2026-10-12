@@ -1,3 +1,4 @@
+import { renderBoard } from './quest-board.js';
 // QuestSheet, QuestBoard and RollTable behavior ported from the original UI.
 import { richText, emptyDoc } from './editor.js';
 import { writeReference } from '/static/gravewright_table/references.js';
@@ -153,94 +154,7 @@ function quest(w, host, state, upload) {
             editor(w, gm.querySelector(`[data-rich=${key}]`), q.gm[key], key === 'notes' ? 'GM notes' : 'Secrets', value => q.gm[key] = value, upload);
     }
 }
-function board(w, host, state, open) {
-    const editing = w.editing, entries = (editing ? w.draft.board_entries : w.draft.board_display_entries) || [];
-    w.boardFilters ??= new Set(statuses);
-    host.classList.toggle('quest-board--editing', editing);
-    show(host.querySelector('[data-board-editor]'), editing && state.is_gm);
-    for (const b of host.querySelectorAll('[data-status-filter]')) {
-        b.setAttribute('aria-pressed', String(w.boardFilters.has(b.dataset.statusFilter)));
-        b.onclick = () => { w.boardFilters.has(b.dataset.statusFilter) ? w.boardFilters.delete(b.dataset.statusFilter) : w.boardFilters.add(b.dataset.statusFilter); w.render(); };
-    }
-    const form = host.querySelector('form'), select = form.querySelector('select');
-    for (const q of state.journals.filter(j => j.type === 'quest' && !entries.some(e => e.quest_id === j.id))) {
-        const option = document.createElement('option');
-        option.value = q.id;
-        option.textContent = q.title;
-        select.append(option);
-    }
-    select.onchange = () => form.querySelector('button').disabled = !select.value;
-    form.onsubmit = e => { e.preventDefault(); void w.perform('board-add', { quest_id: select.value }); };
-    const list = host.querySelector('[data-board-entries]');
-    list.className = editing ? 'quest-board__list' : 'quest-board__wall';
-    for (const [index, entry] of entries.entries()) {
-        if (editing && !w.boardFilters.has(entry.card.status))
-            continue;
-        const card = entry.card, el = clone(editing ? 'board-edit-card' : 'board-read-card');
-        el.dataset.status = card.status;
-        el.draggable = true;
-        el.addEventListener('dragstart', event => writeReference(event.dataTransfer, {type: 'journal', id: entry.quest_id, title: card.title}));
-        el.classList.toggle('quest-board__card--pinned', entry.pinned);
-        list.append(el);
-        if (editing) {
-            const mark = icon(entry.pinned ? 'PushPin' : 'Scroll');
-            mark.classList.add('quest-board__mark');
-            el.querySelector('[data-mark]').replaceWith(mark);
-            text(el, '.quest-board__title', card.title);
-            el.querySelector('.quest-board__title').onclick = () => open(entry.quest_id);
-            el.querySelector('select').value = card.status;
-            el.querySelector('select').onchange = e => void w.perform('status', { journal_id: entry.quest_id, status: e.target.value });
-            for (const b of el.querySelectorAll('[data-board-action]')) {
-                const action = b.dataset.boardAction;
-                b.disabled = action === 'up' ? index === 0 : action === 'down' ? index === entries.length - 1 : false;
-                if (action === 'pin')
-                    b.setAttribute('aria-pressed', String(entry.pinned));
-                b.onclick = () => { if (action === 'pin')
-                    void w.perform('board-pin', { quest_id: entry.quest_id, pinned: !entry.pinned }); if (action === 'remove')
-                    void w.perform('board-remove', { quest_id: entry.quest_id }); if (action === 'up' || action === 'down') {
-                    const ids = entries.map(e => e.quest_id), target = index + (action === 'up' ? -1 : 1);
-                    [ids[index], ids[target]] = [ids[target], ids[index]];
-                    void w.perform('board-reorder', { ordered_quest_ids: ids });
-                } };
-            }
-        }
-        else {
-            el.querySelector('button').onclick = () => open(entry.quest_id);
-            image(el.querySelector('img'), card.image.src);
-            el.querySelector('[data-seal]').replaceWith(seal(card.status));
-            show(el.querySelector('.quest-board__pinned'), entry.pinned);
-            text(el, 'h3', card.title);
-            text(el, '.quest-board__summary', card.summary);
-            show(el.querySelector('.quest-board__summary'), !!card.summary);
-            show(el.querySelector('.quest-board__facts'), !!(card.location || card.giver));
-            for (const fact of el.querySelectorAll('[data-fact]')) {
-                show(fact, !!card[fact.dataset.fact]);
-                text(fact, 'span', card[fact.dataset.fact]);
-            }
-            show(el.querySelector('[data-objectives]'), card.objectives.length > 0);
-            text(el, 'h4 small', `${card.objectives.filter(o => o.completed).length}/${card.objectives.length}`);
-            const objectives = el.querySelector('.quest-board__objectives');
-            for (const objective of card.objectives.slice(0, 2)) {
-                const li = document.createElement('li');
-                li.classList.toggle('quest-board__objective--done', objective.completed);
-                const span = document.createElement('span');
-                span.textContent = objective.text;
-                li.append(icon(objective.completed ? 'CheckCircle' : 'Circle'), span);
-                objectives.append(li);
-            }
-            if (card.objectives.length > 2) {
-                const li = document.createElement('li');
-                li.textContent = '+' + (card.objectives.length - 2);
-                objectives.append(li);
-            }
-            show(el.querySelector('.quest-board__section--rewards'), card.rewards.length > 0);
-            text(el, '.quest-board__section--rewards p', card.rewards.map(r => r.text).join(' · '));
-        }
-    }
-    show(host.querySelector('.quest-board__empty'), !entries.length);
-    text(host, '.quest-board__empty p', editing ? 'Add a quest to the board to publish it here.' : 'No published quests on this board.');
-    show(host.querySelector('.quest-board__filtered'), entries.length > 0 && !list.children.length);
-}
+const board = renderBoard;
 function table(w, host, state) {
     const t = w.draft.roll_table, editing = w.editing;
     for (const el of host.querySelectorAll('[data-table-edit]'))

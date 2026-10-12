@@ -18,7 +18,7 @@
 .gw-card:hover,
 .gw-card:focus-within {
     border-color: rgba(192, 154, 90, 0.5);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 var(--step-14) var(--fib-8) rgba(0, 0, 0, 0.4);
 }
 
 .gw-card--flat:hover,

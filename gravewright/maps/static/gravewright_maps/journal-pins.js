@@ -1,5 +1,6 @@
 import { readReference, referenceMime, openReference } from '/static/gravewright_table/references.js';
 import { openFormModal, modalText } from '/static/gravewright_table/form-modal.js';
+import { rpgIcon } from '/static/gravewright_web/rpg-icons.js';
 
 export function journalPins(surface, board, map, gm, api) {
   const host = document.createElement('div'), status = document.createElement('p');
@@ -23,7 +24,10 @@ export function journalPins(surface, board, map, gm, api) {
     if (!view) return;
     for (const button of host.children) {
       const pin = moving?.pin.id === button.dataset.pinId ? moving.preview : byId.get(button.dataset.pinId);
-      if (pin) button.style.transform = `translate(${view.x + pin.x * view.scale}px, ${view.y + pin.y * view.scale}px) translate(-50%, -100%)`;
+      if (pin) {
+        button.style.setProperty('--marker-size', `${Math.max(18, Math.min(28, 28 * view.scale))}px`);
+        button.style.transform = `translate(${view.x + pin.x * view.scale}px, ${view.y + pin.y * view.scale}px) translate(-50%, -50%)`;
+      }
     }
   }
   function edit(pin) {
@@ -60,9 +64,9 @@ export function journalPins(surface, board, map, gm, api) {
       let button = buttons.get(pin.id);
       if (!button) {
         button = document.createElement('button'); button.type = 'button'; button.dataset.pinId = pin.id;
+        button.append(rpgIcon('journal'));
         host.append(button);
       }
-      button.textContent = pin.public ? '◆' : '◇';
       button.className = 'journal-map-pin' + (pin.public ? '' : ' journal-map-pin--private');
       button.setAttribute('aria-label', pin.label);
       if (gm) button.setAttribute('aria-keyshortcuts', 'Delete Backspace');

@@ -1,4 +1,4 @@
-// directory.js
+// gravewright/maps/frontend/directory.js
 function normalized(value) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase().trim();
 }

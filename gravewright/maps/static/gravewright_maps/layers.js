@@ -69,11 +69,8 @@ export function createLayers(surface, board, map, gm, initial) {
     painting = false,
     lighting, extra, pins;
   const walls = node("svg", { class: "wall-workspace" }),
-    doors = node("svg", { class: "door-controls" }),
-    hint = document.createElement("div");
-  hint.className = "wall-workspace__hint";
-  hint.setAttribute("role", "status");
-  surface.append(doors, walls, hint);
+    doors = node("svg", { class: "door-controls" });
+  surface.append(doors, walls);
   const command = (area, action, data) =>
     window.gravewrightRealtime.mapCommand("objects", {
       mapId: map.id,
@@ -362,7 +359,6 @@ export function createLayers(surface, board, map, gm, initial) {
         "wall-workspace--measure",
         getPath("_tool") === "measure",
       );
-      hint.hidden = !active;
       const wallTree = document.createDocumentFragment(),
         doorTree = document.createDocumentFragment();
       if (active) {
@@ -468,17 +464,7 @@ export function createLayers(surface, board, map, gm, initial) {
           );
         }
         wallTree.append(g);
-        hint.textContent = view.busy
-          ? "Saving…"
-          : ["wall", "door"].includes(getPath("_tool"))
-            ? "Click endpoints or drag · Alt ends the chain · Shift snaps to grid · Ctrl ignores snapping · Esc cancels"
-            : "Drag to select · Shift separates an endpoint · Double-click splits";
-        if (view.error) {
-          const e = document.createElement("span");
-          e.setAttribute("role", "alert");
-          e.textContent = view.error;
-          hint.append(e);
-        }
+
       }
       for (const w of state.walls.filter((w) => w.kind === "door")) {
         const g = node("g", {
@@ -646,7 +632,6 @@ export function createLayers(surface, board, map, gm, initial) {
         closeDialog(name);
       walls.remove();
       doors.remove();
-      hint.remove();
       window.removeEventListener("click", click);
       window.removeEventListener("pointerdown", outside);
       window.removeEventListener("gravewright:map-viewport", sync);

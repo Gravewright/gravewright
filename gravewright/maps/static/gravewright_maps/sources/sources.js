@@ -1,4 +1,4 @@
-// shared/config/i18n/text.js
+// gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
 function notifyTextChange() {
   for (const listener of listeners)
@@ -30,7 +30,7 @@ if (typeof window !== "undefined") {
   if (window.gravewrightLocale) apply(window.gravewrightLocale);
 }
 
-// features/lighting/model/light-profiles.js
+// gravewright/maps/frontend/features/lighting/model/light-profiles.js
 var lightPresets = [
   { id: "torch", get name() {
     return text("Torch");
@@ -43,7 +43,7 @@ var lightPresets = [
   }, bright_radius: 2, dim_radius: 4, intensity: 0.85, color: "#ffd8a8", angle: 360 }
 ];
 
-// features/effects/model/particle-profiles.js
+// gravewright/maps/frontend/features/effects/model/particle-profiles.js
 var PARTICLE_DEFAULTS = {
   smoke: { scale: 3, density: 0.6, color: "#9aa3ad" },
   ember: { scale: 2, density: 0.5, color: "#ff9040" },
@@ -59,7 +59,7 @@ var PARTICLE_DEFAULTS = {
   runes: { scale: 3, density: 0.65, color: "#69a7ff" }
 };
 
-// features/scene-layers/lib/shader-language.js
+// gravewright/maps/frontend/features/scene-layers/lib/shader-language.js
 var PREAMBLE = `#version 300 es
 precision highp float;
 
@@ -191,7 +191,7 @@ var USER_PREFIX = `#define uTexture gwUTexture
 `;
 var USER_SUFFIX = "\n#undef main\nvoid main() { gwUserMain(); finalColor *= gwUOpacity; finalColor = gwIlluminate(finalColor, vTextureCoord, gwULightResponse); }\n";
 
-// features/effects/model/shader-validation.js
+// gravewright/maps/frontend/features/effects/model/shader-validation.js
 var ShaderDraftValidator = class {
   gl;
   validate(source) {
@@ -220,7 +220,7 @@ var ShaderDraftValidator = class {
   }
 };
 
-// features/scene-layers/lib/shader-presets.js
+// gravewright/maps/frontend/features/scene-layers/lib/shader-presets.js
 var shaderPresets = [
   {
     "opacity": 1,
@@ -1414,7 +1414,7 @@ var shaderPresets = [
   }
 ];
 
-// features/effects/model/effects.js
+// gravewright/maps/frontend/features/effects/model/effects.js
 function defaults() {
   return { light_response: 0, light_emission: 0, bright_radius: 2, dim_radius: 4, angle: 360, animation: "none", x: 0, y: 0, kind: "smoke", scale: 3, density: 0.6, color: "#9aa3ad", enabled: true, rotation: 0, name: "Shader", source: "void main() { float a = 0.35 * uIntensity; finalColor = vec4(uColor * a, a); }", radius: 0, opacity: 1, intensity: 0.6, speed: 1, blend_mode: "normal" };
 }
@@ -1438,7 +1438,7 @@ function translatedCopies(items, at) {
   return items.map((e) => ({ kind: e.kind, data: payload(e.kind, { ...e.data, x: at.x + e.x - center.x, y: at.y + e.y - center.y }) }));
 }
 
-// features/scene-layers/ui/sources.js
+// gravewright/maps/frontend/features/scene-layers/ui/sources.js
 var box = (value) => ({ value });
 var derive = (read) => ({ get value() {
   return read();

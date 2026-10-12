@@ -1,4 +1,4 @@
-// shared/lib/dom/tree-drag.js
+// gravewright/maps/frontend/shared/lib/dom/tree-drag.js
 var shallowRef = () => {
   let value;
   return { get value() {

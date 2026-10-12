@@ -1,33 +1,35 @@
 
-.selection-workspace{position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none}.selection-workspace [data-image-resize]{touch-action:none}.selection-workspace [data-image-resize]:focus-visible{outline:2px solid var(--accent)}.selection-workspace__error{position:absolute;bottom:89px;left:13px;z-index:9;max-width:calc(100% - 26px);margin:0;padding:5px 8px;background:#10151bef;border:1px solid var(--border);border-radius:5px;color:#ffaaaa;font-size:11px}
+.selection-workspace{position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none}.selection-workspace [data-image-resize]{touch-action:none}.selection-workspace [data-image-resize]:focus-visible{outline:var(--fib-2) solid var(--accent)}.selection-workspace__error{position:absolute;bottom:var(--fib-10);left:var(--fib-6);z-index:9;max-width:calc(100% - var(--step-26));margin:0;padding:var(--fib-4) var(--fib-5);background:#10151bef;border:var(--fib-1) solid var(--border);border-radius:var(--fib-4);color:#ffaaaa;font-size:var(--step-11)}
 
 .journal-map-pins{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden}
-.journal-map-pin{position:absolute;left:0;top:0;pointer-events:auto;touch-action:none;width:32px;height:36px;border:1px solid #e5c788;border-radius:50% 50% 50% 0;background:#352c1e;color:#f9dc99;font-size:23px;cursor:pointer;box-shadow:0 2px 6px #0008}
-.journal-map-pin--private{border-style:dashed;background:#20252d;color:#c5ccd6}
-.journal-map-pin:focus-visible{outline:3px solid #fff;outline-offset:2px}
-.journal-map-pins__status{position:absolute;bottom:90px;left:16px;z-index:9;background:#10151bef;color:#eee;padding:8px;border-radius:5px;max-width:420px}
-.journal-rich-text__reference{margin-bottom:8px;padding:5px 10px;border:1px solid var(--border);border-radius:5px;background:var(--panel);color:var(--text);cursor:pointer}
-.journal-rich-text a[href*="?document="]{color:var(--accent);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.document-reference-results{display:flex;flex-direction:column;gap:5px;max-height:320px;overflow:auto}
-.document-reference-results button{text-align:left;padding:8px;border:1px solid var(--border);border-radius:5px;background:var(--panel);color:var(--text)}
+.journal-map-pin{position:absolute;left:0;top:0;display:grid;place-items:center;pointer-events:auto;touch-action:none;box-sizing:border-box;width:var(--marker-size,var(--step-28));height:var(--marker-size,var(--step-28));min-width:0;min-height:0;padding:0;border:var(--fib-1) solid #c09a5a;border-radius:var(--step-4);background:#181c20ed;color:#e5c788;cursor:pointer;box-shadow:0 var(--fib-1) var(--fib-3) #0006}
+.journal-map-pin .rpg-icon{width:74%;height:74%}
+.journal-map-pin--private{border-color:#8f99a4;background:#181c20e6;color:#b9c1cb}
+.journal-map-pin:hover{background:#292b2e;border-color:#f0d297;color:#f0d297}
+.journal-map-pin:focus-visible{outline:var(--fib-3) solid #fff;outline-offset:var(--fib-2)}
+.journal-map-pins__status{position:absolute;bottom:var(--size-90);left:var(--step-16);z-index:9;background:#10151bef;color:#eee;padding:var(--fib-5);border-radius:var(--fib-4);max-width:var(--size-420)}
+.journal-rich-text__reference{margin-bottom:var(--fib-5);padding:var(--fib-4) var(--step-10);border:var(--fib-1) solid var(--border);border-radius:var(--fib-4);background:var(--panel);color:var(--text);cursor:pointer}
+.journal-rich-text a[href*="?document="]{color:var(--accent);text-decoration:underline;text-underline-offset:var(--fib-3);cursor:pointer}
+.document-reference-results{display:flex;flex-direction:column;gap:var(--fib-4);max-height:var(--size-320);overflow:auto}
+.document-reference-results button{text-align:left;padding:var(--fib-5);border:var(--fib-1) solid var(--border);border-radius:var(--fib-4);background:var(--panel);color:var(--text)}
 .document-reference-results button[aria-pressed=true]{border-color:var(--accent)}
 
 #maps-panel .game-directory--scenes{display:flex;flex-direction:column}
 #maps-panel .game-directory--scenes>.directory-toolbar{flex:0 0 auto}
 #maps-panel .game-directory--scenes>[data-map-tree]{flex:1 1 0;min-height:0;overflow:auto}
-[data-scene-prepared]{color:var(--accent);font-size:10px}
-.game-scene-settings .table-modal-body .game-scene-editor__check{display:flex;align-items:center;gap:8px}
+[data-scene-prepared]{color:var(--accent);font-size:var(--step-10)}
+.game-scene-settings .table-modal-body .game-scene-editor__check{display:flex;align-items:center;gap:var(--fib-5)}
 .game-scene-settings .table-modal-body .game-scene-editor__check input{flex:0 0 auto;width:auto;margin:0}
-.scene-settings-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px}
-.scene-settings-column{display:flex;flex-direction:column;gap:14px;min-width:0}
-.scene-settings-column+.scene-settings-column{border-left:1px solid var(--border);padding-left:24px}
-.scene-settings-column .game-scene-settings__wide{display:grid;grid-template-columns:1fr;gap:14px}
+.scene-settings-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--step-24)}
+.scene-settings-column{display:flex;flex-direction:column;gap:var(--step-14);min-width:0}
+.scene-settings-column+.scene-settings-column{border-left:var(--fib-1) solid var(--border);padding-left:var(--step-24)}
+.scene-settings-column .game-scene-settings__wide{display:grid;grid-template-columns:1fr;gap:var(--step-14)}
 .scene-settings-column [data-view-hint]{margin:0}
-.scene-settings-column .game-scene-settings__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.scene-settings-column .game-scene-settings__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--step-12)}
 .scene-settings-column .game-scene-settings__grid label{min-width:0}
 .scene-settings-column .game-scene-settings__grid input[type=range]{width:100%;min-width:0}
-.scene-settings-column .game-scene-settings__calibration{flex-direction:column;align-items:stretch;gap:10px;padding:12px}
-.scene-settings-column .game-scene-settings__calibration button{width:100%;min-height:34px;white-space:nowrap;gap:8px}
-.scene-settings-column .game-scene-settings__calibration button svg{flex:0 0 18px;width:18px;height:18px}
+.scene-settings-column .game-scene-settings__calibration{flex-direction:column;align-items:stretch;gap:var(--step-10);padding:var(--step-12)}
+.scene-settings-column .game-scene-settings__calibration button{width:100%;min-height:var(--fib-8);white-space:nowrap;gap:var(--fib-5)}
+.scene-settings-column .game-scene-settings__calibration button svg{flex:0 0 var(--step-18);width:var(--step-18);height:var(--step-18)}
 .scene-settings-column .game-scene-settings__calibration button:hover{border-color:var(--accent)}
-@media(max-width:560px){.scene-settings-columns{grid-template-columns:1fr;gap:18px}.scene-settings-column+.scene-settings-column{border-left:0;border-top:1px solid var(--border);padding-left:0;padding-top:18px}}
+@media(max-width:560px){.scene-settings-columns{grid-template-columns:1fr;gap:var(--step-18)}.scene-settings-column+.scene-settings-column{border-left:0;border-top:var(--fib-1) solid var(--border);padding-left:0;padding-top:var(--step-18)}}

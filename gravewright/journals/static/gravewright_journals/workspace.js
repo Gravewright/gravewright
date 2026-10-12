@@ -305,7 +305,7 @@ class JournalWindow {
     }
     async perform(action, data = {}) {
         if (!await this.flush())
-            return;
+            return false;
         try {
             const reply = await commands(action, { journal_id: this.draft.id, ...data });
             if (reply.entry) {
@@ -317,9 +317,11 @@ class JournalWindow {
                 }
                 output.textContent = `${reply.entry.name}: ${reply.entry.result}`;
             }
+            return reply;
         }
         catch (error) {
             this.error(error.message);
+            return false;
         }
     }
     async close(force = false) {

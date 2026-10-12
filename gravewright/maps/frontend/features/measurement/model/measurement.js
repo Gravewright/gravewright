@@ -1,6 +1,19 @@
 import { formatNumber, text as gwText } from "../../../shared/config/i18n/text.js";
 export const unitsPerPixel = (cell, value) => (Number.isFinite(value) && value > 0 ? value : 1) / (Number.isFinite(cell) && cell > 0 ? cell : 70);
 export function dragMeasure(seed, end, constrain = false) {
+    if (seed.kind === 'line' && seed.points) {
+        const anchor = seed.points.at(-1);
+        let dx = end.x - seed.origin.x - anchor.x, dy = end.y - seed.origin.y - anchor.y;
+        const distance = Math.hypot(dx, dy);
+        if (constrain) {
+            const angle = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * Math.PI / 4;
+            dx = Math.cos(angle) * distance;
+            dy = Math.sin(angle) * distance;
+        }
+        const points = [...seed.points, { x: anchor.x + dx, y: anchor.y + dy }];
+        const length = points.slice(1).reduce((total, p, i) => total + Math.hypot(p.x - points[i].x, p.y - points[i].y), 0);
+        return { ...seed, points, length, direction: 0 };
+    }
     let dx = end.x - seed.origin.x, dy = end.y - seed.origin.y;
     if (seed.kind === 'rect') {
         if (constrain) {
@@ -19,7 +32,7 @@ export function dragMeasure(seed, end, constrain = false) {
 export function measurePath(m) {
     const l = Math.max(.01, m.length), w = Math.max(.01, m.width);
     if (m.kind === 'line')
-        return `M0 0H${l}`;
+        return m.points ? m.points.map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join('') : `M0 0H${l}`;
     if (m.kind === 'circle')
         return `M${-l} 0a${l} ${l} 0 1 0 ${2 * l} 0a${l} ${l} 0 1 0 ${-2 * l} 0`;
     if (m.kind === 'rect')

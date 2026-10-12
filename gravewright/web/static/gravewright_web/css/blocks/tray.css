@@ -18,7 +18,7 @@
     border-radius: var(--radius-pill);
     padding: var(--fib-4);
     background: rgba(24, 29, 35, 0.94);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.73);
+    box-shadow: 0 var(--fib-5) var(--step-28) rgba(0, 0, 0, 0.73);
 }
 
 .gw-tray__toggle {

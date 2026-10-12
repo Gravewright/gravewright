@@ -16,7 +16,7 @@
     border-radius: var(--radius-xl);
     padding: var(--fib-4) var(--step-7);
     background: rgba(9, 13, 16, 0.62);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 var(--step-6) var(--step-18) rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(var(--step-7));
     opacity: 0.78;
     transition: opacity var(--motion-base) var(--ease);

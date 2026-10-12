@@ -24,10 +24,10 @@
     z-index: 0;
     pointer-events: none;
     background-image:
-        linear-gradient(rgba(192, 154, 90, 0.075) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(192, 154, 90, 0.075) 1px, transparent 1px),
-        linear-gradient(rgba(192, 154, 90, 0.032) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(192, 154, 90, 0.032) 1px, transparent 1px);
+        linear-gradient(rgba(192, 154, 90, 0.075) var(--fib-1), transparent var(--fib-1)),
+        linear-gradient(90deg, rgba(192, 154, 90, 0.075) var(--fib-1), transparent var(--fib-1)),
+        linear-gradient(rgba(192, 154, 90, 0.032) var(--fib-1), transparent var(--fib-1)),
+        linear-gradient(90deg, rgba(192, 154, 90, 0.032) var(--fib-1), transparent var(--fib-1));
     background-size:
         var(--grid-major) var(--grid-major), var(--grid-major) var(--grid-major),
         var(--grid-minor) var(--grid-minor), var(--grid-minor) var(--grid-minor);
@@ -211,8 +211,8 @@
 
 .gw-gate__brand .gw-mark {
     box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.4),
-        0 0 18px rgba(192, 154, 90, 0.18);
+        0 0 0 var(--fib-1) rgba(0, 0, 0, 0.4),
+        0 0 var(--step-18) rgba(192, 154, 90, 0.18);
 }
 
 .gw-gate__eyebrow {

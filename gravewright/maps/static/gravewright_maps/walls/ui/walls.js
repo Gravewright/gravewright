@@ -1,4 +1,4 @@
-// shared/config/i18n/text.js
+// gravewright/maps/frontend/shared/config/i18n/text.js
 var listeners = /* @__PURE__ */ new Set();
 function notifyTextChange() {
   for (const listener of listeners)
@@ -30,7 +30,7 @@ if (typeof window !== "undefined") {
   if (window.gravewrightLocale) apply(window.gravewrightLocale);
 }
 
-// features/walls/model/walls.js
+// gravewright/maps/frontend/features/walls/model/walls.js
 var solid = { movement: "block", vision: "block", light: "block", sound: "block" };
 var wallPresets = [
   { id: "normal", get name() {
@@ -99,7 +99,7 @@ function enclosed(w, a, b) {
   return [1, 2].every((n) => w[`x${n}`] >= Math.min(a.x, b.x) && w[`x${n}`] <= Math.max(a.x, b.x) && w[`y${n}`] >= Math.min(a.y, b.y) && w[`y${n}`] <= Math.max(a.y, b.y));
 }
 
-// features/walls/ui/walls.js
+// gravewright/maps/frontend/features/walls/ui/walls.js
 var box = (value) => ({ value });
 var derive = (read) => ({ get value() {
   return read();

@@ -823,4 +823,17 @@ window.addEventListener('gravewright:open-scene', ({detail}) => {
   const map=state.maps.find(row=>row.id===detail.id);
   if(map)void navigate(map);
 });
+window.addEventListener('gravewright:locate-journal-marker', async ({detail}) => {
+  try {
+    const map = state.maps.find(row => row.id === detail.sceneId);
+    if (!map) return;
+    const {gravewright} = await import('/static/gravewright_modules/frontend-api.js');
+    // Revalidate the marker through the current member's projection before navigating.
+    const layers = await gravewright.maps.layers({mapId:map.id,sceneId:map.id});
+    const pin = layers.journalPins?.find(row => row.id === detail.pinId);
+    if (!pin) return;
+    if (current?.id !== map.id) await navigate(map);
+    if (current?.id === map.id) board?.ping({x:pin.x,y:pin.y},true,'#c09a5a');
+  } catch (cause) { error(cause.message); }
+});
 window.addEventListener('gravewright:tool-error', ({detail})=>error(detail.message));

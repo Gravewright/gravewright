@@ -1,15 +1,15 @@
 
-.individual-audio[data-v-gwaudio] { position:relative; display: flex; align-items: center; gap: 5px;
+.individual-audio[data-v-gwaudio] { position:relative; display: flex; align-items: center; gap: var(--fib-4);
 }
 .individual-audio__toggle[data-v-gwaudio] {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 3px; border: 0; background: transparent; color: inherit; cursor: pointer;
+  padding: var(--fib-3); border: 0; background: transparent; color: inherit; cursor: pointer;
 }
-.individual-audio__toggle svg[data-v-gwaudio] { width: 18px; height: 18px;
+.individual-audio__toggle svg[data-v-gwaudio] { width: var(--step-18); height: var(--step-18);
 }
-.individual-audio__volume[data-v-gwaudio] { width: 55px; margin: 0; accent-color: var(--accent); cursor: pointer;
+.individual-audio__volume[data-v-gwaudio] { width: var(--fib-9); margin: 0; accent-color: var(--accent); cursor: pointer;
 }
-.individual-audio[data-v-gwaudio] :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px;
+.individual-audio[data-v-gwaudio] :focus-visible { outline: var(--fib-2) solid var(--accent); outline-offset: var(--fib-2);
 }
-.individual-audio__mixer[data-v-gwaudio]{position:absolute;right:0;top:34px;z-index:150;width:233px;display:grid;gap:8px;padding:13px;border:1px solid var(--border);border-radius:8px;background:var(--surface,#181d23);box-shadow:0 8px 21px #0008;font-size:13px}.individual-audio__mixer label[data-v-gwaudio]{display:flex;align-items:center;justify-content:space-between;gap:8px}.individual-audio__mixer input[data-v-gwaudio]{width:89px}.individual-audio__mixer small[data-v-gwaudio]{font-size:11px;color:var(--muted)}
+.individual-audio__mixer[data-v-gwaudio]{position:absolute;right:0;top:var(--fib-8);z-index:150;width:var(--fib-12);display:grid;gap:var(--fib-5);padding:var(--fib-6);border:var(--fib-1) solid var(--border);border-radius:var(--fib-5);background:var(--surface,#181d23);box-shadow:0 var(--fib-5) var(--fib-7) #0008;font-size:var(--fib-6)}.individual-audio__mixer label[data-v-gwaudio]{display:flex;align-items:center;justify-content:space-between;gap:var(--fib-5)}.individual-audio__mixer input[data-v-gwaudio]{width:var(--fib-10)}.individual-audio__mixer small[data-v-gwaudio]{font-size:var(--step-11);color:var(--muted)}
 

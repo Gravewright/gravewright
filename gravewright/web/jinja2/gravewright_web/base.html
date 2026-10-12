@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#11151a" />
     <title>{{ app_name }} VTT · {{ release_label }}</title>
+    <link rel="stylesheet" href="{{ static('gravewright_web/css/tokens.css') }}" />
     {% block styles %}<link rel="stylesheet" href="{{ static('gravewright_web/css/index.css') }}" />{% endblock %}
     {% block before_scripts %}{% endblock %}
     <script type="importmap" nonce="{{ request.csp_nonce }}">{{ module_import_map()|tojson }}</script>

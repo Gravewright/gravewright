@@ -1,15 +1,15 @@
 
-.module-marketplace{display:grid;gap:13px;color:var(--text);font-size:13px}.module-marketplace h3,.module-marketplace h4,.module-marketplace p{margin:0}.module-marketplace__header,.module-marketplace__item,.module-marketplace__catalog header{display:flex;align-items:center;justify-content:space-between;gap:13px}.module-marketplace__item{padding:8px;border:1px solid var(--border);border-radius:8px}.module-marketplace__item small{display:block;color:var(--text-muted);margin-top:3px}.module-marketplace button,.module-marketplace select{padding:5px 8px;border:1px solid var(--border);border-radius:5px;background:var(--surface);color:inherit;font:inherit}.module-marketplace__replacements{display:grid;gap:8px;border:1px solid var(--border)}.module-marketplace__replacements label{display:flex;align-items:center;justify-content:space-between;gap:8px}.module-marketplace__error{color:var(--danger-text)}.module-marketplace__catalog{display:grid;gap:8px}
+.module-marketplace{display:grid;gap:var(--fib-6);color:var(--text);font-size:var(--fib-6)}.module-marketplace h3,.module-marketplace h4,.module-marketplace p{margin:0}.module-marketplace__header,.module-marketplace__item,.module-marketplace__catalog header{display:flex;align-items:center;justify-content:space-between;gap:var(--fib-6)}.module-marketplace__item{padding:var(--fib-5);border:var(--fib-1) solid var(--border);border-radius:var(--fib-5)}.module-marketplace__item small{display:block;color:var(--text-muted);margin-top:var(--fib-3)}.module-marketplace button,.module-marketplace select{padding:var(--fib-4) var(--fib-5);border:var(--fib-1) solid var(--border);border-radius:var(--fib-4);background:var(--surface);color:inherit;font:inherit}.module-marketplace__replacements{display:grid;gap:var(--fib-5);border:var(--fib-1) solid var(--border)}.module-marketplace__replacements label{display:flex;align-items:center;justify-content:space-between;gap:var(--fib-5)}.module-marketplace__error{color:var(--danger-text)}.module-marketplace__catalog{display:grid;gap:var(--fib-5)}
 
 .gw-module-surface:empty{display:none}.gw-module-root{min-width:0;min-height:0}.gw-module-overlay{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:7}
 
-.gw-module-overlay>.gw-module-surface,.gw-module-overlay .gw-module-root{position:absolute;inset:0;pointer-events:none}.gw-module-scene-controls{position:absolute;top:13px;left:13px;z-index:15}
-[data-table-modules].module-marketplace{gap:0;padding:16px;align-content:start;min-width:0}
-[data-table-modules] .module-marketplace__header{padding-bottom:12px;gap:12px;flex-wrap:wrap}
-[data-table-modules] .module-marketplace__header h3{flex:1;font-size:14px}
+.gw-module-overlay>.gw-module-surface,.gw-module-overlay .gw-module-root{position:absolute;inset:0;pointer-events:none}.gw-module-scene-controls{position:absolute;top:var(--fib-6);left:var(--fib-6);z-index:15}
+[data-table-modules].module-marketplace{gap:0;padding:var(--step-16);align-content:start;min-width:0}
+[data-table-modules] .module-marketplace__header{padding-bottom:var(--step-12);gap:var(--step-12);flex-wrap:wrap}
+[data-table-modules] .module-marketplace__header h3{flex:1;font-size:var(--step-14)}
 [data-table-modules] .module-marketplace__list{margin:0;padding:0;list-style:none}
-[data-table-modules] .module-marketplace__item{min-height:52px;padding:10px 0;border:0;border-bottom:1px solid var(--border);border-radius:0;gap:16px}
-[data-table-modules] .module-marketplace__item>strong{min-width:0;overflow-wrap:anywhere;font-size:14px;font-weight:500}
-[data-table-modules] .module-marketplace__actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-shrink:0}
+[data-table-modules] .module-marketplace__item{min-height:var(--step-52);padding:var(--step-10) 0;border:0;border-bottom:var(--fib-1) solid var(--border);border-radius:0;gap:var(--step-16)}
+[data-table-modules] .module-marketplace__item>strong{min-width:0;overflow-wrap:anywhere;font-size:var(--step-14);font-weight:500}
+[data-table-modules] .module-marketplace__actions{display:flex;align-items:center;justify-content:flex-end;gap:var(--fib-5);flex-shrink:0}
 [data-table-modules] .module-marketplace__item:last-child{border-bottom:0}
-@media(max-width:600px){[data-table-modules] .module-marketplace__item{flex-wrap:wrap;gap:8px}}
+@media(max-width:600px){[data-table-modules] .module-marketplace__item{flex-wrap:wrap;gap:var(--fib-5)}}

@@ -15,6 +15,7 @@ license-files = [
     "gravewright/web/icons/LICENSE",
     "gravewright/web/static/gravewright_web/ORIGINAL-*",
     "gravewright/web/static/gravewright_web/vendor/*LICENSE*",
+    "gravewright/web/static/gravewright_web/vendor/rpg-icons/*.txt",
     "gravewright/maps/static/gravewright_maps/vendor/licenses/*",
     "gravewright/journals/static/gravewright_journals/vendor/*LICENSE*",
     "gravewright/journals/static/gravewright_journals/vendor/licenses/*",

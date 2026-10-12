@@ -50,6 +50,82 @@
     --fib-14: 610px;
     --fib-15: 987px;
 
+
+    /* Exact geometry expressed as Fibonacci sums (CSS scale audit). */
+    --step-15: calc(var(--fib-6) + var(--fib-2));
+    --step-17: calc(var(--fib-6) + var(--fib-3) + var(--fib-1));
+    --step-19: calc(var(--fib-6) + var(--fib-4) + var(--fib-1));
+    --step-23: calc(var(--fib-7) + var(--fib-2));
+    --step-25: calc(var(--fib-7) + var(--fib-3) + var(--fib-1));
+    --step-29: calc(var(--fib-7) + var(--fib-5));
+    --step-31: calc(var(--fib-7) + var(--fib-5) + var(--fib-2));
+    --step-45: calc(var(--fib-8) + var(--fib-5) + var(--fib-3));
+    --step-52: calc(var(--fib-8) + var(--fib-6) + var(--fib-4));
+    --size-60: calc(var(--fib-9) + var(--fib-4));
+    --size-62: calc(var(--fib-9) + var(--fib-4) + var(--fib-2));
+    --size-64: calc(var(--fib-9) + var(--fib-5) + var(--fib-1));
+    --size-65: calc(var(--fib-9) + var(--fib-5) + var(--fib-2));
+    --size-70: calc(var(--fib-9) + var(--fib-6) + var(--fib-2));
+    --size-76: calc(var(--fib-9) + var(--fib-7));
+    --size-78: calc(var(--fib-9) + var(--fib-7) + var(--fib-2));
+    --size-80: calc(var(--fib-9) + var(--fib-7) + var(--fib-3) + var(--fib-1));
+    --size-84: calc(var(--fib-9) + var(--fib-7) + var(--fib-5));
+    --size-90: calc(var(--fib-10) + var(--fib-1));
+    --size-108: calc(var(--fib-10) + var(--fib-6) + var(--fib-4) + var(--fib-1));
+    --size-110: calc(var(--fib-10) + var(--fib-7));
+    --size-112: calc(var(--fib-10) + var(--fib-7) + var(--fib-2));
+    --size-113: calc(var(--fib-10) + var(--fib-7) + var(--fib-3));
+    --size-116: calc(var(--fib-10) + var(--fib-7) + var(--fib-4) + var(--fib-1));
+    --size-120: calc(var(--fib-10) + var(--fib-7) + var(--fib-5) + var(--fib-2));
+    --size-122: calc(var(--fib-10) + var(--fib-7) + var(--fib-5) + var(--fib-3) + var(--fib-1));
+    --size-123: calc(var(--fib-10) + var(--fib-8));
+    --size-125: calc(var(--fib-10) + var(--fib-8) + var(--fib-2));
+    --size-140: calc(var(--fib-10) + var(--fib-8) + var(--fib-6) + var(--fib-3) + var(--fib-1));
+    --size-145: calc(var(--fib-11) + var(--fib-1));
+    --size-160: calc(var(--fib-11) + var(--fib-6) + var(--fib-3));
+    --size-174: calc(var(--fib-11) + var(--fib-7) + var(--fib-5) + var(--fib-1));
+    --size-180: calc(var(--fib-11) + var(--fib-8) + var(--fib-2));
+    --size-188: calc(var(--fib-11) + var(--fib-8) + var(--fib-5) + var(--fib-2));
+    --size-190: calc(var(--fib-11) + var(--fib-8) + var(--fib-5) + var(--fib-3) + var(--fib-1));
+    --size-205: calc(var(--fib-11) + var(--fib-9) + var(--fib-4) + var(--fib-1));
+    --size-220: calc(var(--fib-11) + var(--fib-9) + var(--fib-7));
+    --size-230: calc(var(--fib-11) + var(--fib-9) + var(--fib-7) + var(--fib-5) + var(--fib-2));
+    --size-240: calc(var(--fib-12) + var(--fib-4) + var(--fib-2));
+    --size-248: calc(var(--fib-12) + var(--fib-6) + var(--fib-2));
+    --size-250: calc(var(--fib-12) + var(--fib-6) + var(--fib-3) + var(--fib-1));
+    --size-252: calc(var(--fib-12) + var(--fib-6) + var(--fib-4) + var(--fib-1));
+    --size-260: calc(var(--fib-12) + var(--fib-7) + var(--fib-4) + var(--fib-1));
+    --size-270: calc(var(--fib-12) + var(--fib-8) + var(--fib-3));
+    --size-280: calc(var(--fib-12) + var(--fib-8) + var(--fib-6));
+    --size-290: calc(var(--fib-12) + var(--fib-9) + var(--fib-2));
+    --size-320: calc(var(--fib-12) + var(--fib-9) + var(--fib-7) + var(--fib-5) + var(--fib-3));
+    --size-330: calc(var(--fib-12) + var(--fib-10) + var(--fib-5));
+    --size-340: calc(var(--fib-12) + var(--fib-10) + var(--fib-6) + var(--fib-4));
+    --size-360: calc(var(--fib-12) + var(--fib-10) + var(--fib-8) + var(--fib-3) + var(--fib-1));
+    --size-372: calc(var(--fib-12) + var(--fib-10) + var(--fib-8) + var(--fib-6) + var(--fib-3));
+    --size-418: calc(var(--fib-13) + var(--fib-8) + var(--fib-4) + var(--fib-2));
+    --size-420: calc(var(--fib-13) + var(--fib-8) + var(--fib-5) + var(--fib-1));
+    --size-430: calc(var(--fib-13) + var(--fib-8) + var(--fib-6) + var(--fib-4) + var(--fib-1));
+    --size-466: calc(var(--fib-13) + var(--fib-10));
+    --size-480: calc(var(--fib-13) + var(--fib-10) + var(--fib-6) + var(--fib-1));
+    --size-500: calc(var(--fib-13) + var(--fib-10) + var(--fib-8));
+    --size-504: calc(var(--fib-13) + var(--fib-10) + var(--fib-8) + var(--fib-3) + var(--fib-1));
+    --size-520: calc(var(--fib-13) + var(--fib-10) + var(--fib-8) + var(--fib-6) + var(--fib-4) + var(--fib-2));
+    --size-600: calc(var(--fib-13) + var(--fib-11) + var(--fib-9) + var(--fib-7) + var(--fib-3));
+    --size-620: calc(var(--fib-14) + var(--fib-5) + var(--fib-2));
+    --size-640: calc(var(--fib-14) + var(--fib-7) + var(--fib-5) + var(--fib-1));
+    --size-680: calc(var(--fib-14) + var(--fib-9) + var(--fib-6) + var(--fib-2));
+    --size-720: calc(var(--fib-14) + var(--fib-10) + var(--fib-7));
+    --size-754: calc(var(--fib-14) + var(--fib-11));
+    --size-800: calc(var(--fib-14) + var(--fib-11) + var(--fib-8) + var(--fib-5) + var(--fib-3) + var(--fib-1));
+    --size-820: calc(var(--fib-14) + var(--fib-11) + var(--fib-9) + var(--fib-5) + var(--fib-3));
+    --size-850: calc(var(--fib-14) + var(--fib-12) + var(--fib-4) + var(--fib-2));
+    --size-900: calc(var(--fib-14) + var(--fib-12) + var(--fib-9) + var(--fib-2));
+    --size-999: calc(var(--fib-15) + var(--fib-5) + var(--fib-3) + var(--fib-1));
+    --size-1100: calc(var(--fib-15) + var(--fib-10) + var(--fib-7) + var(--fib-3));
+    --size-1180: calc(var(--fib-15) + var(--fib-11) + var(--fib-8) + var(--fib-6) + var(--fib-2));
+    --size-1200: calc(var(--fib-15) + var(--fib-11) + var(--fib-9) + var(--fib-6) + var(--fib-1));
+
     /* ===== Spacing ========================================================
      * Bare steps first; composites (Zeckendorf sums) after, each annotated
      * with the arithmetic so the value can be checked at a glance.
@@ -262,12 +338,12 @@
     /* ===== Radius ========================================================= */
 
     --radius-xs: var(--fib-3); /* 3 */
-    --radius-sm: var(--fib-4); /* 4 */
-    --radius-md: var(--fib-5); /* 6 */
-    --radius-lg: var(--fib-6); /* 8 */
+    --radius-sm: var(--fib-4); /* 5 */
+    --radius-md: var(--fib-5); /* 8 */
+    --radius-lg: var(--fib-6); /* 13 */
     --radius-xl: calc(var(--fib-5) + var(--fib-3) + var(--fib-1)); /* 12 */
     --radius-2xl: calc(var(--fib-6) + var(--fib-3)); /* 16 */
-    --radius-pill: 999px;
+    --radius-pill: var(--size-999);
     --radius-circle: 50%;
     --radius: var(--radius-sm);
 

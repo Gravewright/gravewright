@@ -188,7 +188,13 @@ def state(campaign_id,user_id):
     who=member(campaign_id,user_id)
     from gravewright.table.ownership import allows, journal_grants
     journals=[]
-    for j in directory_rows(campaign_id):
+    rows=directory_rows(campaign_id)
+    from gravewright.actors.models import Actor
+    from gravewright.actors.services import access as actor_access
+    assigned={value for row in rows if row.type == 'quest' for value in shapes.normalize_quest_data(row.data)['assignees']}
+    who._quest_actor_cache={str(actor.pk):{'id':str(actor.pk),'name':actor.name} for actor in Actor.objects.filter(
+        campaign_id=campaign_id,pk__in=assigned).only('id','name','permissions') if actor_access(actor,who)}
+    for j in rows:
         if permissions(j,who)[0] or types.via_board(j,who):
             journals.append(projection(j,who))
         elif allows(journal_grants(j,who),who,listing=True):

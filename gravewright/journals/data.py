@@ -220,6 +220,7 @@ def normalize_quest_data(raw: object) -> dict:
         "objectives": objectives,
         "rewards": rewards,
         "tags": tags,
+        "assignees": list(dict.fromkeys(str(value) for value in raw.get('assignees', [])[:32])) if isinstance(raw.get('assignees'), list) else [],
     }
 
 
@@ -282,6 +283,7 @@ def build_quest_gm_view(*, title: str, data: dict) -> dict:
         "display_objectives": visible_objectives,
         "display_rewards": visible_rewards,
         "tags": data["tags"],
+        "assignees": data['assignees'],
     }
 
 
@@ -310,6 +312,7 @@ def build_quest_player_view(*, title: str, data: dict) -> dict:
         "display_objectives": visible_objectives,
         "display_rewards": visible_rewards,
         "tags": data["tags"],
+        "assignees": data['assignees'],
     }
 
 

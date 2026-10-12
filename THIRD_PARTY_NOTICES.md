@@ -163,6 +163,8 @@ Both files also embed **core-js 3.49.0**, which identifies its version, copyrigh
 
 ## Icons, fonts, templates and reused UI
 
+The local RPG library adds **4,180 Game-icons.net SVGs** (CC BY 3.0, with CC0 exceptions recorded in the upstream author notice) and **275 CoMiGo SVGs** by Cosmo Myzrail Gorynych (CC0 1.0). Files remain unmodified; color and size are applied by CSS masks. The complete library, catalog and notices occupy approximately **24.4 MB**, below the 40 MB budget. Original author names/links, full legal texts and per-file provenance are available in the bundled [icon credits](gravewright/web/static/gravewright_web/vendor/rpg-icons/CREDITS.html), also linked from table preferences. The [catalog](gravewright/web/static/gravewright_web/vendor/rpg-icons/catalog.json) records archive hashes and asset hashes. Sources: [Game-icons.net](https://game-icons.net/) and [CoMiGo Fantasy Icons](https://comigo.itch.io/fantasy-icons-ink). Importing from the two official archives is supported by [vendor_rpg_icons.py](scripts/vendor_rpg_icons.py); raster duplicates are omitted.
+
 | Material | Evidence and terms |
 | --- | --- |
 | Phosphor icons | **247 SVGs** under [gravewright/web/icons](gravewright/web/icons/), with the original [MIT license](gravewright/web/icons/LICENSE), copyright 2020 Phosphor Icons. The [upstream project](https://github.com/phosphor-icons/core) is identified by that notice; the exact imported release/commit is not recorded locally. |

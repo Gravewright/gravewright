@@ -3,8 +3,9 @@
  * tokens → base → blocks. Nothing below tokens may declare a raw pixel
  * dimension; every one resolves through the Fibonacci scale. */
 
-@import "./tokens.css";
+/* Tokens are loaded by the base template with a content version. */
 @import "./base.css";
+@import "./blocks/rpg-icon.css";
 
 @import "./blocks/mark.css";
 @import "./blocks/button.css";

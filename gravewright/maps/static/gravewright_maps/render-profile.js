@@ -1,4 +1,4 @@
-// shared/storage/browser-key-value-store.js
+// gravewright/maps/frontend/shared/storage/browser-key-value-store.js
 var BrowserKeyValueStore = class {
   open;
   constructor(open) {
@@ -28,7 +28,7 @@ function browserStore(lifetime) {
   return new BrowserKeyValueStore(() => lifetime === "device" ? localStorage : sessionStorage);
 }
 
-// shared/rendering/presentation-profiles.js
+// gravewright/maps/frontend/shared/rendering/presentation-profiles.js
 var PRESENTATION_PROFILES = Object.freeze({
   scope: "player",
   default: "performance",
@@ -39,7 +39,7 @@ var PRESENTATION_PROFILES = Object.freeze({
   })
 });
 
-// shared/rendering/render-profile.js
+// gravewright/maps/frontend/shared/rendering/render-profile.js
 var PROFILES = {
   performance: { name: "performance", capabilities: PRESENTATION_PROFILES.profiles.performance },
   balanced: { name: "balanced", capabilities: PRESENTATION_PROFILES.profiles.balanced },

@@ -50,7 +50,7 @@
 .gw-dock__button[aria-pressed="true"],
 .gw-dock__button--active {
     background: rgba(var(--layer-accent-rgb), 0.1);
-    box-shadow: inset 0 0 0 1px rgba(var(--layer-accent-rgb), 0.22);
+    box-shadow: inset 0 0 0 var(--fib-1) rgba(var(--layer-accent-rgb), 0.22);
     color: rgb(var(--layer-accent-rgb));
 }
 
@@ -174,7 +174,7 @@
 .gw-tool-dock__button[aria-pressed="true"],
 .gw-tool-dock__button--active {
     background: rgba(var(--layer-accent-rgb), 0.1);
-    box-shadow: inset 0 0 0 1px rgba(var(--layer-accent-rgb), 0.22);
+    box-shadow: inset 0 0 0 var(--fib-1) rgba(var(--layer-accent-rgb), 0.22);
     color: rgb(var(--layer-accent-rgb));
 }
 
