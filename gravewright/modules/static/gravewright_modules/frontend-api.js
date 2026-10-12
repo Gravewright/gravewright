@@ -2,6 +2,7 @@ import { HttpClient } from './http-client.js';
 import { Lifetime, ModuleError } from './lifetime.js';
 import { createDomainApi, createEvents } from './domain-api.js';
 import { SurfaceRegistry } from './surface-registry.js';
+import { createTranslator } from './i18n.js';
 
 // Host-page API lifetime. Signed modules receive a separately leased adapter
 // from BrowserBridge instead of using this global page-owned object.
@@ -27,7 +28,7 @@ export function tableApi(tableId, sceneId, life = page) {
     }, { signal });
     return result.value;
   }, options.signal);
-  return createDomainApi(call, { context, events: createEvents(window, life, context,
+  return createDomainApi(call, { context, i18n: createTranslator('gravewright', life), events: createEvents(window, life, context,
     domain => call(domain === 'maps.layers' ? 'maps' : domain, domain === 'maps.layers' ? 'layers' : 'state', {}, {})), ui: registry.public });
 }
 

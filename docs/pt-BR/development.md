@@ -51,19 +51,19 @@ Os documentos da gramática de dados são mantidos junto à implementação. Os 
 
 ## Identificadores da versão
 
-A versão atual é **0.1.3**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
+A versão atual é **0.2.0**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
 
 | Local | Identificador |
 | --- | --- |
-| Nome público, aplicação e Runner | `0.1.3` |
-| Projeto Python e `uv.lock` | `0.1.3` |
-| Pacote frontend, package lock e API de atualização | `0.1.3` |
-| Tag do release | `v0.1.3` |
-| Artefato do código-fonte | `Gravewright-0.1.3-django.zip` |
+| Nome público, aplicação e Runner | `0.2.0` |
+| Projeto Python e `uv.lock` | `0.2.0` |
+| Pacote frontend, package lock e API de atualização | `0.2.0` |
+| Tag do release | `v0.2.0` |
+| Artefato do código-fonte | `Gravewright-0.2.0-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
 
-A release `0.1.3` usa o canal de atualização `stable`. Esse canal descreve o identificador da versão; o projeto continua em desenvolvimento inicial. O canal selecionado continua sendo uma preferência do host.
+A release `0.2.0` usa o canal de atualização `stable`. Esse canal descreve o identificador da versão; o projeto continua em desenvolvimento inicial. O canal selecionado continua sendo uma preferência do host.
 
 ## Antes de enviar
 

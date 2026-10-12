@@ -9,7 +9,7 @@ const collections = { actors: 'actors', tokens: 'tokens', maps: 'maps', journals
  * frontend-contract.js is generated from contracts/frontend.json, while result
  * projection and command validation stay in each native Python service.
  */
-export function createDomainApi(call, { events, ui, context = {} } = {}) {
+export function createDomainApi(call, { events, ui, i18n, context = {} } = {}) {
   const api = { version: FRONTEND_CONTRACT.version, context: Object.freeze({ ...context }) };
   const request = (domain, method, payload = {}, options = {}) => {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return Promise.reject(new ModuleError('invalid_data'));
@@ -60,6 +60,7 @@ export function createDomainApi(call, { events, ui, context = {} } = {}) {
   };
   if (events) api.events = events;
   if (ui) api.ui = ui;
+  if (i18n) api.i18n = i18n;
   for (const value of Object.values(api)) if (value && typeof value === 'object') Object.freeze(value);
   return Object.freeze(api);
 }

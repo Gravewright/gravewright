@@ -51,19 +51,19 @@ The existing dice grammar documents are maintained next to their implementation.
 
 ## Release identifiers
 
-The current release is **0.1.3**. Its equivalent identifiers follow the formats required by each tool:
+The current release is **0.2.0**. Its equivalent identifiers follow the formats required by each tool:
 
 | Location | Identifier |
 | --- | --- |
-| Public release name, application and Runner | `0.1.3` |
-| Python project and `uv.lock` | `0.1.3` |
-| Frontend package, package lock and update API | `0.1.3` |
-| Release tag | `v0.1.3` |
-| Source release artifact | `Gravewright-0.1.3-django.zip` |
+| Public release name, application and Runner | `0.2.0` |
+| Python project and `uv.lock` | `0.2.0` |
+| Frontend package, package lock and update API | `0.2.0` |
+| Release tag | `v0.2.0` |
+| Source release artifact | `Gravewright-0.2.0-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) is the source of the installed version. [`gravewright/version.py`](../../gravewright/version.py) derives its public identifier and label; keep the frontend package metadata aligned when changing it. API/SDK contract versions and third-party module versions have independent lifecycles.
 
-Release `0.1.3` uses the `stable` update channel. This channel describes the version identifier; the project remains an early development preview. The selected channel remains a host preference.
+Release `0.2.0` uses the `stable` update channel. This channel describes the version identifier; the project remains an early development preview. The selected channel remains a host preference.
 
 ## Before submitting
 

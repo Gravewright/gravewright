@@ -214,3 +214,44 @@ node --test tests/modules/*.test.mjs
 ```
 
 `frontend-contract.js` is generated from `frontend.json`; update the source registry first. Keep native frontend calls, module-scoped calls, and public Python calls consistent in authorization, payload semantics and post-commit behavior. For new original SDK operations, update the schemas, registry, supported operation constants, dispatcher, and tests together; the repository has no general-purpose generator for all of those files.
+
+## Module translations (Translator)
+
+Modules receive `context.i18n` and `context.api.i18n`. Register catalogs in the
+activation's `start(context)`, then translate through the API supplied to a surface:
+
+```javascript
+export default {
+  start({ i18n }) {
+    i18n.register({
+      en: { 'sheet.title': 'Character sheet', 'sheet.greeting': 'Welcome, {name}' },
+      'pt-BR': { 'sheet.title': 'Ficha de personagem', 'sheet.greeting': 'Boas-vindas, {name}' },
+      es: { 'sheet.title': 'Ficha de personaje', 'sheet.greeting': 'Bienvenido, {name}' },
+    });
+  },
+  register({ register }) {
+    register('actor.directory', async ({ root, api }) => {
+      root.setAttribute('translate', 'no');
+      root.textContent = api.i18n.t('sheet.greeting', { name: 'Arin' });
+    });
+  },
+};
+```
+
+Catalogs can also be loaded with `await context.assets.json('locales/messages.json')`.
+`locale` follows the user's interface language. Lookup falls back from the exact
+locale to its base language, then English, then the source key. `t(key, params)`
+substitutes named or numbered placeholders as plain text. Use `textContent` for
+rendering. `has(key)` checks coverage; `number(value, options)` uses
+`Intl.NumberFormat`; `onChange(handler)` returns an unsubscribe function for locale
+events. Changing the interface language currently reloads the page, preserving the
+table URL.
+
+Catalogs are isolated by module ID and shared across that module's contexts on the
+page. `register` returns a disposer and also removes its catalog when its owning
+context is disposed. Partial translations require an English fallback for each key
+and matching placeholders. Register during activation so surface mounts can reuse
+the catalog. No HTTP permission or external translation service is needed. Without
+Translator/language packs, the interface uses English. The native
+`gravewright.i18n` adapter resolves host catalogs; installed modules use their
+supplied context.

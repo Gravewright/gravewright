@@ -1,6 +1,8 @@
 import { mountModal } from './modal.js';
+import { createTranslator } from '/static/gravewright_modules/i18n.js';
 
-export const modalText = (en, pt) => document.documentElement.lang.toLowerCase().startsWith('pt') ? pt : en;
+const translator = createTranslator();
+export const modalText = (en, pt) => translator.has(en) ? translator.t(en) : translator.locale.toLowerCase().startsWith('pt') ? pt ?? en : en;
 
 export function openFormModal(title, fields, save, {key = 'form', submitLabel} = {}) {
   const modal = document.createElement('section');

@@ -3,6 +3,7 @@ import { applyLocale } from "./module-locale.js";
 import { HttpClient, ApiError } from "./http-client.js";
 import { ModuleError } from "./lifetime.js";
 import { createDomainApi, createEvents } from "./domain-api.js";
+import { createTranslator } from './i18n.js';
 const errorCodes = ["not_found", "permission_denied", "invalid_data", "conflict", "unavailable", "cancelled", "stale_context"];
 /** Translate module-owned handles into authenticated, revision-checked requests. */
 class BrowserBridge {
@@ -114,7 +115,7 @@ class BrowserBridge {
         ...(identity.sceneId ? { sceneId: identity.sceneId } : {}),
       }, signal);
     }, options.signal);
-    return createDomainApi(call, { context: identity, events: createEvents(window, life, identity,
+    return createDomainApi(call, { context: identity, i18n: createTranslator(identity.moduleId, life), events: createEvents(window, life, identity,
       domain => call(domain === 'maps.layers' ? 'maps' : domain, domain === 'maps.layers' ? 'layers' : 'state', {}, {})), ui });
   }
   events(identity, life) {
@@ -187,6 +188,7 @@ class BrowserBridge {
     };
     return {
       api: this.api(identity, life),
+      i18n: createTranslator(identity.moduleId, life),
       signal: life.signal,
       onDispose: life.onDispose,
       assets: { url, bytes: read, text: async (path) => new TextDecoder().decode(await read(path)), json: async (path) => {

@@ -1,5 +1,6 @@
 // Translate browser-created interface controls from the installed, static catalog.
 // Values, editable documents, resource names and chat are deliberately excluded.
+import { createTranslator } from '/static/gravewright_modules/i18n.js';
 const config = document.getElementById('gravewright-language');
 if (config) {
   const {id, messages} = JSON.parse(config.textContent);
@@ -7,24 +8,24 @@ if (config) {
   const missing = new Set();
   const originals = new WeakMap();
   const attributes = new WeakMap();
-  const excluded = 'script,style,code,pre,textarea,[contenteditable],[data-text], [translate=no],#chat-log,[data-message-id],.chat-message,.journal-editor,.journal-content,.gw-campaign,.directory-entry,.game-directory__item,.module-catalog__details,.campaign-hub__owner-copy,.player-home__account,.gw-avatar,[data-member-id]';
+  const excluded = 'script,style,code,pre,textarea,[contenteditable],[data-text], [translate=no],#chat-log,[data-message-id],.chat-message,.journal-editor,.journal-content,.gw-campaign,.directory-entry,.game-directory__item,.module-catalog__details,.campaign-hub__owner-copy,.player-home__account,.gw-avatar,[data-member-id],.quest-board__title,.quest-board__cover,.quest-board__summary,.quest-board__metadata,.quest-board__objective,.quest-board__assignees';
   const controls = '.module-catalog [data-status],button,label,option,legend,summary,h1,h2,h3,h4,[role=alert],[role=status],form p,dialog p,.directory-dialog header,.module-catalog__header p,.module-catalog__setup p';
   const dynamicOptions = 'select[name=source],select[name=template],select[name=actorId],select[name=folderId]';
-  const patterns = Object.entries(messages).filter(([key]) => /\{[A-Za-z_]/.test(key)).map(([key, translation]) => {
+  const patterns = Object.entries(messages).filter(([key]) => /\{(?:[A-Za-z_]|\d)/.test(key)).map(([key, translation]) => {
     const names = [];
-    const parts = key.split(/(\{[A-Za-z_][A-Za-z0-9_.]*\})/g);
+    const parts = key.split(/(\{(?:[A-Za-z_][A-Za-z0-9_.]*|\d+)\})/g);
     const pattern = parts.map(part => {
-      if (/^\{[A-Za-z_][A-Za-z0-9_.]*\}$/.test(part)) { names.push(part); return '(.+?)'; }
+      if (/^\{(?:[A-Za-z_][A-Za-z0-9_.]*|\d+)\}$/.test(part)) { names.push(part); return '(.+?)'; }
       return part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }).join('');
     return {regex: new RegExp('^' + pattern + '$'), names, translation};
   });
   function value(text) {
     const key = text.trim();
-    if (Object.hasOwn(messages, key)) return text.replace(key, messages[key]);
+    if (Object.hasOwn(messages, key)) return text.replace(key, () => messages[key]);
     for (const {regex, names, translation} of patterns) {
       const match = key.match(regex);
-      if (match) return text.replace(key, () => translation.replace(/\{[A-Za-z_][A-Za-z0-9_.]*\}/g, name => match[names.indexOf(name) + 1]));
+      if (match) return text.replace(key, () => translation.replace(/\{(?:[A-Za-z_][A-Za-z0-9_.]*|\d+)\}/g, name => match[names.indexOf(name) + 1]));
     }
     if (id !== 'en' && key && /[A-Za-z]/.test(key) && !translated.has(key)) missing.add(key);
     return text;
@@ -68,5 +69,7 @@ if (config) {
                             attributeFilter:['title','aria-label','placeholder','alt']});
   scan(document.body);
   document.documentElement.lang = id;
-  window.gravewrightTranslator = Object.freeze({locale:id, missing:() => [...missing].sort()});
+  const translator = createTranslator();
+  window.gravewrightTranslator = Object.freeze({locale:id, t:translator.t, has:translator.has,
+    number:translator.number, missing:() => [...missing].sort()});
 }

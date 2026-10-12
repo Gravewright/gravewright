@@ -130,5 +130,15 @@ export const FRONTEND_CONTRACT = {
       "import": "import",
       "setPermissions": "permissions"
     }
+  },
+  "local": {
+    "i18n": [
+      "locale",
+      "t",
+      "has",
+      "number",
+      "register",
+      "onChange"
+    ]
   }
 };

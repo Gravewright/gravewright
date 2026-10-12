@@ -1,4 +1,5 @@
-const gwText = (s, ...args) => s.replace(/\{(\d+)\}/g, (_, i) => args[Number(i)]);
+const gwText = (s, ...args) => typeof window !== 'undefined' && window.gravewright?.i18n
+    ? window.gravewright.i18n.t(s, args) : s.replace(/\{(\d+)\}/g, (match, i) => args[Number(i)] === undefined ? match : String(args[Number(i)]));
 const field = (key, label, min, max, initial) => ({ key, get label() { return gwText(label); }, min, max, initial });
 const bonus = field('bonus', 'Modifier', -1000, 1000, 0);
 const modifier = (v) => v ? ` ${v > 0 ? '+' : '-'} ${Math.abs(v)}` : '';

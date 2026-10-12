@@ -36,11 +36,17 @@ function text(source, ...values) {
 }
 if (typeof window !== "undefined") {
   const apply = (detail) => registerTextResolver((source) => {
-    const translated2 = detail.messages?.text?.[source];
-    return typeof translated2 === "string" ? translated2 : source;
+    const messages = detail.messages?.text ?? detail.messages ?? {};
+    if (typeof messages[source] === "string") return messages[source];
+    const translated2 = messages[source.trim()];
+    return typeof translated2 === "string" ? source.replace(source.trim(), () => translated2) : source;
   }, () => detail.id || "en");
   window.addEventListener("gravewright:locale", (event) => apply(event.detail));
   if (window.gravewrightLocale) apply(window.gravewrightLocale);
+  else {
+    const config = document.getElementById("gravewright-language");
+    if (config) apply(JSON.parse(config.textContent));
+  }
 }
 
 // gravewright/maps/frontend/features/drawing/model/drawing.js

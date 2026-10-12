@@ -33,11 +33,17 @@ function text(source, ...values) {
 }
 if (typeof window !== "undefined") {
   const apply = (detail) => registerTextResolver((source) => {
-    const translated = detail.messages?.text?.[source];
-    return typeof translated === "string" ? translated : source;
+    const messages = detail.messages?.text ?? detail.messages ?? {};
+    if (typeof messages[source] === "string") return messages[source];
+    const translated = messages[source.trim()];
+    return typeof translated === "string" ? source.replace(source.trim(), () => translated) : source;
   }, () => detail.id || "en");
   window.addEventListener("gravewright:locale", (event) => apply(event.detail));
   if (window.gravewrightLocale) apply(window.gravewrightLocale);
+  else {
+    const config = document.getElementById("gravewright-language");
+    if (config) apply(JSON.parse(config.textContent));
+  }
 }
 
 // gravewright/maps/frontend/features/tokens/model/token-interaction.js

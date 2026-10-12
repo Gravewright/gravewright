@@ -34,7 +34,7 @@ class PublicApiTests(TestCase):
                 result=actors.command(self.campaign.pk,self.gm.pk,'actor.create',{'name':'Extension actor'},request)
                 self.assertFalse(send.called)
                 self.assertEqual(changes,[])
-            self.assertEqual([c.args[1]['type'] for c in send.call_args_list],['room.actors','room.tokens','room.map_layers'])
+            self.assertEqual([c.args[1]['type'] for c in send.call_args_list],['room.actors','room.tokens','room.map_layers','room.resources'])
             self.assertEqual(changes[0][1].request_id,request)
             send.reset_mock()
             with self.captureOnCommitCallbacks(execute=True):

@@ -68,6 +68,12 @@ class LocalizationTests(TestCase):
             download.assert_not_called()
         self.assertFalse(Package.objects.exists())
 
+    def test_numbered_placeholders_must_be_preserved(self):
+        from .localization import validate_catalog
+        validate_catalog({'Card {0} of {1}': 'Carta {0} de {1}'})
+        with self.assertRaises(ModuleFailure):
+            validate_catalog({'Card {0} of {1}': 'Carta {0}'})
+
     def release(self, catalogs=None, **changes):
         catalogs = catalogs if catalogs is not None else {
             'pt-BR': {'Settings': 'Configurações', 'Campaigns': 'Campanhas', 'Save language': 'Salvar idioma'},
@@ -152,7 +158,9 @@ class LocalizationTests(TestCase):
             'Window': 'Janela', 'Turn off manual lighting': 'Desativar iluminação manual',
         }.items():
             self.assertEqual(messages[source], expected)
-        self.assertEqual(available['es']['messages'], {'Create table': 'Crear mesa'})
+        self.assertEqual(available['es']['messages']['Create table'], 'Crear mesa')
+        self.assertEqual(available['es']['messages']['Character sheet'], 'Ficha de personaje')
+        self.assertEqual(available['es']['messages']['New quest'], 'Nueva misión')
         self.assertEqual(available['en']['messages'], {})
         translated = translate_tree(native_messages(), messages)
         self.assertEqual(translated['inside']['campaigns']['create'], 'Criar mesa')
@@ -161,6 +169,7 @@ class LocalizationTests(TestCase):
         package = Package.objects.get(module_id='gravewright.translator')
         self.assertEqual(package.locale_catalogs['pt-BR']['messages']['Create table'], 'Crie a tabela')
         host().verify_installed(package)
+        self.assertEqual(package.locale_catalogs['es']['messages'], {'Create table': 'Crear mesa'})
         self.client.post('/inside/language', {'locale': 'pt-BR'})
         self.assertContains(self.client.get('/inside'), 'Criar mesa')
         self.assertNotContains(self.client.get('/inside'), 'Crie a tabela')

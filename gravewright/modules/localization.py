@@ -7,13 +7,19 @@ import re
 
 from .models import Package
 
-PLACEHOLDERS = re.compile(r'\{[A-Za-z_][A-Za-z0-9_.]*\}')
+PLACEHOLDERS = re.compile(r'\{(?:[A-Za-z_][A-Za-z0-9_.]*|\d+)\}')
 
 
 @lru_cache(maxsize=1)
 def reviewed_portuguese():
     """Host UI copy corrections, kept separate from signed module artifacts."""
     path = Path(__file__).with_name('locale_overrides') / 'pt-BR.json'
+    return json.loads(path.read_text(encoding='utf-8'))
+
+
+@lru_cache(maxsize=1)
+def reviewed_spanish():
+    path = Path(__file__).with_name('locale_overrides') / 'es.json'
     return json.loads(path.read_text(encoding='utf-8'))
 
 
@@ -37,6 +43,8 @@ def catalogs():
             result.update(deepcopy(package.locale_catalogs))
             if package.module_id == 'gravewright.translator' and 'pt-BR' in package.locale_catalogs:
                 result['pt-BR']['messages'].update(reviewed_portuguese())
+            if package.module_id == 'gravewright.translator' and 'es' in package.locale_catalogs:
+                result['es']['messages'].update(reviewed_spanish())
     return result
 
 

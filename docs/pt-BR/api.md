@@ -214,3 +214,44 @@ node --test tests/modules/*.test.mjs
 ```
 
 `frontend-contract.js` é gerado a partir de `frontend.json`; altere o registro fonte primeiro. Preserve consistência de autorização, payloads e pós-commit entre frontend nativo, módulos e Python. Ao adicionar operação no SDK original, atualize schemas, registro, constantes de operações, dispatcher e testes em conjunto; não existe gerador genérico para todos esses arquivos.
+
+## Tradu??es de m?dulos (Translator)
+
+Os m?dulos recebem `context.i18n` e `context.api.i18n`. Registre os cat?logos em
+`start(context)` e use a API fornecida ? superf?cie para traduzir seus controles:
+
+```javascript
+export default {
+  start({ i18n }) {
+    i18n.register({
+      en: { 'sheet.title': 'Character sheet', 'sheet.greeting': 'Welcome, {name}' },
+      'pt-BR': { 'sheet.title': 'Ficha de personagem', 'sheet.greeting': 'Boas-vindas, {name}' },
+      es: { 'sheet.title': 'Ficha de personaje', 'sheet.greeting': 'Bienvenido, {name}' },
+    });
+  },
+  register({ register }) {
+    register('actor.directory', async ({ root, api }) => {
+      root.setAttribute('translate', 'no');
+      root.textContent = api.i18n.t('sheet.greeting', { name: 'Arin' });
+    });
+  },
+};
+```
+
+Tamb?m ? poss?vel carregar os cat?logos com
+`await context.assets.json('locales/messages.json')`. `locale` segue o idioma da
+interface escolhido pelo usu?rio. A busca usa o idioma exato, o idioma base, o
+ingl?s e, por ?ltimo, a pr?pria chave. `t(chave, par?metros)` substitui par?metros
+nomeados ou num?ricos como texto simples; use `textContent` ao exibir o resultado.
+`has(chave)` verifica a cobertura; `number(valor, op??es)` usa `Intl.NumberFormat`;
+`onChange(callback)` acompanha eventos de idioma e devolve uma fun??o para cancelar
+a assinatura. A troca de idioma recarrega a p?gina preservando a URL da mesa.
+
+Os cat?logos s?o isolados pelo ID do m?dulo e compartilhados entre seus contextos
+na p?gina. `register` devolve uma fun??o de remo??o; o descarte do contexto que fez
+o registro tamb?m remove o cat?logo. Tradu??es parciais s?o aceitas, com um texto
+em ingl?s para cada chave e os mesmos par?metros em todos os idiomas. Registre
+durante a ativa??o para que as superf?cies reutilizem o cat?logo. N?o ? necess?ria
+permiss?o HTTP nem servi?o externo de tradu??o. Sem Translator/pacotes de idioma,
+a interface usa ingl?s. O adaptador nativo `gravewright.i18n` consulta o cat?logo
+da interface; m?dulos instalados devem usar o contexto recebido.

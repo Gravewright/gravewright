@@ -13,7 +13,8 @@ function fieldBounds(viewport, rect, offsetTop = 0) {
 
 // gravewright/pdf_system/frontend/text.js
 function text(value, ...args) {
-  return value.replace(/\{(\d+)\}/g, (_, i) => String(args[Number(i)] ?? ""));
+  const i18n = typeof window !== "undefined" && window.gravewright?.i18n;
+  return i18n ? i18n.t(value, args) : value.replace(/\{(\d+)\}/g, (match, i) => args[Number(i)] === void 0 ? match : String(args[Number(i)]));
 }
 
 // gravewright/pdf_system/frontend/pdfjs-loader.js
