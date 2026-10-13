@@ -164,6 +164,7 @@ gw_prerequisites() {
     fi
     if [ "$GW_PLATFORM" = darwin ]; then
         [ "${#missing[@]}" -eq 0 ] && [ "$hash_missing" -eq 0 ] || { gw_fail 'macOS system tools curl, tar, gzip and shasum are required. Restore the system tools; Homebrew is not required.'; return 1; }
+        if [ "$GW_ARCH" = x64 ]; then gw_mac_require_clt; fi
         return 0
     fi
     packages=("${missing[@]}")
@@ -367,9 +368,10 @@ gw_main() {
     fi
     GW_ROOT=$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)
     local required
-    for required in pyproject.toml uv.lock .env.example scripts/gravewright_runner.py scripts/prepare_frontend.py scripts/posix/create_runner.py scripts/posix/runner.sh gravewright/maps/frontend/package.json gravewright/maps/frontend/package-lock.json gravewright/maps/scripts/build.cjs; do
+    for required in pyproject.toml uv.lock .env.example scripts/gravewright_runner.py scripts/prepare_frontend.py scripts/posix/create_runner.py scripts/posix/runner.sh scripts/posix/mac_tools.sh scripts/posix/mac_build.py gravewright/maps/frontend/package.json gravewright/maps/frontend/package-lock.json gravewright/maps/scripts/build.cjs; do
         [ -f "$GW_ROOT/$required" ] || { gw_fail "The project is incomplete ($required). Extract the entire ZIP first."; return 1; }
     done
+    source "$GW_ROOT/scripts/posix/mac_tools.sh"
     [ -n "${HOME:-}" ] || { gw_fail 'A user home directory is required.'; return 1; }
     if [ "$GW_PLATFORM" = darwin ]; then GW_USER_DATA="$HOME/Library/Application Support/Gravewright"
     else GW_USER_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/Gravewright"; fi
@@ -401,6 +403,7 @@ gw_main() {
     GW_PHASE='Node.js/npm'; gw_info '[3/7] Checking Node.js and npm...'; gw_resolve_node
     export PATH="${GW_NODE%/*}:$PATH"
     "$GW_NODE" --version; "$GW_NODE" "$GW_NPM" --version
+    GW_PHASE='macOS build tools'; gw_mac_prepare_build_tools
     GW_PHASE='locked Python dependencies'; gw_info '[4/7] Installing/checking locked Python dependencies...'
     "$GW_UV" --no-config sync --project "$GW_ROOT" --locked --no-dev --no-python-downloads --python "$GW_BASE_PYTHON"
     GW_PYTHON="$UV_PROJECT_ENVIRONMENT/bin/python"

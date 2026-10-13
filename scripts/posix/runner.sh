@@ -5,6 +5,11 @@ GW_PYTHON=@@PYTHON@@
 GW_DATA=@@DATA@@
 GW_UV=@@UV@@
 export GW_UV
+@@BUILD_ENV@@
+if [ -n "${GRAVEWRIGHT_BUILD_TOOLS_PATH:-}" ]; then
+    PATH="$GRAVEWRIGHT_BUILD_TOOLS_PATH:${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}"
+    export PATH
+fi
 unset VIRTUAL_ENV PYTHONHOME PYTHONPATH
 export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 if [ ! -x "$GW_PYTHON" ] || [ ! -f @@BOOTSTRAP@@ ]; then

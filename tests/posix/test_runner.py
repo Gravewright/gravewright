@@ -17,6 +17,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+from types import ModuleType
 import unittest
 from unittest.mock import patch
 import venv
@@ -102,6 +103,19 @@ class GeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'has changed'):
             create_runner(self.project, sys.executable, self.data, platform='linux')
 
+    def test_mac_launcher_captures_private_build_environment_for_staged_updates(self):
+        values = {'GRAVEWRIGHT_BUILD_TOOLS_PATH': str(self.work / "Rust bins ç '$"),
+                  'OPENSSL_DIR': str(self.work / "OpenSSL static ã '$"),
+                  'OPENSSL_STATIC': '1', 'CARGO_HOME': str(self.work / 'Private cargo cache')}
+        with patch.dict(os.environ, {**values, 'AUTOBAHN_USE_NVX': '1'}):
+            create_runner(self.project, sys.executable, self.data, platform='darwin',
+                          runtime_project=self.work / 'final app')
+        content = next((self.data / '.runner-launchers').glob('*.command')).read_text(encoding='utf-8')
+        for name, value in values.items():
+            self.assertIn(name + '=' + shell_value(value) + '\nexport ' + name, content)
+        self.assertIn('AUTOBAHN_USE_NVX=0\nexport AUTOBAHN_USE_NVX', content)
+        self.assertIn('PATH="$GRAVEWRIGHT_BUILD_TOOLS_PATH:', content)
+
     def test_recovery_restores_generated_launcher_and_keeps_local_configuration(self):
         launcher = create_runner(self.project, sys.executable, self.data, platform='linux')
         original = launcher.read_bytes()
@@ -125,6 +139,23 @@ class GeneratorTests(unittest.TestCase):
 
 
 class PlatformTests(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'Private build tools are a POSIX installer contract')
+    def test_private_build_path_survives_project_environment_loading_without_becoming_configuration(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            values = {'DEFAULT_LOCALE': 'en', 'GRAVEWRIGHT_PORT': '3000', 'DJANGO_SECRET_KEY': 'x' * 64}
+            (work / '.env.example').write_text('DEFAULT_LOCALE=en\nGRAVEWRIGHT_PORT=3000\n')
+            (work / '.env').write_text('DJANGO_SECRET_KEY=' + 'x' * 64 + '\n')
+            dotenv = ModuleType('dotenv')
+            dotenv.dotenv_values = lambda *args, **kwargs: values.copy()
+            build = str(work / 'Private Rust bins ç')
+            with patch.object(runner, 'ROOT', work), patch.dict(os.environ), \
+                    patch.object(sys, 'path', sys.path.copy()), patch.dict(sys.modules, {'dotenv': dotenv}):
+                os.environ['GRAVEWRIGHT_BUILD_TOOLS_PATH'] = build
+                runner.prepare_environment(work / 'runner state')
+                self.assertEqual(os.environ['GRAVEWRIGHT_BUILD_TOOLS_PATH'], build)
+                self.assertNotIn('GRAVEWRIGHT_BUILD_TOOLS_PATH', (work / '.env').read_text())
+
     def test_terminal_close_uses_the_same_graceful_stop_as_termination(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp)
@@ -205,7 +236,10 @@ class UpdateTests(unittest.TestCase):
                 with closing(sqlite3.connect(database)) as db, db:
                     db.execute('CREATE TABLE fixture(value TEXT)')
                 env = {'DJANGO_SETTINGS_MODULE': 'config.runner', 'GW_UV': 'test-uv',
-                       'GRAVEWRIGHT_RUNNER_DATA': str(data)}
+                       'GRAVEWRIGHT_RUNNER_DATA': str(data),
+                       'GRAVEWRIGHT_BUILD_TOOLS_PATH': str(work / 'private Rust/bin'),
+                       'OPENSSL_DIR': str(work / 'private OpenSSL'), 'OPENSSL_STATIC': '1',
+                       'CARGO_HOME': str(work / 'cargo cache')}
                 with patch.dict(os.environ, env, clear=True), patch.object(sys, 'platform', platform):
                     supervisor = Supervisor(project, data / 'updates', database, work / 'media', '127.0.0.1', 3000)
                     calls = []
@@ -237,6 +271,8 @@ class UpdateTests(unittest.TestCase):
                              if p.suffix in {'.sh', '.command'} and b'updated release marker' in p.read_bytes()]
                     self.assertEqual(len(saved), 1)
                     self.assertIn('--project ' + shell_value(project), saved[0].read_text(encoding='utf-8'))
+                    for name in ('GRAVEWRIGHT_BUILD_TOOLS_PATH', 'OPENSSL_DIR', 'OPENSSL_STATIC', 'CARGO_HOME'):
+                        self.assertIn(name + '=' + shell_value(env[name]), saved[0].read_text(encoding='utf-8'))
                     if platform == 'linux':
                         self.assertTrue((project / 'Gravewright Runner.desktop').is_file())
                     if os.name != 'nt':
@@ -263,6 +299,9 @@ class NativeShellTests(unittest.TestCase):
                 'import json, os, sys\nfrom pathlib import Path\n'
                 f'Path({str(report)!r}).write_text(json.dumps({{"argv": sys.argv[1:], "cwd": os.getcwd(), '
                 '"python": sys.executable, "prefix": sys.prefix, "uv": os.environ.get("GW_UV"), '
+                '"build_path": os.environ.get("GRAVEWRIGHT_BUILD_TOOLS_PATH"), '
+                '"openssl": os.environ.get("OPENSSL_DIR"), "static": os.environ.get("OPENSSL_STATIC"), '
+                '"cargo": os.environ.get("CARGO_HOME"), "path": os.environ.get("PATH"), '
                 '"pythonpath": os.environ.get("PYTHONPATH"), "venv": os.environ.get("VIRTUAL_ENV")}))\n'
                 'Path("replacement").write_text("#!/bin/sh\\necho REPLACEMENT_EXECUTED\\nexit 99\\n")\n'
                 'Path("replacement").replace("Gravewright Runner.sh")\n'
@@ -270,9 +309,14 @@ class NativeShellTests(unittest.TestCase):
             )
             (project / 'scripts/gravewright_runner.py').write_text(fake, encoding='utf-8')
             uv = work / 'uv $ ` " % \' binary'
-            launcher = create_runner(project, python, data, uv=uv, platform='linux')
+            build_env = {'GRAVEWRIGHT_BUILD_TOOLS_PATH': str(work / 'Rust $ " binaries'),
+                         'OPENSSL_DIR': str(work / 'OpenSSL $ " static'), 'OPENSSL_STATIC': '1',
+                         'CARGO_HOME': str(work / 'Cargo $ " cache')}
+            with patch.dict(os.environ, build_env):
+                launcher = create_runner(project, python, data, uv=uv, platform='linux')
             argument = 'literal $(touch ' + str(sentinel) + ') $ ` % \' " ã'
-            env = {**os.environ, 'PYTHONPATH': str(work / 'poison'), 'VIRTUAL_ENV': 'poison'}
+            env = {**os.environ, **{name: 'inherited poison' for name in build_env},
+                   'PYTHONPATH': str(work / 'poison'), 'VIRTUAL_ENV': 'poison'}
             result = subprocess.run(['/bin/sh', str(launcher), '--check', '--no-browser', '--port', '3210', argument],
                                     cwd=work, env=env, capture_output=True, text=True, timeout=15)
             self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
@@ -282,6 +326,10 @@ class NativeShellTests(unittest.TestCase):
             self.assertEqual(observed['python'], str(python))
             self.assertEqual(observed['prefix'], str(environment))
             self.assertEqual(observed['uv'], str(uv))
+            for field, name in [('build_path', 'GRAVEWRIGHT_BUILD_TOOLS_PATH'), ('openssl', 'OPENSSL_DIR'),
+                                ('static', 'OPENSSL_STATIC'), ('cargo', 'CARGO_HOME')]:
+                self.assertEqual(observed[field], build_env[name])
+            self.assertEqual(observed['path'], build_env['GRAVEWRIGHT_BUILD_TOOLS_PATH'] + os.pathsep + env['PATH'])
             self.assertIsNone(observed['pythonpath'])
             self.assertIsNone(observed['venv'])
             self.assertNotIn('REPLACEMENT_EXECUTED', result.stdout)

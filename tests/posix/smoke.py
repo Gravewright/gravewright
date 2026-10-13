@@ -12,6 +12,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import shlex
 import shutil
 import signal
 import socket
@@ -34,7 +35,8 @@ def digest(path):
 
 def check_sources():
     required = ['Install Linux.sh', 'Install macOS.command', 'scripts/posix/install.sh',
-                'scripts/posix/runner.sh', 'scripts/posix/create_runner.py']
+                'scripts/posix/runner.sh', 'scripts/posix/create_runner.py',
+                'scripts/posix/mac_tools.sh', 'scripts/posix/mac_build.py']
     shell = shutil.which('bash')
     if os.name == 'nt':
         # Windows may expose an inaccessible WSL app-execution alias.
@@ -112,6 +114,40 @@ def find_tool(runtime, name, fallback_path):
     return Path(existing)
 
 
+def private_build_tools(runtime, data):
+    """Prove Intel macOS builds use the prepared private toolchain, not CI's."""
+    if sys.platform != 'darwin' or platform.machine().lower() not in {'x86_64', 'amd64'}:
+        return []
+    saved = list((data / '.runner-launchers').glob('*.command'))
+    assert len(saved) == 1, 'Expected one freshly generated immutable macOS launcher'
+    values = {}
+    for line in saved[0].read_text(encoding='utf-8').splitlines():
+        for name in ('GRAVEWRIGHT_BUILD_TOOLS_PATH', 'OPENSSL_DIR', 'OPENSSL_STATIC',
+                     'CARGO_HOME', 'AUTOBAHN_USE_NVX'):
+            if line.startswith(name + '='):
+                words = shlex.split(line)
+                assert len(words) == 1, 'Build environment is not a literal quoted assignment'
+                values[name] = words[0].split('=', 1)[1]
+    assert values.get('AUTOBAHN_USE_NVX') == '0', 'macOS must disable Autobahn optional native vectors'
+    assert values.get('OPENSSL_STATIC') == '1', 'Intel cryptography must link prepared OpenSSL statically'
+    bins = [Path(item) for item in values.get('GRAVEWRIGHT_BUILD_TOOLS_PATH', '').split(os.pathsep) if item]
+    assert bins and all(path.is_relative_to(runtime) for path in bins), 'Rust tools escaped private runtime'
+    cargo_home = Path(values.get('CARGO_HOME', ''))
+    openssl = Path(values.get('OPENSSL_DIR', ''))
+    assert cargo_home.is_relative_to(runtime) and cargo_home.is_dir(), 'Cargo cache must be private'
+    assert openssl.is_relative_to(runtime) and openssl.is_dir(), 'OpenSSL must be prepared privately'
+    binaries = []
+    for name in ('rustc', 'cargo'):
+        matches = [path / name for path in bins if (path / name).is_file()]
+        assert len(matches) == 1 and os.access(matches[0], os.X_OK), f'Missing private {name}'
+        binaries.extend(matches)
+    for name in ('libcrypto.a', 'libssl.a'):
+        matches = list(openssl.rglob(name))
+        assert len(matches) == 1, f'Missing private static {name}'
+        binaries.extend(matches)
+    return [*binaries, cargo_home, openssl]
+
+
 def exercise(work):
     project = work / 'Gravewright São Paulo & (fixture)'
     runtime = work / 'Private tools ã'
@@ -126,11 +162,13 @@ def exercise(work):
     original_environment = dict(os.environ)
     home = Path.home()
     personal = [home / name for name in ('.profile', '.bashrc', '.bash_profile', '.zshrc',
-                                         '.npmrc', '.config/uv/uv.toml')]
+                                         '.npmrc', '.config/uv/uv.toml', '.cargo/config',
+                                         '.cargo/config.toml', '.cargo/env', '.rustup/settings.toml')]
     original_personal = snapshot(personal)
     env = dict(os.environ)
     for key in list(env):
-        if key.startswith(('DJANGO_', 'GRAVEWRIGHT_', 'UV_', 'PYTHON', 'NPM_CONFIG_', 'npm_config_')) or key in {
+        if key.startswith(('DJANGO_', 'GRAVEWRIGHT_', 'UV_', 'PYTHON', 'NPM_CONFIG_', 'npm_config_',
+                           'CARGO', 'RUST', 'OPENSSL', 'PKG')) or key in {
             'VIRTUAL_ENV', 'LOCALAPPDATA', 'BASH_ENV', 'ENV', 'NODE_OPTIONS', 'NODE_PATH'}:
             env.pop(key)
     # Child-only overrides; preserve HOME and real user configuration.
@@ -164,7 +202,9 @@ def exercise(work):
     installed_lock = project / 'gravewright/maps/frontend/node_modules/.package-lock.json'
     bundle = project / 'gravewright/table/static/gravewright_table/media-workspace.js'
     assert installed_lock.is_file() and bundle.is_file(), 'Frontend was not prepared'
-    prepared = snapshot([uv, node, installed_lock, bundle])
+    toolchain = private_build_tools(runtime, data)
+    prepared_paths = [uv, node, installed_lock, bundle, *toolchain]
+    prepared = snapshot(prepared_paths)
     env['PATH'] = os.pathsep.join((str(uv.parent), str(node.parent), env['PATH']))
     offline = dict(env, UV_OFFLINE='1', npm_config_offline='true',
                    HTTP_PROXY='http://127.0.0.1:9', HTTPS_PROXY='http://127.0.0.1:9',
@@ -174,7 +214,7 @@ def exercise(work):
     repeat = run([bash, str(project / installer), *args], cwd=work, env=offline,
                  log=OUTPUT / 'offline-install.log')
     assert 'Gravewright Runner checks passed.' in repeat
-    assert snapshot([uv, node, installed_lock, bundle]) == prepared, 'Offline installation rewrote prepared tools/assets'
+    assert snapshot(prepared_paths) == prepared, 'Offline installation rewrote prepared tools/assets'
     assert digest(project / '.env') == configuration, 'Repeated installation changed saved configuration'
     checked = run([bash, str(generated), '--check', '--no-browser'], cwd=work, env=offline,
                   log=OUTPUT / 'runner-check.log', timeout=120)
@@ -221,6 +261,7 @@ def exercise(work):
         shutil.copytree(logs, OUTPUT / 'application-logs', dirs_exist_ok=True)
     return {'platform': sys.platform, 'architecture': platform.machine(), 'home_unchanged': True,
             'source_and_personal_config_unchanged': True, 'offline_reuse': True,
+            'private_intel_toolchain': bool(toolchain),
             'http_ready': True, 'graceful_shutdown': True, 'post_shutdown_lock_released': True,
             'python': subprocess.check_output([str(python), '--version'], text=True).strip(),
             'uv': subprocess.check_output([str(uv), '--version'], text=True).strip(),

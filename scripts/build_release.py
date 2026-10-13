@@ -127,6 +127,7 @@ def required_files(notes):
         'pyproject.toml', 'uv.lock', 'main.py', 'manage.py', '.env.example',
         'Install Windows.bat', 'Install Linux.sh', 'Install macOS.command',
         'scripts/posix/install.sh', 'scripts/posix/create_runner.py', 'scripts/posix/runner.sh',
+        'scripts/posix/mac_tools.sh', 'scripts/posix/mac_build.py',
         'scripts/windows/create_runner.py', 'scripts/windows/runner.bat',
         'scripts/windows/launch_runner.py', 'scripts/prepare_frontend.py',
         'gravewright/maps/scripts/build.cjs',

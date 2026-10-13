@@ -24,6 +24,8 @@ O **pacote 0.2.1 atualizado em 13 de outubro de 2026** inclui os instaladores da
 
 Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
 
+**Mac Intel também precisa das Command Line Tools e do SDK da Apple.** A primeira instalação compila a dependência cryptography fixada usando Rust/OpenSSL privados, sem Homebrew, e pode demorar mais. Se faltarem as ferramentas Apple, o modo interativo abre o instalador do sistema; conclua-o e execute novamente o instalador Gravewright. `--check` sem perguntas informa o requisito. O [guia macOS](docs/pt-BR/macos-runner.md) explica os limites desse build e o reaproveitamento do cache.
+
 ### Windows
 
 Extraia o projeto completo e dê dois cliques em **`Install Windows.bat`**. Ele instala ferramentas ausentes, prepara dependências e frontend, faz as perguntas de configuração e gera **`Gravewright Runner.bat`**. Abra o runner gerado para iniciar a aplicação sem instalações ou perguntas. Execute o instalador novamente para mudar configurações ou preparar uma versão atualizada do projeto. Mantenha a janela do executor aberta enquanto usar o Gravewright; pressione **Ctrl+C** para encerrar.

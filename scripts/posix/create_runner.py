@@ -52,6 +52,21 @@ def immutable(directory, raw, suffix, mode):
     return path
 
 
+def build_environment(platform):
+    """Keep verified native build tools available to later managed updates."""
+    names = ('GRAVEWRIGHT_BUILD_TOOLS_PATH', 'OPENSSL_DIR', 'OPENSSL_STATIC', 'CARGO_HOME')
+    values = {name: os.environ.get(name, '') for name in names}
+    values['AUTOBAHN_USE_NVX'] = '0' if platform == 'darwin' else ''
+    lines = []
+    for name, value in values.items():
+        if value:
+            lines += [name + '=' + shell_value(value), 'export ' + name]
+        else:
+            # Do not borrow an unrelated shell's build configuration at startup.
+            lines.append('unset ' + name)
+    return '\n'.join(lines)
+
+
 def create_runner(project, python, data, uv=None, runtime_project=None, *, port=None,
                   no_browser=False, platform=None):
     project = Path(project).resolve()
@@ -82,6 +97,7 @@ def create_runner(project, python, data, uv=None, runtime_project=None, *, port=
         'UV': shell_value(uv if uv is not None else os.environ.get('GW_UV', '')),
         'PROJECT': shell_value(runtime_project), 'BOOTSTRAP': shell_value(bootstrap),
         'DEFAULT_ARGS': shlex.join(defaults),
+        'BUILD_ENV': build_environment(platform),
     }
     template = (project / 'scripts/posix/runner.sh').read_text(encoding='utf-8')
     content = re.sub(r'@@([A-Z_]+)@@', lambda match: substitutions[match[1]], template)

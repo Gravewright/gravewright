@@ -394,11 +394,16 @@ def prepare_environment(directory, port_override=None):
         raise RunnerError('GRAVEWRIGHT_ALLOW_TUNNELS must be true or false.')
     origin = '' if tunnels == 'true' else f'http://127.0.0.1:{port}'
 
+    # Generated POSIX launchers retain the installer's private native toolchain
+    # for source-only dependencies during future supervised environment builds.
+    build_tools = os.environ.get('GRAVEWRIGHT_BUILD_TOOLS_PATH') if os.name != 'nt' else None
     # Purge inherited application settings, including undocumented Runner internals.
     for name in tuple(os.environ):
         if name.startswith(('DJANGO_', 'GRAVEWRIGHT_')) or name in allowed:
             del os.environ[name]
     os.environ.update(values)
+    if build_tools:
+        os.environ['GRAVEWRIGHT_BUILD_TOOLS_PATH'] = build_tools
     os.environ.update(
         DJANGO_SETTINGS_MODULE='config.runner', DJANGO_DEBUG='false',
         DJANGO_SECRET_KEY=secret, DJANGO_ALLOWED_HOSTS='*' if tunnels == 'true' else '127.0.0.1',

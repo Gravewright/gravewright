@@ -6,6 +6,8 @@
 
 Use **macOS 13.5 ou superior**, em Intel x64 ou Apple Silicon ARM64, com navegador moderno com WebGL. A alternativa privada do Node.js segue os [requisitos macOS do Node.js 24](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). O **pacote 0.2.1 atualizado em 13 de outubro de 2026** inclui estes launchers, assim como pacotes completos gerados por [build_release.py](../../scripts/build_release.py).
 
+**Mac Intel exige as Command Line Tools da Apple (ou um Xcode selecionado com compilador e SDK)** para compilar a dependência descrita abaixo. Homebrew não é necessário.
+
 1. Extraia o novo pacote completo ou use um checkout que contenha **`Install macOS.command`**, em uma pasta local gravável. Mantenha todos os arquivos juntos.
 2. Abra **`Install macOS.command`** pelo Finder. Ele abre o Terminal e prepara a instalação. Também é possível abrir o Terminal na pasta do projeto e executar:
 
@@ -36,6 +38,22 @@ O Bash 3.2 do macOS é suportado; não é preciso instalar outro shell ou Homebr
 
 O instalador escolhe `darwin-x64` ou `darwin-arm64` conforme a arquitetura em execução; as ferramentas devem ser compatíveis. Downloads ausentes exigem internet. Mantenha instaladas as ferramentas reaproveitadas. O Python usa `uv sync --locked --no-dev` em ambiente privado; o frontend usa `npm ci --include=dev --include=optional` e `npm run build` quando necessário. Entradas/saídas inalteradas são reaproveitadas. O `.venv` de desenvolvimento e os lock files do código são preservados. O perfil local dispensa Docker e Redis.
 
+### Compilação de dependências no Intel
+
+Cryptography removeu o suporte oficial a macOS x86_64 e os wheels Intel na versão 49; consulte o [changelog](https://cryptography.io/en/50.0.1/changelog/#v49-0-0). O Gravewright compila localmente a versão cryptography 50.x fixada no Intel. Esse caminho é mantido pelo Gravewright e coberto pelo nosso CI de plataforma; não representa a volta do suporte oficial upstream. A versão fixada de cryptography permanece igual.
+
+O build precisa do SDK selecionado pelo `xcrun` da Apple, Clang, Make e Perl. Se faltarem, o instalador interativo abre o diálogo oficial do sistema com:
+
+```bash
+xcode-select --install
+```
+
+Conclua a instalação da Apple e execute novamente **`Install macOS.command`**. O Gravewright não fica aguardando a conclusão do diálogo. O `--check` não o abre: termina indicando como instalar os requisitos e tentar novamente. Um Xcode completo e selecionado corretamente também pode fornecê-los. O [guia de compilação do cryptography](https://cryptography.io/en/50.0.1/installation/#building-cryptography-on-macos) apresenta os requisitos de compilador/bibliotecas.
+
+Com os requisitos Apple disponíveis, o Gravewright baixa componentes Rust com SHA-256 fixado, compila um OpenSSL estático privado e compila cryptography com essas ferramentas. Usa [Rust 1.99.0](https://blog.rust-lang.org/2026/10/01/Rust-1.99.0/) (`rustc`, Cargo e biblioteca padrão), sem rustup, e [OpenSSL 3.5.9 LTS](https://openssl-library.org/source/), sem Homebrew. A primeira instalação Intel pode levar vários minutos a mais; ferramentas, OpenSSL preparado e caches verificados são reutilizados. Reutilização offline exige uma preparação anterior concluída, incluindo a dependência compilada e os insumos em cache.
+
+Nas duas arquiteturas Mac, o instalador define `AUTOBAHN_USE_NVX=0` ao preparar dependências, usando a alternativa Python do Autobahn em vez da extensão nativa opcional NVX. Isso evita exigir esse build opcional no Apple Silicon, inclusive em macOS 13.5/14. O requisito de compilador/SDK do cryptography no Intel continua necessário. A inicialização normal do Runner não compila dependências.
+
 Se o Finder informar falta de permissão após extrair, use o Terminal na pasta do projeto:
 
 ```bash
@@ -54,6 +72,9 @@ O instalador cria/completa **o `.env` do projeto** a partir de `.env.example`, p
 | `data/gravewright.sqlite3` do projeto | Banco padrão (`GRAVEWRIGHT_DATABASE`) |
 | `data/media/` do projeto | Uploads privados e módulos padrão (`GRAVEWRIGHT_MEDIA_ROOT`) |
 | `~/Library/Application Support/Gravewright/runner/` | Ferramentas privadas, caches e ambientes por localização do código |
+| `rust/1.99.0-x86_64-apple-darwin/` nas ferramentas | Compilador Rust/Cargo/biblioteca padrão privados e verificados para Intel |
+| `openssl/3.5.9-darwin-x64/` nas ferramentas | OpenSSL estático privado para compilar a dependência no Intel |
+| `cargo/` nas ferramentas | Cache Cargo privado, sem usar a instalação pessoal de `~/.cargo` |
 | `~/Library/Application Support/Gravewright/data/` | Estado padrão do Runner, logs e assets coletados |
 | `logs/runner.log` no estado do Runner | Diagnóstico de inicialização/execução |
 | `runner.lock`, `.runner-launchers/`, `updates/` no estado | Bloqueio da instância, cópias imutáveis do launcher e recuperação de atualização |
@@ -91,6 +112,8 @@ Flags do instalador: `--check`, `--data-dir PATH`, `--port NUMBER`, `--no-browse
 | macOS bloqueia o download | Siga o fluxo individual da Apple para aprovar downloads confiáveis |
 | Falha de download ou hash | Confira GitHub, nodejs.org e fontes de pacotes; preserve a verificação de integridade |
 | Arquitetura ou SO incompatível | Use ferramentas nativas compatíveis e macOS 13.5+; não misture ferramentas Intel/ARM |
+| Faltam compilador/SDK no Intel | Conclua `xcode-select --install` e execute novamente o instalador; `--check` não abre o diálogo Apple |
+| Primeira instalação Intel demora mais | A preparação de Rust/OpenSSL e cryptography inclui compilação; acompanhe o progresso e preserve o cache privado |
 | Python preparado ausente ou projeto movido | Execute `Install macOS.command` novamente na nova pasta |
 | Porta ocupada | Encerre o outro processo ou use `--port 3001`; reabra o instalador para mudar a porta salva |
 | Outro Runner usa o mesmo estado | Encerre-o; o bloqueio do SO é liberado ao sair. O arquivo de lock permanecer é normal |
