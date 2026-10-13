@@ -63,6 +63,13 @@ def extract(archive, destination):
             if total > 2 * 1024**3 or len(seen) > 100000:
                 raise ValueError('Expanded release exceeds limit')
         z.extractall(destination)
+        if os.name != 'nt':
+            # ZipFile does not restore executable bits. Only native launchers
+            # need them; never propagate archive setuid/setgid permission bits.
+            for item in z.infolist():
+                path = destination / item.filename
+                if not item.is_dir() and path.suffix in {'.sh', '.command'}:
+                    path.chmod(0o755)
     projects = list(destination.glob('pyproject.toml')) + list(destination.glob('*/pyproject.toml'))
     if len(projects) != 1:
         raise ValueError('Expected one project root')
@@ -71,6 +78,22 @@ def extract(archive, destination):
         if not (project / name).is_file():
             raise ValueError('Release does not support managed updates')
     return project
+
+
+def runner_layout():
+    """Installer inputs and machine-specific outputs for the current OS."""
+    if sys.platform == 'win32':
+        return ('scripts/windows/create_runner.py',
+                ('Install Windows.bat', 'scripts/windows/create_runner.py',
+                 'scripts/windows/runner.bat', 'scripts/windows/launch_runner.py'),
+                ('Gravewright Runner.bat',))
+    mac = sys.platform == 'darwin'
+    return ('scripts/posix/create_runner.py',
+            ('Install macOS.command' if mac else 'Install Linux.sh',
+             'scripts/posix/install.sh', 'scripts/posix/create_runner.py',
+             'scripts/posix/runner.sh', 'scripts/windows/launch_runner.py'),
+            ('Gravewright Runner.command',) if mac else
+            ('Gravewright Runner.sh', 'Gravewright Runner.desktop'))
 
 
 def download(artifact, target, notify):
@@ -270,13 +293,12 @@ class Supervisor:
                           for p in self.protected if p.is_relative_to(self.origin)]))
             incoming = sorted(allowed)
             if self.profile == 'config.runner':
-                for name in ('Install Windows.bat', 'scripts/windows/create_runner.py',
-                             'scripts/windows/runner.bat', 'scripts/windows/launch_runner.py'):
+                generator, required, generated = runner_layout()
+                for name in required:
                     if name not in incoming:
-                        raise ValueError('Release is missing the Windows installer or runner generator')
+                        raise ValueError('Release is missing the native installer or runner generator')
                 # Generated launchers and shortcuts are local outputs, not release inputs.
-                if 'Gravewright Runner.bat' not in incoming:
-                    incoming.append('Gravewright Runner.bat')
+                incoming.extend(name for name in generated if name not in incoming)
             self.notify('dependencies')
             uv = os.environ.get('GW_UV') or shutil.which('uv')
             if not uv:
@@ -285,7 +307,7 @@ class Supervisor:
             self.command(candidate, uv, 'sync', '--locked', '--no-dev', '--project', str(candidate), '--python', previous_python)
             self.install_django_dependencies(candidate, self.python(candidate), read(self.modules / 'server-apps.json', {}), uv)
             if self.profile == 'config.runner':
-                self.command(candidate, self.python(candidate), 'scripts/windows/create_runner.py',
+                self.command(candidate, self.python(candidate), generator,
                              '--data-dir', self.env['GRAVEWRIGHT_RUNNER_DATA'], '--runtime-project', str(self.origin))
             self.command(candidate, self.python(candidate), 'manage.py', 'check')
             (self.state / 'maintenance').touch()

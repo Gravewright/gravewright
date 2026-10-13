@@ -30,7 +30,8 @@ def main():
     local_patterns = shutil.ignore_patterns(
         '.git', '.venv', 'node_modules', '__pycache__', '.env', 'data', 'media',
         'staticfiles', 'test-results', 'dist', 'build', 'Gravewright Runner.bat',
-        'Gravewright Runner.lnk')
+        'Gravewright Runner.lnk', 'Gravewright Runner.sh',
+        'Gravewright Runner.command', 'Gravewright Runner.desktop')
     def ignore_local(folder, names):
         ignored = set(local_patterns(folder, names))
         ignored.update(name for name in names if name.startswith('.env.') and name != '.env.example')
@@ -52,9 +53,15 @@ def main():
         from scripts.gravewright_runner import prepare_environment
         directory = work / 'user-data'; directory.mkdir()
         prepare_environment(directory, port)
-        from scripts.windows.create_runner import create_runner
+        if os.name == 'nt':
+            from scripts.windows.create_runner import create_runner
+            runner_name, runner_suffix = 'Gravewright Runner.bat', '*.bat'
+        else:
+            from scripts.posix.create_runner import create_runner
+            runner_name = 'Gravewright Runner.command' if sys.platform == 'darwin' else 'Gravewright Runner.sh'
+            runner_suffix = '*.command' if sys.platform == 'darwin' else '*.sh'
         create_runner(ROOT, sys.executable, directory, shutil.which('uv'))
-        original_runner = (ROOT / 'Gravewright Runner.bat').read_bytes()
+        original_runner = (ROOT / runner_name).read_bytes()
     import django
     django.setup()
     from django.core.management import call_command
@@ -114,6 +121,8 @@ def main():
                     data=b"raise RuntimeError('Intentional startup failure')\n"+data
                 if name in ('Install Windows.bat', 'scripts/windows/runner.bat'):
                     data += f'\nrem release test {sequence}\n'.encode()
+                if name in ('Install Linux.sh', 'Install macOS.command', 'scripts/posix/runner.sh'):
+                    data += f'\n# release test {sequence}\n'.encode()
                 z.writestr('release/'+name,data)
             z.writestr('release/new-release-file.txt', str(sequence))
             if failure=='migration':
@@ -174,9 +183,14 @@ def main():
             assert (old / 'obsolete-release-file.txt').is_file()
             assert (old / '.gravewright-rollback/database.sqlite3').is_file()
             if '--runner' in sys.argv:
-                assert any('release test 1' in p.read_text() for p in (directory / '.runner-launchers').glob('*.bat'))
-                assert str(Path(supervisor.python(ROOT)).resolve()) in (ROOT / 'Gravewright Runner.bat').read_text()
-            print('PASS: in-place replacement, new/removed files, updated BATs, preserved .env and retained .old.',flush=True)
+                immutable_launchers = list((directory / '.runner-launchers').glob(runner_suffix))
+                assert any('release test 1' in p.read_text() for p in immutable_launchers)
+                launcher_text = (ROOT / runner_name).read_text() if os.name == 'nt' else '\n'.join(p.read_text() for p in immutable_launchers)
+                assert str(Path(supervisor.python(ROOT)).absolute()) in launcher_text
+                if os.name != 'nt':
+                    assert os.access(ROOT / runner_name, os.X_OK), 'Updated POSIX launcher lost its executable mode'
+                    assert os.access(ROOT / ('Install macOS.command' if sys.platform == 'darwin' else 'Install Linux.sh'), os.X_OK)
+            print('PASS: in-place replacement, new/removed files, updated launchers, preserved .env and retained .old.',flush=True)
             for failure in ['migration','startup']:
                 target=archive(2,failure)
                 supervisor.apply(job(target,2))
@@ -201,7 +215,7 @@ def main():
             assert not (ROOT / 'new-release-file.txt').exists()
             assert (ROOT / 'obsolete-release-file.txt').is_file()
             if '--runner' in sys.argv:
-                assert (ROOT / 'Gravewright Runner.bat').read_bytes() == original_runner
+                assert (ROOT / runner_name).read_bytes() == original_runner
             preserved()
             print('PASS: optional .old retention and explicit rollback of code and data.', flush=True)
     finally:

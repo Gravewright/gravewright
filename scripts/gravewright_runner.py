@@ -1,7 +1,7 @@
 """Prepare private user data and supervise the local Gravewright server and updates.
 
-Windows installation uses Install Windows.bat; the generated Gravewright Runner.bat
-only starts the prepared app. This helper is also portable for checks with --data-dir.
+Native installers prepare the app; the generated Gravewright Runner launcher
+only starts it. This helper is also portable for checks with --data-dir.
 Configuration lives in the source checkout's .env; runtime data stays separate.
 """
 
@@ -268,15 +268,16 @@ def offer_default_marketplace(directory, prompt=input, download=None):
 
 
 def data_directory(value=None):
-    """Use a persistent Windows user directory, never the installed source tree."""
+    """Use persistent per-user state, independently of project configuration."""
     if value:
         directory = Path(value).expanduser().resolve()
-    elif os.environ.get('LOCALAPPDATA'):
-        directory = (Path(os.environ['LOCALAPPDATA']) / 'Gravewright' / 'data').resolve()
+    elif sys.platform == 'win32':
+        directory = Path(os.environ.get('LOCALAPPDATA', Path.home() / 'AppData/Local')) / 'Gravewright/data'
     elif sys.platform == 'darwin':
         directory = Path.home() / 'Library/Application Support/Gravewright/data'
     else:
         directory = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'Gravewright/data'
+    directory = directory.resolve()
     if directory == ROOT:
         raise RunnerError('The data directory must be separate from the project root.')
     return directory
@@ -659,6 +660,10 @@ def main(argv=None):
                 def stop_runner(*_):
                     raise KeyboardInterrupt
                 signal.signal(signal.SIGTERM, stop_runner)
+                if hasattr(signal, 'SIGHUP'):
+                    # Closing the terminal must also drain the separately
+                    # supervised server, rather than leave it running orphaned.
+                    signal.signal(signal.SIGHUP, stop_runner)
                 if hasattr(signal, 'SIGBREAK'):
                     signal.signal(signal.SIGBREAK, stop_runner)
                 supervisor.run()

@@ -1,0 +1,41 @@
+name: POSIX Runner
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  posix-runner:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+      - name: Check POSIX launcher sources
+        run: python3 tests/posix/smoke.py --source-check
+      - name: Check distribution and bootstrap branches without downloads
+        run: python3 -m unittest discover -s tests/posix -p 'test_bootstrap.py' -v
+      - name: Check native launcher generation and recovery contracts
+        run: python3 -m unittest discover -s tests/posix -p 'test_runner.py' -v
+      - name: Exercise real installation, offline reuse and local server lifecycle
+        run: python3 tests/posix/smoke.py
+      - name: Retain POSIX Runner diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: posix-runner-${{ matrix.os }}-diagnostics
+          path: test-results/posix-runner/
+          if-no-files-found: ignore
+          retention-days: 7

@@ -6,11 +6,25 @@ Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo nave
 
 A versão atual do projeto é **0.2.1**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
-## Executar no Windows
+## Instalar e executar localmente
 
 A versão 0.2.1 amplia as APIs para sistemas independentes, compêndios instaláveis,
 provedores de combate, salvamento ao fechar fichas e modais nativos consistentes.
 Consulte as [notas da release](docs/releases/0.2.1.md).
+
+Extraia o projeto completo para uma pasta gravável, execute o instalador do seu sistema operacional e depois use o Runner gerado. O instalador prepara ferramentas, dependências, frontend e configurações; o Runner inicia a aplicação já preparada.
+
+| Plataforma | Instalador | Executor gerado | Guia |
+| --- | --- | --- | --- |
+| Windows x64 | `Install Windows.bat` | `Gravewright Runner.bat` | [Windows](docs/pt-BR/windows-runner.md) |
+| Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/pt-BR/linux-runner.md) |
+| macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/pt-BR/macos-runner.md) |
+
+O **pacote 0.2.1 atualizado em 13 de outubro de 2026** inclui os instaladores das três plataformas. Versão, estágio Alpha, canal `stable` e nome do arquivo permanecem iguais. Instalações que já informam 0.2.1 não recebem atualização automática da mesma versão: baixe o ZIP atualizado e seu checksum, preserve `.env` e dados configurados, substitua os arquivos da aplicação na instalação existente e execute seu instalador novamente. Veja as [instruções de reempacotamento e reinstalação](docs/releases/0.2.1.md).
+
+Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
+
+### Windows
 
 Extraia o projeto completo e dê dois cliques em **`Install Windows.bat`**. Ele instala ferramentas ausentes, prepara dependências e frontend, faz as perguntas de configuração e gera **`Gravewright Runner.bat`**. Abra o runner gerado para iniciar a aplicação sem instalações ou perguntas. Execute o instalador novamente para mudar configurações ou preparar uma versão atualizada do projeto. Mantenha a janela do executor aberta enquanto usar o Gravewright; pressione **Ctrl+C** para encerrar.
 
@@ -18,9 +32,15 @@ O executor funciona diretamente no **CMD do Windows**. Use Windows 10 versão 18
 
 O instalador salva configurações no `.env` do projeto. Os caminhos do banco e uploads seguem essa configuração; os padrões são `data/gravewright.sqlite3` e `data/media` no projeto. Ferramentas, caches, logs e arquivos estáticos coletados do Runner ficam em `%LOCALAPPDATA%\Gravewright`. O executor atende apenas este computador e dispensa Redis. Um atalho com o ícone do Gravewright é criado ao lado do launcher. Veja o [guia do executor Windows](docs/pt-BR/windows-runner.md) para requisitos e solução de problemas, e o guia de [implantação e backups](docs/pt-BR/deployment.md).
 
+### Linux e macOS
+
+No Linux, abra um terminal na pasta extraída e execute `bash "./Install Linux.sh"`. No macOS, abra **`Install macOS.command`** pelo Finder ou use `bash "./Install macOS.command"` nessa pasta. Responda às perguntas e depois inicie **`Gravewright Runner.sh`** ou **`Gravewright Runner.command`**. Mantenha o terminal aberto; Ctrl+C encerra a aplicação. Execute o instalador novamente após mover o projeto, atualizar seus arquivos ou alterar configurações salvas.
+
+O `.env` permanece no projeto; os padrões de banco e uploads continuam `data/gravewright.sqlite3` e `data/media` dentro dele. Ferramentas e estado privados do Runner usam `$XDG_DATA_HOME/Gravewright` (padrão `~/.local/share/Gravewright`) no Linux e `~/Library/Application Support/Gravewright` no macOS. `--data-dir` muda o estado do Runner, não os caminhos do banco/mídias no `.env`. Os guias [Linux](docs/pt-BR/linux-runner.md) e [macOS](docs/pt-BR/macos-runner.md) explicam verificações sem perguntas, reaproveitamento offline, permissões, atualização e backups.
+
 ## Executar localmente pelo terminal
 
-Requisitos: **Python 3.14 ou superior**, [uv](https://docs.astral.sh/uv/) e navegador moderno com WebGL. As configurações padrão do servidor exigem Redis quando `DJANGO_DEBUG=false` e sempre que vários processos ASGI precisarem se comunicar. O executor Windows usa um perfil local separado e administra Node.js/npm para preparar o frontend. O fluxo de terminal abaixo serve os recursos versionados; recompilá-los ou executar testes JavaScript exige Node.js.
+Requisitos: **Python 3.14 ou superior**, [uv](https://docs.astral.sh/uv/) e navegador moderno com WebGL. As configurações padrão do servidor exigem Redis quando `DJANGO_DEBUG=false` e sempre que vários processos ASGI precisarem se comunicar. Os Runners gerados usam um perfil local separado; seus instaladores administram Node.js/npm para preparar o frontend. O fluxo de terminal abaixo serve os recursos versionados; recompilá-los ou executar testes JavaScript exige Node.js.
 
 Na pasta do código-fonte:
 

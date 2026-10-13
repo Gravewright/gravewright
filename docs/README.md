@@ -7,6 +7,8 @@ English is the primary documentation. Each guide has a corresponding Portuguese 
 | Guide | What it explains |
 | --- | --- |
 | [Windows runner](en/windows-runner.md) | Double-click installation, local execution, icon shortcut and personal data |
+| [Linux runner](en/linux-runner.md) | Distribution detection, private tools, local execution and unattended checks |
+| [macOS runner](en/macos-runner.md) | Intel/Apple Silicon installation, Finder launcher, private tools and local execution |
 | [Getting started](en/getting-started.md) | Dependencies, configuration, migrations and first login |
 | [User guide](en/user-guide.md) | Campaigns, scenes, sheets, journals and table workflows |
 | [Architecture](en/architecture.md) | Request flow, persistence, authorization and realtime |
@@ -24,4 +26,4 @@ Project policies: [contributing](../CONTRIBUTING.md), [security](../SECURITY.md)
 
 For the dice implementation, see the existing [grammar architecture](../gravewright/dice/grammar/ARCHITECTURE.md) and [notation reference](../gravewright/dice/grammar/notation/GRAMMAR.md). Machine-readable module contracts live in [contracts/](../gravewright/modules/contracts/); the [transport note](../gravewright/modules/contracts/transport.md) accompanies them.
 
-Current release: [Gravewright 0.2.1 release notes](releases/0.2.1.md).
+Current release: [Gravewright 0.2.1 release notes](releases/0.2.1.md), including the **13 October 2026 package refresh** with Windows, Linux and macOS installers. Existing 0.2.1 hosts need the manual same-version reinstall described there.

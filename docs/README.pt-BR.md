@@ -7,6 +7,8 @@ Inglês é o idioma principal da documentação. Cada guia tem uma versão corre
 | Guia | O que explica |
 | --- | --- |
 | [Executor Windows](pt-BR/windows-runner.md) | Instalação com dois cliques, execução local, atalho com ícone e dados pessoais |
+| [Executor Linux](pt-BR/linux-runner.md) | Detecção da distribuição, ferramentas privadas, execução local e verificações sem perguntas |
+| [Executor macOS](pt-BR/macos-runner.md) | Instalação Intel/Apple Silicon, launcher pelo Finder, ferramentas privadas e execução local |
 | [Primeiros passos](pt-BR/getting-started.md) | Dependências, configuração, migrações e primeiro acesso |
 | [Guia de uso](pt-BR/user-guide.md) | Campanhas, cenas, fichas, diários e fluxos da mesa |
 | [Arquitetura](pt-BR/architecture.md) | Requisições, persistência, autorização e tempo real |
@@ -26,4 +28,4 @@ Para a implementação de dados, consulte os documentos existentes de [arquitetu
 
 Os contratos de módulos processáveis por máquina ficam em [contracts/](../gravewright/modules/contracts/), acompanhados da [nota de transporte](../gravewright/modules/contracts/transport.pt-BR.md).
 
-Release atual: [notas do Gravewright 0.2.1](releases/0.2.1.md).
+Release atual: [notas do Gravewright 0.2.1](releases/0.2.1.md), incluindo o **reempacotamento de 13 de outubro de 2026** com instaladores Windows, Linux e macOS. Hosts que já usam 0.2.1 precisam seguir a reinstalação manual da mesma versão descrita nas notas.

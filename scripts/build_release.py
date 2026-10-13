@@ -79,7 +79,11 @@ def public_path(name):
         return extension_readme(name)
     if parts[0] == 'data':
         return name == 'data/.gitkeep'
-    if path.name in ('Gravewright Runner.bat', 'Gravewright Runner.lnk'):
+    if path.name in ('Gravewright Runner.bat', 'Gravewright Runner.lnk',
+                     'Gravewright Runner.sh', 'Gravewright Runner.command',
+                     'Gravewright Runner.desktop'):
+        return False
+    if path.name.startswith('.Gravewright-') and path.suffix in ('.bat', '.lnk', '.sh', '.command', '.desktop'):
         return False
     if path.name.startswith('.env') and path.name != '.env.example':
         return False
@@ -121,7 +125,12 @@ def selection(root, output, *, include_untracked=False):
 def required_files(notes):
     return {
         'pyproject.toml', 'uv.lock', 'main.py', 'manage.py', '.env.example',
-        'Install Windows.bat', 'config/managed_asgi.py', 'scripts/managed_server.py',
+        'Install Windows.bat', 'Install Linux.sh', 'Install macOS.command',
+        'scripts/posix/install.sh', 'scripts/posix/create_runner.py', 'scripts/posix/runner.sh',
+        'scripts/windows/create_runner.py', 'scripts/windows/runner.bat',
+        'scripts/windows/launch_runner.py', 'scripts/prepare_frontend.py',
+        'gravewright/maps/scripts/build.cjs',
+        'config/managed_asgi.py', 'scripts/managed_server.py',
         'scripts/build_release.py', 'scripts/update_supervisor.py',
         'gravewright/maps/frontend/package.json', 'gravewright/maps/frontend/package-lock.json',
         'gravewright/maps/static/gravewright_maps/vendor/board.js',
@@ -180,7 +189,9 @@ def build(root=ROOT, *, output_dir=None, include_untracked=False, check=False):
                 info = zipfile.ZipInfo(name, stamp)
                 info.compress_type = zipfile.ZIP_DEFLATED
                 info.create_system = 3
-                info.external_attr = 0o100644 << 16
+                # Finder and Linux launchers must remain runnable after ZIP extraction.
+                mode = 0o100755 if PurePosixPath(name).suffix in ('.sh', '.command') else 0o100644
+                info.external_attr = mode << 16
                 archive.writestr(info, checked_file(root, name).read_bytes(), compresslevel=9)
         if temporary.stat().st_size > MAX_ARCHIVE_BYTES:
             raise ValueError('Release exceeds the updater compressed-size limit')

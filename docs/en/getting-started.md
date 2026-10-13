@@ -2,7 +2,17 @@
 
 [Documentation](../README.md) · [Português](../pt-BR/getting-started.md)
 
-On Windows, the [Gravewright Runner](windows-runner.md) detects and reuses installed tools, installs missing prerequisites, prepares Python/npm dependencies and the frontend build, then starts the local application with two clicks. The terminal workflow below is for a source checkout with manually managed configuration.
+For local play, use the installer for [Windows](windows-runner.md), [Linux](linux-runner.md) or [macOS](macos-runner.md). It reuses compatible tools, prepares missing tools and locked Python/npm dependencies, builds the frontend and saves configuration. The generated Gravewright Runner starts the prepared application separately. The manual terminal workflow below is for a source checkout with manually managed configuration.
+
+| Platform | Install | Start after installation |
+| --- | --- | --- |
+| Windows x64 | Open `Install Windows.bat` | Open `Gravewright Runner.bat` |
+| Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `bash "./Gravewright Runner.sh"` |
+| macOS 13.5+ Intel / Apple Silicon | Open `Install macOS.command` or run `bash "./Install macOS.command"` | Open `Gravewright Runner.command` |
+
+Extract the whole project into a writable folder first. Installation can download tools and packages; startup uses the prepared environment. Keep the Runner terminal open and press Ctrl+C to stop. The default address is `http://127.0.0.1:3000`. Linux private downloads require glibc; see its guide for recognized distribution families and Alpine/musl limits.
+
+The 0.2.1 archive refreshed on **13 October 2026** includes these Linux/macOS installers alongside Windows. Already-installed 0.2.1 hosts need the refreshed ZIP and matching checksum manually; the automatic updater does not offer the same version again. Stop the Runner, back up `.env`, configured database/media and Runner recovery state, preserve them while replacing application files in the existing folder, then rerun its installer. See the [complete refresh instructions](../releases/0.2.1.md).
 
 ## Prerequisites
 
@@ -15,7 +25,7 @@ uv run --locked python manage.py migrate
 uv run --locked python main.py
 ```
 
-`uv sync` includes the development dependency group. The lock file supplies the reproducible package versions. This terminal workflow serves the existing JavaScript and CSS assets. To rebuild them, use the npm project under `gravewright/maps/frontend` as described in [frontend](frontend.md); the Windows runner performs that preparation automatically. In Windows CMD, replace the copy command with `if not exist .env copy .env.example .env`.
+`uv sync` includes the development dependency group. The lock file supplies the reproducible package versions. This terminal workflow serves the existing JavaScript and CSS assets. To rebuild them, use the npm project under `gravewright/maps/frontend` as described in [frontend](frontend.md); the platform installers perform that preparation automatically. In Windows CMD, replace the copy command with `if not exist .env copy .env.example .env`.
 
 ## First access
 
@@ -34,6 +44,8 @@ This creates an administrative account, not a VTT owner. Do not use it as a repl
 ## Files and settings
 
 `.env` is optional and loads automatically. Exported process variables take precedence; `${NAME}` in `.env` remains literal. Restart the server after changing settings. See the complete [configuration reference](configuration.md).
+
+The generated Runner uses the project `.env` and its database/media paths, while enforcing its local network profile. Its private tools and runtime state live outside the project by default: `%LOCALAPPDATA%\Gravewright` on Windows, `$XDG_DATA_HOME/Gravewright` (or `~/.local/share/Gravewright`) on Linux and `~/Library/Application Support/Gravewright` on macOS. Runner `--data-dir` changes state/logs/collected assets; change `.env` to relocate the database or uploads. Back up the configured database, media and `.env` together before upgrades.
 
 | Path | Purpose |
 | --- | --- |
@@ -54,7 +66,9 @@ If you override database/media paths, create their parent directories and ensure
 | Missing table / `no such table` | Run migrations against the intended `GRAVEWRIGHT_DATABASE` |
 | Existing campaigns appear missing | Confirm the database path; root `db.sqlite3` is not the configured default |
 | Startup rejects a setting | Read the named variable; booleans and limits are validated |
-| Startup requests a secret or Redis | Standard server settings with `DJANGO_DEBUG=false` require a persistent secret and Redis URL; the Windows runner has a separate local profile |
+| Startup requests a secret or Redis | Standard server settings with `DJANGO_DEBUG=false` require a persistent secret and Redis URL; generated Runners have a separate local profile |
+| Installer or Runner reports missing prepared tools | Rerun the platform installer from the complete project folder; the generated Runner does not install tools |
+| Linux/macOS script will not open | Run its quoted filename with `bash` in a terminal; see the platform guide for executable permissions and macOS download restrictions |
 | Login works but cookies disappear on local HTTP | Clear `GRAVEWRIGHT_PUBLIC_ORIGIN` and disable `DJANGO_SECURE_COOKIES` for local HTTP; start a fresh browser session |
 | Invalid host or WebSocket rejection | Match the browser URL to `GRAVEWRIGHT_PUBLIC_ORIGIN`, including its port; check allowed hosts and trusted proxy headers in [deployment](deployment.md) |
 | Port 3000 is occupied | Set `GRAVEWRIGHT_PORT` or run `manage.py runserver 127.0.0.1:3001` |

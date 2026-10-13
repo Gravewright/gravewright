@@ -1,6 +1,9 @@
 # Normalize source text while keeping the Windows entry point native to CMD.
 * text=auto
 *.bat text eol=crlf
+*.sh text eol=lf
+*.command text eol=lf
+*.desktop text eol=lf
 
 # Keep copied third-party notices byte-for-byte as supplied upstream.
 LICENSES/** -text
