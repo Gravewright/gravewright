@@ -30,7 +30,7 @@ O instalador pergunta nome da mesa, idioma (`en` ou `pt-BR`), porta local, pasta
 
 Escolher `pt-BR` instala e ativa globalmente o [Translator](https://github.com/Gravewright/translator) oficial assinado. A ausência de tradução ou uma falha de verificação impede a conclusão da instalação; o pacote instalado e verificado é reutilizado offline. As chaves oficiais são adicionadas sem remover as chaves confiáveis existentes.
 
-Ele também oferece o Marketplace padrão do Gravewright uma vez. Aceitar baixa as chaves oficiais, confere o SHA-256 e salva as configurações do catálogo. Recusar registra a escolha; o proprietário ainda pode instalar em Configurações → Marketplace. Apagar `data/.default-marketplace-choice` permite que o instalador ofereça novamente.
+Antes de preparar o Translator, o instalador oferece o Marketplace padrão do Gravewright uma vez por instalação. Aceitar baixa as chaves oficiais, confere o SHA-256 e salva as configurações do catálogo. Catálogos existentes são preservados; arquivos de chaves personalizados nunca são sobrescritos, e chaves oficiais adicionais ficam em uma cópia gerenciada. Recusar mantém o catálogo desativado mesmo quando `pt-BR` instala seu Translator obrigatório e as chaves necessárias. A escolha é independente de outras cópias extraídas, e a inicialização normal do Runner nunca faz essa pergunta. O proprietário ainda pode ativar o catálogo em Configurações → Marketplace.
 
 O banco e as mídias usam `GRAVEWRIGHT_DATABASE` e `GRAVEWRIGHT_MEDIA_ROOT` do `.env` do projeto, com padrões `data/gravewright.sqlite3` e `data/media` dentro do projeto. Estado do Runner, assets coletados e ferramentas continuam em **`%LOCALAPPDATA%\Gravewright`**:
 
@@ -40,6 +40,8 @@ O banco e as mídias usam `GRAVEWRIGHT_DATABASE` e `GRAVEWRIGHT_MEDIA_ROOT` do `
 | `data/staticfiles/` | Assets públicos coletados |
 | `data/logs/runner.log` | Diagnósticos de inicialização e execução |
 | `data/runner.lock` | Impede uso simultâneo dos mesmos dados |
+| `data/marketplace/<hash-da-pasta>/.default-marketplace-choice` | Escolha de catálogo desta instalação; remover permite oferecer novamente quando não há catálogo configurado |
+| `data/marketplace/<hash-da-pasta>/trusted-keys.json` | Chaves públicas oficiais e de outros publicadores preservadas, quando necessário |
 | `runner/` | Ferramentas, caches e ambientes por pasta do código |
 | `runner/prepare.lock` | Impede preparação simultânea de dependências |
 | `runner/frontend/<hash-da-pasta>/state.json` | Estado da preparação do frontend |

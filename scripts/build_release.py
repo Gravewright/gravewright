@@ -142,6 +142,7 @@ def required_files(notes):
         'gravewright/web/jinja2/gravewright_web/inside/update-notification.html',
         'gravewright/web/static/gravewright_web/inside/release-notes.js',
         'gravewright/web/static/gravewright_web/inside/update-notification.js',
+        'gravewright/web/static/gravewright_web/inside/update-progress.js',
         'gravewright/web/static/gravewright_web/inside/update-notification.css',
         'gravewright/modules/static/gravewright_modules/i18n.js',
         'gravewright/modules/locale_overrides/es.json', 'LICENSE', 'LICENSE-EXCEPTION', notes,

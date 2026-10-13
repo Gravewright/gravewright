@@ -1,5 +1,6 @@
 import { mountModal } from '/static/gravewright_table/modal.js';
 import { renderReleaseNotes } from './release-notes.js';
+import { createUpdateProgress } from './update-progress.js';
 function openPackageModal(element) {
   const placeholder = document.createComment('package-modal');
   element.before(placeholder); element.hidden = false;
@@ -427,9 +428,14 @@ function privacySettings(root) {
   };
 }
 function administration(root) {
-  let report, preview, release, automatic = {}, pollTimer;
+  let report, preview, release, automatic = {};
   const language = document.documentElement.lang;
   const ui = (en, pt, es) => language === 'pt-BR' ? pt : language === 'es' ? es : en;
+  const updateProgress = createUpdateProgress(root, {
+    locale: language,
+    requestStatus: async signal => (await http.get('/api/admin/status', {signal, timeoutMs: 10000})).updates,
+    onStatus: value => updates(value),
+  });
   const normalize = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const categories = {module:ui('Modules','Módulos','Módulos'), campaign:ui('Tables','Mesas','Mesas'), snapshot:ui('Backups','Backups','Copias de seguridad'), updates:ui('Updates','Atualizações','Actualizaciones'), settings:ui('Settings','Configurações','Configuración')};
   const actions = {
@@ -461,7 +467,7 @@ function administration(root) {
       [ui('Status','Situação','Estado')]: statuses[value.status] ?? value.status,
       ...value.checkedAt ? {[ui('Last check','Última verificação','Última comprobación')]:new Date(value.checkedAt*1000).toLocaleString(language)} : {},
     });
-    const failed = ['failed', 'rolled_back', 'rollback'].includes(automatic.stage);
+    const failed = ['failed', 'rolled_back'].includes(automatic.stage);
     show(root, '[data-install-panel]', available || !!automatic.busy || failed);
     text(root, '[data-automatic-help]', automatic.supported
       ? ui('The server will restart during installation. Keep a copy of the previous version to help with recovery.','O servidor será reiniciado durante a instalação. Mantenha uma cópia da versão anterior para facilitar a recuperação.','El servidor se reiniciará durante la instalación. Conserva una copia de la versión anterior para facilitar la recuperación.')
@@ -478,7 +484,8 @@ function administration(root) {
     text(root, '[data-automatic-progress]', (stages[automatic.stage] ?? '') + (automatic.stage === 'download' && automatic.total ? ` · ${Math.floor(100 * automatic.received / automatic.total)}%` : ''));
     show(root, '[data-automatic-progress]', !!stages[automatic.stage] && (!!automatic.busy || failed));
     show(root, '[data-container-update]', value.installFormat === 'container');
-    if (automatic.busy && !pollTimer) pollTimer = setTimeout(pollUpdate, 1500);
+    updateProgress.update(value);
+    show(root, '[data-action=view-update-progress]', !!automatic.busy || failed || updateProgress.hasProgress());
 
     const displayed = available ? {name: value.releaseName || value.availableVersionLabel || value.availableVersion,
       notes: value.releaseNotes, url: value.releaseUrl} : installed;
@@ -525,12 +532,6 @@ function administration(root) {
   }
   async function refresh() {
     updates((await http.get('/api/admin/status')).updates);
-  }
-  async function pollUpdate() {
-    pollTimer = null;
-    if (!root.isConnected) return;
-    try { await refresh(); }
-    catch { text(root, '[data-automatic-progress]', ui('Waiting for the server to restart…','Aguardando o servidor reiniciar…','Esperando el reinicio del servidor…'));pollTimer = setTimeout(pollUpdate, 2000); }
   }
   function events() {
     const area = root.querySelector('[data-events]');
@@ -591,10 +592,19 @@ function administration(root) {
     if (action === "refresh") void run(root, async () => { await refresh(); if (!root.querySelector('[data-content=diagnostics]').hidden) await diagnostics(); });
     if (action === "diagnostics") void run(root, diagnostics);
     if (action === 'apply-update') void run(root, async () => {
+      if (updateProgress.isActive()) { updateProgress.open(); return; }
+      updateProgress.start(release.availableVersion);
       try { automatic = await http.post('/api/admin/updates/apply', {version: release.availableVersion, keep_old: root.querySelector("[data-update-keep-old]").checked}, {timeoutMs:null}); }
-      catch (error) { throw Error(ui('Could not start the update. Check for local changes, another update or a changed release.','Não foi possível iniciar a atualização. Verifique alterações locais, outra atualização em curso ou mudança na release.','No se pudo iniciar la actualización. Comprueba cambios locales, otra actualización o cambios en la versión.')); }
+      catch (error) {
+        // A lost/truncated response or server error does not prove rejection:
+        // the supervisor may already have accepted the job.
+        if (!error.status || error.status >= 500) updateProgress.awaitConfirmation();
+        else updateProgress.failStart(ui('Could not start the update. Check for local changes, another update or a changed release.','Não foi possível iniciar a atualização. Verifique alterações locais, outra atualização em curso ou mudança na release.','No se pudo iniciar la actualización. Comprueba cambios locales, otra actualización o cambios en la versión.'));
+        return;
+      }
       updates({...release, automatic});
     });
+    if (action === 'view-update-progress') updateProgress.open();
     if (action === "check-updates") void run(root, async () => updates(await http.post("/api/admin/updates/check", {}, { timeoutMs: null })));
     if (action === "export-diagnostics" && report) {
       const a = document.createElement("a");

@@ -30,7 +30,7 @@ The installer asks for table name, language (`en` or `pt-BR`), local port, modul
 
 Selecting `pt-BR` automatically installs and globally activates the official signed [Translator](https://github.com/Gravewright/translator). A missing or unverifiable translation is an installation error; an installed, verified package is reused offline. The official signing keys are added without removing existing trusted keys.
 
-It also offers the default Gravewright Marketplace once. Accepting downloads the official public keys, verifies their SHA-256 and saves the catalog settings. Declining records the choice; the owner can still install it under Settings → Marketplace. Deleting `data/.default-marketplace-choice` allows the installer to offer it again.
+Before preparing the Translator, the installer offers the default Gravewright Marketplace once per installation. Accepting downloads the official public keys, verifies their SHA-256 and saves the catalog settings. Existing catalogs are preserved; custom key files are never overwritten, and any additional official keys are saved in a managed copy. Declining keeps the catalog disabled even when `pt-BR` installs its required Translator and signing keys. The choice is independent of other extracted copies, and normal Runner startup never asks this question. The owner can still enable the catalog under Settings → Marketplace.
 
 The database and media use `GRAVEWRIGHT_DATABASE` and `GRAVEWRIGHT_MEDIA_ROOT` from the project `.env`, defaulting to `data/gravewright.sqlite3` and `data/media` in the project. Runner state, collected assets and tools remain under **`%LOCALAPPDATA%\Gravewright`**:
 
@@ -40,6 +40,8 @@ The database and media use `GRAVEWRIGHT_DATABASE` and `GRAVEWRIGHT_MEDIA_ROOT` f
 | `data/staticfiles/` | Collected public assets |
 | `data/logs/runner.log` | Startup/runtime diagnostics |
 | `data/runner.lock` | Prevents concurrent use of the same data |
+| `data/marketplace/<source-location-hash>/.default-marketplace-choice` | This installation's saved catalog choice; remove it to offer again when no catalog is configured |
+| `data/marketplace/<source-location-hash>/trusted-keys.json` | Managed official and retained publisher public keys, when needed |
 | `runner/` | Downloaded tools, caches and environments per source location |
 | `runner/prepare.lock` | Prevents simultaneous dependency preparation |
 | `runner/frontend/<source-location-hash>/state.json` | Frontend preparation state |

@@ -145,9 +145,13 @@ need `--dev` for autoreload. No special update mode is required.
 
 Use Administration → Updates → **Install update** on all three
 platforms. The interface controls download, SHA-256 validation, isolated
-locked dependencies, backup, migrations, restart and failure recovery. Alpha
-releases use Development. Active table connections briefly disconnect during
-the swap; the administration page polls for the restarted server.
+locked dependencies, backup, migrations, restart and failure recovery.
+The progress modal shows the confirmed stage and elapsed time. Download
+percentages use received bytes; other stages use an activity indicator.
+Keep the Runner open during installation. Active table connections briefly
+disconnect during the swap; connection checks become less frequent while
+the server is unavailable, and pause when the page is hidden or offline.
+The page reloads after the server confirms that the target version is running.
 
 Releases require a higher version, the supervisor files, and a
 `Gravewright-VERSION-django.zip` asset with a GitHub SHA-256 digest. The default

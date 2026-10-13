@@ -15,6 +15,7 @@ on:
       - 'tests/e2e/django_marketplace.py'
       - 'tests/e2e/modal_flush.py'
       - 'tests/e2e/update_notification.py'
+      - 'tests/e2e/update_progress.py'
       - 'tests/e2e/release_presentation.py'
       - 'tests/e2e/marketplace.py'
       - '.github/workflows/automatic-updates.yml'
@@ -41,7 +42,7 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       - name: Validate permissions, maintenance gate and recovery
-        run: uv run python manage.py test gravewright.modules gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions gravewright.administration.test_update_notifications gravewright.administration.test_release_presentation config.test_release_build --noinput
+        run: uv run python manage.py test gravewright.modules gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions gravewright.administration.test_update_notifications gravewright.administration.test_release_presentation config.test_runner config.test_release_build --noinput
       - name: Exercise Django package activation and migration recovery
         run: uv run python tests/e2e/django_marketplace.py
       - name: Exercise HTTPS upgrade and recovery on this operating system
@@ -69,6 +70,8 @@ jobs:
         run: uv run python tests/e2e/modal_flush.py
       - name: Validate release notifications
         run: uv run python tests/e2e/update_notification.py
+      - name: Validate update progress and restart reconnection
+        run: uv run python tests/e2e/update_progress.py
       - name: Validate installed release names and notes
         run: uv run python tests/e2e/release_presentation.py
       - name: Validate latest package installation catalogs
@@ -80,6 +83,7 @@ jobs:
           name: release-presentation-diagnostics
           path: |
             test-results/update-notification/
+            test-results/update-progress/
             test-results/release-presentation/
             test-results/marketplace/
             test-results/marketplace-install-progress.png

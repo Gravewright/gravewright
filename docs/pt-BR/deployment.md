@@ -150,12 +150,16 @@ habitual. No Linux e macOS, `uv run --locked python main.py` também inicia o
 fluxo de atualização; `--dev` é reservado ao desenvolvimento com autoreload.
 Não é necessário iniciar um modo especial para usar o botão de atualização.
 
-Em Administração → Atualizações, escolha o canal, verifique a versão e clique
+Em Administração → Atualizações, verifique a versão e clique
 em **Instalar atualização**. O download, validação SHA-256,
 preparação de dependências, backup, migrações, reinício e recuperação são
-controlados por essa tela nos três sistemas operacionais. Alpha usa o canal
-Desenvolvimento. Acesso e conexões de mesa são interrompidos durante a troca;
-a tela acompanha o retorno do servidor.
+controlados por essa tela nos três sistemas operacionais. A modal de progresso
+mostra a etapa confirmada e o tempo decorrido. A porcentagem do download usa
+os bytes recebidos; as outras etapas usam um indicador de atividade.
+Mantenha o Runner aberto durante a instalação. As conexões de mesa são
+interrompidas durante a troca; as consultas ficam mais espaçadas enquanto
+o servidor está indisponível e pausam com a página oculta ou sem conexão.
+A página recarrega após o servidor confirmar que a versão esperada está rodando.
 
 O pacote `Gravewright-VERSAO-django.zip` deve ter digest SHA-256 publicado no
 GitHub, versão superior e os arquivos do supervisor. O repositório padrão é

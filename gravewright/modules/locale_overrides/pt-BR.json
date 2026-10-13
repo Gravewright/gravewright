@@ -1608,5 +1608,7 @@
   "Could not check for updates. Try again later.": "Não foi possível verificar as atualizações. Tente novamente mais tarde.",
   "Installed version": "Versão instalada",
   "Available version": "Versão disponível",
-  "View update": "Ver atualização"
+  "View update": "Ver atualização",
+  "The configured marketplace public keys could not be read or are invalid.": "Não foi possível ler as chaves públicas configuradas do Marketplace ou elas são inválidas.",
+  "The official marketplace signing key conflicts with the configured trust store.": "A chave de assinatura oficial do Marketplace conflita com as chaves de confiança configuradas."
 }

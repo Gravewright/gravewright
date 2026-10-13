@@ -351,18 +351,29 @@ def exercise(work, output, *, skip_browser):
 
     wizard_data = work / 'Wizard data'
     wizard_arguments = ['--data-dir', str(wizard_data), '--no-pause']
-    run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure.log',
+    configured = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure.log',
                 label='Saving interactive configuration with the installed Python...',
-                input_text='Mesa São Paulo\npt-BR\n3001\n\ns\nn\ns\nn\n')
+                input_text='Mesa São Paulo\npt-BR\n3001\n\ns\nn\ns\nn\nn\n')
+    marketplace_question = 'Instalar o Gravewright Marketplace padrão? [s/N]:'
+    if marketplace_question not in configured or 'Instalação do marketplace padrão ignorada.' not in configured:
+        raise AssertionError('The installer did not offer the marketplace or respect the Portuguese refusal.')
     configuration = source_env.read_text(encoding='utf-8')
     for expected in ('APP_NAME="Mesa São Paulo"', 'DEFAULT_LOCALE="pt-BR"',
                      'GRAVEWRIGHT_PORT="3001"', 'CAMPAIGN_SNAPSHOTS_ENABLED="false"'):
         if expected not in configuration:
             raise AssertionError(f'The configuration wizard did not save {expected}.')
+    for line in configuration.splitlines():
+        if line.startswith('GRAVEWRIGHT_MARKETPLACE_URL=') and line.partition('=')[2].strip().strip('"'):
+            raise AssertionError('Installing the pt-BR Translator enabled a declined marketplace catalog.')
+    choices = list((wizard_data / 'marketplace').glob('*/.default-marketplace-choice'))
+    if len(choices) != 1 or choices[0].read_text(encoding='utf-8') != 'declined\n':
+        raise AssertionError('The installer did not save this installation\'s declined marketplace choice.')
     repeated_questions = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure-repeat.log',
                                     label='Asking again and keeping saved settings with Enter...', input_text='\n' * 8)
     if 'Nome da mesa [Mesa São Paulo]' not in repeated_questions:
         raise AssertionError('The repeated launch did not ask with the saved default.')
+    if marketplace_question in repeated_questions:
+        raise AssertionError('Repeated configuration asked again after the saved marketplace refusal.')
     if source_env.read_text(encoding='utf-8') != configuration:
         raise AssertionError('Repeated configuration changed the project .env.')
 
@@ -371,7 +382,7 @@ def exercise(work, output, *, skip_browser):
                         label='Running the generated launcher offline without configuration or tool preparation...')
     if 'Verificações do Gravewright Runner concluídas com sucesso.' not in started or any(
         text in started for text in ('[1/7]', 'Table name', 'Nome da mesa', 'npm ci',
-                                    'Configuration saved.', 'Configuração salva.')
+                                    'Configuration saved.', 'Configuração salva.', marketplace_question)
     ):
         raise AssertionError('The generated runner must only execute the prepared application.')
     if str(wizard_data) not in started:

@@ -3,6 +3,7 @@ import { HttpClient } from '/static/gravewright_modules/http-client.js';
 const http = new HttpClient();
 const POLL_MS = 5 * 60 * 1000;
 let root, latest, open = false, lastRequest = 0, pending, controller, timer, generation = 0;
+let updating = false;
 
 function text(selector, value) {
   const element = root?.querySelector(selector);
@@ -42,13 +43,13 @@ function close(restoreFocus = false) {
 
 function schedule() {
   clearTimeout(timer);
-  if (!root || document.hidden) return;
+  if (!root || document.hidden || updating) return;
   const delay = latest?.status === 'checking' ? 5000 : Math.max(1000, POLL_MS - (Date.now() - lastRequest));
   timer = setTimeout(() => void refresh(), delay);
 }
 
 async function refresh() {
-  if (!root || document.hidden || pending) return;
+  if (!root || document.hidden || pending || updating) return;
   if (Date.now() - lastRequest < POLL_MS && latest?.status !== 'checking') return schedule();
   const revision = generation;
   controller = new AbortController();
@@ -117,6 +118,15 @@ window.addEventListener('gravewright:core-update-status', event => {
   render();
   if (latest.status === 'unchecked') void refresh();
   else schedule();
+});
+window.addEventListener('gravewright:core-update-progress', event => {
+  updating = event.detail?.active === true;
+  if (updating) {
+    ++generation;
+    controller?.abort();
+    controller = pending = undefined;
+    clearTimeout(timer);
+  } else schedule();
 });
 new MutationObserver(sync).observe(document.documentElement, {childList: true, subtree: true});
 sync();

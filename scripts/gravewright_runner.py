@@ -229,27 +229,60 @@ def configure_environment(directory, *, prompt=input):
     return True
 
 
+def marketplace_directory(directory):
+    """Keep a project's catalog choice separate from other local installations."""
+    identity = os.path.normcase(str(ROOT.resolve()))
+    return directory / 'marketplace' / hashlib.sha256(identity.encode('utf-8')).hexdigest()
+
+
+def official_marketplace_keys(directory, raw, configured=''):
+    """Add the pinned keys without overwriting a custom trust-store file."""
+    official = json.loads(raw)
+    keys = {}
+    if configured:
+        key_path = Path(configured).expanduser()
+        if not key_path.is_absolute():
+            key_path = ROOT / key_path
+        try:
+            keys = json.loads(key_path.read_text(encoding='utf-8'))
+            if (not isinstance(keys, dict)
+                    or any(not isinstance(name, str) or not name
+                           or not isinstance(value, str)
+                           or len(base64.b64decode(value, validate=True)) != 32
+                           for name, value in keys.items())):
+                raise ValueError
+        except (OSError, UnicodeError, ValueError, TypeError) as error:
+            raise RunnerError('The configured marketplace public keys could not be read or are invalid.') from error
+        if any(name in keys and keys[name] != value for name, value in official.items()):
+            raise RunnerError('The official marketplace signing key conflicts with the configured trust store.')
+        if all(keys.get(name) == value for name, value in official.items()):
+            return key_path
+    key_path = marketplace_directory(directory) / 'trusted-keys.json'
+    _write_private(key_path, json.dumps({**keys, **official}).encode('utf-8') if configured else raw)
+    return key_path
+
+
 def install_default_marketplace(directory, download=None):
     """Install the pinned official key file and persist the catalog settings."""
     raw = (download or _download_default_keys)()
-    key_path = directory / 'marketplace' / 'trusted-keys.json'
-    _write_private(key_path, raw)
+    key_path = official_marketplace_keys(
+        directory, raw, os.environ.get('GRAVEWRIGHT_MARKETPLACE_KEYS_FILE', '').strip(),
+    )
     values = {
         'GRAVEWRIGHT_MARKETPLACE_URL': DEFAULT_MARKETPLACE_URL,
         'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': key_path.as_posix(),
     }
     _update_dotenv(ROOT / '.env', values)
     os.environ.update(values)
-    _write_private(directory / DEFAULT_MARKETPLACE_CHOICE, b'installed\n')
+    _write_private(marketplace_directory(directory) / DEFAULT_MARKETPLACE_CHOICE, b'installed\n')
     return {**values, 'keyPath': str(key_path)}
 
 
 def offer_default_marketplace(directory, prompt=input, download=None):
     """Offer the official signed catalog once and persist the owner's choice."""
     catalog = os.environ.get('GRAVEWRIGHT_MARKETPLACE_URL', '').strip()
-    keyfile = os.environ.get('GRAVEWRIGHT_MARKETPLACE_KEYS_FILE', '').strip()
-    marker = directory / DEFAULT_MARKETPLACE_CHOICE
-    if catalog or keyfile or marker.exists():
+    marker = marketplace_directory(directory) / DEFAULT_MARKETPLACE_CHOICE
+    if catalog or marker.exists():
         return False
     try:
         answer = prompt(
@@ -456,7 +489,7 @@ def ensure_portuguese_translation(directory):
         return
     from django.db import transaction
     from gravewright.modules.models import Package
-    from gravewright.modules.packages import ModulePackages, ModuleFailure, MAX_ARCHIVE, compatible, host, trusted_keys
+    from gravewright.modules.packages import ModulePackages, ModuleFailure, MAX_ARCHIVE, compatible, host
     from gravewright.modules.views import download
     from gravewright.administration.release_metadata import version_key
 
@@ -467,11 +500,9 @@ def ensure_portuguese_translation(directory):
             engine.verify_installed(row)
         else:
             print(tr('Installing the official Translator for pt-BR...'), flush=True)
-            official = json.loads(_download_default_keys())
-            keys = trusted_keys() if settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE else {}
-            if any(key in keys and keys[key] != value for key, value in official.items()):
-                raise RunnerError('The official Translator signing key conflicts with the configured trust store.')
-            keys.update(official)
+            raw_keys = _download_default_keys()
+            official = json.loads(raw_keys)
+            key_path = official_marketplace_keys(directory, raw_keys, settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE)
             engine = ModulePackages(engine.directory, official)
             records = json.loads(download(DEFAULT_MARKETPLACE_URL, 2 * 1024 * 1024))
             if not isinstance(records, list) or len(records) > 5000:
@@ -491,11 +522,7 @@ def ensure_portuguese_translation(directory):
             row = Package.objects.get(module_id=manifest['id'], version=manifest['version'])
             if 'pt-BR' not in row.locale_catalogs:
                 raise RunnerError('The official Translator does not contain pt-BR catalogs.')
-            key_path = directory / 'marketplace/trusted-keys.json'
-            _write_private(key_path, json.dumps(keys).encode('utf-8'))
             marketplace = {'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': key_path.as_posix()}
-            if not settings.GRAVEWRIGHT_MARKETPLACE_URL:
-                marketplace['GRAVEWRIGHT_MARKETPLACE_URL'] = DEFAULT_MARKETPLACE_URL
             _update_dotenv(ROOT / '.env', marketplace)
             os.environ.update(marketplace)
             for key, value in marketplace.items():
@@ -627,10 +654,10 @@ def main(argv=None):
             if not args.check and args.configure_default_marketplace:
                 configure_environment(directory)
                 port = prepare_environment(directory, args.port)
+                offer_default_marketplace(directory)
                 prepare_application(directory)
                 from gravewright.administration.models import HostSettings
                 HostSettings.objects.update_or_create(pk=1, defaults={'default_locale': os.environ['DEFAULT_LOCALE']})
-                offer_default_marketplace(directory)
                 return 0
             if not args.check:
                 check_port(port)
