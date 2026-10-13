@@ -67,6 +67,36 @@ try:
             page.keyboard.press('Tab')
             expect(first).to_be_focused()
 
+        # Scene and journal forms are cloned from template content, whose inert
+        # owner document has neither a body nor a browsing context until adoption.
+        page.locator('#background').focus()
+        page.evaluate('''() => {
+          const template=document.createElement('template');
+          template.innerHTML='<form id="template-form"><input><button type="button" data-child>Close</button></form>';
+          const form=template.content.firstElementChild.cloneNode(true);
+          if(form.ownerDocument.body || form.ownerDocument.defaultView)throw Error('Expected an inert template document');
+          window.templateClosed=0;
+          form.querySelector('[data-child]').onclick=()=>form.close();
+          form.addEventListener('close',()=>window.templateClosed++);
+          window.templateForm=form;
+          if(reviewMountModal(form)!==form || form.ownerDocument!==document)throw Error('Modal must adopt the original form');
+        }''')
+        template_form = page.locator('#template-form')
+        expect(template_form).to_be_visible()
+        expect(template_form.locator('input')).to_be_focused()
+        assert page.locator('#background').evaluate('(el)=>el.inert')
+        assert_focus_trap(template_form)
+        template_form.locator('[data-child]').click()
+        expect(template_form).to_have_count(0)
+        assert page.evaluate('templateClosed') == 1
+        expect(page.locator('#background')).to_be_focused()
+        assert_restored()
+        page.evaluate('reviewMountModal(window.templateForm)')
+        page.keyboard.press('Escape')
+        expect(template_form).to_have_count(0)
+        assert page.evaluate('templateClosed') == 2
+        assert_restored()
+
         # Real button clicks capture the opener before the child is mounted.
         page.locator('#background').focus()
         page.evaluate("openReview('parent',false,true)")

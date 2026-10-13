@@ -10,7 +10,9 @@ function connectedPrior(origin) {
 
 export function mountModal(modal, {canClose = () => true, nested = false} = {}) {
   if (modal.localName === 'dialog') throw new TypeError('Use a section for project modals.');
-  const document = modal.ownerDocument;
+  // Template clones belong to an inert document until adopted by the page.
+  const document = modal.ownerDocument.defaultView ? modal.ownerDocument : globalThis.document;
+  if (modal.ownerDocument !== document) document.adoptNode(modal);
   // Keep immutable ancestry when an already closed element is mounted again.
   const prior = origins.get(active), inherited = prior;
   if (!nested) active?.close();
