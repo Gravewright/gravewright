@@ -12,6 +12,7 @@ import subprocess
 import sys
 import time
 import tomllib
+import traceback
 import uuid
 from urllib.request import Request, urlopen, build_opener, ProxyHandler
 import zipfile
@@ -23,8 +24,23 @@ def write(path, data):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + '.tmp-' + uuid.uuid4().hex)
-    temporary.write_text(json.dumps(data), encoding='utf-8')
-    temporary.replace(path)
+    try:
+        temporary.write_text(json.dumps(data), encoding='utf-8')
+        deadline = time.monotonic() + 2
+        while True:
+            try:
+                temporary.replace(path)
+                break
+            except OSError as error:
+                # Windows readers can briefly deny atomic replacement. Keep
+                # the previous complete state until the reader releases it.
+                remaining = deadline - time.monotonic()
+                if (os.name != 'nt' or getattr(error, 'winerror', None) not in (5, 32)
+                        or remaining <= 0):
+                    raise
+                time.sleep(min(.025, remaining))
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def read(path, default=None):
@@ -358,6 +374,14 @@ class Supervisor:
                 # A retained temporary copy must not undo a committed update.
                 pass
         except Exception as error:
+            # Recovery can fail too. Preserve the initiating failure before a
+            # second exception or an interrupted restart hides its context.
+            try:
+                with open(self.state / 'update.log', 'a', encoding='utf-8') as log:
+                    log.write(f'Update failed: {type(error).__name__}: {error}\n')
+                    traceback.print_exc(file=log)
+            except OSError:
+                pass  # Unavailable diagnostic storage must not prevent recovery.
             if (self.state / 'maintenance').exists():
                 self.stop()
                 if transaction_started:
@@ -368,8 +392,6 @@ class Supervisor:
             if created_old:
                 remove_work_tree(old_copy, self.origin.parent)
             self.notify('rolled_back' if transaction_started else 'failed', error=type(error).__name__)
-            with open(self.state / 'update.log', 'a') as log:
-                log.write(f'Update failed: {type(error).__name__}: {error}\n')
         finally:
             # Keep maintenance if recovery itself failed; the journal is retried at next start.
             if not (self.state / 'transaction.json').exists():
@@ -435,6 +457,12 @@ class Supervisor:
             except OSError:
                 pass
         except Exception as error:
+            try:
+                with open(self.state / 'update.log', 'a', encoding='utf-8') as log:
+                    log.write(f'Django activation failed: {type(error).__name__}: {error}\n')
+                    traceback.print_exc(file=log)
+            except OSError:
+                pass
             if (self.state / 'maintenance').exists():
                 self.stop()
                 if journal_started:
@@ -443,8 +471,6 @@ class Supervisor:
                 self.start(previous)
                 self.ready()
             self.notify('rolled_back' if journal_started else 'failed', kind='django', error=type(error).__name__)
-            with open(self.state / 'update.log', 'a', encoding='utf-8') as log:
-                log.write(f'Django activation failed: {type(error).__name__}: {error}\n')
         finally:
             if not (self.state / 'transaction.json').exists():
                 (self.state / 'maintenance').unlink(missing_ok=True)

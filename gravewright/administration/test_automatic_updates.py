@@ -4,7 +4,11 @@ import os
 from pathlib import Path
 import sqlite3
 import tempfile
+import threading
+import time
+from types import SimpleNamespace
 import zipfile
+from unittest import skipUnless
 from unittest.mock import patch
 from django.test import SimpleTestCase, TestCase
 from gravewright.accounts.models import User
@@ -211,6 +215,165 @@ class ArchiveTests(SimpleTestCase):
             self.assertFalse((supervisor.state / 'transaction.json').exists())
             self.assertEqual((supervisor.origin / 'Install Windows.bat').read_text(), 'original installer')
             self.assertFalse((supervisor.origin / 'new-file.txt').exists())
+
+
+class StateWriteTests(SimpleTestCase):
+    @skipUnless(os.name == 'nt', 'Requires native Windows file-sharing semantics')
+    def test_reader_releases_state_without_losing_atomic_replacement(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'progress.json'
+            previous = {'stage': 'dependencies'}
+            incoming = {'stage': 'backup', 'detail': 'Atualização pronta'}
+            write(target, previous)
+            locked, collision = threading.Event(), threading.Event()
+            failures, blocked = [], []
+            original_replace = Path.replace
+
+            def reader():
+                try:
+                    with target.open('rb') as handle:
+                        locked.set()
+                        self.assertTrue(collision.wait(2), 'No replacement was attempted with the reader open')
+                        self.assertEqual(json.load(handle), previous)
+                        self.assertEqual(read(target), previous)
+                        time.sleep(.075)
+                except BaseException as error:
+                    failures.append(error)
+
+            def replace(source, destination):
+                try:
+                    return original_replace(source, destination)
+                except PermissionError as error:
+                    blocked.append(error.winerror)
+                    collision.set()
+                    raise
+
+            thread = threading.Thread(target=reader)
+            thread.start()
+            try:
+                self.assertTrue(locked.wait(2))
+                with patch.object(Path, 'replace', replace):
+                    write(target, incoming)
+            finally:
+                thread.join(timeout=3)
+            self.assertFalse(thread.is_alive())
+            self.assertEqual(failures, [])
+            self.assertTrue(blocked, 'The test did not exercise a real Windows sharing conflict')
+            self.assertTrue(set(blocked) <= {5, 32})
+            self.assertEqual(read(target), incoming)
+            self.assertEqual(list(target.parent.glob('progress.json.tmp-*')), [])
+
+    def test_permanent_windows_denial_stops_at_deadline_and_cleans_owned_temporary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / 'progress.json'
+            write(target, {'stage': 'dependencies'})
+            original = target.read_bytes()
+            error = PermissionError('Permanent access denial')
+            error.winerror = 5
+            with (patch('scripts.update_supervisor.os', SimpleNamespace(name='nt')),
+                  patch('scripts.update_supervisor.time.monotonic', side_effect=[100, 100.5, 101, 101.5, 102]),
+                  patch('scripts.update_supervisor.time.sleep') as sleep,
+                  patch.object(Path, 'replace', side_effect=error) as replace):
+                with self.assertRaisesRegex(PermissionError, 'Permanent access denial'):
+                    write(target, {'stage': 'backup'})
+            self.assertEqual(replace.call_count, 4)
+            self.assertEqual(sleep.call_count, 3)
+            self.assertTrue(all(call.args[0] <= .025 for call in sleep.call_args_list))
+            self.assertEqual(target.read_bytes(), original)
+            self.assertEqual(list(target.parent.glob('progress.json.tmp-*')), [])
+
+    def test_non_sharing_errors_fail_immediately_and_preserve_previous_state(self):
+        # Windows disk-full errors and non-Windows permission errors retain
+        # their immediate failure behavior.
+        for platform, code in (('nt', 112), ('posix', 5)):
+            with self.subTest(platform=platform, code=code), tempfile.TemporaryDirectory() as directory:
+                target = Path(directory) / 'progress.json'
+                write(target, {'stage': 'dependencies'})
+                original = target.read_bytes()
+                error = OSError('Not a file-sharing conflict')
+                error.winerror = code
+                with (patch('scripts.update_supervisor.os', SimpleNamespace(name=platform)),
+                      patch('scripts.update_supervisor.time.sleep') as sleep,
+                      patch.object(Path, 'replace', side_effect=error) as replace):
+                    with self.assertRaisesRegex(OSError, 'Not a file-sharing conflict'):
+                        write(target, {'stage': 'backup'})
+                replace.assert_called_once()
+                sleep.assert_not_called()
+                self.assertEqual(target.read_bytes(), original)
+                self.assertEqual(list(target.parent.glob('progress.json.tmp-*')), [])
+
+
+class FailureDiagnosticsTests(SimpleTestCase):
+    def supervisor(self, root):
+        origin = root / 'application'
+        origin.mkdir()
+        (origin / 'pyproject.toml').write_text('[project]\nversion = "0.2.1"\n', encoding='utf-8')
+        database = root / 'database.sqlite3'
+        with closing(sqlite3.connect(database)) as connection, connection:
+            connection.execute('create table fixture(value text)')
+        # Every path and process environment belongs to this isolated fixture.
+        with patch.dict(os.environ, {}, clear=True):
+            return Supervisor(origin, root / 'state', database, root / 'media', '127.0.0.1', 3000)
+
+    def fail_migration(self, *args, **kwargs):
+        if 'prepare_django_packages' in args:
+            write(args[-1], {})
+        if 'migrate' in args:
+            raise ValueError('Falha original: migração inválida')
+
+    def assert_original_failure(self, supervisor, prefix):
+        log = (supervisor.state / 'update.log').read_text(encoding='utf-8')
+        self.assertIn(f'{prefix}: ValueError: Falha original: migração inválida', log)
+        self.assertIn('Traceback (most recent call last):', log)
+        self.assertIn('fail_migration', log)
+
+    def test_source_failure_is_logged_even_when_backup_recovery_fails(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            supervisor = self.supervisor(root)
+            candidate = root / 'candidate'
+            candidate.mkdir()
+            (candidate / 'pyproject.toml').write_text('[project]\nversion = "0.2.2"\n', encoding='utf-8')
+            with (patch('scripts.update_supervisor.download'),
+                  patch('scripts.update_supervisor.extract', return_value=candidate),
+                  patch('scripts.update_supervisor.shutil.which', return_value='uv'),
+                  patch.object(supervisor, 'command', side_effect=self.fail_migration),
+                  patch.object(supervisor, 'stop'),
+                  patch.object(supervisor, 'recover', side_effect=OSError('Backup recovery unavailable'))):
+                with self.assertRaisesRegex(OSError, 'Backup recovery unavailable'):
+                    supervisor.apply({'version': '0.2.2', 'artifact': {'size': 0}})
+            self.assert_original_failure(supervisor, 'Update failed')
+            # Leave the journal for a later recovery attempt, as before.
+            self.assertTrue((supervisor.state / 'transaction.json').exists())
+            self.assertTrue((supervisor.state / 'maintenance').exists())
+
+    def test_django_failure_is_logged_even_when_previous_server_cannot_restart(self):
+        with tempfile.TemporaryDirectory() as directory:
+            supervisor = self.supervisor(Path(directory))
+            supervisor.env['GW_UV'] = 'uv'
+            with (patch.object(supervisor, 'command', side_effect=self.fail_migration),
+                  patch.object(supervisor, 'stop'),
+                  patch.object(supervisor, 'start'),
+                  patch.object(supervisor, 'ready', side_effect=RuntimeError('Previous server unavailable'))):
+                with self.assertRaisesRegex(RuntimeError, 'Previous server unavailable'):
+                    supervisor.apply_django({'id': 'test.fixture', 'version': '1.0.0', 'enabled': True})
+            self.assert_original_failure(supervisor, 'Django activation failed')
+            self.assertEqual(read(supervisor.state / 'progress.json')['stage'], 'rolled_back')
+
+    def test_unavailable_diagnostic_storage_does_not_prevent_recovery(self):
+        with tempfile.TemporaryDirectory() as directory:
+            supervisor = self.supervisor(Path(directory))
+            supervisor.env['GW_UV'] = 'uv'
+            # A directory at the log path causes a real OSError on all platforms.
+            (supervisor.state / 'update.log').mkdir()
+            with (patch.object(supervisor, 'command', side_effect=self.fail_migration),
+                  patch.object(supervisor, 'stop'),
+                  patch.object(supervisor, 'start'),
+                  patch.object(supervisor, 'ready')):
+                supervisor.apply_django({'id': 'test.fixture', 'version': '1.0.0', 'enabled': True})
+            self.assertEqual(read(supervisor.state / 'progress.json')['stage'], 'rolled_back')
+            self.assertFalse((supervisor.state / 'transaction.json').exists())
+            self.assertFalse((supervisor.state / 'maintenance').exists())
 
 
 class RequestTests(TestCase):
