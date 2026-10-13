@@ -289,7 +289,7 @@ class MacPrivateManifestTests(unittest.TestCase):
         self.mac = load_mac_helper()
         self.directory = tempfile.TemporaryDirectory(prefix='mac build fixture ç ')
         self.addCleanup(self.directory.cleanup)
-        self.root = Path(self.directory.name)
+        self.root = Path(self.directory.name).resolve()
         for name in ('bin/openssl', 'lib/libssl.a', 'lib/libcrypto.a',
                      'include/openssl/opensslv.h', 'share/doc/openssl/LICENSE.txt'):
             path = self.root / name
