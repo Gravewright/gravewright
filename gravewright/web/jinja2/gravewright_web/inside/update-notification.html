@@ -1,0 +1,22 @@
+<div class="gw-update-notification" data-update-notification
+     data-label-title="{{ tr('VTT updates') }}"
+     data-label-available="{{ tr('Update available') }}"
+     data-label-checking="{{ tr('Checking for updates…') }}"
+     data-label-new="{{ tr('A new version of Gravewright is available.') }}"
+     data-label-current="{{ tr('Gravewright is up to date.') }}"
+     data-label-ahead="{{ tr('No newer release is available in your channel.') }}"
+     data-label-failed="{{ tr('Could not check for updates. Try again later.') }}">
+  <button class="gw-update-notification__trigger" type="button" data-update-toggle
+          aria-label="{{ tr('VTT updates') }}" title="{{ tr('VTT updates') }}"
+          aria-expanded="false" aria-controls="vtt-update-panel">
+    {{ icon('Bell') }}<span class="gw-update-notification__badge" aria-hidden="true" hidden></span>
+  </button>
+  <span class="sr-only" data-update-announcement role="status" aria-live="polite"></span>
+  <section id="vtt-update-panel" class="gw-update-notification__panel" aria-labelledby="vtt-update-title" hidden>
+    <header class="gw-update-notification__header"><h2 id="vtt-update-title">{{ tr('VTT updates') }}</h2><button class="gw-update-notification__close" type="button" data-update-close aria-label="{{ campaigns.close }}">{{ icon('X') }}</button></header>
+    <p data-update-message>{{ tr('Checking for updates…') }}</p>
+    <p data-update-current-row hidden>{{ tr('Installed version') }} <strong data-update-current></strong></p>
+    <p class="gw-update-notification__version" data-update-available-row hidden>{{ tr('Available version') }} <strong data-update-available></strong></p>
+    <a data-update-action href="/inside?section=administration&amp;tab=updates" data-on:click__prevent="@get('/inside?section=administration&amp;tab=updates', {retry:'never'})" hidden>{{ icon('DownloadSimple') }}{{ tr('View update') }}</a>
+  </section>
+</div>

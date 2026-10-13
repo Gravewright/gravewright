@@ -90,6 +90,8 @@ Disponíveis no objeto global `gravewright`, não na API restrita a domínios do
 
 Permissões de proprietário e gerenciamento da campanha continuam verificadas no servidor. Os métodos usam cookies de sessão e obtêm token CSRF antes de escrever. Não há autenticação por chave de API nessa interface. Views e testes dos apps definem os payloads; não coloque credenciais no código de módulos.
 
+O cabeçalho da biblioteca usa `POST /api/admin/updates/notification`, exclusivo do proprietário, com JSON vazio e o token CSRF normal. A resposta compacta inclui `status`, `available`, versões instalada/disponível e seus rótulos, `channel`, `checkedAt` e a URL interna de Atualizações. Ela reaproveita o cache de consulta por 24 horas; consultas simultâneas com cache expirado recebem `checking` enquanto uma requisição atualiza os metadados. A rota não inicia instalação nem expõe artefatos da release ou erros internos.
+
 ### Eventos de domínio
 
 Use `api.events.on(name, handler)`, que retorna uma função para cancelar a assinatura. Assinaturas são removidas junto com o ciclo de vida da API. Nomes suportados:

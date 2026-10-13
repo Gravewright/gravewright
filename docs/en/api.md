@@ -90,6 +90,8 @@ These are available on the global `gravewright` object, not on the module's doma
 
 Owner-only operations and campaign management remain checked on the server. These methods use session cookies and acquire a CSRF token before writes. They do not provide an API-key authentication scheme. Account/admin payloads are defined by the corresponding app views and tests; never place credentials in module source.
 
+The Inside header uses owner-only `POST /api/admin/updates/notification` with an empty JSON body and the normal CSRF token. Its compact response includes `status`, `available`, installed/available versions and labels, `channel`, `checkedAt` and the internal Updates URL. It reuses the 24-hour discovery cache; concurrent stale checks return `checking` while one request refreshes metadata. It does not start installation or expose release artifacts or internal errors.
+
 ### Domain events
 
 Subscribe using `api.events.on(name, handler)`, which returns an unsubscribe function. Event subscriptions are disposed with their API lifetime. Supported names:

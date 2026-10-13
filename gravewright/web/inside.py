@@ -59,6 +59,7 @@ def inside_response(request, *, section='campaigns', dialog='', campaign=None, f
         'privacy_policy': host_preferences()['privacy'] if section == 'privacy' else {},
         **TEXT, 'auth': AUTH_TEXT, 'user': request.user, 'owner': request.user.role == 'owner',
         'section': section, 'rows': rows, 'visible_rows': visible, 'rulesets': rulesets,
+        'administration_tab': request.GET.get('tab', 'campaigns') if request.GET.get('tab') in {'campaigns', 'diagnostics', 'updates'} else 'campaigns',
         'dialog_rulesets': dialog_rulesets,
         'system_titles': {r['systemId']: r['title'] for r in rulesets},
         'search': query, 'system_filter': system,

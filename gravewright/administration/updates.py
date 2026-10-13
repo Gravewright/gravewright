@@ -25,6 +25,7 @@ from gravewright.version import release_version
 MAX_RELEASE_METADATA_BYTES = 2 * 1024 * 1024
 CACHE_PATH = None
 CACHE_TTL_SECONDS = 24 * 60 * 60
+AUTOMATIC_CHECK_LEASE_SECONDS = 5 * 60
 _CACHE_WRITE_LOCK = threading.Lock()
 
 
@@ -70,6 +71,7 @@ class CoreUpdateService:
         self.fetcher = fetcher
         self.cache_path = cache_path
         self.current_version = _clean_version(current_version or release_version())
+        self._host_channel = channel is None and current_version is None
         if channel is None:
             if current_version is not None:
                 channel = _channel(_clean_version(current_version))
@@ -78,20 +80,23 @@ class CoreUpdateService:
 
                 channel = HostSettings.objects.get_or_create(pk=1)[0].channel
         self.channel = channel if channel in {"stable", "testing", "dev"} else "stable"
+        self._automatic_claim = None
 
-    def status(self) -> dict:
-        current = _clean_version(self.current_version)
-        channel = self.channel
+    def _read(self) -> dict:
         try:
             from .models import HostSettings
 
-            cached = (
+            return (
                 HostSettings.objects.get_or_create(pk=1)[0].update_status
                 if self.cache_path is None
                 else json.loads(self.cache_path.read_text(encoding="utf-8"))
             )
         except OSError, ValueError:
-            cached = {}
+            return {}
+
+    def _cached_status(self, cached) -> dict:
+        current = _clean_version(self.current_version)
+        channel = self.channel
         valid = (
             isinstance(cached, dict)
             and cached.get("currentVersion") == current
@@ -105,8 +110,102 @@ class CoreUpdateService:
         )
         if not valid:
             cached = {"status": "unchecked", "channel": channel}
+        else:
+            cached = {key: value for key, value in cached.items() if key != "_automaticCheck"}
         return {"currentVersion": current, "installFormat": _install_format(), **cached,
                 "currentVersionLabel": version_label(current)}
+
+    def status(self) -> dict:
+        return self._cached_status(self._read())
+
+    def _automatic_context(self) -> dict:
+        return {
+            "currentVersion": self.current_version,
+            "channel": self.channel,
+            "repository": self.repository,
+            "installFormat": _install_format(),
+        }
+
+    def _claim_automatic_check(self, cached) -> tuple[dict, dict | None]:
+        """Return cached state or a short lease, preserving previous metadata."""
+        result = self._cached_status(cached)
+        if result["status"] != "unchecked":
+            return result, None
+        context = self._automatic_context()
+        now = int(time.time())
+        marker = cached.get("_automaticCheck") if isinstance(cached, dict) else None
+        if (isinstance(marker, dict)
+                and all(marker.get(key) == value for key, value in context.items())
+                and isinstance(marker.get("startedAt"), int)
+                and now - AUTOMATIC_CHECK_LEASE_SECONDS < marker["startedAt"] <= now):
+            return {**result, "status": "checking"}, None
+        claimed = dict(cached) if isinstance(cached, dict) else {}
+        claimed["_automaticCheck"] = {**context, "startedAt": now, "token": uuid.uuid4().hex}
+        return result, claimed
+
+    def check_if_stale(self) -> dict:
+        """Coalesce automatic checks across owners, tabs and server processes.
+
+        A conditional database update claims discovery without holding a
+        transaction during the network request. A crashed request leaves an
+        expiring lease; manual refreshes and channel changes supersede its
+        eventual cache write.
+        """
+        if self.cache_path is None:
+            from .models import HostSettings
+
+            for _ in range(3):
+                row, _ = HostSettings.objects.get_or_create(pk=1)
+                if self._host_channel:
+                    self.channel = row.channel if row.channel in {"stable", "testing", "dev"} else "stable"
+                result, claimed = self._claim_automatic_check(row.update_status)
+                if claimed is None:
+                    return result
+                if HostSettings.objects.filter(
+                    pk=1, channel=row.channel, update_status=row.update_status,
+                ).update(update_status=claimed):
+                    self._automatic_claim = claimed
+                    break
+            else:
+                return self._current_status()
+        else:
+            with _CACHE_WRITE_LOCK:
+                result, claimed = self._claim_automatic_check(self._read())
+                if claimed is None:
+                    return result
+                self._write_file(claimed)
+                self._automatic_claim = claimed
+        try:
+            return self.check()
+        finally:
+            self._automatic_claim = None
+
+    def _current_status(self) -> dict:
+        """Observe the current host channel after another request wins a race."""
+        if self._host_channel and self.cache_path is None:
+            from .models import HostSettings
+
+            row, _ = HostSettings.objects.get_or_create(pk=1)
+            self.channel = row.channel if row.channel in {"stable", "testing", "dev"} else "stable"
+            result, _ = self._claim_automatic_check(row.update_status)
+            return result
+        return self.status()
+
+    def notification(self) -> dict:
+        """Expose only the safe fields needed by the owner's release alert."""
+        result = self.check_if_stale()
+        available = result["status"] == "available"
+        return {
+            "status": result["status"],
+            "available": available,
+            "currentVersion": self.current_version,
+            "currentVersionLabel": version_label(self.current_version),
+            "availableVersion": result.get("availableVersion") if available else None,
+            "availableVersionLabel": result.get("availableVersionLabel") if available else None,
+            "channel": self.channel,
+            "checkedAt": result.get("checkedAt"),
+            "url": "/inside?section=administration&tab=updates",
+        }
 
     def check(self) -> dict:
         current = _clean_version(self.current_version)
@@ -217,8 +316,7 @@ class CoreUpdateService:
                 "errorKey": str(exc),
             }
         result['releases'] = history
-        self._write(result)
-        return result
+        return result if self._write(result) else self._current_status()
 
     def _asset(self, release: dict, version: str) -> dict | None:
         expected = f"Gravewright-{version}-django.zip".lower()
@@ -267,20 +365,33 @@ class CoreUpdateService:
             }
         return None
 
-    def _write(self, result: dict) -> None:
+    def _write(self, result: dict) -> bool:
         if self.cache_path is None:
             from .models import HostSettings
 
+            if self._automatic_claim is not None:
+                rows = HostSettings.objects.filter(
+                    pk=1, update_status=self._automatic_claim,
+                )
+                if self._host_channel:
+                    rows = rows.filter(channel=self.channel)
+                return bool(rows.update(update_status=result))
             HostSettings.objects.update_or_create(
                 pk=1, defaults={"update_status": result}
             )
-            return
+            return True
         with _CACHE_WRITE_LOCK:
-            self.cache_path.parent.mkdir(parents=True, exist_ok=True)
-            temporary = self.cache_path.with_suffix(
-                f".tmp-{os.getpid()}-{uuid.uuid4().hex}"
-            )
-            temporary.write_text(
-                json.dumps(result, ensure_ascii=False), encoding="utf-8"
-            )
-            temporary.replace(self.cache_path)
+            if self._automatic_claim is not None and self._read() != self._automatic_claim:
+                return False
+            self._write_file(result)
+            return True
+
+    def _write_file(self, result: dict) -> None:
+        self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = self.cache_path.with_suffix(
+            f".tmp-{os.getpid()}-{uuid.uuid4().hex}"
+        )
+        temporary.write_text(
+            json.dumps(result, ensure_ascii=False), encoding="utf-8"
+        )
+        temporary.replace(self.cache_path)

@@ -277,5 +277,15 @@
   "dF: −1, 0, +1": "dF: −1, 0, +1",
   "Actions": "Acciones",
   "Delete this folder? Its items and subfolders will move to the directory.": "¿Eliminar esta carpeta? Sus elementos y subcarpetas se moverán al directorio.",
-  "Delete this item?": "¿Eliminar este elemento?"
+  "Delete this item?": "¿Eliminar este elemento?",
+  "VTT updates": "Actualizaciones del VTT",
+  "Update available": "Actualización disponible",
+  "Checking for updates…": "Buscando actualizaciones…",
+  "A new version of Gravewright is available.": "Hay una nueva versión de Gravewright disponible.",
+  "Gravewright is up to date.": "Gravewright está actualizado.",
+  "No newer release is available in your channel.": "No hay una versión más reciente disponible en tu canal.",
+  "Could not check for updates. Try again later.": "No se pudieron buscar actualizaciones. Inténtalo de nuevo más tarde.",
+  "Installed version": "Versión instalada",
+  "Available version": "Versión disponible",
+  "View update": "Ver actualización"
 }

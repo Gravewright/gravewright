@@ -76,6 +76,8 @@ def diagnostics(request):
 @require_POST
 @owner
 def updates(request, action):
+    if action == "notification":
+        return JsonResponse(CoreUpdateService().notification(), headers={"Cache-Control": "no-store"})
     if action == "apply":
         data = read_json(request)
         if (set(data) - {"version", "keep_old"} or not isinstance(data.get("version"), str)

@@ -1,0 +1,189 @@
+.gw-update-notification {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.gw-update-notification__trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--fib-8);
+  height: var(--fib-8);
+  padding: 0;
+  border: var(--fib-1) solid transparent;
+  border-radius: var(--fib-4);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gw-update-notification__trigger > svg {
+  width: var(--fib-7);
+  height: var(--fib-7);
+  flex: 0 0 auto;
+}
+
+.gw-update-notification__trigger:hover,
+.gw-update-notification__trigger[aria-expanded="true"] {
+  border-color: var(--border);
+  background: var(--surface-raised);
+  color: var(--text-bright);
+}
+
+.gw-update-notification__trigger:focus-visible,
+.gw-update-notification__close:focus-visible,
+.gw-update-notification__panel a:focus-visible {
+  outline: var(--fib-2) solid var(--accent);
+  outline-offset: var(--fib-3);
+}
+
+.gw-update-notification--available .gw-update-notification__trigger {
+  color: var(--accent);
+}
+
+.gw-update-notification--available .gw-update-notification__trigger:hover,
+.gw-update-notification--available .gw-update-notification__trigger[aria-expanded="true"] {
+  border-color: var(--border-accent);
+  background: var(--accent-glow);
+  color: var(--accent-bright);
+}
+
+.gw-update-notification__badge {
+  position: absolute;
+  top: var(--fib-4);
+  right: var(--fib-4);
+  box-sizing: border-box;
+  width: var(--fib-5);
+  height: var(--fib-5);
+  border: var(--fib-2) solid var(--bg);
+  border-radius: 50%;
+  background: var(--accent-bright);
+  pointer-events: none;
+}
+
+.gw-update-notification__panel {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + var(--fib-5));
+  right: 0;
+  display: grid;
+  gap: var(--fib-6);
+  box-sizing: border-box;
+  width: min(var(--size-320), calc(100vw - var(--fib-6) - var(--fib-6)));
+  max-height: calc(100dvh - var(--topbar-height) - var(--fib-7));
+  overflow: auto;
+  padding: var(--fib-7);
+  border: var(--border-hairline);
+  border-radius: var(--fib-4);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  text-align: left;
+  box-shadow: var(--shadow-window);
+  overflow-wrap: anywhere;
+}
+
+.gw-update-notification__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fib-5);
+}
+
+.gw-update-notification__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--fib-7);
+  height: var(--fib-7);
+  padding: 0;
+  border: 0;
+  border-radius: var(--fib-3);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.gw-update-notification__close > svg {
+  width: var(--fib-6);
+  height: var(--fib-6);
+}
+
+.gw-update-notification__close:hover {
+  background: var(--surface-raised);
+  color: var(--text-bright);
+}
+
+.gw-update-notification__panel h2,
+.gw-update-notification__title {
+  margin: 0;
+  color: var(--text-bright);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.gw-update-notification__panel p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.gw-update-notification__panel .gw-update-notification__version {
+  justify-self: start;
+  padding: var(--fib-3) var(--fib-5);
+  border: var(--fib-1) solid var(--border-accent);
+  border-radius: var(--fib-3);
+  background: var(--accent-glow);
+  color: var(--accent-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.gw-update-notification__panel a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fib-5);
+  min-height: var(--fib-8);
+  padding: var(--fib-4) var(--fib-6);
+  border: var(--fib-1) solid var(--border-accent);
+  border-radius: var(--fib-3);
+  background: var(--accent-glow);
+  color: var(--accent-bright);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-normal);
+  text-decoration: none;
+}
+
+.gw-update-notification__panel a:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+}
+
+.gw-update-notification__panel a > svg {
+  width: var(--fib-6);
+  height: var(--fib-6);
+  flex: 0 0 auto;
+}
+
+.gw-update-notification [hidden] {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+  .campaign-hub__owner > .gw-update-notification {
+    margin-left: auto;
+  }
+
+  .gw-update-notification__panel {
+    position: fixed;
+    top: calc(var(--topbar-height) + var(--fib-5));
+    right: var(--fib-6);
+    left: var(--fib-6);
+    width: auto;
+  }
+}

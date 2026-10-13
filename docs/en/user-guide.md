@@ -8,6 +8,12 @@ Create the first VTT owner at `/setup`, then sign in at `/login`. Other users re
 
 The native ruleset is **Gravewright PDF System**, with `character` actors. Invite players using a campaign join code; the campaign GM configures expiration and maximum uses and can revoke codes. Successful first-time joins increment the usage count automatically. Membership gives a player access to a campaign, while document and scene permissions determine what they can actually see or change. A streamer link provides a restricted read-only view and is not a player account.
 
+## VTT update alerts
+
+The installation owner has a bell next to their name in the library header. A gold marker appears when a newer verified VTT release is available in the selected release channel. Open it to compare installed and available versions; **View update** opens Administration directly on the Updates tab. Installation still requires the owner's explicit action there.
+
+Discovery runs without blocking the library. The visible page refreshes the indicator every five minutes, reusing the host's 24-hour release cache. **Check for updates** in Administration performs an explicit fresh check and updates the bell immediately. Player accounts do not receive host administration alerts.
+
 ## Prepare the table
 
 1. Create a campaign and open its table.

@@ -89,6 +89,7 @@ On Linux, Playwright may need system browser libraries; `uv run --locked playwri
 | Change | Relevant scenarios |
 | --- | --- |
 | Accounts and campaigns | `authentication.py`, `inside.py`, `campaign_controls.py` |
+| VTT update alerts | `update_notification.py`; Django tests in `gravewright.administration.test_update_notifications` |
 | Realtime and permissions | `realtime.py`, `lighting_realtime.py`, `map_prefetch.py` |
 | HTTPS, WSS and proxy trust | `https.py`; Django tests in `config` and `gravewright.realtime` |
 | Local Windows runner | `runner.py`; Django tests in `config.test_runner` and `config.test_frontend_preparation`; Windows CMD runner workflow |

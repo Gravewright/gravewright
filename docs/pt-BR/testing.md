@@ -89,6 +89,7 @@ No Linux, o Playwright pode precisar de bibliotecas do sistema; `uv run --locked
 | Alteração | Cenários pertinentes |
 | --- | --- |
 | Contas e campanhas | `authentication.py`, `inside.py`, `campaign_controls.py` |
+| Alertas de atualização do VTT | `update_notification.py`; testes Django em `gravewright.administration.test_update_notifications` |
 | Tempo real e permissões | `realtime.py`, `lighting_realtime.py`, `map_prefetch.py` |
 | HTTPS, WSS e confiança em proxies | `https.py`; testes Django em `config` e `gravewright.realtime` |
 | Executor Windows local | `runner.py`; testes Django em `config.test_runner` e `config.test_frontend_preparation`; workflow do executor CMD Windows |

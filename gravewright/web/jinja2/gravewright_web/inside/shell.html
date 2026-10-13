@@ -16,7 +16,7 @@
 <section class="gw-shell__area">
   <header class="gw-shell__topbar">
     <label class="campaign-hub__global-search">{{ icon('MagnifyingGlass') }}<span class="sr-only">{{ campaigns.globalSearch }}</span><input data-bind:_search data-on:input__debounce.200ms="@get(window.gravewrightInside.location('/inside?search='+encodeURIComponent($_search)+'&amp;system='+encodeURIComponent($_system), $_search, $_system), {retry:'never'})" type="search" placeholder="{{ campaigns.globalSearch }}" /></label>
-    <div class="campaign-hub__owner"><span class="gw-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span><span class="campaign-hub__owner-copy"><strong>{{ user.name }}</strong></span><button class="campaign-hub__logout" type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
+    <div class="campaign-hub__owner"><span class="gw-avatar" aria-hidden="true">{{ user.name[:1]|upper }}</span><span class="campaign-hub__owner-copy"><strong>{{ user.name }}</strong></span>{% include 'gravewright_web/inside/update-notification.html' %}<button class="campaign-hub__logout" type="submit" form="logout-form" data-attr:disabled="$_pending">{{ auth.signOut }}</button></div>
   </header>
   <div class="gw-shell__content{{ ' gw-shell__content--packages' if section in ['addons','marketplace','systems','administration'] else '' }}{{ ' player-settings gw-shell__content--settings' if section=='settings' else '' }}">
   {% if section=='campaigns' %}{% include 'gravewright_web/inside/library.html' %}
