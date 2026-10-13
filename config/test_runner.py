@@ -312,8 +312,22 @@ class RunnerEnvironmentTests(SimpleTestCase):
                 self.assertEqual((runner.ROOT / '.env').read_text(encoding='utf-8'), contents)
 
     def test_default_data_uses_user_profile(self):
-        with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ, {'LOCALAPPDATA': temp}):
-            self.assertEqual(data_directory(), Path(temp).resolve() / 'Gravewright' / 'data')
+        with tempfile.TemporaryDirectory() as temp:
+            home = Path(temp).resolve() / 'home'
+            windows = home / 'Windows state'
+            xdg = home / 'XDG state'
+            cases = (
+                ('win32', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}, windows / 'Gravewright/data'),
+                ('darwin', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}, home / 'Library/Application Support/Gravewright/data'),
+                ('linux', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}, xdg / 'Gravewright/data'),
+                ('linux', {'LOCALAPPDATA': str(windows)}, home / '.local/share/Gravewright/data'),
+            )
+            for platform, environment, expected in cases:
+                with self.subTest(platform=platform, environment=environment), \
+                        patch.object(sys, 'platform', platform), \
+                        patch.object(Path, 'home', return_value=home), \
+                        patch.dict(os.environ, environment, clear=True):
+                    self.assertEqual(data_directory(), expected)
 
     def test_runner_can_install_default_marketplace_and_remembers_choice(self):
         from dotenv import dotenv_values

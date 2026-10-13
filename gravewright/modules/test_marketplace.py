@@ -358,6 +358,10 @@ class MarketplaceTests(TestCase):
         self.assertEqual(self.client.get("/api/module-packages/install-local").status_code, 403)
 
     def test_owner_installs_default_marketplace_from_settings_screen(self):
+        from django.conf import settings
+        from dotenv import dotenv_values
+        from scripts import gravewright_runner as runner
+
         raw = b'{\n  "gravewright-2026": "PXbpURq9J1jLkPnnwBVN/5B+zrb0p5MaWQAe/ltJ8LY="\n}\n'
         data = self.directory / "runner-data"
         data.mkdir()
@@ -383,7 +387,19 @@ class MarketplaceTests(TestCase):
             self.assertTrue(response.json()["configured"])
             self.assertTrue(response.json()["default"])
             self.assertNotContains(self.client.get("/inside?section=settings"), "data-default-marketplace")
-            self.assertTrue((data / "marketplace/trusted-keys.json").is_file())
+            key_path = runner.marketplace_directory(data) / 'trusted-keys.json'
+            self.assertEqual(key_path.parent.parent, data / 'marketplace')
+            self.assertEqual(key_path.read_bytes(), raw)
+            self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], key_path.as_posix())
+            self.assertEqual(settings.GRAVEWRIGHT_MARKETPLACE_KEYS_FILE, key_path.as_posix())
+            saved = dotenv_values(project / '.env', interpolate=False)
+            self.assertEqual(saved['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], key_path.as_posix())
+            self.assertEqual(saved['GRAVEWRIGHT_MARKETPLACE_URL'], response.json()['catalogUrl'])
+            marker = key_path.parent / runner.DEFAULT_MARKETPLACE_CHOICE
+            self.assertEqual(marker.read_text(encoding='utf-8'), 'installed\n')
+            self.assertFalse((data / runner.DEFAULT_MARKETPLACE_CHOICE).exists())
+            with patch.object(runner, 'ROOT', self.directory / 'another-project'):
+                self.assertNotEqual(runner.marketplace_directory(data), key_path.parent)
             configured = (project / ".env").read_text()
             self.assertEqual((data / '.env').read_text(), '# Legacy configuration must stay untouched\n')
             self.assertIn("GRAVEWRIGHT_MARKETPLACE_URL", configured)
