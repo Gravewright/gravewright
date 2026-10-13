@@ -20,6 +20,7 @@ from pathlib import Path
 from django.conf import settings
 
 from .release_metadata import fetch_bytes, normalize_version, update_version_is_valid, version_key, version_label
+from .release_presentation import bounded_notes, installed_release
 from gravewright.version import release_version
 
 MAX_RELEASE_METADATA_BYTES = 2 * 1024 * 1024
@@ -112,8 +113,13 @@ class CoreUpdateService:
             cached = {"status": "unchecked", "channel": channel}
         else:
             cached = {key: value for key, value in cached.items() if key != "_automaticCheck"}
-        return {"currentVersion": current, "installFormat": _install_format(), **cached,
-                "currentVersionLabel": version_label(current)}
+        return self._present({"currentVersion": current, "installFormat": _install_format(), **cached,
+                              "currentVersionLabel": version_label(current)})
+
+    def _present(self, result: dict) -> dict:
+        return {**result, "installedRelease": installed_release(
+            self.current_version, self.repository, result.get("releases", ()),
+        )}
 
     def status(self) -> dict:
         return self._cached_status(self._read())
@@ -243,7 +249,7 @@ class CoreUpdateService:
                     'name': str(entry.get('name') or entry.get('tag_name') or version),
                     'publishedAt': entry.get('published_at'),
                     'url': str(entry.get('html_url') or ''),
-                    'notes': str(entry.get('body') or '')[:4000],
+                    'notes': bounded_notes(entry.get('body')),
                     'channel': _channel(version),
                     'installed': version == current,
                     'artifact': self._asset(entry, version),
@@ -294,7 +300,7 @@ class CoreUpdateService:
                 "publishedChannels": published_channels,
                 "installFormat": _install_format(),
                 "releaseName": str(release.get("name") or available),
-                "releaseNotes": str(release.get("body") or "")[:4000],
+                "releaseNotes": bounded_notes(release.get("body")),
                 "releaseUrl": str(release.get("html_url") or ""),
                 "artifact": asset if comparison > 0 else None,
                 "requiresBackup": comparison > 0,
@@ -316,7 +322,7 @@ class CoreUpdateService:
                 "errorKey": str(exc),
             }
         result['releases'] = history
-        return result if self._write(result) else self._current_status()
+        return self._present(result) if self._write(result) else self._current_status()
 
     def _asset(self, release: dict, version: str) -> dict | None:
         expected = f"Gravewright-{version}-django.zip".lower()

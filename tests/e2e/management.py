@@ -56,16 +56,10 @@ def check(gm, player, data, output):
     gm.get_by_role("button", name="diagnostics", exact=True).click()
     expect(gm.get_by_role("heading", name="database", exact=True)).to_be_visible()
     gm.get_by_role("button", name="updates", exact=True).click()
-    gm.get_by_label("Release channel").select_option("testing")
-    gm.get_by_role("button", name="Save channel", exact=True).click()
     expect(gm.locator("[data-administration]")).to_have_attribute("aria-busy", "false")
-    expect(gm.get_by_label("Release channel")).to_have_value("testing")
-    assert (
-        gm.evaluate(
-            "async()=> (await(await fetch('/api/admin/status')).json()).updates.channel"
-        )
-        == "testing"
-    )
+    expect(gm.locator("[data-installed-release-name]")).to_contain_text("Gravewright")
+    expect(gm.locator("[data-release-notes]")).not_to_be_empty()
+    expect(gm.locator("[name=channel], [data-form=channel]")).to_have_count(0)
     gm.screenshot(path=str(output / "administration-updates.png"))
     gm.goto(base + "/inside")
     gm.get_by_role("button", name="Table options", exact=True).click()

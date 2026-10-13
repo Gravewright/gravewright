@@ -200,6 +200,81 @@ class MarketplaceTests(TestCase):
         self.assertEqual(response.json(), [active])
         self.assertTrue(self.client.get("/api/module-packages").json()[0]["revoked"])
 
+    def test_latest_catalog_selects_numeric_versions_for_each_package(self):
+        older, _ = self.release(version="1.9.0")
+        system_older, _ = self.release(id="publisher.system", version="0.9.0", type="system")
+        server_older, _ = self.release(id="publisher.server", version="2.0.0", type="django")
+        newest, _ = self.release(version="1.10.0")
+        oldest, _ = self.release(version="1.2.0")
+        server_newest, _ = self.release(id="publisher.server", version="2.1.0", type="django")
+        system_newest, _ = self.release(id="publisher.system", version="0.10.0", type="system")
+        records = [older, system_older, server_older, newest, oldest, server_newest, system_newest]
+        with patch("gravewright.modules.views.download", return_value=json.dumps(records).encode()):
+            response = self.client.get("/api/marketplace?latest=1")
+            self.assertEqual(response.status_code, 200, response.content)
+            self.assertEqual(response.json(), [newest, system_newest, server_newest])
+            # The existing SDK catalog retains every eligible exact release.
+            self.assertEqual(self.client.get("/api/marketplace").json(), records)
+            self.assertEqual(self.client.get("/api/marketplace?latest=0").json(), records)
+
+    def test_latest_catalog_falls_back_from_revoked_and_incompatible_releases(self):
+        older, _ = self.release(version="1.9.0")
+        newest, _ = self.release(version="1.10.0")
+        revoked, _ = self.release(version="3.0.0", status="revoked")
+        incompatible, _ = self.release(version="4.0.0", sdk=">=2.0.0")
+        records = [revoked, older, incompatible, newest]
+        with patch("gravewright.modules.views.download", return_value=json.dumps(records).encode()):
+            response = self.client.get("/api/marketplace?latest=1")
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), [newest])
+
+    def test_latest_catalog_applies_revocations_of_hidden_installed_releases(self):
+        record, raw = self.release()
+        host().install(record, raw)
+        revoked, _ = self.release(status="revoked")
+        newest, _ = self.release(version="1.1.0")
+        with patch("gravewright.modules.views.download", return_value=json.dumps([newest, revoked]).encode()):
+            response = self.client.get("/api/marketplace?latest=1")
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), [newest])
+        self.assertTrue(Package.objects.get().revoked)
+        installed = self.client.get("/api/module-packages").json()
+        self.assertEqual([(row["version"], row["revoked"]) for row in installed], [("1.0.0", True)])
+
+    def test_latest_catalog_verifies_hidden_releases_before_any_revocation(self):
+        record, raw = self.release()
+        host().install(record, raw)
+        revoked, _ = self.release(status="revoked")
+        invalid, _ = self.release(id="publisher.other", version="1.0.0")
+        invalid["signature"] = base64.b64encode(b"x" * 64).decode()
+        newest, _ = self.release(id="publisher.other", version="1.1.0")
+        with patch("gravewright.modules.views.download", return_value=json.dumps([revoked, newest, invalid]).encode()):
+            response = self.client.get("/api/marketplace?latest=1")
+        self.assertEqual(response.status_code, 403, response.content)
+        self.assertEqual(response.json(), {"error": "permission_denied"})
+        self.assertFalse(Package.objects.get().revoked)
+
+    def test_latest_catalog_rejects_versions_outside_the_package_contract(self):
+        for version in ["1.0", "01.0.0", "1.0.0-alpha.1", "v1.0.0", "not-a-version", "1" * 5000 + ".0.0"]:
+            record, _ = self.release(version=version)
+            with self.subTest(version=version), patch(
+                "gravewright.modules.views.download", return_value=json.dumps([record]).encode()
+            ):
+                response = self.client.get("/api/marketplace?latest=1")
+            self.assertEqual(response.status_code, 400, response.content)
+            self.assertEqual(response.json(), {"error": "invalid_data"})
+
+    def test_exact_install_can_still_select_an_older_catalog_release(self):
+        older, raw = self.release()
+        newest, _ = self.release(version="1.1.0")
+        with patch("gravewright.modules.views.download", side_effect=[json.dumps([newest, older]).encode(), raw]):
+            response = self.client.post(
+                "/api/marketplace/install", {"id": older["id"], "version": older["version"]},
+                content_type="application/json",
+            )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(Package.objects.get().version, "1.0.0")
+
     def test_signed_record_with_malformed_download_url_is_rejected(self):
         for url in [
             "https://[invalid/module.zip",

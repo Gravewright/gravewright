@@ -9,8 +9,14 @@ on:
       - 'config/**'
       - 'gravewright/administration/**'
       - 'gravewright/modules/**'
+      - 'gravewright/web/**'
+      - 'gravewright/table/**'
       - 'tests/e2e/automatic_updates.py'
       - 'tests/e2e/django_marketplace.py'
+      - 'tests/e2e/modal_flush.py'
+      - 'tests/e2e/update_notification.py'
+      - 'tests/e2e/release_presentation.py'
+      - 'tests/e2e/marketplace.py'
       - '.github/workflows/automatic-updates.yml'
 env:
   PYTHONUTF8: '1'
@@ -35,10 +41,47 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       - name: Validate permissions, maintenance gate and recovery
-        run: uv run python manage.py test gravewright.modules gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions --noinput
+        run: uv run python manage.py test gravewright.modules gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions gravewright.administration.test_update_notifications gravewright.administration.test_release_presentation config.test_release_build --noinput
       - name: Exercise Django package activation and migration recovery
         run: uv run python tests/e2e/django_marketplace.py
       - name: Exercise HTTPS upgrade and recovery on this operating system
         run: uv run python tests/e2e/automatic_updates.py
       - name: Exercise the desktop Runner profile on this operating system
         run: uv run python tests/e2e/automatic_updates.py --runner
+  presentation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      PYTHON_DOTENV_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: '0.12.13'
+          python-version: '3.14'
+          enable-cache: true
+      - run: uv sync --locked
+      - name: Install Chromium for the isolated browser scenarios
+        run: uv run playwright install --with-deps chromium
+      - name: Validate template modal lifecycle
+        run: uv run python tests/e2e/modal_flush.py
+      - name: Validate release notifications
+        run: uv run python tests/e2e/update_notification.py
+      - name: Validate installed release names and notes
+        run: uv run python tests/e2e/release_presentation.py
+      - name: Validate latest package installation catalogs
+        run: uv run python tests/e2e/marketplace.py
+      - name: Retain browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: release-presentation-diagnostics
+          path: |
+            test-results/update-notification/
+            test-results/release-presentation/
+            test-results/marketplace/
+            test-results/marketplace-install-progress.png
+          if-no-files-found: ignore
+          retention-days: 7

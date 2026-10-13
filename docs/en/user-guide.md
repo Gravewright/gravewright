@@ -8,11 +8,15 @@ Create the first VTT owner at `/setup`, then sign in at `/login`. Other users re
 
 The native ruleset is **Gravewright PDF System**, with `character` actors. Invite players using a campaign join code; the campaign GM configures expiration and maximum uses and can revoke codes. Successful first-time joins increment the usage count automatically. Membership gives a player access to a campaign, while document and scene permissions determine what they can actually see or change. A streamer link provides a restricted read-only view and is not a player account.
 
+In **Systems** and **Modules**, **Install** lists the newest compatible, non-revoked version of each package. Search, categories and pagination operate on that selection.
+
 ## VTT update alerts
 
-The installation owner has a bell next to their name in the library header. A gold marker appears when a newer verified VTT release is available in the selected release channel. Open it to compare installed and available versions; **View update** opens Administration directly on the Updates tab. Installation still requires the owner's explicit action there.
+The installation owner has a bell next to their name in the library header. A gold marker appears when a newer verified VTT release is available. Open it to compare installed and available versions; **View update** opens Administration directly on the Updates tab. Installation still requires the owner's explicit action there.
 
 Discovery runs without blocking the library. The visible page refreshes the indicator every five minutes, reusing the host's 24-hour release cache. **Check for updates** in Administration performs an explicit fresh check and updates the bell immediately. Player accounts do not receive host administration alerts.
+
+The Updates tab highlights the full installed release name and loads its bundled notes immediately, including offline. It has no release-channel selector. When a newer version is available, its name and notes appear with the installation controls. Notes support readable headings, lists, code and safe links; Portuguese notes are selected when available for a Portuguese interface.
 
 ## Prepare the table
 

@@ -92,6 +92,10 @@ Permissões de proprietário e gerenciamento da campanha continuam verificadas n
 
 O cabeçalho da biblioteca usa `POST /api/admin/updates/notification`, exclusivo do proprietário, com JSON vazio e o token CSRF normal. A resposta compacta inclui `status`, `available`, versões instalada/disponível e seus rótulos, `channel`, `checkedAt` e a URL interna de Atualizações. Ela reaproveita o cache de consulta por 24 horas; consultas simultâneas com cache expirado recebem `checking` enquanto uma requisição atualiza os metadados. A rota não inicia instalação nem expõe artefatos da release ou erros internos.
 
+`GET /api/marketplace?latest=1`, exclusivo do proprietário, retorna uma release compatível e não revogada por ID de pacote, escolhendo a maior versão numérica `X.Y.Z` após validar o catálogo assinado completo e aplicar suas revogações. Sistemas e Módulos usam essa seleção na instalação. Sem `latest=1`, a rota continua retornando todas as releases compatíveis e não revogadas; a instalação por versão exata continua disponível.
+
+`GET /api/admin/status` inclui `updates.installedRelease` com `version`, `name` completo, `notes`, `url` canônica do GitHub e `source` (`bundled`, `published` ou `metadata`). Respostas de verificação explícita incluem a mesma apresentação. As notas locais estão disponíveis sem consulta ou acesso à rede e não são gravadas no cache de atualização. As notas têm limite de 128 KiB em UTF-8; a versão numérica e as regras de comparação são independentes do nome exibido.
+
 ### Eventos de domínio
 
 Use `api.events.on(name, handler)`, que retorna uma função para cancelar a assinatura. Assinaturas são removidas junto com o ciclo de vida da API. Nomes suportados:

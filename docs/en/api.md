@@ -92,6 +92,10 @@ Owner-only operations and campaign management remain checked on the server. Thes
 
 The Inside header uses owner-only `POST /api/admin/updates/notification` with an empty JSON body and the normal CSRF token. Its compact response includes `status`, `available`, installed/available versions and labels, `channel`, `checkedAt` and the internal Updates URL. It reuses the 24-hour discovery cache; concurrent stale checks return `checking` while one request refreshes metadata. It does not start installation or expose release artifacts or internal errors.
 
+Owner-only `GET /api/marketplace?latest=1` returns one compatible, non-revoked release per package ID, selecting the highest numeric `X.Y.Z` version after validating the full signed catalog and applying its revocations. Systems and Modules use this selection for installation. Without `latest=1`, the endpoint continues returning all compatible non-revoked releases; exact-version installation remains available.
+
+`GET /api/admin/status` includes `updates.installedRelease` with `version`, full `name`, `notes`, canonical GitHub `url` and `source` (`bundled`, `published` or `metadata`). Explicit update-check responses include the same presentation. Bundled notes are available without discovery or network access and are not stored in the update cache. Notes are bounded to 128 KiB of UTF-8; numeric update versions and comparison rules remain independent of the display name.
+
 ### Domain events
 
 Subscribe using `api.events.on(name, handler)`, which returns an unsubscribe function. Event subscriptions are disposed with their API lifetime. Supported names:

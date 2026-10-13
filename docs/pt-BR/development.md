@@ -51,19 +51,20 @@ Os documentos da gramática de dados são mantidos junto à implementação. Os 
 
 ## Identificadores da versão
 
-A versão atual é **0.2.1**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
+A versão atual é **0.2.2**. Os identificadores equivalentes seguem os formatos exigidos por cada ferramenta:
 
 | Local | Identificador |
 | --- | --- |
-| Nome público, aplicação e Runner | `0.2.1` |
-| Projeto Python e `uv.lock` | `0.2.1` |
-| Pacote frontend, package lock e API de atualização | `0.2.1` |
-| Tag do release | `v0.2.1` |
-| Artefato do código-fonte | `Gravewright-0.2.1-django.zip` |
+| Nome público completo | `Gravewright 0.2.2 — Alpha` |
+| Versão da aplicação e do Runner | `0.2.2` |
+| Projeto Python e `uv.lock` | `0.2.2` |
+| Pacote frontend, package lock e API de atualização | `0.2.2` |
+| Tag do release | `v0.2.2` |
+| Artefato do código-fonte | `Gravewright-0.2.2-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) é a fonte da versão instalada. [`gravewright/version.py`](../../gravewright/version.py) deriva o identificador público e o rótulo; mantenha os metadados do pacote frontend alinhados ao alterá-la. Versões dos contratos de API/SDK e de módulos de terceiros têm ciclos independentes.
 
-A release `0.2.1` usa o canal de atualização `stable`. Esse canal descreve o identificador da versão; o projeto continua em desenvolvimento inicial. O canal selecionado continua sendo uma preferência do host.
+A release `0.2.2` segue a convenção `stable` de descoberta para identificadores numéricos; o projeto permanece em Alpha. Administração mostra o nome completo da versão, sem seletor de canal. Preferências de canal existentes e compatibilidade da API são preservadas.
 
 ## Gerar o pacote de uma release
 
@@ -92,7 +93,7 @@ timestamps reproduzíveis no ZIP.
 
 Teste uma cópia extraída do ZIP final com armazenamento descartável. Publique o
 commit correspondente como `vVERSÃO`, com ZIP, checksum e notas bilíngues.
-Confira o digest do arquivo publicado e os dois workflows de CI; gerar o pacote
+Confira o digest do arquivo publicado e os workflows de CI pertinentes; gerar o pacote
 sozinho não valida o funcionamento da aplicação nem publica uma release.
 
 ## Antes de enviar

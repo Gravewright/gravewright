@@ -19,6 +19,7 @@ import tempfile
 import threading
 import time
 from urllib.request import urlopen
+from urllib.parse import parse_qs, urlsplit
 import zipfile
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -49,6 +50,8 @@ def publisher(directory):
         def do_GET(self):
             if self.path == '/catalog.json':
                 raw = json.dumps(state['records']).encode()
+            elif self.path in state.get('archives', {}):
+                raw = state['archives'][self.path]
             elif self.path == '/system.zip':
                 raw = state['archive']
             else:
@@ -81,6 +84,7 @@ def publisher(directory):
 
 def signed_system(base, state):
     key = Ed25519PrivateKey.generate()
+    state['signer'] = key
     keys = {'browser-test': base64.b64encode(key.public_key().public_bytes_raw()).decode()}
     manifest = {
         'id': 'example.browser-system', 'name': 'Browser RPG', 'version': '1.0.0',
@@ -106,6 +110,91 @@ def signed_system(base, state):
     record['signature'] = base64.b64encode(key.sign(canonical)).decode()
     state['records'] = [record]
     return keys
+
+
+def signed_version(base, state, kind, version, tags):
+    manifest = {
+        'id': f'example.catalog-{kind}', 'name': f'Catalog {kind}', 'version': version,
+        'description': 'Latest release browser regression', 'author': 'Test', 'license': 'MIT',
+        'sdk': {'requires': '>=1.0.0 <2.0.0', 'tested': '1.0.0'}, 'entry': 'main.js',
+    }
+    if kind == 'system':
+        manifest['system'] = {
+            'actorTypes': [{'id': 'character', 'label': 'Character'}],
+            'itemTypes': [{'id': 'gear', 'label': 'Gear'}],
+        }
+    archive = BytesIO()
+    with zipfile.ZipFile(archive, 'w') as zipped:
+        zipped.writestr('manifest.json', json.dumps(manifest))
+        zipped.writestr('main.js', 'export default {start(){},register(){},stop(){}};')
+    path = f'/{kind}-{version}.zip'
+    state.setdefault('archives', {})[path] = archive.getvalue()
+    record = {
+        'id': manifest['id'], 'version': version, 'sdk': manifest['sdk']['requires'],
+        'download': base + path, 'sha256': hashlib.sha256(archive.getvalue()).hexdigest(),
+        'keyId': 'browser-test', 'type': kind, 'tags': tags,
+    }
+    canonical = json.dumps(record, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode('ascii')
+    record['signature'] = base64.b64encode(state['signer'].sign(canonical)).decode()
+    return record
+
+
+def check_latest_releases(page, base, publisher_base, feed):
+    # Publisher order deliberately disagrees with numeric version order.
+    feed['records'] = [
+        signed_version(publisher_base, feed, 'system', '1.10.0', ['Current system']),
+        signed_version(publisher_base, feed, 'module', '1.9.0', ['Retired']),
+        signed_version(publisher_base, feed, 'system', '1.9.0', ['Retired']),
+        signed_version(publisher_base, feed, 'module', '1.10.0', ['Current module']),
+    ]
+    assert len(page.request.get(base + '/api/marketplace').json()) == 4
+    latest = page.request.get(base + '/api/marketplace?latest=1').json()
+    assert {(row['id'], row['version']) for row in latest} == {
+        ('example.catalog-system', '1.10.0'), ('example.catalog-module', '1.10.0'),
+    }, latest
+    library = page.locator('[data-module-catalog=installed]')
+    browser = page.locator('[data-package-browser]')
+    catalog = browser.locator('[data-module-catalog=marketplace]')
+    for kind, section in [('system', 'systems'), ('module', 'addons')]:
+        package_id = f'example.catalog-{kind}'
+        page.goto(base + '/inside?section=' + section)
+        # An explicitly requested older version is still usable and remains in the library.
+        page.evaluate("""async id => {
+            const {HttpClient} = await import('/static/gravewright_modules/http-client.js');
+            await new HttpClient().post('/api/marketplace/install', {id, version:'1.9.0'});
+        }""", package_id)
+        page.reload()
+        installed = library.locator(f'[data-package-id="{package_id}"]')
+        expect(installed).to_have_count(1)
+        expect(installed).to_have_attribute('data-package-version', '1.9.0')
+        with page.expect_response(lambda response: urlsplit(response.url).path == '/api/marketplace') as fetched:
+            library.locator('[data-action=browse]').click()
+        assert parse_qs(urlsplit(fetched.value.url).query) == {'latest': ['1']}
+        cards = catalog.locator('.module-catalog__card')
+        expect(cards).to_have_count(1)
+        expect(cards).to_have_attribute('data-package-id', package_id)
+        expect(cards).to_have_attribute('data-package-version', '1.10.0')
+        expect(catalog.locator('[data-count]')).to_have_text('1 / 1')
+        expect(catalog.locator('[data-category=Retired]')).to_have_count(0)
+        catalog.locator(f'[data-category="Current {kind}"]').click()
+        expect(cards).to_have_count(1)
+        catalog.locator('input[type=search]').fill('1.9.0')
+        expect(cards).to_have_count(0)
+        expect(catalog.locator('[data-count]')).to_have_text('0 / 1')
+        catalog.locator('input[type=search]').fill('1.10.0')
+        expect(cards).to_have_count(1)
+        catalog.locator('[data-state=installed]').click()
+        expect(cards).to_have_count(0)
+        catalog.locator('[data-state=available]').click()
+        expect(cards).to_have_count(1)
+        with page.expect_request(lambda request: urlsplit(request.url).path == '/api/marketplace/install' and request.method == 'POST') as installing:
+            cards.locator('[data-action=install]').click()
+        assert installing.value.post_data_json == {'id': package_id, 'version': '1.10.0'}
+        expect(catalog.locator('[data-install-progress]')).to_have_attribute('data-stage', 'complete', timeout=15000)
+        browser.locator('[data-action=close-browser]').click()
+        expect(installed).to_have_count(2)
+        assert sorted(installed.evaluate_all('(cards) => cards.map(card => card.dataset.packageVersion)')) == ['1.10.0', '1.9.0']
+    print('Latest releases: signed unsorted numeric versions, systems and modules, categories, search, latest install payload and retained installed versions passed.')
 
 
 def check(page, base, keys_file, keys, feed):
@@ -187,7 +276,10 @@ def check_large_library(page, base):
                {'id':'example.new-system', 'name':'New system', 'version':'1.0.0', 'type':'system','tags':['Fantasy']}]
     page.route('**/api/module-packages', lambda route: route.fulfill(json=rows))
     page.route('**/api/marketplace/status', lambda route: route.fulfill(json={'ready':True,'catalogConfigured':True,'trustedKeysConfigured':True}))
-    page.route('**/api/marketplace', lambda route: route.fulfill(json=records))
+    def marketplace_route(route):
+        assert parse_qs(urlsplit(route.request.url).query) == {'latest': ['1']}
+        route.fulfill(json=records)
+    page.route('**/api/marketplace?*', marketplace_route)
     page.set_viewport_size({'width':1600, 'height':1000})
     page.goto(base + '/inside?section=addons')
     root = page.locator('[data-module-catalog=installed]')
@@ -277,16 +369,25 @@ def check_local_install(page, base):
 def main():
     with tempfile.TemporaryDirectory(prefix='grave-marketplace-') as temp:
         directory = Path(temp)
+        for name in ('api', 'django'):
+            (directory / 'extensions' / name).mkdir(parents=True)
         with publisher(directory) as (catalog_base, certificate_path, feed):
             keys = signed_system(catalog_base, feed)
             keys_file = directory / 'keys.json'
             keys_file.write_text(json.dumps(keys))
             env = {
-                **os.environ, 'DJANGO_SETTINGS_MODULE': 'config.settings', 'DJANGO_DEBUG': 'true',
+                **os.environ, 'PYTHON_DOTENV_DISABLED': '1', 'PYTHONUTF8': '1',
+                'DJANGO_SETTINGS_MODULE': 'config.settings', 'DJANGO_DEBUG': 'true',
                 'DJANGO_ALLOWED_HOSTS': '127.0.0.1,localhost,testserver',
                 'GRAVEWRIGHT_DATABASE': str(directory / 'db.sqlite3'),
                 'GRAVEWRIGHT_MEDIA_ROOT': str(directory / 'media'),
                 'GRAVEWRIGHT_MODULES_ROOT': str(directory / 'modules'),
+                'GRAVEWRIGHT_CONTENT_ROOT': str(directory / 'compendiums'),
+                'GRAVEWRIGHT_API_MODULES_ROOT': str(directory / 'extensions' / 'api'),
+                'GRAVEWRIGHT_DJANGO_MODULES_ROOT': str(directory / 'extensions' / 'django'),
+                'GRAVEWRIGHT_SERVER_APPS': '', 'GRAVEWRIGHT_SERVER_APP_PATHS': '',
+                'GRAVEWRIGHT_RUNNER_DATA': str(directory / 'runner'),
+                'GRAVEWRIGHT_RUNNER_ROOT': str(directory / 'runner'),
                 'GRAVEWRIGHT_PUBLIC_ORIGIN': '', 'DJANGO_SECURE_COOKIES': 'false',
                 'GRAVEWRIGHT_REDIS_URL': '', 'TRUSTED_PROXIES': '', 'GRAVEWRIGHT_RELEASES_REPOSITORY': '',
                 'GRAVEWRIGHT_MARKETPLACE_URL': catalog_base + '/catalog.json',
@@ -316,6 +417,7 @@ def main():
                         errors = []
                         page.on('pageerror', lambda error: errors.append(str(error)))
                         check(page, base, keys_file, keys, feed)
+                        check_latest_releases(page, base, catalog_base, feed)
                         check_large_library(page, base)
                         check_local_install(page, base)
                         assert not errors, errors

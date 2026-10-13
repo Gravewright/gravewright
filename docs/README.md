@@ -26,4 +26,4 @@ Project policies: [contributing](../CONTRIBUTING.md), [security](../SECURITY.md)
 
 For the dice implementation, see the existing [grammar architecture](../gravewright/dice/grammar/ARCHITECTURE.md) and [notation reference](../gravewright/dice/grammar/notation/GRAMMAR.md). Machine-readable module contracts live in [contracts/](../gravewright/modules/contracts/); the [transport note](../gravewright/modules/contracts/transport.md) accompanies them.
 
-Current release: [Gravewright 0.2.1 release notes](releases/0.2.1.md), including the **13 October 2026 package refresh** with Windows, Linux and macOS installers. Existing 0.2.1 hosts need the manual same-version reinstall described there.
+Current release: [Gravewright 0.2.2 — Alpha](releases/0.2.2.md), with release alerts, offline release notes, improved Administration and latest-compatible Marketplace installation. Includes Windows, Linux and macOS installers. Hosts on 0.2.1 can use the normal managed update workflow. [0.2.1 notes](releases/0.2.1.md) retain the earlier package-refresh history.

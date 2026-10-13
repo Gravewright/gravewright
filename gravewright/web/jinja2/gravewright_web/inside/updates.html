@@ -1,0 +1,25 @@
+<section class="administration__updates" data-content="updates"{% if administration_tab!='updates' %} hidden{% endif %}>
+  <section class="administration__card administration__release">
+    <header class="administration__release-header">
+      <div><p class="administration__eyebrow">{{ label('Installed version','Versão instalada','Versión instalada') }}</p><h2 data-installed-release-name>Gravewright</h2></div>
+      <button class="gw-button" type="button" data-action="check-updates">{{ icon('ArrowsClockwise') }}{{ label('Check for updates','Verificar atualizações','Buscar actualizaciones') }}</button>
+    </header>
+    <dl class="administration__summary" data-update-summary></dl>
+    <section class="administration__install" data-install-panel hidden>
+      <div class="administration__available" data-available-release hidden><p>{{ label('New version available','Nova versão disponível','Nueva versión disponible') }}</p><h3 data-available-release-name></h3></div>
+      <p data-automatic-help></p>
+      <label class="administration__rollback"><input type="checkbox" data-update-keep-old checked>{{ label('Keep a copy of the previous version','Manter uma cópia da versão anterior','Conservar una copia de la versión anterior') }}</label>
+      <div class="administration__install-actions"><button type="button" class="gw-button gw-button--primary" data-action="apply-update" hidden>{{ label('Install update','Instalar atualização','Instalar actualización') }}</button><p data-automatic-progress role="status" hidden></p></div>
+      <p data-container-update hidden>{{ label('Update the container image while preserving its data volume.','Atualize a imagem do contêiner preservando o volume de dados.','Actualiza la imagen del contenedor conservando su volumen de datos.') }}</p>
+    </section>
+  </section>
+  <section class="administration__card administration__notes">
+    <header class="administration__notes-header"><div><h2>{{ label('Release notes','Notas da versão','Notas de la versión') }}</h2><p data-release-notes-name></p></div><a data-release target="_blank" rel="noopener noreferrer" hidden>{{ label('Open release','Abrir release','Abrir versión') }}{{ icon('ArrowUpRight') }}</a></header>
+    <div class="release-notes" data-release-notes role="region" aria-label="{{ label('Release notes','Notas da versão','Notas de la versión') }}" tabindex="0"></div>
+    <p data-release-notes-empty hidden>{{ label('No release notes are available for this version.','Não há notas disponíveis para esta versão.','No hay notas disponibles para esta versión.') }}</p>
+  </section>
+  <section class="administration__card administration__releases">
+    <header><h2>{{ label('Version history','Histórico de versões','Historial de versiones') }}</h2><p>{{ label('Browse the notes for other published versions.','Consulte as notas de outras versões publicadas.','Consulta las notas de otras versiones publicadas.') }}</p></header>
+    <div data-release-history></div>
+  </section>
+</section>

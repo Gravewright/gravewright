@@ -8,11 +8,15 @@ Crie o primeiro proprietário em `/setup` e entre por `/login`. Outros usuários
 
 O sistema nativo é **Gravewright PDF System**, com atores `character`. Convide jogadores usando o código da campanha; o mestre da campanha configura validade e máximo de usos e pode revogar códigos. Entradas bem-sucedidas de novos membros incrementam automaticamente o contador de usos. O vínculo permite acessar a campanha, enquanto permissões de documentos e cenas definem o que pode ser visto ou alterado. Um link de transmissão oferece acesso restrito de leitura e não equivale a uma conta de jogador.
 
+Em **Sistemas** e **Módulos**, **Instalar** lista a versão mais recente, compatível e não revogada de cada pacote. Busca, categorias e paginação usam essa seleção.
+
 ## Alertas de atualização do VTT
 
-O proprietário da instalação tem um sino ao lado do nome no cabeçalho da biblioteca. Um marcador dourado aparece quando existe uma release mais recente e verificada do VTT no canal selecionado. Abra-o para comparar as versões instalada e disponível; **Ver atualização** abre a Administração diretamente na aba de atualizações. A instalação continua exigindo uma ação explícita do proprietário nessa aba.
+O proprietário da instalação tem um sino ao lado do nome no cabeçalho da biblioteca. Um marcador dourado aparece quando existe uma release mais recente e verificada do VTT. Abra-o para comparar as versões instalada e disponível; **Ver atualização** abre a Administração diretamente na aba de atualizações. A instalação continua exigindo uma ação explícita do proprietário nessa aba.
 
 A consulta não bloqueia a biblioteca. A página visível atualiza o indicador a cada cinco minutos, reaproveitando o cache de releases do servidor por 24 horas. **Verificar atualizações** na Administração força uma consulta nova e atualiza o sino imediatamente. Contas de jogadores não recebem alertas de administração da instância.
+
+A aba de atualizações destaca o nome completo da versão instalada e carrega imediatamente suas notas incluídas no pacote, inclusive sem internet. Ela não possui seletor de canal. Quando há uma versão nova, seu nome e suas notas aparecem junto dos controles de instalação. As notas apresentam títulos, listas, código e links seguros; a interface em português usa a seção em português quando disponível.
 
 ## Preparar a mesa
 

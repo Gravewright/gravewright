@@ -51,19 +51,20 @@ The existing dice grammar documents are maintained next to their implementation.
 
 ## Release identifiers
 
-The current release is **0.2.1**. Its equivalent identifiers follow the formats required by each tool:
+The current release is **0.2.2**. Its equivalent identifiers follow the formats required by each tool:
 
 | Location | Identifier |
 | --- | --- |
-| Public release name, application and Runner | `0.2.1` |
-| Python project and `uv.lock` | `0.2.1` |
-| Frontend package, package lock and update API | `0.2.1` |
-| Release tag | `v0.2.1` |
-| Source release artifact | `Gravewright-0.2.1-django.zip` |
+| Full public release name | `Gravewright 0.2.2 — Alpha` |
+| Application and Runner version | `0.2.2` |
+| Python project and `uv.lock` | `0.2.2` |
+| Frontend package, package lock and update API | `0.2.2` |
+| Release tag | `v0.2.2` |
+| Source release artifact | `Gravewright-0.2.2-django.zip` |
 
 [`pyproject.toml`](../../pyproject.toml) is the source of the installed version. [`gravewright/version.py`](../../gravewright/version.py) derives its public identifier and label; keep the frontend package metadata aligned when changing it. API/SDK contract versions and third-party module versions have independent lifecycles.
 
-Release `0.2.1` uses the `stable` update channel. This channel describes the version identifier; the project remains an early development preview. The selected channel remains a host preference.
+Release `0.2.2` follows the `stable` update-discovery convention for numeric version identifiers; the project remains in Alpha. Administration displays the full release name without a channel selector. Existing host channel preferences and API compatibility are preserved.
 
 ## Build a release archive
 
@@ -90,7 +91,7 @@ to a fixed Unix timestamp for reproducible archive timestamps.
 
 Test an extracted copy of the final ZIP with disposable storage. Publish the
 matching commit as `vVERSION` with the ZIP, checksum and bilingual notes. Verify
-the uploaded asset digest and both repository CI workflows; archive creation
+the uploaded asset digest and applicable repository CI workflows; archive creation
 alone does not validate application behavior or publish a release.
 
 ## Before submitting

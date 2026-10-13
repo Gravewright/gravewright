@@ -39,3 +39,316 @@
 .administration__releases summary span{font-size:var(--fib-6);color:var(--text-muted)}
 .administration__releases pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
 .administration__releases a{display:inline-block;margin:0 var(--step-13) var(--step-13) 0}
+
+/* Release management has its own layout; campaign and diagnostic forms keep
+   their existing controls and spacing. */
+.administration__updates {
+    display: grid;
+    gap: var(--fib-7);
+    width: 100%;
+    max-width: var(--size-1200);
+    min-width: 0;
+}
+.administration__updates > .administration__card {
+    gap: var(--fib-7);
+    padding: var(--fib-7) var(--fib-8);
+    border-radius: var(--radius-md);
+}
+.administration__release-header,
+.administration__notes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--fib-6) var(--fib-7);
+    min-width: 0;
+}
+.administration__release-header > div {
+    display: grid;
+    gap: var(--fib-5);
+    min-width: 0;
+}
+.administration__updates .administration__eyebrow {
+    color: var(--text-muted);
+    font-size: var(--fib-6);
+    line-height: 1.5;
+}
+.administration__release-header h2 {
+    display: block;
+    color: var(--text);
+    font-size: var(--step-26);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.administration__release-header > .gw-button {
+    flex: 0 0 auto;
+}
+.administration__updates .administration__summary {
+    grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: var(--fib-8);
+    row-gap: var(--fib-5);
+    padding-block-start: var(--fib-7);
+    border-block-start: var(--fib-1) solid var(--border);
+    line-height: 1.6;
+}
+.administration__updates .administration__summary dd {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+.administration__install {
+    display: grid;
+    gap: var(--fib-6);
+    padding: var(--fib-7);
+    border: var(--fib-1) solid color-mix(in srgb, var(--accent) 34%, var(--border));
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+    min-width: 0;
+}
+.administration__available {
+    display: grid;
+    gap: var(--fib-5);
+    min-width: 0;
+}
+.administration__available h3 {
+    color: var(--accent);
+    font-size: var(--step-16);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+.administration__install > p,
+.administration__available p,
+.administration__install-actions > p {
+    max-width: 75ch;
+    overflow-wrap: anywhere;
+}
+.administration .administration__updates .administration__rollback {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: var(--fib-5);
+    width: fit-content;
+    max-width: 100%;
+    line-height: 1.6;
+    cursor: pointer;
+}
+.administration__rollback input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: var(--step-16);
+    height: var(--step-16);
+    margin: var(--fib-3) 0 0;
+}
+.administration__install-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--fib-6) var(--fib-7);
+}
+.administration__install-actions > .gw-button {
+    flex: 0 0 auto;
+}
+.administration__install-actions > p {
+    flex: 1 1 var(--size-240);
+}
+.administration__notes-header h2 {
+    font-size: var(--fib-7);
+    line-height: 1.5;
+}
+.administration__notes-header > a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--fib-5);
+    font-size: var(--fib-6);
+    line-height: 1.6;
+    text-underline-offset: var(--fib-3);
+}
+.administration__updates .release-notes {
+    min-width: 0;
+    max-width: 75ch;
+    color: var(--text);
+    font-size: var(--step-14);
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+.administration__updates .release-notes > :first-child {
+    margin-block-start: 0;
+}
+.administration__updates [data-release-notes] {
+    max-height: 55dvh;
+    overflow: auto;
+    scrollbar-gutter: stable;
+    padding-inline-end: var(--fib-6);
+}
+.administration__updates [data-release-notes]:focus-visible {
+    outline: var(--fib-2) solid var(--accent);
+    outline-offset: var(--fib-4);
+}
+.administration__updates .release-notes > :last-child {
+    margin-block-end: 0;
+}
+.administration__updates .release-notes h1,
+.administration__updates .release-notes h2,
+.administration__updates .release-notes h3,
+.administration__updates .release-notes h4 {
+    display: block;
+    margin-block: var(--fib-7) var(--fib-5);
+    color: var(--text);
+    line-height: 1.5;
+}
+.administration__updates .release-notes h1,
+.administration__updates .release-notes h2 {
+    padding-block-end: var(--fib-5);
+    border-block-end: var(--fib-1) solid var(--border);
+    font-size: var(--fib-7);
+}
+.administration__updates .release-notes h3,
+.administration__updates .release-notes h4 {
+    font-size: var(--step-16);
+}
+.administration__updates .release-notes p,
+.administration__updates .release-notes ul,
+.administration__updates .release-notes ol,
+.administration__updates .release-notes pre,
+.administration__updates .release-notes blockquote {
+    margin-block: 0 var(--fib-6);
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+}
+.administration__updates .release-notes ul,
+.administration__updates .release-notes ol {
+    padding-inline-start: var(--fib-7);
+}
+.administration__updates .release-notes li + li {
+    margin-block-start: var(--fib-4);
+}
+.administration__updates .release-notes li > p {
+    margin-block-end: var(--fib-5);
+}
+.administration__updates .release-notes code {
+    padding: var(--fib-2) var(--fib-4);
+    border-radius: var(--radius-xs);
+    background: var(--surface-field);
+    font-size: var(--fib-6);
+}
+.administration__updates .release-notes pre {
+    padding: var(--fib-6);
+    border: var(--fib-1) solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-field);
+    white-space: pre-wrap;
+}
+.administration__updates .release-notes pre code {
+    padding: 0;
+    background: transparent;
+}
+.administration__updates .release-notes blockquote {
+    margin-inline: 0;
+    padding-inline-start: var(--fib-6);
+    border-inline-start: var(--fib-3) solid var(--accent);
+    color: var(--text-muted);
+}
+.administration__updates .release-notes a {
+    display: inline;
+    margin: 0;
+    text-underline-offset: var(--fib-3);
+}
+.administration__updates .release-notes hr {
+    margin-block: var(--fib-7);
+    border: 0;
+    border-block-start: var(--fib-1) solid var(--border);
+}
+.administration__updates .administration__releases {
+    margin: 0;
+    gap: var(--fib-6);
+}
+.administration__updates .administration__releases > h2 {
+    font-size: var(--fib-7);
+    line-height: 1.5;
+}
+.administration__updates .administration__releases details {
+    min-width: 0;
+}
+.administration__updates .administration__releases summary {
+    display: grid;
+    grid-template-columns: var(--fib-6) minmax(0, 1fr) auto;
+    align-items: baseline;
+    justify-content: initial;
+    gap: var(--fib-6);
+    padding-block: var(--fib-6);
+    list-style: none;
+    line-height: 1.6;
+}
+.administration__updates .administration__releases summary::-webkit-details-marker {
+    display: none;
+}
+.administration__updates .administration__releases summary::before {
+    content: "+";
+    color: var(--accent);
+    text-align: center;
+}
+.administration__updates .administration__releases details[open] > summary::before {
+    content: "\2212";
+}
+.administration__updates .administration__releases summary:hover {
+    color: var(--accent);
+}
+.administration__updates .administration__releases summary:focus-visible {
+    outline: var(--fib-2) solid var(--accent);
+    outline-offset: var(--fib-2);
+}
+.administration__updates .administration__releases summary strong {
+    min-width: 0;
+    font-size: var(--step-14);
+    overflow-wrap: anywhere;
+}
+.administration__updates .administration__releases summary span {
+    min-width: 0;
+    font-size: var(--fib-6);
+    overflow-wrap: anywhere;
+}
+.administration__updates .administration__releases details > .release-notes {
+    margin: var(--fib-5) 0 var(--fib-7) var(--step-26);
+}
+.administration__updates [data-artifact] {
+    display: grid;
+    gap: var(--fib-5);
+    padding-block-start: var(--fib-6);
+    border-block-start: var(--fib-1) solid var(--border);
+    min-width: 0;
+}
+@media (max-width: 700px) {
+    .administration__updates > .administration__card {
+        padding: var(--fib-7);
+    }
+    .administration__release-header,
+    .administration__notes-header {
+        align-items: flex-start;
+    }
+    .administration__release-header h2 {
+        font-size: var(--fib-7);
+    }
+    .administration__updates .administration__summary {
+        column-gap: var(--fib-6);
+    }
+    .administration__install {
+        padding: var(--fib-6);
+    }
+    .administration__install-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .administration__install-actions > p {
+        flex-basis: auto;
+    }
+    .administration__updates .administration__releases summary {
+        grid-template-columns: var(--fib-6) minmax(0, 1fr);
+        gap: var(--fib-4) var(--fib-5);
+    }
+    .administration__updates .administration__releases summary span {
+        grid-column: 2;
+    }
+    .administration__updates .administration__releases details > .release-notes {
+        margin-inline-start: 0;
+    }
+}

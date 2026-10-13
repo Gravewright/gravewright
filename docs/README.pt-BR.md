@@ -28,4 +28,4 @@ Para a implementação de dados, consulte os documentos existentes de [arquitetu
 
 Os contratos de módulos processáveis por máquina ficam em [contracts/](../gravewright/modules/contracts/), acompanhados da [nota de transporte](../gravewright/modules/contracts/transport.pt-BR.md).
 
-Release atual: [notas do Gravewright 0.2.1](releases/0.2.1.md), incluindo o **reempacotamento de 13 de outubro de 2026** com instaladores Windows, Linux e macOS. Hosts que já usam 0.2.1 precisam seguir a reinstalação manual da mesma versão descrita nas notas.
+Release atual: [Gravewright 0.2.2 — Alpha](releases/0.2.2.md), com alertas de versão, notas offline, Administração reorganizada e instalação dos pacotes compatíveis mais recentes do Marketplace. Inclui instaladores Windows, Linux e macOS. Hosts na 0.2.1 podem usar a atualização gerenciada normal. As [notas da 0.2.1](releases/0.2.1.md) preservam o histórico do reempacotamento anterior.

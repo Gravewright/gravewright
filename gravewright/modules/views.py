@@ -197,14 +197,32 @@ def default_marketplace(request):
 @require_GET
 @owner
 def marketplace(request):
-    return JsonResponse(
-        [
-            r
-            for r in catalog(host(require_trust=True))
-            if compatible(r["sdk"]) and r.get("status") != "revoked"
-        ],
-        safe=False,
-    )
+    records = [
+        r
+        for r in catalog(host(require_trust=True))
+        if compatible(r["sdk"]) and r.get("status") != "revoked"
+    ]
+    if request.GET.get("latest") == "1":
+        latest = {}
+        for record in records:
+            version = package_version(record["version"])
+            current = latest.get(record["id"])
+            if current is None or version > current[0]:
+                latest[record["id"]] = (version, record)
+        records = [record for _, record in latest.values()]
+    return JsonResponse(records, safe=False)
+
+
+def package_version(value):
+    """Order the stable numeric versions supported by the package contract."""
+    if not isinstance(value, str) or not re.fullmatch(
+        r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", value
+    ):
+        raise ModuleFailure("invalid_data")
+    try:
+        return tuple(map(int, value.split(".")))
+    except ValueError:
+        raise ModuleFailure("invalid_data") from None
 
 
 def installation_stream(request, data):
@@ -350,17 +368,13 @@ def update_package(request):
     from .packages import package_type
     row = selected_package(request)
     engine = host(require_trust=True)
-    def version(value):
-        if not re.fullmatch(r'(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)', value):
-            raise ModuleFailure('invalid_data')
-        return tuple(map(int, value.split('.')))
     candidates = [record for record in catalog(engine)
                   if record['id'] == row.module_id and record.get('status', 'active') == 'active'
-                  and compatible(record['sdk']) and version(record['version']) > version(row.version)
+                  and compatible(record['sdk']) and package_version(record['version']) > package_version(row.version)
                   and record.get('type', 'module') == package_type(row.manifest)]
     if not candidates:
         return JsonResponse({'updated': False, 'version': row.version})
-    record = max(candidates, key=lambda value: version(value['version']))
+    record = max(candidates, key=lambda value: package_version(value['version']))
     engine.install(record, download(record['download'], MAX_ARCHIVE))
     with transaction.atomic():
         row = Package.objects.select_for_update().filter(pk=row.pk).first()

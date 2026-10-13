@@ -4,13 +4,14 @@
 
 Gravewright is a self-hosted virtual tabletop for running role-playing games in a browser. This repository contains the Django implementation: server-rendered Jinja2 pages, Datastar interactions, a JavaScript/PixiJS board and Django Channels WebSockets.
 
-The current project version is **0.2.1**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
+The current project version is **0.2.2**, an alpha preview. The source includes campaigns, maps and scenes, independent system sheets and the bundled PDF System, tokens, chat and dice, journals and quests, audio, cards, combat, compendiums and installable browser modules and trusted Django apps. Game rules and document types belong to their system providers. See the [user guide](docs/en/user-guide.md) for the main workflows and current limitations, and [release identifiers](docs/en/development.md#release-identifiers) for package and tag names.
 
 ## Install and run locally
 
-Version 0.2.1 adds system-defined combat providers and packaged compendiums,
-shared modal windows that await pending saves, translated document types and
-revised item and card interfaces. See the [0.2.1 release notes](docs/releases/0.2.1.md).
+Version 0.2.2 adds release alerts, clearer Administration controls with offline
+release notes, and the latest compatible package selection in Systems and
+Modules. It also fixes opening cloned modal forms. See the
+[0.2.2 release notes](docs/releases/0.2.2.md).
 
 Extract the complete project into a writable folder, run the installer for your operating system, then use its generated Runner. The installer prepares tools, dependencies, the frontend and saved settings; the Runner starts the prepared application.
 
@@ -20,7 +21,7 @@ Extract the complete project into a writable folder, run the installer for your 
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/en/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/en/macos-runner.md) |
 
-The **0.2.1 package refreshed on 13 October 2026** includes all three platform installers. Its version, Alpha stage, `stable` update channel and asset name remain unchanged. Installations already reporting 0.2.1 do not receive a same-version automatic update: download the refreshed ZIP and matching checksum, preserve `.env` and configured data, replace the application files in the existing installation and rerun its installer. See the [repackaging and reinstall instructions](docs/releases/0.2.1.md).
+The **0.2.2 package includes all three platform installers**. Hosts on 0.2.1 can upgrade normally through **Administration → Updates → Check for updates**. Back up `.env` and configured data first. For a manual upgrade, stop the Runner, replace application files while preserving configuration and data, then rerun the platform installer. See the [download and upgrade instructions](docs/releases/0.2.2.md#download-and-upgrade).
 
 Linux downloads use glibc-based distributions; Alpine/musl needs a compatible Node.js installation already available. The macOS installer targets macOS 13.5 or newer. Installation needs internet for missing tools/packages. Python 3.14, uv and Node.js are prepared privately when compatible tools are unavailable; no permanent PATH changes are made. All launchers use a local profile on `127.0.0.1`, with no Redis service required. See the platform guides for exact requirements and storage paths.
 

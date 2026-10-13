@@ -1,4 +1,5 @@
 import { mountModal } from '/static/gravewright_table/modal.js';
+import { renderReleaseNotes } from './release-notes.js';
 function openPackageModal(element) {
   const placeholder = document.createComment('package-modal');
   element.before(placeholder); element.hidden = false;
@@ -305,7 +306,7 @@ function modules(root) {
         show(root, `[data-setup=${field}]`, !configured);
       }
       if (ready) {
-        const records = await http.get("/api/marketplace", { timeoutMs: 6e4 });
+        const records = await http.get("/api/marketplace?latest=1", { timeoutMs: 6e4 });
         // Reading a catalog applies signed revocations; refresh local status afterwards.
         installed = await http.get("/api/module-packages");
         releases = records;
@@ -447,69 +448,80 @@ function administration(root) {
     release = value;
     window.dispatchEvent(new CustomEvent('gravewright:core-update-status', {detail: value}));
     automatic = value.automatic ?? automatic;
-    const stages = {replace:ui('Replacing project files','Substituindo arquivos do projeto','Sustituyendo archivos del proyecto'),queued:ui('Update queued','Atualização na fila','Actualización en cola'),download:ui('Downloading release','Baixando versão','Descargando versión'),verify:ui('Verifying release','Validando versão','Validando versión'),dependencies:ui('Preparing dependencies','Preparando dependências','Preparando dependencias'),backup:ui('Backing up database and files','Salvando banco e arquivos','Guardando base y archivos'),migrate:ui('Applying migrations','Aplicando migrações','Aplicando migraciones'),restart:ui('Restarting server','Reiniciando servidor','Reiniciando servidor'),rollback:ui('Restoring previous version','Restaurando versão anterior','Restaurando versión anterior'),rolled_back:ui('Update failed; previous version restored','A atualização falhou; versão anterior restaurada','La actualización falló; versión anterior restaurada'),failed:ui('Update failed; check the update log','A atualização falhou; consulte o log de atualização','La actualización falló; consulta el registro'),complete:ui('Update installed','Atualização instalada','Actualización instalada')};
-    text(root, '[data-automatic-help]', automatic.supported ? ui('Replaces project files, including launchers. Keep .old to retain a rollback copy after success. Temporary recovery is always available during installation. Open tables will disconnect.','Substitui os arquivos do projeto, incluindo os inicializadores. Marque .old para manter uma cópia de rollback após o sucesso. A recuperação temporária durante a instalação é sempre mantida. As mesas serão desconectadas.','Sustituye los archivos del proyecto, incluidos los iniciadores. Marca .old para conservar una copia tras el éxito. La recuperación temporal durante la instalación siempre está disponible. Las mesas se desconectarán.') : ui('Automatic installation is available through the Gravewright launcher on Windows, Linux and macOS. Restart using the updated launcher.','A instalação automática funciona pelo inicializador do Gravewright no Windows, Linux e macOS. Reinicie pelo inicializador atualizado.','La instalación automática está disponible desde el iniciador de Gravewright en Windows, Linux y macOS. Reinicia con el iniciador actualizado.'));
+    const installed = value.installedRelease ?? {
+      name: `Gravewright ${value.currentVersionLabel ?? value.currentVersion}`,
+      version: value.currentVersion, notes: '', url: '',
+    };
+    const available = value.status === 'available' && !!value.availableVersion;
+    text(root, '[data-installed-release-name]', installed.name);
+    text(root, '[data-available-release-name]', value.releaseName || value.availableVersionLabel || value.availableVersion);
+    show(root, '[data-available-release]', available);
+    const statuses = {current:ui('Up to date','Atualizado','Actualizado'),available:ui('Update available','Atualização disponível','Actualización disponible'),failed:ui('Could not check for updates','Não foi possível verificar atualizações','No se pudieron buscar actualizaciones'),unchecked:ui('Not checked yet','Ainda não verificado','Todavía sin comprobar'),'ahead-of-channel':ui('No newer version available','Nenhuma versão mais recente disponível','No hay una versión más reciente disponible')};
+    summary(root.querySelector('[data-update-summary]'), {
+      [ui('Status','Situação','Estado')]: statuses[value.status] ?? value.status,
+      ...value.checkedAt ? {[ui('Last check','Última verificação','Última comprobación')]:new Date(value.checkedAt*1000).toLocaleString(language)} : {},
+    });
+    const failed = ['failed', 'rolled_back', 'rollback'].includes(automatic.stage);
+    show(root, '[data-install-panel]', available || !!automatic.busy || failed);
+    text(root, '[data-automatic-help]', automatic.supported
+      ? ui('The server will restart during installation. Keep a copy of the previous version to help with recovery.','O servidor será reiniciado durante a instalação. Mantenha uma cópia da versão anterior para facilitar a recuperação.','El servidor se reiniciará durante la instalación. Conserva una copia de la versión anterior para facilitar la recuperación.')
+      : ui('Start Gravewright with its launcher to install updates here.','Inicie o Gravewright pelo seu inicializador para instalar atualizações por aqui.','Inicia Gravewright con su iniciador para instalar actualizaciones aquí.'));
     const installButton = root.querySelector('[data-action=apply-update]');
-    installButton.hidden = false;
-    installButton.dataset.unavailable = String(!automatic.supported || automatic.busy || value.status !== 'available');
+    installButton.hidden = !available || !automatic.supported;
+    installButton.dataset.unavailable = String(!automatic.supported || !!automatic.busy || !available);
     installButton.disabled = installButton.dataset.unavailable === 'true';
-    root.querySelector('[data-update-keep-old]').disabled = !!automatic.busy;
+    const keepOld = root.querySelector('[data-update-keep-old]');
+    keepOld.dataset.unavailable = String(!!automatic.busy);
+    keepOld.disabled = !!automatic.busy;
+    keepOld.closest('label').hidden = !available;
+    const stages = {replace:ui('Replacing project files','Substituindo arquivos do projeto','Sustituyendo archivos del proyecto'),queued:ui('Update queued','Atualização na fila','Actualización en cola'),download:ui('Downloading release','Baixando versão','Descargando versión'),verify:ui('Verifying release','Validando versão','Validando versión'),dependencies:ui('Preparing dependencies','Preparando dependências','Preparando dependencias'),backup:ui('Backing up database and files','Salvando banco e arquivos','Guardando base y archivos'),migrate:ui('Applying migrations','Aplicando migrações','Aplicando migraciones'),restart:ui('Restarting server','Reiniciando servidor','Reiniciando servidor'),rollback:ui('Restoring previous version','Restaurando versão anterior','Restaurando versión anterior'),rolled_back:ui('Update failed; previous version restored','A atualização falhou; versão anterior restaurada','La actualización falló; versión anterior restaurada'),failed:ui('Update failed; check the update log','A atualização falhou; consulte o log de atualização','La actualización falló; consulta el registro')};
     text(root, '[data-automatic-progress]', (stages[automatic.stage] ?? '') + (automatic.stage === 'download' && automatic.total ? ` · ${Math.floor(100 * automatic.received / automatic.total)}%` : ''));
-    show(root, '[data-automatic-progress]', !!stages[automatic.stage]);
-    if (automatic.stage === 'complete' && automatic.backup) {
-      text(root, '[data-automatic-progress]', `${stages.complete} · .old: ${automatic.backup}`);
-    }
+    show(root, '[data-automatic-progress]', !!stages[automatic.stage] && (!!automatic.busy || failed));
+    show(root, '[data-container-update]', value.installFormat === 'container');
     if (automatic.busy && !pollTimer) pollTimer = setTimeout(pollUpdate, 1500);
-    const statuses = {current:ui('Up to date','Atualizado','Actualizado'),available:ui('Update available','Atualização disponível','Actualización disponible'),failed:ui('Check failed','Falha na consulta','Error de consulta'),unchecked:ui('Not checked yet','Ainda não verificado','Todavía sin comprobar'),'ahead-of-channel':ui('Newer than this channel','Mais recente que este canal','Más reciente que este canal')};
-    summary(root.querySelector('[data-update-summary]'), {[ui('Installed version','Versão instalada','Versión instalada')]:value.currentVersionLabel ?? value.currentVersion,[ui('Status','Situação','Estado')]:statuses[value.status] ?? value.status,...value.availableVersion ? {[ui('Published version','Versão publicada','Versión publicada')]:value.availableVersionLabel ?? value.availableVersion} : {},...value.checkedAt ? {[ui('Last check','Última verificação','Última comprobación')]:new Date(value.checkedAt*1000).toLocaleString(language)} : {}});
-    root.querySelector("[name=channel]").value = value.channel;
-    show(root, "[data-channel-risk]", value.channel !== "stable");
-    show(root, "[data-source-update]", false);
-    show(root, "[data-container-update]", value.installFormat === "container");
-    text(root, "[data-release-notes]", value.releaseNotes);
+
+    const displayed = available ? {name: value.releaseName || value.availableVersionLabel || value.availableVersion,
+      notes: value.releaseNotes, url: value.releaseUrl} : installed;
+    text(root, '[data-release-notes-name]', displayed.name);
+    show(root, '[data-release-notes-name]', displayed.name !== installed.name);
+    const hasNotes = renderReleaseNotes(root.querySelector('[data-release-notes]'), displayed.notes, {locale: language, url: displayed.url, title: displayed.name});
+    show(root, '[data-release-notes-empty]', !hasNotes);
+    const link = root.querySelector('[data-release]');
+    let valid = false;
+    try {
+      const url = new URL(displayed.url);
+      valid = url.protocol === 'https:' && url.hostname === 'github.com' && !url.username && !url.password;
+      if (valid) link.href = url.href;
+    } catch {}
+    link.hidden = !valid;
+
     const history = root.querySelector('[data-release-history]');
+    const expanded = new Set([...history.querySelectorAll('details[open]')].map(row => row.dataset.releaseVersion));
     history.replaceChildren();
     for (const item of value.releases ?? []) {
-      const row = document.createElement('details');
-      const heading = document.createElement('summary');
-      const title = document.createElement('strong');
-      title.textContent = item.name;
-      const meta = document.createElement('span');
+      const row = document.createElement('details'); row.dataset.releaseVersion = item.version;
+      row.open = expanded.has(item.version);
+      const heading = document.createElement('summary'), title = document.createElement('strong'), meta = document.createElement('span');
+      title.textContent = item.name || `Gravewright ${item.version}`;
       const date = item.publishedAt ? new Date(item.publishedAt) : null;
-      meta.textContent = [item.version, item.channel, date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(language) : '', item.installed ? ui('Installed','Instalada','Instalada') : ''].filter(Boolean).join(' · ');
+      meta.textContent = [date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(language) : '',
+        item.installed ? ui('Installed','Instalada','Instalada') : ''].filter(Boolean).join(' · ');
       heading.append(title, meta);
-      const body = document.createElement('div');
-      const notes = document.createElement('pre');
-      notes.textContent = item.notes || ui('No release notes.','Sem notas da versão.','Sin notas de versión.');
-      body.append(notes);
+      const body = document.createElement('div'); body.className = 'release-notes';
+      if (!renderReleaseNotes(body, item.notes, {locale: language, url: item.url, title: item.name})) {
+        const empty = document.createElement('p'); empty.textContent = ui('No release notes.','Sem notas da versão.','Sin notas de versión.'); body.append(empty);
+      }
       for (const [url, caption] of [[item.url, ui('Open release','Abrir release','Abrir versión')], [item.artifact?.url, ui('Download','Baixar','Descargar')]]) {
         try {
           const parsed = new URL(url);
           if (parsed.protocol !== 'https:' || parsed.hostname !== 'github.com' || parsed.username || parsed.password) continue;
-          const anchor = document.createElement('a');
-          anchor.href = parsed.href; anchor.target = '_blank'; anchor.rel = 'noopener noreferrer'; anchor.textContent = caption;
-          body.append(anchor);
+          const anchor = document.createElement('a'); anchor.href = parsed.href;
+          anchor.target = '_blank'; anchor.rel = 'noopener noreferrer'; anchor.textContent = caption; body.append(anchor);
         } catch {}
       }
       row.append(heading, body); history.append(row);
     }
-    if (!history.childElementCount) history.textContent = ui('Check for updates to load published releases.','Verifique as atualizações para carregar as releases publicadas.','Busca actualizaciones para cargar las versiones publicadas.');
-
-    const link = root.querySelector("[data-release]");
-    let valid = false;
-    try {
-      const u = new URL(value.releaseUrl);
-      valid = u.protocol === "https:" && u.hostname === "github.com" && !u.username && !u.password;
-      if (valid) link.href = u.href;
-    } catch {
-    }
-    link.hidden = !valid;
-    show(root, "[data-artifact]", !!value.artifact && value.installFormat === "win64");
-    if (value.artifact) {
-      text(root, "[data-artifact-name]", value.artifact.name);
-      text(root, "[data-artifact-hash]", value.artifact.sha256);
-      root.querySelector("[data-artifact-link]").href = value.artifact.url;
-    }
+    if (!history.childElementCount) history.textContent = ui('Check for updates to load the version history.','Verifique as atualizações para carregar o histórico de versões.','Busca actualizaciones para cargar el historial de versiones.');
   }
   async function refresh() {
     updates((await http.get('/api/admin/status')).updates);
@@ -598,10 +610,6 @@ function administration(root) {
     event.preventDefault();
     const data = new FormData(form);
     void run(root, async () => {
-      if (form.dataset.form === "channel") {
-        updates(await http.post("/api/admin/updates/channel", { channel: data.get("channel") }));
-        return;
-      }
       if (form.dataset.form === "import") {
         const file = data.get("archive");
         if (file.size > 256 * 1024 * 1024) throw Error("Choose a ZIP smaller than 256 MB.");
