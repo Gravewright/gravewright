@@ -18,7 +18,7 @@ class ReleasePresentationTests(SimpleTestCase):
     def setUp(self):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
-        self.root = Path(directory.name)
+        self.root = Path(directory.name).resolve()
         self.notes = self.root / "docs/releases/0.2.1.md"
         self.notes.parent.mkdir(parents=True)
         self.body = "# Gravewright 0.2.1 — Alpha\n\n" + "Complete notes.\n" * 400 + "\n## Português (Brasil)\nNotas completas.\n"
