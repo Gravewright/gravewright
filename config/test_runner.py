@@ -28,7 +28,8 @@ from scripts.gravewright_runner import (
 class RunnerEnvironmentTests(SimpleTestCase):
     def setUp(self):
         project = self.enterContext(tempfile.TemporaryDirectory())
-        root = Path(project)
+        # Match the production ROOT, including Windows 8.3 and macOS /var aliases.
+        root = Path(project).resolve()
         shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
         self.enterContext(patch.object(runner, 'ROOT', root))
         self.enterContext(patch.object(runner, 'LANGUAGE', runner.RunnerLanguage()))
@@ -471,7 +472,7 @@ class RunnerPortugueseMarketplaceTests(SimpleTestCase):
     # Exercise the first-install Translator branch without downloading packages
     # or touching any real database, catalog, configuration or trust store.
     def setUp(self):
-        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        root = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
         shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
         self.enterContext(patch.object(runner, 'ROOT', root))
         self.enterContext(patch.object(runner, 'LANGUAGE', runner.RunnerLanguage()))
