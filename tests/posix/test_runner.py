@@ -19,6 +19,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+import venv
 import zipfile
 
 
@@ -252,14 +253,16 @@ class NativeShellTests(unittest.TestCase):
             data = work / 'State $ % \' " ã'
             report = work / 'observed.json'
             sentinel = work / 'INJECTION-MUST-NOT-EXIST'
-            # A true venv symlink must not collapse to the base Python path.
-            python = work / 'venv $ "/bin/python'
-            python.parent.mkdir(parents=True)
-            python.symlink_to(sys.executable)
+            # A bare symlink is not a venv: macOS framework Python legitimately
+            # resolves it to the base executable. Exercise the actual prepared
+            # environment contract, including its pyvenv.cfg and sys.prefix.
+            environment = work / 'venv $ "'
+            venv.EnvBuilder(with_pip=False, symlinks=True).create(environment)
+            python = environment / 'bin/python'
             fake = (
                 'import json, os, sys\nfrom pathlib import Path\n'
                 f'Path({str(report)!r}).write_text(json.dumps({{"argv": sys.argv[1:], "cwd": os.getcwd(), '
-                '"python": sys.executable, "uv": os.environ.get("GW_UV"), '
+                '"python": sys.executable, "prefix": sys.prefix, "uv": os.environ.get("GW_UV"), '
                 '"pythonpath": os.environ.get("PYTHONPATH"), "venv": os.environ.get("VIRTUAL_ENV")}))\n'
                 'Path("replacement").write_text("#!/bin/sh\\necho REPLACEMENT_EXECUTED\\nexit 99\\n")\n'
                 'Path("replacement").replace("Gravewright Runner.sh")\n'
@@ -277,6 +280,7 @@ class NativeShellTests(unittest.TestCase):
             self.assertEqual(observed['argv'], ['--data-dir', str(data), '--check', '--no-browser', '--port', '3210', argument])
             self.assertEqual(observed['cwd'], str(project))
             self.assertEqual(observed['python'], str(python))
+            self.assertEqual(observed['prefix'], str(environment))
             self.assertEqual(observed['uv'], str(uv))
             self.assertIsNone(observed['pythonpath'])
             self.assertIsNone(observed['venv'])
