@@ -412,7 +412,7 @@ gw_main() {
     "$GW_PYTHON" -X utf8 scripts/prepare_frontend.py --node "$GW_NODE" --npm-cli "$GW_NPM" --state-dir "$GW_FRONTEND_STATE"
     if [ -z "$GW_DATA" ]; then GW_DATA="$GW_USER_DATA/data"; fi
     GW_DATA=$("$GW_BASE_PYTHON" -I -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]).expanduser(); print((p if p.is_absolute() else Path(sys.argv[2])/p).resolve())' "$GW_DATA" "$GW_CALLER_PWD")
-    GW_PHASE='personal configuration and optional marketplace'; gw_info '[6/7] Configuring the project and optional marketplace...'
+    GW_PHASE='personal configuration and default marketplace'; gw_info '[6/7] Configuring the project and default marketplace...'
     if [ "$GW_CHECK" -eq 0 ]; then "$GW_PYTHON" -X utf8 scripts/gravewright_runner.py --data-dir "$GW_DATA" --configure-default-marketplace; fi
     GW_PHASE='database check and launcher generation'; gw_info '[7/7] Checking the database and generating Gravewright Runner...'
     local check_args=(--data-dir "$GW_DATA" --check) launcher_args=(--data-dir "$GW_DATA")

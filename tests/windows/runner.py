@@ -353,27 +353,33 @@ def exercise(work, output, *, skip_browser):
     wizard_arguments = ['--data-dir', str(wizard_data), '--no-pause']
     configured = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure.log',
                 label='Saving interactive configuration with the installed Python...',
-                input_text='Mesa São Paulo\npt-BR\n3001\n\ns\nn\ns\nn\nn\n')
+                input_text='Mesa São Paulo\npt-BR\n3001\n\ns\nn\ns\nn\n')
     marketplace_question = 'Instalar o Gravewright Marketplace padrão? [s/N]:'
-    if marketplace_question not in configured or 'Instalação do marketplace padrão ignorada.' not in configured:
-        raise AssertionError('The installer did not offer the marketplace or respect the Portuguese refusal.')
+    if marketplace_question in configured or 'Marketplace padrão instalado. Chaves públicas:' not in configured:
+        raise AssertionError('The installer did not configure the official marketplace automatically.')
     configuration = source_env.read_text(encoding='utf-8')
     for expected in ('APP_NAME="Mesa São Paulo"', 'DEFAULT_LOCALE="pt-BR"',
                      'GRAVEWRIGHT_PORT="3001"', 'CAMPAIGN_SNAPSHOTS_ENABLED="false"'):
         if expected not in configuration:
             raise AssertionError(f'The configuration wizard did not save {expected}.')
-    for line in configuration.splitlines():
-        if line.startswith('GRAVEWRIGHT_MARKETPLACE_URL=') and line.partition('=')[2].strip().strip('"'):
-            raise AssertionError('Installing the pt-BR Translator enabled a declined marketplace catalog.')
+    expected_catalog = 'https://raw.githubusercontent.com/Gravewright/marketplace/main/gravewright.marketplace.json'
+    if f'GRAVEWRIGHT_MARKETPLACE_URL="{expected_catalog}"' not in configuration:
+        raise AssertionError('The installer did not persist the default marketplace catalog.')
+    keys = list((wizard_data / 'marketplace').glob('*/trusted-keys.json'))
+    if len(keys) != 1 or set(json.loads(keys[0].read_bytes())) != {'gravewright-2026', 'gravewright-2026-10'}:
+        raise AssertionError('The installer did not persist the reviewed official public keys.')
+    key_time = keys[0].stat().st_mtime_ns
     choices = list((wizard_data / 'marketplace').glob('*/.default-marketplace-choice'))
-    if len(choices) != 1 or choices[0].read_text(encoding='utf-8') != 'declined\n':
-        raise AssertionError('The installer did not save this installation\'s declined marketplace choice.')
+    if len(choices) != 1 or choices[0].read_text(encoding='utf-8') != 'installed\n':
+        raise AssertionError('The installer did not record the automatic marketplace installation.')
     repeated_questions = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure-repeat.log',
                                     label='Asking again and keeping saved settings with Enter...', input_text='\n' * 8)
     if 'Nome da mesa [Mesa São Paulo]' not in repeated_questions:
         raise AssertionError('The repeated launch did not ask with the saved default.')
     if marketplace_question in repeated_questions:
-        raise AssertionError('Repeated configuration asked again after the saved marketplace refusal.')
+        raise AssertionError('Repeated configuration asked a marketplace installation question.')
+    if 'Marketplace padrão instalado. Chaves públicas:' in repeated_questions or keys[0].stat().st_mtime_ns != key_time:
+        raise AssertionError('Repeated configuration installed the already validated marketplace keys again.')
     if source_env.read_text(encoding='utf-8') != configuration:
         raise AssertionError('Repeated configuration changed the project .env.')
 

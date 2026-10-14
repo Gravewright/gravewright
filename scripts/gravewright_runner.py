@@ -39,6 +39,12 @@ DEFAULT_MARKETPLACE_KEYS_URL = (
 # together so a later edit to main cannot break this installer's integrity check.
 # https://github.com/Gravewright/marketplace/commit/56aefb9db91666f7573bfdcdc2f6e9a6f2100527
 DEFAULT_MARKETPLACE_KEYS_SHA256 = '8f98a1bc4abf9c394b2818c9a34d28bb73cf39dd0b159a42ccb541b8a0b32815'
+# Compare cached trust stores against the same reviewed public keys. A merged
+# custom store has different bytes, so its file hash cannot establish this pin.
+DEFAULT_MARKETPLACE_PUBLIC_KEYS = {
+    'gravewright-2026': 'PXbpURq9J1jLkPnnwBVN/5B+zrb0p5MaWQAe/ltJ8LY=',
+    'gravewright-2026-10': 'GEEbh7w29FAsH+XqMhGV+nlCZhroohrJEOwoNy5g48E=',
+}
 DEFAULT_MARKETPLACE_CHOICE = '.default-marketplace-choice'
 
 
@@ -278,24 +284,42 @@ def install_default_marketplace(directory, download=None):
     return {**values, 'keyPath': str(key_path)}
 
 
-def offer_default_marketplace(directory, prompt=input, download=None):
-    """Offer the official signed catalog once and persist the owner's choice."""
-    catalog = os.environ.get('GRAVEWRIGHT_MARKETPLACE_URL', '').strip()
-    marker = marketplace_directory(directory) / DEFAULT_MARKETPLACE_CHOICE
-    if catalog or marker.exists():
-        return False
+def _cached_default_keys(path):
+    """Return a valid local trust store only when it contains the pinned keys."""
+    path = Path(path).expanduser()
+    if not path.is_absolute():
+        path = ROOT / path
     try:
-        answer = prompt(
-            tr('Install the default Gravewright Marketplace? [y/N]: ')
-        ).strip().casefold()
-    except (EOFError, KeyboardInterrupt):
-        print('', flush=True)
+        raw = path.read_bytes()
+        keys = json.loads(raw)
+        if (not isinstance(keys, dict)
+                or any(not isinstance(name, str) or not name
+                       or not isinstance(value, str)
+                       or len(base64.b64decode(value, validate=True)) != 32
+                       for name, value in keys.items())
+                or any(keys.get(name) != value for name, value in DEFAULT_MARKETPLACE_PUBLIC_KEYS.items())):
+            return None
+    except (OSError, UnicodeError, ValueError, TypeError):
+        return None
+    return raw
+
+
+def ensure_default_marketplace(directory, download=None):
+    """Configure the official catalog automatically, preserving custom catalogs.
+
+    Previously declined choices do not disable the installer's default. Existing
+    official configuration with validated local keys needs no network or writes.
+    """
+    catalog = os.environ.get('GRAVEWRIGHT_MARKETPLACE_URL', '').strip()
+    if catalog and catalog != DEFAULT_MARKETPLACE_URL:
         return False
-    if answer not in {'y', 'yes', 's', 'sim'}:
-        _write_private(marker, b'declined\n')
-        print(tr('Default marketplace installation skipped.'), flush=True)
+    configured = os.environ.get('GRAVEWRIGHT_MARKETPLACE_KEYS_FILE', '').strip()
+    raw = _cached_default_keys(configured or marketplace_directory(directory) / 'trusted-keys.json')
+    if catalog and configured and raw is not None:
         return False
-    result = install_default_marketplace(directory, download=download)
+    result = install_default_marketplace(
+        directory, download=(lambda: raw) if raw is not None else download,
+    )
     print(tr('Default marketplace installed. Public keys: {path}', path=result["keyPath"]), flush=True)
     return True
 
@@ -644,7 +668,7 @@ def main(argv=None):
     parser.add_argument('--no-browser', action='store_true', help=tr('Print the address without opening a browser.'))
     parser.add_argument('--check', action='store_true', help=tr('Prepare and check the installation, then exit.'))
     parser.add_argument('--configure-default-marketplace', action='store_true',
-                        help=tr('Ask personal settings and offer the official marketplace, then exit.'))
+                        help=tr('Ask personal settings and configure the official marketplace automatically, then exit.'))
     args = parser.parse_args(argv)
     log_path = None
     try:
@@ -654,7 +678,7 @@ def main(argv=None):
             if not args.check and args.configure_default_marketplace:
                 configure_environment(directory)
                 port = prepare_environment(directory, args.port)
-                offer_default_marketplace(directory)
+                ensure_default_marketplace(directory)
                 prepare_application(directory)
                 from gravewright.administration.models import HostSettings
                 HostSettings.objects.update_or_create(pk=1, defaults={'default_locale': os.environ['DEFAULT_LOCALE']})

@@ -1610,5 +1610,6 @@
   "Available version": "Versão disponível",
   "View update": "Ver atualização",
   "The configured marketplace public keys could not be read or are invalid.": "Não foi possível ler as chaves públicas configuradas do Marketplace ou elas são inválidas.",
-  "The official marketplace signing key conflicts with the configured trust store.": "A chave de assinatura oficial do Marketplace conflita com as chaves de confiança configuradas."
+  "The official marketplace signing key conflicts with the configured trust store.": "A chave de assinatura oficial do Marketplace conflita com as chaves de confiança configuradas.",
+  "Ask personal settings and configure the official marketplace automatically, then exit.": "Configurar a instalação e o marketplace oficial automaticamente e encerrar."
 }

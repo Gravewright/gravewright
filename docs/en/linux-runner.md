@@ -50,7 +50,7 @@ Internet is required for missing tools and packages. Compatible reused tools mus
 
 ## Configuration and storage
 
-Configuration is saved in **the project's `.env`**, next to the installer. Missing options are filled from `.env.example`; existing secrets, unrelated settings and saved answers are preserved. The installer asks for table name, language, local port, module folder, join codes, snapshots, campaign exports and tunnel access. Relative database/media/module paths start at the project root. Selecting `pt-BR` installs and activates the signed official Translator; a verified installed package can be reused offline. The optional default Marketplace is offered during interactive configuration, not unattended `--check`.
+Configuration is saved in **the project's `.env`**, next to the installer. Missing options are filled from `.env.example`; existing secrets, unrelated settings and saved answers are preserved. The installer asks for table name, language, local port, module folder, join codes, snapshots, campaign exports and tunnel access. Relative database/media/module paths start at the project root. Selecting `pt-BR` installs and activates the signed official Translator; a verified installed package can be reused offline. The official Marketplace is configured automatically when no catalog is configured. Existing custom catalogs are preserved, and verified official settings are reused offline. Unattended `--check` does not configure it.
 
 | Location | Purpose |
 | --- | --- |

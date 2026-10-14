@@ -80,6 +80,8 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `GRAVEWRIGHT_MARKETPLACE_KEYS_FILE` | empty | Local Ed25519 trust-key JSON path; relative to source root |
 | `GRAVEWRIGHT_RELEASES_REPOSITORY` | `Gravewright/gravewright` | owner/repo used for compatible Django release discovery; empty leaves it unconfigured |
 
+The native installer configures the official Marketplace automatically when no catalog is configured. Existing custom catalogs are preserved.
+
 Two optional commented settings are also recognized:
 
 | Variable | Default | Purpose |

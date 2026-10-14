@@ -80,6 +80,8 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `GRAVEWRIGHT_MARKETPLACE_KEYS_FILE` | vazio | Caminho local do JSON de chaves Ed25519 confiáveis, relativo à raiz |
 | `GRAVEWRIGHT_RELEASES_REPOSITORY` | `Gravewright/gravewright` | owner/repo para descobrir releases Django compatíveis; vazio deixa sem configuração |
 
+O instalador nativo configura automaticamente o Marketplace oficial quando não há catálogo configurado. Catálogos personalizados existentes são preservados.
+
 Duas opções comentadas também são reconhecidas:
 
 | Variável | Padrão | Finalidade |

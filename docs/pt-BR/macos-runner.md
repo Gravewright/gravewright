@@ -64,7 +64,7 @@ O Runner gerado é executável. Se o macOS bloquear um script baixado, use o flu
 
 ## Configuração e armazenamento
 
-O instalador cria/completa **o `.env` do projeto** a partir de `.env.example`, preservando valores salvos, chave privada e opções extras. Pergunta nome da mesa, idioma, porta, pasta de módulos, códigos de convite, snapshots, exportações e túneis. Caminhos relativos de banco/mídia/módulos partem da raiz do projeto. Escolher `pt-BR` instala e ativa o Translator oficial verificado; o pacote instalado e verificado pode ser reutilizado offline. O Marketplace padrão é opcional na configuração interativa; `--check` não faz perguntas.
+O instalador cria/completa **o `.env` do projeto** a partir de `.env.example`, preservando valores salvos, chave privada e opções extras. Pergunta nome da mesa, idioma, porta, pasta de módulos, códigos de convite, snapshots, exportações e túneis. Caminhos relativos de banco/mídia/módulos partem da raiz do projeto. Escolher `pt-BR` instala e ativa o Translator oficial verificado; o pacote instalado e verificado pode ser reutilizado offline. O Marketplace oficial é configurado automaticamente quando não há catálogo configurado. Catálogos personalizados são preservados, e as configurações oficiais verificadas são reutilizadas offline. O modo `--check` não configura o catálogo.
 
 | Local | Finalidade |
 | --- | --- |

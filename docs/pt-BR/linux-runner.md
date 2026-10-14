@@ -50,7 +50,7 @@ Downloads de ferramentas e pacotes ausentes exigem internet. Mantenha disponíve
 
 ## Configuração e armazenamento
 
-As configurações são salvas **no `.env` do projeto**, ao lado do instalador. Opções ausentes vêm de `.env.example`; chave privada, opções extras e respostas salvas são preservadas. O instalador pergunta nome da mesa, idioma, porta local, pasta de módulos, códigos de convite, snapshots, exportações e acesso por túneis. Caminhos relativos de banco/mídia/módulos partem da raiz do projeto. Escolher `pt-BR` instala e ativa o Translator oficial assinado; um pacote instalado e verificado pode ser reutilizado offline. O Marketplace padrão é oferecido na configuração interativa, não em `--check` sem perguntas.
+As configurações são salvas **no `.env` do projeto**, ao lado do instalador. Opções ausentes vêm de `.env.example`; chave privada, opções extras e respostas salvas são preservadas. O instalador pergunta nome da mesa, idioma, porta local, pasta de módulos, códigos de convite, snapshots, exportações e acesso por túneis. Caminhos relativos de banco/mídia/módulos partem da raiz do projeto. Escolher `pt-BR` instala e ativa o Translator oficial assinado; um pacote instalado e verificado pode ser reutilizado offline. O Marketplace oficial é configurado automaticamente quando não há catálogo configurado. Catálogos personalizados são preservados, e as configurações oficiais verificadas são reutilizadas offline. O modo `--check` não configura o catálogo.
 
 | Local | Finalidade |
 | --- | --- |

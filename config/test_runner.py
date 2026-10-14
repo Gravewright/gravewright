@@ -20,7 +20,7 @@ from scripts.gravewright_runner import (
     RunnerError,
     configure_environment,
     data_directory,
-    offer_default_marketplace,
+    ensure_default_marketplace,
     prepare_environment,
 )
 
@@ -330,84 +330,89 @@ class RunnerEnvironmentTests(SimpleTestCase):
                         patch.dict(os.environ, environment, clear=True):
                     self.assertEqual(data_directory(), expected)
 
-    def test_runner_can_install_default_marketplace_and_remembers_choice(self):
+    def test_runner_configures_default_marketplace_without_a_question_and_is_offline_on_repeat(self):
         from dotenv import dotenv_values
 
-        raw = b'{\n  "gravewright-2026": "PXbpURq9J1jLkPnnwBVN/5B+zrb0p5MaWQAe/ltJ8LY="\n}\n'
+        raw = RunnerDefaultKeysTests.keys
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ, clear=True), patch.object(
             sys, 'path', sys.path.copy()
         ):
             directory = Path(temp)
             prepare_environment(directory)
-            self.assertTrue(offer_default_marketplace(
-                directory, prompt=lambda _: 'sim', download=lambda: raw,
+            self.assertTrue(ensure_default_marketplace(
+                directory, download=lambda: raw,
             ))
             values = dotenv_values(runner.ROOT / '.env', interpolate=False)
             key_path = runner.marketplace_directory(directory) / 'trusted-keys.json'
             self.assertEqual(values['GRAVEWRIGHT_MARKETPLACE_URL'], DEFAULT_MARKETPLACE_URL)
             self.assertEqual(values['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], key_path.as_posix())
             self.assertEqual(key_path.read_bytes(), raw)
-            self.assertFalse(offer_default_marketplace(
-                directory,
-                prompt=lambda _: self.fail('The saved choice must prevent another question.'),
-            ))
+            original = (runner.ROOT / '.env').read_bytes()
+            with patch.object(runner, '_write_private') as write:
+                self.assertFalse(ensure_default_marketplace(
+                    directory, download=lambda: self.fail('Configured official keys must work offline.'),
+                ))
+                write.assert_not_called()
+            self.assertEqual((runner.ROOT / '.env').read_bytes(), original)
 
-    def test_runner_remembers_declined_default_marketplace(self):
+    def test_old_declined_marker_does_not_prevent_automatic_default_marketplace(self):
         with tempfile.TemporaryDirectory() as temp, patch.dict(os.environ, clear=True), patch.object(
             sys, 'path', sys.path.copy()
         ):
             directory = Path(temp)
             prepare_environment(directory)
-            self.assertFalse(offer_default_marketplace(directory, prompt=lambda _: 'n'))
-            self.assertTrue((runner.marketplace_directory(directory) / '.default-marketplace-choice').is_file())
-            self.assertFalse(offer_default_marketplace(
-                directory,
-                prompt=lambda _: self.fail('The saved choice must prevent another question.'),
-            ))
+            marker = runner.marketplace_directory(directory) / runner.DEFAULT_MARKETPLACE_CHOICE
+            marker.parent.mkdir(parents=True)
+            marker.write_text('declined\n', encoding='utf-8')
+            self.assertTrue(ensure_default_marketplace(directory, download=lambda: RunnerDefaultKeysTests.keys))
+            self.assertEqual(marker.read_text(encoding='utf-8'), 'installed\n')
+            self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_URL'], DEFAULT_MARKETPLACE_URL)
 
-    def test_catalog_choice_is_per_installation_and_ignores_the_legacy_global_marker(self):
+    def test_automatic_catalog_keys_are_per_installation_and_ignore_legacy_global_marker(self):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
             directory = Path(temporary)
             (directory / '.default-marketplace-choice').write_text('declined\n', encoding='utf-8')
             first = runner.ROOT / 'first'
             second = runner.ROOT / 'second'
             with patch.object(runner, 'ROOT', first):
-                prompt = Mock(return_value='n')
-                self.assertFalse(offer_default_marketplace(directory, prompt=prompt))
-                prompt.assert_called_once()
-                self.assertFalse(offer_default_marketplace(
-                    directory, prompt=lambda _: self.fail('A project must retain its own choice.'),
-                ))
+                self.assertTrue(ensure_default_marketplace(directory, download=lambda: RunnerDefaultKeysTests.keys))
+                first_keys = Path(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'])
+                self.assertEqual(first_keys, runner.marketplace_directory(directory) / 'trusted-keys.json')
+            os.environ['GRAVEWRIGHT_MARKETPLACE_URL'] = ''
+            os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'] = ''
             with patch.object(runner, 'ROOT', second):
-                prompt = Mock(return_value='n')
-                self.assertFalse(offer_default_marketplace(directory, prompt=prompt))
-                prompt.assert_called_once()
+                self.assertTrue(ensure_default_marketplace(directory, download=lambda: RunnerDefaultKeysTests.keys))
+                second_keys = Path(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'])
+                self.assertEqual(second_keys, runner.marketplace_directory(directory) / 'trusted-keys.json')
+                self.assertNotEqual(first_keys, second_keys)
 
-    def test_existing_catalog_configuration_is_preserved_without_an_offer(self):
+    def test_existing_custom_catalog_configuration_is_preserved_without_network_or_writes(self):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {
                 'GRAVEWRIGHT_MARKETPLACE_URL': 'https://catalog.example/catalog.json',
                 'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': 'custom-trust.json'}):
-            self.assertFalse(offer_default_marketplace(
-                Path(temporary), prompt=lambda _: self.fail('An existing catalog must be preserved.'),
-            ))
+            with patch.object(runner, '_write_private') as write:
+                self.assertFalse(ensure_default_marketplace(
+                    Path(temporary), download=lambda: self.fail('A custom catalog must not need official keys.'),
+                ))
+                write.assert_not_called()
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_URL'], 'https://catalog.example/catalog.json')
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], 'custom-trust.json')
 
-    def test_keys_installed_for_translation_do_not_suppress_the_catalog_offer(self):
+    def test_keys_installed_for_translation_allow_automatic_catalog_configuration_offline(self):
         raw = RunnerDefaultKeysTests.keys
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
             directory = Path(temporary)
             custom = directory / 'custom-trust.json'
             custom.write_bytes(raw)
             os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'] = str(custom)
-            prompt = Mock(return_value='yes')
-            self.assertTrue(offer_default_marketplace(directory, prompt=prompt, download=lambda: raw))
-            prompt.assert_called_once()
+            self.assertTrue(ensure_default_marketplace(
+                directory, download=lambda: self.fail('Validated local keys do not need a download.'),
+            ))
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], custom.as_posix())
             self.assertEqual(custom.read_bytes(), raw)
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_URL'], DEFAULT_MARKETPLACE_URL)
 
-    def test_accepting_official_catalog_merges_keys_without_overwriting_the_custom_file(self):
+    def test_automatic_official_catalog_merges_keys_without_overwriting_the_custom_file(self):
         raw = RunnerDefaultKeysTests.keys
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
             directory = Path(temporary)
@@ -415,11 +420,52 @@ class RunnerEnvironmentTests(SimpleTestCase):
             original = b'{"custom-publisher":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}'
             custom.write_bytes(original)
             os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'] = str(custom)
-            self.assertTrue(offer_default_marketplace(directory, prompt=lambda _: 'yes', download=lambda: raw))
+            self.assertTrue(ensure_default_marketplace(directory, download=lambda: raw))
             self.assertEqual(custom.read_bytes(), original)
             saved = Path(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'])
             self.assertEqual(saved, runner.marketplace_directory(directory) / 'trusted-keys.json')
             self.assertEqual(json.loads(saved.read_bytes()), {**json.loads(original), **json.loads(raw)})
+            self.assertFalse(ensure_default_marketplace(
+                directory, download=lambda: self.fail('Merged official/custom keys must work offline.'),
+            ))
+
+    def test_existing_official_catalog_with_missing_keys_is_repaired(self):
+        from dotenv import dotenv_values
+
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {
+                'GRAVEWRIGHT_MARKETPLACE_URL': DEFAULT_MARKETPLACE_URL,
+                'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': ''}, clear=True):
+            directory = Path(temporary)
+            self.assertTrue(ensure_default_marketplace(directory, download=lambda: RunnerDefaultKeysTests.keys))
+            values = dotenv_values(runner.ROOT / '.env', interpolate=False)
+            self.assertEqual(values['GRAVEWRIGHT_MARKETPLACE_URL'], DEFAULT_MARKETPLACE_URL)
+            self.assertEqual(json.loads(Path(values['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE']).read_bytes()),
+                             runner.DEFAULT_MARKETPLACE_PUBLIC_KEYS)
+
+    def test_existing_official_catalog_with_previous_signing_key_adds_the_reviewed_key(self):
+        raw = RunnerDefaultKeysTests.keys
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
+            directory = Path(temporary)
+            custom = directory / 'previous-keys.json'
+            original = json.dumps({'gravewright-2026': runner.DEFAULT_MARKETPLACE_PUBLIC_KEYS['gravewright-2026']}).encode()
+            custom.write_bytes(original)
+            os.environ.update({'GRAVEWRIGHT_MARKETPLACE_URL': DEFAULT_MARKETPLACE_URL,
+                               'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': str(custom)})
+            self.assertTrue(ensure_default_marketplace(directory, download=lambda: raw))
+            self.assertEqual(custom.read_bytes(), original)
+            self.assertEqual(json.loads(Path(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE']).read_bytes()),
+                             runner.DEFAULT_MARKETPLACE_PUBLIC_KEYS)
+
+    def test_automatic_catalog_download_failure_does_not_change_configuration(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
+            config = runner.ROOT / '.env'
+            config.write_text('GRAVEWRIGHT_MARKETPLACE_URL=\nCUSTOM_OPTION=keep\n', encoding='utf-8')
+            original = config.read_bytes()
+            download = Mock(side_effect=RunnerError('Could not download the default marketplace public keys.'))
+            with self.assertRaisesRegex(RunnerError, 'Could not download'):
+                ensure_default_marketplace(Path(temporary), download=download)
+            self.assertEqual(config.read_bytes(), original)
+            self.assertNotIn('GRAVEWRIGHT_MARKETPLACE_URL', os.environ)
 
     def test_official_key_conflicts_or_invalid_custom_files_leave_configuration_unchanged(self):
         raw = RunnerDefaultKeysTests.keys
@@ -439,19 +485,19 @@ class RunnerEnvironmentTests(SimpleTestCase):
                 with self.subTest(content=content):
                     custom.write_bytes(content)
                     with self.assertRaises(RunnerError):
-                        offer_default_marketplace(directory, prompt=lambda _: 'yes', download=lambda: raw)
+                        ensure_default_marketplace(directory, download=lambda: raw)
                     self.assertEqual(custom.read_bytes(), content)
                     self.assertEqual(config.read_bytes(), original)
                     self.assertFalse((runner.marketplace_directory(directory) / runner.DEFAULT_MARKETPLACE_CHOICE).exists())
 
-    def test_interactive_installer_offers_catalog_before_preparing_translation(self):
+    def test_interactive_installer_configures_catalog_before_preparing_translation(self):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {'DEFAULT_LOCALE': 'pt-BR'}):
             events = []
             with patch.object(runner, 'data_directory', return_value=Path(temporary)), \
                     patch.object(runner, 'instance_lock'), \
                     patch.object(runner, 'prepare_environment', return_value=3000), \
                     patch.object(runner, 'configure_environment', side_effect=lambda _: events.append('configure')), \
-                    patch.object(runner, 'offer_default_marketplace', side_effect=lambda _: events.append('marketplace')), \
+                    patch.object(runner, 'ensure_default_marketplace', side_effect=lambda _: events.append('marketplace')), \
                     patch.object(runner, 'prepare_application', side_effect=lambda _: events.append('application')), \
                     patch('gravewright.administration.models.HostSettings.objects.update_or_create'):
                 self.assertEqual(runner.main(['--configure-default-marketplace']), 0)
@@ -461,11 +507,18 @@ class RunnerEnvironmentTests(SimpleTestCase):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             with patch.object(runner, 'prepare_application'), \
                     patch.object(runner, 'configure_logging', return_value=Path(temporary) / 'runner.log'), \
-                    patch.object(runner, 'offer_default_marketplace') as offer, \
+                    patch.object(runner, 'configure_environment') as configure, \
+                    patch.object(runner, 'ensure_default_marketplace') as ensure, \
                     patch('scripts.update_supervisor.Supervisor') as supervisor:
                 self.assertEqual(runner.main(['--check', '--data-dir', temporary]), 0)
-                offer.assert_not_called()
+                configure.assert_not_called()
+                ensure.assert_not_called()
                 supervisor.return_value.recover.assert_called_once()
+                configure.reset_mock()
+                ensure.reset_mock()
+                self.assertEqual(runner.main(['--check', '--configure-default-marketplace', '--data-dir', temporary]), 0)
+                configure.assert_not_called()
+                ensure.assert_not_called()
 
 
 class RunnerPortugueseMarketplaceTests(SimpleTestCase):
@@ -477,13 +530,12 @@ class RunnerPortugueseMarketplaceTests(SimpleTestCase):
         self.enterContext(patch.object(runner, 'ROOT', root))
         self.enterContext(patch.object(runner, 'LANGUAGE', runner.RunnerLanguage()))
 
-    def test_required_translation_keeps_the_declined_catalog_disabled(self):
+    def test_translation_preparation_does_not_configure_a_catalog_during_unattended_checks(self):
         from dotenv import dotenv_values
 
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ), patch.object(sys, 'path', sys.path.copy()):
             directory = Path(temporary)
             prepare_environment(directory)
-            offer_default_marketplace(directory, prompt=lambda _: 'n')
             row = Mock(pk=1, version='0.2.2', locale_catalogs={'pt-BR': 'pt-BR.json'})
             record = {'id': 'gravewright.translator', 'version': '0.2.2', 'sdk': '>=1.0.0',
                       'download': 'https://example.org/translator.zip'}
@@ -508,9 +560,10 @@ class RunnerPortugueseMarketplaceTests(SimpleTestCase):
             self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_URL'], '')
             self.assertEqual(json.loads(Path(values['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE']).read_bytes()),
                              json.loads(RunnerDefaultKeysTests.keys))
-            self.assertFalse(offer_default_marketplace(
-                directory, prompt=lambda _: self.fail('The declined choice remains in force.'),
+            self.assertTrue(ensure_default_marketplace(
+                directory, download=lambda: self.fail('Translation already installed the pinned keys.'),
             ))
+            self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_URL'], DEFAULT_MARKETPLACE_URL)
 
 
 class RunnerDefaultKeysTests(SimpleTestCase):
@@ -528,6 +581,7 @@ class RunnerDefaultKeysTests(SimpleTestCase):
         self.response.read.return_value = self.keys
         self.assertEqual(runner._download_default_keys(), self.keys)
         self.assertEqual(hashlib.sha256(self.keys).hexdigest(), runner.DEFAULT_MARKETPLACE_KEYS_SHA256)
+        self.assertEqual(json.loads(self.keys), runner.DEFAULT_MARKETPLACE_PUBLIC_KEYS)
         request = self.opener.open.call_args.args[0]
         self.assertEqual(request.full_url, 'https://raw.githubusercontent.com/Gravewright/marketplace/'
                          '56aefb9db91666f7573bfdcdc2f6e9a6f2100527/trusted-keys.json')

@@ -64,7 +64,7 @@ The generated Runner is executable. If macOS blocks a downloaded script, use App
 
 ## Configuration and storage
 
-The installer creates/completes **the project's `.env`** from `.env.example`, preserving saved values, its private secret and custom settings. It asks for table name, language, port, modules folder, join codes, snapshots, campaign exports and tunnel access. Relative database/media/module paths are resolved from the project root. Selecting `pt-BR` installs and activates the verified official Translator; a verified installed package can be reused offline. The default Marketplace is optional during interactive configuration; unattended `--check` does not ask about it.
+The installer creates/completes **the project's `.env`** from `.env.example`, preserving saved values, its private secret and custom settings. It asks for table name, language, port, modules folder, join codes, snapshots, campaign exports and tunnel access. Relative database/media/module paths are resolved from the project root. Selecting `pt-BR` installs and activates the verified official Translator; a verified installed package can be reused offline. The official Marketplace is configured automatically when no catalog is configured. Existing custom catalogs are preserved, and verified official settings are reused offline. Unattended `--check` does not configure it.
 
 | Location | Purpose |
 | --- | --- |

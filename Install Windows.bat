@@ -178,7 +178,7 @@ exit /b 0
 :start_application
 if not defined GW_DATA set "GW_DATA=%LOCALAPPDATA%\Gravewright\data"
 echo.
-echo [6/7] Configuring the project .env and optional marketplace...
+echo [6/7] Configuring the project .env and default marketplace...
 if not defined GW_MARKETPLACE goto marketplace_ready
 set "GW_ERROR=Could not configure the project .env or marketplace. Check the error above."
 "%GW_PYTHON%" -X utf8 scripts\gravewright_runner.py --data-dir "%GW_DATA%" --configure-default-marketplace

@@ -133,6 +133,19 @@ class FrontendPreparationTests(TestCase):
         self.prepare()
         self.assertEqual(len(self.mutation_commands()), 2)
 
+    def test_install_script_policy_change_reinstalls_then_reuses_dependencies(self):
+        self.prepare()
+        self.calls.clear()
+        package = self.source / 'package.json'
+        package.write_text(json.dumps({
+            'name': 'test', 'allowScripts': {'esbuild@1.0.0': True},
+        }), encoding='utf-8')
+        self.prepare()
+        self.assertEqual(len(self.mutation_commands()), 2)
+        self.calls.clear()
+        self.prepare()
+        self.assertEqual(self.mutation_commands(), [])
+
     def test_missing_package_or_broken_native_esbuild_is_reinstalled(self):
         self.prepare()
         for missing in (True, False):
