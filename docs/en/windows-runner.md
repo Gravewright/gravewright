@@ -14,13 +14,13 @@ The installer finishes without starting the server. Run it again whenever you wa
 
 ## Tools and preparation
 
-| Tool | Compatible existing installation | Private fallback |
-| --- | --- | --- |
-| uv | Version 0.12.0 or newer | Verified uv 0.12.13 |
-| Python | CPython 3.14, Windows x64, standard GIL build | Managed `cpython-3.14-windows-x86_64-none`, validated after discovery |
-| Node.js/npm | Stable Node.js 22 or 24 LTS x64, npm 10 or newer | Verified Node.js 24.19.0 with npm |
+| Tool | Installation-local managed tool |
+| --- | --- |
+| uv | Verified uv 0.12.13 |
+| Python | Managed CPython 3.14, Windows x64, standard GIL build |
+| Node.js/npm | Verified Node.js 24.19.0 with npm |
 
-No administrator privileges, permanent PATH changes, Docker or Redis server are required. Reused tools must remain installed. Python dependencies use an isolated environment and `uv sync --locked --no-dev`. Frontend preparation runs `npm ci --include=dev --include=optional` when required, then `npm run build`; input/output hashes allow unchanged assets to be reused. Installation updates generated assets and ignored `node_modules` in the source folder.
+No administrator privileges, permanent PATH changes, Docker or Redis server are required. The installer reuses verified tools in this installation and does not depend on tools in another OS profile. Python dependencies use an isolated environment and `uv sync --locked --no-dev`. Frontend preparation runs `npm ci --include=dev --include=optional` when required, then `npm run build`; input/output hashes allow unchanged assets to be reused. Installation updates generated assets and ignored `node_modules` in the source folder.
 
 ## Configuration and personal data
 
@@ -32,7 +32,7 @@ Selecting `pt-BR` automatically installs and globally activates the official sig
 
 Before preparing the Translator, the installer configures the official Gravewright Marketplace automatically when no catalog is configured, including installations that previously declined it. It verifies the official public keys and saves the catalog settings without an extra question. Existing custom catalogs are preserved; custom key files are kept intact, with any required official keys added to a managed copy. A complete, verified official configuration is reused offline on later installations. Unattended `--check` does not configure the Marketplace.
 
-The database and media use `GRAVEWRIGHT_DATABASE` and `GRAVEWRIGHT_MEDIA_ROOT` from the project `.env`, defaulting to `data/gravewright.sqlite3` and `data/media` in the project. Runner state, collected assets and tools remain under **`%LOCALAPPDATA%\Gravewright`**:
+The database and media use `GRAVEWRIGHT_DATABASE` and `GRAVEWRIGHT_MEDIA_ROOT` from the project `.env`, defaulting to `data/gravewright.sqlite3` and `data/media` in the project. Runner state, collected assets, managed tools and caches also stay **inside the extracted project folder**:
 
 | Path | Purpose |
 | --- | --- |
@@ -41,9 +41,9 @@ The database and media use `GRAVEWRIGHT_DATABASE` and `GRAVEWRIGHT_MEDIA_ROOT` f
 | `data/logs/runner.log` | Startup/runtime diagnostics |
 | `data/runner.lock` | Prevents concurrent use of the same data |
 | `data/marketplace/<source-location-hash>/trusted-keys.json` | Managed official and retained publisher public keys, when needed |
-| `runner/` | Downloaded tools, caches and environments per source location |
-| `runner/prepare.lock` | Prevents simultaneous dependency preparation |
-| `runner/frontend/<source-location-hash>/state.json` | Frontend preparation state |
+| `data/runner/` | Downloaded tools, caches and environments per source location |
+| `data/runner/prepare.lock` | Prevents simultaneous dependency preparation |
+| `data/runner/frontend/<source-location-hash>/state.json` | Frontend preparation state |
 
 The installer creates and reads `.env` in the project root, next to `Install Windows.bat`. If it does not exist, a complete configuration is generated from `.env.example` with a new private secret. Configuration files in user-data directories are never imported. Python environments are managed separately. Defaults come from `.env.example`, then the project `.env`; local network/security bounds are enforced by the runner. The secret is generated automatically. Stop the server before changing settings or backing up the project `.env` and the entire personal `data` directory. Preserve the secret, database and media together. Back up before installing a new version, since migrations can make older source versions incompatible.
 
@@ -56,7 +56,7 @@ The runner serves HTTP only on `127.0.0.1`, with one server process and in-memor
 For unattended installation with defaults, without configuration questions or server startup:
 
 ```bat
-"Install Windows.bat" --check --no-pause --data-dir "%TEMP%\Gravewright Install Check"
+"Install Windows.bat" --check --no-pause --data-dir "data\check"
 ```
 
 This installs dependencies, prepares assets/database and generates a runner pointing at the selected data directory. It is not read-only. A later normal installation asks the questions. `--data-dir` chooses the stored data directory; `--port` overrides only the installation check, not the saved port.

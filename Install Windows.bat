@@ -63,7 +63,6 @@ set "GW_ARCH=%PROCESSOR_ARCHITECTURE%"
 if defined PROCESSOR_ARCHITEW6432 set "GW_ARCH=%PROCESSOR_ARCHITEW6432%"
 set "GW_ERROR=This Runner requires Windows 10 1803 or newer, or Windows 11, on x64."
 if /i not "%GW_ARCH%"=="AMD64" goto failed
-if not defined LOCALAPPDATA goto failed
 rem Windows supplies these utilities even when Python and Node are absent.
 set "GW_SYSTEM=%SystemRoot%\System32"
 if not exist "%GW_SYSTEM%\curl.exe" goto failed
@@ -78,9 +77,13 @@ set "GW_PUSHED=1"
 set "GRAVEWRIGHT_ROOT=%CD%"
 set "GW_ERROR=The project is incomplete. Extract the entire ZIP before starting."
 for %%F in (pyproject.toml uv.lock scripts\gravewright_runner.py scripts\windows\create_runner.py scripts\windows\runner.bat scripts\windows\launch_runner.py scripts\prepare_frontend.py gravewright\maps\frontend\package.json gravewright\maps\frontend\package-lock.json gravewright\maps\scripts\build.cjs) do if not exist "%%F" goto failed
-set "GW_RUNTIME=%LOCALAPPDATA%\Gravewright\runner"
-set "GW_ERROR=Cannot create the Runner working directory under LOCALAPPDATA."
+set "GW_RUNTIME=%GRAVEWRIGHT_ROOT%\data\runner"
+if defined GRAVEWRIGHT_RUNNER_ROOT for %%D in ("%GRAVEWRIGHT_RUNNER_ROOT%\.") do set "GW_RUNTIME=%%~fD"
+set "GRAVEWRIGHT_RUNNER_ROOT=%GW_RUNTIME%"
+if not defined GW_DATA set "GW_DATA=%GRAVEWRIGHT_ROOT%\data"
+set "GW_ERROR=Cannot create the local Runner directory. Extract the ZIP to a writable folder."
 if not exist "%GW_RUNTIME%" mkdir "%GW_RUNTIME%"
+if not exist "%GW_RUNTIME%\tmp" mkdir "%GW_RUNTIME%\tmp"
 set "GW_WORK=%GW_RUNTIME%\work-%RANDOM%-%RANDOM%"
 mkdir "%GW_WORK%" 2>nul
 if errorlevel 1 goto failed
@@ -89,6 +92,23 @@ set "GW_WORK_CREATED=1"
 rem Settings apply only to this CMD process and its children.
 for %%V in (VIRTUAL_ENV PYTHONHOME PYTHONPATH UV_PROJECT UV_PYTHON UV_SYSTEM_PYTHON UV_MANAGED_PYTHON UV_NO_MANAGED_PYTHON UV_PYTHON_NO_REGISTRY UV_FROZEN UV_NO_SYNC UV_WORKING_DIR UV_CONFIG_FILE) do set "%%V="
 set "UV_CACHE_DIR=%GW_RUNTIME%\cache"
+set "UV_PYTHON_INSTALL_DIR=%GW_RUNTIME%\python"
+set "UV_PYTHON_BIN_DIR=%GW_RUNTIME%\python-bin"
+set "UV_PYTHON_INSTALL_BIN=0"
+set "UV_PYTHON_INSTALL_REGISTRY=0"
+set "UV_PYTHON_NO_REGISTRY=1"
+set "UV_PYTHON_PREFERENCE=only-managed"
+set "npm_config_cache=%GW_RUNTIME%\npm-cache"
+set "CARGO_HOME=%GW_RUNTIME%\cargo"
+set "RUSTUP_HOME=%GW_RUNTIME%\rustup"
+set "TEMP=%GW_RUNTIME%\tmp"
+set "TMP=%GW_RUNTIME%\tmp"
+rem Native Windows helpers may create profile caches even when only making a shortcut.
+rem Contain those child-process writes in this installation too.
+set "LOCALAPPDATA=%GW_RUNTIME%\profile\local"
+set "APPDATA=%GW_RUNTIME%\profile\roaming"
+if not exist "%LOCALAPPDATA%" mkdir "%LOCALAPPDATA%"
+if not exist "%APPDATA%" mkdir "%APPDATA%"
 set "UV_PYTHON_DOWNLOADS=automatic"
 set "UV_LINK_MODE=copy"
 set "UV_NO_ENV_FILE=1"
@@ -176,7 +196,6 @@ set "GW_PREPARED=1"
 exit /b 0
 
 :start_application
-if not defined GW_DATA set "GW_DATA=%LOCALAPPDATA%\Gravewright\data"
 echo.
 echo [6/7] Configuring the project .env and default marketplace...
 if not defined GW_MARKETPLACE goto marketplace_ready
@@ -207,12 +226,7 @@ goto finish
 
 :resolve_uv
 set "GW_UV="
-"%GW_SYSTEM%\where.exe" uv.exe >"%GW_WORK%\uv-candidates.txt" 2>nul
-for /f "usebackq delims=" %%U in ("%GW_WORK%\uv-candidates.txt") do (
-    set "GW_CANDIDATE=%%U"
-    call :try_uv
-)
-if defined GW_UV exit /b 0
+rem Use the verified local executable, never another installation's PATH tools.
 set "GW_CANDIDATE=%GW_RUNTIME%\uv\0.12.13-x64\uv.exe"
 set "GW_HASH_FILE=%GW_CANDIDATE%"
 set "GW_EXPECTED=e43cc6ca110540ad845ad6aa1e468e224813eb1da76e145413a262d7073d05e7"
@@ -274,9 +288,6 @@ exit /b 1
 
 :resolve_python
 set "GW_BASE_PYTHON="
-set "UV_PYTHON_PREFERENCE=system"
-call :find_python
-if defined GW_BASE_PYTHON exit /b 0
 set "UV_PYTHON_INSTALL_DIR=%GW_RUNTIME%\python"
 set "UV_PYTHON_BIN_DIR=%GW_RUNTIME%\python-bin"
 set "UV_PYTHON_INSTALL_BIN=0"
@@ -306,13 +317,7 @@ exit /b 1
 :resolve_node
 set "GW_NODE="
 set "GW_NPM="
-"%GW_SYSTEM%\where.exe" node.exe >"%GW_WORK%\node-candidates.txt" 2>nul
-"%GW_SYSTEM%\where.exe" npm.cmd >"%GW_WORK%\npm-candidates.txt" 2>nul
-for /f "usebackq delims=" %%N in ("%GW_WORK%\node-candidates.txt") do (
-    set "GW_NODE_CANDIDATE=%%N"
-    call :try_node
-)
-if defined GW_NODE exit /b 0
+rem Node and its bundled npm stay in this installation's verified tool folder.
 set "GW_NODE_CANDIDATE=%GW_RUNTIME%\node\24.19.0-x64\node.exe"
 set "GW_HASH_FILE=%GW_NODE_CANDIDATE%"
 set "GW_EXPECTED=3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237"
@@ -362,17 +367,7 @@ if not exist "%GW_NODE_REAL%" exit /b 1
 for %%D in ("%GW_NODE_REAL%") do set "GW_NPM_CANDIDATE=%%~dpDnode_modules\npm\bin\npm-cli.js"
 call :try_npm
 if defined GW_NODE exit /b 0
-for /f "usebackq delims=" %%N in ("%GW_WORK%\npm-candidates.txt") do (
-    set "GW_NPM_WRAPPER=%%N"
-    call :try_path_npm
-)
-if defined GW_NODE exit /b 0
 exit /b 1
-:try_path_npm
-if defined GW_NODE exit /b 0
-for %%D in ("%GW_NPM_WRAPPER%") do set "GW_NPM_CANDIDATE=%%~dpDnode_modules\npm\bin\npm-cli.js"
-call :try_npm
-exit /b
 :try_npm
 if not exist "%GW_NPM_CANDIDATE%" exit /b 1
 rem Invoke npm's JS CLI directly, avoiding a second CMD parse by npm.cmd.
@@ -409,6 +404,7 @@ echo.
 echo --check prepares tools, dependencies, frontend and database, then exits.
 echo --no-browser is accepted for compatibility; installation never starts the server.
 echo --data-dir selects the Runner state folder for logs, updates and collected assets.
+echo Tools, caches and temporary files default to the project's data\runner folder.
 echo --port overrides the port during the installation check only.
 echo --no-pause exits without waiting for a key, for terminals and automation.
 set "GW_EXIT=0"

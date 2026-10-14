@@ -33,7 +33,6 @@ from scripts.project_files import copy_files, source_files
 from scripts.update_supervisor import Supervisor, extract, read, runner_layout, write
 from scripts.windows.launch_runner import recover_source
 
-
 def fixture(project):
     for name in ('scripts/posix/runner.sh', 'scripts/posix/create_runner.py',
                  'scripts/windows/launch_runner.py'):
@@ -103,6 +102,35 @@ class GeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'has changed'):
             create_runner(self.project, sys.executable, self.data, platform='linux')
 
+    def test_local_runtime_defaults_ignore_user_cache_paths_and_use_final_update_project(self):
+        final = self.work / 'Final installed project with spaces ç'
+        poison = {'UV_CACHE_DIR': str(self.work / 'outside uv'),
+                  'npm_config_cache': str(self.work / 'outside npm'),
+                  'TMPDIR': str(self.work / 'outside tmp'),
+                  'XDG_DATA_HOME': str(self.work / 'outside xdg')}
+        with patch.dict(os.environ, poison, clear=True):
+            create_runner(self.project, sys.executable, runtime_project=final, platform='linux')
+        saved = next((final / 'data/.runner-launchers').glob('*.sh')).read_text(encoding='utf-8')
+        runtime = final / 'data/runner'
+        for name, suffix in [('GRAVEWRIGHT_RUNNER_ROOT', ''), ('UV_CACHE_DIR', 'cache'),
+                             ('UV_PYTHON_INSTALL_DIR', 'python'), ('UV_PYTHON_BIN_DIR', 'python-bin'),
+                             ('npm_config_cache', 'npm-cache'), ('TMPDIR', 'tmp'),
+                             ('CARGO_HOME', 'cargo'), ('RUSTUP_HOME', 'rustup'),
+                             ('XDG_DATA_HOME', 'xdg-data')]:
+            self.assertIn(name + '=' + shell_value(runtime / suffix), saved)
+        self.assertIn('GW_DATA=' + shell_value(final / 'data'), saved)
+        self.assertNotIn(str(self.project), saved)
+        for value in poison.values():
+            self.assertNotIn(value, saved)
+
+    def test_relative_runtime_and_data_paths_resolve_against_final_project(self):
+        final = self.work / 'Final project ç'
+        with patch.dict(os.environ, {'GRAVEWRIGHT_RUNNER_ROOT': 'custom tools'}, clear=True):
+            create_runner(self.project, sys.executable, 'custom state', runtime_project=final, platform='linux')
+        saved = next((final / 'custom state/.runner-launchers').glob('*.sh')).read_text(encoding='utf-8')
+        self.assertIn('GW_DATA=' + shell_value(final / 'custom state'), saved)
+        self.assertIn('GRAVEWRIGHT_RUNNER_ROOT=' + shell_value(final / 'custom tools'), saved)
+
     def test_mac_launcher_captures_private_build_environment_for_staged_updates(self):
         values = {'GRAVEWRIGHT_BUILD_TOOLS_PATH': str(self.work / "Rust bins ç '$"),
                   'OPENSSL_DIR': str(self.work / "OpenSSL static ã '$"),
@@ -150,7 +178,8 @@ class PlatformTests(unittest.TestCase):
             dotenv.dotenv_values = lambda *args, **kwargs: values.copy()
             build = str(work / 'Private Rust bins ç')
             with patch.object(runner, 'ROOT', work), patch.dict(os.environ), \
-                    patch.object(sys, 'path', sys.path.copy()), patch.dict(sys.modules, {'dotenv': dotenv}):
+                    patch.object(sys, 'path', sys.path.copy()), patch.dict(sys.modules, {'dotenv': dotenv}), \
+                    patch.object(tempfile, 'tempdir', tempfile.tempdir):
                 os.environ['GRAVEWRIGHT_BUILD_TOOLS_PATH'] = build
                 runner.prepare_environment(work / 'runner state')
                 self.assertEqual(os.environ['GRAVEWRIGHT_BUILD_TOOLS_PATH'], build)
@@ -180,13 +209,13 @@ class PlatformTests(unittest.TestCase):
                 self.assertEqual(runner.main(['--data-dir', str(work), '--no-browser']), 0)
                 self.assertTrue(supervisor.return_value.run.called)
 
-    def test_data_defaults_use_native_home_and_ignore_other_platform_variables(self):
-        with tempfile.TemporaryDirectory() as temp, patch.object(Path, 'home', return_value=Path(temp)), \
+    def test_data_defaults_stay_with_project_and_ignore_user_profile_variables(self):
+        with tempfile.TemporaryDirectory() as temp, patch.object(runner, 'ROOT', Path(temp) / 'extracted project'), \
                 patch.dict(os.environ, {'LOCALAPPDATA': str(Path(temp) / 'windows'),
-                                        'XDG_DATA_HOME': str(Path(temp) / 'xdg')}, clear=True):
-            for platform, expected in [('darwin', Path(temp) / 'Library/Application Support/Gravewright/data'),
-                                       ('linux', Path(temp) / 'xdg/Gravewright/data'),
-                                       ('win32', Path(temp) / 'windows/Gravewright/data')]:
+                                        'XDG_DATA_HOME': str(Path(temp) / 'xdg'),
+                                        'HOME': str(Path(temp) / 'home')}, clear=True):
+            expected = Path(temp) / 'extracted project/data'
+            for platform in ('darwin', 'linux', 'win32'):
                 with self.subTest(platform=platform), patch.object(sys, 'platform', platform):
                     self.assertEqual(runner.data_directory(), expected.resolve())
 

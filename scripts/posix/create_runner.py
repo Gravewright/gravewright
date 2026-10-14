@@ -61,17 +61,39 @@ def build_environment(platform):
     for name, value in values.items():
         if value:
             lines += [name + '=' + shell_value(value), 'export ' + name]
-        else:
+        elif name != 'CARGO_HOME':
             # Do not borrow an unrelated shell's build configuration at startup.
             lines.append('unset ' + name)
     return '\n'.join(lines)
 
 
-def create_runner(project, python, data, uv=None, runtime_project=None, *, port=None,
+def runtime_environment(project):
+    runtime = Path(os.environ.get('GRAVEWRIGHT_RUNNER_ROOT') or project / 'data/runner')
+    runtime = (runtime if runtime.is_absolute() else project / runtime).resolve()
+    values = {
+        'GRAVEWRIGHT_RUNNER_ROOT': runtime,
+        'UV_CACHE_DIR': runtime / 'cache',
+        'UV_PYTHON_INSTALL_DIR': runtime / 'python',
+        'UV_PYTHON_BIN_DIR': runtime / 'python-bin',
+        'UV_PYTHON_INSTALL_BIN': '0',
+        'npm_config_cache': runtime / 'npm-cache',
+        'CARGO_HOME': runtime / 'cargo',
+        'RUSTUP_HOME': runtime / 'rustup',
+        'TMPDIR': runtime / 'tmp', 'TMP': runtime / 'tmp', 'TEMP': runtime / 'tmp',
+        'XDG_CACHE_HOME': runtime / 'xdg-cache',
+        'XDG_DATA_HOME': runtime / 'xdg-data',
+        'XDG_CONFIG_HOME': runtime / 'xdg-config',
+    }
+    return '\n'.join(name + '=' + shell_value(value) + '\nexport ' + name
+                     for name, value in values.items())
+
+
+def create_runner(project, python, data=None, uv=None, runtime_project=None, *, port=None,
                   no_browser=False, platform=None):
     project = Path(project).resolve()
     runtime_project = Path(runtime_project).resolve() if runtime_project else project
-    data = Path(data).expanduser().resolve()
+    data = Path(data) if data is not None else runtime_project / 'data'
+    data = (data if data.is_absolute() else runtime_project / data).resolve()
     # Resolving bin/python follows a venv symlink to the shared interpreter,
     # which silently loses all the prepared virtual environment's packages.
     python = Path(os.path.abspath(python))
@@ -98,6 +120,7 @@ def create_runner(project, python, data, uv=None, runtime_project=None, *, port=
         'PROJECT': shell_value(runtime_project), 'BOOTSTRAP': shell_value(bootstrap),
         'DEFAULT_ARGS': shlex.join(defaults),
         'BUILD_ENV': build_environment(platform),
+        'RUNTIME_ENV': runtime_environment(runtime_project),
     }
     template = (project / 'scripts/posix/runner.sh').read_text(encoding='utf-8')
     content = re.sub(r'@@([A-Z_]+)@@', lambda match: substitutions[match[1]], template)
@@ -123,7 +146,7 @@ def create_runner(project, python, data, uv=None, runtime_project=None, *, port=
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
-    parser.add_argument('--data-dir', required=True, type=Path)
+    parser.add_argument('--data-dir', type=Path)
     parser.add_argument('--runtime-project', type=Path,
                         help='Final project path when preparing a staged update.')
     parser.add_argument('--port', type=int)

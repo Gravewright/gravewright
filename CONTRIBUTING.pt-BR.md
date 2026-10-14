@@ -13,6 +13,14 @@ Contribuições podem melhorar código, testes, acessibilidade, documentação, 
 5. Atualize a documentação em inglês e a correspondente em português quando mudar comportamento ou instalação. Preserve identificadores e comandos entre traduções.
 6. Descreva problema, comportamento resultante, validação e limitações no pull request. Inclua capturas quando houver mudanças visuais; use dados fictícios de campanha.
 
+## Contrato de armazenamento portátil
+
+Todo armazenamento padrão do VTT fica na pasta descompactada: `data/` para dados,
+logs e estado do Runner/atualizador; `data/runner/` para ferramentas gerenciadas e
+seus caches. Não introduza padrões em AppData, HOME ou XDG nem metadados
+compartilhados entre instalações. Siga [AGENTS.md](AGENTS.md) e mantenha testes
+que comprovem a independência entre duas cópias.
+
 ## Código e documentação
 
 Use inglês em novos comentários, docstrings, documentação de APIs e identificadores. Explique responsabilidades, limites de confiança, efeitos colaterais e restrições pouco óbvias. Evite comentários que apenas repitam uma instrução. Funções públicas devem explicar entradas, retornos, suposições de permissão e exceções relevantes quando isso não estiver claro na assinatura.

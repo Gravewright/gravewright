@@ -86,13 +86,20 @@ def compiler_environment(sdk):
     return environment
 
 
+def temporary_build_directory(root, prefix):
+    """Keep every compiler/probe scratch file with the prepared local tools."""
+    directory = Path(os.environ.get('GRAVEWRIGHT_RUNNER_ROOT') or Path(root).resolve().parent) / 'tmp'
+    directory.mkdir(parents=True, exist_ok=True)
+    return tempfile.TemporaryDirectory(prefix=prefix, dir=directory)
+
+
 def probe_openssl(root, clang, sdk):
     root = Path(root).resolve()
     paths = [root / name for name in ('include/openssl/opensslv.h', 'lib/libssl.a', 'lib/libcrypto.a')]
     if not all(path.is_file() for path in paths):
         raise ValueError('Static OpenSSL headers/libraries were not found')
     # Link the actual static libraries, rather than trusting an unrelated CLI.
-    with tempfile.TemporaryDirectory(prefix='gravewright-openssl-probe-', dir='/tmp') as name:
+    with temporary_build_directory(root, 'gravewright-openssl-probe-') as name:
         work = Path(name)
         source = work / 'probe.c'
         source.write_text('#include <stdio.h>\n#include <openssl/ssl.h>\n#include <openssl/crypto.h>\n'
@@ -124,17 +131,17 @@ def extract_component(archive, destination, prefix):
 def install_rust(archives, hashes, root, version):
     if len(archives) != 3 or len(hashes) != 3:
         raise ValueError('Rust installation needs exactly rustc, cargo and rust-std')
-    root = Path(root)
+    root = Path(root).resolve()
     if root.exists():
         raise ValueError('Rust staging destination must be new')
-    with tempfile.TemporaryDirectory(prefix='gravewright-rust-install-', dir='/tmp') as name:
+    with temporary_build_directory(root, 'gravewright-rust-install-') as name:
         work = Path(name).resolve()
         prefix = work / 'install'
         for component, archive, expected in zip(('rustc', 'cargo', 'rust-std'), archives, hashes, strict=True):
             if digest(archive) != expected:
                 raise ValueError('Rust component failed its pinned SHA256 check')
             source = extract_component(archive, work, f'{component}-{version}-x86_64-apple-darwin')
-            subprocess.run(['/bin/sh', str(source / 'install.sh'), f'--prefix={prefix}', '--disable-ldconfig'],
+            subprocess.run(['/bin/sh', 'install.sh', '--prefix=../install', '--disable-ldconfig'],
                            cwd=source, check=True)
             notices = prefix / 'share/doc/gravewright-rust' / component
             notices.mkdir(parents=True, exist_ok=True)
@@ -151,9 +158,7 @@ def build_openssl(archive, sha256, root, final_root, version, clang, sdk, log):
     if root.exists():
         raise ValueError('OpenSSL staging destination must be new')
     log.parent.mkdir(parents=True, exist_ok=True)
-    # /tmp is deliberate: a user profile or its runtime directory may contain
-    # whitespace, which cannot safely appear in OpenSSL Makefile target names.
-    with tempfile.TemporaryDirectory(prefix='gravewright-openssl-build-', dir='/tmp') as name:
+    with temporary_build_directory(root, 'gravewright-openssl-build-') as name:
         work = Path(name).resolve()
         source = extract_component(archive, work, f'openssl-{version}')
         prefix = work / 'install'
@@ -161,10 +166,12 @@ def build_openssl(archive, sha256, root, final_root, version, clang, sdk, log):
         environment['CC'] = '/usr/bin/clang'
         commands = [
             ['/usr/bin/perl', 'Configure', 'darwin64-x86_64-cc', 'no-shared', 'no-tests', 'no-module',
-             f'--prefix={prefix}', f'--openssldir={final_root / "ssl"}', '--libdir=lib',
+             f'--prefix={final_root}', f'--openssldir={final_root / "ssl"}', '--libdir=lib',
              '-mmacosx-version-min=13.5'],
-            ['/usr/bin/make', '-j', str(min(os.cpu_count() or 2, 4))],
-            ['/usr/bin/make', 'install_sw'],
+            # Keep Makefile installation targets relative and free of spaces.
+            # Configure still records the final local paths in the library.
+            ['/usr/bin/make', 'INSTALLTOP=../install', '-j', str(min(os.cpu_count() or 2, 4))],
+            ['/usr/bin/make', 'INSTALLTOP=../install', 'OPENSSLDIR=../install/ssl', 'install_sw'],
         ]
         with log.open('w', encoding='utf-8') as output:
             for command in commands:

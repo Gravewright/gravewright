@@ -45,7 +45,7 @@ Isso cria uma conta administrativa, não o proprietário do VTT. Não substitui 
 
 O `.env` é opcional e carregado automaticamente. Variáveis exportadas no processo têm prioridade; `${NAME}` no `.env` permanece literal. Reinicie o servidor após alterar valores. Consulte a [referência de configuração](configuration.md).
 
-O Runner gerado usa o `.env` do projeto e seus caminhos de banco/mídia, impondo seu perfil local de rede. Ferramentas e estado privados ficam fora do projeto por padrão: `%LOCALAPPDATA%\Gravewright` no Windows, `$XDG_DATA_HOME/Gravewright` (ou `~/.local/share/Gravewright`) no Linux e `~/Library/Application Support/Gravewright` no macOS. `--data-dir` muda estado/logs/assets coletados; altere o `.env` para mudar o banco ou uploads. Antes de atualizar, faça backup conjunto do banco configurado, mídias e `.env`.
+O Runner gerado usa o `.env` do projeto e seus caminhos de banco/mídia, impondo seu perfil local de rede. Todo armazenamento padrão fica na pasta descompactada do projeto no Windows, Linux e macOS: `data/` para estado, logs e assets coletados, e `data/runner/` para ferramentas gerenciadas, ambientes e caches. O estado não é compartilhado pelo perfil do usuário do sistema operacional. `--data-dir` muda estado/logs/assets coletados; altere o `.env` para mudar o banco ou uploads. Antes de atualizar, faça backup conjunto do banco configurado, mídias e `.env`.
 
 | Caminho | Finalidade |
 | --- | --- |

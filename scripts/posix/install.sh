@@ -19,8 +19,8 @@ Usage: installer [--check] [--data-dir PATH] [--port NUMBER] [--no-browser] [--n
 --no-pause    Exit without waiting for a key, for terminals and automation.
 
 Installation never starts the server. Open the generated Gravewright Runner to play.
-Tools are private to your user; compatible existing installations are reused.
-GRAVEWRIGHT_RUNNER_ROOT optionally selects an absolute private-tools directory.
+Tools, caches and Runner state stay inside this extracted installation.
+GRAVEWRIGHT_RUNNER_ROOT optionally selects a tools directory, relative to the project.
 HELP
 }
 
@@ -227,10 +227,8 @@ EOF
 }
 
 gw_resolve_uv() {
-    local candidate destination
+    local destination
     GW_UV=''
-    while IFS= read -r candidate; do gw_try_uv "$candidate" && break; done < <(type -a -p uv 2>/dev/null || true)
-    [ -z "$GW_UV" ] || return 0
     gw_uv_archive
     destination="$GW_RUNTIME/uv/$GW_UV_VERSION-$GW_UV_TARGET"
     gw_try_uv "$destination/uv" && return 0
@@ -258,8 +256,6 @@ gw_resolve_python() {
     # uv displays the canonical OS name "macos"; Node/Python report "darwin".
     case "$GW_PLATFORM" in darwin) GW_PYTHON_OS=macos ;; *) GW_PYTHON_OS=$GW_PLATFORM ;; esac
     GW_PYTHON_KEY="cpython-3.14-$GW_PYTHON_OS-$GW_UV_ARCH-$GW_LIBC"
-    export UV_PYTHON_PREFERENCE=only-system
-    gw_find_python && return 0
     export UV_PYTHON_INSTALL_DIR="$GW_RUNTIME/python"
     export UV_PYTHON_BIN_DIR="$GW_RUNTIME/python-bin"
     export UV_PYTHON_INSTALL_BIN=0
@@ -280,7 +276,7 @@ gw_try_npm() {
 }
 
 gw_try_node() {
-    local candidate=$1 version actual_arch actual_platform cli npm_path
+    local candidate=$1 version actual_arch actual_platform cli
     [ -x "$candidate" ] || return 1
     version=$("$candidate" --version 2>/dev/null) || return 1
     [[ "$version" =~ ^v(22|24)\.[0-9]+\.[0-9]+$ ]] || return 1
@@ -289,14 +285,9 @@ gw_try_node() {
     [ "$actual_arch" = "$GW_ARCH" ] && [ "$actual_platform" = "$GW_PLATFORM" ] || return 1
     GW_NODE_REAL=$("$candidate" -p process.execPath 2>/dev/null) || return 1
     [ -x "$GW_NODE_REAL" ] || return 1
-    for cli in "${GW_NODE_REAL%/*}/../lib/node_modules/npm/bin/npm-cli.js" "${GW_NODE_REAL%/*}/node_modules/npm/bin/npm-cli.js" /usr/share/nodejs/npm/bin/npm-cli.js; do
+    for cli in "${GW_NODE_REAL%/*}/../lib/node_modules/npm/bin/npm-cli.js" "${GW_NODE_REAL%/*}/node_modules/npm/bin/npm-cli.js"; do
         gw_try_npm "$cli" && return 0
     done
-    # Version managers and distro packages may expose npm through a symlink.
-    while IFS= read -r npm_path; do
-        cli=$("$GW_BASE_PYTHON" -I -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve())' "$npm_path") || continue
-        gw_try_npm "$cli" && return 0
-    done < <(type -a -p npm 2>/dev/null || true)
     return 1
 }
 
@@ -307,16 +298,18 @@ gw_node_archive() {
         linux-arm64-gnu) GW_NODE_SHA=d28c8a5bf0a808f0ed434a1dce8c54ae98f0371c0bd86ac58abc613f73e6643f ;;
         darwin-x64-none) GW_NODE_SHA=d1b5e999db158c62fe8f7267a4476b035d8bd93b1a605bac24a3f0dd166e3316 ;;
         darwin-arm64-none) GW_NODE_SHA=8294b7aa9b03997481c06babf1e8b270c859358f27da57a11509afe537ac381d ;;
-        linux-*-musl) gw_fail 'Alpine/musl has no official Node.js binary for private bootstrap. Install a native Node.js 22 or 24 with npm >=10 through your distribution, then run again. No glibc binary or compatibility shim will be installed.'; return 1 ;;
+        linux-*-musl) gw_fail "Alpine/musl has no official Node.js binary for private bootstrap. Place a native Node.js 22 or 24 distribution with npm >=10 under $GW_RUNTIME/node/native (bin/node and lib/node_modules/npm), then run again. No glibc binary or compatibility shim will be installed."; return 1 ;;
         *) gw_fail 'No pinned Node.js archive for this platform.'; return 1 ;;
     esac
 }
 
 gw_resolve_node() {
-    local candidate destination archive_name
+    local destination archive_name
     GW_NODE='' GW_NPM=''
-    while IFS= read -r candidate; do gw_try_node "$candidate" && break; done < <(type -a -p node 2>/dev/null || true)
-    [ -z "$GW_NODE" ] || return 0
+    # musl has no official archive; an explicitly prepared local native build is required.
+    if [ "$GW_LIBC" = musl ]; then
+        gw_try_node "$GW_RUNTIME/node/native/bin/node" && return 0
+    fi
     gw_node_archive
     destination="$GW_RUNTIME/node/$GW_NODE_VERSION-$GW_PLATFORM-$GW_ARCH"
     gw_try_node "$destination/bin/node" && return 0
@@ -350,9 +343,31 @@ gw_cleanup() {
     return "$status"
 }
 
+gw_local_paths() {
+    GW_RUNTIME=${GRAVEWRIGHT_RUNNER_ROOT:-$GW_ROOT/data/runner}
+    case "$GW_RUNTIME" in /*) ;; *) GW_RUNTIME="$GW_ROOT/$GW_RUNTIME" ;; esac
+    if [ -z "$GW_DATA" ]; then GW_DATA="$GW_ROOT/data"; fi
+    case "$GW_DATA" in /*) ;; *) GW_DATA="$GW_ROOT/$GW_DATA" ;; esac
+    case "$GW_RUNTIME$GW_DATA" in *$'\n'*|*$'\r'*) gw_fail 'Paths cannot contain newlines.'; return 1 ;; esac
+    mkdir -p "$GW_RUNTIME" "$GW_DATA"
+    GW_RUNTIME=$(CDPATH= cd -- "$GW_RUNTIME" && pwd -P)
+    GW_DATA=$(CDPATH= cd -- "$GW_DATA" && pwd -P)
+    export GRAVEWRIGHT_RUNNER_ROOT="$GW_RUNTIME"
+}
+
+gw_cache_environment() {
+    export UV_CACHE_DIR="$GW_RUNTIME/cache" UV_PYTHON_DOWNLOADS=automatic UV_LINK_MODE=copy UV_NO_ENV_FILE=1
+    export UV_PYTHON_INSTALL_DIR="$GW_RUNTIME/python" UV_PYTHON_BIN_DIR="$GW_RUNTIME/python-bin" UV_PYTHON_INSTALL_BIN=0
+    export CARGO_HOME="$GW_RUNTIME/cargo" RUSTUP_HOME="$GW_RUNTIME/rustup"
+    export TMPDIR="$GW_RUNTIME/tmp" TMP="$GW_RUNTIME/tmp" TEMP="$GW_RUNTIME/tmp"
+    export XDG_CACHE_HOME="$GW_RUNTIME/xdg-cache" XDG_DATA_HOME="$GW_RUNTIME/xdg-data" XDG_CONFIG_HOME="$GW_RUNTIME/xdg-config"
+    unset NPM_CONFIG_CACHE
+    export npm_config_cache="$GW_RUNTIME/npm-cache"
+    mkdir -p "$TMPDIR"
+}
+
 gw_main() {
     set -eE -o pipefail
-    GW_CALLER_PWD=$(pwd -P)
     gw_parse_arguments "$@"
     if [ "$GW_HELP" -eq 1 ]; then gw_help; return 0; fi
     GW_PHASE='platform checks' GW_LOCK_OWNED=0 GW_WORK=''
@@ -372,16 +387,9 @@ gw_main() {
         [ -f "$GW_ROOT/$required" ] || { gw_fail "The project is incomplete ($required). Extract the entire ZIP first."; return 1; }
     done
     source "$GW_ROOT/scripts/posix/mac_tools.sh"
-    [ -n "${HOME:-}" ] || { gw_fail 'A user home directory is required.'; return 1; }
-    if [ "$GW_PLATFORM" = darwin ]; then GW_USER_DATA="$HOME/Library/Application Support/Gravewright"
-    else GW_USER_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/Gravewright"; fi
-    GW_RUNTIME=${GRAVEWRIGHT_RUNNER_ROOT:-$GW_USER_DATA/runner}
-    case "$GW_RUNTIME" in /*) ;; *) gw_fail 'GRAVEWRIGHT_RUNNER_ROOT and XDG_DATA_HOME must resolve to an absolute path.'; return 1 ;; esac
-    case "$GW_RUNTIME$GW_DATA" in *$'\n'*|*$'\r'*) gw_fail 'Paths cannot contain newlines.'; return 1 ;; esac
-    mkdir -p "$GW_RUNTIME"
-    GW_RUNTIME=$(CDPATH= cd -- "$GW_RUNTIME" && pwd -P)
+    gw_local_paths
     if ! mkdir "$GW_RUNTIME/prepare.lock" 2>/dev/null; then
-        gw_fail "Another installer may be preparing this user profile. If an earlier process was interrupted, check the PID in $GW_RUNTIME/prepare.lock/pid and remove that lock directory after it has stopped."; return 1
+        gw_fail "Another installer may be preparing this installation. If an earlier process was interrupted, check the PID in $GW_RUNTIME/prepare.lock/pid and remove that lock directory after it has stopped."; return 1
     fi
     GW_LOCK_OWNED=1
     printf '%s\n' "$$" > "$GW_RUNTIME/prepare.lock/pid"
@@ -391,10 +399,8 @@ gw_main() {
     cd -- "$GW_ROOT"
     # Process-local isolation: never edit shell profiles, global PATH or Python.
     unset VIRTUAL_ENV PYTHONHOME PYTHONPATH NODE_OPTIONS NODE_PATH UV_PROJECT UV_PYTHON UV_SYSTEM_PYTHON UV_MANAGED_PYTHON UV_NO_MANAGED_PYTHON UV_FROZEN UV_NO_SYNC UV_WORKING_DIR UV_CONFIG_FILE UV_PROJECT_ENVIRONMENT UV_PYTHON_INSTALL_DIR UV_PYTHON_BIN_DIR UV_PYTHON_INSTALL_MIRROR UV_PYTHON_DOWNLOADS_JSON_URL
-    export UV_CACHE_DIR="$GW_RUNTIME/cache" UV_PYTHON_DOWNLOADS=automatic UV_LINK_MODE=copy UV_NO_ENV_FILE=1
+    gw_cache_environment
     export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
-    unset NPM_CONFIG_CACHE
-    export npm_config_cache="$GW_RUNTIME/npm-cache"
     GW_PHASE='uv'; gw_info '[1/7] Checking uv...'; gw_resolve_uv; export GW_UV; "$GW_UV" --version
     GW_PHASE='Python 3.14'; gw_info '[2/7] Checking Python 3.14...'; gw_resolve_python; "$GW_BASE_PYTHON" --version
     GW_CHECKOUT=$("$GW_BASE_PYTHON" -I -c 'import hashlib,os,sys; print(hashlib.sha256(os.fsencode(sys.argv[1])).hexdigest()[:20])' "$GW_ROOT")
@@ -410,8 +416,6 @@ gw_main() {
     [ -x "$GW_PYTHON" ] || { gw_fail 'The private Python environment was not created.'; return 1; }
     GW_PHASE='frontend dependencies and assets'; gw_info '[5/7] Checking npm dependencies and frontend assets...'
     "$GW_PYTHON" -X utf8 scripts/prepare_frontend.py --node "$GW_NODE" --npm-cli "$GW_NPM" --state-dir "$GW_FRONTEND_STATE"
-    if [ -z "$GW_DATA" ]; then GW_DATA="$GW_USER_DATA/data"; fi
-    GW_DATA=$("$GW_BASE_PYTHON" -I -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]).expanduser(); print((p if p.is_absolute() else Path(sys.argv[2])/p).resolve())' "$GW_DATA" "$GW_CALLER_PWD")
     GW_PHASE='personal configuration and default marketplace'; gw_info '[6/7] Configuring the project and default marketplace...'
     if [ "$GW_CHECK" -eq 0 ]; then "$GW_PYTHON" -X utf8 scripts/gravewright_runner.py --data-dir "$GW_DATA" --configure-default-marketplace; fi
     GW_PHASE='database check and launcher generation'; gw_info '[7/7] Checking the database and generating Gravewright Runner...'

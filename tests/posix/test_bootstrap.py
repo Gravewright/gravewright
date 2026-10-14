@@ -104,6 +104,34 @@ class BootstrapTests(unittest.TestCase):
         self.assertEqual(output.splitlines(), [value, '42', '1', '1', '1'])
         self.assertFalse((ROOT / 'NEVER').exists())
 
+    def test_default_and_relative_storage_stay_in_project_despite_home_and_caller(self):
+        project = self.work / 'Extracted project ç with spaces'
+        project.mkdir()
+        for tools, data in [('', ''), ('private tools', 'private state')]:
+            with self.subTest(tools=tools, data=data):
+                output = self.run_shell('cd /; GW_ROOT="$GW_TEST_ROOT"; GW_DATA="$GW_TEST_DATA"; '
+                                        'gw_local_paths; gw_cache_environment; '
+                                        'printf "%s\\n" "$GW_RUNTIME" "$GW_DATA" "$UV_CACHE_DIR" '
+                                        '"$UV_PYTHON_INSTALL_DIR" "$npm_config_cache" "$CARGO_HOME" "$TMPDIR"',
+                                        environment={'GW_TEST_ROOT': shell_path(project), 'GW_TEST_DATA': data,
+                                                     'GRAVEWRIGHT_RUNNER_ROOT': tools, 'HOME': '/unused-home',
+                                                     'XDG_DATA_HOME': '/unused-xdg'})
+                expected_tools = shell_path(project / (tools or 'data/runner'))
+                expected_data = shell_path(project / (data or 'data'))
+                self.assertEqual(output.splitlines(), [expected_tools, expected_data,
+                                 expected_tools + '/cache', expected_tools + '/python',
+                                 expected_tools + '/npm-cache', expected_tools + '/cargo', expected_tools + '/tmp'])
+
+    def test_resolvers_do_not_search_external_uv_node_rust_or_openssl(self):
+        output = self.run_shell('GW_RUNTIME="$GW_TEST_WORK/runtime"; GW_PLATFORM=linux GW_ARCH=x64 GW_LIBC=gnu; '
+                                'type() { touch "$GW_TEST_WORK/external-search"; exit 99; }; '
+                                'gw_try_uv() { return 0; }; gw_try_node() { return 0; }; '
+                                'gw_resolve_uv; gw_resolve_node; '
+                                'gw_mac_pins; gw_mac_manifest() { return 0; }; '
+                                'gw_mac_try_rust() { return 0; }; gw_mac_try_openssl() { return 0; }; '
+                                'gw_mac_resolve_rust; gw_mac_resolve_openssl')
+        self.assertFalse((self.work / 'external-search').exists(), output)
+
     def test_invalid_and_missing_options_fail_before_installation(self):
         for args in ('--port 0', '--port 65536', '--port 12abc', '--port -1', '--port', '--data-dir', '--bogus'):
             with self.subTest(args=args):
@@ -325,18 +353,16 @@ class MacPrivateManifestTests(unittest.TestCase):
         def compile(arguments, **kwargs):
             observed.append(arguments)
         with patch.object(self.mac.subprocess, 'run', side_effect=compile), \
-                patch.object(self.mac.subprocess, 'check_output', return_value='OpenSSL 3.5.9\n'):
-            # Use the native test temporary directory on Windows too; the
-            # production helper deliberately chooses /tmp on macOS.
-            original = self.mac.tempfile.TemporaryDirectory
-            with patch.object(self.mac.tempfile, 'TemporaryDirectory',
-                              side_effect=lambda **kwargs: original(prefix=kwargs['prefix'])):
-                self.mac.probe_openssl(self.root, Path('/usr/bin/clang'), Path('/fake SDK'))
+                patch.object(self.mac.subprocess, 'check_output', return_value='OpenSSL 3.5.9\n'), \
+                patch.dict(os.environ, {'GRAVEWRIGHT_RUNNER_ROOT': str(self.root / 'runner tools with spaces')}):
+            self.mac.probe_openssl(self.root, Path('/usr/bin/clang'), Path('/fake SDK'))
         command = observed[0]
         self.assertIn(str(self.root / 'lib/libssl.a'), command)
         self.assertIn(str(self.root / 'lib/libcrypto.a'), command)
         self.assertIn(str(self.root / 'include'), command)
         self.assertIn('/fake SDK' if os.name != 'nt' else '\\fake SDK', command)
+        source = Path(command[command.index('-I') + 2])
+        self.assertTrue(source.is_relative_to(self.root / 'runner tools with spaces/tmp'))
 
     @unittest.skipIf(os.name == 'nt', 'Runs verified POSIX component installers in an isolated temporary prefix')
     def test_rust_component_install_uses_prefix_without_spaces_then_relocates_and_keeps_notices(self):
@@ -367,6 +393,43 @@ class MacPrivateManifestTests(unittest.TestCase):
                              'preserve component license')
         self.mac.record(destination, 'rust', '1.99.0')
         self.mac.verify(destination, 'rust', '1.99.0')
+
+    def test_openssl_build_keeps_scratch_local_and_make_targets_relative_for_spaced_paths(self):
+        archive = self.root / 'openssl-source.tar.gz'
+        folder = 'openssl-3.5.9'
+        with tarfile.open(archive, 'w:gz') as stream:
+            for name in ('Configure', 'LICENSE.txt', 'apps/openssl.cnf'):
+                raw = b'build fixture'
+                info = tarfile.TarInfo(folder + '/' + name)
+                info.size = len(raw)
+                stream.addfile(info, io.BytesIO(raw))
+        runtime = self.root / 'local tools with spaces ç'
+        stage, final = runtime / 'staging install', runtime / 'openssl final'
+        observed = []
+        def run(command, **kwargs):
+            source = Path(kwargs['cwd'])
+            self.assertTrue(source.is_relative_to(runtime / 'tmp'))
+            observed.append(command)
+            if 'install_sw' in command:
+                install = source.parent / 'install'
+                (install / 'lib').mkdir(parents=True)
+                (install / 'lib/libssl.a').write_bytes(b'static fixture')
+        with patch.dict(os.environ, {'GRAVEWRIGHT_RUNNER_ROOT': str(runtime)}), \
+                patch.object(self.mac.subprocess, 'run', side_effect=run), \
+                patch.object(self.mac, 'probe_openssl') as probe:
+            self.mac.build_openssl(archive, self.mac.digest(archive), stage, final, '3.5.9',
+                                   Path('/usr/bin/clang'), Path('/fake SDK'), runtime / 'build.log')
+        self.assertIn('--prefix=' + str(final.resolve()), observed[0])
+        self.assertIn('--openssldir=' + str(final.resolve() / 'ssl'), observed[0])
+        for command in observed[1:]:
+            self.assertIn('INSTALLTOP=../install', command)
+        self.assertNotIn('OPENSSLDIR=../install/ssl', observed[1])
+        self.assertIn('OPENSSLDIR=../install/ssl', observed[2])
+        self.assertTrue((stage / 'lib/libssl.a').is_file())
+        self.assertTrue((stage / 'share/doc/openssl/LICENSE.txt').is_file())
+        self.assertTrue((stage / 'ssl/openssl.cnf').is_file())
+        self.assertEqual(list((runtime / 'tmp').iterdir()), [])
+        probe.assert_called_once_with(stage, Path('/usr/bin/clang'), Path('/fake SDK'))
 
 
 if __name__ == '__main__':

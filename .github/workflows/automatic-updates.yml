@@ -42,7 +42,7 @@ jobs:
           enable-cache: true
       - run: uv sync --locked
       - name: Validate permissions, maintenance gate and recovery
-        run: uv run python manage.py test gravewright.modules gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions gravewright.administration.test_update_notifications gravewright.administration.test_release_presentation config.test_runner config.test_release_build --noinput
+        run: uv run python manage.py test gravewright.modules gravewright.administration.test_automatic_updates gravewright.administration.tests.UpdateTests gravewright.administration.test_versions gravewright.administration.test_update_notifications gravewright.administration.test_release_presentation config.test_runner config.test_runtime_storage config.test_portable_backups config.test_release_build --noinput
       - name: Exercise Django package activation and migration recovery
         run: uv run python tests/e2e/django_marketplace.py
       - name: Exercise HTTPS upgrade and recovery on this operating system

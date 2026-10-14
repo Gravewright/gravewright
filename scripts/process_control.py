@@ -7,12 +7,14 @@ import subprocess
 import sys
 
 
-def state_home():
-    if sys.platform == 'win32':
-        return Path(os.environ.get('LOCALAPPDATA', Path.home() / 'AppData/Local')) / 'Gravewright/updates'
-    if sys.platform == 'darwin':
-        return Path.home() / 'Library/Application Support/Gravewright/updates'
-    return Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'gravewright/updates'
+def state_home(project=None):
+    """Keep updater state in this extracted installation on every platform.
+
+    A shared OS profile can contain another installation's active-release
+    pointer. Never use AppData, HOME or XDG as a storage default; see AGENTS.md.
+    """
+    root = Path(project).resolve() if project is not None else Path(__file__).resolve().parents[1]
+    return root / 'data/updates'
 
 
 def environment_python(project):

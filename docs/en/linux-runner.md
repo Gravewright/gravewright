@@ -13,7 +13,7 @@ The **0.2.1 package refreshed on 13 October 2026** includes these launchers. The
    bash "./Install Linux.sh"
    ```
 
-3. The installer detects the distribution, reuses compatible tools, downloads missing private tools, installs locked Python/npm dependencies and prepares the frontend. Answer the configuration questions. Enter keeps the displayed value; Ctrl+C cancels without saving the answers.
+3. The installer detects the distribution, reuses verified local tools, downloads missing tools inside the extracted folder, installs locked Python/npm dependencies and prepares the frontend. Answer the configuration questions. Enter keeps the displayed value; Ctrl+C cancels without saving the answers.
 4. The installer prepares the database and generates **`Gravewright Runner.sh`** beside itself, then exits without starting the server. Start it with:
 
    ```bash
@@ -36,17 +36,17 @@ The Bash installer reads `/etc/os-release`, matching both `ID` and `ID_LIKE`. It
 | Arch | Arch Linux, Manjaro and derivatives | `pacman` |
 | Alpine | Alpine Linux | `apk` |
 
-Recognizing a family is not a claim that every release has been tested. The official private Node.js binaries need **glibc 2.28+ and Linux kernel 4.18+** on x64/ARM64, as documented in [Node.js 24's platform requirements](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). On Alpine/musl, provide compatible Node.js/npm first; the installer does not substitute a glibc Node binary. Unsupported architectures or incompatible tools produce a diagnostic instead of a global tool installation.
+Recognizing a family is not a claim that every release has been tested. The official private Node.js binaries need **glibc 2.28+ and Linux kernel 4.18+** on x64/ARM64, as documented in [Node.js 24's platform requirements](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). On Alpine/musl, place native Node.js 22/24 and npm 10+ in data/runner/node/native first (bin/node and lib/node_modules/npm); the installer does not substitute a glibc Node binary. Unsupported architectures or incompatible tools produce a diagnostic instead of a global tool installation.
 
 Basic requirements are **Bash 3.2+**, HTTPS-capable `curl`, CA certificates, `tar`/gzip and SHA-256 verification (`sha256sum` or `shasum`). Minimal Alpine installations may need Bash installed before the entrypoint can run. Missing distribution prerequisites can require the package manager and `sudo`; run Gravewright itself as your regular user. An unrecognized `ID`/`ID_LIKE` stops the installer before prerequisite preparation, even if tools are present. Report those identifiers so the family can be supported, or use the [manual terminal workflow](getting-started.md).
 
-| Tool | Reused installation | Private fallback |
-| --- | --- | --- |
-| uv | Version 0.12.0 or newer | uv 0.12.13 with a pinned SHA-256 |
-| Python | Standard-GIL CPython 3.14 for the native platform | Managed CPython 3.14 through uv |
-| Node.js/npm | Stable Node.js 22 or 24 LTS, npm 10+ | Node.js 24.19.0/npm with a pinned SHA-256 on glibc |
+| Tool | Installation-local managed tool |
+| --- | --- |
+| uv | Verified uv 0.12.13 |
+| Python | Managed standard-GIL CPython 3.14 for the native platform |
+| Node.js/npm | Verified Node.js 24.19.0/npm; Alpine requires a native distribution inside the local tools folder |
 
-Internet is required for missing tools and packages. Compatible reused tools must remain available. Private tools, Python environments and caches stay in the Runner directory. The installer does not change shell profiles or the permanent PATH, and does not require Docker, Homebrew or Redis. Python preparation uses `uv sync --locked --no-dev`; frontend preparation uses `npm ci --include=dev --include=optional` and `npm run build` when hashes indicate work is needed. It preserves a developer `.venv` and source lock files. Existing frontend outputs are reused when inputs and outputs are unchanged.
+Internet is required for missing tools and packages. Verified tools are reused from this installation; tools in another OS profile are not selected. Private tools, Python environments and caches stay in the Runner directory. The installer does not change shell profiles or the permanent PATH, and does not require Docker, Homebrew or Redis. Python preparation uses `uv sync --locked --no-dev`; frontend preparation uses `npm ci --include=dev --include=optional` and `npm run build` when hashes indicate work is needed. It preserves a developer `.venv` and source lock files. Existing frontend outputs are reused when inputs and outputs are unchanged.
 
 ## Configuration and storage
 
@@ -57,8 +57,8 @@ Configuration is saved in **the project's `.env`**, next to the installer. Missi
 | Project `.env` | Configuration and persistent private secret |
 | Project `data/gravewright.sqlite3` | Default database (`GRAVEWRIGHT_DATABASE`) |
 | Project `data/media/` | Default private uploads and module packages (`GRAVEWRIGHT_MEDIA_ROOT`) |
-| `${XDG_DATA_HOME:-~/.local/share}/Gravewright/runner/` | Private tools, caches and prepared environments |
-| `${XDG_DATA_HOME:-~/.local/share}/Gravewright/data/` | Default Runner state, logs and collected public assets |
+| `data/runner/` | Private tools, caches and prepared environments |
+| `data/` | Default Runner state, logs and collected public assets |
 | Runner state `logs/runner.log` | Startup/runtime diagnostics |
 | Runner state `runner.lock`, `.runner-launchers/`, `updates/` | Instance lock, immutable launcher copies and update recovery |
 
@@ -83,8 +83,8 @@ POSIX `SIGHUP` is handled as an orderly stop, like terminal shutdown; it does no
 Unattended preparation, without configuration questions or server startup:
 
 ```bash
-bash "./Install Linux.sh" --check --no-pause --data-dir "/tmp/Gravewright check"
-bash "./Gravewright Runner.sh" --check --no-browser --data-dir "/tmp/Gravewright check"
+bash "./Install Linux.sh" --check --no-pause --data-dir "data/check"
+bash "./Gravewright Runner.sh" --check --no-browser --data-dir "data/check"
 ```
 
 These checks **write files**: installation prepares tools/dependencies/frontend, `.env`, database and Runner; Runner `--check` can run migrations and collect static assets. They are not read-only. Use a disposable source copy and explicit directories for experiments. Installer flags are `--check`, `--data-dir PATH`, `--port NUMBER`, `--no-browser`, `--no-pause` and `--help`. Runner flags are `--check`, `--data-dir PATH`, `--port NUMBER` and `--no-browser`; a port override applies only to that run.
@@ -95,7 +95,7 @@ After one successful installation, unchanged tools/packages/assets can be reused
 | --- | --- |
 | File manager displays the script as text | Open a terminal and use the quoted `bash` command |
 | Missing curl, CA certificates, tar or hash utility | Install the prerequisites reported for your detected distribution; retry as the regular user |
-| Node cannot start / missing GLIBC | Check the platform requirements; Alpine/musl needs a compatible existing Node/npm |
+| Node cannot start / missing GLIBC | Check the platform requirements; Alpine/musl needs native Node/npm under data/runner/node/native |
 | Download/checksum failure | Check GitHub, nodejs.org and package-source connectivity; rerun with the complete project and retain checksum verification |
 | Moved project / prepared Python missing | Run `Install Linux.sh` again in the new location |
 | Port in use | Stop the other process or use `--port 3001`; use the installer to change the saved default |
@@ -103,3 +103,5 @@ After one successful installation, unchanged tools/packages/assets can be reused
 | Startup fails | Read the selected state directory's `logs/runner.log`; redact private details before sharing |
 
 [POSIX smoke tests](../../tests/posix/smoke.py) exercise a disposable source copy, private tools, paths with spaces/Unicode, unattended preparation, offline reuse, real HTTP readiness and graceful shutdown. The [POSIX Runner workflow](../../.github/workflows/posix-runner.yml) runs the native checks on Linux and macOS; mocked distribution tests separately cover detection branches. Platform CI does not imply every recognized distribution was tested.
+
+All paths in the storage table are relative to the extracted project. `data/runner/tmp/` holds bootstrap temporary files. Explicit relative state/tool overrides resolve from this project, never from the caller's working directory.

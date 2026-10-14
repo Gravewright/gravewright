@@ -31,7 +31,8 @@ if not RUNNER_TOKEN:
     raise ImproperlyConfigured('Gravewright Runner must supply a startup token.')
 
 # Database and media paths come from the project .env through config.settings.
-# Runner state and collected assets remain separate from application storage.
+# Runner state and collected assets default to the same installation's data/.
+# Do not introduce OS-profile defaults or import another installation's state.
 if GRAVEWRIGHT_MODULES_ROOT is None:
     GRAVEWRIGHT_MODULES_ROOT = MEDIA_ROOT / 'modules'
 STATIC_ROOT = RUNNER_DATA / 'staticfiles'

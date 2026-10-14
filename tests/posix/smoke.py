@@ -150,8 +150,8 @@ def private_build_tools(runtime, data):
 
 def exercise(work):
     project = work / 'Gravewright São Paulo & (fixture)'
-    runtime = work / 'Private tools ã'
-    data = work / 'Runner state ç'
+    runtime = project / 'data/runner'
+    data = project / 'data'
     shutil.copytree(ROOT, project, ignore=ignore_source, symlinks=True)
     # Deliberately present a developer venv which installation must not replace.
     sentinel = project / '.venv/developer-data.txt'
@@ -172,18 +172,17 @@ def exercise(work):
             'VIRTUAL_ENV', 'LOCALAPPDATA', 'BASH_ENV', 'ENV', 'NODE_OPTIONS', 'NODE_PATH'}:
             env.pop(key)
     # Child-only overrides; preserve HOME and real user configuration.
-    env.update(GRAVEWRIGHT_RUNNER_ROOT=str(runtime), XDG_DATA_HOME=str(work / 'XDG data'),
+    env.update(XDG_DATA_HOME=str(work / 'XDG data'),
                XDG_CACHE_HOME=str(work / 'XDG cache'), XDG_CONFIG_HOME=str(work / 'XDG config'),
                NPM_CONFIG_USERCONFIG=str(work / 'isolated.npmrc'),
                NPM_CONFIG_GLOBALCONFIG=str(work / 'isolated-global.npmrc'),
-               NPM_CONFIG_CACHE=str(runtime / 'npm-cache'),
                PYTHONUTF8='1', NO_COLOR='1')
     env['PATH'] = '/usr/bin:/bin:/usr/sbin:/sbin'
     bash = '/bin/bash'
     installer = 'Install macOS.command' if sys.platform == 'darwin' else 'Install Linux.sh'
     launcher = 'Gravewright Runner.command' if sys.platform == 'darwin' else 'Gravewright Runner.sh'
     port = free_port()
-    args = ['--check', '--no-browser', '--no-pause', '--data-dir', str(data), '--port', str(port)]
+    args = ['--check', '--no-browser', '--no-pause', '--port', str(port)]
     print('Preparing real POSIX installation in isolated Unicode/space paths...', flush=True)
     first = run([bash, str(project / installer), *args], cwd=work, env=env,
                 log=OUTPUT / 'first-install.log')
@@ -192,6 +191,7 @@ def exercise(work):
     assert generated.is_file() and generated.stat().st_mode & stat.S_IXUSR, 'Missing executable generated Runner'
     assert (project / '.env').is_file() and (project / 'data/gravewright.sqlite3').is_file()
     assert not (data / '.env').exists(), 'Configuration must remain in the project root'
+    assert runtime.is_dir(), 'Default tools must stay inside the extracted project'
     assert list((data / '.runner-launchers').glob('*.py')), 'Missing immutable recovery launcher'
     uv = find_tool(runtime, 'uv', env['PATH'])
     node = find_tool(runtime, 'node', env['PATH'])
@@ -256,6 +256,8 @@ def exercise(work):
     assert digest(project / '.env') == configuration, 'Runner changed saved configuration'
     assert snapshot(personal) == original_personal, 'Personal configuration changed'
     assert dict(os.environ) == original_environment, 'Parent process environment changed'
+    for name in ('XDG data', 'XDG cache', 'XDG config'):
+        assert not (work / name).exists(), 'Installation wrote to an external user-profile directory'
     logs = data / 'logs'
     if logs.exists():
         shutil.copytree(logs, OUTPUT / 'application-logs', dirs_exist_ok=True)

@@ -170,22 +170,21 @@ para habilitar o fluxo da interface nessa instalação antiga.
 
 A atualização substitui os arquivos na pasta original do projeto, incluindo `Install Windows.bat`, scripts, assets e o runner gerado. Arquivos da versão anterior que não existem na release nova são removidos. `.env`, ambientes Python, caches e diretórios de dados/extensões locais são preservados. As dependências da versão nova são preparadas isoladamente antes da substituição.
 
-A opção **Manter cópia .old para rollback** vem marcada. Após o sucesso, cria uma pasta irmã, por exemplo `Gravewright-0.1.2.old`, com o código anterior e os snapshots de banco, mídia e outros dados em `.gravewright-rollback`. Se já existir uma cópia, uma nova recebe um identificador no nome; nenhuma cópia anterior é sobrescrita. Desmarcar elimina a cópia temporária após o sucesso. Durante a instalação sempre existe recuperação temporária: falhas de migração, substituição ou inicialização restauram código, inicializadores e dados. Uma transação interrompida é recuperada na próxima inicialização.
+A opção **Manter cópia .old para rollback** vem marcada. Após o sucesso, cria uma pasta interna, por exemplo `data/updates/retained/Gravewright-0.2.3.old`, com o código anterior e os snapshots de banco, mídia e outros dados em `.gravewright-rollback`. Se já existir uma cópia, uma nova recebe um identificador no nome; nenhuma cópia anterior é sobrescrita. Desmarcar elimina a cópia temporária após o sucesso. Durante a instalação sempre existe recuperação temporária: falhas de migração, substituição ou inicialização restauram código, inicializadores e dados. Uma transação interrompida é recuperada na próxima inicialização.
 
 Para restaurar uma cópia retida, encerre o Runner e execute com o Python da instalação (o caminho aparece no BAT gerado):
 
 ```bat
-"CAMINHO_DO_PYTHON\python.exe" -X utf8 scripts\rollback_update.py "E:\Gravewright-0.1.2.old"
+"CAMINHO_DO_PYTHON\python.exe" -X utf8 scripts\rollback_update.py "data\updates\retained\Gravewright-0.2.3.old"
 ```
 
 A restauração também retorna banco e mídia ao momento do backup; alterações feitas depois dele serão perdidas. Preserve a pasta de estado e os ambientes de atualização junto da cópia `.old`, pois ela referencia o Python anterior. Checkouts Git com alterações locais continuam bloqueados contra atualização. Não execute outro servidor contra o mesmo banco durante atualização ou restauração.
 
-O Runner guarda versões, backups e `update.log` na pasta `updates` dentro de
-seu diretório de dados. O inicializador por `main.py` usa o diretório de estado
-do usuário: `%LOCALAPPDATA%/Gravewright/updates` no Windows,
-`~/Library/Application Support/Gravewright/updates` no macOS e
-`$XDG_STATE_HOME/gravewright/updates` (ou `~/.local/state/gravewright/updates`)
-no Linux. Preserve esses diretórios e reserve espaço para os ambientes e as cópias `.old` retidas.
+O Runner guarda versões, backups e `update.log` em `data/updates/` dentro da
+pasta descompactada. O inicializador por `main.py` também mantém seu estado em
+`data/updates/` dentro do projeto, no Windows, Linux e macOS. Nenhum estado padrão
+do atualizador é compartilhado em AppData, HOME ou XDG. Preserve `data/` e reserve
+espaço para os ambientes e as cópias `.old` retidas.
 
 O workflow `Automatic updates` testa Windows, Linux e macOS nativamente.
 Para reproduzir, execute `uv run python tests/e2e/automatic_updates.py` e

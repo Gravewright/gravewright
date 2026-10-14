@@ -45,7 +45,7 @@ This creates an administrative account, not a VTT owner. Do not use it as a repl
 
 `.env` is optional and loads automatically. Exported process variables take precedence; `${NAME}` in `.env` remains literal. Restart the server after changing settings. See the complete [configuration reference](configuration.md).
 
-The generated Runner uses the project `.env` and its database/media paths, while enforcing its local network profile. Its private tools and runtime state live outside the project by default: `%LOCALAPPDATA%\Gravewright` on Windows, `$XDG_DATA_HOME/Gravewright` (or `~/.local/share/Gravewright`) on Linux and `~/Library/Application Support/Gravewright` on macOS. Runner `--data-dir` changes state/logs/collected assets; change `.env` to relocate the database or uploads. Back up the configured database, media and `.env` together before upgrades.
+The generated Runner uses the project `.env` and its database/media paths, while enforcing its local network profile. All default storage stays in the extracted project folder on Windows, Linux and macOS: `data/` for runtime state, logs and collected assets, and `data/runner/` for managed tools, environments and caches. It does not share state through the operating-system user profile. Runner `--data-dir` changes state/logs/collected assets; change `.env` to relocate the database or uploads. Back up the configured database, media and `.env` together before upgrades.
 
 | Path | Purpose |
 | --- | --- |

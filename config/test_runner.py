@@ -33,6 +33,7 @@ class RunnerEnvironmentTests(SimpleTestCase):
         shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
         self.enterContext(patch.object(runner, 'ROOT', root))
         self.enterContext(patch.object(runner, 'LANGUAGE', runner.RunnerLanguage()))
+        self.enterContext(patch.object(tempfile, 'tempdir', tempfile.tempdir))
 
     def test_runner_locale_comes_from_project_not_inherited_or_user_configuration(self):
         config = runner.ROOT / '.env'
@@ -312,23 +313,47 @@ class RunnerEnvironmentTests(SimpleTestCase):
                     prepare_environment(directory)
                 self.assertEqual((runner.ROOT / '.env').read_text(encoding='utf-8'), contents)
 
-    def test_default_data_uses_user_profile(self):
+    def test_default_data_stays_in_this_project_on_every_platform_without_reading_profiles(self):
         with tempfile.TemporaryDirectory() as temp:
             home = Path(temp).resolve() / 'home'
             windows = home / 'Windows state'
             xdg = home / 'XDG state'
             cases = (
-                ('win32', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}, windows / 'Gravewright/data'),
-                ('darwin', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}, home / 'Library/Application Support/Gravewright/data'),
-                ('linux', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}, xdg / 'Gravewright/data'),
-                ('linux', {'LOCALAPPDATA': str(windows)}, home / '.local/share/Gravewright/data'),
+                ('win32', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}),
+                ('darwin', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}),
+                ('linux', {'LOCALAPPDATA': str(windows), 'XDG_DATA_HOME': str(xdg)}),
+                ('linux', {}),
             )
-            for platform, environment, expected in cases:
+            for platform, environment in cases:
                 with self.subTest(platform=platform, environment=environment), \
                         patch.object(sys, 'platform', platform), \
-                        patch.object(Path, 'home', return_value=home), \
+                        patch.object(Path, 'home', side_effect=AssertionError('Do not inspect the user profile.')), \
                         patch.dict(os.environ, environment, clear=True):
-                    self.assertEqual(data_directory(), expected)
+                    self.assertEqual(data_directory(), runner.ROOT / 'data')
+
+    def test_relative_data_override_uses_project_root_and_absolute_override_remains_explicit(self):
+        self.assertEqual(data_directory('custom/state'), runner.ROOT / 'custom/state')
+        with tempfile.TemporaryDirectory() as temporary:
+            self.assertEqual(data_directory(temporary), Path(temporary).resolve())
+        with self.assertRaises(RunnerError):
+            data_directory('.')
+
+    def test_tool_caches_ignore_inherited_profile_paths_and_keep_a_relative_explicit_override_local(self):
+        with patch.dict(os.environ, {'GRAVEWRIGHT_RUNNER_ROOT': '', 'UV_CACHE_DIR': '/old/global/uv-cache',
+                                     'UV_PYTHON_INSTALL_DIR': '/old/global/python', 'npm_config_cache': '/old/global/npm',
+                                     'TEMP': '/old/global/tmp', 'TMP': '/old/global/tmp'}), \
+                patch.object(sys, 'path', sys.path.copy()):
+            prepare_environment(data_directory())
+            runtime = runner.ROOT / 'data/runner'
+            self.assertEqual(os.environ['GRAVEWRIGHT_RUNNER_ROOT'], str(runtime))
+            for variable, name in (('UV_CACHE_DIR', 'cache'), ('UV_PYTHON_INSTALL_DIR', 'python'),
+                                   ('UV_PYTHON_BIN_DIR', 'python-bin'), ('npm_config_cache', 'npm-cache'),
+                                   ('CARGO_HOME', 'cargo'), ('RUSTUP_HOME', 'rustup'),
+                                   ('TEMP', 'tmp'), ('TMP', 'tmp'), ('TMPDIR', 'tmp')):
+                self.assertEqual(Path(os.environ[variable]), runtime / name)
+            os.environ['GRAVEWRIGHT_RUNNER_ROOT'] = 'custom/tools'
+            prepare_environment(data_directory())
+            self.assertEqual(Path(os.environ['UV_CACHE_DIR']), runner.ROOT / 'custom/tools/cache')
 
     def test_runner_configures_default_marketplace_without_a_question_and_is_offline_on_repeat(self):
         from dotenv import dotenv_values
@@ -442,6 +467,46 @@ class RunnerEnvironmentTests(SimpleTestCase):
             self.assertEqual(json.loads(Path(values['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE']).read_bytes()),
                              runner.DEFAULT_MARKETPLACE_PUBLIC_KEYS)
 
+    def test_legacy_managed_profile_keys_are_not_imported_when_configuring_the_local_catalog(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
+            legacy = Path(temporary) / 'AppData/Local/Gravewright/data/marketplace' / ('a' * 64) / 'trusted-keys.json'
+            legacy.parent.mkdir(parents=True)
+            legacy.write_bytes(b'Never import this obsolete profile trust store')
+            os.environ.update({'GRAVEWRIGHT_MARKETPLACE_URL': DEFAULT_MARKETPLACE_URL,
+                               'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': str(legacy)})
+            self.assertTrue(ensure_default_marketplace(
+                data_directory(), download=lambda: RunnerDefaultKeysTests.keys,
+            ))
+            saved = Path(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'])
+            self.assertEqual(saved, runner.marketplace_directory(runner.ROOT / 'data') / 'trusted-keys.json')
+            self.assertEqual(json.loads(saved.read_bytes()), runner.DEFAULT_MARKETPLACE_PUBLIC_KEYS)
+            self.assertEqual(legacy.read_bytes(), b'Never import this obsolete profile trust store')
+            self.assertFalse(ensure_default_marketplace(
+                data_directory(), download=lambda: self.fail('The new local keys must work offline.'),
+            ))
+
+    def test_internal_official_keys_install_ignores_missing_legacy_profile_store(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            legacy = Path(temporary) / 'Gravewright/data/marketplace' / ('b' * 64) / 'trusted-keys.json'
+            saved = runner.official_marketplace_keys(data_directory(), RunnerDefaultKeysTests.keys, str(legacy))
+            self.assertTrue(saved.is_relative_to(runner.ROOT / 'data'))
+            self.assertEqual(saved.read_bytes(), RunnerDefaultKeysTests.keys)
+            self.assertFalse(legacy.exists())
+
+    def test_ignoring_legacy_profile_keys_does_not_mutate_configuration_on_download_failure(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
+            legacy = Path(temporary) / 'Gravewright/data/marketplace' / ('c' * 64) / 'trusted-keys.json'
+            os.environ.update({'GRAVEWRIGHT_MARKETPLACE_URL': DEFAULT_MARKETPLACE_URL,
+                               'GRAVEWRIGHT_MARKETPLACE_KEYS_FILE': str(legacy)})
+            config = runner.ROOT / '.env'
+            config.write_text('CUSTOM_OPTION=keep\n', encoding='utf-8')
+            original = config.read_bytes()
+            download = Mock(side_effect=RunnerError('Could not download the default marketplace public keys.'))
+            with self.assertRaises(RunnerError):
+                ensure_default_marketplace(data_directory(), download=download)
+            self.assertEqual(config.read_bytes(), original)
+            self.assertEqual(os.environ['GRAVEWRIGHT_MARKETPLACE_KEYS_FILE'], str(legacy))
+
     def test_existing_official_catalog_with_previous_signing_key_adds_the_reviewed_key(self):
         raw = RunnerDefaultKeysTests.keys
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, clear=True):
@@ -521,6 +586,98 @@ class RunnerEnvironmentTests(SimpleTestCase):
                 ensure.assert_not_called()
 
 
+class RuntimeStorageTests(SimpleTestCase):
+    def setUp(self):
+        self.project = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.enterContext(patch.object(tempfile, 'tempdir', tempfile.tempdir))
+        self.enterContext(patch.dict(os.environ, {'GRAVEWRIGHT_RUNNER_ROOT': ''}))
+
+    def test_local_temporary_storage_replaces_a_previously_cached_profile_directory(self):
+        from scripts.runtime_storage import configure_runtime_storage
+
+        tempfile.tempdir = str(self.project / 'old-profile-tmp')
+        runtime = configure_runtime_storage(self.project)
+        self.assertEqual(runtime, self.project / 'data/runner')
+        self.assertEqual(Path(tempfile.gettempdir()), runtime / 'tmp')
+        with tempfile.NamedTemporaryFile() as created:
+            self.assertTrue(Path(created.name).is_relative_to(runtime / 'tmp'))
+
+    def test_local_temporary_storage_permission_failure_never_falls_back_to_profile(self):
+        from scripts.runtime_storage import configure_runtime_storage
+
+        previous = tempfile.tempdir
+        environment = dict(os.environ)
+        with patch.object(Path, 'mkdir', side_effect=PermissionError('Project storage is not writable.')):
+            with self.assertRaises(PermissionError):
+                configure_runtime_storage(self.project)
+        self.assertEqual(tempfile.tempdir, previous)
+        self.assertEqual(dict(os.environ), environment)
+
+    def test_windows_auxiliary_caches_are_local_without_changing_home_or_userprofile(self):
+        if os.name != 'nt':
+            self.skipTest('Windows auxiliary process metadata uses AppData environment variables.')
+        from scripts.runtime_storage import configure_runtime_storage
+
+        home, profile = os.environ.get('HOME'), os.environ.get('USERPROFILE')
+        runtime = configure_runtime_storage(self.project)
+        self.assertEqual(Path(os.environ['LOCALAPPDATA']), runtime / 'profile/local')
+        self.assertEqual(Path(os.environ['APPDATA']), runtime / 'profile/roaming')
+        self.assertTrue((runtime / 'profile/local').is_dir())
+        self.assertEqual(os.environ.get('HOME'), home)
+        self.assertEqual(os.environ.get('USERPROFILE'), profile)
+
+
+class RunnerLauncherStorageTests(SimpleTestCase):
+    def setUp(self):
+        self.directory = Path(self.enterContext(tempfile.TemporaryDirectory())).resolve()
+        self.project = self.directory / 'extracted-project'
+        templates = self.project / 'scripts/windows'
+        templates.mkdir(parents=True)
+        source = Path(__file__).resolve().parents[1] / 'scripts/windows'
+        for name in ('runner.bat', 'launch_runner.py'):
+            shutil.copy2(source / name, templates / name)
+        self.enterContext(patch.dict(os.environ, {'GRAVEWRIGHT_RUNNER_ROOT': ''}))
+
+    def test_windows_generated_launcher_keeps_data_copies_and_tool_configuration_inside_project(self):
+        from scripts.windows.create_runner import create_runner
+
+        create_runner(self.project, sys.executable)
+        saved = next((self.project / 'data/.runner-launchers').glob('*.bat'))
+        content = saved.read_text(encoding='utf-8')
+        self.assertIn(f'set "GW_DATA={self.project / "data"}"', content)
+        self.assertIn(f'set "GW_RUNTIME={self.project / "data/runner"}"', content)
+        for name in ('UV_CACHE_DIR', 'UV_PYTHON_INSTALL_DIR', 'UV_PYTHON_BIN_DIR', 'npm_config_cache', 'TEMP', 'TMP'):
+            self.assertIn(f'set "{name}=%GW_RUNTIME%', content)
+        self.assertIn('set "LOCALAPPDATA=%GW_RUNTIME%\\profile\\local"', content)
+        self.assertIn('set "APPDATA=%GW_RUNTIME%\\profile\\roaming"', content)
+        self.assertNotIn('%LOCALAPPDATA%\\Gravewright', content)
+        self.assertEqual(len(list((self.project / 'data/.runner-launchers').glob('*.py'))), 1)
+
+    def test_windows_staged_launcher_resolves_relative_state_and_tools_against_final_project(self):
+        from scripts.windows.create_runner import create_runner
+
+        final = self.directory / 'final-project'
+        os.environ['GRAVEWRIGHT_RUNNER_ROOT'] = 'custom/tools'
+        create_runner(self.project, sys.executable, 'custom/state', runtime_project=final)
+        content = next((final / 'custom/state/.runner-launchers').glob('*.bat')).read_text(encoding='utf-8')
+        self.assertIn(f'set "GW_DATA={final / "custom/state"}"', content)
+        self.assertIn(f'set "GW_RUNTIME={final / "custom/tools"}"', content)
+        self.assertIn(f'pushd "{final}"', content)
+        self.assertNotIn(str(self.project), content)
+
+    def test_source_recovery_defaults_to_local_data_and_ignores_global_profile_journal(self):
+        from scripts.windows.launch_runner import recover_source
+
+        profile = self.directory / 'profile'
+        legacy = profile / 'Gravewright/data/updates/transaction.json'
+        legacy.parent.mkdir(parents=True)
+        legacy.write_text('invalid foreign journal', encoding='utf-8')
+        with patch.dict(os.environ, {'LOCALAPPDATA': str(profile), 'XDG_DATA_HOME': str(profile)}):
+            self.assertEqual(recover_source(self.project), sys.executable)
+            self.assertEqual(recover_source(self.project, 'data'), sys.executable)
+        self.assertEqual(legacy.read_text(encoding='utf-8'), 'invalid foreign journal')
+
+
 class RunnerPortugueseMarketplaceTests(SimpleTestCase):
     # Exercise the first-install Translator branch without downloading packages
     # or touching any real database, catalog, configuration or trust store.
@@ -529,6 +686,7 @@ class RunnerPortugueseMarketplaceTests(SimpleTestCase):
         shutil.copy2(runner.ROOT / '.env.example', root / '.env.example')
         self.enterContext(patch.object(runner, 'ROOT', root))
         self.enterContext(patch.object(runner, 'LANGUAGE', runner.RunnerLanguage()))
+        self.enterContext(patch.object(tempfile, 'tempdir', tempfile.tempdir))
 
     def test_translation_preparation_does_not_configure_a_catalog_during_unattended_checks(self):
         from dotenv import dotenv_values

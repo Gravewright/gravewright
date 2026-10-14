@@ -50,6 +50,23 @@ def read(path, default=None):
         return default
 
 
+def retained_backup_parent(origin, state, path, *, allow_legacy=False):
+    """Validate a local retained copy, or an explicitly selected legacy sibling."""
+    origin, state = Path(origin).resolve(), Path(state).resolve()
+    requested = Path(path)
+    if requested.is_symlink() or requested.is_junction():
+        raise ValueError('Invalid retained backup path')
+    old = requested.resolve()
+    retained = (state / 'retained').resolve()
+    if old == origin or origin.is_relative_to(old) or not old.name.endswith('.old'):
+        raise ValueError('Invalid retained backup path')
+    if retained != state and retained.is_relative_to(state) and old.parent == retained:
+        return retained
+    if allow_legacy and old.parent == origin.parent:
+        return origin.parent
+    raise ValueError('Invalid retained backup path')
+
+
 def extract(archive, destination):
     """Only ordinary source files, one project root, bounded expanded size."""
     destination = Path(destination)
@@ -260,6 +277,10 @@ class Supervisor:
     def recover(self):
         journal = read(self.state / 'transaction.json')
         if journal:
+            old = Path(journal['old_copy']) if journal.get('old_copy') else None
+            old_parent = retained_backup_parent(
+                self.origin, self.state, old, allow_legacy=True,
+            ) if old is not None else None
             self.notify('rollback')
             self.active = self.resolve_active(journal['previous'])
             folder = self.state / 'backups' / journal['backup']
@@ -270,16 +291,33 @@ class Supervisor:
                 self.runtime_python = journal['previous_python']
             elif journal.get('previous_python'):
                 self.runtime_python = journal['previous_python']
-            if journal.get('old_copy'):
-                old = Path(journal['old_copy']).resolve()
-                if old.parent != self.origin.parent or old == self.origin or not old.name.endswith('.old'):
-                    raise ValueError('Invalid retained backup path')
-                remove_work_tree(old, self.origin.parent)
+            if old is not None:
+                remove_work_tree(old, old_parent)
             write(self.state / 'active.json', {'path': str(self.active), 'python': self.runtime_python})
             (self.state / 'transaction.json').unlink()
             (self.state / 'job.json').unlink(missing_ok=True)
             shutil.rmtree(self.state / 'job.lock', ignore_errors=True)
             self.notify('rolled_back')
+
+    def create_retained_copy(self, ident):
+        """Reserve a new rollback folder inside updater storage without overwriting."""
+        if not isinstance(ident, str) or len(ident) != 32 or any(char not in '0123456789abcdef' for char in ident):
+            raise ValueError('Invalid retained backup identifier')
+        retained = (self.state / 'retained').resolve()
+        if retained == self.state or not retained.is_relative_to(self.state):
+            raise ValueError('Invalid retained backup path')
+        retained.mkdir(parents=True, exist_ok=True, mode=0o700)
+        name = self.origin.name + '.old'
+        while True:
+            old = retained / name
+            try:
+                old.mkdir(mode=0o700)
+            except FileExistsError:
+                name = self.origin.name + '.' + ident + '.old'
+                ident = uuid.uuid4().hex
+                continue
+            retained_backup_parent(self.origin, self.state, old)
+            return old
 
     def apply(self, job):
         if job.get('kind') == 'django':
@@ -346,11 +384,8 @@ class Supervisor:
             self.start(self.origin)
             self.ready()
             if job.get('keep_old', True):
-                old_copy = self.origin.with_name(self.origin.name + '.old')
-                if old_copy.exists():
-                    old_copy = self.origin.with_name(self.origin.name + '.' + ident + '.old')
                 # Do not replace an earlier user-selected rollback copy.
-                old_copy.mkdir(mode=0o700)
+                old_copy = self.create_retained_copy(ident)
                 created_old = True
                 journal['old_copy'] = str(old_copy)
                 write(self.state / 'transaction.json', journal)
@@ -390,7 +425,7 @@ class Supervisor:
                 self.start(previous)
                 self.ready()
             if created_old:
-                remove_work_tree(old_copy, self.origin.parent)
+                remove_work_tree(old_copy, retained_backup_parent(self.origin, self.state, old_copy))
             self.notify('rolled_back' if transaction_started else 'failed', error=type(error).__name__)
         finally:
             # Keep maintenance if recovery itself failed; the journal is retried at next start.

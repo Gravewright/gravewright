@@ -14,13 +14,13 @@ O instalador termina sem iniciar o servidor. Abra-o novamente para mudar configu
 
 ## Ferramentas e preparação
 
-| Ferramenta | Instalação compatível | Alternativa privada |
-| --- | --- | --- |
-| uv | Versão 0.12.0 ou posterior | uv 0.12.13 com integridade verificada |
-| Python | CPython 3.14, Windows x64, GIL padrão | `cpython-3.14-windows-x86_64-none`, validado após a descoberta |
-| Node.js/npm | Node.js 22 ou 24 LTS estável x64, npm 10 ou posterior | Node.js 24.19.0 verificado, com npm |
+| Ferramenta | Ferramenta gerenciada dentro da instalação |
+| --- | --- |
+| uv | uv 0.12.13 com SHA-256 verificado |
+| Python | CPython 3.14 gerenciado, GIL padrão, para a plataforma nativa |
+| Node.js/npm | Node.js 24.19.0/npm verificado |
 
-Não exige administrador, mudanças permanentes no PATH, Docker ou servidor Redis. Mantenha instaladas as ferramentas reaproveitadas. Dependências Python usam ambiente isolado e `uv sync --locked --no-dev`. O frontend usa `npm ci --include=dev --include=optional` quando necessário e depois `npm run build`; hashes permitem reaproveitar assets inalterados. A instalação atualiza assets gerados e o `node_modules` ignorado na pasta do código.
+Não exige administrador, mudanças permanentes no PATH, Docker ou servidor Redis. Ferramentas verificadas são reutilizadas dentro desta instalação, sem depender do perfil global do usuário. Dependências Python usam ambiente isolado e `uv sync --locked --no-dev`. O frontend usa `npm ci --include=dev --include=optional` quando necessário e depois `npm run build`; hashes permitem reaproveitar assets inalterados. A instalação atualiza assets gerados e o `node_modules` ignorado na pasta do código.
 
 ## Configuração e dados pessoais
 
@@ -32,7 +32,7 @@ Escolher `pt-BR` instala e ativa globalmente o [Translator](https://github.com/G
 
 Antes de preparar o Translator, o instalador configura automaticamente o Marketplace oficial do Gravewright quando não há catálogo configurado, incluindo instalações que recusaram essa opção anteriormente. Ele verifica as chaves públicas oficiais e salva as configurações sem uma pergunta adicional. Catálogos personalizados são preservados; arquivos de chaves personalizados continuam intactos, com eventuais chaves oficiais adicionadas a uma cópia gerenciada. Uma configuração oficial completa e verificada é reutilizada offline nas próximas instalações. O modo `--check` não configura o Marketplace.
 
-O banco e as mídias usam `GRAVEWRIGHT_DATABASE` e `GRAVEWRIGHT_MEDIA_ROOT` do `.env` do projeto, com padrões `data/gravewright.sqlite3` e `data/media` dentro do projeto. Estado do Runner, assets coletados e ferramentas continuam em **`%LOCALAPPDATA%\Gravewright`**:
+O banco e as mídias usam `GRAVEWRIGHT_DATABASE` e `GRAVEWRIGHT_MEDIA_ROOT` do `.env` do projeto, com padrões `data/gravewright.sqlite3` e `data/media` dentro do projeto. Estado do Runner, assets coletados, ferramentas gerenciadas e caches também ficam **dentro da pasta descompactada do projeto**:
 
 | Caminho | Finalidade |
 | --- | --- |
@@ -41,9 +41,9 @@ O banco e as mídias usam `GRAVEWRIGHT_DATABASE` e `GRAVEWRIGHT_MEDIA_ROOT` do `
 | `data/logs/runner.log` | Diagnósticos de inicialização e execução |
 | `data/runner.lock` | Impede uso simultâneo dos mesmos dados |
 | `data/marketplace/<hash-da-pasta>/trusted-keys.json` | Chaves públicas oficiais e de outros publicadores preservadas, quando necessário |
-| `runner/` | Ferramentas, caches e ambientes por pasta do código |
-| `runner/prepare.lock` | Impede preparação simultânea de dependências |
-| `runner/frontend/<hash-da-pasta>/state.json` | Estado da preparação do frontend |
+| `data/runner/` | Ferramentas, caches e ambientes por pasta do código |
+| `data/runner/prepare.lock` | Impede preparação simultânea de dependências |
+| `data/runner/frontend/<hash-da-pasta>/state.json` | Estado da preparação do frontend |
 
 O instalador cria e lê o `.env` na raiz do projeto, ao lado de `Install Windows.bat`. Se não existir, gera uma configuração completa a partir de `.env.example`, com uma nova chave privada. Arquivos de configuração na pasta de dados do usuário nunca são importados. Os ambientes Python são gerenciados separadamente. Os padrões vêm de `.env.example` e depois do `.env` do projeto; os limites locais de rede e segurança são impostos pelo runner. A chave é gerada automaticamente. Pare o servidor antes de reconfigurar ou copiar o `.env` do projeto e toda a pasta pessoal `data` para backup. Preserve chave, banco e mídia juntos. Faça backup antes de instalar uma nova versão: migrações podem impedir o uso de versões anteriores.
 
@@ -56,7 +56,7 @@ O runner serve HTTP apenas em `127.0.0.1`, com um processo servidor e Channels e
 Para instalar com os padrões, sem perguntas nem inicialização do servidor:
 
 ```bat
-"Install Windows.bat" --check --no-pause --data-dir "%TEMP%\Gravewright Install Check"
+"Install Windows.bat" --check --no-pause --data-dir "data\check"
 ```
 
 Isso instala dependências, prepara assets/banco e gera um runner apontando para a pasta escolhida. Não é somente leitura. Uma instalação normal posterior faz as perguntas. `--data-dir` escolhe a pasta persistida; `--port` altera apenas a verificação da instalação, não a porta salva.

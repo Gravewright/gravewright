@@ -7,6 +7,10 @@ import sys
 def main():
     if os.name == 'nt' and not sys.flags.utf8_mode:
         os.execv(sys.executable, [sys.executable, '-X', 'utf8', *sys.argv])
+    from pathlib import Path
+    from scripts.runtime_storage import configure_runtime_storage
+    # Set local caches before Django or dependency activation can use them.
+    configure_runtime_storage(Path(__file__).resolve().parent)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
     from django.conf import settings
     from django.core.management import execute_from_command_line
@@ -18,7 +22,7 @@ def main():
         origin = settings.BASE_DIR
         identity = hashlib.sha256(str(origin).encode()).hexdigest()[:16]
         from scripts.process_control import state_home
-        state = state_home() / identity
+        state = state_home(origin) / identity
         database = Path(settings.DATABASES['default']['NAME']).resolve()
         media = Path(settings.MEDIA_ROOT).resolve()
         if state.is_relative_to(media) or media == origin or origin.is_relative_to(media):

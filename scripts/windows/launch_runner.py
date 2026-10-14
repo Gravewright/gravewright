@@ -1,4 +1,4 @@
-"""Immutable startup recovery, kept outside the replaceable project directory."""
+"""Immutable startup recovery, kept in the project's preserved data directory."""
 import argparse
 from contextlib import contextmanager
 import json
@@ -33,13 +33,15 @@ def data_lock(directory):
                 fcntl.flock(handle, fcntl.LOCK_UN)
 
 
-def recover_source(project, data):
+def recover_source(project, data=None):
     """Repair interrupted source replacement before importing any project code.
 
     The restored supervisor completes database/media recovery from the same
     journal. Leave that journal intact until the regular recovery commits.
     """
-    project, data = Path(project).resolve(), Path(data).resolve()
+    project = Path(project).resolve()
+    data_path = Path(data).expanduser() if data else Path('data')
+    data = (data_path if data_path.is_absolute() else project / data_path).resolve()
     transaction = data / 'updates/transaction.json'
     if not transaction.exists():
         return sys.executable
@@ -95,10 +97,12 @@ def recover_source(project, data):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(allow_abbrev=False)
     parser.add_argument('--project', type=Path, required=True)
-    parser.add_argument('--data-dir', type=Path, required=True)
+    parser.add_argument('--data-dir', type=Path)
     args, remaining = parser.parse_known_args()
     try:
-        project, data = args.project.resolve(), args.data_dir.resolve()
+        project = args.project.resolve()
+        data_path = args.data_dir.expanduser() if args.data_dir else Path('data')
+        data = (data_path if data_path.is_absolute() else project / data_path).resolve()
         python = recover_source(project, data)
         command = [python, '-X', 'utf8', str(project / 'scripts/gravewright_runner.py'),
                    '--data-dir', str(data), *remaining]

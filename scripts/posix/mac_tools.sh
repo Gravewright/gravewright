@@ -68,11 +68,9 @@ EOF
 }
 
 gw_mac_resolve_rust() {
-    local candidate destination stage component expected archive
+    local destination stage component expected archive
     local archives=() hashes=()
     GW_RUST_BIN=''
-    while IFS= read -r candidate; do gw_mac_try_rust "$candidate" && break; done < <(type -a -p rustc 2>/dev/null || true)
-    [ -z "$GW_RUST_BIN" ] || { gw_info "Reusing compatible Rust: $GW_RUST_BIN"; return 0; }
     destination="$GW_RUNTIME/rust/$GW_RUST_VERSION-$GW_RUST_TARGET"
     if gw_mac_manifest verify --root "$destination" --kind rust --version "$GW_RUST_VERSION" --quiet && gw_mac_try_rust "$destination/bin/rustc"; then return 0; fi
     stage="$GW_WORK/rust-install"
@@ -83,8 +81,7 @@ gw_mac_resolve_rust() {
         gw_mac_cached_download "https://static.rust-lang.org/dist/$GW_RUST_DATE/$component-$GW_RUST_VERSION-$GW_RUST_TARGET.tar.gz" "$archive" "$expected"
         archives+=("$archive"); hashes+=("$expected")
     done
-    # Rust's official component installer splits prefixes containing spaces.
-    # Install in an isolated path without spaces, then relocate the toolchain.
+    # Pass a relative prefix to Rust's installer so project spaces are harmless.
     gw_mac_manifest install-rust --root "$stage" --version "$GW_RUST_VERSION" --archives "${archives[@]}" --hashes "${hashes[@]}"
     gw_mac_manifest record --root "$stage" --kind rust --version "$GW_RUST_VERSION"
     mkdir -p "$GW_RUNTIME/rust"
@@ -101,13 +98,8 @@ gw_mac_try_openssl() {
 }
 
 gw_mac_resolve_openssl() {
-    local requested=${OPENSSL_DIR:-} destination stage archive candidate prefix
+    local destination stage archive
     GW_OPENSSL_ROOT=''
-    if gw_mac_try_openssl "$requested"; then gw_info "Reusing compatible static OpenSSL: $GW_OPENSSL_ROOT"; return 0; fi
-    while IFS= read -r candidate; do
-        prefix=$("$GW_BASE_PYTHON" -I -c 'from pathlib import Path; import sys; print(Path(sys.argv[1]).resolve().parent.parent)' "$candidate") || continue
-        if gw_mac_try_openssl "$prefix"; then gw_info "Reusing compatible static OpenSSL: $GW_OPENSSL_ROOT"; return 0; fi
-    done < <(type -a -p openssl 2>/dev/null || true)
     destination="$GW_RUNTIME/openssl/$GW_OPENSSL_VERSION-darwin-x64"
     if gw_mac_manifest verify --root "$destination" --kind openssl --version "$GW_OPENSSL_VERSION" --quiet && gw_mac_try_openssl "$destination"; then return 0; fi
     archive="$GW_RUNTIME/downloads/mac/openssl-$GW_OPENSSL_VERSION.tar.gz"
@@ -134,7 +126,7 @@ gw_mac_prepare_build_tools() {
     unset RUSTC CARGO RUSTDOC RUSTFLAGS CARGO_ENCODED_RUSTFLAGS
     export CARGO_HOME="$GW_RUNTIME/cargo"
     gw_mac_resolve_rust
-    unset RUSTUP_HOME RUSTUP_TOOLCHAIN
+    unset RUSTUP_TOOLCHAIN
     export GRAVEWRIGHT_BUILD_TOOLS_PATH="$GW_RUST_BIN"
     export PATH="$GW_RUST_BIN:$PATH"
     gw_mac_resolve_openssl

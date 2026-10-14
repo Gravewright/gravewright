@@ -1,8 +1,9 @@
-"""Prepare private user data and supervise the local Gravewright server and updates.
+"""Prepare project-local data and supervise the local server and updates.
 
 Native installers prepare the app; the generated Gravewright Runner launcher
 only starts it. This helper is also portable for checks with --data-dir.
 Configuration lives in the source checkout's .env; runtime data stays separate.
+Default data, tools and caches belong to that checkout, never the user profile.
 """
 
 import argparse
@@ -241,8 +242,29 @@ def marketplace_directory(directory):
     return directory / 'marketplace' / hashlib.sha256(identity.encode('utf-8')).hexdigest()
 
 
+def project_marketplace_keys(configured, directory):
+    """Ignore obsolete managed stores outside this project, preserving custom ones.
+
+    Recognize the Runner's own generated path without opening it. A new project
+    must not import another installation's trust store or state from a profile.
+    """
+    if not configured:
+        return ''
+    path = Path(configured).expanduser()
+    path = (path if path.is_absolute() else ROOT / path).resolve()
+    parts = path.parts
+    if (len(parts) >= 3 and parts[-3] == 'marketplace'
+            and parts[-1] == 'trusted-keys.json' and len(parts[-2]) == 64
+            and all(char in '0123456789abcdef' for char in parts[-2])
+            and not path.is_relative_to(ROOT.resolve())
+            and not path.is_relative_to(marketplace_directory(directory).resolve())):
+        return ''
+    return configured
+
+
 def official_marketplace_keys(directory, raw, configured=''):
     """Add the pinned keys without overwriting a custom trust-store file."""
+    configured = project_marketplace_keys(configured, directory)
     official = json.loads(raw)
     keys = {}
     if configured:
@@ -313,7 +335,7 @@ def ensure_default_marketplace(directory, download=None):
     catalog = os.environ.get('GRAVEWRIGHT_MARKETPLACE_URL', '').strip()
     if catalog and catalog != DEFAULT_MARKETPLACE_URL:
         return False
-    configured = os.environ.get('GRAVEWRIGHT_MARKETPLACE_KEYS_FILE', '').strip()
+    configured = project_marketplace_keys(os.environ.get('GRAVEWRIGHT_MARKETPLACE_KEYS_FILE', '').strip(), directory)
     raw = _cached_default_keys(configured or marketplace_directory(directory) / 'trusted-keys.json')
     if catalog and configured and raw is not None:
         return False
@@ -325,17 +347,14 @@ def ensure_default_marketplace(directory, download=None):
 
 
 def data_directory(value=None):
-    """Use persistent per-user state, independently of project configuration."""
-    if value:
-        directory = Path(value).expanduser().resolve()
-    elif sys.platform == 'win32':
-        directory = Path(os.environ.get('LOCALAPPDATA', Path.home() / 'AppData/Local')) / 'Gravewright/data'
-    elif sys.platform == 'darwin':
-        directory = Path.home() / 'Library/Application Support/Gravewright/data'
-    else:
-        directory = Path(os.environ.get('XDG_DATA_HOME', Path.home() / '.local/share')) / 'Gravewright/data'
-    directory = directory.resolve()
-    if directory == ROOT:
+    """Keep default state in this extracted project's data folder on every OS.
+
+    Explicit overrides are supported; relative ones always use the project root.
+    Never inspect or import another installation's AppData/Home state.
+    """
+    path = Path(value).expanduser() if value else Path('data')
+    directory = (path if path.is_absolute() else ROOT / path).resolve()
+    if directory == ROOT.resolve():
         raise RunnerError('The data directory must be separate from the project root.')
     return directory
 
@@ -454,11 +473,14 @@ def prepare_environment(directory, port_override=None):
     # Generated POSIX launchers retain the installer's private native toolchain
     # for source-only dependencies during future supervised environment builds.
     build_tools = os.environ.get('GRAVEWRIGHT_BUILD_TOOLS_PATH') if os.name != 'nt' else None
+    tools_root = os.environ.get('GRAVEWRIGHT_RUNNER_ROOT') or 'data/runner'
     # Purge inherited application settings, including undocumented Runner internals.
     for name in tuple(os.environ):
         if name.startswith(('DJANGO_', 'GRAVEWRIGHT_')) or name in allowed:
             del os.environ[name]
     os.environ.update(values)
+    from scripts.runtime_storage import configure_runtime_storage
+    configure_runtime_storage(ROOT, tools_root=tools_root)
     if build_tools:
         os.environ['GRAVEWRIGHT_BUILD_TOOLS_PATH'] = build_tools
     os.environ.update(

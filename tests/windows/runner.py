@@ -1,8 +1,8 @@
 """Exercise the actual Windows BAT, private tools and local server.
 
-Run ``python tests/windows/runner.py`` on Windows. A temporary source copy,
-profile and campaign directory keep developer files untouched. The first BAT
-process sees a restricted PATH; the next reuses the installed tools offline.
+Run ``python tests/windows/runner.py`` on Windows. A temporary source copy and
+legacy profile keep developer files untouched. Tools, caches and Runner state
+must stay in the extracted project. The next BAT reuses local tools offline.
 The harness then runs the frontend unit tests and the real browser Runner E2E.
 
 ``--source-check`` checks for obsolete launcher implementations on any OS.
@@ -39,11 +39,39 @@ def check_sources():
                      "tests/windows/tooling.ps1"):
         if (ROOT / obsolete).exists():
             raise AssertionError(f"Obsolete launcher implementation remains: {obsolete}")
+    if ('%localappdata%\\gravewright' in batch or 'if not defined localappdata' in batch
+            or '"%gw_system%\\where.exe"' in batch):
+        raise AssertionError("The installer must not discover another installation's AppData/PATH tools.")
+    for expected in (
+        'set "gw_runtime=%gravewright_root%\\data\\runner"',
+        'set "gw_data=%gravewright_root%\\data"',
+        'set "uv_cache_dir=%gw_runtime%\\cache"',
+        'set "uv_python_install_dir=%gw_runtime%\\python"',
+        'set "uv_python_preference=only-managed"',
+        'set "npm_config_cache=%gw_runtime%\\npm-cache"',
+        'set "cargo_home=%gw_runtime%\\cargo"',
+        'set "rustup_home=%gw_runtime%\\rustup"',
+        'set "temp=%gw_runtime%\\tmp"',
+        'set "tmp=%gw_runtime%\\tmp"',
+        'set "localappdata=%gw_runtime%\\profile\\local"',
+        'set "appdata=%gw_runtime%\\profile\\roaming"',
+    ):
+        if expected not in batch:
+            raise AssertionError(f"A local installer storage default is missing: {expected}")
     print("Native BAT source checks passed.", flush=True)
 
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def tree_snapshot(directory):
+    """Detect writes to an unrelated profile, including directories and new files."""
+    paths = [directory, *directory.rglob('*')]
+    return {path.relative_to(directory).as_posix(): (
+        'file' if path.is_file() else 'directory',
+        digest(path) if path.is_file() else None, path.stat().st_mtime_ns,
+    ) for path in paths}
 
 
 def free_port():
@@ -118,7 +146,13 @@ def run_batch(project, arguments, *, env, log, label, cwd, expected=0, timeout=6
 
 
 def single_match(directory, pattern):
-    matches = list(directory.glob(pattern))
+    # uv keeps a minor-version directory alias beside the installed patch version.
+    # Require one real executable while accepting aliases to that same file.
+    matches = []
+    for candidate in directory.glob(pattern):
+        resolved = candidate.resolve(strict=True)
+        if not any(resolved.samefile(existing) for existing in matches):
+            matches.append(resolved)
     if len(matches) != 1:
         raise AssertionError(f"Expected one {pattern} under {directory}; found {len(matches)}")
     return matches[0]
@@ -157,7 +191,8 @@ def check_private_python(work, uv, output):
                       'call :resolve_python\nexit /b %errorlevel%\n' + block, encoding='utf-8')
     env = dict(os.environ, GW_RUNTIME=str(directory), GW_WORK=str(directory), GW_UV=str(uv),
                UV_PYTHON_INSTALL_DIR=str(directory / 'empty-discovery'), UV_PYTHON_NO_REGISTRY='1',
-               UV_PYTHON_INSTALL_REGISTRY='0', UV_PYTHON_INSTALL_BIN='0', GW_PYTHON_PROBE=str(script))
+               UV_PYTHON_INSTALL_REGISTRY='0', UV_PYTHON_INSTALL_BIN='0', GW_PYTHON_PROBE=str(script),
+               UV_CACHE_DIR=str(directory / 'cache'), TEMP=str(directory), TMP=str(directory))
     env.pop('UV_OFFLINE', None)
     env['PATH'] = str(Path(env['SYSTEMROOT']) / 'System32')
     comspec = str(Path(env['SYSTEMROOT']) / 'System32/cmd.exe')
@@ -252,7 +287,7 @@ def check_shortcut(project, output):
 
 def diagnose_failure(work, output):
     """Retain tool startup evidence before deleting the temporary test profile."""
-    runtime = work / PROFILE_NAME / "Gravewright/runner"
+    runtime = work / "Gravewright & (test) ! 100% ç/data/runner"
     system = Path(os.environ["SYSTEMROOT"]) / "System32"
     report = {"runtime_exists": runtime.exists(), "executables": []}
 
@@ -280,7 +315,7 @@ def diagnose_failure(work, output):
 def exercise(work, output, *, skip_browser):
     check_running_bat_replacement(work, output)
     project = work / "Gravewright & (test) ! 100% ç"
-    data = work / "Campaign data & ã"
+    data = project / 'data'
     profile = work / PROFILE_NAME
     shutil.copytree(
         ROOT, project,
@@ -296,19 +331,46 @@ def exercise(work, output, *, skip_browser):
     original = {path: digest(path) for path in protected}
     persisted_paths = registry_paths()
     process_path = os.environ.get("PATH", "")
-    env = dict(os.environ, LOCALAPPDATA=str(profile))
-    # uv/Node/npm disappear from PATH; registered/shared Python may still be
-    # found and reused by uv. This never changes the parent or registry PATH.
+    legacy_runtime = profile / 'Gravewright/runner'
+    legacy_state = profile / 'Gravewright/data'
+    foreign = legacy_state / 'updates/releases/foreign-install'
+    foreign.mkdir(parents=True)
+    (foreign / 'manage.py').write_text('raise SystemExit("FOREIGN_INSTALL_EXECUTED")\n', encoding='utf-8')
+    (legacy_state / 'updates/active.json').write_text(json.dumps({
+        'path': str(foreign), 'python': str(legacy_runtime / 'old-python/python.exe'),
+    }), encoding='utf-8')
+    (legacy_runtime / 'cache').mkdir(parents=True)
+    (legacy_runtime / 'cache/keep.txt').write_text('legacy installation cache', encoding='utf-8')
+    legacy_before = tree_snapshot(profile)
+    env = dict(os.environ, LOCALAPPDATA=str(profile), APPDATA=str(profile / 'Roaming'),
+               USERPROFILE=str(profile), UV_PYTHON_INSTALL_DIR=str(legacy_runtime / 'old-python'),
+               UV_CACHE_DIR=str(legacy_runtime / 'cache'), npm_config_cache=str(profile / 'npm-cache'))
+    env.pop('GRAVEWRIGHT_RUNNER_ROOT', None)
+    env.pop('UV_OFFLINE', None)
+    env.pop('npm_config_offline', None)
+    # No default may follow another installation's AppData state or inherited caches.
     env["PATH"] = str(Path(env["SYSTEMROOT"]) / "System32")
     port = str(free_port())
-    arguments = ["--check", "--no-browser", "--no-pause", "--data-dir", str(data), "--port", port]
-    run_batch(project, arguments, cwd=work, env=env, log=output / "first-bootstrap.log",
-              label="Running the real BAT with uv and Node/npm absent from PATH...")
-    runtime = profile / "Gravewright/runner"
+    arguments = ["--check", "--no-browser", "--no-pause", "--port", port]
+    first = run_batch(project, arguments, cwd=work, env=env, log=output / "first-bootstrap.log",
+                      label="Installing entirely inside the extracted project, ignoring old AppData state...")
+    if str(data) not in first or str(legacy_state) in first or 'FOREIGN_INSTALL_EXECUTED' in first:
+        raise AssertionError('The installer did not isolate default Runner state from the legacy profile.')
+    if tree_snapshot(profile) != legacy_before:
+        raise AssertionError('The installer wrote to the unrelated legacy AppData profile.')
+    runtime = data / 'runner'
     uv = single_match(runtime / "uv", "*/uv.exe")
     check_private_python(work, uv, output)
     node = single_match(runtime / "node", "*/node.exe")
     python = single_match(runtime / "environments", "*/Scripts/python.exe")
+    base_python = single_match(runtime / 'python', '*/python.exe')
+    if not all(path.resolve().is_relative_to(project.resolve()) for path in (uv, node, python, base_python)):
+        raise AssertionError('The installer selected a runtime outside the extracted project.')
+    for name in ('cache', 'npm-cache', 'tmp'):
+        if not (runtime / name).is_dir():
+            raise AssertionError(f'The installer did not create its local {name}.')
+    if not (data / 'logs/runner.log').is_file():
+        raise AssertionError('Default Runner logs did not stay in project data.')
     check_shortcut(project, output)
     for expected in (source_env, project / "data/gravewright.sqlite3"):
         if not expected.is_file():
@@ -330,8 +392,15 @@ def exercise(work, output, *, skip_browser):
     if (project / "data/gravewright.sqlite3").stat().st_mtime_ns != database_time:
         raise AssertionError("The competing launcher changed the database while preparation was locked.")
 
-    # Make the same tools available as preinstalled applications on PATH.
-    env["PATH"] = os.pathsep.join((str(uv.parent), str(node.parent), process_path))
+    # Place valid tools from another profile on PATH; local copies must still win.
+    legacy_uv = legacy_runtime / 'uv/external'
+    legacy_node = legacy_runtime / 'node/external'
+    legacy_uv.mkdir(parents=True)
+    legacy_node.mkdir(parents=True)
+    shutil.copy2(uv, legacy_uv / 'uv.exe')
+    shutil.copy2(node, legacy_node / 'node.exe')
+    legacy_before = tree_snapshot(profile)
+    env["PATH"] = os.pathsep.join((str(legacy_uv), str(legacy_node), process_path))
     env["UV_OFFLINE"] = "1"
     env["npm_config_offline"] = "true"
     repeated = run_batch(project, arguments, cwd=work, env=env, log=output / "repeat-bootstrap.log",
@@ -339,6 +408,8 @@ def exercise(work, output, *, skip_browser):
     for message in ("Frontend dependencies are already current.", "Frontend assets are already current."):
         if message not in repeated:
             raise AssertionError(f"The unchanged bootstrap did not report: {message}")
+    if str(legacy_runtime) in repeated or tree_snapshot(profile) != legacy_before:
+        raise AssertionError('The repeated installer used or changed the legacy AppData runtime.')
     for path, timestamp in timestamps.items():
         if path.stat().st_mtime_ns != timestamp:
             raise AssertionError(f"The unchanged bootstrap rewrote {path.name}.")
@@ -349,8 +420,8 @@ def exercise(work, output, *, skip_browser):
     if registry_paths() != persisted_paths or os.environ.get("PATH", "") != process_path:
         raise AssertionError("The BAT changed the user, machine or parent process PATH.")
 
-    wizard_data = work / 'Wizard data'
-    wizard_arguments = ['--data-dir', str(wizard_data), '--no-pause']
+    wizard_data = data
+    wizard_arguments = ['--no-pause']
     configured = run_batch(project, wizard_arguments, cwd=work, env=env, log=output / 'configure.log',
                 label='Saving interactive configuration with the installed Python...',
                 input_text='Mesa São Paulo\npt-BR\n3001\n\ns\nn\ns\nn\n')
@@ -393,6 +464,16 @@ def exercise(work, output, *, skip_browser):
         raise AssertionError('The generated runner must only execute the prepared application.')
     if str(wizard_data) not in started:
         raise AssertionError('The generated runner lost the configured data directory.')
+    if str(legacy_state) in started or tree_snapshot(profile) != legacy_before:
+        raise AssertionError('The generated launcher reused or changed old AppData state.')
+
+    override_data = project / 'Custom state & ã'
+    overridden = run_batch(project, ['--check', '--no-pause', '--data-dir', str(override_data)],
+                           launcher='Gravewright Runner.bat', cwd=work, env=env,
+                           log=output / 'explicit-data-dir.log',
+                           label='Preserving an explicitly selected local Runner state directory...')
+    if str(override_data) not in overridden or not (override_data / 'logs/runner.log').is_file():
+        raise AssertionError('The explicit --data-dir override was not honored.')
 
     run_batch(project, ["--port", "70000", "--no-pause"], launcher='Gravewright Runner.bat', cwd=work, env=env,
               log=output / "invalid-port.log", label="Rejecting an invalid port without pausing...", expected=1)
@@ -409,6 +490,10 @@ def exercise(work, output, *, skip_browser):
     env["UV_CACHE_DIR"] = str(runtime / "cache")
     env["UV_PYTHON_INSTALL_BIN"] = "0"
     env["UV_PYTHON_INSTALL_REGISTRY"] = "0"
+    env['npm_config_cache'] = str(runtime / 'npm-cache')
+    env['TEMP'] = str(runtime / 'tmp')
+    env['TMP'] = str(runtime / 'tmp')
+    env['PLAYWRIGHT_BROWSERS_PATH'] = str(runtime / 'test-browsers')
     run_command([str(uv), "--no-config", "sync", "--project", str(project), "--locked", "--python", str(python)],
                 cwd=project, env=env, log=output / "browser-dependencies.log",
                 label="Preparing isolated browser test dependencies...")
@@ -437,7 +522,9 @@ def main():
         parser.error("Native BAT tests require Windows; --source-check is available on this OS.")
     output = ROOT / "test-results/windows-runner"
     output.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="gravewright-bat-") as temporary:
+    temporary_root = ROOT / 'data'
+    temporary_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="gw-", dir=temporary_root) as temporary:
         # Hosted Windows TEMP can use an 8.3 profile alias (RUNNER~1), while
         # the launcher prints canonical paths. Derive all fixture paths from
         # the same resolved root without weakening the data-directory check.

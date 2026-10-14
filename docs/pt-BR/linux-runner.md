@@ -36,15 +36,15 @@ O instalador Bash lê `/etc/os-release` e considera `ID` e `ID_LIKE`. Reconhece 
 | Arch | Arch Linux, Manjaro e derivados | `pacman` |
 | Alpine | Alpine Linux | `apk` |
 
-Reconhecer uma família não significa que todas as versões foram testadas. Os binários privados oficiais do Node.js exigem **glibc 2.28+ e kernel Linux 4.18+**, em x64/ARM64, conforme os [requisitos do Node.js 24](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). Em Alpine/musl, disponibilize antes Node.js/npm compatíveis; o instalador não usa um binário glibc nesse ambiente. Arquiteturas não suportadas ou ferramentas incompatíveis geram um diagnóstico, em vez de instalar ferramentas globais.
+Reconhecer uma família não significa que todas as versões foram testadas. Os binários privados oficiais do Node.js exigem **glibc 2.28+ e kernel Linux 4.18+**, em x64/ARM64, conforme os [requisitos do Node.js 24](https://github.com/nodejs/node/blob/v24.19.0/BUILDING.md#platform-list). Em Alpine/musl, coloque Node.js 22/24 nativo e npm 10+ em `data/runner/node/native/` (`bin/node` e `lib/node_modules/npm`); o instalador não usa um binário glibc nesse ambiente. Arquiteturas não suportadas ou ferramentas incompatíveis geram um diagnóstico, em vez de instalar ferramentas globais.
 
 Os requisitos básicos são **Bash 3.2+**, `curl` com HTTPS, certificados CA, `tar`/gzip e verificação SHA-256 (`sha256sum` ou `shasum`). Alpine mínimo pode precisar da instalação do Bash antes de executar o launcher. Requisitos ausentes da distribuição podem precisar do gerenciador de pacotes e `sudo`; execute o Gravewright como usuário comum. Um `ID`/`ID_LIKE` não reconhecido interrompe o instalador antes dos requisitos, mesmo que as ferramentas estejam presentes. Informe esses identificadores para permitir suporte à família ou use o [fluxo manual pelo terminal](getting-started.md).
 
-| Ferramenta | Instalação reaproveitada | Alternativa privada |
-| --- | --- | --- |
-| uv | Versão 0.12.0 ou superior | uv 0.12.13 com SHA-256 fixado |
-| Python | CPython 3.14 com GIL padrão para a plataforma nativa | CPython 3.14 gerenciado pelo uv |
-| Node.js/npm | Node.js 22 ou 24 LTS estável, npm 10+ | Node.js 24.19.0/npm com SHA-256 fixado em glibc |
+| Ferramenta | Ferramenta gerenciada dentro da instalação |
+| --- | --- |
+| uv | uv 0.12.13 com SHA-256 verificado |
+| Python | CPython 3.14 gerenciado, GIL padrão, para a plataforma nativa |
+| Node.js/npm | Node.js 24.19.0/npm verificado; Alpine exige distribuição nativa na pasta local de ferramentas |
 
 Downloads de ferramentas e pacotes ausentes exigem internet. Mantenha disponíveis as ferramentas reaproveitadas. Ferramentas privadas, ambientes Python e caches ficam na pasta do Runner. O instalador não altera perfis de shell nem o PATH permanente; dispensa Docker, Homebrew e Redis. O Python usa `uv sync --locked --no-dev`; o frontend usa `npm ci --include=dev --include=optional` e `npm run build` quando os hashes indicam necessidade. O `.venv` de desenvolvimento e os lock files do código são preservados. Assets existentes são reutilizados quando entradas e saídas não mudaram.
 
@@ -57,8 +57,8 @@ As configurações são salvas **no `.env` do projeto**, ao lado do instalador. 
 | `.env` do projeto | Configuração e chave privada persistente |
 | `data/gravewright.sqlite3` do projeto | Banco padrão (`GRAVEWRIGHT_DATABASE`) |
 | `data/media/` do projeto | Uploads privados e módulos padrão (`GRAVEWRIGHT_MEDIA_ROOT`) |
-| `${XDG_DATA_HOME:-~/.local/share}/Gravewright/runner/` | Ferramentas privadas, caches e ambientes preparados |
-| `${XDG_DATA_HOME:-~/.local/share}/Gravewright/data/` | Estado padrão do Runner, logs e assets públicos coletados |
+| `data/runner/` | Ferramentas privadas, caches e ambientes preparados |
+| `data/` | Estado padrão do Runner, logs e assets públicos coletados |
 | `logs/runner.log` no estado do Runner | Diagnóstico de inicialização/execução |
 | `runner.lock`, `.runner-launchers/`, `updates/` no estado | Bloqueio da instância, cópias imutáveis do launcher e recuperação de atualização |
 
@@ -83,8 +83,8 @@ O `SIGHUP` POSIX é tratado como encerramento ordenado, inclusive ao fechar o te
 Preparação sem perguntas nem inicialização do servidor:
 
 ```bash
-bash "./Install Linux.sh" --check --no-pause --data-dir "/tmp/Gravewright check"
-bash "./Gravewright Runner.sh" --check --no-browser --data-dir "/tmp/Gravewright check"
+bash "./Install Linux.sh" --check --no-pause --data-dir "data/check"
+bash "./Gravewright Runner.sh" --check --no-browser --data-dir "data/check"
 ```
 
 Essas verificações **gravam arquivos**: a instalação prepara ferramentas/dependências/frontend, `.env`, banco e Runner; o `--check` do Runner pode executar migrações e coletar assets. Não são somente leitura. Use uma cópia descartável e pastas explícitas para experimentos. Flags do instalador: `--check`, `--data-dir PATH`, `--port NUMBER`, `--no-browser`, `--no-pause` e `--help`. Flags do Runner: `--check`, `--data-dir PATH`, `--port NUMBER` e `--no-browser`; a porta informada vale apenas naquela execução.
@@ -95,7 +95,7 @@ Após uma instalação bem-sucedida, ferramentas/pacotes/assets inalterados pode
 | --- | --- |
 | Gerenciador abre o script como texto | Abra um terminal e use o comando `bash` com aspas |
 | Faltam curl, certificados CA, tar ou hash | Instale os requisitos indicados para a distribuição; tente novamente como usuário comum |
-| Node não inicia / falta GLIBC | Confira os requisitos; Alpine/musl precisa de Node/npm compatíveis já instalados |
+| Node não inicia / falta GLIBC | Confira os requisitos; Alpine/musl precisa de Node/npm nativos em `data/runner/node/native/` |
 | Falha de download/integridade | Confira GitHub, nodejs.org e fontes de pacotes; use o projeto completo e mantenha a verificação de hash |
 | Projeto movido / Python preparado ausente | Execute `Install Linux.sh` novamente na nova pasta |
 | Porta ocupada | Encerre o outro processo ou use `--port 3001`; o instalador muda o padrão salvo |
@@ -103,3 +103,5 @@ Após uma instalação bem-sucedida, ferramentas/pacotes/assets inalterados pode
 | Falha ao iniciar | Leia `logs/runner.log` na pasta de estado escolhida; remova dados privados antes de compartilhar |
 
 Os [smoke tests POSIX](../../tests/posix/smoke.py) usam uma cópia descartável, ferramentas privadas, caminhos com espaços/Unicode, preparação sem perguntas, reutilização offline, prontidão HTTP real e encerramento correto. O [workflow POSIX](../../.github/workflows/posix-runner.yml) executa testes nativos em Linux/macOS; testes de distribuição com simulações cobrem separadamente os ramos de detecção. CI de plataforma não significa que toda distribuição reconhecida foi testada.
+
+Todos os caminhos da tabela são relativos à pasta descompactada. `data/runner/tmp/` guarda arquivos temporários do bootstrap. Opções explícitas relativas de estado/ferramentas são resolvidas a partir deste projeto, nunca da pasta de trabalho de quem executa.

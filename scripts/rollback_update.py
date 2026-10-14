@@ -7,19 +7,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from scripts.process_control import instance_lock
 from scripts.project_files import checked_path, replace_files, source_files
-from scripts.update_supervisor import Supervisor, read, write
+from scripts.update_supervisor import Supervisor, read, retained_backup_parent, write
 
 
 def rollback(old):
-    old = Path(old).resolve()
+    requested = Path(old)
+    old = requested.resolve()
     metadata = old / '.gravewright-rollback'
     installation = read(metadata / 'installation.json')
     journal = read(metadata / 'project.json')
     if not installation or not journal or not read(metadata / 'complete.json'):
         raise ValueError('This is not a complete Gravewright .old backup')
     origin, state = Path(installation['origin']).resolve(), Path(installation['state']).resolve()
-    if old == origin or old.is_relative_to(origin) or origin.is_relative_to(old):
-        raise ValueError('The rollback copy must be separate from the installation')
+    retained_backup_parent(origin, state, requested, allow_legacy=True)
     with instance_lock(state / 'supervisor.lock'):
         supervisor = Supervisor(origin, state, installation['database'], installation['media'], '127.0.0.1', 3000)
         supervisor.extra_paths = {key: Path(value) for key, value in installation['extra_paths'].items()}

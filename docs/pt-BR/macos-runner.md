@@ -30,13 +30,13 @@ O Runner gerado usa o Python preparado e as configurações salvas, sem pergunta
 
 O Bash 3.2 do macOS é suportado; não é preciso instalar outro shell ou Homebrew. O bootstrap usa `curl`, certificados do sistema, `tar`/gzip e `shasum -a 256` ou outro utilitário SHA-256 compatível. Execute como usuário comum; Python, uv e Node.js ausentes são preparados de forma privada, sem `sudo`, instalação global ou alteração permanente de PATH/perfis de shell.
 
-| Ferramenta | Instalação reaproveitada | Alternativa privada |
-| --- | --- | --- |
-| uv | Versão 0.12.0 ou superior | uv 0.12.13 com SHA-256 fixado |
-| Python | CPython 3.14 com GIL padrão para a arquitetura nativa | CPython 3.14 gerenciado pelo uv |
-| Node.js/npm | Node.js 22 ou 24 LTS estável, npm 10+ | Node.js 24.19.0/npm com SHA-256 fixado |
+| Ferramenta | Ferramenta gerenciada dentro da instalação |
+| --- | --- |
+| uv | uv 0.12.13 com SHA-256 verificado |
+| Python | CPython 3.14 gerenciado, GIL padrão, para a plataforma nativa |
+| Node.js/npm | Node.js 24.19.0/npm verificado |
 
-O instalador escolhe `darwin-x64` ou `darwin-arm64` conforme a arquitetura em execução; as ferramentas devem ser compatíveis. Downloads ausentes exigem internet. Mantenha instaladas as ferramentas reaproveitadas. O Python usa `uv sync --locked --no-dev` em ambiente privado; o frontend usa `npm ci --include=dev --include=optional` e `npm run build` quando necessário. Entradas/saídas inalteradas são reaproveitadas. O `.venv` de desenvolvimento e os lock files do código são preservados. O perfil local dispensa Docker e Redis.
+O instalador escolhe `darwin-x64` ou `darwin-arm64` conforme a arquitetura em execução; as ferramentas devem ser compatíveis. Downloads ausentes exigem internet. Ferramentas verificadas são reutilizadas dentro desta instalação, sem depender do perfil global do usuário. O Python usa `uv sync --locked --no-dev` em ambiente privado; o frontend usa `npm ci --include=dev --include=optional` e `npm run build` quando necessário. Entradas/saídas inalteradas são reaproveitadas. O `.venv` de desenvolvimento e os lock files do código são preservados. O perfil local dispensa Docker e Redis.
 
 ### Compilação de dependências no Intel
 
@@ -71,15 +71,15 @@ O instalador cria/completa **o `.env` do projeto** a partir de `.env.example`, p
 | `.env` do projeto | Configuração e chave privada persistente |
 | `data/gravewright.sqlite3` do projeto | Banco padrão (`GRAVEWRIGHT_DATABASE`) |
 | `data/media/` do projeto | Uploads privados e módulos padrão (`GRAVEWRIGHT_MEDIA_ROOT`) |
-| `~/Library/Application Support/Gravewright/runner/` | Ferramentas privadas, caches e ambientes por localização do código |
+| `data/runner/` | Ferramentas privadas, caches e ambientes por localização do código |
 | `rust/1.99.0-x86_64-apple-darwin/` nas ferramentas | Compilador Rust/Cargo/biblioteca padrão privados e verificados para Intel |
 | `openssl/3.5.9-darwin-x64/` nas ferramentas | OpenSSL estático privado para compilar a dependência no Intel |
 | `cargo/` nas ferramentas | Cache Cargo privado, sem usar a instalação pessoal de `~/.cargo` |
-| `~/Library/Application Support/Gravewright/data/` | Estado padrão do Runner, logs e assets coletados |
+| `data/` | Estado padrão do Runner, logs e assets coletados |
 | `logs/runner.log` no estado do Runner | Diagnóstico de inicialização/execução |
 | `runner.lock`, `.runner-launchers/`, `updates/` no estado | Bloqueio da instância, cópias imutáveis do launcher e recuperação de atualização |
 
-`--data-dir` muda **o estado do Runner**, não o banco ou uploads; configure-os no `.env`. Defina `GRAVEWRIGHT_RUNNER_ROOT` com um caminho absoluto antes de instalar para escolher outra pasta de ferramentas privadas, por exemplo em um teste isolado. Isso não muda HOME nem importa configuração de outra instalação. Mover o projeto exige instalar novamente: o ambiente preparado e o estado do frontend ficam associados à localização do código.
+`--data-dir` muda **o estado do Runner**, não o banco ou uploads; configure-os no `.env`. Defina `GRAVEWRIGHT_RUNNER_ROOT` com um caminho expl?cito absoluto ou relativo ao projeto antes de instalar para escolher outra pasta de ferramentas privadas, por exemplo em um teste isolado. Isso não muda HOME nem importa configuração de outra instalação. Mover o projeto exige instalar novamente: o ambiente preparado e o estado do frontend ficam associados à localização do código.
 
 ## Execução local, atualização e backups
 
@@ -98,8 +98,8 @@ Pare o Runner e faça backup do `.env`, dos caminhos configurados de banco/mídi
 ## Verificações sem perguntas e solução de problemas
 
 ```bash
-bash "./Install macOS.command" --check --no-pause --data-dir "/tmp/Gravewright check"
-bash "./Gravewright Runner.command" --check --no-browser --data-dir "/tmp/Gravewright check"
+bash "./Install macOS.command" --check --no-pause --data-dir "data/check"
+bash "./Gravewright Runner.command" --check --no-browser --data-dir "data/check"
 ```
 
 O `--check` do instalador prepara ferramentas/dependências/frontend, grava configuração, migra o banco e gera o Runner sem perguntas nem inicialização do servidor. O `--check` do Runner valida a aplicação preparada e pode migrar/coletar assets. **Nenhum é somente leitura.** Use uma cópia descartável e pastas explícitas nos experimentos.
@@ -120,3 +120,5 @@ Flags do instalador: `--check`, `--data-dir PATH`, `--port NUMBER`, `--no-browse
 | Aplicação não inicia | Consulte `logs/runner.log` no estado escolhido e remova dados privados antes de compartilhar |
 
 O [smoke test POSIX](../../tests/posix/smoke.py) instala em uma cópia descartável com ferramentas/estado isolados, sem mudar HOME ou configurações pessoais. Cobre espaços/Unicode, reaproveitamento offline, prontidão HTTP real e encerramento correto. O [workflow nativo](../../.github/workflows/posix-runner.yml) executa Linux e macOS Intel/Apple Silicon; o comportamento no navegador é coberto separadamente pelos testes de browser do projeto.
+
+Todos os caminhos da tabela são relativos à pasta descompactada. `data/runner/tmp/` guarda arquivos temporários do bootstrap. Opções explícitas relativas de estado/ferramentas são resolvidas a partir deste projeto, nunca da pasta de trabalho de quem executa.

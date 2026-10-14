@@ -48,10 +48,11 @@ def main():
         if name.startswith(('DJANGO_', 'GRAVEWRIGHT_')):
             del os.environ[name]
     os.environ.update(PYTHON_DOTENV_DISABLED='1', GRAVEWRIGHT_HOST='127.0.0.1',GRAVEWRIGHT_PORT=str(port))
-    os.environ.update(DJANGO_SETTINGS_MODULE='config.settings', GRAVEWRIGHT_DATABASE=str(work/'db.sqlite3'), GRAVEWRIGHT_MEDIA_ROOT=str(work/'media'), GRAVEWRIGHT_CONTENT_ROOT=str(work/'compendiums'))
+    directory = ROOT / 'data'
+    directory.mkdir()
+    os.environ.update(DJANGO_SETTINGS_MODULE='config.settings', GRAVEWRIGHT_DATABASE=str(directory/'db.sqlite3'), GRAVEWRIGHT_MEDIA_ROOT=str(directory/'media'), GRAVEWRIGHT_CONTENT_ROOT=str(directory/'compendiums'), GRAVEWRIGHT_RUNNER_DATA=str(directory))
     if '--runner' in sys.argv:
         from scripts.gravewright_runner import prepare_environment
-        directory = work / 'user-data'; directory.mkdir()
         prepare_environment(directory, port)
         if os.name == 'nt':
             from scripts.windows.create_runner import create_runner
@@ -103,7 +104,7 @@ def main():
     host().install_local(raw.getvalue())
     write(host().directory / 'server-apps.json', plan('test.update', '1.0.0', True))
     connections.close_all()
-    supervisor=Supervisor(ROOT,work/'state',settings.DATABASES['default']['NAME'],media,'127.0.0.1',port)
+    supervisor=Supervisor(ROOT,directory/'updates',settings.DATABASES['default']['NAME'],media,'127.0.0.1',port)
     files=subprocess.check_output(['git','ls-files','-z','--cached','--others','--exclude-standard'],cwd=source_root).decode().split('\0')
     installed_version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"]["version"]
     (ROOT / 'obsolete-release-file.txt').write_text('remove on upgrade', encoding='utf-8')
@@ -179,7 +180,8 @@ def main():
             assert not (ROOT / 'obsolete-release-file.txt').exists()
             assert 'release test 1' in (ROOT / 'Install Windows.bat').read_text()
             assert (ROOT / '.env').read_text() == '# local configuration must survive\n'
-            old = ROOT.with_name(ROOT.name + '.old')
+            old = supervisor.state / 'retained' / (ROOT.name + '.old')
+            assert old.is_relative_to(ROOT), 'Retained rollback escaped the extracted installation'
             assert (old / 'obsolete-release-file.txt').is_file()
             assert (old / '.gravewright-rollback/database.sqlite3').is_file()
             if '--runner' in sys.argv:
@@ -206,7 +208,8 @@ def main():
             supervisor.apply(third)
             assert read(supervisor.state/'progress.json')['stage'] == 'complete'
             assert read(supervisor.state/'progress.json')['backup'] is None
-            assert list(ROOT.parent.glob('*.old')) == [old]
+            assert list((supervisor.state / 'retained').glob('*.old')) == [old]
+            assert not list(ROOT.parent.glob('*.old'))
             assert (ROOT / 'new-release-file.txt').read_text() == '3'
             preserved()
             supervisor.stop()

@@ -5,7 +5,10 @@ GW_PYTHON=@@PYTHON@@
 GW_DATA=@@DATA@@
 GW_UV=@@UV@@
 export GW_UV
+@@RUNTIME_ENV@@
 @@BUILD_ENV@@
+unset NPM_CONFIG_CACHE
+mkdir -p "$TMPDIR"
 if [ -n "${GRAVEWRIGHT_BUILD_TOOLS_PATH:-}" ]; then
     PATH="$GRAVEWRIGHT_BUILD_TOOLS_PATH:${PATH:-/usr/bin:/bin:/usr/sbin:/sbin}"
     export PATH

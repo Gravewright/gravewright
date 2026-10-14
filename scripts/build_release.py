@@ -124,12 +124,12 @@ def selection(root, output, *, include_untracked=False):
 
 def required_files(notes):
     return {
-        'pyproject.toml', 'uv.lock', 'main.py', 'manage.py', '.env.example',
+        'pyproject.toml', 'uv.lock', 'main.py', 'manage.py', '.env.example', 'AGENTS.md',
         'Install Windows.bat', 'Install Linux.sh', 'Install macOS.command',
         'scripts/posix/install.sh', 'scripts/posix/create_runner.py', 'scripts/posix/runner.sh',
         'scripts/posix/mac_tools.sh', 'scripts/posix/mac_build.py',
         'scripts/windows/create_runner.py', 'scripts/windows/runner.bat',
-        'scripts/windows/launch_runner.py', 'scripts/prepare_frontend.py',
+        'scripts/windows/launch_runner.py', 'scripts/prepare_frontend.py', 'scripts/runtime_storage.py',
         'gravewright/maps/scripts/build.cjs',
         'config/managed_asgi.py', 'scripts/managed_server.py',
         'scripts/build_release.py', 'scripts/update_supervisor.py',

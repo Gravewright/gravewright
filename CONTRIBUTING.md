@@ -13,6 +13,13 @@ Contributions can improve code, tests, accessibility, documentation, translation
 5. Update English documentation and its Portuguese counterpart whenever behavior or setup changes. Keep code identifiers and commands identical between translations.
 6. Describe the problem, resulting behavior, validation and any known limits in the pull request. Include screenshots when visual behavior changes; use synthetic campaign data.
 
+## Portable storage contract
+
+All default VTT storage stays in the extracted project folder: `data/` for data,
+logs and Runner/update state; `data/runner/` for managed tools and their caches.
+Do not introduce AppData, HOME or XDG defaults or shared installation metadata.
+Follow [AGENTS.md](AGENTS.md) and retain regression tests for independent copies.
+
 ## Code and documentation
 
 Use English for new comments, docstrings, API documentation and identifiers. Explain responsibilities, trust boundaries, side effects and non-obvious constraints. Avoid comments that merely repeat a statement. Public functions should describe their inputs, results, permission assumptions and important exceptions where these are not apparent from the signature.
