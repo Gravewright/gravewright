@@ -15,7 +15,8 @@ sys.path.insert(0, str(ROOT))
 
 
 def main():
-    with tempfile.TemporaryDirectory(prefix='gravewright-django-marketplace-') as directory:
+    allowed_temp_parent = Path(tempfile.gettempdir()).resolve()
+    with tempfile.TemporaryDirectory(prefix='gravewright-django-marketplace-', dir=allowed_temp_parent) as directory:
         data = Path(directory)
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
@@ -85,7 +86,7 @@ def main():
             supervisor.stop()
             connections.close_all()
             from scripts.project_files import remove_work_tree
-            remove_work_tree(data, Path(tempfile.gettempdir()))
+            remove_work_tree(data, allowed_temp_parent)
 
 
 if __name__ == '__main__':

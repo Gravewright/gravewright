@@ -222,7 +222,8 @@ def browser_setup(browser, base, port):
 
 def main():
     global ROOT, RUNNER
-    original = project_data_state()
+    source_root = ROOT
+    original = project_data_state(source_root)
     output = ROOT / "test-results" / "runner"
     output.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="grave-runner-") as temporary:
@@ -304,7 +305,7 @@ def main():
                     for application_log in (data / "logs").glob("runner.log*"):
                         shutil.copy2(application_log, output / application_log.name)
         assert not ignored_data.exists(), "Inherited production storage settings were used"
-        assert project_data_state() == original, "The Runner changed development data"
+    assert project_data_state(source_root) == original, "The Runner changed development data"
     print("Runner checks passed with temporary user data; Windows bootstrap needs its own Windows smoke test.", flush=True)
 
 
