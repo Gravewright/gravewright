@@ -494,6 +494,7 @@ def exercise(work, output, *, skip_browser):
     env['TEMP'] = str(runtime / 'tmp')
     env['TMP'] = str(runtime / 'tmp')
     env['PLAYWRIGHT_BROWSERS_PATH'] = str(runtime / 'test-browsers')
+    env['PYTHONPYCACHEPREFIX'] = str(work / 'browser-pycache')
     run_command([str(uv), "--no-config", "sync", "--project", str(project), "--locked", "--python", str(python)],
                 cwd=project, env=env, log=output / "browser-dependencies.log",
                 label="Preparing isolated browser test dependencies...")

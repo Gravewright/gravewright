@@ -8,6 +8,7 @@ and shortcut also need a Windows smoke test. No development data is modified.
 from __future__ import annotations
 
 import base64
+from contextlib import ExitStack
 import hashlib
 import http.client
 import json
@@ -226,8 +227,10 @@ def main():
     original = project_data_state(source_root)
     output = ROOT / "test-results" / "runner"
     output.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="grave-runner-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="grave-runner-") as temporary, ExitStack() as cleanup:
         work = Path(temporary)
+        cleanup.callback(setattr, sys, 'pycache_prefix', sys.pycache_prefix)
+        sys.pycache_prefix = str(work / 'bytecode')
         data = work / "runner data ç"
         project = work / 'project'
         shutil.copytree(ROOT, project, ignore=shutil.ignore_patterns(
@@ -241,6 +244,7 @@ def main():
         ignored_data = work / "must-not-be-used"
         env = {
             **os.environ, "PYTHONUNBUFFERED": "1", "DJANGO_SETTINGS_MODULE": "config.does_not_exist",
+            "PYTHONPYCACHEPREFIX": sys.pycache_prefix,
             "DJANGO_DEBUG": "true", "DJANGO_SECRET_KEY": "django-insecure-inherited-must-be-ignored",
             "DJANGO_ALLOWED_HOSTS": "*", "GRAVEWRIGHT_HOST": "0.0.0.0",
             "GRAVEWRIGHT_PUBLIC_ORIGIN": "https://foreign.example.test", "DJANGO_SECURE_COOKIES": "true",
@@ -305,7 +309,20 @@ def main():
                     for application_log in (data / "logs").glob("runner.log*"):
                         shutil.copy2(application_log, output / application_log.name)
         assert not ignored_data.exists(), "Inherited production storage settings were used"
-    assert project_data_state(source_root) == original, "The Runner changed development data"
+    current = project_data_state(source_root)
+    if current != original:
+        changes = {
+            'added': {name: current[name] for name in current.keys() - original.keys()},
+            'removed': {name: original[name] for name in original.keys() - current.keys()},
+            'changed': {name: {'before': original[name], 'after': current[name]}
+                        for name in original.keys() & current.keys() if original[name] != current[name]},
+        }
+        report = output / 'data-changes.json'
+        report.write_text(json.dumps(changes, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+        print('Development-data fingerprint differences:', report, flush=True)
+        for kind, paths in changes.items():
+            print(kind + ':', ', '.join(sorted(paths)), flush=True)
+    assert current == original, "The Runner changed development data"
     print("Runner checks passed with temporary user data; Windows bootstrap needs its own Windows smoke test.", flush=True)
 
 
