@@ -13,7 +13,7 @@ from gravewright.actors.views import publish
 from gravewright.campaigns.models import Campaign
 from gravewright.campaigns.systems import asset_content_type, asset_provider, asset_provider_for, resolve_system_id
 from gravewright.journals.services import JournalError, member
-from gravewright.maps.services import MapError, title
+from gravewright.maps.services import MapError, manage, title
 from gravewright.tokens import services as tokens
 
 from .packages import ModuleFailure
@@ -181,6 +181,21 @@ def invoke(request, table_id, scene_id, name, payload, upload=None):
                 filename=row.name,
                 content_type=asset_content_type(row.kind),
             )
+        if name == "card.asset.upload":
+            manage(who)
+            if upload is None:
+                raise ModuleFailure("invalid_data")
+            # The native card upload owns image validation, conversion and cleanup.
+            from gravewright.table.media import upload as upload_card_asset
+
+            request.POST = request.POST.copy()
+            request.POST["purpose"] = payload["purpose"]
+            response = upload_card_asset(request, table_id, "card-asset")
+            if response.status_code != 200:
+                raise ModuleFailure(
+                    "permission_denied" if response.status_code == 403 else "invalid_data"
+                )
+            return {"assetId": json.loads(response.content)["asset_id"]}
         if name in ("asset.upload", "actor.image.upload"):
             if upload is None:
                 raise ModuleFailure("invalid_data")

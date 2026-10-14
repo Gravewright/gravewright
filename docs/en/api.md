@@ -114,7 +114,7 @@ Subscriptions use the current page's socket event source. A `forTable` handle on
 
 ## Original schema-checked operations
 
-Use the mount's `host.call` for the following names. Input/output/event/context schemas are linked from [`contracts/registry.json`](../../gravewright/modules/contracts/registry.json); lifecycle/storage semantics are in [`contracts/api.json`](../../gravewright/modules/contracts/api.json).
+Use the mount's or lifecycle/customization context's `host.call` for the following names. Input/output/event/context schemas are linked from [`contracts/registry.json`](../../gravewright/modules/contracts/registry.json); lifecycle/storage semantics are in [`contracts/api.json`](../../gravewright/modules/contracts/api.json).
 
 | Operation | Scope | Purpose |
 | --- | --- | --- |
@@ -125,6 +125,7 @@ Use the mount's `host.call` for the following names. Input/output/event/context 
 | `token.data.read`, `token.data.update` | Scene | Read/replace linked actor data or unlinked token snapshot data |
 | `asset.list`, `asset.upload`, `asset.download` | Table | List/upload/download current-system PDF templates |
 | `actor.image.upload` | Table | Upload an actor portrait/token image with native validation |
+| `card.asset.upload` | Table | Upload a reusable card front/back image; GM only |
 | `locale.apply` | Local | Apply a client language catalog for the mount lifetime |
 
 ```javascript
@@ -136,6 +137,19 @@ const data = await host.call("actor.data.read", { id: actorId });
 Scene operations require a mounted scene; a scene ID in an arbitrary payload cannot create that authority. `actor.data.update` and `token.data.update` replace whole data objects, including nested arrays/objects; `null` is a value, not a delete instruction. `actor.update` changes only supplied patch fields. Use the exact schema for each revision field; SDK revisions are not interchangeable with domain API entity versions.
 
 Binary uploads take a real `File`/`Blob` in `payload.file`, use authenticated multipart transport, and derive metadata on the server. PDF template upload is GM-only and limited to 10 MiB. Downloads return `{blob, name, contentType, size}`. `options.onProgress` reports completion for this fetch-based SDK transport, not streaming progress. `options.signal` is supported; cancellation cannot undo a committed mutation.
+
+`card.asset.upload` is an additive SDK 1.0 operation available in Gravewright 0.2.3 and later. It accepts `purpose: "card_front" | "card_back"` and a `File`/`Blob`, validates PNG/JPEG/WebP up to 10 MiB and 16 megapixels through the native card uploader, and returns `{assetId}`. The asset belongs to the authenticated GM and current table. Reuse it in `api.cards.define` as `front_asset_id` or `default_back_asset_id`; deck instances reference the same stored image. Uploads create new assets and have no retry receipt: persist returned IDs before starting another import. No database migration or SDK major-version change is required.
+
+```javascript
+const { assetId } = await context.host.call("card.asset.upload", {
+  file: new File([await context.assets.bytes("cards/front.png")], "front.png", { type: "image/png" }),
+  purpose: "card_front",
+});
+const definition = await context.api.cards.define({
+  name: "My deck", cards: [{ name: "One", front_asset_id: assetId }],
+});
+await context.api.cards.instantiate({ deck_definition_id: definition.deck.id });
+```
 
 | Public module error | Interpretation |
 | --- | --- |

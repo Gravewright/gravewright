@@ -252,6 +252,23 @@
       "description": "Native actor image validation and ownership; multipart File/Blob.",
       "transport": "multipart"
     },
+    "card.asset.upload": {
+      "input": "schemas/card.asset.upload.input.json",
+      "output": "schemas/card.asset.upload.output.json",
+      "errors": [
+        "not_found",
+        "permission_denied",
+        "invalid_data",
+        "conflict",
+        "unavailable",
+        "cancelled",
+        "stale_context"
+      ],
+      "effect": "write",
+      "scope": "table",
+      "description": "GM-only reusable card front/back image. Native PNG/JPEG/WebP validation, 10 MiB/16 megapixel limits, conversion and table/uploader scope. Returns assetId for cards.define; multipart File/Blob.",
+      "transport": "multipart"
+    },
     "locale.apply": {
       "input": "schemas/locale.apply.input.json",
       "output": "schemas/locale.apply.output.json",
@@ -317,6 +334,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -349,6 +367,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -381,6 +400,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -413,6 +433,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -445,6 +466,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -477,6 +499,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -509,6 +532,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -541,6 +565,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -573,6 +598,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -605,6 +631,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -637,6 +664,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -669,6 +697,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [
@@ -701,6 +730,7 @@
         "asset.upload",
         "asset.download",
         "actor.image.upload",
+        "card.asset.upload",
         "locale.apply"
       ],
       "events": [

@@ -73,6 +73,11 @@ PY
 
 A cobertura inclui ciclos de vida e contratos de módulos, parsing de shaders, entradas do tabuleiro, agendamento de tiles, visibilidade, paredes, seleção, rotas de tokens e mapeamento PDF. Testes de geometria/modelos não substituem a conferência da renderização real na GPU.
 
+Os testes de módulos cobrem uploads multipart de imagens de cartas na
+inicialização, duração de ativação, permissões nativas e operações canceladas.
+A suíte Django `gravewright.modules.test_card_assets` também verifica validação
+de imagens, reutilização de recursos, isolamento de mesas e limpeza após falha.
+
 ## Cenários no navegador
 
 ```bash
@@ -82,7 +87,12 @@ uv run --locked python tests/e2e/realtime.py
 uv run --locked python tests/e2e/frontend_api.py
 uv run --locked python tests/e2e/https.py
 uv run --locked python tests/e2e/runner.py
+uv run --locked python tests/web/window_i18n_browser.py
 ```
+
+O teste independente de janelas serve apenas arquivos estáticos do host e
+confere os controles em inglês, português e espanhol, incluindo liberação dos
+listeners e preservação dos textos do usuário. Não carrega campanha ou banco.
 
 No Linux, o Playwright pode precisar de bibliotecas do sistema; `uv run --locked playwright install --with-deps chromium` também as instala e pode exigir privilégios administrativos. Os cenários iniciam servidores próprios em portas temporárias e criam dados fictícios. A maioria usa configurações de desenvolvimento e grava diagnósticos em `test-results/`; os cenários HTTPS e do executor usam configurações específicas descritas abaixo. Execute em sequência: vários compartilham `test-results/migration-closure/`.
 

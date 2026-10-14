@@ -2,7 +2,8 @@
   "lifecycle": {
     "start": "ModuleContext => void | Promise<void>",
     "register": "RegistrationContext => void; synchronous; once per activation",
-    "stop": "ModuleContext => void | Promise<void>; once even after start fails"
+    "stop": "ModuleContext => void | Promise<void>; once even after start fails",
+    "customize": "optional ModuleContext => void | Promise<void>; active module lifetime"
   },
   "register": {
     "defaultMode": "augment",
@@ -22,6 +23,7 @@
     "error": "stale_context",
     "root": "owned HTMLElement; native content restored after failed replacement",
     "scope": "one module, one table, one mounting UUID",
+    "host": "host.call(name, payload, options?) is available in module lifecycle/customize contexts and mounted blocks; all server calls share the activation lease and native permissions",
     "cleanup": "AbortSignal first; cleanup in reverse order; every cleanup attempted; asynchronous cleanup deadline 5000 ms"
   },
   "assets": {

@@ -66,6 +66,10 @@ jobs:
       - run: uv sync --locked
       - name: Install Chromium for the isolated browser scenarios
         run: uv run playwright install --with-deps chromium
+      - name: Validate public module contexts and native translation adapters
+        run: node --test tests/modules/*.test.mjs
+      - name: Validate translated native floating-window controls
+        run: uv run python tests/web/window_i18n_browser.py
       - name: Validate template modal lifecycle
         run: uv run python tests/e2e/modal_flush.py
       - name: Validate release notifications

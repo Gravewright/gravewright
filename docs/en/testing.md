@@ -73,6 +73,11 @@ PY
 
 Coverage includes module lifetimes and contracts, shader parsing, board input, tile scheduling, visibility, walls, selection, token routes and PDF field mapping. Pure geometry/model tests do not replace checking the actual GPU-rendered board.
 
+Module tests cover multipart card-image uploads from lifecycle contexts,
+activation leases, native permissions and cancelled operations. The Django
+`gravewright.modules.test_card_assets` suite also verifies image validation,
+asset reuse, table isolation and failed-upload cleanup.
+
 ## Browser scenarios
 
 ```bash
@@ -82,7 +87,12 @@ uv run --locked python tests/e2e/realtime.py
 uv run --locked python tests/e2e/frontend_api.py
 uv run --locked python tests/e2e/https.py
 uv run --locked python tests/e2e/runner.py
+uv run --locked python tests/web/window_i18n_browser.py
 ```
+
+The standalone window test serves only static host files and checks native
+controls in English, Portuguese and Spanish, including listener disposal and
+preservation of authored content. It does not load a campaign or database.
 
 On Linux, Playwright may need system browser libraries; `uv run --locked playwright install --with-deps chromium` also installs those and can require administrator privileges. Scenarios launch their own servers on temporary ports and seed synthetic data. Most use development settings and write diagnostics under `test-results/`; the HTTPS and runner scenarios use dedicated settings described below. Run scenarios sequentially: several share `test-results/migration-closure/`.
 

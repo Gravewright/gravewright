@@ -4,14 +4,14 @@
 
 Gravewright é uma mesa virtual que você pode hospedar para jogar RPG pelo navegador. Este repositório contém a implementação em Django: páginas renderizadas com Jinja2, interações com Datastar, tabuleiro JavaScript/PixiJS e WebSockets com Django Channels.
 
-A versão atual do projeto é **0.2.2**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
+A versão atual do projeto é **0.2.3**, uma prévia em estágio alpha. O código inclui campanhas, mapas e cenas, fichas independentes por sistema e o PDF System integrado, tokens, chat e dados, diários e missões, áudio, cartas, combate, compêndios e módulos de navegador e apps Django confiáveis instaláveis. Regras e tipos de documento pertencem aos provedores de cada sistema. O [guia de uso](docs/pt-BR/user-guide.md) apresenta os principais fluxos e as limitações atuais; consulte os [identificadores da versão](docs/pt-BR/development.md#identificadores-da-versão) para os nomes de pacotes e tags.
 
 ## Instalar e executar localmente
 
-A versão 0.2.2 inclui alertas de novas versões, Administração reorganizada com
-notas disponíveis offline e seleção dos pacotes compatíveis mais recentes em
-Sistemas e Módulos. Também corrige a abertura de formulários clonados nas modais.
-Consulte as [notas da release](docs/releases/0.2.2.md).
+A versão 0.2.3 permite que módulos independentes importem imagens pelo serviço
+nativo de cartas e usem a API pública do host na inicialização e em Personalizar.
+Os controles nativos das janelas acompanham o idioma ativo do Translator.
+Consulte as [notas da release](docs/releases/0.2.3.md).
 
 Extraia o projeto completo para uma pasta gravável, execute o instalador do seu sistema operacional e depois use o Runner gerado. O instalador prepara ferramentas, dependências, frontend e configurações; o Runner inicia a aplicação já preparada.
 
@@ -21,7 +21,7 @@ Extraia o projeto completo para uma pasta gravável, execute o instalador do seu
 | Linux x64 / ARM64 | `bash "./Install Linux.sh"` | `Gravewright Runner.sh` | [Linux](docs/pt-BR/linux-runner.md) |
 | macOS Intel / Apple Silicon | `Install macOS.command` | `Gravewright Runner.command` | [macOS](docs/pt-BR/macos-runner.md) |
 
-O **pacote 0.2.2 inclui os instaladores das três plataformas**. Hosts na 0.2.1 podem atualizar normalmente por **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env` e dados configurados antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração e dados e execute novamente o instalador da plataforma. Veja as [instruções de download e atualização](docs/releases/0.2.2.md#download-e-atualização).
+O **pacote 0.2.3 inclui os instaladores das três plataformas**. Hosts na 0.2.1 ou 0.2.2 podem atualizar normalmente por **Administração → Atualizações → Verificar atualizações**. Faça backup de `.env` e dados configurados antes. Na atualização manual, pare o Runner, substitua os arquivos da aplicação preservando configuração e dados e execute novamente o instalador da plataforma. Veja as [instruções de download e atualização](docs/releases/0.2.3.md#download-e-atualização).
 
 Os downloads Linux usam distribuições com glibc; Alpine/musl precisa de uma instalação compatível do Node.js já disponível. O instalador macOS atende ao macOS 13.5 ou superior. Downloads de ferramentas e pacotes ausentes exigem internet. Python 3.14, uv e Node.js são preparados de forma privada quando faltam ferramentas compatíveis, sem alterações permanentes no PATH. Os executores usam um perfil local em `127.0.0.1`, sem precisar de um serviço Redis. Os guias apresentam requisitos e caminhos exatos.
 

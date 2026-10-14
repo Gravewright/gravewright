@@ -189,6 +189,7 @@ class BrowserBridge {
     };
     return {
       api: this.api(identity, life),
+      host: this.host(identity, life),
       i18n: createTranslator(identity.moduleId, life),
       signal: life.signal,
       onDispose: life.onDispose,

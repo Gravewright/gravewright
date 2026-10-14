@@ -114,7 +114,7 @@ Assinaturas usam o socket da página atual. Uma API criada com `forTable` em `/i
 
 ## Operações originais validadas por schema
 
-Use `host.call` do bloco montado. Schemas de entrada/saída/eventos/contexto estão relacionados em [`contracts/registry.json`](../../gravewright/modules/contracts/registry.json); semântica de ciclo de vida e armazenamento, em [`contracts/api.json`](../../gravewright/modules/contracts/api.json).
+Use `host.call` do bloco montado ou do contexto de ciclo de vida/personalização. Schemas de entrada/saída/eventos/contexto estão relacionados em [`contracts/registry.json`](../../gravewright/modules/contracts/registry.json); semântica de ciclo de vida e armazenamento, em [`contracts/api.json`](../../gravewright/modules/contracts/api.json).
 
 | Operação | Escopo | Finalidade |
 | --- | --- | --- |
@@ -125,6 +125,7 @@ Use `host.call` do bloco montado. Schemas de entrada/saída/eventos/contexto est
 | `token.data.read`, `token.data.update` | Cena | Ler/substituir dados do ator vinculado ou snapshot do token |
 | `asset.list`, `asset.upload`, `asset.download` | Mesa | Listar/enviar/baixar modelos PDF do sistema atual |
 | `actor.image.upload` | Mesa | Enviar retrato/imagem do ator com validação nativa |
+| `card.asset.upload` | Mesa | Enviar imagem reutilizável de frente/verso de carta; apenas mestre |
 | `locale.apply` | Local | Aplicar catálogo de idioma durante a montagem |
 
 ```javascript
@@ -136,6 +137,19 @@ const data = await host.call("actor.data.read", { id: actorId });
 Operações de cena exigem uma cena montada; um ID arbitrário no payload não cria essa autorização. `actor.data.update` e `token.data.update` substituem objetos completos, inclusive arrays/objetos internos; `null` é valor, não instrução de exclusão. `actor.update` altera apenas campos fornecidos. Confira cada campo de revisão: revisões do SDK não equivalem às versões de entidade da API de domínio.
 
 Uploads recebem `File`/`Blob` real em `payload.file`, usam multipart autenticado e derivam metadados no servidor. Envio de modelo PDF é exclusivo do mestre e limitado a 10 MiB. Downloads retornam `{blob, name, contentType, size}`. `options.onProgress` informa conclusão nesse transporte SDK por fetch, não progresso contínuo. `options.signal` é suportado; cancelamento não desfaz mutação confirmada.
+
+`card.asset.upload` é uma adição ao SDK 1.0 disponível no Gravewright 0.2.3 ou posterior. Recebe `purpose: "card_front" | "card_back"` e `File`/`Blob`, valida PNG/JPEG/WebP de até 10 MiB e 16 megapixels pelo uploader nativo de cartas e retorna `{assetId}`. O arquivo pertence ao mestre autenticado e à mesa atual. Reutilize o ID em `api.cards.define` como `front_asset_id` ou `default_back_asset_id`; as instâncias do baralho referenciam a mesma imagem armazenada. Cada upload cria um novo arquivo e não possui recibo de repetição: guarde os IDs retornados antes de iniciar outra importação. Não exige migração de banco nem alteração da versão principal do SDK.
+
+```javascript
+const { assetId } = await context.host.call("card.asset.upload", {
+  file: new File([await context.assets.bytes("cards/front.png")], "front.png", { type: "image/png" }),
+  purpose: "card_front",
+});
+const definition = await context.api.cards.define({
+  name: "Meu baralho", cards: [{ name: "Um", front_asset_id: assetId }],
+});
+await context.api.cards.instantiate({ deck_definition_id: definition.deck.id });
+```
 
 | Erro público do módulo | Significado |
 | --- | --- |

@@ -1,5 +1,7 @@
 // Shared floating-window movement, focus and per-member layout preferences.
-(() => {
+(async () => {
+const { createTranslator } = await import('/static/gravewright_modules/i18n.js');
+const translator = createTranslator();
 const cleanups = new WeakMap(), windows = new Set(), mounted = new Set();
 const restoredWindows = new WeakSet(), initialStyles = new WeakMap();
 const table = document.querySelector('#table-workspace');
@@ -7,7 +9,7 @@ const scope = table?.dataset.profileId && table?.dataset.tableId
     ? `gravewright.windows.v1.${table.dataset.profileId}.${table.dataset.tableId}` : null;
 let layouts = new Map();
 try { if (scope) layouts = new Map(JSON.parse(localStorage.getItem(scope) || '[]')); } catch { }
-const text = (en, pt) => document.documentElement.lang.toLowerCase().startsWith('pt') ? pt : en;
+const text = source => translator.t(source);
 const visible = element => element.isConnected && !element.hidden && element.getClientRects().length > 0;
 const minimized = element => element.hasAttribute('data-window-minimized') || [...element.classList].some(name => name.endsWith('--minimized'));
 function mount(element) {
@@ -48,7 +50,7 @@ function mount(element) {
         wasMinimized = isMinimized;
         const button = element.querySelector('[data-window-action=minimize]');
         if (button) {
-            const on = minimized(element), label = on ? text('Restore','Restaurar') : text('Minimize','Minimizar');
+            const on = minimized(element), label = text(on ? 'Restore' : 'Minimize');
             const state = on ? 'minimized' : 'expanded';
             if (button.dataset.windowState !== state) { button.dataset.windowState = state; button.setAttribute('aria-label', label); button.title = label; button.textContent = on ? '□' : '−'; }
         }
@@ -94,20 +96,29 @@ function mount(element) {
     if (header) {
         const host = header.querySelector('.gw-window__controls') || [...header.children].find(child => child.tagName === 'DIV') || header;
         function control(label, action, glyph) { const button = doc.createElement('button'); button.type='button'; button.className='gw-window__control'; button.setAttribute('aria-label',label); button.title=label; button.dataset.windowAction=action; button.textContent=glyph; host.append(button); controls.push(button); return button; }
-        const reset = control(text('Reset window layout','Redefinir posição e tamanho'), 'reset', '↺');
+        const reset = control(text('Reset window layout'), 'reset', '↺');
         reset.onclick = () => { layouts.delete(key); try { if(scope) localStorage.setItem(scope,JSON.stringify([...layouts])); } catch {} Object.assign(element.style,initial); resize(); };
         const firstControl = [...host.children].find(child => child !== reset && child.tagName === 'BUTTON');
         if (firstControl) host.insertBefore(reset, firstControl);
         if (element.classList.contains('game-panel') && !header.querySelector('[data-map-panel=minimize],[data-actor-panel=minimize],[data-journal-directory=minimize],[data-visibility-action=minimize],[data-action=minimize],[data-window-action=minimize]')) {
-            const button = control(text('Minimize','Minimizar'),'minimize','−');
-            button.onclick = () => { const on = element.toggleAttribute('data-window-minimized'); button.setAttribute('aria-label',on?text('Restore','Restaurar'):text('Minimize','Minimizar')); button.title=button.getAttribute('aria-label'); button.textContent=on?'□':'−'; };
+            const button = control(text('Minimize'),'minimize','−');
+            button.onclick = () => { const on = element.toggleAttribute('data-window-minimized'); button.setAttribute('aria-label',text(on?'Restore':'Minimize')); button.title=button.getAttribute('aria-label'); button.textContent=on?'□':'−'; };
         }
     }
+    // Module-owned windows exclude legacy DOM translation. Translate only the
+    // native controls injected here, using the active official host catalog.
+    const stopLanguage = translator.onChange(() => {
+        for (const button of controls) {
+            const label = text(button.dataset.windowAction === 'reset' ? 'Reset window layout'
+                : minimized(element) ? 'Restore' : 'Minimize');
+            button.setAttribute('aria-label', label); button.title = label;
+        }
+    });
     element.addEventListener('pointerdown', raise, true); element.addEventListener('focusin', raise); element.addEventListener('pointerdown', beginResize);
     handle.addEventListener('pointerdown', pointerDown); doc.addEventListener('pointerup', endResize); view.addEventListener('resize', resize);
     restore();
     cleanups.set(element, () => {
-        stopDrag(); clearTimeout(saveTimer); observer.disconnect(); visibility.disconnect(); controls.forEach(control => control.remove()); windows.delete(entry);
+        stopDrag(); stopLanguage(); clearTimeout(saveTimer); observer.disconnect(); visibility.disconnect(); controls.forEach(control => control.remove()); windows.delete(entry);
         element.style.zIndex=originalZ; element.classList.remove('gw-window--focused'); element.removeEventListener('pointerdown',raise,true); element.removeEventListener('focusin',raise); element.removeEventListener('pointerdown',beginResize);
         handle.removeEventListener('pointerdown',pointerDown); doc.removeEventListener('pointerup',endResize); view.removeEventListener('resize',resize);
     });
