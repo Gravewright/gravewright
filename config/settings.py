@@ -239,6 +239,12 @@ INSTALLED_APPS += [name for name in GRAVEWRIGHT_SERVER_APPS if name not in INSTA
 GRAVEWRIGHT_CONTENT_ROOT = env_path('GRAVEWRIGHT_CONTENT_ROOT', 'data/vtt/compendiums')
 DATA_UPLOAD_MAX_MEMORY_SIZE = 8 * 1024 * 1024
 GRAVEWRIGHT_MAP_MAX_PIXELS = int(os.environ.get('GRAVEWRIGHT_MAP_MAX_PIXELS', '64000000'))
+GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS = int(os.environ.get('GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS', '64000000'))
+if min(GRAVEWRIGHT_MAP_MAX_PIXELS, GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS) < 1:
+    raise ValueError('Map pixel limits must be positive.')
+GRAVEWRIGHT_MAP_TILER = os.environ.get('GRAVEWRIGHT_MAP_TILER', 'auto').strip().lower()
+if GRAVEWRIGHT_MAP_TILER not in {'auto', 'vips', 'pillow'}:
+    raise ValueError('GRAVEWRIGHT_MAP_TILER must be auto, vips or pillow.')
 
 
 # Email

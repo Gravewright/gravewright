@@ -96,6 +96,20 @@ preservation of authored content. It does not load a campaign or database.
 
 On Linux, Playwright may need system browser libraries; `uv run --locked playwright install --with-deps chromium` also installs those and can require administrator privileges. Scenarios launch their own servers on temporary ports and seed synthetic data. Most use development settings and write diagnostics under `test-results/`; the HTTPS and runner scenarios use dedicated settings described below. Run scenarios sequentially: several share `test-results/migration-closure/`.
 
+`tests/e2e/compendium_server.py --fixture <new-empty-directory>` starts a
+disposable localhost fixture with a synthetic browser system, language catalogs
+and compendiums. Repeat `--archive <system.zip>` to review local browser systems;
+no operator data is reused. Run `tests/e2e/compendium_layout.py --seed
+<fixture>/seed.json [--browser-executable <chromium>]` to check desktop, 390px and
+320px layouts, en/pt-BR/es collation, accent-insensitive search, type/pack filters,
+previews and native keyboard focus, independent imports, failed-import retry,
+permissions, read-only access and first-pack creation. Results go to
+`test-results/compendiums/` by default. On a separate fresh fixture,
+`tests/e2e/item_directory_layout.py --seed <fixture>/seed.json --output
+<results-directory> [--browser-executable <chromium>]` checks the native item
+directory's density, item/folder/type ordering, search, keyboard menus,
+duplication, moving and read-only controls. Stop each owned server afterward.
+
 | Change | Relevant scenarios |
 | --- | --- |
 | Accounts and campaigns | `authentication.py`, `inside.py`, `campaign_controls.py` |

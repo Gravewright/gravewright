@@ -1,31 +1,31 @@
 
-.condition-preferences[data-v-gwcondition] { display: grid; gap: var(--fib-6); border-top: var(--fib-1) solid var(--border); padding-top: var(--fib-6);
+.condition-preferences[data-v-gwcondition] { display: grid; gap: var(--space-3); border-top: var(--size-1) solid var(--border); padding-top: var(--space-3);
 }
-.condition-preferences header strong[data-v-gwcondition] { font: bold var(--step-18) var(--font-display);
+.condition-preferences header strong[data-v-gwcondition] { font: bold var(--text-xl) var(--font-display);
 }
-.condition-preferences p[data-v-gwcondition] { color: var(--text-muted); font-size: var(--fib-6); margin: var(--fib-4) 0 0;
+.condition-preferences p[data-v-gwcondition] { color: var(--text-muted); font-size: var(--text-md); margin: var(--space-1) var(--space-0) var(--space-0);
 }
-.condition-preferences__options[data-v-gwcondition] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--fib-6);
+.condition-preferences__options[data-v-gwcondition] { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-3);
 }
-.condition-preferences__option[data-v-gwcondition] { display: grid; gap: var(--fib-5); text-align: left; padding: var(--fib-6); border: var(--fib-1) solid var(--border); border-radius: var(--fib-5); color: var(--text); background: var(--surface); cursor: pointer;
+.condition-preferences__option[data-v-gwcondition] { display: grid; gap: var(--space-2); text-align: left; padding: var(--space-3); border: var(--size-1) solid var(--border); border-radius: var(--radius-md); color: var(--text); background: var(--surface); cursor: pointer;
 }
 .condition-preferences__option--selected[data-v-gwcondition] { border-color: var(--accent); background: color-mix(in srgb,var(--accent) 10%,var(--surface));
 }
-.condition-preferences__option small[data-v-gwcondition] { color: var(--text-muted); font-size: var(--step-12);
+.condition-preferences__option small[data-v-gwcondition] { color: var(--text-muted); font-size: var(--text-sm);
 }
-.condition-preferences__preview[data-v-gwcondition] { height: var(--fib-9); display: flex; align-items: center; justify-content: flex-end; gap: var(--fib-5); background: #10151b; border-radius: var(--fib-4); padding: var(--fib-5);
+.condition-preferences__preview[data-v-gwcondition] { height: var(--size-55); display: flex; align-items: center; justify-content: flex-end; gap: var(--space-2); background: #10151b; border-radius: var(--radius-sm); padding: var(--space-2);
 }
-.condition-preferences__preview--classic[data-v-gwcondition] { flex-direction: column-reverse; justify-content: center; gap: var(--fib-3);
+.condition-preferences__preview--classic[data-v-gwcondition] { flex-direction: column-reverse; justify-content: center; gap: var(--space-half);
 }
 .condition-preferences__preview--gravewright[data-v-gwcondition] { flex-direction: row-reverse;
 }
-.condition-preferences__portrait[data-v-gwcondition] { display: grid; place-items: center; width: var(--fib-8); height: var(--fib-8); border-radius: 50%; border: var(--fib-1) solid var(--accent);
+.condition-preferences__portrait[data-v-gwcondition] { display: grid; place-items: center; width: var(--size-34); height: var(--size-34); border-radius: var(--radius-circle); border: var(--size-1) solid var(--accent);
 }
-.condition-preferences__icons[data-v-gwcondition] { display: flex; gap: var(--fib-4); color: var(--accent);
+.condition-preferences__icons[data-v-gwcondition] { display: flex; gap: var(--space-1); color: var(--accent);
 }
-.condition-preferences svg[data-v-gwcondition] { width: var(--fib-7); height: var(--fib-7);
+.condition-preferences svg[data-v-gwcondition] { width: var(--size-21); height: var(--size-21);
 }
-.condition-preferences button[data-v-gwcondition]:focus-visible { outline: var(--fib-2) solid var(--accent); outline-offset: var(--fib-2);
+.condition-preferences button[data-v-gwcondition]:focus-visible { outline: var(--size-2) solid var(--accent); outline-offset: var(--size-2);
 }
 @media(max-width:600px) {
 .condition-preferences__options[data-v-gwcondition] { grid-template-columns: 1fr;

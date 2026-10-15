@@ -19,16 +19,16 @@
     min-height: var(--topbar-height);
     align-items: center;
     justify-content: space-between;
-    gap: var(--step-21);
-    padding: 0 var(--step-34);
+    gap: var(--space-5);
+    padding: var(--space-0) var(--space-8);
     border-bottom: var(--border-hairline);
     background: color-mix(in srgb, var(--bg) 94%, black);
 }
 
 .gw-shell__content {
     width: min(100%, var(--content-width));
-    margin: 0 auto;
-    padding: var(--step-34);
+    margin: var(--space-0) auto;
+    padding: var(--space-8);
 }
 
 .gw-shell__content--packages {

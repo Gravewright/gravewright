@@ -13,6 +13,12 @@ while preserving campaigns, compatibility and existing work.
 - **The core is independent of RPG systems.** Character sheets, rules, items,
   powers, system-specific initiative and catalogs belong to their system package.
   The core provides generic capabilities and contracts.
+- **Each new RPG system is one installable system package.** Keep its sheets,
+  items, rules, automation, translations and assets together. Do not introduce
+  a separately installed Server Rules companion under Modules.
+- **Respect the requested released host version.** Use its existing public APIs.
+  Do not require a newer VTT or publish a VTT release as a workaround for a
+  system-package task unless the owner explicitly requests that host upgrade.
 - **Use the existing modals.** Do not introduce the HTML `<dialog>` element,
   browser alerts or native confirmations as substitutes for application modals.
 - **Preserve data and earlier changes.** Do not overwrite pending work or publish
@@ -150,6 +156,13 @@ Use existing colors, tokens, typography and interaction patterns. Modals must
 support focus, keyboard navigation, closing, scrolling and smaller viewports.
 Visually inspect layout changes using synthetic data, long content and empty
 states. Do not present buttons for functionality with no implemented action.
+
+Fixed design-token dimensions use plain pixel values. Reuse existing tokens and
+add a new one when a value is shared across components. Padding, margins and
+gaps use the `--space-*` scale; corners use `--radius-*`. Host interface text
+must remain at least 12px, including relative sizes and font shorthands.
+Component-specific widths and heights may use literal pixels. Keep responsive
+geometry as CSS expressions and preserve authored document and scene text sizes.
 
 `en` is the default language; preserve explicit user choices. Integrate translations
 through the official mechanism and the owning package, considering `en`, `pt-BR`

@@ -107,6 +107,14 @@ Mantenha `MEDIA_ROOT` privado: mapas, PDFs, diários, áudio, cartas e pacotes d
 
 Configure limites de upload e timeouts do servidor externo. O limite padrão de bytes de mapa é 50 GiB, enquanto pixels decodificados, dimensões e quantidade de tiles têm limites separados; aceitar muitos bytes não significa que haverá memória suficiente para processar o arquivo.
 
+### Uploads de mapas grandes
+
+A geração do mapa continua síncrona dentro da requisição de upload. Ela executa fora do loop de eventos, mas um mapa grande ou a espera por outro mapa pode ultrapassar o timeout de resposta do proxy reverso. Dimensione `proxy_read_timeout` com base nos tempos de processamento observados; os `300s` do exemplo não garantem o processamento de qualquer imagem. Um timeout do proxy pode desconectar quem enviou o arquivo enquanto o servidor continua processando; confira a lista de cenas antes de tentar novamente.
+
+Para mapas maiores, instale as dependências opcionais do libvips no ambiente que executa o servidor e aumente `GRAVEWRIGHT_MAP_MAX_PIXELS` somente conforme necessário. Nos comandos de implantação por código-fonte acima, use `uv sync --locked --no-dev --extra vips`; mantenha o extra nas sincronizações seguintes. Os instaladores nativos e a preparação de atualizações gerenciadas selecionam as dependências padrão sem esse extra. `GRAVEWRIGHT_MAP_TILER=vips` faz a falta de suporte nativo impedir a inicialização; `auto` recorre ao Pillow, cujo teto separado `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` tem padrão de 64 milhões de pixels. Consulte [configuração](configuration.md#geração-de-tiles-e-imagens-grandes) antes de aumentar qualquer teto.
+
+A geração é serializada por processo; vários workers ASGI ainda podem somar uso de memória e disco. Libvips processa mapas comuns em faixas, enquanto rotações e alguns codecs exigem recursos adicionais. Reserve espaço com permissão de escrita em `data/runner/tmp/` dentro da instalação para a fonte codificada, o conjunto completo de tiles preparados e os arquivos temporários nativos, além do armazenamento final de mídia. Overrides explícitos da raiz do Runner ou da pasta temporária de uploads Django mantêm a prioridade documentada. Meça formatos, transparências e orientações representativos no servidor de destino antes de elevar limites; essa mudança não acrescenta processamento em segundo plano nem uma cota global de memória.
+
 ## Vários processos
 
 Todos os workers precisam compartilhar banco, arquivos, chave secreta, configuração de confiança dos módulos e camada Redis. As configurações padrão do servidor exigem `GRAVEWRIGHT_REDIS_URL` com debug desativado, mesmo em um único processo. O executor local possui um perfil separado e não pode ser usado para essa implantação. Channels em memória não entrega eventos entre workers.

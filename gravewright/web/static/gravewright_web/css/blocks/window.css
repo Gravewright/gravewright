@@ -10,16 +10,16 @@
     width: var(--panel-width);
     min-width: var(--panel-min-width);
     min-height: var(--panel-min-height);
-    max-width: calc(100vw - var(--gap-block));
-    max-height: calc(100vh - var(--gap-block));
+    max-width: calc(100vw - var(--size-24));
+    max-height: calc(100vh - var(--size-24));
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: var(--fib-1) solid var(--border-accent-strong);
-    border-radius: var(--radius-2xl);
+    border: var(--size-1) solid var(--border-accent-strong);
+    border-radius: var(--radius-xl);
     background: color-mix(in srgb, var(--surface) 94%, transparent);
-    box-shadow: var(--shadow-window), inset 0 var(--fib-1) rgb(255 255 255 / 5%);
-    backdrop-filter: blur(var(--step-13)) saturate(125%);
+    box-shadow: var(--shadow-window), inset 0 var(--size-1) rgb(255 255 255 / 5%);
+    backdrop-filter: blur(var(--size-13)) saturate(125%);
 }
 
 .gw-window--minimized {
@@ -31,7 +31,7 @@
 /* A panel window stands the height of the table, like a rail: its content is
  * a list that scrolls, not a card that ends. */
 .gw-window--fill {
-    height: calc(100vh - var(--step-48));
+    height: calc(100vh - var(--size-48));
 }
 
 .gw-window--minimized.gw-window--fill {
@@ -46,8 +46,8 @@
     flex: 0 0 auto;
     align-items: center;
     justify-content: space-between;
-    gap: var(--gap-comfy);
-    padding: var(--step-6) var(--gap-base) var(--step-6) var(--gap-comfy);
+    gap: var(--space-3);
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-3);
     background:
         linear-gradient(180deg, rgba(192, 154, 90, 0.05), rgba(192, 154, 90, 0)),
         rgba(16, 19, 21, 0.78);
@@ -82,11 +82,11 @@
     display: flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: var(--fib-2);
+    gap: var(--space-half);
     overflow-x: auto;
-    margin: 0 var(--gap-base) var(--gap-snug);
-    padding: var(--fib-3);
-    border: var(--fib-1) solid var(--hairline);
+    margin: var(--space-0) var(--space-2) var(--space-1);
+    padding: var(--space-half);
+    border: var(--size-1) solid var(--hairline);
     border-radius: var(--radius-lg);
     background: rgb(0 0 0 / 24%);
     scrollbar-width: none;
@@ -99,13 +99,13 @@
 .gw-window__tab {
     display: inline-flex;
     align-items: center;
-    gap: var(--step-6);
+    gap: var(--space-1);
     min-height: var(--control-height-xs);
-    border: var(--fib-1) solid transparent;
+    border: var(--size-1) solid transparent;
     flex: 1 0 auto;
     justify-content: center;
     border-radius: var(--radius-md);
-    padding: 0 var(--step-10);
+    padding: var(--space-0) var(--space-2);
     background: transparent;
     color: var(--text-faint);
     font-size: var(--text-xs);
@@ -128,7 +128,7 @@
 .gw-window__tab--active {
     border-color: var(--border-accent);
     background: color-mix(in srgb, var(--accent) 15%, var(--surface-raised));
-    box-shadow: 0 var(--fib-1) var(--fib-3) rgb(0 0 0 / 35%), inset 0 var(--fib-1) rgb(255 255 255 / 5%);
+    box-shadow: 0 var(--size-1) var(--size-3) rgb(0 0 0 / 35%), inset 0 var(--size-1) rgb(255 255 255 / 5%);
     color: var(--accent-hover);
 }
 
@@ -136,7 +136,7 @@
     display: flex;
     flex: 0 0 auto;
     align-items: center;
-    gap: var(--gap-snug);
+    gap: var(--space-1);
 }
 
 .gw-window__control {
@@ -146,9 +146,9 @@
     place-items: center;
     width: var(--control-height-sm);
     height: var(--control-height-sm);
-    border: var(--fib-1) solid var(--border);
+    border: var(--size-1) solid var(--border);
     border-radius: var(--radius-md);
-    padding: 0;
+    padding: var(--space-0);
     background: rgb(255 255 255 / 3%);
     color: var(--text-muted);
     font-size: var(--text-lg);
@@ -178,12 +178,12 @@
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: var(--step-10);
+    gap: var(--space-2);
     overflow: auto;
-    padding: var(--gap-base);
+    padding: var(--space-2);
 }
 
 .gw-window__body--flush {
-    gap: 0;
-    padding: 0;
+    gap: var(--space-0);
+    padding: var(--space-0);
 }

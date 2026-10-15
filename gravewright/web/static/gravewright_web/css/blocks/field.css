@@ -7,7 +7,7 @@
 
 .gw-field {
     display: grid;
-    gap: var(--gap-snug);
+    gap: var(--space-1);
     min-width: 0;
 }
 
@@ -27,7 +27,7 @@
     min-height: var(--control-height-md);
     border: var(--border-hairline);
     border-radius: var(--radius-sm);
-    padding: 0 var(--step-13);
+    padding: var(--space-0) var(--space-3);
     background: var(--surface-field);
     color: var(--text-bright);
     /* Explicit, so a control can never pick up the label's caps styling. */
@@ -42,21 +42,21 @@
 }
 
 .gw-field textarea {
-    min-height: var(--fib-10);
-    padding: var(--step-10);
+    min-height: var(--size-89);
+    padding: var(--space-2);
     line-height: var(--leading-normal);
     resize: vertical;
 }
 
 .gw-field select {
     appearance: none;
-    padding-right: var(--step-28);
+    padding-right: var(--space-7);
     background-image: linear-gradient(45deg, transparent 50%, var(--text-faint) 50%),
         linear-gradient(135deg, var(--text-faint) 50%, transparent 50%);
     background-position:
-        right var(--step-14) center,
-        right var(--step-9) center;
-    background-size: var(--fib-4) var(--fib-4), var(--fib-4) var(--fib-4);
+        right var(--size-14) center,
+        right var(--size-9) center;
+    background-size: var(--size-5) var(--size-5), var(--size-5) var(--size-5);
     background-repeat: no-repeat;
 }
 
@@ -72,11 +72,11 @@
 .gw-field input:is(:autofill, :-webkit-autofill) {
     -webkit-text-fill-color: var(--text-bright);
     caret-color: var(--text-bright);
-    box-shadow: inset 0 0 0 var(--fib-15) var(--surface-field);
+    box-shadow: inset 0 0 0 var(--size-987) var(--surface-field);
 }
 
 .gw-field input:is(:autofill, :-webkit-autofill):focus {
-    box-shadow: inset 0 0 0 var(--fib-15) var(--surface-field),
+    box-shadow: inset 0 0 0 var(--size-987) var(--surface-field),
         var(--ring-field), var(--ring-accent);
 }
 
@@ -90,7 +90,7 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--step-13);
+    gap: var(--space-3);
 }
 
 .gw-field__help,
@@ -112,16 +112,16 @@
  * grey bevel sitting on a dark dialog. */
 .gw-field input[type="file"] {
     max-width: 100%;
-    padding: var(--step-8);
+    padding: var(--space-2);
     color: var(--text-muted);
     font-size: var(--text-md);
 }
 
 .gw-field input[type="file"]::file-selector-button {
-    margin-right: var(--step-12);
-    border: var(--fib-1) solid var(--border-strong);
+    margin-right: var(--space-3);
+    border: var(--size-1) solid var(--border-strong);
     border-radius: var(--radius-sm);
-    padding: var(--step-7) var(--step-16);
+    padding: var(--space-2) var(--space-4);
     background: var(--surface-raised);
     color: var(--text);
     font-family: inherit;
@@ -149,18 +149,18 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    gap: var(--gap-comfy);
-    border: var(--fib-1) solid var(--hairline);
+    gap: var(--space-3);
+    border: var(--size-1) solid var(--hairline);
     border-radius: var(--radius-sm);
-    padding: var(--step-12) var(--step-16);
+    padding: var(--space-3) var(--space-4);
     background: rgba(0, 0, 0, 0.14);
     cursor: pointer;
 }
 
 .gw-switch__input {
     position: absolute;
-    width: var(--fib-1);
-    height: var(--fib-1);
+    width: var(--size-1);
+    height: var(--size-1);
     opacity: 0;
 }
 
@@ -168,7 +168,7 @@
     position: relative;
     width: var(--size-38);
     height: var(--size-22);
-    border: var(--fib-1) solid var(--border-strong);
+    border: var(--size-1) solid var(--border-strong);
     border-radius: var(--radius-pill);
     background: var(--surface-field);
     transition:
@@ -179,8 +179,8 @@
 .gw-switch__control::after {
     content: "";
     position: absolute;
-    top: var(--fib-3);
-    left: var(--fib-3);
+    top: var(--size-3);
+    left: var(--size-3);
     width: var(--size-14);
     height: var(--size-14);
     border-radius: var(--radius-circle);
@@ -197,17 +197,17 @@
 
 .gw-switch__input:checked + .gw-switch__control::after {
     background: var(--accent-hover);
-    transform: translateX(var(--step-16));
+    transform: translateX(var(--size-16));
 }
 
 .gw-switch__input:focus-visible + .gw-switch__control {
-    outline: var(--fib-2) solid var(--focus-ring);
-    outline-offset: var(--fib-3);
+    outline: var(--size-2) solid var(--focus-ring);
+    outline-offset: var(--size-3);
 }
 
 .gw-switch__text {
     display: grid;
-    gap: var(--fib-2);
+    gap: var(--space-half);
 }
 
 .gw-switch__title {

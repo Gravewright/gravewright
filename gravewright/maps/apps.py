@@ -7,6 +7,11 @@ class MapsConfig(AppConfig):
     label = "gravewright_maps"
 
     def ready(self):
+        from .tiling import configure_pillow_limit, engine
+
+        configure_pillow_limit()
+        engine()
+
         from django.db import transaction
         from django.db.models.signals import post_delete
         from .models import Tile, MapAsset

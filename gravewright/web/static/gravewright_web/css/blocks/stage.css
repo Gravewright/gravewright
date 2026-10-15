@@ -9,7 +9,7 @@
         radial-gradient(
             circle at 50% 38%,
             rgba(192, 154, 90, 0.05),
-            transparent var(--fib-14)
+            transparent var(--size-610)
         ),
         var(--bg);
 }
@@ -26,18 +26,18 @@
     display: grid;
     place-content: center;
     justify-items: center;
-    padding: var(--gap-block);
+    padding: var(--space-6);
     text-align: center;
     pointer-events: none;
 }
 
 /* The marker stands one step above the eyebrow, not on it. */
 .gw-stage__marker {
-    margin-bottom: var(--step-18);
+    margin-bottom: var(--space-4);
 }
 
 .gw-stage__eyebrow {
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-muted);
     font-size: var(--text-lead);
     font-weight: var(--weight-black);
@@ -47,7 +47,7 @@
 }
 
 .gw-stage__title {
-    margin: 0 0 var(--step-10);
+    margin: var(--space-0) var(--space-0) var(--space-2);
     color: var(--text);
     font-size: var(--text-stage);
     font-weight: var(--weight-display);
@@ -57,7 +57,7 @@
 
 .gw-stage__description {
     max-width: 60ch;
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-muted);
     font-size: var(--text-lead);
     line-height: var(--leading-normal);
@@ -67,6 +67,6 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--gap-base);
-    margin-top: var(--step-18);
+    gap: var(--space-2);
+    margin-top: var(--space-4);
 }

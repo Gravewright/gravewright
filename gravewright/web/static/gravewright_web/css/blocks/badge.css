@@ -6,12 +6,12 @@
 .gw-badge {
     display: inline-flex;
     align-items: center;
-    gap: var(--gap-snug);
+    gap: var(--space-1);
     width: max-content;
     max-width: 100%;
-    border: var(--fib-1) solid var(--border);
-    border-radius: var(--radius-xs);
-    padding: var(--step-4) var(--step-10);
+    border: var(--size-1) solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-1) var(--space-2);
     background: var(--surface-sunken);
     color: var(--text-faint);
     font-size: var(--text-xs);
@@ -47,7 +47,7 @@
 
 .gw-badge--pill {
     border-radius: var(--radius-pill);
-    padding: var(--step-4) var(--step-11);
+    padding: var(--space-1) var(--space-3);
 }
 
 /* Sentence case on a raised surface: the form the table's own metadata takes,
@@ -55,7 +55,7 @@
 .gw-badge--plain {
     border-color: var(--border);
     border-radius: var(--radius-sm);
-    padding: var(--step-5) var(--step-8);
+    padding: var(--space-1) var(--space-2);
     background: var(--surface);
     color: var(--text-faint);
     letter-spacing: var(--tracking-none);

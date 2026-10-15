@@ -5,7 +5,7 @@
     min-height: 100vh;
     place-content: center;
     justify-items: center;
-    gap: var(--step-13);
+    gap: var(--space-3);
     background: var(--bg);
     color: var(--text-muted);
 }
@@ -20,7 +20,7 @@
 }
 
 .gw-loading p {
-    margin: 0;
+    margin: var(--space-0);
     font-size: var(--text-md);
 }
 

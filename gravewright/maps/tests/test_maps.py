@@ -181,17 +181,98 @@ class MapTests(TransactionTestCase):
         from unittest.mock import patch
         from django.core.files.storage import default_storage
         save = default_storage.save
-        calls = 0
-        def fail_second(*args, **kwargs):
-            nonlocal calls
-            calls += 1
-            if calls == 2:
-                raise OSError('simulated storage failure')
-            return save(*args, **kwargs)
-        with patch.object(default_storage, 'save', side_effect=fail_second), self.assertRaises(OSError):
-            self.upload()
+        for error in (OSError('simulated storage failure'), ValueError('storage rejected file')):
+            with self.subTest(error=type(error).__name__):
+                calls = 0
+                def fail_second(*args, **kwargs):
+                    nonlocal calls
+                    calls += 1
+                    if calls == 2:
+                        raise error
+                    return save(*args, **kwargs)
+                with patch.object(default_storage, 'save', side_effect=fail_second), self.assertRaises(type(error)):
+                    self.upload()
+                self.assertFalse(Tile.objects.exists())
+                self.assertFalse(Scene.objects.exists())
+                self.assertFalse(any(Path(self.media.name).rglob('*.webp')))
+
+    def test_invalid_json_settings_do_not_publish_a_scene(self):
+        self.client.force_login(self.gm)
+        response = self.client.post(
+            f"/api/containers/{self.campaign.pk}/scene-upload",
+            {"name": "Invalid settings", "settings": "{"},
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json()["error"], "Invalid scene settings.")
+        self.assertFalse(Scene.objects.exists())
         self.assertFalse(Tile.objects.exists())
-        self.assertFalse(any(Path(self.media.name).rglob('*.webp')))
+
+    def test_configured_pixel_limit_accepts_images_above_original_pillow_guard(self):
+        from unittest.mock import patch
+        from gravewright.maps import tiling
+
+        image = BytesIO()
+        Image.new("RGB", (21, 21), "#354b66").save(image, "PNG")
+        self.client.force_login(self.gm)
+        with (self.settings(GRAVEWRIGHT_MAP_TILER="pillow", GRAVEWRIGHT_MAP_MAX_PIXELS=500,
+                            GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS=500),
+              patch.object(tiling, "_DEFAULT_MAX_IMAGE_PIXELS", 100),
+              patch.object(Image, "MAX_IMAGE_PIXELS", 100)):
+            tiling.configure_pillow_limit()
+            response = self.client.post(
+                f"/api/containers/{self.campaign.pk}/scene-upload",
+                {"name": "Configured limit", "map": SimpleUploadedFile("map.png", image.getvalue())},
+            )
+        self.assertEqual(response.status_code, 201, response.content)
+        self.assertEqual((response.json()["width"], response.json()["height"]), (21, 21))
+        self.assertEqual(Tile.objects.count(), 1)
+
+    def test_pillow_header_and_fallback_limits_have_actionable_errors(self):
+        from unittest.mock import patch
+
+        self.client.force_login(self.gm)
+        with patch("gravewright.maps.tiling.Image.open", side_effect=Image.DecompressionBombError("too large")):
+            response = self.client.post(
+                f"/api/containers/{self.campaign.pk}/scene-upload",
+                {"name": "Too large", "map": SimpleUploadedFile("map.png", b"image header")},
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json()["error"], "This map exceeds the server image pixel limit.")
+        image = BytesIO()
+        Image.new("RGB", (21, 21)).save(image, "PNG")
+        with self.settings(GRAVEWRIGHT_MAP_TILER="pillow", GRAVEWRIGHT_MAP_MAX_PIXELS=500,
+                           GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS=440):
+            response = self.client.post(
+                f"/api/containers/{self.campaign.pk}/scene-upload",
+                {"name": "Requires streaming", "map": SimpleUploadedFile("map.png", image.getvalue())},
+            )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertIn("vips", response.json()["error"])
+        self.assertFalse(Scene.objects.exists())
+        self.assertFalse(Tile.objects.exists())
+        self.assertFalse(any(Path(self.media.name).rglob("*.webp")))
+
+    def test_corrupt_input_does_not_publish_scene_or_tiles(self):
+        self.client.force_login(self.gm)
+        response = self.client.post(
+            f"/api/containers/{self.campaign.pk}/scene-upload",
+            {"name": "Corrupt map", "map": SimpleUploadedFile("map.png", b"not an image")},
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        self.assertEqual(response.json()["error"], "Choose a valid PNG, JPEG, WebP or TIFF image.")
+        self.assertFalse(Scene.objects.exists())
+        self.assertFalse(Tile.objects.exists())
+        self.assertFalse(any(Path(self.media.name).rglob("*.webp")))
+
+    def test_failed_tile_persistence_rolls_back_scene_and_removes_files(self):
+        from unittest.mock import patch
+
+        with patch.object(Tile.objects, "bulk_create", side_effect=OSError("simulated database failure")):
+            with self.assertRaisesMessage(OSError, "simulated database failure"):
+                self.upload()
+        self.assertFalse(Scene.objects.exists())
+        self.assertFalse(Tile.objects.exists())
+        self.assertFalse(any(Path(self.media.name).rglob("*.webp")))
 
     def test_settings_conflicts_scope_and_folder_cycles(self):
         m = self.upload()

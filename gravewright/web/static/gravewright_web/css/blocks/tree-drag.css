@@ -1,4 +1,4 @@
-.gw-tree-preview { position: fixed; z-index: 1500; top: 0; left: 0; display: flex; max-width: var(--size-250); padding: var(--step-6) var(--step-10); align-items: center; gap: var(--fib-5); border: var(--fib-1) solid var(--accent); border-radius: var(--step-4); background: rgb(24 29 35 / 96%); box-shadow: 0 var(--fib-5) var(--fib-7) rgb(0 0 0 / 45%); color: var(--text); pointer-events: none; }
-.gw-tree-preview svg { width: var(--step-14); height: var(--step-14); flex: 0 0 var(--step-14); color: var(--accent); }
-.gw-tree-preview strong { overflow: hidden; font-size: var(--step-12); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.gw-tree-preview { position: fixed; z-index: 1500; top: 0; left: 0; display: flex; max-width: 250px; padding: var(--space-1) var(--space-2); align-items: center; gap: var(--space-2); border: var(--size-1) solid var(--accent); border-radius: var(--radius-sm); background: rgb(24 29 35 / 96%); box-shadow: 0 var(--size-8) var(--size-21) rgb(0 0 0 / 45%); color: var(--text); pointer-events: none; }
+.gw-tree-preview svg { width: var(--size-14); height: var(--size-14); flex: 0 0 var(--size-14); color: var(--accent); }
+.gw-tree-preview strong { overflow: hidden; font-size: var(--text-sm); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .gw-tree-dragging, .gw-tree-dragging * { cursor: grabbing !important; user-select: none !important; }

@@ -20,7 +20,7 @@
     flex-direction: column;
     max-width: var(--content-max-width);
     margin-inline: auto;
-    padding: 0 var(--gutter) var(--step-40);
+    padding: var(--space-0) var(--gutter) var(--space-10);
 }
 
 /* ---- The head ---------------------------------------------------------- */
@@ -33,12 +33,12 @@
     flex-wrap: wrap;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--step-4) var(--gap-block);
-    border-bottom: var(--fib-1) solid var(--hairline);
-    margin: 0 calc(var(--gutter) * -1) var(--gap-block);
-    padding: var(--gap-section) var(--gutter) var(--gap-loose);
+    gap: var(--space-1) var(--space-6);
+    border-bottom: var(--size-1) solid var(--hairline);
+    margin: var(--space-0) calc(var(--gutter) * -1) var(--space-6);
+    padding: var(--space-5) var(--gutter) var(--space-4);
     background: rgba(17, 21, 26, 0.92);
-    backdrop-filter: blur(var(--step-12));
+    backdrop-filter: blur(var(--size-12));
 }
 
 /* The signature: the one piece of gold at the top of every panel. */
@@ -46,7 +46,7 @@
     content: "";
     position: absolute;
     inset: 0 0 auto;
-    height: var(--fib-2);
+    height: var(--size-2);
     background: linear-gradient(
         90deg,
         var(--accent),
@@ -58,7 +58,7 @@
 /* The title of a panel is set in the display serif, not as an 11px caps
  * eyebrow: it *is* the title, so it carries the weight of one. */
 .gw-panel__title {
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-bright);
     font-family: var(--font-display);
     font-size: var(--text-3xl);
@@ -70,7 +70,7 @@
 
 .gw-panel__description {
     flex: 0 1 46ch;
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-faint);
     font-size: var(--text-base);
     line-height: var(--leading-normal);
@@ -82,8 +82,8 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    gap: var(--gap-base);
-    margin: 0 0 var(--gap-section);
+    gap: var(--space-2);
+    margin: var(--space-0) var(--space-0) var(--space-5);
 }
 
 /* ---- Content grids ----------------------------------------------------- */
@@ -91,12 +91,12 @@
 .gw-panel__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(var(--card-min-width), 1fr));
-    gap: var(--gap-section);
+    gap: var(--space-5);
 }
 
 @media (max-width: 900px) {
     .gw-panel__head {
-        padding-top: var(--gap-loose);
+        padding-top: var(--space-4);
     }
 
     .gw-panel__title {
@@ -116,11 +116,11 @@
 
 @media (max-width: 640px) {
     .gw-panel__inner {
-        padding: 0 var(--gap-loose) var(--gap-block);
+        padding: var(--space-0) var(--space-4) var(--space-6);
     }
 
     .gw-panel__head {
-        margin-inline: calc(var(--gap-loose) * -1);
-        padding-inline: var(--gap-loose);
+        margin-inline: calc(var(--space-4) * -1);
+        padding-inline: var(--space-4);
     }
 }

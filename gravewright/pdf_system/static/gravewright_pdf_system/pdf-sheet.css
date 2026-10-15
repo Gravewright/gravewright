@@ -1,9 +1,9 @@
-/* Legacy sheet structure, Vue BEM selectors and compact Fibonacci spacing. */
+/* Legacy sheet structure, retained BEM selectors and compact shared spacing. */
 gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
-  /* Aliases onto the shared scale in @gravewright/ui. */
-  --p-radius-sm: var(--radius-sm, var(--fib-3));
-  --p-radius-md: var(--radius-md, var(--fib-4));
-  --p-radius-lg: var(--radius-lg, var(--fib-5));
+  /* Aliases for shared @gravewright/ui border radii. */
+  --p-radius-sm: var(--radius-sm, var(--radius-sm));
+  --p-radius-md: var(--radius-md, var(--radius-sm));
+  --p-radius-lg: var(--radius-lg, var(--radius-md));
   display: block;
   height: 100%;
   min-height: 0;
@@ -14,34 +14,34 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
 .pdf-sheet { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .pdf-sheet__loading {
   display: flex; align-items: center; justify-content: center;
-  height: 100%; padding: var(--fib-7); color: var(--text-faint, #7f8994); font-size: var(--fib-6); text-align: center;
+  height: 100%; padding: var(--space-5); color: var(--text-faint, #7f8994); font-size: var(--text-md); text-align: center;
 }
 
 .pdf-sheet__bar {
-  display: flex; align-items: center; gap: var(--fib-6);
-  padding: var(--fib-4) var(--fib-5); border-bottom: var(--fib-1) solid var(--border, #303842);
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: var(--space-1) var(--space-2); border-bottom: var(--size-1) solid var(--border, #303842);
 }
-.pdf-sheet__bar-group { display: flex; align-items: center; gap: var(--fib-3); }
+.pdf-sheet__bar-group { display: flex; align-items: center; gap: var(--space-half); }
 .pdf-sheet__bar-group--end { margin-left: auto; }
 
 .pdf-sheet__btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: var(--fib-8); height: var(--fib-8); padding: 0;
-  border: var(--fib-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
+  width: var(--size-34); height: var(--size-34); padding: var(--space-0);
+  border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
   background: none; color: var(--text-muted, #a9a193); cursor: pointer;
 }
 .pdf-sheet__btn:hover { color: var(--text, #d8d2c3); }
 .pdf-sheet__btn--active { border-color: var(--accent, #c09a5a); }
 
-.pdf-sheet__page { min-width: var(--size-62); text-align: center; font-variant-numeric: tabular-nums; font-size: var(--fib-6); }
-.pdf-sheet__status { color: var(--text-faint, #7f8994); font-size: var(--fib-6); }
+.pdf-sheet__page { min-width: var(--size-62); text-align: center; font-variant-numeric: tabular-nums; font-size: var(--text-md); }
+.pdf-sheet__status { color: var(--text-faint, #7f8994); font-size: var(--text-md); }
 
 .pdf-sheet__stage { flex: 1; min-height: 0; overflow: auto; }
 
 /* The page and the fields layer share one coordinate system: the doc shrinks
    to the page width and centers, so the fields layer (inset: 0) covers exactly
    the canvas. */
-.pdf-sheet__doc { position: relative; width: max-content; margin: 0 auto; }
+.pdf-sheet__doc { position: relative; width: max-content; margin: var(--space-0) auto; }
 .pdf-sheet__page-host { display: block; }
 .pdf-sheet__fields { position: absolute; inset: 0; pointer-events: none; }
 .pdf-sheet__fields > .pdf-sheet__field { pointer-events: auto; }
@@ -49,29 +49,29 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
 /* Without a renderer the sheet doesn't become a blank screen: the fields stack
    into a readable column and keep saving. */
 .pdf-sheet__stage[data-viewer-missing="true"] .pdf-sheet__fields {
-  position: static; display: grid; gap: var(--fib-5); padding: var(--fib-6);
+  position: static; display: grid; gap: var(--space-2); padding: var(--space-3);
 }
 .pdf-sheet__stage[data-viewer-missing="true"] .pdf-sheet__field { position: static; }
 
 .pdf-sheet__field {
   position: absolute;
-  border: var(--fib-1) solid transparent; border-radius: var(--fib-3);
+  border: var(--size-1) solid transparent; border-radius: var(--radius-sm);
   background: color-mix(in srgb, var(--accent, #c09a5a) 12%, transparent);
   /* The field sits over the PDF PAGE, which is light: inheriting the dark
      modal theme left the text an almost illegible grey. The default is dark;
      the sheet can change it through the variable. */
   color: var(--pdf-field-text, #111111);
-  font: inherit; padding: 0 var(--fib-3);
+  font: inherit; padding: var(--space-0) var(--space-half);
 }
 .pdf-sheet__field:focus { border-color: var(--accent, #c09a5a); outline: none; }
 .pdf-sheet__field[readonly] { background: none; }
 .pdf-sheet__field--checkbox { width: auto !important; }
 
 .pdf-sheet__empty {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--fib-5);
-  height: 100%; padding: var(--fib-7); color: var(--text-faint, #7f8994); text-align: center; font-size: var(--fib-6);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2);
+  height: 100%; padding: var(--space-5); color: var(--text-faint, #7f8994); text-align: center; font-size: var(--text-md);
 }
-.pdf-sheet__empty p { margin: 0; max-width: 42ch; }
+.pdf-sheet__empty p { margin: var(--space-0); max-width: 42ch; }
 .pdf-sheet__empty strong { color: var(--text-muted, #a9a193); }
 
 /* The doc is what centers; centering here too would shift the canvas inside
@@ -82,38 +82,38 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
    and opening a modal to swap sheets would be disproportionate. */
 .pdf-sheet__picker-wrap { position: relative; display: inline-flex; }
 .pdf-sheet__picker {
-  position: absolute; top: calc(100% + var(--fib-3)); right: 0; z-index: 5;
-  min-width: var(--size-180); padding: var(--fib-3); display: flex; flex-direction: column; gap: var(--fib-2);
-  border: var(--fib-1) solid var(--border, #303842); border-radius: var(--p-radius-lg);
+  position: absolute; top: calc(100% + var(--size-3)); right: 0; z-index: 5;
+  min-width: var(--size-180); padding: var(--space-half); display: flex; flex-direction: column; gap: var(--space-half);
+  border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-lg);
   background: var(--surface-raised, #20262d);
-  box-shadow: 0 var(--fib-5) var(--fib-7) rgba(0, 0, 0, 0.35);
+  box-shadow: 0 var(--size-8) var(--size-21) rgba(0, 0, 0, 0.35);
 }
 .pdf-sheet__picker-option {
-  padding: var(--fib-4) var(--fib-5); text-align: left; font-size: var(--fib-6);
-  border: var(--fib-1) solid transparent; border-radius: var(--p-radius-md);
+  padding: var(--space-1) var(--space-2); text-align: left; font-size: var(--text-md);
+  border: var(--size-1) solid transparent; border-radius: var(--p-radius-md);
   background: none; color: var(--text-muted, #a9a193); cursor: pointer;
 }
 .pdf-sheet__picker-option:hover { color: var(--text, #d8d2c3); }
 .pdf-sheet__picker-option[aria-selected="true"] { border-color: var(--accent, #c09a5a); color: var(--text, #d8d2c3); }
-.pdf-sheet__picker-empty { margin: 0; padding: var(--fib-5); font-size: var(--fib-6); line-height: 1.4; color: var(--text-faint, #7f8994); }
+.pdf-sheet__picker-empty { margin: var(--space-0); padding: var(--space-2); font-size: var(--text-md); line-height: 1.4; color: var(--text-faint, #7f8994); }
 .pdf-sheet__picker-upload {
-  display: block; margin-top: var(--fib-2); padding: var(--fib-4) var(--fib-5);
-  border-top: var(--fib-1) solid var(--border, #303842);
-  color: var(--accent, #c09a5a); font-size: var(--fib-6); cursor: pointer;
+  display: block; margin-top: var(--space-half); padding: var(--space-1) var(--space-2);
+  border-top: var(--size-1) solid var(--border, #303842);
+  color: var(--accent, #c09a5a); font-size: var(--text-md); cursor: pointer;
 }
 
 /* --- tabs ---------------------------------------------------------------
    The sheet panel must keep the full height, otherwise the PDF stage loses
    the room it needs to scroll. */
 .pdf-sheet__tabs {
-  display: flex; gap: var(--fib-2); margin: var(--fib-4) var(--fib-5); padding: var(--fib-3);
-  border: var(--fib-1) solid var(--border, #303842); border-radius: var(--p-radius-lg);
+  display: flex; gap: var(--space-half); margin: var(--space-1) var(--space-2); padding: var(--space-half);
+  border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-lg);
   background: rgba(0, 0, 0, .24);
 }
 .pdf-sheet__tab {
-  display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: var(--fib-4);
-  padding: var(--fib-4) var(--fib-6); font-size: var(--fib-6);
-  border: var(--fib-1) solid transparent;
+  display: inline-flex; flex: 1; align-items: center; justify-content: center; gap: var(--space-1);
+  padding: var(--space-1) var(--space-3); font-size: var(--text-md);
+  border: var(--size-1) solid transparent;
   border-radius: var(--p-radius-md);
   background: none; color: var(--text-faint, #7f8994); cursor: pointer;
 }
@@ -122,63 +122,63 @@ gravewright-pdf-system-sheet, gravewright-pdf-system-combat {
   color: var(--accent-hover, #dfbc7b);
   border-color: color-mix(in srgb, var(--accent, #c09a5a) 42%, var(--border, #303842));
   background: color-mix(in srgb, var(--accent, #c09a5a) 14%, rgba(255, 255, 255, .04));
-  box-shadow: 0 var(--fib-1) var(--fib-3) rgba(0, 0, 0, .35), inset 0 var(--fib-1) rgba(255, 255, 255, .05);
+  box-shadow: 0 var(--size-1) var(--size-3) rgba(0, 0, 0, .35), inset 0 var(--size-1) rgba(255, 255, 255, .05);
 }
 
 .pdf-sheet__panel { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.pdf-sheet__panel--form { gap: var(--fib-6); padding: var(--fib-5); overflow: auto; }
+.pdf-sheet__panel--form { gap: var(--space-3); padding: var(--space-2); overflow: auto; }
 
-.pdf-sheet__field-group { display: flex; flex-direction: column; gap: var(--fib-4); }
+.pdf-sheet__field-group { display: flex; flex-direction: column; gap: var(--space-1); }
 .pdf-sheet__field-group h3 {
-  margin: 0; font-size: var(--fib-6); text-transform: uppercase; letter-spacing: 0.06em;
+  margin: var(--space-0); font-size: var(--text-md); text-transform: uppercase; letter-spacing: 0.06em;
   color: var(--text-muted, #a9a193);
 }
-.pdf-sheet__hint { margin: 0; font-size: var(--fib-6); line-height: 1.5; color: var(--text-faint, #7f8994); }
+.pdf-sheet__hint { margin: var(--space-0); font-size: var(--text-md); line-height: 1.5; color: var(--text-faint, #7f8994); }
 
-.pdf-sheet__bar-map { display: grid; gap: var(--fib-5); }
+.pdf-sheet__bar-map { display: grid; gap: var(--space-2); }
 .pdf-sheet__row {
-  display: grid; grid-template-columns: var(--fib-11) minmax(0, 1fr);
-  align-items: center; gap: var(--fib-5); font-size: var(--fib-6);
+  display: grid; grid-template-columns: var(--size-144) minmax(0, 1fr);
+  align-items: center; gap: var(--space-2); font-size: var(--text-md);
 }
 .pdf-sheet__select {
-  padding: var(--fib-4) var(--fib-5); font: inherit; font-size: var(--fib-6);
-  border: var(--fib-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
+  padding: var(--space-1) var(--space-2); font: inherit; font-size: var(--text-md);
+  border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
   background: var(--surface-raised, #20262d); color: var(--text, #d8d2c3);
 }
 .pdf-sheet__text {
-  padding: var(--fib-5) var(--fib-5); font: inherit; font-size: var(--fib-6); line-height: 1.55; resize: vertical;
-  border: var(--fib-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
+  padding: var(--space-2) var(--space-2); font: inherit; font-size: var(--text-md); line-height: 1.55; resize: vertical;
+  border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
   background: color-mix(in srgb, var(--accent, #c09a5a) 6%, transparent);
   color: inherit;
 }
 .pdf-sheet__text:focus, .pdf-sheet__select:focus { border-color: var(--accent, #c09a5a); outline: none; }
 
 .pdf-sheet__textarea {
-  min-height: var(--size-120); width: 100%; padding: var(--fib-5) var(--fib-5); resize: vertical;
-  border: var(--fib-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
+  min-height: 120px; width: 100%; padding: var(--space-2) var(--space-2); resize: vertical;
+  border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
   background: color-mix(in srgb, var(--accent, #c09a5a) 6%, transparent);
-  color: inherit; font: inherit; font-size: var(--fib-6); line-height: 1.55;
+  color: inherit; font: inherit; font-size: var(--text-md); line-height: 1.55;
 }
 .pdf-sheet__textarea:focus { border-color: var(--accent, #c09a5a); outline: none; }
 
 .pdf-sheet__color {
-  width: 100%; height: var(--fib-8); padding: var(--fib-2);
-  border: var(--fib-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
+  width: 100%; height: var(--size-34); padding: var(--space-half);
+  border: var(--size-1) solid var(--border, #303842); border-radius: var(--p-radius-md);
   background: var(--surface-raised, #20262d); cursor: pointer;
 }
 
-.pdf-sheet__error { padding: var(--fib-4) var(--fib-5); color: #ffaaaa; border-bottom: var(--fib-1) solid var(--border, #303842); font-size: var(--fib-6); }
-.pdf-sheet__error button { margin-left: var(--fib-5); }
-.pdf-sheet__images { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--fib-6); }
-.pdf-sheet__image-picker { display: grid; gap: var(--fib-4); font-size: var(--fib-6); }
-.pdf-sheet__image-picker img { width: var(--fib-10); height: var(--fib-10); object-fit: contain; }
-.pdf-sheet__image-picker input { max-width: 100%; font-size: var(--fib-6); }
-.pdf-sheet__btn svg { width: var(--fib-7); height: var(--fib-7); }
-.pdf-sheet__field-group .journal-rich-text { min-height: var(--fib-10); }
+.pdf-sheet__error { padding: var(--space-1) var(--space-2); color: #ffaaaa; border-bottom: var(--size-1) solid var(--border, #303842); font-size: var(--text-md); }
+.pdf-sheet__error button { margin-left: var(--space-2); }
+.pdf-sheet__images { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-3); }
+.pdf-sheet__image-picker { display: grid; gap: var(--space-1); font-size: var(--text-md); }
+.pdf-sheet__image-picker img { width: var(--size-89); height: var(--size-89); object-fit: contain; }
+.pdf-sheet__image-picker input { max-width: 100%; font-size: var(--text-md); }
+.pdf-sheet__btn svg { width: var(--size-21); height: var(--size-21); }
+.pdf-sheet__field-group .journal-rich-text { min-height: var(--size-89); }
 
 .pdf-sheet__btn:disabled { opacity: .4; cursor: default; }
-.pdf-sheet__tab svg { width: var(--fib-7); height: var(--fib-7); }
+.pdf-sheet__tab svg { width: var(--size-21); height: var(--size-21); }
 
-.pdf-sheet__image-picker { border: var(--fib-1) solid var(--border, #303842); padding: var(--fib-5); border-radius: var(--fib-4); align-content: start; }
-.pdf-sheet__image-action { display: flex; gap: var(--fib-4); align-items: center; color: var(--accent, #c09a5a); cursor: pointer; }
-.pdf-sheet__image-action svg { width: var(--fib-7); height: var(--fib-7); }
+.pdf-sheet__image-picker { border: var(--size-1) solid var(--border, #303842); padding: var(--space-2); border-radius: var(--radius-sm); align-content: start; }
+.pdf-sheet__image-action { display: flex; gap: var(--space-1); align-items: center; color: var(--accent, #c09a5a); cursor: pointer; }
+.pdf-sheet__image-action svg { width: var(--size-21); height: var(--size-21); }

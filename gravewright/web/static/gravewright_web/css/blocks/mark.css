@@ -10,7 +10,7 @@
     flex: 0 0 auto;
     width: var(--size-34);
     height: var(--size-34);
-    border: var(--fib-1) solid var(--accent);
+    border: var(--size-1) solid var(--accent);
     background:
         linear-gradient(
             135deg,

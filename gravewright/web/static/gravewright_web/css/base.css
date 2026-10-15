@@ -10,7 +10,7 @@ html,
 body,
 #app {
     min-height: 100%;
-    margin: 0;
+    margin: var(--space-0);
 }
 
 body {
@@ -41,10 +41,10 @@ select {
         linear-gradient(135deg, currentcolor 50%, transparent 50%);
     background-repeat: no-repeat;
     background-position:
-        right var(--step-14) center,
-        right var(--step-9) center;
-    background-size: var(--fib-4) var(--fib-4), var(--fib-4) var(--fib-4);
-    padding-right: var(--step-28);
+        right var(--size-14) center,
+        right var(--size-9) center;
+    background-size: var(--size-5) var(--size-5), var(--size-5) var(--size-5);
+    padding-right: var(--space-7);
 }
 
 select option {
@@ -82,18 +82,18 @@ a {
 
 :focus-visible {
     outline: var(--hairline-width-strong) solid var(--focus-ring);
-    outline-offset: var(--fib-4);
+    outline-offset: var(--size-5);
 }
 
 /* The screen-reader-only utility. Not a block: it has no visual form. */
 .sr-only {
     position: absolute;
     overflow: hidden;
-    width: var(--fib-1);
-    height: var(--fib-1);
-    margin: calc(var(--fib-1) * -1);
+    width: var(--size-1);
+    height: var(--size-1);
+    margin: calc(var(--space-px) * -1);
     border: 0;
-    padding: 0;
+    padding: var(--space-0);
     clip-path: inset(50%);
     white-space: nowrap;
 }
@@ -106,12 +106,12 @@ a {
 }
 
 *::-webkit-scrollbar {
-    width: var(--fib-5);
-    height: var(--fib-5);
+    width: var(--size-8);
+    height: var(--size-8);
 }
 
 *::-webkit-scrollbar-thumb {
-    border: var(--fib-2) solid var(--surface-field);
+    border: var(--size-2) solid var(--surface-field);
     border-radius: var(--radius-sm);
     background: var(--accent);
 }

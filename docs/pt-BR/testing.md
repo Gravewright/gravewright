@@ -96,6 +96,23 @@ listeners e preservação dos textos do usuário. Não carrega campanha ou banco
 
 No Linux, o Playwright pode precisar de bibliotecas do sistema; `uv run --locked playwright install --with-deps chromium` também as instala e pode exigir privilégios administrativos. Os cenários iniciam servidores próprios em portas temporárias e criam dados fictícios. A maioria usa configurações de desenvolvimento e grava diagnósticos em `test-results/`; os cenários HTTPS e do executor usam configurações específicas descritas abaixo. Execute em sequência: vários compartilham `test-results/migration-closure/`.
 
+`tests/e2e/compendium_server.py --fixture <diretório-novo-vazio>` inicia uma
+fixture descartável em localhost com sistema de navegador, catálogos de idiomas
+e compêndios sintéticos. Repita `--archive <sistema.zip>` para revisar sistemas
+locais reais; nenhum dado do operador é reutilizado. Execute
+`tests/e2e/compendium_layout.py --seed <fixture>/seed.json
+[--browser-executable <chromium>]` para verificar layouts desktop, 390px e 320px,
+ordenação em en/pt-BR/es, busca sem distinção de acentos, filtros de tipo/pacote,
+prévias e foco nativo por teclado, importações independentes, recuperação de
+falhas de importação, permissões, acesso somente para leitura e criação do
+primeiro pacote. Os resultados ficam em `test-results/compendiums/` por padrão.
+Em outra fixture nova, `tests/e2e/item_directory_layout.py --seed
+<fixture>/seed.json --output <diretório-de-resultados>
+[--browser-executable <chromium>]` verifica a densidade do diretório nativo de
+itens, ordenação de itens/pastas/tipos, busca, menus pelo teclado, duplicação,
+movimentação e controles de leitura. Encerre cada servidor pertencente ao teste
+depois da execução.
+
 | Alteração | Cenários pertinentes |
 | --- | --- |
 | Contas e campanhas | `authentication.py`, `inside.py`, `campaign_controls.py` |

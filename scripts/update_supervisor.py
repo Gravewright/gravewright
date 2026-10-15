@@ -176,8 +176,7 @@ class Supervisor:
                     'GRAVEWRIGHT_MODULES_ROOT': str(self.modules),
                     'GRAVEWRIGHT_HOST': host, 'GRAVEWRIGHT_PORT': str(port),
                     'GRAVEWRIGHT_CONTENT_ROOT': str(content.resolve())}
-        self.active = self.resolve_active(read(self.state / 'active.json', {'path': str(self.origin)})['path'])
-        self.runtime_python = read(self.state / 'active.json', {}).get('python', sys.executable)
+        self.active, self.runtime_python = self.load_active()
         self.protected = [self.state, self.database, self.media, *self.extra_paths.values()]
         self.protected += [Path(str(self.database) + suffix) for suffix in ('-wal', '-shm', '-journal')]
         if runner_data:
@@ -195,6 +194,44 @@ class Supervisor:
         if path != self.origin and not path.is_relative_to(self.state / 'releases'):
             raise ValueError('Invalid active release path')
         return path
+
+    def load_active(self):
+        active_file = self.state / 'active.json'
+
+        def load():
+            try:
+                content = active_file.read_bytes()
+            except FileNotFoundError:
+                return {'path': str(self.origin)}, None
+            value = json.loads(content)
+            if not isinstance(value, dict) or not isinstance(value.get('path'), str) or not value['path'].strip():
+                raise ValueError('Invalid active release state')
+            return value, content
+
+        value, _ = load()
+        try:
+            active = self.resolve_active(value['path'])
+        except ValueError:
+            # Per-user Runner state can outlive a moved checkout or belong to
+            # another installation. Only idle metadata may be rebound; never
+            # reinterpret a pending update or trust its saved interpreter.
+            with instance_lock(self.state / 'supervisor.lock'):
+                value, content = load()
+                try:
+                    active = self.resolve_active(value['path'])
+                except ValueError as error:
+                    pending = [name for name in ('transaction.json', 'job.json', 'job.lock', 'maintenance')
+                               if (self.state / name).exists() or (self.state / name).is_symlink()]
+                    if pending:
+                        raise ValueError('Invalid active release path with pending updater state: '
+                                         + ', '.join(pending)) from error
+                    backup = active_file.with_name('active.json.backup-' + uuid.uuid4().hex)
+                    with backup.open('xb') as handle:
+                        handle.write(content)
+                    value = {'path': str(self.origin), 'python': sys.executable}
+                    write(active_file, value)
+                    active = self.origin
+        return active, value.get('python', sys.executable)
 
     def notify(self, stage, **values):
         write(self.state / 'progress.json', {'stage': stage, 'at': time.time(), **values})

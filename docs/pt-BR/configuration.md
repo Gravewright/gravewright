@@ -72,6 +72,8 @@ Os valores abaixo correspondem à configuração de exemplo/padrão. “Vazio”
 | `JOURNAL_PDF_MAX_MB` | `25` | Limite de PDF em diário em MB (1 MB = 1024 * 1024 bytes) |
 | `PDF_SYSTEM_UPLOAD_MAX_MB` | `10` | Limite de upload de fichas PDF em MB (1 MB = 1024 * 1024 bytes) |
 | `GRAVEWRIGHT_MAP_MAX_PIXELS` | `64000000` | Limite de pixels decodificados de mapa |
+| `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` | `64000000` | Teto adicional de pixels decodificados ao usar o gerador Pillow |
+| `GRAVEWRIGHT_MAP_TILER` | `auto` | Gerador de tiles: `auto`, `vips` ou `pillow` |
 | `MAP_UPLOAD_MAX_MB` | `51200` | Limite de upload de mapa em MB (50 GiB); outros limites continuam aplicáveis |
 | `MAP_IMAGE_MAX_WIDTH` | `500000` | Largura máxima do mapa-fonte em pixels |
 | `MAP_IMAGE_MAX_HEIGHT` | `500000` | Altura máxima do mapa-fonte em pixels |
@@ -90,6 +92,24 @@ Duas opções comentadas também são reconhecidas:
 | `DJANGO_SECURE_COOKIES` | `false` | Ativa cookies seguros; origem pública HTTPS configurada sempre os ativa. A opção não configura TLS nem a origem WebSocket |
 
 `GRAVEWRIGHT_CONTAINER` é lido pela descoberta de releases para identificar formato de instalação quando vale `1`, `true` ou `yes`; não configura contêiner nem oferece atualização automática. `DJANGO_SETTINGS_MODULE` seleciona o módulo Python de configuração; os pontos de entrada usam `config.settings` por padrão.
+
+## Geração de tiles e imagens grandes
+
+`GRAVEWRIGHT_MAP_MAX_PIXELS` define o limite exato de pixels do mapa. Na inicialização, a proteção de cabeçalho do Pillow é elevada até pelo menos esse valor configurado, evitando um teto inferior sem relação com a configuração. Exceder qualquer proteção de pixels informa um erro de limite de pixels. Os limites independentes de bytes, dimensões e quantidade de tiles continuam aplicáveis. As duas configurações de pixels devem ser positivas; reinicie o servidor após alterá-las.
+
+`GRAVEWRIGHT_MAP_TILER=auto` usa libvips quando disponível e Pillow nos demais casos. `pillow` sempre seleciona Pillow; `vips` exige libvips e impede a inicialização quando ele está indisponível. As dependências padrão e os instaladores nativos não selecionam o extra opcional `vips`. Para um ambiente do código-fonte, instale com:
+
+```bash
+uv sync --locked --extra vips
+```
+
+Para um Runner nativo, instale no ambiente Python indicado pelo inicializador gerado; a `.venv` do checkout pode ser outro ambiente. Mantenha `--extra vips` nas sincronizações de dependências seguintes. Um `uv sync` exato sem esse argumento, uma reinstalação nativa ou a preparação de uma atualização gerenciada do núcleo seleciona as dependências padrão e pode remover ou omitir o extra. Verifique novamente a disponibilidade após essas operações; definir `GRAVEWRIGHT_MAP_TILER=vips` não instala dependências.
+
+Pillow decodifica o mapa inteiro. Seu teto adicional `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` tem padrão de 64 milhões de pixels, mesmo com um limite geral maior. Uma imagem maior exige libvips ou um aumento explícito desse teto após avaliar a memória disponível. Esse teto limita o tamanho de imagem aceito, não a memória residente: decodificação, orientação, reamostragem e codecs também alocam memória. Libvips processa mapas comuns em faixas, mas formatos, codecs e rotações EXIF podem exigir memória adicional e espaço temporário em disco.
+
+Apenas uma pirâmide de mapa é gerada por vez em cada processo do servidor, incluindo a decodificação. Workers separados ainda podem processar mapas simultaneamente. Os dois mecanismos produzem tiles WebP sem perdas, com a mesma disposição de 512 pixels e tiles parciais nas bordas; os níveis reduzidos podem diferir porque os filtros de reamostragem são diferentes.
+
+A geração nativa prepara a imagem-fonte e os tiles em `data/runner/tmp/` dentro da instalação. Um `GRAVEWRIGHT_RUNNER_ROOT` explícito altera a raiz das ferramentas, e um override Django de `FILE_UPLOAD_TEMP_DIR` tem prioridade para a área temporária dos tiles; caminhos relativos partem da raiz da instalação. A pasta deve permitir escrita e comportar a fonte, os tiles preparados e eventuais arquivos temporários dos codecs enquanto os tiles finais são gravados na mídia. Falhas de armazenamento ou de geração nativa permanecem erros do servidor, e tiles já gravados são removidos se o upload falhar. Consulte [implantação](deployment.md) para timeouts de upload síncrono e dimensionamento.
 
 ## Configurações sem variáveis de ambiente
 

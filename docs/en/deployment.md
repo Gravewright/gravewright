@@ -107,6 +107,14 @@ Keep `MEDIA_ROOT` private: uploaded maps, PDFs, journal files, audio, cards and 
 
 Configure upstream upload limits and timeouts explicitly for your deployment. The default map byte limit is 50 GiB, while decoded-pixel, dimension and tile limits apply separately; a high accepted byte limit does not imply that the server can process such a file within available memory.
 
+### Large map uploads
+
+Map generation remains synchronous within the upload request. It runs outside the event loop, but a large map or time spent waiting for another map can exceed a reverse proxy's response timeout. Size `proxy_read_timeout` for observed upload processing times; the example's `300s` is not a guarantee for every image. A proxy timeout can disconnect the uploader while the server continues processing, so check the scene list before retrying.
+
+For larger maps, install the optional libvips dependencies into the environment that runs the server and raise `GRAVEWRIGHT_MAP_MAX_PIXELS` only as needed. In the source deployment commands above, use `uv sync --locked --no-dev --extra vips`; retain the extra on later syncs. The native installers and managed update preparation select default dependencies without this extra. `GRAVEWRIGHT_MAP_TILER=vips` makes missing native support a startup error; `auto` falls back to Pillow, whose separate `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` ceiling defaults to 64 million pixels. See [configuration](configuration.md#map-tiling-and-large-images) before increasing either ceiling.
+
+Generation is serialized per process; multiple ASGI workers can still add their memory and disk use. Libvips streams ordinary maps, while rotations and some codecs require additional resources. Reserve writable installation-local `data/runner/tmp/` space for the encoded source, the complete staged tile set and native spill files, in addition to final media storage. Explicit Runner-root or Django upload-temp overrides retain their documented precedence. Measure representative formats, transparency and orientations on the intended server before raising limits; this change does not add background jobs or a global memory quota.
+
 ## Multiple processes
 
 All workers need the same database, media files, secret, module trust configuration and Redis channel layer. Standard server settings require `GRAVEWRIGHT_REDIS_URL` with debug disabled, even for one process. The dedicated local runner is a separate profile and cannot be used for this deployment. In-memory Channels cannot exchange events between workers.

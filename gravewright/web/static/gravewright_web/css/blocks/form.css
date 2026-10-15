@@ -3,14 +3,14 @@
 
 .gw-form {
     display: grid;
-    gap: var(--gap-loose);
+    gap: var(--space-4);
     min-width: 0;
 }
 
 /* A row that wraps into columns when there is room for them, with the submit
  * pinned to the baseline of the last field rather than stretched across. */
 .gw-form--row {
-    grid-template-columns: repeat(auto-fit, minmax(var(--fib-12), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(var(--size-233), 1fr));
     align-items: end;
 }
 
@@ -21,10 +21,10 @@
 
 .gw-form__section {
     min-width: 0;
-    margin: 0;
+    margin: var(--space-0);
     border: 0;
-    border-bottom: var(--fib-1) solid var(--hairline);
-    padding: var(--gap-section) 0;
+    border-bottom: var(--size-1) solid var(--hairline);
+    padding: var(--space-5) var(--space-0);
 }
 
 .gw-form__section:last-of-type {
@@ -32,7 +32,7 @@
 }
 
 .gw-form__legend {
-    padding: 0;
+    padding: var(--space-0);
     color: var(--text-bright);
     font-family: var(--font-display);
     font-size: var(--text-lg);
@@ -40,7 +40,7 @@
 }
 
 .gw-form__help {
-    margin: var(--step-4) 0 var(--gap-loose);
+    margin: var(--space-1) var(--space-0) var(--space-4);
     color: var(--text-faint);
     font-size: var(--text-md);
     line-height: var(--leading-normal);
@@ -48,8 +48,8 @@
 
 .gw-form__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(var(--fib-12), 1fr));
-    gap: var(--gap-loose);
+    grid-template-columns: repeat(auto-fit, minmax(var(--size-233), 1fr));
+    gap: var(--space-4);
 }
 
 /* The save strip: a rule, a note on the left, the affirmative on the right. */
@@ -58,13 +58,13 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: var(--gap-loose);
-    border-top: var(--fib-1) solid var(--hairline);
-    padding-top: var(--gap-section);
+    gap: var(--space-4);
+    border-top: var(--size-1) solid var(--hairline);
+    padding-top: var(--space-5);
 }
 
 .gw-form__note {
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-faint);
     font-size: var(--text-xs);
 }
@@ -73,9 +73,9 @@
 
 .gw-filters {
     display: grid;
-    grid-template-columns: minmax(var(--fib-12), 2fr) repeat(2, minmax(0, 1fr));
-    gap: var(--gap-comfy);
-    margin-bottom: var(--gap-block);
+    grid-template-columns: minmax(var(--size-233), 2fr) repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
 }
 
 @media (max-width: 820px) {

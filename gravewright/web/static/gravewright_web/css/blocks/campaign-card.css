@@ -7,9 +7,9 @@
     display: grid;
     grid-template-columns: repeat(
         auto-fill,
-        minmax(calc(var(--fib-12) + var(--fib-7) + var(--fib-4) + var(--fib-1)), 1fr)
+        minmax(calc(var(--size-233) + var(--size-21) + var(--size-5) + var(--size-1)), 1fr)
     );
-    gap: var(--step-21);
+    gap: var(--space-5);
 }
 
 /* One per row, cover to the left: the shelf read as a list instead of a grid. */
@@ -19,7 +19,7 @@
 
 .gw-campaign-grid--list .gw-campaign:not(.gw-campaign--new) {
     display: grid;
-    grid-template-columns: var(--fib-12) 1fr;
+    grid-template-columns: var(--size-233) 1fr;
 }
 
 .gw-campaign-grid--list .gw-campaign__cover {
@@ -32,7 +32,7 @@
 }
 
 .gw-campaign {
-    --cover-height: var(--fib-11);
+    --cover-height: var(--size-144);
     min-width: 0;
     border: var(--border-hairline);
     border-radius: var(--radius-sm);
@@ -47,7 +47,7 @@
 .gw-campaign:not(.gw-campaign--new):hover {
     border-color: var(--border-strong);
     box-shadow: var(--shadow-md);
-    transform: translateY(calc(var(--fib-2) * -1));
+    transform: translateY(calc(var(--size-2) * -1));
 }
 
 /* ---- Cover ------------------------------------------------------------- */
@@ -62,7 +62,7 @@
     border: 0;
     border-bottom: var(--border-hairline);
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    padding: 0;
+    padding: var(--space-0);
     background: linear-gradient(135deg, var(--plate-a), var(--plate-b));
     color: var(--text);
 }
@@ -73,8 +73,8 @@
     inset: 0;
     background-image: repeating-linear-gradient(
         135deg,
-        transparent 0 var(--step-12),
-        rgb(255 255 255 / 3%) var(--step-13) var(--step-14)
+        transparent 0 var(--size-12),
+        rgb(255 255 255 / 3%) var(--size-13) var(--size-14)
     );
     content: "";
 }
@@ -96,8 +96,8 @@
 .gw-campaign__open {
     position: absolute;
     z-index: 1;
-    right: var(--step-13);
-    bottom: var(--step-13);
+    right: var(--size-13);
+    bottom: var(--size-13);
     color: var(--text);
     font-size: var(--text-md);
     font-weight: var(--weight-bold);
@@ -108,18 +108,18 @@
 /* ---- Body -------------------------------------------------------------- */
 
 .gw-campaign__body {
-    padding: var(--step-13);
+    padding: var(--space-3);
 }
 
 .gw-campaign__title-row {
     display: flex;
     align-items: start;
-    gap: var(--step-13);
+    gap: var(--space-3);
 }
 
 .gw-campaign__title-row h2 {
     min-height: 2.4em;
-    margin: 0;
+    margin: var(--space-0);
     flex: 1;
     font-family: var(--font-display);
     font-size: var(--text-heading);
@@ -128,7 +128,7 @@
 
 .gw-campaign__title {
     min-width: 0;
-    padding: 0;
+    padding: var(--space-0);
     flex: 1;
     border: 0;
     background: transparent;
@@ -142,7 +142,7 @@
 
 .gw-campaign__description {
     min-height: 3em;
-    margin: var(--step-8) 0;
+    margin: var(--space-2) var(--space-0);
     color: var(--text-muted);
     font-size: var(--text-md);
     line-height: var(--leading-normal);
@@ -150,7 +150,7 @@
 
 .gw-campaign__meta {
     overflow: hidden;
-    margin: var(--step-13) 0;
+    margin: var(--space-3) var(--space-0);
     color: var(--accent-hover);
     font-size: var(--text-md);
     font-weight: var(--weight-book);
@@ -164,7 +164,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-top: var(--step-13);
+    padding-top: var(--space-3);
     border-top: var(--border-hairline);
     color: var(--text-faint);
     font-size: var(--text-2xs);
@@ -183,7 +183,7 @@
     width: var(--control-height-sm);
     height: var(--control-height-sm);
     place-items: center;
-    margin-left: calc(var(--step-8) * -1);
+    margin-left: calc(var(--space-2) * -1);
     border: var(--hairline-width) solid var(--border-strong);
     border-radius: var(--radius-circle);
     background: var(--surface-raised);
@@ -203,7 +203,7 @@
     display: grid;
     width: var(--control-height-sm);
     height: var(--control-height-sm);
-    padding: 0;
+    padding: var(--space-0);
     place-items: center;
     border: 0;
     border-radius: var(--radius-sm);
@@ -228,7 +228,7 @@
     top: 100%;
     right: 0;
     display: grid;
-    min-width: var(--fib-11);
+    min-width: var(--size-144);
     overflow: hidden;
     border: var(--border-hairline);
     border-radius: var(--radius-sm);
@@ -237,7 +237,7 @@
 }
 
 .gw-campaign__manage-menu button {
-    padding: var(--step-8) var(--step-13);
+    padding: var(--space-2) var(--space-3);
     border: 0;
     background: transparent;
     color: var(--text);
@@ -263,10 +263,10 @@
 
 .gw-campaign--new {
     display: grid;
-    min-height: calc(var(--fib-12) + var(--fib-8) + var(--fib-5) + var(--fib-2));
+    min-height: calc(var(--size-233) + var(--size-34) + var(--size-8) + var(--size-2));
     place-content: center;
     justify-items: center;
-    gap: var(--step-8);
+    gap: var(--space-2);
     border-style: dashed;
     background: transparent;
     color: var(--text-muted);
@@ -279,8 +279,8 @@
 
 .gw-campaign--new span {
     display: grid;
-    width: var(--step-55);
-    height: var(--step-55);
+    width: var(--size-55);
+    height: var(--size-55);
     place-items: center;
     border: var(--border-hairline);
     border-radius: var(--radius-circle);

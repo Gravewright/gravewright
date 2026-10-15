@@ -10,44 +10,44 @@
     z-index: var(--z-modal);
     display: grid;
     place-items: center;
-    padding: var(--gap-block);
+    padding: var(--space-6);
     background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(var(--fib-3));
+    backdrop-filter: blur(var(--size-3));
 }
 
 .gw-modal__dialog {
-    width: min(var(--fib-14) - var(--fib-10), 100%); /* 610 - 89 = 521 */
-    max-height: calc(100vh - var(--step-48));
+    width: min(var(--size-610) - var(--size-89), 100%); /* 610 - 89 = 521 */
+    max-height: calc(100vh - var(--size-48));
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: var(--fib-1) solid var(--border-strong);
+    border: var(--size-1) solid var(--border-strong);
     border-radius: var(--radius-md);
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent var(--fib-12)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent var(--size-233)),
         var(--surface-raised);
     box-shadow: var(--shadow-xl);
 }
 
 .gw-modal__dialog--narrow {
-    width: min(calc(var(--fib-13) + var(--fib-5)), 100%); /* 377 + 8 = 385 */
+    width: min(calc(var(--size-377) + var(--size-8)), 100%); /* 377 + 8 = 385 */
 }
 
 .gw-modal__dialog--wide {
-    width: min(calc(var(--fib-14) + var(--fib-11)), calc(100vw - var(--step-32))); /* 754 */
+    width: min(calc(var(--size-610) + var(--size-144)), calc(100vw - var(--size-32))); /* 754 */
 }
 
 .gw-modal__header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: var(--gap-loose);
-    border-bottom: var(--fib-1) solid var(--hairline);
-    padding: var(--gap-section);
+    gap: var(--space-4);
+    border-bottom: var(--size-1) solid var(--hairline);
+    padding: var(--space-5);
 }
 
 .gw-modal__eyebrow {
-    margin: 0 0 var(--step-4);
+    margin: var(--space-0) var(--space-0) var(--space-1);
     color: var(--accent);
     font-size: var(--text-sm);
     font-weight: var(--weight-black);
@@ -56,7 +56,7 @@
 }
 
 .gw-modal__title {
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-bright);
     font-family: var(--font-display);
     font-size: var(--text-2xl);
@@ -71,9 +71,9 @@
     display: grid;
     flex: 0 0 auto;
     place-items: center;
-    border: var(--fib-1) solid var(--border);
+    border: var(--size-1) solid var(--border);
     border-radius: var(--radius-md);
-    padding: 0;
+    padding: var(--space-0);
     background: rgba(22, 26, 29, 0.88);
     color: var(--text-muted);
     font-size: var(--text-lg);
@@ -91,13 +91,13 @@
 
 .gw-modal__body {
     display: grid;
-    gap: var(--gap-loose);
+    gap: var(--space-4);
     overflow-y: auto;
-    padding: var(--gap-section);
+    padding: var(--space-5);
 }
 
 .gw-modal__copy {
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-muted);
     font-size: var(--text-md);
     line-height: var(--leading-normal);
@@ -108,9 +108,9 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--gap-base);
-    border-top: var(--fib-1) solid var(--hairline);
-    padding: var(--gap-loose) var(--gap-section);
+    gap: var(--space-2);
+    border-top: var(--size-1) solid var(--hairline);
+    padding: var(--space-4) var(--space-5);
     background: var(--surface-sunken);
 }
 
@@ -119,7 +119,7 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--gap-base);
+    gap: var(--space-2);
 }
 
 .gw-modal__actions--split {
@@ -128,7 +128,7 @@
 
 @media (max-width: 620px) {
     .gw-modal {
-        padding: var(--gap-comfy);
+        padding: var(--space-3);
     }
 
     .gw-modal__actions .gw-button,

@@ -72,6 +72,8 @@ Values below match the sample/default configuration. An empty cell shown as “e
 | `JOURNAL_PDF_MAX_MB` | `25` | Journal PDF attachment limit in MB (1 MB = 1024 * 1024 bytes) |
 | `PDF_SYSTEM_UPLOAD_MAX_MB` | `10` | PDF character sheet upload limit in MB (1 MB = 1024 * 1024 bytes) |
 | `GRAVEWRIGHT_MAP_MAX_PIXELS` | `64000000` | Decoded map pixel limit |
+| `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` | `64000000` | Additional decoded-pixel ceiling when using the Pillow tiler |
+| `GRAVEWRIGHT_MAP_TILER` | `auto` | Map tiler: `auto`, `vips` or `pillow` |
 | `MAP_UPLOAD_MAX_MB` | `51200` | Map upload limit in MB (50 GiB); other limits still apply |
 | `MAP_IMAGE_MAX_WIDTH` | `500000` | Maximum source map width in pixels |
 | `MAP_IMAGE_MAX_HEIGHT` | `500000` | Maximum source map height in pixels |
@@ -90,6 +92,24 @@ Two optional commented settings are also recognized:
 | `DJANGO_SECURE_COOKIES` | `false` | Enable secure cookies; a configured HTTPS public origin always enables them. This flag does not configure TLS or the WebSocket origin |
 
 `GRAVEWRIGHT_CONTAINER` is read by release discovery to label the install format when set to `1`, `true` or `yes`; it does not configure a container runtime or provide automatic updates. `DJANGO_SETTINGS_MODULE` selects the Python settings module; entry points default to `config.settings`.
+
+## Map tiling and large images
+
+`GRAVEWRIGHT_MAP_MAX_PIXELS` is the exact map pixel limit. At startup, Pillow's header guard is raised to at least that configured value so it does not impose an unrelated lower limit. Exceeding either pixel guard reports a pixel-limit error. The independent byte, dimension and tile-count limits still apply. Both pixel settings must be positive; restart the server after changing them.
+
+`GRAVEWRIGHT_MAP_TILER=auto` uses libvips when available and otherwise uses Pillow. `pillow` always selects Pillow; `vips` requires libvips and fails startup when it is unavailable. The default dependencies and native installers do not select the optional `vips` extra. For a source environment, install it with:
+
+```bash
+uv sync --locked --extra vips
+```
+
+For a native Runner, install into the Python environment named by its generated launcher; the checkout's `.venv` may be a different environment. Keep `--extra vips` on subsequent dependency syncs. A plain exact `uv sync`, a native reinstall or preparation for a managed core update selects the default dependencies and can remove or omit the extra. Check availability again after those operations; setting `GRAVEWRIGHT_MAP_TILER=vips` does not install dependencies.
+
+Pillow decodes the entire map. Its additional `GRAVEWRIGHT_MAP_PILLOW_MAX_PIXELS` ceiling defaults to 64 million pixels, even if the overall map limit is higher. A larger image requires libvips or an explicit increase to that ceiling after assessing available memory. This pixel ceiling bounds accepted image size, not resident memory: decoding, orientation, resampling and codecs also allocate memory. Libvips streams ordinary maps in strips, but formats, codecs and EXIF rotations can require additional memory and temporary disk space.
+
+Only one map pyramid is generated at a time per server process, including decoding. Separate workers can still process maps concurrently. Both engines produce lossless WebP tiles with the same 512-pixel layout and partial edge tiles; reduced levels can differ because the resampling filters differ.
+
+Native tiling stages the source image and generated tiles under installation-root `data/runner/tmp/`. An explicit `GRAVEWRIGHT_RUNNER_ROOT` changes the tool root, and a Django `FILE_UPLOAD_TEMP_DIR` override takes precedence for tiling scratch space; relative paths resolve against the installation root. The directory must be writable and have room for the source, staged tiles and any codec spill files while final tiles are saved to media storage. Storage or native generation failures remain server errors, and already saved tiles are removed if the upload fails. See [deployment](deployment.md) for synchronous upload timeouts and capacity planning.
 
 ## Settings without environment switches
 

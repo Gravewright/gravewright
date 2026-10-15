@@ -8,11 +8,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--fib-8);
-  height: var(--fib-8);
-  padding: 0;
-  border: var(--fib-1) solid transparent;
-  border-radius: var(--fib-4);
+  width: var(--size-34);
+  height: var(--size-34);
+  padding: var(--space-0);
+  border: var(--size-1) solid transparent;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   font: inherit;
@@ -20,8 +20,8 @@
 }
 
 .gw-update-notification__trigger > svg {
-  width: var(--fib-7);
-  height: var(--fib-7);
+  width: var(--size-21);
+  height: var(--size-21);
   flex: 0 0 auto;
 }
 
@@ -35,8 +35,8 @@
 .gw-update-notification__trigger:focus-visible,
 .gw-update-notification__close:focus-visible,
 .gw-update-notification__panel a:focus-visible {
-  outline: var(--fib-2) solid var(--accent);
-  outline-offset: var(--fib-3);
+  outline: var(--size-2) solid var(--accent);
+  outline-offset: var(--size-3);
 }
 
 .gw-update-notification--available .gw-update-notification__trigger {
@@ -52,13 +52,13 @@
 
 .gw-update-notification__badge {
   position: absolute;
-  top: var(--fib-4);
-  right: var(--fib-4);
+  top: var(--size-5);
+  right: var(--size-5);
   box-sizing: border-box;
-  width: var(--fib-5);
-  height: var(--fib-5);
-  border: var(--fib-2) solid var(--bg);
-  border-radius: 50%;
+  width: var(--size-8);
+  height: var(--size-8);
+  border: var(--size-2) solid var(--bg);
+  border-radius: var(--radius-circle);
   background: var(--accent-bright);
   pointer-events: none;
 }
@@ -66,17 +66,17 @@
 .gw-update-notification__panel {
   position: absolute;
   z-index: var(--z-dropdown);
-  top: calc(100% + var(--fib-5));
+  top: calc(100% + var(--size-8));
   right: 0;
   display: grid;
-  gap: var(--fib-6);
+  gap: var(--space-3);
   box-sizing: border-box;
-  width: min(var(--size-320), calc(100vw - var(--fib-6) - var(--fib-6)));
-  max-height: calc(100dvh - var(--topbar-height) - var(--fib-7));
+  width: min(var(--size-320), calc(100vw - var(--size-13) - var(--size-13)));
+  max-height: calc(100dvh - var(--topbar-height) - var(--size-21));
   overflow: auto;
-  padding: var(--fib-7);
+  padding: var(--space-5);
   border: var(--border-hairline);
-  border-radius: var(--fib-4);
+  border-radius: var(--radius-sm);
   background: var(--surface);
   color: var(--text);
   font-size: var(--text-md);
@@ -90,7 +90,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--fib-5);
+  gap: var(--space-2);
 }
 
 .gw-update-notification__close {
@@ -98,11 +98,11 @@
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: var(--fib-7);
-  height: var(--fib-7);
-  padding: 0;
+  width: var(--size-21);
+  height: var(--size-21);
+  padding: var(--space-0);
   border: 0;
-  border-radius: var(--fib-3);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   font: inherit;
@@ -110,8 +110,8 @@
 }
 
 .gw-update-notification__close > svg {
-  width: var(--fib-6);
-  height: var(--fib-6);
+  width: var(--size-13);
+  height: var(--size-13);
 }
 
 .gw-update-notification__close:hover {
@@ -121,7 +121,7 @@
 
 .gw-update-notification__panel h2,
 .gw-update-notification__title {
-  margin: 0;
+  margin: var(--space-0);
   color: var(--text-bright);
   font-size: var(--text-lg);
   font-weight: var(--weight-bold);
@@ -129,15 +129,15 @@
 }
 
 .gw-update-notification__panel p {
-  margin: 0;
+  margin: var(--space-0);
   color: var(--text-muted);
 }
 
 .gw-update-notification__panel .gw-update-notification__version {
   justify-self: start;
-  padding: var(--fib-3) var(--fib-5);
-  border: var(--fib-1) solid var(--border-accent);
-  border-radius: var(--fib-3);
+  padding: var(--space-half) var(--space-2);
+  border: var(--size-1) solid var(--border-accent);
+  border-radius: var(--radius-sm);
   background: var(--accent-glow);
   color: var(--accent-bright);
   font-variant-numeric: tabular-nums;
@@ -147,11 +147,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--fib-5);
-  min-height: var(--fib-8);
-  padding: var(--fib-4) var(--fib-6);
-  border: var(--fib-1) solid var(--border-accent);
-  border-radius: var(--fib-3);
+  gap: var(--space-2);
+  min-height: var(--size-34);
+  padding: var(--space-1) var(--space-3);
+  border: var(--size-1) solid var(--border-accent);
+  border-radius: var(--radius-sm);
   background: var(--accent-glow);
   color: var(--accent-bright);
   font-weight: var(--weight-bold);
@@ -165,8 +165,8 @@
 }
 
 .gw-update-notification__panel a > svg {
-  width: var(--fib-6);
-  height: var(--fib-6);
+  width: var(--size-13);
+  height: var(--size-13);
   flex: 0 0 auto;
 }
 
@@ -181,9 +181,9 @@
 
   .gw-update-notification__panel {
     position: fixed;
-    top: calc(var(--topbar-height) + var(--fib-5));
-    right: var(--fib-6);
-    left: var(--fib-6);
+    top: calc(var(--topbar-height) + var(--size-8));
+    right: var(--size-13);
+    left: var(--size-13);
     width: auto;
   }
 }

@@ -8,9 +8,9 @@
     display: grid;
     place-content: center;
     justify-items: center;
-    border: var(--fib-1) dashed var(--hairline);
+    border: var(--size-1) dashed var(--hairline);
     border-radius: var(--radius-sm);
-    padding: var(--step-40) var(--gap-block);
+    padding: var(--space-10) var(--space-6);
     background:
         radial-gradient(
             60% 80% at 50% 0%,
@@ -22,12 +22,12 @@
 }
 
 .gw-empty__marker {
-    margin-bottom: var(--gap-comfy);
+    margin-bottom: var(--space-3);
 }
 
 .gw-empty__text {
     max-width: 42ch;
-    margin: 0;
+    margin: var(--space-0);
     color: var(--text-faint);
     font-size: var(--text-base);
     line-height: var(--leading-relaxed);
@@ -37,8 +37,8 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--gap-base);
-    margin-top: var(--gap-loose);
+    gap: var(--space-2);
+    margin-top: var(--space-4);
 }
 
 /* A loading state is an empty state that is still waiting: same field, with

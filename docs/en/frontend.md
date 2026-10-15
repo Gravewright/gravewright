@@ -26,6 +26,45 @@ Useful areas to inspect:
 
 Templates carry IDs and `data-*` attributes that native controllers and extension surfaces depend on. Changing one may affect the corresponding controller, Datastar signals, and module attachment. Check all three before renaming selectors or replacing an entire panel.
 
+## Shared dimensions and design tokens
+
+[`tokens.css`](../../gravewright/web/static/gravewright_web/css/tokens.css) defines the shared visual values. Fixed dimensional tokens use plain `px` values. Reuse existing tokens when they fit the component, and introduce a new shared value only when it is needed across components. The Fibonacci scale and its audit script have been retired; core CSS uses the spacing, radius and typography rules below instead of `--fib-*` or `--step-*`.
+
+Use `--space-*` for padding, margins and gaps, including their shorthand, logical and row/column forms. When migrating a fixed length, choose the nearest value in this scale; on a tie, choose the smaller value. Preserve the sign of negative margins. The token suffix counts four-pixel steps, with separate names for zero, one and two pixels:
+
+| Token | Value |
+| --- | --- |
+| `--space-0` | `0` |
+| `--space-px` | `1px` |
+| `--space-half` | `2px` |
+| `--space-1` | `4px` |
+| `--space-2` | `8px` |
+| `--space-3` | `12px` |
+| `--space-4` | `16px` |
+| `--space-5` | `20px` |
+| `--space-6` | `24px` |
+| `--space-7` | `28px` |
+| `--space-8` | `32px` |
+| `--space-10` | `40px` |
+| `--space-12` | `48px` |
+| `--space-14` | `56px` |
+| `--space-16` | `64px` |
+
+The former `--space-9` value of 34px is replaced by `--space-8` at 32px. Border radii use these shared names:
+
+| Token | Value |
+| --- | --- |
+| `--radius-sm` | `4px` |
+| `--radius-md` | `8px` |
+| `--radius-lg` | `12px` |
+| `--radius-xl` | `16px` |
+| `--radius-pill` | `999px` |
+| `--radius-circle` | `50%` |
+
+Host interface CSS must render text at **12px or larger**. Check effective sizes from inherited styles, relative units and font shorthands as well as explicit `font-size`. The existing `--text-3xs`, `--text-2xs` and `--text-xs` names remain available at 12px. Authored text in PDFs and drawings, and scene labels scaled by the camera, retain their authored sizes.
+
+Widths, heights and other component geometry keep their required dimensions. A value specific to one component may use a local `px` literal; reserve shared `--size-*` tokens for values reused across components. Responsive geometry can still use relative units and layout expressions such as `calc()` and `clamp()` where needed.
+
 ## Native state and realtime
 
 Native UI code calls the shared domain API where implemented and still has dedicated HTTP/socket adapters for specialized flows such as uploads, board subscriptions and rendered fragments. The public browser API does not replace every native transport.
@@ -33,6 +72,16 @@ Native UI code calls the shared domain API where implemented and still has dedic
 The realtime controller connects the current table's authenticated WebSocket, tracks subscriptions and reconnect state, and dispatches `gravewright:*` browser events. The server sends user-authorized projections and rendered HTML; private actor data, chat audiences and scene visibility are enforced before delivery. Insert user-provided text with `textContent`. Existing HTML fragment insertion is for HTML rendered by the trusted server templates, not arbitrary module or chat text.
 
 `gravewright:api-event` is the internal adapter event consumed by the domain API; `api.changed` notifications trigger fresh authorized reads. Public integrations should use `api.events.on(...)` as documented in [API events](api.md#domain-events), rather than copying the native socket command protocol. Subscriptions are not a durable change stream: reconnect and reread current state. Creating `gravewright.forTable(...)` alone does not open a socket.
+
+The native item and compendium directories sort copies of visible entries by
+their displayed names using the active locale; stored document order and IDs
+stay unchanged. Compendium packs, filters and previews use compact rows and
+content-sized default windows, with internal scrolling for long content. Manual
+window layouts retain the shared drag, resize, minimize and reset controls. GMs
+can create the first compendium from the empty directory; read access does not
+expose import or permission controls. System-owned item editors remain in their
+packages and use the existing host contracts. Repeated item projections preserve
+open action menus and focus; document or permission changes invalidate them.
 
 ## Sources and generated assets
 

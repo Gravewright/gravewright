@@ -11,7 +11,7 @@ const root=document.querySelector('#table-workspace'),table=root?.dataset.tableI
 const typeTranslator=createTranslator(root?.dataset.systemId||'gravewright');
 const modules=['items','combat','compendiums'],pending={};
 const itemFolderKey=`gravewright.directory.${table}.items`;
-let closedItemFolders=new Set(),itemMenu,itemMenuReturn;
+let closedItemFolders=new Set(),itemMenu,itemMenuReturn,itemDirectoryProjection;
 try{closedItemFolders=new Set(JSON.parse(localStorage.getItem(itemFolderKey)||'[]'));}catch{}
 const panel=name=>document.querySelector(`[data-native-directory="${name}"]`);
 function notify(name,error){const node=panel(name)?.querySelector('[data-error]');if(node){node.hidden=!error;node.textContent=error?.message||'';}}
@@ -32,12 +32,16 @@ function itemTypeLabel(type){
  const descriptor=states.items?.types?.find(entry=>entry.id===type),label=descriptor?.label||type;
  return descriptor?.labelKey&&typeTranslator.has(descriptor.labelKey)?typeTranslator.t(descriptor.labelKey):label;
 }
+function alphabeticalEntries(entries,label=entry=>entry.name){
+ const collator=new Intl.Collator(typeTranslator.locale||'en',{sensitivity:'base',numeric:true});
+ return [...entries].sort((left,right)=>collator.compare(String(label(left)||''),String(label(right)||'')));
+}
 function createItem(item,folderId=''){
  const types=states.items?.types||[];
  let created;
  const el=dialog(item?item.name:modalText('Create item','Criar item'),[
   {name:'name',label:modalText('Name','Nome'),value:item?.name,required:true},
-  {name:'type',label:modalText('Type','Tipo'),value:item?.type||types[0]?.id||'',required:true,options:item?[{value:item.type,label:itemTypeLabel(item.type)}]:types.map(t=>({value:t.id,label:itemTypeLabel(t.id)}))}
+  {name:'type',label:modalText('Type','Tipo'),value:item?.type||types[0]?.id||'',required:true,options:item?[{value:item.type,label:itemTypeLabel(item.type)}]:alphabeticalEntries(types,entry=>itemTypeLabel(entry.id)).map(t=>({value:t.id,label:itemTypeLabel(t.id)}))}
  ],async form=>{const result=await command('items',item?'update':'create',{id:item?.id,version:item?.version,name:form.elements.name.value,type:form.elements.type.value,...(!item?{folderId}:{})});if(!item)created=result.item||states.items.items.find(entry=>entry.id===result.id);},{key:item?'item:'+item.id:'item:create',...(!item?{submitLabel:modalText('Create item','Criar item')}:{})});
  if(!item)el.addEventListener('close',()=>{if(created)itemSheet(created);},{once:true});
  if(item)el.querySelector('[name=type]').disabled=true;
@@ -86,7 +90,7 @@ document.addEventListener('keydown',event=>{
  choices[event.key==='Home'?0:event.key==='End'?choices.length-1:(index+(event.key==='ArrowDown'?1:-1)+choices.length)%choices.length]?.focus();
 });
 function confirmItemRemoval(item){const modal=dialog(modalText('Delete item','Excluir item'),[],()=>command('items','delete',{id:item.id,version:item.version}),{key:'item:delete:'+item.id,submitLabel:modalText('Delete','Excluir')});const message=document.createElement('p');message.textContent=modalText('Delete this item?','Excluir este item?')+' '+item.name;modal.querySelector('[data-fields]').append(message);}
-function folderChoices(){return [{value:'',label:modalText('No folder','Sem pasta')},...(states.items?.folders||[]).map(folder=>({value:folder.id,label:folder.name}))];}
+function folderChoices(){return [{value:'',label:modalText('No folder','Sem pasta')},...alphabeticalEntries(states.items?.folders||[]).map(folder=>({value:folder.id,label:folder.name}))];}
 function moveItem(item){return dialog(modalText('Move to folder','Mover para pasta'),[{name:'folder',label:modalText('Folder','Pasta'),value:item.folderId||'',options:folderChoices()}],form=>command('items','update',{id:item.id,version:item.version,folderId:form.elements.folder.value}),{key:'item:move:'+item.id});}
 function itemActions(item){
  const entries=[[modalText(item.canEdit?'Edit':'Open item sheet',item.canEdit?'Editar':'Abrir ficha do item'),'edit',()=>itemSheet(item)]];
@@ -119,16 +123,24 @@ function localizeDirectoryTitles(){
  }
 }
 function renderItems(target,state,list,query){
- dismissItemMenu();localizeItems();
+ const byId=(rows,fields)=>rows.map(fields).sort((left,right)=>left[0].localeCompare(right[0]));
+ const projection=JSON.stringify([query,typeTranslator.locale,!!pending.items,
+  byId(state.types||[],type=>[type.id,type.icon,itemTypeLabel(type.id)]),
+  byId(state.folders||[],folder=>[folder.id,folder.name,folder.parentId,folder.color]),
+  byId(state.items||[],item=>[item.id,item.version,item.name,item.type,item.folderId,item.canOpen,item.canEdit])]);
+ // Repeated realtime projections must not interrupt an open action menu.
+ if(itemMenu&&projection===itemDirectoryProjection)return;
+ itemDirectoryProjection=projection;
+ dismissItemMenu();list.replaceChildren();localizeItems();
  const normalize=value=>String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase();query=normalize(query);
- const folders=state.folders||[],folderMap=new Map(folders.map(folder=>[folder.id,folder])),items=(state.items||[]).filter(item=>normalize(item.name+' '+itemTypeLabel(item.type)).includes(query));
+ const folders=alphabeticalEntries(state.folders||[]),folderMap=new Map(folders.map(folder=>[folder.id,folder])),items=alphabeticalEntries((state.items||[]).filter(item=>normalize(item.name+' '+itemTypeLabel(item.type)).includes(query)));
  const visible=new Set(items.map(item=>item.folderId));
  for(const id of [...visible]){let cursor=folderMap.get(id),seen=new Set();while(cursor?.parentId&&!seen.has(cursor.id)){seen.add(cursor.id);visible.add(cursor.parentId);cursor=folderMap.get(cursor.parentId);}}
  const addItem=(host,item)=>{
   const row=document.createElement('article');row.className='directory-entry item-card item-directory__entry';row.dataset.itemId=item.id;row.draggable=item.canOpen!==false;
   row.addEventListener('dragstart',event=>{if(item.canOpen===false){event.preventDefault();return;}event.dataTransfer.effectAllowed='copy';writeReference(event.dataTransfer,{type:'item',id:item.id,title:item.name});event.dataTransfer.setData('application/x-gravewright-item',JSON.stringify({id:item.id,tableId:table}));});
   const open=button('',()=>itemSheet(item));open.className='item-directory__open';open.disabled=item.canOpen===false;open.append(itemIcon(itemGlyph(item.type)));
-  const info=document.createElement('span');info.className='item-directory__info';const name=document.createElement('strong'),type=document.createElement('small');name.textContent=item.name;name.title=item.name;type.textContent=itemTypeLabel(item.type);info.append(name,type);open.append(info);row.append(open);
+  const info=document.createElement('span');info.className='item-directory__info';const name=document.createElement('strong'),type=document.createElement('small');name.textContent=item.name;name.title=item.name;type.textContent=itemTypeLabel(item.type);type.title=type.textContent;info.append(name,type);open.append(info);row.append(open);
   if(item.canOpen!==false){const more=itemIconButton(modalText('Actions','Ações'),'more',()=>{});more.className='item-directory__more';more.setAttribute('aria-haspopup','menu');more.onclick=event=>showItemMenu(event,itemActions(item),more);row.append(more);row.addEventListener('contextmenu',event=>showItemMenu(event,itemActions(item),more));}
   host.append(row);
  };
@@ -151,10 +163,10 @@ function renderItems(target,state,list,query){
 }
 
 
-function render(name){if(name==='compendiums'){const toggle=document.querySelector('[data-native-directory-toggle="content"]');if(toggle)toggle.hidden=!states.compendiums?.packs?.length;if(!states.compendiums?.packs?.length&&panel(name))panel(name).hidden=true;}if(name==='combat'&&states.combat){window.gravewrightCombatState={...states.combat,sceneId:scene};window.dispatchEvent(new CustomEvent('gravewright:combat-state',{detail:window.gravewrightCombatState}));}if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
+function render(name){if(name==='compendiums'){const show=gm||!!states.compendiums?.packs?.length,toggle=document.querySelector('[data-native-directory-toggle="content"]');if(toggle)toggle.hidden=!show;if(!show&&panel(name))panel(name).hidden=true;}if(name==='combat'&&states.combat){window.gravewrightCombatState={...states.combat,sceneId:scene};window.dispatchEvent(new CustomEvent('gravewright:combat-state',{detail:window.gravewrightCombatState}));}if(name==='items'&&!contentReady()){restoreContent('items',()=>render(name));return;}const target=panel(name),state=states[name];if(!target||!state)return;
  if(name==='compendiums'){if(!target._content)target._content=mountCompendiums(target.querySelector('[data-entries]'),state);else target._content.update(state);return;}
  if(name==='combat'){if(target.contains(document.activeElement)&&document.activeElement.matches('[data-combat-initiative]'))return;target.dataset.selectedTokenCount=String(window.gravewrightTokenSelection?.length||0);window.GravewrightCombatPanel?.renderPanel(target,state);if(pending[name])target.querySelectorAll('button,input').forEach(el=>el.disabled=true);return;}
- const list=target.querySelector('[data-entries]'),query=target.querySelector('input[type=search]').value.toLowerCase();list.replaceChildren();
+ const list=target.querySelector('[data-entries]'),query=target.querySelector('input[type=search]').value.toLowerCase();
  if(name==='items'){
   for(const sheet of document.querySelectorAll('.item-sheet[role=dialog]')){const current=state.items.find(item=>item.id===sheet.dataset.itemId);if(!current||current.canOpen===false)sheet.close(true);else if(!current.canEdit){sheet.querySelector('[name=name]').readOnly=true;sheet.querySelector('[type=submit]').hidden=true;}}
   renderItems(target,state,list,query);
@@ -169,7 +181,9 @@ window.addEventListener('gravewright:locale',()=>localizeDirectoryTitles());
 typeTranslator.onChange(()=>{
  render('items');
  for(const modal of document.querySelectorAll('.item-sheet,.table-form-modal[data-window-key="item:create"]')){
-  for(const option of modal.querySelectorAll('[name=type] option'))option.textContent=itemTypeLabel(option.value);
+  const select=modal.querySelector('[name=type]');if(!select)continue;
+  const value=select.value;for(const option of select.options)option.textContent=itemTypeLabel(option.value);
+  select.replaceChildren(...alphabeticalEntries(select.options,option=>option.textContent));select.value=value;
  }
 });
 document.addEventListener('click',e=>{const toggle=e.target.closest('[data-native-directory-toggle]');if(toggle){const name=toggle.dataset.nativeDirectoryToggle==='content'?'compendiums':toggle.dataset.nativeDirectoryToggle;const target=panel(name);if(target.hasAttribute('data-window-minimized')){restoreWindow(target);target.hidden=false;}else target.hidden=!target.hidden;window.gravewrightRealtime.subscribeModule(name,scene);void refresh(name).catch(e=>notify(name,e));}});

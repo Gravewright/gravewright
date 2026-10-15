@@ -3,6 +3,7 @@ from contextlib import closing
 import os
 from pathlib import Path
 import sqlite3
+import sys
 import tempfile
 import threading
 import time
@@ -14,6 +15,125 @@ from django.test import SimpleTestCase, TestCase
 from gravewright.accounts.models import User
 from scripts.update_supervisor import Supervisor, extract, read, write
 from scripts.project_files import source_files, copy_files, replace_files
+
+
+class ActiveReleaseStateTests(SimpleTestCase):
+    def supervisor(self, root):
+        with patch.dict(os.environ, {}, clear=True):
+            return Supervisor(root / 'app', root / 'state', root / 'database.sqlite3',
+                              root / 'media', '127.0.0.1', 3000)
+
+    def test_missing_state_uses_current_installation_without_writing_a_pointer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            supervisor = self.supervisor(root)
+            self.assertEqual(supervisor.active, root / 'app')
+            self.assertEqual(supervisor.runtime_python, sys.executable)
+            self.assertFalse((root / 'state/active.json').exists())
+
+    def test_current_origin_and_managed_release_preserve_the_saved_interpreter_and_bytes(self):
+        for relative in ('app', 'state/releases/release/source'):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                path = root / 'state/active.json'
+                content = (json.dumps({'path': str(root / relative), 'python': 'saved-python'}, indent=2) + '\n').encode()
+                path.parent.mkdir(parents=True)
+                path.write_bytes(content)
+                with patch('scripts.update_supervisor.instance_lock') as lock:
+                    supervisor = self.supervisor(root)
+                self.assertEqual(supervisor.active, root / relative)
+                self.assertEqual(supervisor.runtime_python, 'saved-python')
+                self.assertEqual(path.read_bytes(), content)
+                self.assertEqual(list(path.parent.glob('active.json.backup-*')), [])
+                lock.assert_not_called()
+
+    def test_idle_pointer_from_another_or_moved_installation_is_backed_up_and_rebound(self):
+        for exists in (False, True):
+            with self.subTest(previous_exists=exists), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                previous = root / 'previous-installation'
+                if exists:
+                    previous.mkdir()
+                path = root / 'state/active.json'
+                content = (json.dumps({'path': str(previous), 'python': 'foreign-python'}, indent=2) + '\n').encode()
+                path.parent.mkdir(parents=True)
+                path.write_bytes(content)
+                supervisor = self.supervisor(root)
+                self.assertEqual(supervisor.active, root / 'app')
+                self.assertEqual(supervisor.runtime_python, sys.executable)
+                self.assertEqual(read(path), {'path': str(root / 'app'), 'python': sys.executable})
+                backups = list(path.parent.glob('active.json.backup-*'))
+                self.assertEqual(len(backups), 1)
+                self.assertEqual(backups[0].read_bytes(), content)
+                self.assertEqual(previous.exists(), exists)
+
+    def test_foreign_pointer_with_any_pending_state_is_rejected_without_rewriting(self):
+        for name in ('transaction.json', 'job.json', 'job.lock', 'maintenance'):
+            with self.subTest(marker=name), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                path = root / 'state/active.json'
+                write(path, {'path': str(root / 'other-app'), 'python': 'foreign-python'})
+                before = path.read_bytes()
+                marker = path.parent / name
+                if name == 'job.lock':
+                    marker.mkdir()
+                else:
+                    marker.write_bytes(b'pending state must survive')
+                with self.assertRaisesRegex(ValueError, 'Invalid active release path with pending updater state'):
+                    self.supervisor(root)
+                self.assertEqual(path.read_bytes(), before)
+                self.assertTrue(marker.exists())
+                if marker.is_file():
+                    self.assertEqual(marker.read_bytes(), b'pending state must survive')
+                self.assertEqual(list(path.parent.glob('active.json.backup-*')), [])
+
+    def test_pointer_is_reloaded_under_lock_before_rebinding(self):
+        from contextlib import contextmanager
+        for change in ('valid-pointer', 'pending-job'):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                path = root / 'state/active.json'
+                write(path, {'path': str(root / 'other-app'), 'python': 'foreign-python'})
+
+                @contextmanager
+                def locked(lock_path):
+                    self.assertEqual(lock_path, root / 'state/supervisor.lock')
+                    if change == 'valid-pointer':
+                        write(path, {'path': str(root / 'app'), 'python': 'concurrent-python'})
+                    else:
+                        write(path.parent / 'job.json', {'pending': True})
+                    yield
+
+                with patch('scripts.update_supervisor.instance_lock', side_effect=locked):
+                    if change == 'valid-pointer':
+                        supervisor = self.supervisor(root)
+                        self.assertEqual(supervisor.runtime_python, 'concurrent-python')
+                        self.assertEqual(read(path)['python'], 'concurrent-python')
+                    else:
+                        before = path.read_bytes()
+                        with self.assertRaisesRegex(ValueError, 'pending updater state'):
+                            self.supervisor(root)
+                        self.assertEqual(path.read_bytes(), before)
+                self.assertEqual(list(path.parent.glob('active.json.backup-*')), [])
+
+    def test_foreign_pointer_is_unchanged_when_another_supervisor_holds_the_lock(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            path = root / 'state/active.json'
+            write(path, {'path': str(root / 'other-app'), 'python': 'foreign-python'})
+            before = path.read_bytes()
+            with patch('scripts.update_supervisor.instance_lock', side_effect=OSError('already locked')):
+                with self.assertRaisesRegex(OSError, 'already locked'):
+                    self.supervisor(root)
+            self.assertEqual(path.read_bytes(), before)
+            self.assertEqual(list(path.parent.glob('active.json.backup-*')), [])
+
+    def test_resolver_still_rejects_paths_outside_the_origin_and_managed_releases(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            supervisor = self.supervisor(root)
+            with self.assertRaisesRegex(ValueError, '^Invalid active release path$'):
+                supervisor.resolve_active(root / 'state/releases/../outside')
 
 
 class ArchiveTests(SimpleTestCase):

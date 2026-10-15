@@ -17,9 +17,9 @@
     min-height: var(--topbar-height);
     display: flex;
     align-items: center;
-    gap: var(--step-13);
+    gap: var(--space-3);
     border-bottom: var(--border-hairline);
-    padding: 0 var(--step-21);
+    padding: var(--space-0) var(--space-5);
 }
 
 .gw-nav__brand-text {
@@ -48,9 +48,9 @@
 .gw-nav__list {
     display: grid;
     align-content: start;
-    gap: var(--step-8);
+    gap: var(--space-2);
     overflow-y: auto;
-    padding: var(--step-21) var(--step-13);
+    padding: var(--space-5) var(--space-3);
 }
 
 /* The group that sinks to the bottom: settings, privacy, the quiet links. */
@@ -70,10 +70,10 @@
     min-height: var(--control-height-md);
     display: flex;
     align-items: center;
-    gap: var(--step-13);
+    gap: var(--space-3);
     border: var(--hairline-width) solid transparent;
     border-radius: var(--radius-sm);
-    padding: 0 var(--step-13);
+    padding: var(--space-0) var(--space-3);
     background: transparent;
     color: var(--text-muted);
     font-size: var(--text-md);
@@ -95,8 +95,8 @@
 }
 
 .gw-nav__item:focus-visible {
-    outline: var(--fib-2) solid var(--focus-ring);
-    outline-offset: calc(var(--fib-2) * -1);
+    outline: var(--size-2) solid var(--focus-ring);
+    outline-offset: calc(var(--size-2) * -1);
 }
 
 .gw-nav__item--active,
@@ -114,7 +114,7 @@
 .gw-nav__collapse {
     display: grid;
     margin-left: auto;
-    padding: var(--step-8);
+    padding: var(--space-2);
     place-items: center;
     border: 0;
     background: transparent;
@@ -124,7 +124,7 @@
 
 .gw-shell--compact .gw-nav__brand {
     justify-content: center;
-    padding: 0;
+    padding: var(--space-0);
 }
 
 .gw-shell--compact .gw-nav__brand-text,
@@ -139,8 +139,8 @@
     right: calc(var(--control-height-sm) / -2);
     width: var(--control-height-sm);
     height: var(--control-height-sm);
-    margin: 0;
-    padding: 0;
+    margin: var(--space-0);
+    padding: var(--space-0);
     border: var(--border-hairline);
     border-radius: var(--radius-circle);
     background: var(--bg);
@@ -148,29 +148,29 @@
 }
 
 .gw-shell--compact .gw-nav__list {
-    padding-inline: var(--step-8);
+    padding-inline: var(--space-2);
 }
 
 .gw-shell--compact .gw-nav__item {
     justify-content: center;
-    padding: 0;
+    padding: var(--space-0);
 }
 
 /* ---- Footer ------------------------------------------------------------ */
 
 .gw-nav__footer {
     display: grid;
-    gap: var(--gap-base);
-    border-top: var(--fib-1) solid var(--border);
-    padding: var(--step-14);
+    gap: var(--space-2);
+    border-top: var(--size-1) solid var(--border);
+    padding: var(--space-3);
 }
 
 .gw-nav__card {
     display: grid;
-    gap: var(--fib-3);
-    border: var(--fib-1) solid var(--border);
+    gap: var(--space-half);
+    border: var(--size-1) solid var(--border);
     border-radius: var(--radius-sm);
-    padding: var(--step-10);
+    padding: var(--space-2);
     background: rgba(255, 255, 255, 0.014);
 }
 
@@ -203,7 +203,7 @@
     .gw-nav__brand,
     .gw-nav__item {
         justify-content: center;
-        padding-inline: 0;
+        padding-inline: var(--space-0);
     }
 }
 
@@ -232,7 +232,7 @@
         display: flex;
         width: 100%;
         justify-content: space-around;
-        padding: var(--step-5);
+        padding: var(--space-1);
     }
 
     .gw-nav__item {
@@ -241,7 +241,7 @@
     }
 
     .gw-shell__content {
-        padding: var(--step-21) var(--step-13)
-            calc(var(--control-height-lg) + var(--step-21));
+        padding: var(--space-5) var(--space-3)
+            calc(var(--control-height-lg) + var(--space-5));
     }
 }

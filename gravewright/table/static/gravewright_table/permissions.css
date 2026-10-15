@@ -1,22 +1,22 @@
-.ownership-modal-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:#0005;padding:var(--step-16)}
-.ownership-dialog{box-sizing:border-box;width:min(var(--size-420),calc(100vw - var(--step-32)));max-height:calc(100dvh - var(--step-32));overflow:auto;padding:0;border:var(--fib-1) solid #806b43;border-radius:var(--step-12);background:#171c20;color:#e8e4d8;box-shadow:0 var(--step-12) var(--step-40) #0009}
-.ownership-dialog form{padding:var(--step-18);display:flex;flex-direction:column;gap:var(--step-16)}
-.ownership-dialog header{display:flex;align-items:center;gap:var(--step-12);border-bottom:var(--fib-1) solid #ffffff1a;padding-bottom:var(--step-12)}
+.ownership-modal-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:#0005;padding:var(--space-4)}
+.ownership-dialog{box-sizing:border-box;width:min(var(--size-420),calc(100vw - var(--size-32)));max-height:calc(100dvh - var(--size-32));overflow:auto;padding:var(--space-0);border:var(--size-1) solid #806b43;border-radius:var(--radius-lg);background:#171c20;color:#e8e4d8;box-shadow:0 var(--size-12) var(--size-40) #0009}
+.ownership-dialog form{padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-4)}
+.ownership-dialog header{display:flex;align-items:center;gap:var(--space-3);border-bottom:var(--size-1) solid #ffffff1a;padding-bottom:var(--space-3)}
 .ownership-dialog header strong{flex:1;min-width:0;overflow-wrap:anywhere}
-.ownership-dialog header button{font-size:var(--step-24);background:none;border:0;color:inherit;cursor:pointer}
-.ownership-dialog p{margin:0;font-size:var(--fib-6);line-height:1.5}
-.ownership-dialog__gm{display:flex;align-items:center;justify-content:flex-end;gap:var(--step-10);font-size:var(--step-12)}
-.ownership-dialog__row{display:grid;grid-template-columns:minmax(var(--size-90),1fr) minmax(var(--size-140),1.7fr);align-items:center;gap:var(--step-16);margin-bottom:var(--step-12);font-size:var(--step-14)}
+.ownership-dialog header button{font-size:24px;background:none;border:0;color:inherit;cursor:pointer}
+.ownership-dialog p{margin:var(--space-0);font-size:var(--text-md);line-height:1.5}
+.ownership-dialog__gm{display:flex;align-items:center;justify-content:flex-end;gap:var(--space-2);font-size:var(--text-sm)}
+.ownership-dialog__row{display:grid;grid-template-columns:minmax(var(--size-90),1fr) minmax(var(--size-140),1.7fr);align-items:center;gap:var(--space-4);margin-bottom:var(--space-3);font-size:var(--text-base)}
 .ownership-dialog__row span{overflow-wrap:anywhere}
-.ownership-dialog select{width:100%;padding:var(--step-9);border-radius:var(--fib-4);border:var(--fib-1) solid #40464e;background:#252c34;color:inherit}
+.ownership-dialog select{width:100%;padding:var(--space-2);border-radius:var(--radius-sm);border:var(--size-1) solid #40464e;background:#252c34;color:inherit}
 .ownership-dialog__help{color:#b7b5ad}
 .ownership-dialog [role=alert]{color:#ffb7ac}
-.ownership-dialog footer{display:flex;flex-direction:column;gap:var(--fib-5)}
-.ownership-dialog footer button{padding:var(--step-10);border:var(--fib-1) solid #b99857;border-radius:var(--fib-4);background:#b99857;color:#111820;cursor:pointer}
+.ownership-dialog footer{display:flex;flex-direction:column;gap:var(--space-2)}
+.ownership-dialog footer button{padding:var(--space-2);border:var(--size-1) solid #b99857;border-radius:var(--radius-sm);background:#b99857;color:#111820;cursor:pointer}
 .ownership-dialog button:disabled{opacity:.5;cursor:wait}
 .ownership-dialog [hidden]{display:none!important}
-.journal-presentation-modal fieldset{margin:0;padding:var(--step-12);border:var(--fib-1) solid #40464e;border-radius:var(--fib-4);min-width:0}
-.journal-presentation-modal legend{padding:0 var(--step-6);font-size:var(--fib-6)}
-.journal-presentation-modal .ownership-dialog__gm{justify-content:space-between;margin:var(--fib-5) 0;font-size:var(--step-14)}
+.journal-presentation-modal fieldset{margin:var(--space-0);padding:var(--space-3);border:var(--size-1) solid #40464e;border-radius:var(--radius-sm);min-width:0}
+.journal-presentation-modal legend{padding:var(--space-0) var(--space-1);font-size:var(--text-md)}
+.journal-presentation-modal .ownership-dialog__gm{justify-content:space-between;margin:var(--space-2) var(--space-0);font-size:var(--text-base)}
 .journal-presentation-modal .ownership-dialog__gm span{overflow-wrap:anywhere;min-width:0}
 .journal-presentation-modal input[type=checkbox]{flex-shrink:0;accent-color:#b99857}

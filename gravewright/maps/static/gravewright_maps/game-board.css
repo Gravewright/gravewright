@@ -26,7 +26,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    padding: var(--step-8) var(--step-13);
+    padding: var(--space-2) var(--space-3);
     border: var(--border-hairline);
     border-radius: var(--radius-sm);
     background: var(--surface);

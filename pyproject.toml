@@ -34,6 +34,11 @@ dependencies = [
     "python-dotenv>=1.1,<2",
 ]
 
+[project.optional-dependencies]
+vips = [
+    "pyvips[binary]>=3.2,<4",
+]
+
 [dependency-groups]
 dev = [
     "playwright>=1.62.0",

@@ -26,6 +26,45 @@ A aplicação renderiza HTML Jinja2 no servidor, usa Datastar para sinais reativ
 
 IDs e atributos `data-*` dos templates conectam controladores nativos e superfícies de extensão. Alterá-los pode afetar o controlador, sinais Datastar e montagem de módulos. Confira os três ao renomear seletores ou substituir painéis inteiros.
 
+## Dimensões compartilhadas e tokens visuais
+
+[`tokens.css`](../../gravewright/web/static/gravewright_web/css/tokens.css) define os valores visuais compartilhados. Tokens dimensionais fixos usam valores simples em `px`. Reutilize os tokens existentes quando forem adequados ao componente e introduza um novo valor compartilhado somente quando ele for necessário entre componentes. A escala Fibonacci e seu script de auditoria foram retirados; o CSS do núcleo usa as regras de espaçamento, raio e tipografia abaixo em vez de `--fib-*` ou `--step-*`.
+
+Use `--space-*` para padding, margens e gaps, incluindo suas formas abreviadas, lógicas e de linha/coluna. Ao migrar uma dimensão fixa, escolha o valor mais próximo desta escala; em caso de empate, escolha o menor. Preserve o sinal de margens negativas. O sufixo do token conta passos de quatro pixels, com nomes separados para zero, um e dois pixels:
+
+| Token | Valor |
+| --- | --- |
+| `--space-0` | `0` |
+| `--space-px` | `1px` |
+| `--space-half` | `2px` |
+| `--space-1` | `4px` |
+| `--space-2` | `8px` |
+| `--space-3` | `12px` |
+| `--space-4` | `16px` |
+| `--space-5` | `20px` |
+| `--space-6` | `24px` |
+| `--space-7` | `28px` |
+| `--space-8` | `32px` |
+| `--space-10` | `40px` |
+| `--space-12` | `48px` |
+| `--space-14` | `56px` |
+| `--space-16` | `64px` |
+
+O antigo valor de 34px de `--space-9` é substituído por `--space-8` com 32px. Os raios de borda usam estes nomes compartilhados:
+
+| Token | Valor |
+| --- | --- |
+| `--radius-sm` | `4px` |
+| `--radius-md` | `8px` |
+| `--radius-lg` | `12px` |
+| `--radius-xl` | `16px` |
+| `--radius-pill` | `999px` |
+| `--radius-circle` | `50%` |
+
+O CSS da interface do host deve renderizar textos com **12px ou mais**. Confira os tamanhos efetivos vindos de estilos herdados, unidades relativas e formas abreviadas de fonte, além de `font-size` explícito. Os nomes existentes `--text-3xs`, `--text-2xs` e `--text-xs` continuam disponíveis com 12px. Textos de PDFs e desenhos, assim como rótulos de cena escalados pela câmera, preservam os tamanhos definidos pelo autor.
+
+Larguras, alturas e demais geometrias dos componentes mantêm as dimensões necessárias. Um valor específico de um único componente pode usar um literal local em `px`; reserve tokens `--size-*` compartilhados para valores reutilizados entre componentes. A geometria responsiva ainda pode usar unidades relativas e expressões de layout como `calc()` e `clamp()` quando necessário.
+
 ## Estado nativo e tempo real
 
 O frontend nativo usa a API de domínio compartilhada onde implementada e mantém adaptadores HTTP/socket especializados para uploads, assinaturas do tabuleiro e fragmentos renderizados. A API pública não substitui todos os transportes nativos.
@@ -33,6 +72,18 @@ O frontend nativo usa a API de domínio compartilhada onde implementada e manté
 O controlador de tempo real conecta o WebSocket autenticado da mesa atual, gerencia assinaturas/reconexão e dispara eventos `gravewright:*`. O servidor envia projeções autorizadas por usuário e HTML renderizado; dados privados, audiência do chat e visibilidade da cena são filtrados antes do envio. Insira texto de usuário com `textContent`. A inserção de fragmentos HTML existente destina-se ao HTML dos templates confiáveis do servidor, não a texto arbitrário de chat ou módulo.
 
 `gravewright:api-event` é o evento interno consumido pela API de domínio; notificações `api.changed` provocam novas leituras autorizadas. Integrações públicas devem usar `api.events.on(...)`, conforme [eventos da API](api.md#eventos-de-domínio), em vez de copiar comandos internos de socket. Assinaturas não são um fluxo durável: reconecte e releia o estado. Criar `gravewright.forTable(...)` não abre um socket.
+
+Os diretórios nativos de itens e compêndios ordenam cópias das entradas visíveis
+pelo nome exibido, usando o idioma ativo; a ordem armazenada e os IDs dos
+documentos permanecem intactos. Pacotes, filtros e prévias de compêndios usam
+linhas compactas e janelas com tamanho inicial ajustado ao conteúdo, com rolagem
+interna para conteúdos longos. O usuário mantém os controles compartilhados de
+mover, redimensionar, minimizar e redefinir janelas. Mestres podem criar o
+primeiro compêndio no diretório vazio; acesso de leitura não exibe controles de
+importação ou permissões. Os editores de itens de cada sistema permanecem em
+seus pacotes e usam os contratos existentes do host. Projeções de itens repetidas
+preservam menus de ações abertos e foco; alterações de documento ou permissão
+invalidam esses menus.
 
 ## Fontes e arquivos gerados
 

@@ -5,10 +5,10 @@
 
 .gw-notice {
     border: 0;
-    border-left: var(--fib-2) solid var(--accent);
+    border-left: var(--size-2) solid var(--accent);
     border-radius: 0;
-    margin: 0 0 var(--gap-comfy);
-    padding: var(--step-12) var(--step-16);
+    margin: var(--space-0) var(--space-0) var(--space-3);
+    padding: var(--space-3) var(--space-4);
     background: linear-gradient(90deg, var(--accent-glow), transparent 72%);
     color: var(--text);
     font-size: var(--text-base);
@@ -35,8 +35,8 @@
 .gw-notice--boxed {
     border: var(--hairline-width) solid currentcolor;
     border-radius: var(--radius-sm);
-    margin: 0;
-    padding: var(--step-13);
+    margin: var(--space-0);
+    padding: var(--space-3);
     font-size: var(--text-md);
 }
 
