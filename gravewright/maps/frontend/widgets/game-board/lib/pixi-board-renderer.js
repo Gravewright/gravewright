@@ -84,6 +84,11 @@ export class PixiBoardRenderer {
     viewport() {
         return { x: this.#world.x, y: this.#world.y, scale: this.#world.scale.x };
     }
+    /** Internal scene effects reuse the board's GPU without exposing it through the SDK. */
+    renderToTexture(container, target) {
+        if (this.#destroyed) return;
+        this.#application.renderer.render({ container, target, clear: true, clearColor: [0, 0, 0, 0] });
+    }
     setViewport(view) {
         this.#world.position.set(view.x, view.y);
         this.#world.scale.set(view.scale);

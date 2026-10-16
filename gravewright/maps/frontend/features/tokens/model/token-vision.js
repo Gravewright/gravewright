@@ -4,6 +4,7 @@ export function distancePerCell(value) {
 }
 export function selectedVision(tokens, selectedIds, cell, origin = { x: 0, y: 0 }) {
     return tokens.filter(token => selectedIds.includes(token.id) && token.visionEnabled !== false).map(token => ({
+        sourceId: token.id,
         x: origin.x + (token.gridX + token.cells / 2) * cell,
         y: origin.y + (token.gridY + (token.heightCells ?? token.cells) / 2) * cell,
         radius: (token.visionRange ?? 0) * cell,

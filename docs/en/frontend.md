@@ -138,6 +138,37 @@ Use one consistent coordinate system across controllers and renderer calls: logi
 
 Async work belongs to a page, board, module activation, or individual mount. [`Lifetime`](../../gravewright/modules/static/gravewright_modules/lifetime.js) cancels API calls and disposes subscriptions; map source code has its own shared lifecycle helpers. Add/remove listeners and observers with their owner. Release rendering resources and pending work during board teardown or scene changes. A listener or cached API handle that outlives its owner can update the next scene with old data.
 
+### Lighting and vision work
+
+`SceneLayers` calculates light occlusion once for each static scene key and
+reuses those polygons for masks, the light atlas and the GM darkness veil.
+`createVisibilityContext` shares wall indices and keeps at most eight filtered
+subsets for finite ranges or elevation. Preserve the original ray arithmetic
+and wall membership: changing a BVH can change rounding at coincident endpoints.
+
+Torch and pulse frames update additive Pixi sprites over immutable falloff
+textures. Shaders receive a GPU render texture; only particles that respond to
+light request CPU samples, capped at eight samples per second. Profiles keep
+their existing animation rates. A scene owns the texture pool and releases it
+after shader bindings, the atlas and sprite layers.
+
+Vision changes coalesce once per animation frame. Scenes with at least 128 wall
+segments use the same-origin module worker emitted as `vendor/visibility-worker.js`;
+smaller scenes and unavailable workers use the same geometry synchronously.
+The worker keeps one active job and the latest pending snapshot, transferring
+coordinate buffers. Native observers carry a `sourceId` so movement can retain
+the last completed view while the next calculation runs. Selection, range,
+elevation, cone and preview changes revoke that view immediately; wall and scene
+changes terminate the old worker. Never reuse visibility across those boundaries
+or quantize the configured vision range or token positions.
+Pending movement retains the existing veil texture until a result arrives;
+unrestricted GM vision reuses its static veil without repainting on token moves.
+
+Compare full frames and completed worker jobs when profiling. Queuing work is
+not completion, and headless software WebGL results do not establish hardware
+GPU performance. Rebuild both board and worker entries together with the normal
+asset build.
+
 ## Extending the interface
 
 The host's [`SurfaceRegistry`](../../gravewright/modules/static/gravewright_modules/surface-registry.js) accepts `gravewright.ui.register(domain, declaration)` and returns an unregister function. It supports registered table surfaces plus `app.shell` and `inside.content`. A mount receives `{root, context, api, signal, onDispose}`. It gets a fresh lifetime and a dedicated root; failed mounts are cleaned up, and replaced native elements have their previous visibility restored. This global registry permits one replacement per domain.

@@ -32,8 +32,13 @@
             {{ icon('Plus') }}{{ game.newActor }}</button
           ><button data-v-gwtoolbar type="button" data-actor-panel="folder">
             {{ icon('FolderPlus') }}{{ game.createActorFolder }}</button
-          >{% if actor_sheet_provider and actor_sheet_provider.directory_actions_template %}{% include actor_sheet_provider.directory_actions_template %}{% endif %}
+          >
         </div>
+        {% if actor_sheet_provider and actor_sheet_provider.directory_actions_template %}
+        <div class="actor-directory__secondary-actions">
+          {% include actor_sheet_provider.directory_actions_template %}
+        </div>
+        {% endif %}
         {% endif %}<label class="directory-toolbar__search" data-v-gwtoolbar
           >{{ icon('MagnifyingGlass',scope='data-v-gwtoolbar') }}<input
             data-v-gwtoolbar

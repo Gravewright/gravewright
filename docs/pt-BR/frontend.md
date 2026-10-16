@@ -140,6 +140,39 @@ Mantenha um sistema de coordenadas consistente: pixels lógicos da cena, origem 
 
 Operações assíncronas pertencem a uma página, tabuleiro, ativação ou montagem. [`Lifetime`](../../gravewright/modules/static/gravewright_modules/lifetime.js) cancela chamadas e remove assinaturas; os fontes de mapas possuem utilitários próprios. Adicione/remova listeners e observers com seu proprietário. Libere recursos gráficos e tarefas pendentes ao encerrar o tabuleiro ou trocar de cena. Listener ou API que sobrevive ao contexto pode atualizar a próxima cena com dados antigos.
 
+### Trabalho de iluminação e visão
+
+`SceneLayers` calcula a oclusão das luzes uma vez por chave estática da cena e
+reutiliza os polígonos nas máscaras, no atlas de luz e na penumbra do mestre.
+`createVisibilityContext` compartilha os índices de paredes e mantém no máximo
+oito subconjuntos para alcance finito ou elevação. Preserve a aritmética dos
+raios e a composição das paredes: trocar a BVH pode mudar o arredondamento em
+extremidades coincidentes.
+
+Quadros de tocha e pulso atualizam sprites aditivos do Pixi sobre texturas de
+atenuação imutáveis. Shaders recebem uma textura renderizada na GPU; apenas
+partículas que reagem à luz pedem amostras na CPU, limitadas a oito por segundo.
+Os perfis mantêm suas taxas de animação. A cena possui o pool de texturas e o
+libera depois dos vínculos dos shaders, do atlas e das camadas de sprites.
+
+Mudanças de visão são agrupadas uma vez por quadro de animação. Cenas com pelo
+menos 128 segmentos de parede usam o worker de módulo da mesma origem gerado em
+`vendor/visibility-worker.js`; cenas menores ou sem worker usam a mesma geometria
+de forma síncrona. O worker mantém uma tarefa ativa e o último estado pendente,
+transferindo buffers de coordenadas. Observadores nativos levam um `sourceId`
+para que o movimento preserve a última visão concluída enquanto calcula a
+seguinte. Trocas de seleção, alcance, elevação, cone ou prévia revogam essa visão
+imediatamente; mudanças de paredes ou cena encerram o worker anterior. Não
+reutilize a visão entre esses limites nem arredonde o alcance configurado ou as
+posições dos tokens para células.
+Movimento pendente preserva a textura do véu até o resultado chegar; a visão do
+mestre sem prévia reutiliza o véu estático sem repintar ao mover tokens.
+
+Ao medir, compare quadros completos e tarefas de worker concluídas. Enfileirar
+não equivale a concluir, e WebGL por software em navegador headless não comprova
+desempenho de uma GPU física. Gere as entradas do tabuleiro e do worker juntas
+pelo build normal de arquivos.
+
 ## Estendendo a interface
 
 O [`SurfaceRegistry`](../../gravewright/modules/static/gravewright_modules/surface-registry.js) do host aceita `gravewright.ui.register(domain, declaration)` e retorna função de cancelamento. Suporta superfícies da mesa, `app.shell` e `inside.content`. Uma montagem recebe `{root, context, api, signal, onDispose}`, ciclo de vida e raiz próprios. Falhas geram limpeza e restauram a visibilidade anterior dos elementos nativos substituídos. Esse registro global permite uma substituição por domínio.

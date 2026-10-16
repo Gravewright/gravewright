@@ -29,7 +29,7 @@ const common = {
   results.push(
     await esbuild.build({
       ...common,
-      entryPoints: [source + "/widgets/game-board/ui/board.js"],
+      entryPoints: { board: source + "/widgets/game-board/ui/board.js", "visibility-worker": source + "/widgets/game-board/model/visibility-worker.js" },
       splitting: true,
       minify: true,
       outdir: output + "/vendor",

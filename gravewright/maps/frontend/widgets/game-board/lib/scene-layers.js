@@ -5,12 +5,13 @@ import { effectQuality } from "../../../shared/rendering/effect-quality.js";
 import { renderingPreferences } from "../../../shared/rendering/render-profile.js";
 import { SceneLightMap } from "./scene-light-map.js";
 import { effectLights } from "../model/effect-lighting.js";
-import { paintAnimatedLight } from "../../../features/lighting/model/light-profiles.js";
+import { AnimatedLight, LightTexturePool } from "./animated-light.js";
 import { particlesOf } from "../../../features/effects/model/particle-profiles.js";
 import { mountShaders } from "./scene-shaders.js";
 import { SceneRenderKey } from "../model/scene-render-key.js";
 import { sceneDarkness } from "../model/scene-darkness.js";
-import { visibilityPolygon } from "../model/visibility-polygon.js";
+import { createVisibilityContext, visibilityPolygon } from "../model/visibility-polygon.js";
+import { VisibilityJobs } from "../model/visibility-jobs.js";
 /** All GPU, animation and image resources here belong to a single mounted block. */
 export class SceneLayers {
     board;
@@ -33,6 +34,13 @@ export class SceneLayers {
     #visionSprite;
     #lightState;
     #lightMap;
+    #lightTextures;
+    #lightPolygons = [];
+    #visibilityJobs;
+    #visionPolygons = [];
+    #visionIdentity = '';
+    #visionFrame = 0;
+    #pendingVision;
     #shaders;
     #bitmaps = new Set();
     #generation = 0;
@@ -110,6 +118,10 @@ export class SceneLayers {
         this.#staticKey = '';
         this.#visionKey = '';
         this.#lightState = undefined;
+        this.#lightPolygons = [];
+        cancelAnimationFrame(this.#visionFrame);
+        this.#visionFrame = 0;
+        this.#pendingVision = undefined;
         this.clearVision();
         this.clearFog();
         cancelAnimationFrame(this.#frame);
@@ -123,6 +135,8 @@ export class SceneLayers {
         for (const texture of this.#textures)
             texture.destroy(true);
         this.#textures.clear();
+        this.#lightTextures?.dispose();
+        this.#lightTextures = undefined;
         for (const bitmap of this.#bitmaps)
             bitmap.close();
         this.#bitmaps.clear();
@@ -139,7 +153,7 @@ export class SceneLayers {
             this.syncImages(state.images);
             this.fog(state, cell, width, height, gm);
             if (visionKey !== this.#visionKey) {
-                this.darkness({ ...this.#lightState, vision: state.vision, previewTokenVision: state.previewTokenVision }, cell, width, height, gm);
+                this.queueVision({ ...this.#lightState, vision: state.vision, previewTokenVision: state.previewTokenVision }, cell, width, height, gm);
                 this.#visionKey = visionKey;
             }
             this.board.invalidate?.();
@@ -152,10 +166,24 @@ export class SceneLayers {
         const quality = effectQuality(profile);
         const lightState = { ...state, lights: effectLights(state, cell, width, height) };
         this.#lightState = lightState;
+        const lightWalls = state.walls.filter(w => w.blocks_light !== 0 && w.light_behavior !== 'pass')
+            .map(w => ({ ...w, blocks_sight: w.blocks_light, vision_behavior: w.light_behavior }));
+        const lightContext = createVisibilityContext(lightWalls);
+        for (const light of lightState.lights) {
+            if (!light.enabled) continue;
+            const radius = light.dim_radius === 0 ? Math.hypot(width, height) * 2 : Math.max(light.dim_radius, light.bright_radius) * cell;
+            if (radius > 0) this.#lightPolygons.push({ light, radius, polygon: visibilityPolygon(light, radius, lightWalls, lightContext) });
+        }
+        const lightTextures = this.#lightTextures = new LightTexturePool();
         const ambient = Math.max(.08, 1 - sceneDarkness(state.lighting));
-        const lightMap = this.#lightMap = new SceneLightMap(width, height, quality.lightMap, ambient);
-        const stamps = [];
         const readLight = state.particles.some(e => (e.light_response ?? 0) > 0) && quality.particles > 0;
+        const needsShaders = quality.shaders && state.shaders.some(s => s.enabled);
+        const lightMap = this.#lightMap = new SceneLightMap(width, height, quality.lightMap, ambient, {
+            renderToTexture: this.board.renderToTexture?.bind(this.board), textures: lightTextures,
+            sampleOnly: !needsShaders,
+        });
+        const stamps = [];
+        const needsLightMap = readLight || needsShaders;
         const imageLayer = this.layer("images", 150);
         imageLayer.sortableChildren = true;
         this.#imageLayer = imageLayer;
@@ -229,35 +257,18 @@ export class SceneLayers {
         this.darkness(lightState, cell, width, height, gm);
         const lights = this.layer("lights", 240);
         const animatedLights = [];
-        for (const light of lightState.lights) {
-            if (!light.enabled)
-                continue;
-            const radius = light.dim_radius === 0 ? Math.hypot(width, height) * 2 : Math.max(light.dim_radius, light.bright_radius) * cell;
-            const polygon = visibilityPolygon(light, radius, state.walls.filter(w => w.blocks_light !== 0 && w.light_behavior !== "pass").map(w => ({ ...w, blocks_sight: w.blocks_light, vision_behavior: w.light_behavior })));
-            if (radius <= 0)
-                continue;
+        for (const { light, radius, polygon } of this.#lightPolygons) {
             const mask = new Graphics().poly(polygon.flatMap(p => [p.x, p.y])).fill("white");
-            const canvas = document.createElement("canvas");
-            canvas.width = canvas.height = 256;
-            const context = canvas.getContext("2d");
-            paintAnimatedLight(context, light, 128, 128, 128, quality.fps ? performance.now() : 0);
-            stamps.push({ canvas, x: light.x, y: light.y, radius, polygon });
-            const texture = Texture.from(canvas);
-            this.#textures.add(texture);
-            const glow = new Sprite(texture);
-            glow.anchor.set(.5);
-            glow.position.set(light.x, light.y);
-            glow.width = glow.height = radius * 2;
-            glow.alpha = 1;
-            glow.blendMode = "add";
-            glow.mask = mask;
+            const animated = new AnimatedLight(light, radius, lightTextures, quality.fps ? performance.now() : 0);
+            stamps.push({ light, x: light.x, y: light.y, radius, polygon });
+            animated.node.mask = mask;
             const group = new Container();
-            group.addChild(mask, glow);
+            group.addChild(mask, animated.node);
             lights.addChild(group);
             this.registerSelection(`light:${light.id}`, group);
-            animatedLights.push({ light, glow, canvas, texture });
+            animatedLights.push(animated);
         }
-        lightMap.update(stamps, readLight);
+        if (needsLightMap) lightMap.update(stamps, readLight, quality.fps ? performance.now() : 0);
         const cards = this.layer("cards", 210);
         this.#cardRows = state.cards;
         for (const card of [...state.cards].sort((a, b) => (a.z_index ?? 0) - (b.z_index ?? 0))) {
@@ -309,7 +320,7 @@ export class SceneLayers {
             this.registerSelection(`particle:${e.id}`, group);
             particles.push({ emitter, dots: samples.map(() => { const dot = new Sprite(dotTexture); dot.anchor.set(.5); group.addChild(dot); return dot; }) });
         }
-        const movingLights = animatedLights.some(({ light }) => light.animation && light.animation !== 'none');
+        const movingLights = animatedLights.some(light => light.animated);
         this.#shaders = mountShaders(this.layer("shaders", 245), state, cell, width, height, lightMap.texture, ambient, profile, (key, node) => this.registerSelection(key, node));
         const started = performance.now();
         let lastLightFrame = 0, lastFrame = 0;
@@ -331,15 +342,8 @@ export class SceneLayers {
             const now = performance.now();
             if (movingLights && quality.lightFps && now - lastLightFrame >= 1000 / quality.lightFps) {
                 lastLightFrame = now;
-                for (const { light, canvas, texture } of animatedLights) {
-                    if (!light.animation || light.animation === 'none')
-                        continue;
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, 256, 256);
-                    paintAnimatedLight(ctx, light, 128, 128, 128, now);
-                    texture.source.update();
-                }
-                lightMap.update(stamps, readLight);
+                for (const light of animatedLights) if (light.animated) light.update(now);
+                if (needsLightMap) lightMap.update(stamps, readLight, now);
             }
             for (const { emitter, dots } of particles) {
                 particlesOf(emitter, time * 1000, cell).forEach((particle, index) => {
@@ -364,6 +368,13 @@ export class SceneLayers {
         this.board.invalidate?.();
     }
     clearVision() {
+        cancelAnimationFrame(this.#visionFrame);
+        this.#visionFrame = 0;
+        this.#pendingVision = undefined;
+        this.#visibilityJobs?.dispose();
+        this.#visibilityJobs = undefined;
+        this.#visionPolygons = [];
+        this.#visionIdentity = '';
         this.#visionLayer?.dispose();
         this.#visionLayer = undefined;
         this.#visionTexture?.destroy(true);
@@ -371,12 +382,76 @@ export class SceneLayers {
         this.#visionSprite = undefined;
         this.#visionCanvas = undefined;
     }
+    queueVision(state, cell, width, height, gm) {
+        if (sceneDarkness(state.lighting) === 0) { this.clearVision(); return; }
+        // Revoke old observers before yielding; a worker may finish before RAF.
+        const identity = this.visionIdentity(state, gm);
+        if (identity !== this.#visionIdentity) {
+            this.#visionIdentity = identity;
+            this.#visionPolygons = [];
+            this.#visibilityJobs?.cancel();
+            this.paintDarkness(state, cell, width, height, gm, []);
+        }
+        if (identity === 'gm') {
+            // The GM veil depends only on static scene inputs. Drop a queued
+            // preview as well, so it cannot replace the unrestricted view.
+            cancelAnimationFrame(this.#visionFrame);
+            this.#visionFrame = 0;
+            this.#pendingVision = undefined;
+            return;
+        }
+        this.#pendingVision = [state, cell, width, height, gm];
+        if (this.#visionFrame) return;
+        this.#visionFrame = requestAnimationFrame(() => {
+            this.#visionFrame = 0;
+            const pending = this.#pendingVision;
+            this.#pendingVision = undefined;
+            if (!this.#closed && pending) this.darkness(...pending);
+        });
+    }
+    visionIdentity(state, gm) {
+        if (gm && !state.previewTokenVision) return 'gm';
+        return JSON.stringify(state.vision.map(source => [source.sourceId ?? [source.x, source.y],
+            source.radius, source.elevation, source.angle, source.rotation]));
+    }
     darkness(state, cell, width, height, gm) {
         const darkness = sceneDarkness(state.lighting);
         if (darkness === 0) {
             this.clearVision();
             return;
         }
+        const limited = !gm || !!state.previewTokenVision;
+        if (!limited) {
+            this.#visionIdentity = 'gm';
+            this.#visibilityJobs?.cancel();
+            this.paintDarkness(state, cell, width, height, gm, []);
+            return;
+        }
+        // Keep the last completed frame only for the same observers and wall
+        // revision. A selection, range, elevation or scene change closes it.
+        const identity = this.visionIdentity(state, gm);
+        const changed = identity !== this.#visionIdentity;
+        if (changed) {
+            this.#visionIdentity = identity;
+            this.#visionPolygons = [];
+            this.#visibilityJobs?.cancel();
+        }
+        this.#visibilityJobs ??= new VisibilityJobs(state.walls);
+        const generation = this.#generation;
+        let complete = false;
+        this.#visibilityJobs.request(state.vision, Math.hypot(width, height) * 2, polygons => {
+            if (this.#closed || generation !== this.#generation || identity !== this.#visionIdentity) return;
+            complete = true;
+            this.#visionPolygons = polygons;
+            this.paintDarkness(state, cell, width, height, gm, polygons);
+            this.board.invalidate?.();
+        });
+        // An unchanged observer already has a veil. Retain that texture until
+        // the worker completes instead of repainting the same pixels each RAF.
+        if (!complete && changed) this.paintDarkness(state, cell, width, height, gm, this.#visionPolygons);
+    }
+    paintDarkness(state, cell, width, height, gm, polygons) {
+        const darkness = sceneDarkness(state.lighting);
         const limited = !gm || !!state.previewTokenVision;
         const scale = Math.min(1, 2048 / Math.max(width, height));
         const canvas = this.#visionCanvas ??= document.createElement("canvas");
@@ -391,13 +466,9 @@ export class SceneLayers {
         ctx.scale(scale, scale);
         ctx.fillStyle = `rgba(0,0,0,${darkness})`;
         ctx.fillRect(0, 0, width, height);
-        for (const light of state.lights.filter(l => l.enabled && !limited)) {
-            const radius = light.dim_radius === 0 ? Math.hypot(width, height) * 2 : Math.max(light.dim_radius, light.bright_radius) * cell;
-            if (radius <= 0)
-                continue;
+        for (const { light, radius, polygon } of limited ? [] : this.#lightPolygons) {
             ctx.save();
             ctx.beginPath();
-            const polygon = visibilityPolygon(light, radius, state.walls.filter(w => w.blocks_light !== 0 && w.light_behavior !== "pass").map(w => ({ ...w, blocks_sight: w.blocks_light, vision_behavior: w.light_behavior })));
             polygon.forEach((p, i) => { if (i === 0)
                 ctx.moveTo(p.x, p.y);
             else
@@ -419,13 +490,11 @@ export class SceneLayers {
             ctx.save();
             ctx.globalCompositeOperation = "destination-out";
             ctx.fillStyle = "#000";
-            for (const source of state.vision) {
-                const polygon = visibilityPolygon(source, source.radius > 0 ? source.radius : Math.hypot(width, height) * 2, state.walls);
+            for (const polygon of polygons) {
                 ctx.beginPath();
-                polygon.forEach((p, i) => { if (i === 0)
-                    ctx.moveTo(p.x, p.y);
-                else
-                    ctx.lineTo(p.x, p.y); });
+                for (let i = 0; i < polygon.length; i += 2)
+                    if (i === 0) ctx.moveTo(polygon[i], polygon[i + 1]);
+                    else ctx.lineTo(polygon[i], polygon[i + 1]);
                 ctx.closePath();
                 ctx.fill();
             }

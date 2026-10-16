@@ -1,5 +1,8 @@
-import { Texture } from 'pixi.js';
-/** Reused, bounded atlas. Visibility masks are calculated once per scene update. */
+import { Container, Graphics, RenderTexture, Texture } from 'pixi.js';
+import { paintAnimatedLight } from '../../../features/lighting/model/light-profiles.js';
+import { AnimatedLight, LightTexturePool } from './animated-light.js';
+
+/** Bounded GPU light atlas, with a separate CPU sample only for responsive particles. */
 export class SceneLightMap {
     ambient;
     canvas = document.createElement('canvas');
@@ -7,32 +10,89 @@ export class SceneLightMap {
     context;
     scale;
     #pixels;
-    constructor(width, height, edge, ambient) {
+    #renderToTexture;
+    #scene;
+    #textures;
+    #ownsTextures;
+    #stamps;
+    #lights = [];
+    #lastRead = -Infinity;
+    #sampleOnly;
+    constructor(width, height, edge, ambient, { renderToTexture, textures, sampleOnly = false } = {}) {
         this.ambient = ambient;
         this.scale = Math.min(1, edge / Math.max(width, height));
         this.canvas.width = Math.max(1, Math.ceil(width * this.scale));
         this.canvas.height = Math.max(1, Math.ceil(height * this.scale));
-        this.context = this.canvas.getContext('2d', { willReadFrequently: true });
-        this.texture = Texture.from(this.canvas);
+        this.#sampleOnly = sampleOnly;
+        this.#renderToTexture = !sampleOnly && renderToTexture;
+        if (sampleOnly) {
+            this.texture = Texture.EMPTY;
+        }
+        else if (renderToTexture) {
+            this.texture = RenderTexture.create({ width: this.canvas.width, height: this.canvas.height });
+            this.#scene = new Container();
+            this.#scene.scale.set(this.scale);
+            this.#textures = textures ?? new LightTexturePool();
+            this.#ownsTextures = !textures;
+        }
+        else {
+            this.texture = Texture.from(this.canvas, true);
+        }
     }
-    update(stamps, readPixels) {
-        const ctx = this.context;
+    #mount(stamps, now) {
+        if (stamps === this.#stamps) return;
+        for (const node of this.#scene.removeChildren()) node.destroy({ children: true });
+        this.#lights = [];
+        for (const stamp of stamps) {
+            const group = new Container();
+            const mask = new Graphics().poly(stamp.polygon.flatMap(p => [p.x, p.y])).fill('white');
+            const light = new AnimatedLight(stamp.light, stamp.radius, this.#textures, now);
+            light.node.mask = mask;
+            group.addChild(mask, light.node);
+            this.#scene.addChild(group);
+            if (light.animated) this.#lights.push(light);
+        }
+        this.#stamps = stamps;
+    }
+    #paint(stamps, now) {
+        const ctx = this.context ??= this.canvas.getContext('2d', { willReadFrequently: true });
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.globalCompositeOperation = 'source-over';
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         ctx.scale(this.scale, this.scale);
-        for (const s of stamps) {
+        for (const stamp of stamps) {
             ctx.save();
             ctx.beginPath();
-            s.polygon.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+            stamp.polygon.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
             ctx.closePath();
             ctx.clip();
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.drawImage(s.canvas, s.x - s.radius, s.y - s.radius, s.radius * 2, s.radius * 2);
+            // Draw straight into the bounded atlas; never rasterize a 256px canvas per torch.
+            if (stamp.light) paintAnimatedLight(ctx, stamp.light, stamp.x, stamp.y, stamp.radius, now);
+            else {
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.drawImage(stamp.canvas, stamp.x - stamp.radius, stamp.y - stamp.radius, stamp.radius * 2, stamp.radius * 2);
+            }
             ctx.restore();
         }
-        this.#pixels = readPixels ? ctx.getImageData(0, 0, this.canvas.width, this.canvas.height).data : undefined;
-        this.texture.source.update();
+    }
+    update(stamps, readPixels, now = performance.now()) {
+        if (this.#renderToTexture) {
+            this.#mount(stamps, now);
+            for (const light of this.#lights) light.update(now);
+            this.#renderToTexture(this.#scene, this.texture);
+        }
+        else if (!this.#sampleOnly) {
+            this.#paint(stamps, now);
+            this.texture.source.update();
+        }
+        // Sampling is for particle tint only; shaders always see the current GPU frame.
+        // Keep readback independent of light/particle frame rates and omit it when unused.
+        if (readPixels && (now - this.#lastRead >= 125 || !this.#pixels)) {
+            if (this.#renderToTexture || this.#sampleOnly) this.#paint(stamps, now);
+            this.#pixels = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height).data;
+            this.#lastRead = now;
+        }
+        else if (!readPixels) this.#pixels = undefined;
     }
     tint(color, x, y, response) {
         const base = parseInt(color.slice(1), 16), pixels = this.#pixels;
@@ -48,5 +108,13 @@ export class SceneLightMap {
         }
         return output;
     }
-    dispose() { this.#pixels = undefined; this.texture.destroy(true); this.canvas.width = this.canvas.height = 1; }
+    dispose() {
+        this.#pixels = undefined;
+        this.#lights = [];
+        this.#stamps = undefined;
+        this.#scene?.destroy({ children: true });
+        if (this.#ownsTextures) this.#textures.dispose();
+        if (this.texture !== Texture.EMPTY) this.texture.destroy(true);
+        this.canvas.width = this.canvas.height = 1;
+    }
 }

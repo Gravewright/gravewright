@@ -1,0 +1,1 @@
+import{a as i,c as l}from"./chunk-HEORHLRN.js";import"./chunk-OOJM4CTU.js";var e=[],r;self.onmessage=({data:s})=>{if(s.type==="walls")e=s.walls,r=i(e);else if(s.type==="vision")try{let o=l(s.sources,s.radius,e,r);self.postMessage({id:s.id,polygons:o},o.map(t=>t.buffer))}catch{self.postMessage({id:s.id,error:!0})}};

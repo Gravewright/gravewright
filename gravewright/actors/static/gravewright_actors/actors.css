@@ -1,6 +1,9 @@
 
 .actor-directory { display: grid; gap: var(--space-1); }
-.actor-directory__actions .actor-directory__upload { grid-column: 1 / -1; min-height: var(--control-height-sm); }
+.actor-directory__secondary-actions { display: flex; justify-content: flex-end; }
+.actor-directory__secondary-actions button { display: inline-flex; min-height: var(--size-28); align-items: center; justify-content: center; gap: var(--space-1); padding: var(--space-half) var(--space-1); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-muted); font: inherit; font-size: var(--text-sm); cursor: pointer; }
+.actor-directory__secondary-actions button:hover { background: var(--surface-field); color: var(--text); }
+.actor-directory__secondary-actions svg { width: var(--size-15); height: var(--size-15); flex-shrink: 0; }
 .actor-directory .game-directory__search { display: flex; min-height: var(--control-height-sm); align-items: center; gap: var(--space-2); padding: var(--space-0) var(--space-2); border: var(--border-hairline); border-radius: var(--radius-sm); background: var(--surface-field); color: var(--text-faint); }
 .actor-directory .game-directory__search input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-size: var(--text-sm); }
 .actor-directory__actor img { width: var(--size-28); height: var(--size-28); object-fit: cover; border-radius: var(--radius-sm); }

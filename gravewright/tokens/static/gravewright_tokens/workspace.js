@@ -729,6 +729,7 @@ export function createTokens(surface, board, map, gm, initial) {
           (preview ? v.selected.includes(t.id) : !gm && t.canControl),
       )
       .map((t) => ({
+        sourceId: t.id,
         x: g.x + (t.gridX + t.cells / 2) * g.cell,
         y: g.y + (t.gridY + (t.heightCells ?? t.cells) / 2) * g.cell,
         radius: (t.visionRange || 0) * g.cell,
