@@ -1,5 +1,5 @@
 import {openFormModal,modalText} from '/static/gravewright_table/form-modal.js';
-import {sceneObjects,hit,corners,centerOf,transformedPoint} from '../model/objects.js';
+import {sceneObjects,hit,corners,centerOf,rotationCenter,transformedPoint} from '../model/objects.js';
 import {applySelection,transformMeasures} from '../model/selection-commands.js';
 import {effects,translatedCopies} from '../../effects/model/effects.js';
 import {resizeImage} from '../../images/model/image-transform.js';
@@ -85,7 +85,7 @@ export function createSelection(surface,board,map,gm,api,stateAPI,measurements){
   }catch(error){if(!signal.aborted){notice.textContent=error.message;notice.hidden=false;}}
   finally{busy=false;preview=undefined;if(!signal.aborted)publish();}
  }
- function rotate(angle,defer=false){if(busy||drag||!chosen().length)return;preview={...(preview||{center:centerOf(chosen()),dx:0,dy:0,angle:0}),angle:(preview?.angle||0)+angle};publish();clearTimeout(timer);if(defer)timer=setTimeout(()=>void execute('transform'),180);else void execute('transform');}
+ function rotate(angle,defer=false){if(busy||drag||!chosen().length)return;preview={...(preview||{center:rotationCenter(chosen()),dx:0,dy:0,angle:0}),angle:(preview?.angle||0)+angle};publish();clearTimeout(timer);if(defer)timer=setTimeout(()=>void execute('transform'),180);else void execute('transform');}
  function copy(){clipboard=[...effects(state),...effects(state,'lighting')].filter(o=>selected.includes(o.key));menu?.remove();}
  async function paste(){if(!clipboard.length||busy)return;busy=true;try{for(const area of ['effects','light-selection']){const rows=translatedCopies(clipboard,lastPoint).filter(o=>(o.kind==='light')===(area==='light-selection'));if(rows.length)await api.command(area,'paste',{effects:rows});}await api.read();}catch(error){notice.textContent=error.message;notice.hidden=false;}finally{busy=false;}}
  function confirmDelete(){

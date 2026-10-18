@@ -583,7 +583,7 @@ def clean_document(raw, who):
                 row[key] = max(0, min(doc["columns"] if key[0] == "x" else doc["rows"], row[key]))
         else:
             row = base(item, "door", ("id", "assetId", "x1", "y1", "x2", "y2", "thickness", "state",
-                                      *(("blueprint", "interactionEnabled", *WALL_PROPERTY_FIELDS) if expanded else ())))
+                                      *(("blueprint", "interactionEnabled", "rotationAnchor", *WALL_PROPERTY_FIELDS) if expanded else ())))
             for key in ("x1", "x2", "y1", "y2"):
                 row[key] = number(item.get(key), 0, doc["columns"] if key[0] == "x" else doc["rows"], f"door {key}")
             row["thickness"] = number(item.get("thickness"), LIMITS["minWallThickness"], LIMITS["maxWallThickness"], "door thickness")
@@ -594,6 +594,8 @@ def clean_document(raw, who):
             raise services.MapError("Invalid door state.")
         if "interactionEnabled" in item:
             row["interactionEnabled"] = objects.boolean(item["interactionEnabled"])
+        if "rotationAnchor" in item:
+            row["rotationAnchor"] = objects.choice(item["rotationAnchor"], {"start", "center", "end"})
         clean_wall_properties(item, row)
         if any(collinear_overlap(row, other) is not None for other in doc["doors"]):
             raise services.MapError("Doors cannot overlap.")
@@ -883,6 +885,8 @@ def native_objects(doc, scene, *, dynamic_planes=(), stored=None):
                **{key: span["wall"][key] for key in WALL_PROPERTY_FIELDS if key in span["wall"]}}
         if door and door["assetId"]:
             raw.update(asset_id=door["assetId"], thickness=span["wall"]["thickness"] * cell)
+        if door and "rotationAnchor" in door:
+            raw["rotationAnchor"] = door["rotationAnchor"]
         data = objects.wall(raw, campaign_id=scene.campaign_id)
         if door and "interactionEnabled" in door:
             data["interactionEnabled"] = door["interactionEnabled"]

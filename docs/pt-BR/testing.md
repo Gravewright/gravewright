@@ -90,6 +90,12 @@ de imagens, reutilização de recursos, isolamento de mesas e limpeza após falh
 
 ## Cenários no navegador
 
+`uv run --locked python tests/e2e/door_rotation_anchor.py` verifica a escolha do
+pivô da porta, rotação, desfazer, imagem ao abrir/fechar, editor compartilhado de
+paredes e configurações salvas em inglês, português e espanhol, em larguras de
+desktop e celular. Usa uma campanha isolada e aceita `--output` e
+`--browser-executable`.
+
 ```bash
 uv run --locked playwright install chromium
 uv run --locked python tests/e2e/authentication.py

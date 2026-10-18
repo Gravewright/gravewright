@@ -18,6 +18,19 @@ salvamento automático, importação de mapas prontos, importação/exportação
 Universal VTT, Objetos vazios sem imagem e atualização da mesma cena do jogo.
 Este guia registra o comportamento entregue e seus limites.
 
+## Rotação de portas
+
+Selecione uma porta e escolha **Ponto de ancoragem da rotação** nas propriedades
+ou no editor do jogo: **Início da porta**, **Centro da porta** ou **Fim da porta**.
+O marcador da porta selecionada mostra o pivô. **Girar** mantém esse ponto fixo;
+portas existentes usam o centro por padrão. Com uma âncora explícita, abrir gira
+a imagem em 90° ao redor desse ponto e fechar restaura a imagem. **Padrão (centro)**
+mantém o comportamento original de ocultar a imagem ao abrir. Aparências ocultas
+explícitas do Blueprint continuam ocultas. Vários objetos giram em torno do
+centro da seleção. A escolha acompanha desfazer/refazer, salvamento automático,
+duplicação e atualizações da cena gerada, e também controla a rotação de uma
+porta individual com a ferramenta Selecionar do jogo.
+
 ## Salvamento automático
 
 As edições do projeto são salvas automaticamente após uma breve pausa: nome do

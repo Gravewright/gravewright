@@ -10,6 +10,8 @@
       <label class="wall-editor__check" data-secret><input name="discovered" type="checkbox" aria-label="Revealed to players">Revealed to players</label>
       <label class="wall-editor__check" data-player-interaction><input name="interactionEnabled" type="checkbox" aria-label="Player interaction">Player interaction</label>
       <small data-player-interaction>The GM can always operate and edit this element.</small>
+      <label data-player-interaction>Rotation anchor point<select name="rotationAnchor" aria-label="Rotation anchor point"><option value="">Default (center)</option><option value="start">Start of door</option><option value="center">Center of door</option><option value="end">End of door</option></select></label>
+      <small data-player-interaction>An anchor rotates the door image 90° when opened.</small>
       <p role="alert" hidden></p>
       <footer><button type="button" data-native-editor-cancel hidden>Cancel</button><button type="submit" data-native-editor-save>{{ icon('FloppyDisk') }}Save</button></footer>
     </fieldset></form>

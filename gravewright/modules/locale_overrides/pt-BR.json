@@ -1,4 +1,10 @@
 {
+  "Rotation anchor point": "Ponto de ancoragem da rotação",
+  "Default (center)": "Padrão (centro)",
+  "An anchor rotates the door image 90° when opened.": "Uma âncora gira a imagem da porta em 90° ao abrir.",
+  "Start of door": "Início da porta",
+  "Center of door": "Centro da porta",
+  "End of door": "Fim da porta",
   "Unknown shader preset.": "Predefinição de shader desconhecida.",
   "Unknown light preset.": "Predefinição de luz desconhecida.",
   "Unknown particle preset.": "Predefinição de partículas desconhecida.",

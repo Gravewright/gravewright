@@ -28,3 +28,13 @@ assert.equal(doorArt({ ...wall, blueprintAppearance: { visible: 'true', assetId:
 assert.equal(doorArt({ ...wall, blueprintAppearance: null }), undefined);
 assert.equal(doorArt({ ...wall, blueprintAppearance: {}, blueprint: { assetId: alternate } }), undefined);
 assert.equal(doorArt({ ...wall, kind: 'wall', blueprintAppearance: { visible: true, assetId: alternate } }), undefined);
+
+for (const [rotationAnchor, position] of [['start', [14, 28]], ['center', [49, 63]], ['end', [84, 98]]]) {
+    const data = { ...wall, rotationAnchor, door_state: 'open' }, before = structuredClone(data), opened = doorArt(data);
+    assert.deepEqual([opened.x, opened.y, opened.angle], [...position, 180]);
+    assert.deepEqual(data, before, 'opening rotates only the image, never the collision endpoints');
+    assert.deepEqual(doorArt({ ...data, door_state: 'closed' }), art);
+    assert.deepEqual(doorArt({ ...data, door_state: 'locked' }), art);
+    assert.equal(doorArt({ ...data, blueprintAppearance: { visible: false, assetId: alternate } }), undefined);
+    assert.equal(doorArt({ ...data, blueprintAppearance: { visible: true, assetId: alternate } }).angle, 180);
+}

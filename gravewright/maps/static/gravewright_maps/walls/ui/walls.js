@@ -71,7 +71,7 @@ var wallPresets = [
   }, presentation: "invisible", behavior: { movement: "block", vision: "pass", light: "pass", sound: "pass" } }
 ];
 function wallPayload(w) {
-  return { kind: w.kind, x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, presentation: w.presentation ?? "normal", behavior: { movement: w.movement_behavior ?? "block", vision: w.vision_behavior ?? "block", light: w.light_behavior ?? "block", sound: w.sound_behavior ?? "block" }, vertical: { bottom: w.vertical_bottom ?? null, top: w.vertical_top ?? null }, ...w.asset_id ? { asset_id: w.asset_id, thickness: w.thickness } : {}, ...w.blueprint ? { blueprint: structuredClone(w.blueprint), ...w.thickness !== void 0 ? { thickness: w.thickness } : {} } : {} };
+  return { kind: w.kind, x1: w.x1, y1: w.y1, x2: w.x2, y2: w.y2, presentation: w.presentation ?? "normal", behavior: { movement: w.movement_behavior ?? "block", vision: w.vision_behavior ?? "block", light: w.light_behavior ?? "block", sound: w.sound_behavior ?? "block" }, vertical: { bottom: w.vertical_bottom ?? null, top: w.vertical_top ?? null }, ...w.kind === "door" && Object.hasOwn(w, "rotationAnchor") ? { rotationAnchor: w.rotationAnchor } : {}, ...w.asset_id ? { asset_id: w.asset_id, thickness: w.thickness } : {}, ...w.blueprint ? { blueprint: structuredClone(w.blueprint), ...w.thickness !== void 0 ? { thickness: w.thickness } : {} } : {} };
 }
 function project(p, w) {
   const dx = w.x2 - w.x1, dy = w.y2 - w.y1, t = Math.max(0, Math.min(1, ((p.x - w.x1) * dx + (p.y - w.y1) * dy) / (dx * dx + dy * dy || 1)));

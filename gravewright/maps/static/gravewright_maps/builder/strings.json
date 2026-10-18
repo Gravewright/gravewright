@@ -1,4 +1,10 @@
 [
+  "Rotation anchor point",
+  "Default (center)",
+  "An anchor rotates the door image 90° when opened.",
+  "Start of door",
+  "Center of door",
+  "End of door",
   "Project actions",
   "New",
   "Open",

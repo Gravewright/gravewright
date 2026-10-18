@@ -1,4 +1,10 @@
 {
+  "Rotation anchor point": "Punto de anclaje de rotación",
+  "Default (center)": "Predeterminado (centro)",
+  "An anchor rotates the door image 90° when opened.": "Un anclaje gira la imagen de la puerta 90° al abrirla.",
+  "Start of door": "Inicio de la puerta",
+  "Center of door": "Centro de la puerta",
+  "End of door": "Final de la puerta",
   "No matching presets.": "No hay ajustes predefinidos coincidentes.",
   "Click to place a particle emitter.": "Haz clic para colocar un emisor de partículas.",
   "Click to place a shader effect.": "Haz clic para colocar un efecto de shader.",

@@ -617,5 +617,5 @@ export function blueprintAppearance(element, kind = element?.torch ? 'torch' : e
     const state = element.blueprint?.states?.[current];
     if (state?.appearance === 'hidden') return { visible: false, assetId: null };
     if (state?.appearance === 'asset') return { visible: true, assetId: state.assetId };
-    return { visible: kind !== 'door' || current !== 'open', assetId: element.assetId };
+    return { visible: kind !== 'door' || current !== 'open' || element.rotationAnchor !== undefined, assetId: element.assetId };
 }

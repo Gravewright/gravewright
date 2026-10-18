@@ -1,6 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sceneObjects, hit } from './objects.js';
+import { sceneObjects, hit, rotationCenter, centerOf, transformedPoint } from './objects.js';
+
+test('single-door rotation uses its anchor while mixed selections retain their shared center', () => {
+    const row = { kind: 'wall', x: 15, y: 10, width: 10, height: 4, rotation: 0,
+        data: { kind: 'door', x1: 10, y1: 10, x2: 20, y2: 10 } };
+    for (const [anchor, x] of [['start', 10], ['center', 15], ['end', 20]]) {
+        const door = { ...row, data: { ...row.data, rotationAnchor: anchor } }, pivot = rotationCenter([door]);
+        assert.deepEqual(pivot, { x, y: 10 });
+        assert.deepEqual(transformedPoint(pivot, pivot, 0, 0, 90), pivot);
+        assert.deepEqual(rotationCenter([door, row]), centerOf([door, row]));
+    }
+    assert.deepEqual(rotationCenter([row]), centerOf([row]));
+});
 
 test('a composed image is one mixed selection object while unrelated native effects remain selectable', () => {
     const state = { cards: [], walls: [], lights: [{ id: 'owned', x: 10, y: 20 }, { id: 'free', x: 50, y: 60 }],

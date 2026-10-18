@@ -23,7 +23,7 @@ export function projectTestDocument(source, result) {
         if (['doors', 'decorations'].includes(kind)) {
             const config = data.sprite || item.blueprint?.states?.[item.torch?.state || item.lever?.state || item.state] || {};
             item.testAppearance = {
-                visible: !item.testHidden && config.appearance !== 'hidden' && (kind !== 'doors' || item.state !== 'open' || config.appearance === 'asset'),
+                visible: !item.testHidden && config.appearance !== 'hidden' && (kind !== 'doors' || item.state !== 'open' || config.appearance === 'asset' || item.rotationAnchor !== undefined),
                 assetId: config.appearance === 'asset' ? config.assetId : data.asset_id || item.assetId,
             };
         }

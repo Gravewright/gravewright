@@ -16,6 +16,7 @@ export function createWallEditor(wall, { onSave, onClose, transactional = false,
     fields.bottom.value = data.vertical.bottom ?? 0; fields.top.value = data.vertical.top ?? 3;
     fields.discovered.checked = Boolean(wall.discovered);
     fields.interactionEnabled.checked = wall.interactionEnabled !== false;
+    fields.rotationAnchor.value = wall.rotationAnchor ?? '';
     for (const control of form.querySelectorAll('[data-player-interaction]')) control.hidden = wall.kind !== 'door';
     const cancel = editor.querySelector('[data-native-editor-cancel]'); cancel.hidden = !transactional;
     const preset = () => wallPresets.find(value => value.id === fields.preset.value) || wallPresets[0];
@@ -48,6 +49,7 @@ export function createWallEditor(wall, { onSave, onClose, transactional = false,
             presentation: preset().presentation, vertical: { bottom: fields.finite.checked ? Number(fields.bottom.value) : null,
                 top: fields.finite.checked ? Number(fields.top.value) : null }, discovered: fields.discovered.checked };
         if (wall.kind === 'door' && ('interactionEnabled' in wall || !fields.interactionEnabled.checked)) patch.interactionEnabled = fields.interactionEnabled.checked;
+        if (wall.kind === 'door' && ('rotationAnchor' in wall || fields.rotationAnchor.value)) patch.rotationAnchor = fields.rotationAnchor.value || null;
         if (transactional) setState({ busy: true });
         try {
             Promise.resolve(onSave?.(patch)).catch(error => setState({ error: error.message || t('Could not save the change.') }))

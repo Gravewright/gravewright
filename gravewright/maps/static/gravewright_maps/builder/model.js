@@ -132,6 +132,9 @@ export function normalizeDocument(document) {
     for (const kind of ['doors', 'decorations']) for (const item of result[kind] || []) {
         if (Object.hasOwn(item, 'interactionEnabled') && typeof item.interactionEnabled !== 'boolean') throw new TypeError('Invalid element interaction setting.');
     }
+    for (const item of result.doors || []) if (Object.hasOwn(item, 'rotationAnchor')
+        && (result.schemaVersion !== 3 || !['start', 'center', 'end'].includes(item.rotationAnchor)))
+        throw new TypeError('Invalid door rotation anchor.');
     for (const kind of ['floors', 'walls']) for (const item of result[kind] || []) {
         if (Object.hasOwn(item, 'dynamic') && (result.schemaVersion !== 3 || typeof item.dynamic !== 'boolean'
             || item.dynamic && item.brush?.operation === 'erase')) throw new TypeError('Invalid dynamic surface.');
@@ -873,6 +876,17 @@ export function translateSelection(document, refs, dx, dy, { snapStep = 0 } = {}
     if (!validGeometry(next, candidates)) return false;
     applyItems(document, candidates); return true;
 }
+export function doorRotationPoint(door) {
+    const offset = door.rotationAnchor === 'start' ? 0 : door.rotationAnchor === 'end' ? 1 : .5;
+    return { x: door.x1 + (door.x2 - door.x1) * offset, y: door.y1 + (door.y2 - door.y1) * offset };
+}
+export function doorDisplaySegment(door) {
+    const segment = doorSegment(null, door);
+    if (door.state !== 'open' || !['start', 'center', 'end'].includes(door.rotationAnchor)) return segment;
+    const pivot = doorRotationPoint(door), a = rotationPoint({ x: door.x1, y: door.y1 }, pivot, 90),
+        b = rotationPoint({ x: door.x2, y: door.y2 }, pivot, 90);
+    return { ...segment, x1: a.x, y1: a.y, x2: b.x, y2: b.y, angle: segment.angle + 90 };
+}
 export function rotateSelection(document, refs, angle = 90) {
     const items = mutableSelection(document, refs), bounds = itemsBounds(items, document);
     if (!items.length || !bounds || !Number.isFinite(angle) || angle % 360 === 0
@@ -884,7 +898,8 @@ export function rotateSelection(document, refs, angle = 90) {
     });
     const parent = roots.length === 1 && roots[0].kind === 'decorations'
         ? document.decorations.find(item => item.id === roots[0].id && item.torch) : null;
-    const center = parent ? { x: parent.x + parent.width / 2, y: parent.y + parent.height / 2 }
+    const center = items.length === 1 && items[0].kind === 'doors' ? doorRotationPoint(items[0].item)
+        : parent ? { x: parent.x + parent.width / 2, y: parent.y + parent.height / 2 }
         : { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
     const next = clone(document), candidates = selectedItems(next, refs);
     const parents = new Set(candidates.filter(({ kind }) => kind === 'decorations').map(({ item }) => item.id));

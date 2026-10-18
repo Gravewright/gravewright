@@ -24,3 +24,5 @@ assert.equal(blueprint.graphs['enter:closed'].nodes[0].id, 'event', 'nested grap
 const alternateOnly = wallPayload({ ...w, kind: 'door', blueprint, thickness: 42 });
 assert.equal(alternateOnly.thickness, 42, 'blueprint-only state images preserve the authored door thickness');
 assert.equal(Object.hasOwn(alternateOnly, 'asset_id'), false);
+assert.equal(wallPayload({ ...w, kind: 'door', rotationAnchor: 'end' }).rotationAnchor, 'end');
+assert.equal(Object.hasOwn(wallPayload(w), 'rotationAnchor'), false);

@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultBlueprint, eventGraph, connectNodes, upgradeBlueprint, simulateGraph } from './blueprint-model.js';
+import { defaultBlueprint, eventGraph, connectNodes, upgradeBlueprint, simulateGraph, blueprintAppearance } from './blueprint-model.js';
 import { detachDocumentAsset } from './asset-removal.js';
 import { clone, newDocument, normalizeDocument, defaultLayers, nearestWall, doorFits, doorSegment, wallSegments,
     translateObject, translateSelection, rotateSelection, duplicateSelection, selectionBounds, objectsInRectangle,
     removeObject, fitsBounds, history, familyAssetIds, sampleAssetId, floorBrushCells, floorRectangleCells,
     floorCircleCells, floorPolygonCells, paintFloorCells, eraseFloorCells, sampleFloor, floodFloorCells, snapWallSegment,
     documentEditingMode, setEditingMode, normalizeFloorPaint, applyFloorContours, fillFloorShape, floorContainsPoint, applyTerrainStroke,
-    readyMapGeometry, setBackgroundImage, createEmptyObject } from './model.js';
+    readyMapGeometry, setBackgroundImage, createEmptyObject, doorDisplaySegment, doorRotationPoint } from './model.js';
 import { terrainBrushAlpha } from './terrain-brush.js';
 
 function documentWithLayer(name) {
@@ -21,6 +21,35 @@ const floorBox = (x, y, width, height) => [[x, y], [x + width, y], [x + width, y
 const floorRow = (document, id, assetId, x, y, width = 1, height = 1, extra = {}) =>
     ({ id, layerId: document.layers[0].id, assetId, x, y, width, height, rotation: 0, ...extra });
 const unexpectedChoice = () => { throw new Error('An ignored repaint must not allocate or reroll.'); };
+test('door pivots keep the chosen point fixed for editing and open artwork without moving collision', () => {
+    const expected = { start: [5, 2, 5, 4], center: [6, 1, 6, 3], end: [7, 0, 7, 2] };
+    for (const [anchor, coordinates] of Object.entries(expected)) {
+        const document = documentWithLayer('Door pivots'), item = { ...door(), layerId: document.layers[0].id, rotationAnchor: anchor };
+        document.doors.push(item);
+        const before = clone(item), pivot = doorRotationPoint(item), opened = doorDisplaySegment({ ...item, state: 'open' });
+        assert.deepEqual([opened.x1, opened.y1, opened.x2, opened.y2], coordinates);
+        assert.deepEqual(item, before, 'opening artwork must leave the wall opening in place');
+        assert.equal(rotateSelection(document, [{ kind: 'doors', id: item.id }], 90), true);
+        assert.deepEqual([item.x1, item.y1, item.x2, item.y2], coordinates);
+        assert.deepEqual(doorRotationPoint(item), pivot);
+        const refs = duplicateSelection(document, [{ kind: 'doors', id: item.id }]);
+        assert.equal(document.doors.find(row => row.id === refs[0].id).rotationAnchor, anchor);
+        assert.deepEqual(normalizeDocument(document), document);
+    }
+    const legacy = door();
+    assert.deepEqual(doorDisplaySegment({ ...legacy, state: 'open' }), doorSegment(null, legacy));
+    assert.equal(blueprintAppearance({ ...legacy, state: 'open', rotationAnchor: 'start' }).visible, true);
+    assert.equal(blueprintAppearance({ ...legacy, state: 'open' }).visible, false);
+    const document = documentWithLayer('Boundary');
+    document.doors.push({ ...door(), x1: 0, y1: 0, x2: 2, y2: 0, layerId: document.layers[0].id, rotationAnchor: 'end' });
+    const before = clone(document);
+    assert.equal(rotateSelection(document, [{ kind: 'doors', id: 'door' }]), false);
+    assert.deepEqual(document, before);
+    for (const value of [null, false, 0, 'left', {}, []]) {
+        const invalid = clone(before); invalid.doors[0].rotationAnchor = value;
+        assert.throws(() => normalizeDocument(invalid), /rotation anchor/);
+    }
+});
 const mapImage = '00000000-0000-4000-8000-000000000021';
 
 test('element names survive document loading and legacy door geometry promotion without changing identity', () => {

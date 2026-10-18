@@ -41,6 +41,32 @@ class BuilderDoorArtTests(TransactionTestCase):
         return SceneObject.objects.create(scene=self.scene, kind="walls",
             data=objects.wall({**self.payload, **patch}, campaign_id=self.campaign.pk))
 
+    def test_anchor_validation_preservation_and_explicit_removal(self):
+        for anchor in ("start", "center", "end"):
+            data = objects.wall({**self.payload, "rotationAnchor": anchor})
+            self.assertEqual(data["rotationAnchor"], anchor)
+            self.assertEqual(objects.wall({"door_state": "open"}, data)["rotationAnchor"], anchor)
+            self.assertNotIn("rotationAnchor", objects.wall({"rotationAnchor": None}, data))
+        self.assertNotIn("rotationAnchor", objects.wall(self.payload))
+        for invalid in (True, 0, "left", {}, []):
+            with self.subTest(anchor=invalid), self.assertRaises(services.MapError):
+                objects.wall({**self.payload, "rotationAnchor": invalid})
+
+    def test_open_anchored_art_remains_public_but_explicit_hidden_appearance_stays_private(self):
+        from gravewright.maps.blueprints import default_blueprint
+        from gravewright.maps.blueprint_runtime import appearance
+        door = self.create_door(rotationAnchor="start", door_state="open", blueprint=default_blueprint())
+        self.assertTrue(appearance(door.data)["visible"])
+        self.client.force_login(self.player)
+        self.assertEqual(self.asset_response(), 200)
+        public = objects.layer_state(self.scene, self.viewer)["walls"][0]
+        self.assertEqual(public["rotationAnchor"], "start")
+        self.assertNotIn("blueprint", public)
+        door.data["blueprint"]["states"]["open"] = {"appearance": "hidden"}
+        door.save(update_fields=["data"])
+        self.assertFalse(appearance(door.data)["visible"])
+        self.assertEqual(self.asset_response(), 404)
+
     def asset_response(self):
         response = self.client.get(f"/game/map-assets/{self.asset.pk}")
         response.close()

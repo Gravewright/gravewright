@@ -124,7 +124,7 @@ def appearance(data):
     mode = config.get("appearance", "inherit")
     if mode not in ("hidden", "inherit", "asset"):
         return {"visible": False, "assetId": None}
-    if mode == "hidden" or mode == "inherit" and state == "open":
+    if mode == "hidden" or mode == "inherit" and state == "open" and "rotationAnchor" not in data:
         return {"visible": False, "assetId": None}
     asset_id = config.get("assetId") if mode == "asset" else data.get("asset_id")
     if asset_id is not None:

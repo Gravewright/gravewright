@@ -90,6 +90,11 @@ asset reuse, table isolation and failed-upload cleanup.
 
 ## Browser scenarios
 
+`uv run --locked python tests/e2e/door_rotation_anchor.py` checks door pivot
+selection, rotation, Undo, opening/closing artwork, the shared wall editor and
+saved settings in English, Portuguese and Spanish at desktop and mobile widths.
+It uses an isolated campaign and accepts `--output` and `--browser-executable`.
+
 ```bash
 uv run --locked playwright install chromium
 uv run --locked python tests/e2e/authentication.py

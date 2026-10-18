@@ -46,6 +46,8 @@ def wall(raw, previous=None, *, campaign_id=None, scene_id=None):
     data["door_state"] = choice(
         p.get("door_state", "closed"), {"open", "closed", "locked"}
     )
+    if data["kind"] == "door" and p.get("rotationAnchor") is not None:
+        data["rotationAnchor"] = choice(p["rotationAnchor"], {"start", "center", "end"})
     data["discovered"] = boolean(p.get("discovered", False))
     behavior = p.get("behavior", {})
     if not isinstance(behavior, dict):

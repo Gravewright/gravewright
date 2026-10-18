@@ -38,6 +38,36 @@ class BuilderNativeWallPropertyTests(TestCase):
         self.assertEqual(response.status_code, 200, response.content)
         self.scene = Scene.objects.get(pk=response.json()["scene"]["id"])
 
+    def test_door_anchor_roundtrips_generates_and_updates_without_resetting_open_state(self):
+        self.doc["doors"][0]["rotationAnchor"] = "start"
+        self.generated()
+        self.assertEqual(self.client.get(self.url).json()["project"]["document"], self.doc)
+        door = self.scene.elements.get(kind="walls", data__kind="door")
+        self.assertEqual(door.data["rotationAnchor"], "start")
+        door.data["door_state"] = "open"
+        door.save(update_fields=["data"])
+        self.doc["doors"][0]["rotationAnchor"] = "end"
+        self.assertEqual(self.save(expected_version=1).status_code, 200)
+        self.update()
+        door.refresh_from_db()
+        self.assertEqual((door.data["rotationAnchor"], door.data["door_state"]), ("end", "open"))
+        self.doc["doors"][0].pop("rotationAnchor")
+        self.assertEqual(self.save(expected_version=2).status_code, 200)
+        self.update()
+        door.refresh_from_db()
+        self.assertNotIn("rotationAnchor", door.data)
+
+    def test_invalid_door_anchors_do_not_replace_the_project(self):
+        self.assertEqual(self.save().status_code, 200)
+        for anchor in (None, True, 0, "left", {}, []):
+            candidate = deepcopy(self.doc)
+            candidate["doors"][0]["rotationAnchor"] = anchor
+            with self.subTest(anchor=anchor):
+                response = self.save(expected_version=1, document=candidate)
+                self.assertEqual(response.status_code, 400, response.content)
+                source = MapBuilderProject.objects.get(pk=self.project_id)
+                self.assertEqual((source.version, source.document), (1, self.doc))
+
     def update(self):
         source = MapBuilderProject.objects.get(pk=self.project_id)
         self.scene.refresh_from_db()

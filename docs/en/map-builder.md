@@ -16,6 +16,18 @@ lights/effects and editors, Smart Object behaviors, automatic saving, finished-m
 import, Universal VTT import/export, image-free Empty Objects and updating the linked
 game scene in place. This guide records the delivered behavior and its limits.
 
+## Door rotation
+
+Select one door and choose **Rotation anchor point** in its properties or game
+editor: **Start of door**, **Center of door** or **End of door**. The marker on the
+selected door shows its pivot. **Rotate** keeps that point fixed; existing doors
+default to the center. With an explicit anchor, opening rotates the image 90°
+around that point and closing restores it. **Default (center)** retains the
+original behavior of hiding the image when open. Explicit Blueprint hidden
+appearances remain hidden. Multiple objects rotate around their selection's center.
+The choice follows Undo/Redo, automatic saving, duplication and generated scene
+updates, and also controls rotation of a single door with the game's Select tool.
+
 ## Automatic saving
 
 Project edits save automatically after a short pause: map name, completed brush

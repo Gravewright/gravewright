@@ -26,7 +26,7 @@ import { mountNativeEffects } from './native-effects.js';
 import { isNativeKind, nativeFactory, nativeCatalog, presetName, renderNativeLibrary, renderNativeProperties } from './native-controls.js';
 import { layerContents, layerSummaries, mergeLayerDown, moveSelectionToLayer, reorderLayer, duplicateLayer } from './layer-model.js';
 import { clone, clamp, round, length, newDocument, normalizeDocument, nearestWall, doorFits, doorSegment, wallSegments, removeObject, fitsBounds, history,
-    objectKinds, translateSelection, rotateSelection, duplicateSelection, updateTorchGeometry, objectsInRectangle, familyAssetIds, sampleAssetId, snapWallSegment, floorBrushCells, sampleFloor,
+    objectKinds, translateSelection, rotateSelection, doorRotationPoint, doorDisplaySegment, duplicateSelection, updateTorchGeometry, objectsInRectangle, familyAssetIds, sampleAssetId, snapWallSegment, floorBrushCells, sampleFloor,
     floorShapeRings, floorFreeContours, floorContainsPoint, documentEditingMode, setEditingMode, setDynamicSurface,
     setBackgroundImage } from './model.js';
 
@@ -1535,7 +1535,7 @@ function mountWorkspace(root) {
             group.append(strip);
             return group;
         }
-        const segment = doorSegment(state.document, item); if (!segment) return svg('g');
+        const segment = doorDisplaySegment(item); if (!segment) return svg('g');
         const group = svg('g', attrs);
         const appearance = item.testAppearance || blueprintAppearance(item), doorAsset = assetById(appearance.assetId);
         if (!appearance.visible) {
@@ -1667,6 +1667,12 @@ function mountWorkspace(root) {
             const style = { fill: 'none', stroke: '#e4bf76', 'stroke-width': 2, 'stroke-dasharray': '5 3', 'vector-effect': 'non-scaling-stroke' };
             if (ref.kind === 'doors' || ref.kind === 'walls') {
                 container.append(svg('line', { x1: item.x1, y1: item.y1, x2: item.x2, y2: item.y2, ...style }));
+                if (ref.kind === 'doors' && selectionRefs().length === 1) {
+                    const anchor = doorRotationPoint(item);
+                    container.append(svg('circle', { cx: anchor.x, cy: anchor.y, r: 5 / camera.scale,
+                        fill: '#e4bf76', stroke: '#253038', 'stroke-width': 1, 'vector-effect': 'non-scaling-stroke',
+                        'data-builder-door-anchor': item.rotationAnchor ?? 'center' }));
+                }
             } else if (isNativeKind(ref.kind)) {
                 container.append(svg('circle', { cx: item.x, cy: item.y, r: .22, ...style }));
             } else {
@@ -1820,6 +1826,17 @@ function mountWorkspace(root) {
             }, { signal });
         }
         if (kind === 'doors') {
+            const anchorLabel = node('label', {}, t('Rotation anchor point'));
+            const anchorSelect = node('select', { 'data-builder-property': 'rotationAnchor' });
+            for (const [value, text] of [['', 'Default (center)'], ['start', 'Start of door'], ['center', 'Center of door'], ['end', 'End of door']])
+                anchorSelect.append(new Option(t(text), value));
+            anchorSelect.value = item.rotationAnchor ?? ''; anchorLabel.append(anchorSelect); container.append(anchorLabel);
+            anchorSelect.addEventListener('change', () => {
+                if (busy || state.preview || anchorSelect.disabled || anchorSelect.value === (item.rotationAnchor ?? '')) return;
+                if (!anchorSelect.value) delete item.rotationAnchor; else item.rotationAnchor = anchorSelect.value;
+                commit(); renderCanvas();
+            }, { signal });
+            container.append(node('small', { class: 'map-builder__hint' }, t('An anchor rotates the door image 90° when opened.')));
             const field = node('div', { class: 'map-builder__state-field' }), title = node('span', { id: 'builder-door-state-label' }, t('Initial state'));
             const group = node('div', { class: 'map-builder__segmented', role: 'group', 'aria-labelledby': 'builder-door-state-label', 'data-builder-property': 'state', 'data-value': item.state });
             for (const [value, text] of [['closed', 'Closed'], ['open', 'Opened'], ['locked', 'Locked']]) {
@@ -2484,6 +2501,9 @@ function mountWorkspace(root) {
                         for (const key of wallPropertyFields) if (!sameDocument(baseline[key], patch[key])) next[key] = clone(patch[key]);
                         if (target.kind === 'doors' && 'interactionEnabled' in patch) {
                             if (patch.interactionEnabled) delete next.interactionEnabled; else next.interactionEnabled = false;
+                        }
+                        if (target.kind === 'doors' && 'rotationAnchor' in patch) {
+                            if (patch.rotationAnchor === null) delete next.rotationAnchor; else next.rotationAnchor = patch.rotationAnchor;
                         }
                         applyNativeItem(target, next); modal.close(true);
                     },

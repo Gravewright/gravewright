@@ -7,7 +7,7 @@ export function doorArt(wall) {
         if (!appearance || appearance.visible !== true) return;
         assetId = appearance.assetId;
     } else {
-        if (wall.door_state === 'open') return;
+        if (wall.door_state === 'open' && wall.rotationAnchor === undefined) return;
         assetId = wall.asset_id;
     }
     if (typeof assetId !== 'string'
@@ -15,6 +15,11 @@ export function doorArt(wall) {
     const dx = wall.x2 - wall.x1, dy = wall.y2 - wall.y1;
     const width = Math.hypot(dx, dy), height = wall.thickness ?? 14;
     if (![wall.x1, wall.y1, width, height].every(Number.isFinite) || width <= 0 || height <= 0 || height > 512) return;
-    return { src: `/game/map-assets/${assetId}`, x: wall.x1, y: wall.y1,
-        width, height, angle: Math.atan2(dy, dx) * 180 / Math.PI };
+    let x = wall.x1, y = wall.y1, angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (wall.door_state === 'open' && ['start', 'center', 'end'].includes(wall.rotationAnchor)) {
+        const offset = wall.rotationAnchor === 'start' ? 0 : wall.rotationAnchor === 'end' ? 1 : .5;
+        const pivotX = x + dx * offset, pivotY = y + dy * offset;
+        x = pivotX - (wall.y1 - pivotY); y = pivotY + (wall.x1 - pivotX); angle += 90;
+    }
+    return { src: `/game/map-assets/${assetId}`, x, y, width, height, angle };
 }

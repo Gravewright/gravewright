@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import { projectTestDocument } from './playtest-model.js';
 import { torchComponentState } from './torch-model.js';
 
+test('door rehearsal keeps anchored open artwork while honoring an explicit hidden sprite', () => {
+    const source = { cellSize: 70, doors: [{ id: 'hinged', assetId: 'wood', state: 'closed', rotationAnchor: 'end' }],
+        decorations: [], regions: [], floors: [], walls: [], lights: [] };
+    const opened = { changes: { elements: [{ id: 'native', sourceId: 'hinged', after: { data: { door_state: 'open' } } }] } };
+    assert.equal(projectTestDocument(source, opened).doors[0].testAppearance.visible, true);
+    opened.changes.elements[0].after.data.sprite = { appearance: 'hidden' };
+    assert.equal(projectTestDocument(source, opened).doors[0].testAppearance.visible, false);
+    assert.equal(source.doors[0].state, 'closed');
+});
+
 test('native rehearsal projects visual changes while preserving authored data and graphs', () => {
     const source = { cellSize: 100, doors: [{ id: 'door', state: 'closed', assetId: 'original', blueprint: { graphs: { 'signal:FixtureInteractClosed': { nodes: [] } } } }],
         floors: [{ id: 'floor', assetId: 'stone' }], lights: [{ id: 'lamp', x: 2, y: 2, enabled: false, brightRadius: 1, dimRadius: 2 }], decorations: [], regions: [], walls: [] };

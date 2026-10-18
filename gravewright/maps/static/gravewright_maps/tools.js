@@ -193,6 +193,12 @@ function centerOf(rows) {
   const points = rows.flatMap(corners);
   return { x: (Math.min(...points.map((p) => p.x)) + Math.max(...points.map((p) => p.x))) / 2, y: (Math.min(...points.map((p) => p.y)) + Math.max(...points.map((p) => p.y))) / 2 };
 }
+function rotationCenter(rows) {
+  const door = rows.length === 1 && rows[0].kind === "wall" && rows[0].data.kind === "door" && rows[0].data;
+  if (!door) return centerOf(rows);
+  const offset = door.rotationAnchor === "start" ? 0 : door.rotationAnchor === "end" ? 1 : 0.5;
+  return { x: door.x1 + (door.x2 - door.x1) * offset, y: door.y1 + (door.y2 - door.y1) * offset };
+}
 function sceneObjects(state, tokens, cell, gm, measures, origin = { x: 0, y: 0 }) {
   const out = [];
   const components = new Set(state.images.flatMap(imageComponentKeys));
@@ -588,7 +594,7 @@ function createSelection(surface, board, map, gm, api, stateAPI, measurements) {
   }
   function rotate2(angle, defer = false) {
     if (busy || drag || !chosen().length) return;
-    preview = { ...preview || { center: centerOf(chosen()), dx: 0, dy: 0, angle: 0 }, angle: (preview?.angle || 0) + angle };
+    preview = { ...preview || { center: rotationCenter(chosen()), dx: 0, dy: 0, angle: 0 }, angle: (preview?.angle || 0) + angle };
     publish();
     clearTimeout(timer);
     if (defer) timer = setTimeout(() => void execute("transform"), 180);
